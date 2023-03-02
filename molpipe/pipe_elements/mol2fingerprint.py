@@ -125,17 +125,6 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
             raise AttributeError("Attribute not set. Please call fit first.")
         return self._bit_mapping.copy()
 
-    def _create_mapping(self, molecule_features: Iterable[dict[int, int]]) -> None:
-        unraveled_features = [f for f_list in molecule_features for f in f_list.keys()]
-        feature_hash, count = np.unique(unraveled_features, return_counts=True)
-        feature_hash_dict = dict(zip(feature_hash, count))
-        unique_features = set(unraveled_features)
-        feature_order = sorted(
-            unique_features, key=lambda f: (feature_hash_dict[f], f), reverse=True
-        )
-        self._bit_mapping = dict({feature: idx for idx, feature in enumerate(feature_order)})
-        self._n_bits = len(self._bit_mapping)
-
     def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
         bi: dict[int, list[tuple[int, int]]] = dict()
         _ = AllChem.GetMorganFingerprint(
@@ -143,11 +132,6 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
         )
         bit_info = {self.bit_mapping[k]: v for k, v in bi.items()}
         return bit_info
-
-    def _fit(self, mol_obj_list: list[Chem.Mol]) -> list[dict[int, int]]:
-        hash_count_list = [self._pretransform_single(mol_obj) for mol_obj in mol_obj_list]
-        self._create_mapping(hash_count_list)
-        return hash_count_list
 
     def fit(self, mol_obj_list: list[Chem.Mol]) -> None:
         _ = self._fit(mol_obj_list)
@@ -157,18 +141,51 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
         mapped_feature_count_dicts = [self._map_feature_dict(f_dict) for f_dict in hash_count_list]
         return self.collect_singles(mapped_feature_count_dicts)
 
+    def transform_single(self, mol: Chem.Mol) -> dict[int, int]:
+        """Return a dict, where the key is the feature-position and the value is the count."""
+        feature_count_dict = self._pretransform_single(mol)
+        bit_count_dict = self._map_feature_dict(feature_count_dict)
+        return bit_count_dict
+
+    def _create_mapping(self, feature_hash_dict_list: Iterable[dict[int, int]]) -> None:
+        """Create a mapping from feature hash to bit position."""
+        unraveled_features = [f for f_dict in feature_hash_dict_list for f in f_dict.keys()]
+        feature_hash, count = np.unique(unraveled_features, return_counts=True)
+        feature_hash_count_dict = dict(zip(feature_hash, count))
+        unique_features = set(unraveled_features)
+        feature_order = sorted(
+            unique_features, key=lambda f: (feature_hash_count_dict[f], f), reverse=True
+        )
+        self._bit_mapping = dict({feature: idx for idx, feature in enumerate(feature_order)})
+        self._n_bits = len(self._bit_mapping)
+
+    def _fit(self, mol_obj_list: list[Chem.Mol]) -> list[dict[int, int]]:
+        hash_count_list = [self._pretransform_single(mol_obj) for mol_obj in mol_obj_list]
+        self._create_mapping(hash_count_list)
+        return hash_count_list
+
     def _map_feature_dict(self, feature_count_dict: dict[int, int]) -> dict[int, int]:
+        """ Transform a dict of feature hash and occurrence to a dict of bit-pos and occurence.
+
+        Parameters
+        ----------
+        feature_count_dict: dict[int, int]
+
+        Returns
+        -------
+        dict[int, int]
+        """
         mapped_count_dict = {}
         for feature_hash, feature_count in feature_count_dict.items():
-            mapped_pos = self.bit_mapping.get(feature_hash)
-            if mapped_pos is None:
+            bit_position = self.bit_mapping.get(feature_hash)
+            if bit_position is None:
                 if self.ignore_unknown:
                     continue
                 else:
                     raise KeyError(
                         f"This feature hash did not occur during training: {feature_hash}"
                     )
-            mapped_count_dict[mapped_pos] = feature_count
+            mapped_count_dict[bit_position] = feature_count
         return mapped_count_dict
 
     def _pretransform_single(self, mol: Chem.Mol) -> dict[int, int]:
@@ -179,8 +196,3 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
         morgan_feature_count_dict: dict[int, int] = morgan_features.GetNonzeroElements()
         return morgan_feature_count_dict
 
-    def transform_single(self, mol: Chem.Mol) -> dict[int, int]:
-        """Return a dict, where the key is the feature-position and the value is the count."""
-        feature_count_dict = self._pretransform_single(mol)
-        bit_count_dict = self._map_feature_dict(feature_count_dict)
-        return bit_count_dict
