@@ -27,6 +27,7 @@ EXPECTED_OUTPUT = make_sparse_fp(TEST_SMILES)
 
 class PipelineTest(unittest.TestCase):
     def test_fit_transform_single_core(self) -> None:
+        # Create pipeline
         pipeline = MolPipeline(
             [
                 Smiles2Mol(),
@@ -34,7 +35,10 @@ class PipelineTest(unittest.TestCase):
             ]
         )
 
+        # Run pipeline
         matrix, label, group = pipeline.fit_transform(TEST_SMILES)
+
+        # Compare with expected output
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
 
