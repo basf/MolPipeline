@@ -1,3 +1,5 @@
+"""All abstract classes later pipeline elements inherit from."""
+
 import abc
 from typing import Any, Iterable
 
@@ -11,6 +13,8 @@ from molpipe.utils.matrices import sparse_from_index_value_dicts
 
 
 class AnyPipeElement(abc.ABC):
+    _input_type: type
+    _output_type: type
     @abc.abstractmethod
     def fit(self, input_values: Any) -> None:
         """Fit object to input_values."""
@@ -20,12 +24,25 @@ class AnyPipeElement(abc.ABC):
         """Transform input_values according to object rules."""
 
     def fit_transform(self, input_values: Any) -> Any:
-        """Apply fit function and subsequently transorm the input"""
+        """Apply fit function and subsequently transform the input"""
         self.fit(input_values)
         return self.transform(input_values)
 
+    @property
+    def input_type(self) -> type:
+        """Return the input type"""
+        return self._input_type
+
+    @property
+    def output_type(self) -> type:
+        """Return the output type"""
+        return self._output_type
+
 
 class Mol2MolPipe(AnyPipeElement):
+    _input_type = Chem.Mol
+    _output_type = Chem.Mol
+
     def transform(self, mol_list: list[OptionalMol]) -> list[OptionalMol]:
         return [mol for mol in map(self._transform_single, mol_list)]
 
@@ -42,12 +59,15 @@ class Mol2MolPipe(AnyPipeElement):
 
 
 class Any2Mol(AnyPipeElement):
+    _output_type = Chem.Mol
+
     @abc.abstractmethod
     def transform(self, any_input: Any) -> list[OptionalMol]:
         """Transform the list of molecules to an array."""
 
 
 class Mol2Any(AnyPipeElement):
+    _input_type = Chem.Mol
     @abc.abstractmethod
     def transform(self, mol_list: list[Chem.Mol]) -> Any:
         """Transform the list of molecules to output of any type."""
@@ -55,9 +75,11 @@ class Mol2Any(AnyPipeElement):
 
 class Mol2Fingerprint(Mol2Any):
     _n_bits: int
+    _output_type = sparse.csr_matrix
 
     @property
     def n_bits(self) -> int:
+        """Number of bits in (or size of) fingerprint."""
         return self._n_bits
 
     def collect_singles(self, row_dict_iterable:  Iterable[dict[int, int]]) -> sparse.csr_matrix:
