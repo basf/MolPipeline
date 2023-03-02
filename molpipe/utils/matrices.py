@@ -29,3 +29,10 @@ def sparse_from_index_value_dicts(
         col_positions.extend(row_dict.keys())
         row_positions.extend([row_idx] * len(row_dict))
     return sparse.csr_matrix((data, (row_positions, col_positions)), shape=(row_idx+1, n_columns))
+
+
+def are_equal(matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix) -> bool:
+    """Compare if any element is not equal, as this is more efficient."""
+    is_unequal_matrix = matrix_a != matrix_b
+    number_unequal_elements = int(is_unequal_matrix.nnz)
+    return number_unequal_elements == 0
