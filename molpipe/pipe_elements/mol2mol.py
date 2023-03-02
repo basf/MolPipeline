@@ -1,3 +1,5 @@
+"""Pipline elements for mol to mol transformations."""
+
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
@@ -6,7 +8,7 @@ from molpipe.utils.molpipe_types import OptionalMol
 
 
 class ReactionPipe(Mol2MolPipe):
-    def __init__(self, reaction, additive_list: list[Chem.Mol]):
+    def __init__(self, reaction: AllChem.ChemicalReaction, additive_list: list[Chem.Mol]):
         self.reaction = reaction
         self.additive_list = additive_list
 
@@ -28,13 +30,9 @@ class ReactionPipe(Mol2MolPipe):
         # TODO: handle multiple products
         if len(product_list) > 1:
             pass
-            #warnings.warn("Not yet able to handle multiple reactions. An arbriraty reaction is selected.")
+            #warnings.warn("Not able to handle multiple reactions. An arbriraty reaction is selected.")
         if len(product_list) == 0:
             return None
         product = product_list[0][0]
         AllChem.SanitizeMol(product)
         return product
-
-
-
-
