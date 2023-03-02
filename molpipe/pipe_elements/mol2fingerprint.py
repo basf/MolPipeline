@@ -194,5 +194,7 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
             mol, self.radius, useFeatures=self.use_features
         )
         morgan_feature_count_dict: dict[int, int] = morgan_features.GetNonzeroElements()
+        if not self.counted:
+            morgan_feature_count_dict = {f_hash: 1 for f_hash in morgan_feature_count_dict}
         return morgan_feature_count_dict
 
