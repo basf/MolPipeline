@@ -1,0 +1,4 @@
+rdkit
+numpy
+scipy
+setuptools
