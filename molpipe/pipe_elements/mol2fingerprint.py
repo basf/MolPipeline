@@ -33,6 +33,18 @@ class _BaseMorganFingerprint(Mol2Fingerprint):
     def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
         raise NotImplementedError
 
+    def bit2atom_mapping(self, mol_obj: Chem.Mol) -> dict[int, list[CircularAtomEnvironment]]:
+        bit2atom_dict = self.explain_rdmol(mol_obj)
+        result_dict: dict[int, list[CircularAtomEnvironment]] = dict()
+        # Iterating over all present bits and respective matches
+        for bit, matches in bit2atom_dict.items():  # type: int, list[tuple[int, int]]
+            result_dict[bit] = []
+            for central_atom, radius in matches:  # type: int, int
+                env = CircularAtomEnvironment.from_mol(mol_obj, central_atom, radius)
+                result_dict[bit].append(env)
+        # Transforming default dict to dict
+        return result_dict
+
 
 class Mol2FoldedMorganFingerprint(_BaseMorganFingerprint):
     def __init__(self, radius: int = 2, use_features: bool = False, n_bits: int = 2048):
