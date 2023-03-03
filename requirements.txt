@@ -2,3 +2,4 @@ rdkit
 numpy
 scipy
 setuptools
+scikit-learn
