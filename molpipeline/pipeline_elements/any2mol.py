@@ -35,18 +35,22 @@ class SDF2MolPipe(Any2MolPipe):
         self.identifier = identifier
         self.mol_counter = 0
 
-    def finish(self) -> None:
+    def _finish(self) -> None:
+        """Reset the mol counter which assigns identifiers."""
         self.mol_counter = 0
 
     def fit(self, input_values: Any) -> None:
+        """Does nothing during fit."""
         pass
 
     def transform(self, input_values: str) -> list[OptionalMol]:
+        """Transform a list of SDF-strings to a list of rdkit molecules."""
         molecule_list = [self.transform_single(sdf_str) for sdf_str in input_values]
-        self.finish()
+        self._finish()
         return molecule_list
 
     def transform_single(self, input_value: Chem.Mol) -> OptionalMol:
+        """Transform an SDF-strings to a rdkit molecule."""
         mol = Chem.MolFromMolBlock(input_value)
         if self.identifier == "smiles":
             mol.SetProp("identifier", self.mol_counter)

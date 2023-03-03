@@ -30,9 +30,6 @@ class AnyPipeElement(abc.ABC):
         """Return the output type"""
         return self._output_type
 
-    def finish(self) -> None:
-        pass
-
     @abc.abstractmethod
     def fit(self, input_values: Any) -> None:
         """Fit object to input_values."""
@@ -49,6 +46,10 @@ class AnyPipeElement(abc.ABC):
     @abc.abstractmethod
     def transform_single(self, mol: Chem.Mol) -> OptionalMol:
         """Transform the molecule according to child dependent rules."""
+
+    def _finish(self) -> None:
+        """Called after all transform singles have been processed. Does in most cases nothing."""
+        pass
 
 
 class Mol2MolPipe(AnyPipeElement):

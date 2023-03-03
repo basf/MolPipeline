@@ -55,7 +55,7 @@ class PipelineTest(unittest.TestCase):
         for pred_val, true_val in zip(predicted_value_array, CONTAINS_OX):
             self.assertEqual(pred_val, true_val)
 
-    def test_sliciing(self) -> None:
+    def test_slicing(self) -> None:
         pipeline_element_list = [
             Smiles2MolPipe(),
             MetalDisconnectorPipe(),
