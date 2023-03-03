@@ -1,3 +1,4 @@
+"""Everything relevant to install molpipeline."""
 from setuptools import setup, find_packages
 
 setup(

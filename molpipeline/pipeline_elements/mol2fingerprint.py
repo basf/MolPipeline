@@ -1,7 +1,8 @@
-import abc
-from typing import Iterable, Optional
+"""Classes for generating binary or counted fingerprint representations of molecules."""
 
-import multiprocessing
+import abc
+from typing import Iterable
+
 import numpy as np
 from scipy import sparse
 
@@ -9,14 +10,22 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 
 from molpipeline.pipeline_elements.abstract_pipeline_elements import (
-    Mol2FingerprintPipe as _Mol2FingerprintPipe,
+    MolToFingerprintPipelineElement as _MolToFingerprintPipelineElement,
 )
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 
-class _BaseMorganFingerprintPipe(_Mol2FingerprintPipe):
-    def __init__(self, radius: int = 2, use_features: bool = False, name: str = "AbstractMorgan"):
-        super().__init__(name)
+class _ABCMorganFingerprintPipelineElement(_MolToFingerprintPipelineElement):
+    """Abstract Class for Morgan fingerprints."""
+
+    def __init__(
+        self,
+        radius: int = 2,
+        use_features: bool = False,
+        name: str = "AbstractMorgan",
+        n_jobs: int = 1,
+    ):
+        super().__init__(name=name, n_jobs=n_jobs)
         self._use_features = use_features
         if isinstance(radius, int) and radius >= 0:
             self._radius = radius
@@ -25,19 +34,23 @@ class _BaseMorganFingerprintPipe(_Mol2FingerprintPipe):
 
     @property
     def radius(self) -> int:
+        """Get radius of Morgan fingerprint."""
         return self._radius
 
     @property
     def use_features(self) -> bool:
+        """Get whether to encode atoms by features or not."""
         return self._use_features
 
     @abc.abstractmethod
     def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
+        """Get central atom and radius of all features in molecule."""
         raise NotImplementedError
 
     def bit2atom_mapping(self, mol_obj: Chem.Mol) -> dict[int, list[CircularAtomEnvironment]]:
+        """Obtain set of atoms for all features."""
         bit2atom_dict = self.explain_rdmol(mol_obj)
-        result_dict: dict[int, list[CircularAtomEnvironment]] = dict()
+        result_dict: dict[int, list[CircularAtomEnvironment]] = {}
         # Iterating over all present bits and respective matches
         for bit, matches in bit2atom_dict.items():  # type: int, list[tuple[int, int]]
             result_dict[bit] = []
@@ -48,58 +61,93 @@ class _BaseMorganFingerprintPipe(_Mol2FingerprintPipe):
         return result_dict
 
 
-class Mol2FoldedMorganFingerprintPipe(_BaseMorganFingerprintPipe):
+class Mol2FoldedMorganFingerprint(_ABCMorganFingerprintPipelineElement):
+    """Folded Morgan Fingerprint.
+
+    Feature-mapping to vector-positions is arbitrary.
+
+    """
+
+    # pylint: disable=R0913
     def __init__(
         self,
         radius: int = 2,
         use_features: bool = False,
         n_bits: int = 2048,
         name: str = "Mol2FoldedMorganFingerprint",
+        n_jobs: int = 1,
     ) -> None:
-        super().__init__(radius=radius, use_features=use_features, name=name)
+        """Initialize Mol2FoldedMorganFingerprint.
+
+        Parameters
+        ----------
+        radius: int
+            radius of the circular fingerprint [1]. Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
+        use_features: bool
+            Instead of atoms, features are encoded in the fingerprint. [2]
+        n_bits: int
+            Size of fingerprint.
+        name: str
+            Name of PipelineElement
+        n_jobs: int
+            Number of cores to use.
+
+        References
+        ----------
+            [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
+            [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
+        """
+        super().__init__(radius=radius, use_features=use_features, name=name, n_jobs=n_jobs)
         if isinstance(n_bits, int) and n_bits >= 0:
             self._n_bits = n_bits
         else:
             raise ValueError(f"Number of bits has to be a positive integer! (Received: {n_bits})")
 
-    def fit(self, mol_obj_list: list[Chem.Mol]) -> None:
-        pass
+    def transform_single(self, value: Chem.Mol) -> dict[int, int]:
+        """Transform a single compound to a dictionary.
 
-    def transform_single(self, mol: Chem.Mol) -> dict[int, int]:
-        fp = AllChem.GetMorganFingerprintAsBitVect(
-            mol, self.radius, useFeatures=self._use_features, nBits=self._n_bits
+        Keys denote the featreu position, values the count. Here always 1.
+        """
+        fingerprint_vector = AllChem.GetMorganFingerprintAsBitVect(
+            value, self.radius, useFeatures=self._use_features, nBits=self._n_bits
         )
-        return {bit: 1 for bit in fp.GetOnBits()}
-
-    def fit_transform(self, mol_obj_list: list[Chem.Mol]) -> sparse.csr_matrix:
-        return self.transform(mol_obj_list)
+        return {bit: 1 for bit in fingerprint_vector.GetOnBits()}
 
     def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
-        bi: dict[int, list[tuple[int, int]]] = {}
+        """Get central atom and radius of all features in molecule."""
+        bit_info: dict[int, list[tuple[int, int]]] = {}
         _ = AllChem.GetMorganFingerprintAsBitVect(
-            mol_obj, self.radius, useFeatures=self._use_features, bitInfo=bi, nBits=self._n_bits
+            mol_obj,
+            self.radius,
+            useFeatures=self._use_features,
+            bitInfo=bit_info,
+            nBits=self._n_bits,
         )
-        return bi
+        return bit_info
 
 
-class Mol2UnfoldedMorganFingerprintPipe(_BaseMorganFingerprintPipe):
+class Mol2UnfoldedMorganFingerprint(_ABCMorganFingerprintPipelineElement):
     """Transforms smiles-strings or molecular objects into unfolded bit-vectors based on Morgan-fingerprints [1].
+
     Features are mapped to bits based on the amount of molecules they occur in.
 
-    Long version:
+    Long version
+    ------------
         Circular fingerprints do not have a unique mapping to a bit-vector, therefore the features are mapped to the
         vector according to the number of molecules they occur in. The most occurring feature is mapped to bit 0, the
         second most feature to bit 1 and so on...
 
         Weak-point: features not seen in the fit method are not mappable to the bit-vector and therefore cause an error.
 
-    References:
-            [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
+    References
+    ----------
+        [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
     """
 
-    _bit_mapping: Optional[dict[int, int]]
+    _bit_mapping: dict[int, int]
     _counted: bool
 
+    # pylint: disable=R0913
     def __init__(
         self,
         radius: int = 2,
@@ -107,8 +155,10 @@ class Mol2UnfoldedMorganFingerprintPipe(_BaseMorganFingerprintPipe):
         counted: bool = False,
         ignore_unknown: bool = False,
         name: str = "Mol2UnfoldedMorganFingerprint",
+        n_jobs: int = 1,
     ):
-        """Initializes the class
+        """Initialize Mol2UnfoldedMorganFingerprint.
+
         Parameters
         ----------
         counted: bool
@@ -118,14 +168,17 @@ class Mol2UnfoldedMorganFingerprintPipe(_BaseMorganFingerprintPipe):
             radius of the circular fingerprint [1]. Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
         use_features: bool
             Instead of atoms, features are encoded in the fingerprint. [2]
+        name: str
+            Name of PipelineElement
+        n_jobs: int
+            Number of cores to use.
 
         References
         ----------
             [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
         """
-        super().__init__(radius=radius, use_features=use_features, name=name)
-        self._bit_mapping = None
+        super().__init__(radius=radius, use_features=use_features, name=name, n_jobs=n_jobs)
 
         if not isinstance(counted, bool):
             raise TypeError("The argument 'counted' must be a bool!")
@@ -137,34 +190,31 @@ class Mol2UnfoldedMorganFingerprintPipe(_BaseMorganFingerprintPipe):
 
     @property
     def counted(self) -> bool:
-        """Returns the bool value for enabling counted fingerprint."""
+        """Return whether the fingerprint is counted, or not."""
         return self._counted
 
-    @property
-    def bit_mapping(self) -> dict[int, int]:
-        if self._bit_mapping is None:
-            raise AttributeError("Attribute not set. Please call fit first.")
-        return self._bit_mapping.copy()
-
     def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
-        bi: dict[int, list[tuple[int, int]]] = dict()
+        """Get central atom and radius of all features in molecule."""
+        original_bit_info: dict[int, list[tuple[int, int]]] = {}
         _ = AllChem.GetMorganFingerprint(
-            mol_obj, self.radius, useFeatures=self.use_features, bitInfo=bi
+            mol_obj, self.radius, useFeatures=self.use_features, bitInfo=original_bit_info
         )
-        bit_info = {self.bit_mapping[k]: v for k, v in bi.items()}
+        bit_info = {self._bit_mapping[k]: v for k, v in original_bit_info.items()}
         return bit_info
 
-    def fit(self, mol_obj_list: list[Chem.Mol]) -> None:
-        _ = self._fit(mol_obj_list)
+    def fit(self, value_list: list[Chem.Mol]) -> None:
+        """Determine all features and assign each a unique position in the fingerprint-vector."""
+        _ = self._fit(value_list)
 
-    def fit_transform(self, mol_obj_list: list[Chem.Mol]) -> sparse.csr_matrix:
-        hash_count_list = self._fit(mol_obj_list)
+    def fit_transform(self, value_list: list[Chem.Mol]) -> sparse.csr_matrix:
+        """Create a feature mapping based on input and apply it for transformation."""
+        hash_count_list = self._fit(value_list)
         mapped_feature_count_dicts = [self._map_feature_dict(f_dict) for f_dict in hash_count_list]
-        return self.collect_singles(mapped_feature_count_dicts)
+        return self.collect_rows(mapped_feature_count_dicts)
 
-    def transform_single(self, mol: Chem.Mol) -> dict[int, int]:
+    def transform_single(self, value: Chem.Mol) -> dict[int, int]:
         """Return a dict, where the key is the feature-position and the value is the count."""
-        feature_count_dict = self._pretransform_single(mol)
+        feature_count_dict = self._pretransform_single(value)
         bit_count_dict = self._map_feature_dict(feature_count_dict)
         return bit_count_dict
 
@@ -198,14 +248,11 @@ class Mol2UnfoldedMorganFingerprintPipe(_BaseMorganFingerprintPipe):
         """
         mapped_count_dict = {}
         for feature_hash, feature_count in feature_count_dict.items():
-            bit_position = self.bit_mapping.get(feature_hash)
+            bit_position = self._bit_mapping.get(feature_hash)
             if bit_position is None:
                 if self.ignore_unknown:
                     continue
-                else:
-                    raise KeyError(
-                        f"This feature hash did not occur during training: {feature_hash}"
-                    )
+                raise KeyError(f"This feature hash did not occur during training: {feature_hash}")
             mapped_count_dict[bit_position] = feature_count
         return mapped_count_dict
 

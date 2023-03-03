@@ -1,20 +1,34 @@
+"""Classes for transforming rdkit molecules to any type of output."""
+
 from typing import Any
 
 from rdkit import Chem
 
-from molpipeline.pipeline_elements.abstract_pipeline_elements import Mol2AnyPipe as _Mol2AnyPipe
-from molpipeline.utils.molpipe_types import OptionalMol
+from molpipeline.pipeline_elements.abstract_pipeline_elements import (
+    MolToAnyPipelineElement as _Mol2AnyPipe,
+)
 
 
-class Mol2SmilesPipe(_Mol2AnyPipe):
+class MolToSmilesPipelineElement(_Mol2AnyPipe):
+    """PipelineElement to transform a molecule to a SMILES string."""
+
     def __init__(self, name: str = "Mol2Smiles"):
-        super(Mol2SmilesPipe, self).__init__(name)
+        """Initialize MolToSmilesPipelineElement.
 
-    def fit(self, input_values: Any) -> None:
-        pass
+        Parameters
+        ----------
+        name: str
+            name of PipelineElement
+        """
+        super().__init__(name)
 
-    def transform(self, mol_list: list[Chem.Mol]) -> list[str]:
-        return [self.transform_single(mol) for mol in mol_list]
+    def fit(self, value_list: Any) -> None:
+        """Do nothing during fit."""
 
-    def transform_single(self, mol: Chem.Mol) -> str:
-        return str(Chem.MolToSmiles(mol))
+    def transform(self, value_list: list[Chem.Mol]) -> list[str]:
+        """Transform a list molecules to a list of SMILES strings."""
+        return [self.transform_single(mol) for mol in value_list]
+
+    def transform_single(self, value: Chem.Mol) -> str:
+        """Transform a molecule to a SMILES string."""
+        return str(Chem.MolToSmiles(value))

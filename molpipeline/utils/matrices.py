@@ -1,3 +1,5 @@
+"""Functions to handle sparse matrices."""
+
 from typing import Iterable
 from scipy import sparse
 

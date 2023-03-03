@@ -2,19 +2,20 @@
 from __future__ import annotations
 
 import multiprocessing
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Union
 
-from molpipeline.pipeline_elements.abstract_pipeline_elements import AnyPipeElement
+from molpipeline.pipeline_elements.abstract_pipeline_elements import ABCPipelineElement
 from molpipeline.utils.multi_proc import check_available_cores
 
 
 class MolPipeline:
-    """ Contains the PipeElements which describe the functionality of the pipeline."""
-    _n_jobs: int
-    _pipeline_element_list: list[AnyPipeElement]
+    """Contains the PipeElements which describe the functionality of the pipeline."""
 
-    def __init__(self, pipeline_element_list: list[AnyPipeElement], n_jobs: int = 1):
-        """Initialize MolPipeline"""
+    _n_jobs: int
+    _pipeline_element_list: list[ABCPipelineElement]
+
+    def __init__(self, pipeline_element_list: list[ABCPipelineElement], n_jobs: int = 1):
+        """Initialize MolPipeline."""
         self._pipeline_element_list = pipeline_element_list
         self.n_jobs = n_jobs
 
@@ -29,10 +30,9 @@ class MolPipeline:
         self._n_jobs = check_available_cores(requested_jobs)
 
     @property
-    def pipeline_elements(self) -> list[AnyPipeElement]:
-        """Get a copy of the list of pipeline elements"""
+    def pipeline_elements(self) -> list[ABCPipelineElement]:
+        """Get a copy of the list of pipeline elements."""
         return self._pipeline_element_list[:]  # [:] to create shallow copy.
-
 
     def fit(
         self,
@@ -40,6 +40,23 @@ class MolPipeline:
         y_input: Any = None,
         **fit_params: dict[Any, Any],
     ) -> None:
+        """Fit the MolPipeline according to x_input.
+
+        Parameters
+        ----------
+        x_input: Any
+            Molecular representations which are subsequently processed.
+        y_input: Any
+            Optional label of input. Only for SKlearn compatibility.
+        fit_params: Any
+            Parameters. Only for SKlearn compatibility.
+
+        Returns
+        -------
+        None
+        """
+        _ = y_input  # Making pylint happy
+        _ = fit_params  # Making pylint happy
         self.fit_transform(x_input)
 
     def fit_transform(
@@ -48,52 +65,72 @@ class MolPipeline:
         y_input: Any = None,
         **fit_params: dict[str, Any],
     ) -> Any:
+        """Fit the MolPipeline according to x_input and return the transformed molecules.
 
+        Parameters
+        ----------
+        x_input: Any
+            Molecular representations which are subsequently processed.
+        y_input: Any
+            Optional label of input. Only for SKlearn compatibility.
+        fit_params: Any
+            Parameters. Only for SKlearn compatibility.
+
+        Returns
+        -------
+        Any
+            Transformed molecules.
+        """
         iter_input = x_input
+        _ = y_input  # Making pylint happy
+        _ = fit_params  # Making pylint happy
         for p_element in self._pipeline_element_list:
             iter_input = p_element.fit_transform(iter_input)  # TODO: Parallel processing
         return iter_input
 
-    def transform_single(self, input_value: Any) -> Any:
+    def _transform_single(self, input_value: Any) -> Any:
         iter_value = input_value
-        for p_element in self._pipeline_element_list:  # type: AnyPipeElement
+        for p_element in self._pipeline_element_list:  # type: ABCPipelineElement
             iter_value = p_element.transform_single(iter_value)
         return iter_value
 
     def transform(self, x_input: Any) -> Any:
+        """Transform the input according to the sequence of provided PipelineElements."""
         last_element = self._pipeline_element_list[-1]
-        if hasattr(last_element, "collect_singles"):
-            return last_element.collect_singles(
+        if hasattr(last_element, "collect_rows"):
+            return last_element.collect_rows(
                 (single for single in self._transform_iterator(x_input))
             )
-        else:
-            return list(self._transform_iterator(x_input))
+
+        return list(self._transform_iterator(x_input))
 
     def _finish(self) -> None:
         """Inform each pipeline element that the iterations have finished."""
-        for p_element in self._pipeline_element_list:  # type: AnyPipeElement
-            p_element._finish()
+        for p_element in self._pipeline_element_list:  # type: ABCPipelineElement
+            p_element.finish()
 
     def _transform_iterator(self, x_input: Any) -> Any:
         if self.n_jobs > 1:
             with multiprocessing.Pool(self.n_jobs) as pool:
-                for transformed_value in pool.imap(self.transform_single, x_input):
+                for transformed_value in pool.imap(self._transform_single, x_input):
                     yield transformed_value
         else:
             for value in x_input:
-                yield self.transform_single(value)
+                yield self._transform_single(value)
         self._finish()
 
     def __getitem__(self, index: slice) -> MolPipeline:
+        """Get new MolPipeline with a slice of elements."""
         element_slice = self.pipeline_elements[index]
         return MolPipeline(element_slice, self.n_jobs)
 
-    def __add__(self, other: Union[AnyPipeElement, MolPipeline]) -> MolPipeline:
-        pipeline_element_list = [x for x in self.pipeline_elements]
-        if isinstance(other, AnyPipeElement):
+    def __add__(self, other: Union[ABCPipelineElement, MolPipeline]) -> MolPipeline:
+        """Concatenate two Pipelines or add a PipelineElement."""
+        pipeline_element_list = self.pipeline_elements[:]
+        if isinstance(other, ABCPipelineElement):
             pipeline_element_list.append(other)
         elif isinstance(other, MolPipeline):
             pipeline_element_list.extend(other.pipeline_elements)
         else:
-            raise TypeError(f"{type(other)} not supported for addition!")
+            raise TypeError(f"{type(other)} is not supported for addition!")
         return MolPipeline(pipeline_element_list, self.n_jobs)

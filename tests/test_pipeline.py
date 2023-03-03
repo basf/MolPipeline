@@ -1,19 +1,16 @@
 import unittest
-from scipy import sparse
 from sklearn.pipeline import Pipeline as SkPipeline
 from sklearn.tree import DecisionTreeClassifier
-from rdkit import Chem
-from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
 
 from molpipeline.pipeline import MolPipeline
-from molpipeline.pipeline_elements.any2mol import Smiles2MolPipe
-from molpipeline.pipeline_elements.mol2fingerprint import Mol2FoldedMorganFingerprintPipe
-from molpipeline.pipeline_elements.standardize_mol import (
-    RemoveChargePipe,
-    MetalDisconnectorPipe,
-    SaltRemoverPipe,
+from molpipeline.pipeline_elements.any2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.mol2fingerprint import Mol2FoldedMorganFingerprint
+from molpipeline.pipeline_elements.mol2molstandardize import (
+    RemoveChargePipelineElement,
+    MetalDisconnectorPipelineElement,
+    SaltRemoverPipelineElement,
 )
-from molpipeline.pipeline_elements.mol2any import Mol2SmilesPipe
+from molpipeline.pipeline_elements.mol2any import MolToSmilesPipelineElement
 from molpipeline.utils.matrices import are_equal
 
 from utils.fingerprints import make_sparse_fp
@@ -30,7 +27,10 @@ class PipelineTest(unittest.TestCase):
     def test_fit_transform_single_core(self) -> None:
         # Create pipeline
         pipeline = MolPipeline(
-            [Smiles2MolPipe(), Mol2FoldedMorganFingerprintPipe(radius=FP_RADIUS, n_bits=FP_SIZE)]
+            [
+                SmilesToMolPipelineElement(),
+                Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
+            ]
         )
 
         # Run pipeline
@@ -41,7 +41,10 @@ class PipelineTest(unittest.TestCase):
 
     def test_sklearn_pipeline(self) -> None:
         m_pipeline = MolPipeline(
-            [Smiles2MolPipe(), Mol2FoldedMorganFingerprintPipe(radius=FP_RADIUS, n_bits=FP_SIZE)]
+            [
+                SmilesToMolPipelineElement(),
+                Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
+            ]
         )
         d_tree = DecisionTreeClassifier()
         s_pipeline = SkPipeline(
@@ -57,10 +60,10 @@ class PipelineTest(unittest.TestCase):
 
     def test_slicing(self) -> None:
         pipeline_element_list = [
-            Smiles2MolPipe(),
-            MetalDisconnectorPipe(),
-            SaltRemoverPipe(),
-            Mol2SmilesPipe(),
+            SmilesToMolPipelineElement(),
+            MetalDisconnectorPipelineElement(),
+            SaltRemoverPipelineElement(),
+            MolToSmilesPipelineElement(),
         ]
         m_pipeline = MolPipeline(pipeline_element_list)
 
@@ -84,11 +87,11 @@ class PipelineTest(unittest.TestCase):
 
         salt_remover_pipeline = MolPipeline(
             [
-                Smiles2MolPipe(),
-                MetalDisconnectorPipe(),
-                SaltRemoverPipe(),
-                RemoveChargePipe(),
-                Mol2SmilesPipe(),
+                SmilesToMolPipelineElement(),
+                MetalDisconnectorPipelineElement(),
+                SaltRemoverPipelineElement(),
+                RemoveChargePipelineElement(),
+                MolToSmilesPipelineElement(),
             ]
         )
         generated_smiles = salt_remover_pipeline.transform(smiles_with_salt_list)
