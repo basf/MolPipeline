@@ -2,11 +2,11 @@ from typing import Any
 
 from rdkit import Chem
 
-from molpipeline.pipeline_elements.abstract_pipeline_elements import Any2Mol
+from molpipeline.pipeline_elements.abstract_pipeline_elements import Any2MolPipe
 from molpipeline.utils.molpipe_types import OptionalMol
 
 
-class Smiles2Mol(Any2Mol):
+class Smiles2MolPipe(Any2MolPipe):
     def __init__(self, identifier: str = "smiles", name: str = "smiles2Mol") -> None:
         self.identifier = identifier
         super().__init__(name)
@@ -26,7 +26,7 @@ class Smiles2Mol(Any2Mol):
         return mol
 
 
-class SDF2Mol(Any2Mol):
+class SDF2MolPipe(Any2MolPipe):
     identifier: str
     mol_counter: int
 

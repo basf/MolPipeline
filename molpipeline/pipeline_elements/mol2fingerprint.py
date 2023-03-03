@@ -9,12 +9,12 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 
 from molpipeline.pipeline_elements.abstract_pipeline_elements import (
-    Mol2Fingerprint as _Mol2Fingerprint,
+    Mol2FingerprintPipe as _Mol2FingerprintPipe,
 )
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 
-class _BaseMorganFingerprint(_Mol2Fingerprint):
+class _BaseMorganFingerprintPipe(_Mol2FingerprintPipe):
     def __init__(self, radius: int = 2, use_features: bool = False, name: str = "AbstractMorgan"):
         super().__init__(name)
         self._use_features = use_features
@@ -48,7 +48,7 @@ class _BaseMorganFingerprint(_Mol2Fingerprint):
         return result_dict
 
 
-class Mol2FoldedMorganFingerprint(_BaseMorganFingerprint):
+class Mol2FoldedMorganFingerprintPipe(_BaseMorganFingerprintPipe):
     def __init__(
         self,
         radius: int = 2,
@@ -82,7 +82,7 @@ class Mol2FoldedMorganFingerprint(_BaseMorganFingerprint):
         return bi
 
 
-class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
+class Mol2UnfoldedMorganFingerprintPipe(_BaseMorganFingerprintPipe):
     """Transforms smiles-strings or molecular objects into unfolded bit-vectors based on Morgan-fingerprints [1].
     Features are mapped to bits based on the amount of molecules they occur in.
 

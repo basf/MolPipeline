@@ -1,6 +1,8 @@
 """Defines the pipeline which handles pipeline elements."""
+from __future__ import annotations
+
 import multiprocessing
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Optional, Union
 
 from molpipeline.pipeline_elements.abstract_pipeline_elements import AnyPipeElement
 from molpipeline.utils.multi_proc import check_available_cores
@@ -21,6 +23,10 @@ class MolPipeline:
     @n_jobs.setter
     def n_jobs(self, requested_jobs: int) -> None:
         self._n_jobs = check_available_cores(requested_jobs)
+
+    @property
+    def pipeline_elements(self) -> list[AnyPipeElement]:
+        return self._pipeline_element_list
 
     def finish(self) -> None:
         for p_element in self._pipeline_element_list:  # type: AnyPipeElement
@@ -70,3 +76,17 @@ class MolPipeline:
             for value in x_input:
                 yield self.transform_single(value)
         self.finish()
+
+    def __getitem__(self, index: slice) -> MolPipeline:
+        element_slice = self.pipeline_elements[index]
+        return MolPipeline(element_slice, self.n_jobs)
+
+    def __add__(self, other: Union[AnyPipeElement, MolPipeline]) -> MolPipeline:
+        pipeline_element_list = [x for x in self.pipeline_elements]
+        if isinstance(other, AnyPipeElement):
+            pipeline_element_list.append(other)
+        elif isinstance(other, MolPipeline):
+            pipeline_element_list.extend(other.pipeline_elements)
+        else:
+            raise TypeError(f"{type(other)} not supported for addition!")
+        return MolPipeline(pipeline_element_list, self.n_jobs)

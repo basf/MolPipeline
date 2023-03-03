@@ -66,18 +66,18 @@ class Mol2MolPipe(AnyPipeElement):
             return self.transform_single(mol)
 
 
-class Any2Mol(AnyPipeElement):
+class Any2MolPipe(AnyPipeElement):
     _output_type = Chem.Mol
 
     def __init__(self, name: str = "Any2Mol") -> None:
-        super(Any2Mol, self).__init__(name)
+        super(Any2MolPipe, self).__init__(name)
 
     @abc.abstractmethod
     def transform(self, any_input: Any) -> list[OptionalMol]:
         """Transform the list of molecules to an array."""
 
 
-class Mol2Any(AnyPipeElement):
+class Mol2AnyPipe(AnyPipeElement):
     _input_type = Chem.Mol
 
     @abc.abstractmethod
@@ -85,7 +85,7 @@ class Mol2Any(AnyPipeElement):
         """Transform the list of molecules to output of any type."""
 
 
-class Mol2Fingerprint(Mol2Any):
+class Mol2FingerprintPipe(Mol2AnyPipe):
     _n_bits: int
     _output_type = sparse.csr_matrix
 
@@ -117,7 +117,7 @@ class Mol2Fingerprint(Mol2Any):
         """
 
 
-class Mol2Descriptor(Mol2Any):
+class Mol2DescriptorPipe(Mol2AnyPipe):
     @abc.abstractmethod
     def transform(self, mol_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to numpy array."""

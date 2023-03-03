@@ -8,7 +8,13 @@ from molpipeline.utils.molpipe_types import OptionalMol
 
 
 class ReactionPipe(Mol2MolPipe):
-    def __init__(self, reaction: AllChem.ChemicalReaction, additive_list: list[Chem.Mol]):
+    def __init__(
+        self,
+        reaction: AllChem.ChemicalReaction,
+        additive_list: list[Chem.Mol],
+        name: str = "ReactionPipe",
+    ) -> None:
+        super.__init__(name)
         self.reaction = reaction
         self.additive_list = additive_list
 
