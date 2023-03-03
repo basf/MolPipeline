@@ -8,7 +8,9 @@ from scipy import sparse
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from molpipeline.pipeline_elements.abstract_pipeline_elements import Mol2Fingerprint as _Mol2Fingerprint
+from molpipeline.pipeline_elements.abstract_pipeline_elements import (
+    Mol2Fingerprint as _Mol2Fingerprint,
+)
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 
@@ -48,11 +50,11 @@ class _BaseMorganFingerprint(_Mol2Fingerprint):
 
 class Mol2FoldedMorganFingerprint(_BaseMorganFingerprint):
     def __init__(
-            self,
-            radius: int = 2,
-            use_features: bool = False,
-            n_bits: int = 2048,
-            name: str = "Mol2FoldedMorganFingerprint"
+        self,
+        radius: int = 2,
+        use_features: bool = False,
+        n_bits: int = 2048,
+        name: str = "Mol2FoldedMorganFingerprint",
     ) -> None:
         super().__init__(radius=radius, use_features=use_features, name=name)
         if isinstance(n_bits, int) and n_bits >= 0:
@@ -104,7 +106,7 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
         use_features: bool = False,
         counted: bool = False,
         ignore_unknown: bool = False,
-        name: str = "Mol2UnfoldedMorganFingerprint"
+        name: str = "Mol2UnfoldedMorganFingerprint",
     ):
         """Initializes the class
         Parameters
@@ -184,7 +186,7 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
         return hash_count_list
 
     def _map_feature_dict(self, feature_count_dict: dict[int, int]) -> dict[int, int]:
-        """ Transform a dict of feature hash and occurrence to a dict of bit-pos and occurence.
+        """Transform a dict of feature hash and occurrence to a dict of bit-pos and occurence.
 
         Parameters
         ----------
@@ -216,4 +218,3 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
         if not self.counted:
             morgan_feature_count_dict = {f_hash: 1 for f_hash in morgan_feature_count_dict}
         return morgan_feature_count_dict
-

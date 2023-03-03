@@ -30,7 +30,7 @@ class ReactionPipe(Mol2MolPipe):
         # TODO: handle multiple products
         if len(product_list) > 1:
             pass
-            #warnings.warn("Not able to handle multiple reactions. An arbriraty reaction is selected.")
+            # warnings.warn("Not able to handle multiple reactions. An arbriraty reaction is selected.")
         if len(product_list) == 0:
             return None
         product = product_list[0][0]

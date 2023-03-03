@@ -79,6 +79,7 @@ class Any2Mol(AnyPipeElement):
 
 class Mol2Any(AnyPipeElement):
     _input_type = Chem.Mol
+
     @abc.abstractmethod
     def transform(self, mol_list: list[Chem.Mol]) -> Any:
         """Transform the list of molecules to output of any type."""
@@ -93,7 +94,7 @@ class Mol2Fingerprint(Mol2Any):
         """Number of bits in (or size of) fingerprint."""
         return self._n_bits
 
-    def collect_singles(self, row_dict_iterable:  Iterable[dict[int, int]]) -> sparse.csr_matrix:
+    def collect_singles(self, row_dict_iterable: Iterable[dict[int, int]]) -> sparse.csr_matrix:
         """Transform output of all transform_single operations to matrix."""
         return sparse_from_index_value_dicts(row_dict_iterable, self._n_bits)
 

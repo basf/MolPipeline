@@ -27,18 +27,18 @@ class MolPipeline:
             p_element.finish()
 
     def fit(
-            self,
-            x_input: Any,
-            y_input: Any = None,
-            **fit_params: dict[Any, Any],
-            ) -> None:
+        self,
+        x_input: Any,
+        y_input: Any = None,
+        **fit_params: dict[Any, Any],
+    ) -> None:
         self.fit_transform(x_input)
 
     def fit_transform(
-            self,
-            x_input: Any,
-            y_input: Any = None,
-            **fit_params: dict[str, Any],
+        self,
+        x_input: Any,
+        y_input: Any = None,
+        **fit_params: dict[str, Any],
     ) -> Any:
 
         iter_input = x_input
@@ -55,7 +55,9 @@ class MolPipeline:
     def transform(self, x_input: Any) -> Any:
         last_element = self._pipeline_element_list[-1]
         if hasattr(last_element, "collect_singles"):
-            return last_element.collect_singles((single for single in self._transform_iterator(x_input)))
+            return last_element.collect_singles(
+                (single for single in self._transform_iterator(x_input))
+            )
         else:
             return list(self._transform_iterator(x_input))
 

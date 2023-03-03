@@ -32,10 +32,7 @@ class PipelineTest(unittest.TestCase):
     def test_fit_transform_single_core(self) -> None:
         # Create pipeline
         pipeline = MolPipeline(
-            [
-                Smiles2Mol(),
-                Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
-            ]
+            [Smiles2Mol(), Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)]
         )
 
         # Run pipeline
@@ -46,10 +43,7 @@ class PipelineTest(unittest.TestCase):
 
     def test_sklearn_pipeline(self) -> None:
         m_pipeline = MolPipeline(
-            [
-                Smiles2Mol(),
-                Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
-            ]
+            [Smiles2Mol(), Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)]
         )
         d_tree = DecisionTreeClassifier()
         s_pipeline = SkPipeline(
@@ -64,5 +58,5 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(pred_val, true_val)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

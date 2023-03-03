@@ -5,7 +5,7 @@ import warnings
 
 
 def check_available_cores(n_requested_cores: int) -> int:
-    """ Compare number of requested cores with available cores and return a (corrected) number.
+    """Compare number of requested cores with available cores and return a (corrected) number.
 
     Parameters
     ----------

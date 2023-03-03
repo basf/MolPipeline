@@ -11,6 +11,7 @@ class AtomEnvironment:
 
 class CircularAtomEnvironment(AtomEnvironment):
     """ "A Class to store environment-information for morgan-fingerprint features"""
+
     def __init__(self, central_atom: int, radius: int, environment_atoms: set[int]):
         super().__init__(environment_atoms)
         self.central_atom = central_atom
@@ -18,8 +19,9 @@ class CircularAtomEnvironment(AtomEnvironment):
 
     @classmethod
     def from_mol(
-            cls, mol: Chem.Mol, central_atom_index: int, radius: int) -> CircularAtomEnvironment:
-        """ Generate class from mol, using location (central_atom_index) and the radius.
+        cls, mol: Chem.Mol, central_atom_index: int, radius: int
+    ) -> CircularAtomEnvironment:
+        """Generate class from mol, using location (central_atom_index) and the radius.
 
         Parameters
         ----------
@@ -46,8 +48,7 @@ class CircularAtomEnvironment(AtomEnvironment):
 
 
 def bit2atom_mapping(
-        mol_obj: Chem.Mol,
-        bit_dict: dict[int, list[tuple[int, int]]]
+    mol_obj: Chem.Mol, bit_dict: dict[int, list[tuple[int, int]]]
 ) -> dict[int, list[CircularAtomEnvironment]]:
 
     result_dict: dict[int, list[CircularAtomEnvironment]] = dict()

@@ -7,7 +7,7 @@ from molpipeline.utils.molpipe_types import OptionalMol
 
 
 class Smiles2Mol(Any2Mol):
-    def __init__(self, identifier: str = "smiles", name: str ="smiles2Mol") -> None:
+    def __init__(self, identifier: str = "smiles", name: str = "smiles2Mol") -> None:
         self.identifier = identifier
         super().__init__(name)
 
