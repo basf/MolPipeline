@@ -22,25 +22,30 @@ class MolPipeline:
     def n_jobs(self, requested_jobs: int) -> None:
         self._n_jobs = check_available_cores(requested_jobs)
 
-    def fit(self, x_input: Any, y_input: Any = None, groups: Any = None) -> None:
-        self.fit_transform(x_input, y_input, groups)
+    def fit(
+            self,
+            x_input: Any,
+            y_input: Any = None,
+            **fit_params: dict[Any, Any],
+            ) -> None:
+        self.fit_transform(x_input)
 
     def fit_transform(
             self,
             x_input: Any,
             y_input: Any = None,
-            groups: Any = None
-    ) -> tuple[Any, Any, Any]:
+            **fit_params: dict[str, Any],
+    ) -> Any:
 
         iter_input = x_input
         for p_element in self._pipeline_element_list:
             iter_input = p_element.fit_transform(iter_input)  # TODO: Parallel processing
-        return iter_input, y_input, groups
+        return iter_input
 
     def transform_single(self, input_value: Any) -> Any:
         iter_value = input_value
-        for p_element in self._pipeline_element_list:
-            iter_value = p_element.transform(iter_value)
+        for p_element in self._pipeline_element_list:  # type: AnyPipeElement
+            iter_value = p_element.transform_single(iter_value)
         return iter_value
 
     def transform(self, x_input: Any) -> Any:

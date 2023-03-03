@@ -38,6 +38,10 @@ class AnyPipeElement(abc.ABC):
         """Return the output type"""
         return self._output_type
 
+    @abc.abstractmethod
+    def transform_single(self, mol: Chem.Mol) -> OptionalMol:
+        """Transform the molecule according to child dependent rules."""
+
 
 class Mol2MolPipe(AnyPipeElement):
     _input_type = Chem.Mol
@@ -52,10 +56,6 @@ class Mol2MolPipe(AnyPipeElement):
             return None
         else:
             return self.transform_single(mol)
-
-    @abc.abstractmethod
-    def transform_single(self, mol: Chem.Mol) -> OptionalMol:
-        """Transform the molecule according to child dependent rules."""
 
 
 class Any2Mol(AnyPipeElement):
