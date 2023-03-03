@@ -22,6 +22,10 @@ class MolPipeline:
     def n_jobs(self, requested_jobs: int) -> None:
         self._n_jobs = check_available_cores(requested_jobs)
 
+    def finish(self) -> None:
+        for p_element in self._pipeline_element_list:  # type: AnyPipeElement
+            p_element.finish()
+
     def fit(
             self,
             x_input: Any,
@@ -63,3 +67,4 @@ class MolPipeline:
         else:
             for value in x_input:
                 yield self.transform_single(value)
+        self.finish()

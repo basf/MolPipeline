@@ -15,18 +15,10 @@ from molpipeline.utils.matrices import sparse_from_index_value_dicts
 class AnyPipeElement(abc.ABC):
     _input_type: type
     _output_type: type
-    @abc.abstractmethod
-    def fit(self, input_values: Any) -> None:
-        """Fit object to input_values."""
+    name: str
 
-    @abc.abstractmethod
-    def transform(self, input_values: Any) -> Any:
-        """Transform input_values according to object rules."""
-
-    def fit_transform(self, input_values: Any) -> Any:
-        """Apply fit function and subsequently transform the input"""
-        self.fit(input_values)
-        return self.transform(input_values)
+    def __init__(self, name: str = "AnyPipeElement") -> None:
+        self.name = name
 
     @property
     def input_type(self) -> type:
@@ -37,6 +29,22 @@ class AnyPipeElement(abc.ABC):
     def output_type(self) -> type:
         """Return the output type"""
         return self._output_type
+
+    def finish(self) -> None:
+        pass
+
+    @abc.abstractmethod
+    def fit(self, input_values: Any) -> None:
+        """Fit object to input_values."""
+
+    def fit_transform(self, input_values: Any) -> Any:
+        """Apply fit function and subsequently transform the input"""
+        self.fit(input_values)
+        return self.transform(input_values)
+
+    @abc.abstractmethod
+    def transform(self, input_values: Any) -> Any:
+        """Transform input_values according to object rules."""
 
     @abc.abstractmethod
     def transform_single(self, mol: Chem.Mol) -> OptionalMol:
@@ -60,6 +68,9 @@ class Mol2MolPipe(AnyPipeElement):
 
 class Any2Mol(AnyPipeElement):
     _output_type = Chem.Mol
+
+    def __init__(self, name: str = "Any2Mol") -> None:
+        super(Any2Mol, self).__init__(name)
 
     @abc.abstractmethod
     def transform(self, any_input: Any) -> list[OptionalMol]:
