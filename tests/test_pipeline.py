@@ -3,10 +3,10 @@ from scipy import sparse
 from rdkit import Chem
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
 
-from molpipe.pipeline import MolPipeline
-from molpipe.pipe_elements.any2mol import Smiles2Mol
-from molpipe.pipe_elements.mol2fingerprint import Mol2FoldedMorganFingerprint
-from molpipe.utils.matrices import are_equal
+from molpipeline.pipeline import MolPipeline
+from molpipeline.pipeline_elements.any2mol import Smiles2Mol
+from molpipeline.pipeline_elements.mol2fingerprint import Mol2FoldedMorganFingerprint
+from molpipeline.utils.matrices import are_equal
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(=O)O"]
 FP_RADIUS = 2

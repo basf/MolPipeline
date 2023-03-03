@@ -8,8 +8,8 @@ import numpy.typing as npt
 from rdkit import Chem
 from scipy import sparse
 
-from molpipe.utils.molpipe_types import OptionalMol
-from molpipe.utils.matrices import sparse_from_index_value_dicts
+from molpipeline.utils.molpipe_types import OptionalMol
+from molpipeline.utils.matrices import sparse_from_index_value_dicts
 
 
 class AnyPipeElement(abc.ABC):

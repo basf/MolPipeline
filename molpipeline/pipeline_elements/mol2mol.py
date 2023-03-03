@@ -3,8 +3,8 @@
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from molpipe.pipe_elements.abstract_pipe import Mol2MolPipe
-from molpipe.utils.molpipe_types import OptionalMol
+from molpipeline.pipeline_elements.abstract_pipeline_elements import Mol2MolPipe
+from molpipeline.utils.molpipe_types import OptionalMol
 
 
 class ReactionPipe(Mol2MolPipe):

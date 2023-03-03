@@ -1,7 +1,7 @@
 from rdkit import Chem
 
-from molpipe.pipe_elements.abstract_pipe import Any2Mol
-from molpipe.utils.molpipe_types import OptionalMol
+from molpipeline.pipeline_elements.abstract_pipeline_elements import Any2Mol
+from molpipeline.utils.molpipe_types import OptionalMol
 
 
 class Smiles2Mol(Any2Mol):

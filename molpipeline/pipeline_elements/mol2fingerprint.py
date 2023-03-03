@@ -8,8 +8,8 @@ from scipy import sparse
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from molpipe.pipe_elements.abstract_pipe import Mol2Fingerprint
-from molpipe.utils.substructure_handling import AtomEnvironment, CircularAtomEnvironment
+from molpipeline.pipeline_elements.abstract_pipeline_elements import Mol2Fingerprint
+from molpipeline.utils.substructure_handling import AtomEnvironment, CircularAtomEnvironment
 
 
 class _BaseMorganFingerprint(Mol2Fingerprint):

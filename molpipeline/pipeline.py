@@ -2,8 +2,8 @@
 import multiprocessing
 from typing import Any, Iterable, Optional
 
-from molpipe.pipe_elements.abstract_pipe import AnyPipeElement
-from molpipe.utils.multi_proc import check_available_cores
+from molpipeline.pipeline_elements.abstract_pipeline_elements import AnyPipeElement
+from molpipeline.utils.multi_proc import check_available_cores
 
 
 class MolPipeline:
