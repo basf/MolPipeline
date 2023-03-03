@@ -7,7 +7,6 @@ from molpipeline.utils.molpipe_types import OptionalMol
 
 
 class Mol2SmilesPipe(_Mol2AnyPipe):
-
     def __init__(self, name: str = "Mol2Smiles"):
         super(Mol2SmilesPipe, self).__init__(name)
 

@@ -11,8 +11,7 @@ from molpipeline.pipeline_elements.mol2fingerprint import Mol2FoldedMorganFinger
 from molpipeline.pipeline_elements.standardize_mol import (
     RemoveChargePipe,
     MetalDisconnectorPipe,
-    SaltRemoverPipe
-
+    SaltRemoverPipe,
 )
 from molpipeline.pipeline_elements.mol2any import Mol2SmilesPipe
 from molpipeline.utils.matrices import are_equal
@@ -58,7 +57,11 @@ class PipelineTest(unittest.TestCase):
 
     def test_sliciing(self) -> None:
         pipeline_element_list = [
-            Smiles2MolPipe(), MetalDisconnectorPipe(), SaltRemoverPipe(), Mol2SmilesPipe()]
+            Smiles2MolPipe(),
+            MetalDisconnectorPipe(),
+            SaltRemoverPipe(),
+            Mol2SmilesPipe(),
+        ]
         m_pipeline = MolPipeline(pipeline_element_list)
 
         first_half = m_pipeline[:2]
@@ -70,7 +73,9 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(second_half.pipeline_elements[1] is pipeline_element_list[3])
 
         concatenated_pipeline = first_half + second_half
-        for concat_element, original_element in zip(concatenated_pipeline.pipeline_elements, pipeline_element_list):
+        for concat_element, original_element in zip(
+            concatenated_pipeline.pipeline_elements, pipeline_element_list
+        ):
             self.assertTrue(concat_element is original_element)
 
     def test_salt_removal(self) -> None:
@@ -83,13 +88,15 @@ class PipelineTest(unittest.TestCase):
                 MetalDisconnectorPipe(),
                 SaltRemoverPipe(),
                 RemoveChargePipe(),
-                Mol2SmilesPipe()
-
+                Mol2SmilesPipe(),
             ]
         )
         generated_smiles = salt_remover_pipeline.transform(smiles_with_salt_list)
-        for generated_smiles, smiles_without_salt in zip(generated_smiles, smiles_without_salt_list):
+        for generated_smiles, smiles_without_salt in zip(
+            generated_smiles, smiles_without_salt_list
+        ):
             self.assertEqual(generated_smiles, smiles_without_salt)
+
 
 if __name__ == "__main__":
     unittest.main()
