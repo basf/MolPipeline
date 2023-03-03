@@ -17,6 +17,8 @@ def check_available_cores(n_requested_cores: int) -> int:
     int
         Number of used cores.
     """
+    if not isinstance(n_requested_cores, int):
+        raise TypeError(f"Not an integer: {n_requested_cores}")
     try:
         n_available_cores = multiprocessing.cpu_count()
     except ModuleNotFoundError:
