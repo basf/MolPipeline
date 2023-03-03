@@ -6,8 +6,9 @@ from rdkit import Chem
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
 
 from molpipeline.pipeline import MolPipeline
-from molpipeline.pipeline_elements.any2mol import Smiles2Mol
-from molpipeline.pipeline_elements.mol2fingerprint import Mol2FoldedMorganFingerprint
+from molpipeline.pipeline_elements.any2mol import Smiles2MolPipe
+from molpipeline.pipeline_elements.mol2fingerprint import Mol2FoldedMorganFingerprintPipe
+from molpipeline.pipeline_elements.mol2mol import ReactionPipe
 from molpipeline.utils.matrices import are_equal
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
@@ -32,7 +33,7 @@ class PipelineTest(unittest.TestCase):
     def test_fit_transform_single_core(self) -> None:
         # Create pipeline
         pipeline = MolPipeline(
-            [Smiles2Mol(), Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)]
+            [Smiles2MolPipe(), Mol2FoldedMorganFingerprintPipe(radius=FP_RADIUS, n_bits=FP_SIZE)]
         )
 
         # Run pipeline
@@ -43,7 +44,7 @@ class PipelineTest(unittest.TestCase):
 
     def test_sklearn_pipeline(self) -> None:
         m_pipeline = MolPipeline(
-            [Smiles2Mol(), Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)]
+            [Smiles2MolPipe(), Mol2FoldedMorganFingerprintPipe(radius=FP_RADIUS, n_bits=FP_SIZE)]
         )
         d_tree = DecisionTreeClassifier()
         s_pipeline = SkPipeline(
@@ -56,6 +57,9 @@ class PipelineTest(unittest.TestCase):
         predicted_value_array = s_pipeline.predict(TEST_SMILES)
         for pred_val, true_val in zip(predicted_value_array, CONTAINS_OX):
             self.assertEqual(pred_val, true_val)
+
+    def test_sliciing(self) -> None:
+        pipeline_element_list = [Smiles2MolPipe()]
 
 
 if __name__ == "__main__":
