@@ -13,8 +13,8 @@ from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 
 class _BaseMorganFingerprint(_Mol2Fingerprint):
-    def __init__(self, radius: int = 2, use_features: bool = False):
-        super().__init__()
+    def __init__(self, radius: int = 2, use_features: bool = False, name: str = "AbstractMorgan"):
+        super().__init__(name)
         self._use_features = use_features
         if isinstance(radius, int) and radius >= 0:
             self._radius = radius
@@ -47,8 +47,14 @@ class _BaseMorganFingerprint(_Mol2Fingerprint):
 
 
 class Mol2FoldedMorganFingerprint(_BaseMorganFingerprint):
-    def __init__(self, radius: int = 2, use_features: bool = False, n_bits: int = 2048):
-        super().__init__(radius=radius, use_features=use_features)
+    def __init__(
+            self,
+            radius: int = 2,
+            use_features: bool = False,
+            n_bits: int = 2048,
+            name: str = "Mol2FoldedMorganFingerprint"
+    ) -> None:
+        super().__init__(radius=radius, use_features=use_features, name=name)
         if isinstance(n_bits, int) and n_bits >= 0:
             self._n_bits = n_bits
         else:
@@ -98,6 +104,7 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
         use_features: bool = False,
         counted: bool = False,
         ignore_unknown: bool = False,
+        name: str = "Mol2UnfoldedMorganFingerprint"
     ):
         """Initializes the class
         Parameters
@@ -115,7 +122,7 @@ class Mol2UnfoldedMorganFingerprint(_BaseMorganFingerprint):
             [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
         """
-        super().__init__(radius=radius, use_features=use_features)
+        super().__init__(radius=radius, use_features=use_features, name=name)
         self._bit_mapping = None
 
         if not isinstance(counted, bool):
