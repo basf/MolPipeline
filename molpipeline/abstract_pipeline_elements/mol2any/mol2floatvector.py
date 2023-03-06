@@ -9,10 +9,23 @@ import numpy.typing as npt
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
+from molpipeline.utils.multi_proc import wrap_parallelizable_task
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
+    _normalize: bool
+    _mean: npt.NDArray[np.float_]
+    _std: npt.NDArray[np.float_]
+
+    def __init__(
+            self,
+            normalize: bool = True,
+            name: str ="MolToDescriptorPipelineElement",
+            n_jobs: int = 1
+    ) -> None:
+        super().__init__(name=name, n_jobs=n_jobs)
+        self._normalize = normalize
 
     @staticmethod
     def assemble_output(
@@ -21,12 +34,28 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """Transform output of all transform_single operations to matrix."""
         return np.vstack(list(value_list))
 
+    def fit(self, value_list: list[Chem.Mol]) -> None:
+        self.fit_transform(value_list)
+
+    def fit_transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
+        array_list = wrap_parallelizable_task(self._transform_single, value_list, self.n_jobs)
+        value_matrix = self.assemble_output(array_list)
+        self._mean = value_matrix.mean(axis=1)
+        self._std = value_matrix.std(axis=1)
+        return (value_matrix - self._mean) / self._std
+
     def transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix."""
         return self.assemble_output(super().transform(value_list))
 
-    @abc.abstractmethod
     def transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
+        if self._normalize:
+            return (self._transform_single(value) - self._mean) / self._std
+        else:
+            return self._transform_single(value)
+
+    @abc.abstractmethod
+    def _transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters
