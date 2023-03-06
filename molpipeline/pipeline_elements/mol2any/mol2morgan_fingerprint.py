@@ -174,7 +174,7 @@ class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         mapped_feature_count_dicts = [
             self._map_feature_dict(f_dict) for f_dict in hash_count_list
         ]
-        return self.collect_rows(mapped_feature_count_dicts)
+        return self.assemble_output(mapped_feature_count_dicts)
 
     def _transform_single(self, value: Chem.Mol) -> dict[int, int]:
         """Return a dict, where the key is the feature-position and the value is the count."""

@@ -99,8 +99,8 @@ class MolPipeline:
     def transform(self, x_input: Any) -> Any:
         """Transform the input according to the sequence of provided PipelineElements."""
         last_element = self._pipeline_element_list[-1]
-        if hasattr(last_element, "collect_rows"):
-            return last_element.collect_rows(
+        if hasattr(last_element, "assemble_output"):
+            return last_element.assemble_output(
                 (single for single in self._transform_iterator(x_input))
             )
 

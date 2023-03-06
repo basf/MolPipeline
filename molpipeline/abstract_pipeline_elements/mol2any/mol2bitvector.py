@@ -24,7 +24,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         """Get number of bits in (or size of) fingerprint."""
         return self._n_bits
 
-    def collect_rows(
+    def assemble_output(
         self, row_dict_iterable: Iterable[dict[int, int]]
     ) -> sparse.csr_matrix:
         """Transform output of all transform_single operations to matrix."""
@@ -32,7 +32,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     def transform(self, value_list: list[Chem.Mol]) -> sparse.csr_matrix:
         """Transform the list of molecules to sparse matrix."""
-        return self.collect_rows(super().transform(value_list))
+        return self.assemble_output(super().transform(value_list))
 
     @abc.abstractmethod
     def _transform_single(self, value: Chem.Mol) -> dict[int, int]:
