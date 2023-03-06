@@ -1,10 +1,11 @@
 """Pipline elements for mol to mol transformations."""
+from __future__ import annotations
+
 from typing import Literal
 import warnings
 
 from rdkit import Chem
 from rdkit.Chem import AllChem
-
 
 from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
 from molpipeline.utils.molpipe_types import OptionalMol

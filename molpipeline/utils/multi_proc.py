@@ -1,4 +1,6 @@
 """Utility functions for multiprocessing."""
+from __future__ import annotations
+
 from typing import Any, Callable, Iterable
 
 import multiprocessing
