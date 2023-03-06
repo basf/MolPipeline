@@ -4,5 +4,8 @@ import unittest
 
 
 if __name__ == "__main__":
-    testsuite = unittest.TestLoader().discover(".")
-    unittest.TextTestRunner(verbosity=1).run(testsuite)
+    pipeline_test = unittest.TestLoader().discover(".")
+    unittest.TextTestRunner(verbosity=2).run(pipeline_test)
+
+    element_tests = unittest.TestLoader().discover("./test_elements")
+    unittest.TextTestRunner(verbosity=2).run(element_tests)

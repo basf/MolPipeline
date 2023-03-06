@@ -1,3 +1,5 @@
+"""Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
+
 from typing import Iterable
 
 import numpy as np
@@ -6,18 +8,20 @@ from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
-    MolToFingerprintPipelineElement
+    MolToFingerprintPipelineElement,
 )
 
 
 class MolToConcatenatedVector(MolToAnyPipelineElement):
+    """Creates a concatenated descriptor vectored from multiple MolToAny PipelineElements."""
+
     def __init__(
-            self,
-            pipeline_element_list: list[MolToAnyPipelineElement],
-            name: str = "MolToConcatenatedVector",
-            n_jobs: int = 1
+        self,
+        pipeline_element_list: list[MolToAnyPipelineElement],
+        name: str = "MolToConcatenatedVector",
+        n_jobs: int = 1,
     ) -> None:
-        """
+        """Initialize MolToConcatenatedVector.
 
         Parameters
         ----------
@@ -30,6 +34,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs)
         self._pipeline_element_list = pipeline_element_list
+        for pipeline_element in self._pipeline_element_list:
+            pipeline_element.n_jobs = self.n_jobs
 
     @staticmethod
     def assemble_output(
