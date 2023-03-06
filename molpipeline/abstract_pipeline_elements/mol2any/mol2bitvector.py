@@ -41,11 +41,11 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         Parameters
         ----------
         value: Chem.Mol
-
+            RDKit molecule which is encoded by the fingerprint.
         Returns
         -------
         dict[int, int]
-            Dictionary to encode row in matrix. Keys: column index, values: column value
+            Dictionary to encode row in matrix. Keys: column index, values: column value.
         """
 
 
