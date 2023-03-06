@@ -1,5 +1,6 @@
-rdkit
 numpy
+pandas
+rdkit
 scipy
 setuptools
 scikit-learn
