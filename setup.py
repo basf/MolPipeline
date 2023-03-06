@@ -10,5 +10,4 @@ setup(
     author="Christian W. Feldmann",
     author_email="christian-wolfgang.feldmann@basf.com",
     description="",
-    requires=["scikit-learn", "rdkit", "numpy", "scipy"],
 )
