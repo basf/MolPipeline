@@ -5,7 +5,9 @@ from rdkit import Chem
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
 
 
-def make_sparse_fp(smiles_list: list[str], radius: int, n_bits: int) -> sparse.csr_matrix:
+def make_sparse_fp(
+    smiles_list: list[str], radius: int, n_bits: int
+) -> sparse.csr_matrix:
     """Create a sparse Morgan fingerprint matrix from a list of SMILES.
 
     Used in Unittests.

@@ -3,7 +3,7 @@
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
-    StringToMolPipelineElement as _StringToMolPipelineElement
+    StringToMolPipelineElement as _StringToMolPipelineElement,
 )
 from molpipeline.utils.molpipe_types import OptionalMol
 
@@ -39,4 +39,3 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
             return None
         mol.SetProp("identifier", value)
         return mol
-

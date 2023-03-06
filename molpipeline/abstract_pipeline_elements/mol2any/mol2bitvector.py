@@ -1,3 +1,7 @@
+"""Abstract classes for transforming rdkit molecules to bit vectors."""
+
+from __future__ import annotations  # for all the python 3.8 users out there.
+
 import abc
 from typing import Iterable
 
@@ -20,7 +24,9 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         """Get number of bits in (or size of) fingerprint."""
         return self._n_bits
 
-    def collect_rows(self, row_dict_iterable: Iterable[dict[int, int]]) -> sparse.csr_matrix:
+    def collect_rows(
+        self, row_dict_iterable: Iterable[dict[int, int]]
+    ) -> sparse.csr_matrix:
         """Transform output of all transform_single operations to matrix."""
         return sparse_from_index_value_dicts(row_dict_iterable, self._n_bits)
 
@@ -53,12 +59,27 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
     ):
+        """Initialize abstract class.
+
+        Parameters
+        ----------
+        radius: int
+            Radius of fingerprint.
+        use_features: bool
+            Whether to represent atoms by element or category (donor, acceptor. etc.)
+        name: str
+            Name of PipelineElement.
+        n_jobs:
+            Number of jobs.
+        """
         super().__init__(name=name, n_jobs=n_jobs)
         self._use_features = use_features
         if isinstance(radius, int) and radius >= 0:
             self._radius = radius
         else:
-            raise ValueError(f"Number of bits has to be a positive integer! (Received: {radius})")
+            raise ValueError(
+                f"Number of bits has to be a positive integer! (Received: {radius})"
+            )
 
     @property
     def radius(self) -> int:
@@ -75,7 +96,9 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         """Get central atom and radius of all features in molecule."""
         raise NotImplementedError
 
-    def bit2atom_mapping(self, mol_obj: Chem.Mol) -> dict[int, list[CircularAtomEnvironment]]:
+    def bit2atom_mapping(
+        self, mol_obj: Chem.Mol
+    ) -> dict[int, list[CircularAtomEnvironment]]:
         """Obtain set of atoms for all features."""
         bit2atom_dict = self._explain_rdmol(mol_obj)
         result_dict: dict[int, list[CircularAtomEnvironment]] = {}

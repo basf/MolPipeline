@@ -4,7 +4,9 @@ from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline.pipeline import MolPipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import Mol2FoldedMorganFingerprint
+from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
+    Mol2FoldedMorganFingerprint,
+)
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     RemoveChargePipelineElement,
     MetalDisconnectorPipelineElement,

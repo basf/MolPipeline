@@ -31,7 +31,9 @@ def sparse_from_index_value_dicts(
         data.extend(row_dict.values())
         col_positions.extend(row_dict.keys())
         row_positions.extend([row_idx] * len(row_dict))
-    return sparse.csr_matrix((data, (row_positions, col_positions)), shape=(row_idx + 1, n_columns))
+    return sparse.csr_matrix(
+        (data, (row_positions, col_positions)), shape=(row_idx + 1, n_columns)
+    )
 
 
 def are_equal(matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix) -> bool:

@@ -1,3 +1,7 @@
+"""Implementations for the Morgan fingerprint."""
+
+from __future__ import annotations  # for all the python 3.8 users out there.
+
 from typing import Iterable
 
 import numpy as np
@@ -6,7 +10,7 @@ from rdkit.Chem import AllChem
 from scipy import sparse
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
-    ABCMorganFingerprintPipelineElement
+    ABCMorganFingerprintPipelineElement,
 )
 
 
@@ -46,11 +50,15 @@ class Mol2FoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
         """
-        super().__init__(radius=radius, use_features=use_features, name=name, n_jobs=n_jobs)
+        super().__init__(
+            radius=radius, use_features=use_features, name=name, n_jobs=n_jobs
+        )
         if isinstance(n_bits, int) and n_bits >= 0:
             self._n_bits = n_bits
         else:
-            raise ValueError(f"Number of bits has to be a positive integer! (Received: {n_bits})")
+            raise ValueError(
+                f"Number of bits has to be a positive integer! (Received: {n_bits})"
+            )
 
     def _transform_single(self, value: Chem.Mol) -> dict[int, int]:
         """Transform a single compound to a dictionary.
@@ -127,7 +135,9 @@ class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
         """
-        super().__init__(radius=radius, use_features=use_features, name=name, n_jobs=n_jobs)
+        super().__init__(
+            radius=radius, use_features=use_features, name=name, n_jobs=n_jobs
+        )
 
         if not isinstance(counted, bool):
             raise TypeError("The argument 'counted' must be a bool!")
@@ -146,7 +156,10 @@ class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         """Get central atom and radius of all features in molecule."""
         original_bit_info: dict[int, list[tuple[int, int]]] = {}
         _ = AllChem.GetMorganFingerprint(
-            mol_obj, self.radius, useFeatures=self.use_features, bitInfo=original_bit_info
+            mol_obj,
+            self.radius,
+            useFeatures=self.use_features,
+            bitInfo=original_bit_info,
         )
         bit_info = {self._bit_mapping[k]: v for k, v in original_bit_info.items()}
         return bit_info
@@ -158,7 +171,9 @@ class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
     def fit_transform(self, value_list: list[Chem.Mol]) -> sparse.csr_matrix:
         """Create a feature mapping based on input and apply it for transformation."""
         hash_count_list = self._fit(value_list)
-        mapped_feature_count_dicts = [self._map_feature_dict(f_dict) for f_dict in hash_count_list]
+        mapped_feature_count_dicts = [
+            self._map_feature_dict(f_dict) for f_dict in hash_count_list
+        ]
         return self.collect_rows(mapped_feature_count_dicts)
 
     def _transform_single(self, value: Chem.Mol) -> dict[int, int]:
@@ -169,18 +184,24 @@ class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
 
     def _create_mapping(self, feature_hash_dict_list: Iterable[dict[int, int]]) -> None:
         """Create a mapping from feature hash to bit position."""
-        unraveled_features = [f for f_dict in feature_hash_dict_list for f in f_dict.keys()]
+        unraveled_features = [
+            f for f_dict in feature_hash_dict_list for f in f_dict.keys()
+        ]
         feature_hash, count = np.unique(unraveled_features, return_counts=True)
         feature_hash_count_dict = dict(zip(feature_hash, count))
         unique_features = set(unraveled_features)
         feature_order = sorted(
             unique_features, key=lambda f: (feature_hash_count_dict[f], f), reverse=True
         )
-        self._bit_mapping = dict({feature: idx for idx, feature in enumerate(feature_order)})
+        self._bit_mapping = dict(
+            {feature: idx for idx, feature in enumerate(feature_order)}
+        )
         self._n_bits = len(self._bit_mapping)
 
     def _fit(self, mol_obj_list: list[Chem.Mol]) -> list[dict[int, int]]:
-        hash_count_list = [self._pretransform_single(mol_obj) for mol_obj in mol_obj_list]
+        hash_count_list = [
+            self._pretransform_single(mol_obj) for mol_obj in mol_obj_list
+        ]
         self._create_mapping(hash_count_list)
         return hash_count_list
 
@@ -201,7 +222,9 @@ class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             if bit_position is None:
                 if self.ignore_unknown:
                     continue
-                raise KeyError(f"This feature hash did not occur during training: {feature_hash}")
+                raise KeyError(
+                    f"This feature hash did not occur during training: {feature_hash}"
+                )
             mapped_count_dict[bit_position] = feature_count
         return mapped_count_dict
 
@@ -212,5 +235,7 @@ class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         )
         morgan_feature_count_dict: dict[int, int] = morgan_features.GetNonzeroElements()
         if not self.counted:
-            morgan_feature_count_dict = {f_hash: 1 for f_hash in morgan_feature_count_dict}
+            morgan_feature_count_dict = {
+                f_hash: 1 for f_hash in morgan_feature_count_dict
+            }
         return morgan_feature_count_dict

@@ -1,4 +1,5 @@
 """All abstract classes later pipeline elements inherit from."""
+from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 from typing import Any
@@ -63,7 +64,9 @@ class ABCPipelineElement(abc.ABC):
     @abc.abstractmethod
     def transform(self, value_list: Any) -> Any:
         """Transform input_values according to object rules."""
-        output_values = wrap_parallelizable_task(self.transform_single, value_list, self.n_jobs)
+        output_values = wrap_parallelizable_task(
+            self.transform_single, value_list, self.n_jobs
+        )
         self.finish()
         return output_values
 

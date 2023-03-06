@@ -71,7 +71,9 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
                     mol_id = mol.GetProp("identifier")
                 else:
                     mol_id = "None"
-                raise ValueError(f"Not able to handle multiple reactions: Mol ID: {mol_id}")
+                raise ValueError(
+                    f"Not able to handle multiple reactions: Mol ID: {mol_id}"
+                )
 
         if len(product_list) == 0:
             return None

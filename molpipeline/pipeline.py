@@ -14,7 +14,9 @@ class MolPipeline:
     _n_jobs: int
     _pipeline_element_list: list[ABCPipelineElement]
 
-    def __init__(self, pipeline_element_list: list[ABCPipelineElement], n_jobs: int = 1):
+    def __init__(
+        self, pipeline_element_list: list[ABCPipelineElement], n_jobs: int = 1
+    ):
         """Initialize MolPipeline."""
         self._pipeline_element_list = pipeline_element_list
         self.n_jobs = n_jobs
@@ -85,7 +87,7 @@ class MolPipeline:
         _ = y_input  # Making pylint happy
         _ = fit_params  # Making pylint happy
         for p_element in self._pipeline_element_list:
-            iter_input = p_element.fit_transform(iter_input)  # TODO: Parallel processing
+            iter_input = p_element.fit_transform(iter_input)
         return iter_input
 
     def _transform_single(self, input_value: Any) -> Any:

@@ -1,3 +1,5 @@
+"""Class for Transforming SDF-strings to rdkit molecules."""
+
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
@@ -12,7 +14,9 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
     identifier: str
     mol_counter: int
 
-    def __init__(self, identifier: str = "enumerate", name: str = "SDF2Mol", n_jobs: int = 1) -> None:
+    def __init__(
+        self, identifier: str = "enumerate", name: str = "SDF2Mol", n_jobs: int = 1
+    ) -> None:
         """Initialize SDFToMolPipelineElement.
 
         Parameters

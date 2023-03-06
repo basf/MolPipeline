@@ -1,3 +1,5 @@
+"""Abstract classes for transforming rdkit molecules to float vectors."""
+
 import abc
 from typing import Iterable
 
@@ -12,13 +14,15 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
 
     @staticmethod
-    def collect_rows(value_list: Iterable[npt.NDArray[np.float_]]) -> npt.NDArray[np.float_]:
+    def assemble_output(
+        value_list: Iterable[npt.NDArray[np.float_]],
+    ) -> npt.NDArray[np.float_]:
         """Transform output of all transform_single operations to matrix."""
-        return np.vstack(value_list)
+        return np.vstack(list(value_list))
 
     def transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix."""
-        return self.collect_rows(super().transform(value_list))
+        return self.assemble_output(super().transform(value_list))
 
     @abc.abstractmethod
     def transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:

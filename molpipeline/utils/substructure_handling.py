@@ -7,6 +7,7 @@ from __future__ import annotations
 from rdkit import Chem
 
 
+# pylint: disable=R0903
 class AtomEnvironment:
     """A Class to store environment-information for fingerprint features."""
 
@@ -21,6 +22,7 @@ class AtomEnvironment:
         self.environment_atoms = environment_atoms  # set of all atoms within radius
 
 
+# pylint: disable=R0903
 class CircularAtomEnvironment(AtomEnvironment):
     """A Class to store environment-information for morgan-fingerprint features."""
 
@@ -60,7 +62,9 @@ class CircularAtomEnvironment(AtomEnvironment):
         CircularAtomEnvironment
         """
         if radius == 0:
-            return CircularAtomEnvironment(central_atom_index, radius, {central_atom_index})
+            return CircularAtomEnvironment(
+                central_atom_index, radius, {central_atom_index}
+            )
 
         env = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, central_atom_index)
         amap: dict[int, int] = {}
