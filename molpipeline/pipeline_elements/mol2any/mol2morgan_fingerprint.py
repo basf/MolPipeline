@@ -1,67 +1,16 @@
-"""Classes for generating binary or counted fingerprint representations of molecules."""
-
-import abc
 from typing import Iterable
 
 import numpy as np
-from scipy import sparse
-
 from rdkit import Chem
 from rdkit.Chem import AllChem
+from scipy import sparse
 
-from molpipeline.pipeline_elements.abstract_pipeline_elements import (
-    MolToFingerprintPipelineElement as _MolToFingerprintPipelineElement,
+from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
+    ABCMorganFingerprintPipelineElement
 )
-from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 
-class _ABCMorganFingerprintPipelineElement(_MolToFingerprintPipelineElement):
-    """Abstract Class for Morgan fingerprints."""
-
-    def __init__(
-        self,
-        radius: int = 2,
-        use_features: bool = False,
-        name: str = "AbstractMorgan",
-        n_jobs: int = 1,
-    ):
-        super().__init__(name=name, n_jobs=n_jobs)
-        self._use_features = use_features
-        if isinstance(radius, int) and radius >= 0:
-            self._radius = radius
-        else:
-            raise ValueError(f"Number of bits has to be a positive integer! (Received: {radius})")
-
-    @property
-    def radius(self) -> int:
-        """Get radius of Morgan fingerprint."""
-        return self._radius
-
-    @property
-    def use_features(self) -> bool:
-        """Get whether to encode atoms by features or not."""
-        return self._use_features
-
-    @abc.abstractmethod
-    def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
-        """Get central atom and radius of all features in molecule."""
-        raise NotImplementedError
-
-    def bit2atom_mapping(self, mol_obj: Chem.Mol) -> dict[int, list[CircularAtomEnvironment]]:
-        """Obtain set of atoms for all features."""
-        bit2atom_dict = self.explain_rdmol(mol_obj)
-        result_dict: dict[int, list[CircularAtomEnvironment]] = {}
-        # Iterating over all present bits and respective matches
-        for bit, matches in bit2atom_dict.items():  # type: int, list[tuple[int, int]]
-            result_dict[bit] = []
-            for central_atom, radius in matches:  # type: int, int
-                env = CircularAtomEnvironment.from_mol(mol_obj, central_atom, radius)
-                result_dict[bit].append(env)
-        # Transforming default dict to dict
-        return result_dict
-
-
-class Mol2FoldedMorganFingerprint(_ABCMorganFingerprintPipelineElement):
+class Mol2FoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
     """Folded Morgan Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
@@ -103,7 +52,7 @@ class Mol2FoldedMorganFingerprint(_ABCMorganFingerprintPipelineElement):
         else:
             raise ValueError(f"Number of bits has to be a positive integer! (Received: {n_bits})")
 
-    def transform_single(self, value: Chem.Mol) -> dict[int, int]:
+    def _transform_single(self, value: Chem.Mol) -> dict[int, int]:
         """Transform a single compound to a dictionary.
 
         Keys denote the featreu position, values the count. Here always 1.
@@ -113,7 +62,7 @@ class Mol2FoldedMorganFingerprint(_ABCMorganFingerprintPipelineElement):
         )
         return {bit: 1 for bit in fingerprint_vector.GetOnBits()}
 
-    def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
+    def _explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule."""
         bit_info: dict[int, list[tuple[int, int]]] = {}
         _ = AllChem.GetMorganFingerprintAsBitVect(
@@ -126,7 +75,7 @@ class Mol2FoldedMorganFingerprint(_ABCMorganFingerprintPipelineElement):
         return bit_info
 
 
-class Mol2UnfoldedMorganFingerprint(_ABCMorganFingerprintPipelineElement):
+class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
     """Transforms smiles-strings or molecular objects into unfolded bit-vectors based on Morgan-fingerprints [1].
 
     Features are mapped to bits based on the amount of molecules they occur in.
@@ -193,7 +142,7 @@ class Mol2UnfoldedMorganFingerprint(_ABCMorganFingerprintPipelineElement):
         """Return whether the fingerprint is counted, or not."""
         return self._counted
 
-    def explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
+    def _explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule."""
         original_bit_info: dict[int, list[tuple[int, int]]] = {}
         _ = AllChem.GetMorganFingerprint(
@@ -212,7 +161,7 @@ class Mol2UnfoldedMorganFingerprint(_ABCMorganFingerprintPipelineElement):
         mapped_feature_count_dicts = [self._map_feature_dict(f_dict) for f_dict in hash_count_list]
         return self.collect_rows(mapped_feature_count_dicts)
 
-    def transform_single(self, value: Chem.Mol) -> dict[int, int]:
+    def _transform_single(self, value: Chem.Mol) -> dict[int, int]:
         """Return a dict, where the key is the feature-position and the value is the count."""
         feature_count_dict = self._pretransform_single(value)
         bit_count_dict = self._map_feature_dict(feature_count_dict)

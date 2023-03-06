@@ -6,7 +6,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 
 
-from molpipeline.pipeline_elements.abstract_pipeline_elements import MolToMolPipelineElement
+from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
 from molpipeline.utils.molpipe_types import OptionalMol
 
 

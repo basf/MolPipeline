@@ -4,7 +4,7 @@ from rdkit import Chem
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
-from molpipeline.pipeline_elements.abstract_pipeline_elements import (
+from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
 )
 from molpipeline.utils.molpipe_types import OptionalMol
@@ -17,7 +17,7 @@ class RemoveChargePipelineElement(_MolToMolPipelineElement):
         """Initialize RemoveChargePipelineElement."""
         super().__init__(name)
 
-    def transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
         """Remove charges of molecule."""
         return rdMolStandardize.ChargeParent(value)
 
@@ -30,7 +30,7 @@ class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
         super().__init__(name)
         self._metal_disconnector = rdMolStandardize.MetalDisconnector()
 
-    def transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
         """Cleave bonds with metals."""
         return self._metal_disconnector.Disconnect(value)
 
@@ -43,6 +43,6 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
         super().__init__(name)
         self._salt_remover = rdkit_SaltRemover.SaltRemover()
 
-    def transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
         """Remove metal ions."""
         return self._salt_remover.StripMol(value)

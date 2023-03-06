@@ -1,15 +1,10 @@
 """All abstract classes later pipeline elements inherit from."""
 
 import abc
-from typing import Any, Iterable
-
-import numpy as np
-import numpy.typing as npt
+from typing import Any
 from rdkit import Chem
-from scipy import sparse
 
 from molpipeline.utils.molpipe_types import OptionalMol
-from molpipeline.utils.matrices import sparse_from_index_value_dicts
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 
 
@@ -61,20 +56,26 @@ class ABCPipelineElement(abc.ABC):
         self.fit(value_list)
         return self.transform(value_list)
 
+    def transform_single(self, value: Any) -> Any:
+        """Transform the input to the new Output."""
+        return self._transform_single(value)
+
     @abc.abstractmethod
     def transform(self, value_list: Any) -> Any:
         """Transform input_values according to object rules."""
-        return wrap_parallelizable_task(self.transform_single, value_list, self.n_jobs)
-
-    @abc.abstractmethod
-    def transform_single(self, value: Any) -> Any:
-        """Transform the molecule according to child dependent rules."""
+        output_values = wrap_parallelizable_task(self.transform_single, value_list, self.n_jobs)
+        self.finish()
+        return output_values
 
     def finish(self) -> None:
         """Inform object that iteration has been finished. Does in most cases nothing.
 
         Called after all transform singles have been processed. From MolPipeline
         """
+
+    @abc.abstractmethod
+    def _transform_single(self, value: Any) -> Any:
+        """Transform the molecule according to child dependent rules."""
 
 
 class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
@@ -89,17 +90,18 @@ class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
 
     def transform(self, value_list: list[OptionalMol]) -> list[OptionalMol]:
         """Transform list of molecules to list of molecules."""
-        return wrap_parallelizable_task(self._transform_single_catch_nones, value_list, self.n_jobs)
+        mol_list: list[OptionalMol] = super().transform(value_list)  # Stupid mypy...
+        return mol_list
 
-    @abc.abstractmethod
-    def transform_single(self, value: Chem.Mol) -> OptionalMol:
-        """Transform the molecule according to child dependent rules."""
-
-    def _transform_single_catch_nones(self, value: OptionalMol) -> OptionalMol:
+    def transform_single(self, value: OptionalMol) -> OptionalMol:
         """Wrap the transform_single method to handle Nones."""
         if not value:
             return None
-        return self.transform_single(value)
+        return self._transform_single(value)
+
+    @abc.abstractmethod
+    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+        """Transform the molecule according to child dependent rules."""
 
 
 class AnyToMolPipelineElement(ABCPipelineElement, abc.ABC):
@@ -117,7 +119,7 @@ class AnyToMolPipelineElement(ABCPipelineElement, abc.ABC):
         return mol_list
 
     @abc.abstractmethod
-    def transform_single(self, value: Any) -> OptionalMol:
+    def _transform_single(self, value: Any) -> OptionalMol:
         """Transform the input specified in each child to molecules."""
 
 
@@ -131,66 +133,5 @@ class MolToAnyPipelineElement(ABCPipelineElement, abc.ABC):
         super().__init__(name=name, n_jobs=n_jobs)
 
     @abc.abstractmethod
-    def transform_single(self, value: Chem.Mol) -> Any:
+    def _transform_single(self, value: Chem.Mol) -> Any:
         """Transform the molecules to the input specified in each child."""
-
-
-class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
-    """Abstract class for PipelineElements which transform molecules to integer vectors."""
-
-    _n_bits: int
-    _output_type = sparse.csr_matrix
-
-    @property
-    def n_bits(self) -> int:
-        """Get number of bits in (or size of) fingerprint."""
-        return self._n_bits
-
-    def collect_rows(self, row_dict_iterable: Iterable[dict[int, int]]) -> sparse.csr_matrix:
-        """Transform output of all transform_single operations to matrix."""
-        return sparse_from_index_value_dicts(row_dict_iterable, self._n_bits)
-
-    def transform(self, value_list: list[Chem.Mol]) -> sparse.csr_matrix:
-        """Transform the list of molecules to sparse matrix."""
-        return self.collect_rows(super().transform(value_list))
-
-    @abc.abstractmethod
-    def transform_single(self, value: Chem.Mol) -> dict[int, int]:
-        """Transform mol to dict, where items encode columns indices and values, respectively.
-
-        Parameters
-        ----------
-        value: Chem.Mol
-
-        Returns
-        -------
-        dict[int, int]
-            Dictionary to encode row in matrix. Keys: column index, values: column value
-        """
-
-
-class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
-    """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
-
-    @staticmethod
-    def collect_rows(value_list: list[npt.NDArray[np.float_]]) -> npt.NDArray[np.float_]:
-        """Transform output of all transform_single operations to matrix."""
-        return np.vstack(value_list)
-
-    def transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
-        """Transform the list of molecules to sparse matrix."""
-        return self.collect_rows(super().transform(value_list))
-
-    @abc.abstractmethod
-    def transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
-        """Transform mol to dict, where items encode columns indices and values, respectively.
-
-        Parameters
-        ----------
-        value: Chem.Mol
-
-        Returns
-        -------
-        npt.NDArray[np.float_]
-            Vector with descriptor values of molecule.
-        """

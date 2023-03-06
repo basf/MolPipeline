@@ -4,7 +4,7 @@ from __future__ import annotations
 import multiprocessing
 from typing import Any, Union
 
-from molpipeline.pipeline_elements.abstract_pipeline_elements import ABCPipelineElement
+from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.utils.multi_proc import check_available_cores
 
 
