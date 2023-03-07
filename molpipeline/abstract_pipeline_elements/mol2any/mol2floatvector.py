@@ -61,14 +61,13 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         self._mean = value_matrix.mean(axis=0)
         self._std = value_matrix.std(axis=0)
         self._std[np.where(self._std == 0)] = 1
-        return self._normalize_matric(value_matrix)
+        return self._normalize_matrix(value_matrix)
 
-    def _normalize_matric(
+    def _normalize_matrix(
         self, value_matrix: npt.NDArray[np.float_]
     ) -> npt.NDArray[np.float_]:
         if self._normalize:
             scaled_matrix = (value_matrix - self._mean) / self._std
-            scaled_matrix[np.where(np.isnan(scaled_matrix))] = 0
             return scaled_matrix
         return value_matrix
 
@@ -79,7 +78,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     def transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
         """Normalize _transform_single if required."""
         if self._normalize:
-            return self._normalize_matric(self._transform_single(value))
+            return self._normalize_matrix(self._transform_single(value))
         return self._transform_single(value)
 
     @abc.abstractmethod

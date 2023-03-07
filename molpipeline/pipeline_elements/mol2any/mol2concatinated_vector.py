@@ -15,9 +15,11 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
 class MolToConcatenatedVector(MolToAnyPipelineElement):
     """Creates a concatenated descriptor vectored from multiple MolToAny PipelineElements."""
 
+    _component_list: list[MolToAnyPipelineElement]
+
     def __init__(
         self,
-        pipeline_element_list: list[MolToAnyPipelineElement],
+        component_list: list[MolToAnyPipelineElement],
         name: str = "MolToConcatenatedVector",
         n_jobs: int = 1,
     ) -> None:
@@ -25,7 +27,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        pipeline_element_list: list[MolToAnyPipelineElement]
+        component_list: list[MolToAnyPipelineElement]
             List of Pipeline Elements of which the output is concatenated.
         name: str
             name of pipeline.
@@ -33,9 +35,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Number of cores used.
         """
         super().__init__(name=name, n_jobs=n_jobs)
-        self._pipeline_element_list = pipeline_element_list
-        for pipeline_element in self._pipeline_element_list:
-            pipeline_element.n_jobs = self.n_jobs
+        self._component_list = component_list
+        for component in self._component_list:
+            component.n_jobs = self.n_jobs
+
+    @property
+    def component_list(self) -> list[MolToAnyPipelineElement]:
+        """Get component_list."""
+        return self._component_list[:]
 
     @staticmethod
     def assemble_output(
@@ -50,13 +57,13 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     def fit(self, value_list: list[Chem.Mol]) -> None:
         """Fit each pipeline element."""
-        for pipeline_element in self._pipeline_element_list:
+        for pipeline_element in self._component_list:
             pipeline_element.fit(value_list)
 
     def _transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
         """Get output of each element and concatenate for output."""
         final_vector = []
-        for pipeline_element in self._pipeline_element_list:
+        for pipeline_element in self._component_list:
             if isinstance(pipeline_element, MolToFingerprintPipelineElement):
                 bit_dict = pipeline_element.transform_single(value)
                 vector = np.zeros(pipeline_element.n_bits)

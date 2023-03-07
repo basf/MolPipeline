@@ -16,13 +16,11 @@ from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipeline
 
 class TestConcatenatedFingerprint(unittest.TestCase):
     def test_generation(self) -> None:
-        smi2mol = SmilesToMolPipelineElement()
-        property_element = MolToRDKitPhysChem(normalize=True)
-        morgan_element = Mol2FoldedMorganFingerprint()
-        concatenated_element = MolToConcatenatedVector(
-            [property_element, morgan_element]
+        concatenated_vector_element = MolToConcatenatedVector(
+            [MolToRDKitPhysChem(normalize=True), Mol2FoldedMorganFingerprint()]
         )
-        pipeline = MolPipeline([smi2mol, concatenated_element])
+        smi2mol = SmilesToMolPipelineElement()
+        pipeline = MolPipeline([smi2mol, concatenated_vector_element])
 
         smiles = [
             "CC",
@@ -42,13 +40,19 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         mol_list = [Chem.MolFromSmiles(smi) for smi in smiles]
         output3 = np.hstack(
             [
-                property_element.transform(mol_list),
-                morgan_element.transform(mol_list).toarray(),
+                concatenated_vector_element.component_list[0].transform(mol_list),
+                concatenated_vector_element.component_list[1]
+                .transform(mol_list)
+                .toarray(),
             ]
         )
+        pyschem_component: MolToRDKitPhysChem
+        pyschem_component = concatenated_vector_element.component_list[0]  # type: ignore
+        morgan_component: Mol2FoldedMorganFingerprint
+        morgan_component = concatenated_vector_element.component_list[1]  # type: ignore
         expected_shape = (
             len(smiles),
-            (property_element.n_features + morgan_element.n_bits),
+            (pyschem_component.n_features + morgan_component.n_bits),
         )
         self.assertTrue(output.shape == expected_shape)
         self.assertTrue(np.abs(output - output2).max() < 0.00001)
