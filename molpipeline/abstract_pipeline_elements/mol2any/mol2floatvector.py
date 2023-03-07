@@ -58,8 +58,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             self._transform_single, value_list, self.n_jobs
         )
         value_matrix = self.assemble_output(array_list)
-        self._mean = value_matrix.mean(axis=0)
-        self._std = value_matrix.std(axis=0)
+        self._mean = np.nanmean(value_matrix, axis=0)
+        self._std = np.nanstd(value_matrix, axis=0)
         self._std[np.where(self._std == 0)] = 1
         return self._normalize_matrix(value_matrix)
 
