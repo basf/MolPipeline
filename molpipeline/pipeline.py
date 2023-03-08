@@ -15,11 +15,15 @@ class MolPipeline:
     _pipeline_element_list: list[ABCPipelineElement]
 
     def __init__(
-        self, pipeline_element_list: list[ABCPipelineElement], n_jobs: int = 1
+        self,
+        pipeline_element_list: list[ABCPipelineElement],
+        n_jobs: int = 1,
+        name: str = "MolPipeline",
     ):
         """Initialize MolPipeline."""
         self._pipeline_element_list = pipeline_element_list
         self.n_jobs = n_jobs
+        self.name = name
 
     @property
     def n_jobs(self) -> int:
@@ -121,10 +125,15 @@ class MolPipeline:
                 yield self._transform_single(value)
         self._finish()
 
+    def copy(self) -> MolPipeline:
+        """Return a copy of the MolPipeline."""
+        return self[:]
+
     def __getitem__(self, index: slice) -> MolPipeline:
         """Get new MolPipeline with a slice of elements."""
         element_slice = self.pipeline_elements[index]
-        return MolPipeline(element_slice, self.n_jobs)
+        element_slice_copy = [element.copy() for element in element_slice]
+        return MolPipeline(element_slice_copy, self.n_jobs)
 
     def __add__(self, other: Union[ABCPipelineElement, MolPipeline]) -> MolPipeline:
         """Concatenate two Pipelines or add a PipelineElement."""

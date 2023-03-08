@@ -1,7 +1,9 @@
 """Pipline elements for mol to mol transformations."""
+# pylint: disable=too-many-arguments
+
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 import warnings
 
 from rdkit import Chem
@@ -24,6 +26,7 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         additive_list: list[Chem.Mol],
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
         name: str = "MolToMolReactionPipelineElement",
+        n_jobs: int = 1,
     ) -> None:
         """Initialize MolToMolReactionPipelineElement.
 
@@ -38,10 +41,21 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         name: str
             Name of PipelineElement
         """
-        super().__init__(name)
+        super().__init__(name, n_jobs)
         self.reaction = reaction
         self.additive_list = additive_list
         self.handle_multi = handle_multi
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all parameters defining the object."""
+        return {
+            "reaction": AllChem.ChemicalReaction(self.reaction),
+            "additive_list": [Chem.Mol(additive) for additive in self.additive_list],
+            "handle_multi": self.handle_multi,
+            "name": self.name,
+            "n_jobs": self.n_jobs,
+        }
 
     @property
     def reaction(self) -> AllChem.ChemicalReaction:
@@ -55,7 +69,11 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
             raise TypeError("Not a Chemical reaction!")
         self._reaction = reaction
 
-    def transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def copy(self) -> MolToMolReactionPipelineElement:
+        """Create a copy of the object."""
+        return MolToMolReactionPipelineElement(**self.params)
+
+    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
         """Apply reaction to molecule."""
         mol = value  # Only value to keep signature consistent.
         reactant_list: list[Chem.Mol] = list(self.additive_list)

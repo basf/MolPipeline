@@ -49,6 +49,15 @@ class ABCPipelineElement(abc.ABC):
         """Return the output type."""
         return self._output_type
 
+    @property
+    @abc.abstractmethod
+    def params(self) -> dict[str, Any]:
+        """Any parameter relevant for creating and exact copy."""
+
+    @abc.abstractmethod
+    def copy(self) -> ABCPipelineElement:
+        """Copy the object."""
+
     def fit(self, value_list: Any) -> None:
         """Fit object to input_values. Does often nothing."""
 

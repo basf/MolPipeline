@@ -1,5 +1,7 @@
 """Classes ment to transform given input to a RDKit molecule."""
+from __future__ import annotations
 
+from typing import Any
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
@@ -20,6 +22,15 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
             Name of PipelineElement
         """
         super().__init__(name=name, n_jobs=n_jobs)
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all parameters defining the object."""
+        return {"name": self.name, "n_jobs": self.n_jobs}
+
+    def copy(self) -> SmilesToMolPipelineElement:
+        """Create a copy of the object."""
+        return SmilesToMolPipelineElement(**self.params)
 
     def _transform_single(self, value: str) -> OptionalMol:
         """Transform Smiles string to molecule.

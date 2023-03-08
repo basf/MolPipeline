@@ -1,6 +1,6 @@
 """Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
 from __future__ import annotations
-from typing import Iterable
+from typing import Any, Iterable
 
 import numpy as np
 import numpy.typing as npt
@@ -43,6 +43,19 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     def component_list(self) -> list[MolToAnyPipelineElement]:
         """Get component_list."""
         return self._component_list[:]
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all parameters defining the object."""
+        return {
+            "component_list": [component.copy() for component in self.component_list],
+            "name": self.name,
+            "n_jobs": self.n_jobs,
+        }
+
+    def copy(self) -> MolToConcatenatedVector:
+        """Create a copy of the object."""
+        return MolToConcatenatedVector(**self.params)
 
     @staticmethod
     def assemble_output(

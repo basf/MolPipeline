@@ -1,5 +1,8 @@
 """Class for Transforming SDF-strings to rdkit molecules."""
 
+from __future__ import annotations
+from typing import Any
+
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
@@ -31,6 +34,15 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         super().__init__(name=name, n_jobs=n_jobs)
         self.identifier = identifier
         self.mol_counter = 0
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all parameters defining the object."""
+        return {"identifier": self.identifier, "name": self.name, "n_jobs": self.n_jobs}
+
+    def copy(self) -> SDFToMolPipelineElement:
+        """Create a copy of the object."""
+        return SDFToMolPipelineElement(**self.params)
 
     def finish(self) -> None:
         """Reset the mol counter which assigns identifiers."""

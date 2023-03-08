@@ -1,8 +1,10 @@
 """Abstract classes for transforming rdkit molecules to float vectors."""
+# pylint: disable=too-many-arguments
+
 from __future__ import annotations
 
 import abc
-from typing import Iterable
+from typing import Any, Iterable, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -24,6 +26,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         normalize: bool = True,
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
+        mean: Optional[npt.NDArray[np.float_]] = None,
+        std: Optional[npt.NDArray[np.float_]] = None,
     ) -> None:
         """Initialize MolToDescriptorPipelineElement.
 
@@ -35,6 +39,16 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs)
         self._normalize = normalize
+        if mean is not None:
+            if len(mean.shape) > 1:
+                raise ValueError("Expected a 1-dimensional vector as mean.")
+            if mean.shape[0] == self.n_features:
+                self._mean = mean
+        if std is not None:
+            if len(std.shape) > 1:
+                raise ValueError("Expected a 1-dimensional vector as std.")
+            if std.shape[0] == self.n_features:
+                self._std = std
 
     @property
     @abc.abstractmethod
@@ -47,6 +61,20 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     ) -> npt.NDArray[np.float_]:
         """Transform output of all transform_single operations to matrix."""
         return np.vstack(list(value_list))
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all parameters defining the object."""
+        param_dict = {
+            "normalize": self._normalize,
+            "name": self.name,
+            "n_jobs": self.n_jobs,
+        }
+        if hasattr(self, "_mean"):
+            param_dict["mean"] = self._mean
+        if hasattr(self, "_std"):
+            param_dict["std"] = self._std
+        return param_dict
 
     def fit(self, value_list: list[Chem.Mol]) -> None:
         """Fit object to data."""

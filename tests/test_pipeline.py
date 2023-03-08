@@ -5,7 +5,7 @@ from sklearn.tree import DecisionTreeClassifier
 from molpipeline.pipeline import MolPipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
-    Mol2FoldedMorganFingerprint,
+    MolToFoldedMorganFingerprint,
 )
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     RemoveChargePipelineElement,
@@ -31,7 +31,7 @@ class PipelineTest(unittest.TestCase):
         pipeline = MolPipeline(
             [
                 SmilesToMolPipelineElement(),
-                Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
+                MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
             ]
         )
 
@@ -45,7 +45,7 @@ class PipelineTest(unittest.TestCase):
         m_pipeline = MolPipeline(
             [
                 SmilesToMolPipelineElement(),
-                Mol2FoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
+                MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
             ]
         )
         d_tree = DecisionTreeClassifier()

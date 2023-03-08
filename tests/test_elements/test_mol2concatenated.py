@@ -9,7 +9,7 @@ from molpipeline.pipeline_elements.mol2any.mol2concatinated_vector import (
     MolToConcatenatedVector,
 )
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
-    Mol2FoldedMorganFingerprint,
+    MolToFoldedMorganFingerprint,
 )
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 
@@ -17,7 +17,7 @@ from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipeline
 class TestConcatenatedFingerprint(unittest.TestCase):
     def test_generation(self) -> None:
         concatenated_vector_element = MolToConcatenatedVector(
-            [MolToRDKitPhysChem(normalize=True), Mol2FoldedMorganFingerprint()]
+            [MolToRDKitPhysChem(normalize=True), MolToFoldedMorganFingerprint()]
         )
         smi2mol = SmilesToMolPipelineElement()
         pipeline = MolPipeline([smi2mol, concatenated_vector_element])
@@ -48,7 +48,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         )
         pyschem_component: MolToRDKitPhysChem
         pyschem_component = concatenated_vector_element.component_list[0]  # type: ignore
-        morgan_component: Mol2FoldedMorganFingerprint
+        morgan_component: MolToFoldedMorganFingerprint
         morgan_component = concatenated_vector_element.component_list[1]  # type: ignore
         expected_shape = (
             len(smiles),

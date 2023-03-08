@@ -1,6 +1,8 @@
 """Classes for encoding molecules as phys-chem vector."""
+# pylint: disable=too-many-arguments
+
 from __future__ import annotations
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -32,6 +34,8 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         normalize: bool = True,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
+        mean: Optional[npt.NDArray[np.float_]] = None,
+        std: Optional[npt.NDArray[np.float_]] = None,
     ) -> None:
         """Initialize MolToRDKitPhysChem.
 
@@ -42,9 +46,10 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         name: str
         n_jobs: int
         """
-        super().__init__(normalize=normalize, name=name, n_jobs=n_jobs)
-
         self._descriptor_list = descriptor_list or DEFAULT_DESCRIPTORS
+        super().__init__(
+            normalize=normalize, name=name, n_jobs=n_jobs, mean=mean, std=std
+        )
 
     @property
     def n_features(self) -> int:
@@ -55,6 +60,15 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
     def descriptor_list(self) -> list[str]:
         """Return a copy of the descriptor list."""
         return self._descriptor_list[:]
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all parameters defining the object."""
+        return super().params
+
+    def copy(self) -> MolToRDKitPhysChem:
+        """Create a copy of the object."""
+        return MolToRDKitPhysChem(**self.params)
 
     def _transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
         return np.array(

@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Iterable
+from typing import Any, Iterable, Optional
 
 import numpy as np
 from rdkit import Chem
@@ -14,7 +14,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
 )
 
 
-class Mol2FoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
+class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
     """Folded Morgan Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
@@ -60,6 +60,21 @@ class Mol2FoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
                 f"Number of bits has to be a positive integer! (Received: {n_bits})"
             )
 
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all parameters defining the object."""
+        return {
+            "radius": self.radius,
+            "use_features": self.use_features,
+            "n_bits": self.n_bits,
+            "name": self.name,
+            "n_jobs": self.n_jobs,
+        }
+
+    def copy(self) -> MolToFoldedMorganFingerprint:
+        """Create a copy of the object."""
+        return MolToFoldedMorganFingerprint(**self.params)
+
     def _transform_single(self, value: Chem.Mol) -> dict[int, int]:
         """Transform a single compound to a dictionary.
 
@@ -83,7 +98,7 @@ class Mol2FoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         return bit_info
 
 
-class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
+class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
     """Transforms smiles-strings or molecular objects into unfolded bit-vectors based on Morgan-fingerprints [1].
 
     Features are mapped to bits based on the amount of molecules they occur in.
@@ -111,6 +126,7 @@ class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         use_features: bool = False,
         counted: bool = False,
         ignore_unknown: bool = False,
+        bit_mapping: Optional[dict[int, int]] = None,
         name: str = "Mol2UnfoldedMorganFingerprint",
         n_jobs: int = 1,
     ):
@@ -146,11 +162,30 @@ class Mol2UnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         if not isinstance(ignore_unknown, bool):
             raise TypeError("The argument 'ignore_unknown' must be a bool!")
         self.ignore_unknown = ignore_unknown
+        if bit_mapping:
+            self._bit_mapping = bit_mapping
 
     @property
     def counted(self) -> bool:
         """Return whether the fingerprint is counted, or not."""
         return self._counted
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all parameters defining the object."""
+        return {
+            "radius": self.radius,
+            "use_features": self.use_features,
+            "counted": self.counted,
+            "ignore_unknown": self.ignore_unknown,
+            "name": self.name,
+            "n_jobs": self.n_jobs,
+            "bit_mapping": self._bit_mapping.copy(),
+        }
+
+    def copy(self) -> MolToUnfoldedMorganFingerprint:
+        """Create a copy of the object."""
+        return MolToUnfoldedMorganFingerprint(**self.params)
 
     def _explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule."""
