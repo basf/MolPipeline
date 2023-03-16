@@ -9,6 +9,7 @@ import numpy.typing as npt
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 
+from molpipeline.abstract_pipeline_elements.core import NONE_HANDLING_OPTIONS
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
@@ -34,6 +35,8 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         normalize: bool = True,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
+        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        fill_value: Any = None,
         mean: Optional[npt.NDArray[np.float_]] = None,
         std: Optional[npt.NDArray[np.float_]] = None,
     ) -> None:
@@ -48,7 +51,13 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         """
         self._descriptor_list = descriptor_list or DEFAULT_DESCRIPTORS
         super().__init__(
-            normalize=normalize, name=name, n_jobs=n_jobs, mean=mean, std=std
+            normalize=normalize,
+            name=name,
+            n_jobs=n_jobs,
+            none_handling=none_handling,
+            fill_value=fill_value,
+            mean=mean,
+            std=std,
         )
 
     @property

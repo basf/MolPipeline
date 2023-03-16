@@ -4,6 +4,7 @@ from typing import Any
 
 from rdkit import Chem
 
+from molpipeline.abstract_pipeline_elements.core import NONE_HANDLING_OPTIONS
 from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
     MolToStringPipelineElement as _MolToStringPipelineElement,
 )
@@ -12,7 +13,13 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
 class MolToSmilesPipelineElement(_MolToStringPipelineElement):
     """PipelineElement to transform a molecule to a SMILES string."""
 
-    def __init__(self, name: str = "Mol2Smiles", n_jobs: int = 1):
+    def __init__(
+        self,
+        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        fill_value: Any = None,
+        name: str = "Mol2Smiles",
+        n_jobs: int = 1,
+    ):
         """Initialize MolToSmilesPipelineElement.
 
         Parameters
@@ -20,12 +27,14 @@ class MolToSmilesPipelineElement(_MolToStringPipelineElement):
         name: str
             name of PipelineElement
         """
-        super().__init__(name, n_jobs=n_jobs)
+        super().__init__(
+            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
+        )
 
     @property
     def params(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        return {"name": self.name, "n_jobs": self.n_jobs}
+        return super().params
 
     def copy(self) -> MolToSmilesPipelineElement:
         """Create a copy of the object."""

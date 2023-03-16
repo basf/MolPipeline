@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Literal, Optional
 
 import numpy as np
 from rdkit import Chem
@@ -27,6 +27,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         radius: int = 2,
         use_features: bool = False,
         n_bits: int = 2048,
+        none_handling: Literal["raise", "record_remove"] = "raise",
         name: str = "Mol2FoldedMorganFingerprint",
         n_jobs: int = 1,
     ) -> None:
@@ -51,7 +52,11 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
         """
         super().__init__(
-            radius=radius, use_features=use_features, name=name, n_jobs=n_jobs
+            radius=radius,
+            use_features=use_features,
+            name=name,
+            n_jobs=n_jobs,
+            none_handling=none_handling,
         )
         if isinstance(n_bits, int) and n_bits >= 0:
             self._n_bits = n_bits
@@ -126,6 +131,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         use_features: bool = False,
         counted: bool = False,
         ignore_unknown: bool = False,
+        none_handling: Literal["raise", "record_remove"] = "raise",
         bit_mapping: Optional[dict[int, int]] = None,
         name: str = "Mol2UnfoldedMorganFingerprint",
         n_jobs: int = 1,
@@ -152,7 +158,11 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
         """
         super().__init__(
-            radius=radius, use_features=use_features, name=name, n_jobs=n_jobs
+            radius=radius,
+            use_features=use_features,
+            name=name,
+            n_jobs=n_jobs,
+            none_handling=none_handling,
         )
 
         if not isinstance(counted, bool):
@@ -173,15 +183,15 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
     @property
     def params(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        return {
-            "radius": self.radius,
-            "use_features": self.use_features,
-            "counted": self.counted,
-            "ignore_unknown": self.ignore_unknown,
-            "name": self.name,
-            "n_jobs": self.n_jobs,
-            "bit_mapping": self._bit_mapping.copy(),
-        }
+        parms = super().params
+        parms.update(
+            {
+                "counted": self.counted,
+                "ignore_unknown": self.ignore_unknown,
+                "bit_mapping": self._bit_mapping.copy(),
+            }
+        )
+        return parms
 
     def copy(self) -> MolToUnfoldedMorganFingerprint:
         """Create a copy of the object."""

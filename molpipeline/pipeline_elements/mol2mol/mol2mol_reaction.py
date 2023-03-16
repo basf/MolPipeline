@@ -9,7 +9,10 @@ import warnings
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
+from molpipeline.abstract_pipeline_elements.core import (
+    MolToMolPipelineElement,
+    NONE_HANDLING_OPTIONS,
+)
 from molpipeline.utils.molpipe_types import OptionalMol
 
 
@@ -25,6 +28,8 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         reaction: AllChem.ChemicalReaction,
         additive_list: list[Chem.Mol],
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
+        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        fill_value: Any = None,
         name: str = "MolToMolReactionPipelineElement",
         n_jobs: int = 1,
     ) -> None:

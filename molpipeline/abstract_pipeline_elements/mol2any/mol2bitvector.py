@@ -3,7 +3,7 @@
 from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
-from typing import Iterable
+from typing import Any, Iterable, Literal
 
 from rdkit import Chem
 from scipy import sparse
@@ -32,7 +32,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     def transform(self, value_list: list[Chem.Mol]) -> sparse.csr_matrix:
         """Transform the list of molecules to sparse matrix."""
-        return self.assemble_output(super().transform(value_list))
+        return super().transform(value_list)
 
     @abc.abstractmethod
     def _transform_single(self, value: Chem.Mol) -> dict[int, int]:
@@ -56,6 +56,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         self,
         radius: int = 2,
         use_features: bool = False,
+        none_handling: Literal["raise", "record_remove"] = "raise",
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
     ):
@@ -72,7 +73,11 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         n_jobs:
             Number of jobs.
         """
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(
+            name=name,
+            n_jobs=n_jobs,
+            none_handling=none_handling,
+        )
         self._use_features = use_features
         if isinstance(radius, int) and radius >= 0:
             self._radius = radius
@@ -80,6 +85,13 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
             raise ValueError(
                 f"Number of bits has to be a positive integer! (Received: {radius})"
             )
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Get object parameters relevant for copying the class."""
+        params = super().params
+        params.update({"radius": self.radius, "use_features": self.use_features})
+        return params
 
     @property
     def radius(self) -> int:
