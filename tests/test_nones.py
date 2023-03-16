@@ -13,6 +13,7 @@ EXPECTED_OUTPUT = ["NCCCO", None]
 
 class NoneTest(unittest.TestCase):
     """Unittest for None Handling."""
+
     def test_easy_none_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
         pipeline = MolPipeline(
