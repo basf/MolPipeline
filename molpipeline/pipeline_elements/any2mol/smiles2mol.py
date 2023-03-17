@@ -7,13 +7,20 @@ from rdkit import Chem
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
+from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
 from molpipeline.utils.molpipe_types import OptionalMol
 
 
 class SmilesToMolPipelineElement(_StringToMolPipelineElement):
     """Transforms Smiles to RDKit Mol objects."""
 
-    def __init__(self, name: str = "smiles2mol", n_jobs: int = 1) -> None:
+    def __init__(
+        self,
+        none_handling: NoneHandlingOptions = "raise",
+        fill_value: Any = None,
+        name: str = "smiles2mol",
+        n_jobs: int = 1,
+    ) -> None:
         """Initialize SmilesToMolPipelineElement.
 
         Parameters
@@ -21,12 +28,14 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
         name: str
             Name of PipelineElement
         """
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(
+            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
+        )
 
     @property
     def params(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        return {"name": self.name, "n_jobs": self.n_jobs}
+        return super().params
 
     def copy(self) -> SmilesToMolPipelineElement:
         """Create a copy of the object."""
