@@ -35,4 +35,5 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
 
     @property
     def params(self) -> dict[str, Any]:
+        """Get parameters defining the class."""
         return super().params
