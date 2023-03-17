@@ -31,18 +31,6 @@ class NoneCollector:
             raise AssertionError()
         return filled_list
 
-    @overload
-    def _fill_numpy_arr(
-        self, value_array: npt.NDArray[np.float_]
-    ) -> npt.NDArray[np.float_]:
-        """Return a float array when receiving a float array."""
-
-    @overload
-    def _fill_numpy_arr(
-        self, value_array: npt.NDArray[np.int_]
-    ) -> npt.NDArray[np.int_]:
-        """Return a int array when receiving a int array."""
-
     def _fill_numpy_arr(self, value_array: npt.NDArray[Any]) -> npt.NDArray[Any]:
         fill_value = self.fill_value
         if fill_value is None:
