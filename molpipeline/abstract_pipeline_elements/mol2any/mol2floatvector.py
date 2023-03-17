@@ -10,7 +10,10 @@ import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
 
-from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
+from molpipeline.abstract_pipeline_elements.core import (
+    MolToAnyPipelineElement,
+    NoneHandlingOptions,
+)
 from molpipeline.utils.multi_proc import wrap_parallelizable_task
 
 
@@ -26,6 +29,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         normalize: bool = True,
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
+        none_handling: NoneHandlingOptions = "raise",
+        fill_value: float = np.nan,
         mean: Optional[npt.NDArray[np.float_]] = None,
         std: Optional[npt.NDArray[np.float_]] = None,
     ) -> None:
@@ -37,7 +42,9 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         name: str
         n_jobs: int
         """
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(
+            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
+        )
         self._normalize = normalize
         if mean is not None:
             if len(mean.shape) > 1:
@@ -55,8 +62,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     def n_features(self) -> int:
         """Return the number of features."""
 
-    @staticmethod
     def assemble_output(
+        self,
         value_list: Iterable[npt.NDArray[np.float_]],
     ) -> npt.NDArray[np.float_]:
         """Transform output of all transform_single operations to matrix."""
@@ -65,11 +72,10 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     @property
     def params(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        param_dict = {
-            "normalize": self._normalize,
-            "name": self.name,
-            "n_jobs": self.n_jobs,
-        }
+        param_dict: dict[str, Any]
+        param_dict = {"normalize": self._normalize}
+        param_dict.update(super().params)
+
         if hasattr(self, "_mean"):
             param_dict["mean"] = self._mean
         if hasattr(self, "_std"):
@@ -85,11 +91,19 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         array_list = wrap_parallelizable_task(
             self._transform_single, value_list, self.n_jobs
         )
+        array_list = super()._catch_nones(array_list)
         value_matrix = self.assemble_output(array_list)
         self._mean = np.nanmean(value_matrix, axis=0)
         self._std = np.nanstd(value_matrix, axis=0)
         self._std[np.where(self._std == 0)] = 1
-        return self._normalize_matrix(value_matrix)
+        normalized_matrix = self._normalize_matrix(value_matrix)
+        if self.none_handling == "fill_dummy":
+            final_matrix: npt.NDArray[np.float_]
+            final_matrix = self.none_collector.fill_with_dummy(
+                normalized_matrix
+            )  # mypy: ignore
+            return final_matrix
+        return normalized_matrix
 
     def _normalize_matrix(
         self, value_matrix: npt.NDArray[np.float_]
@@ -101,7 +115,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
     def transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix."""
-        return self.assemble_output(super().transform(value_list))
+        descriptor_matrix: npt.NDArray[np.float_] = super().transform(value_list)
+        return descriptor_matrix
 
     def transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
         """Normalize _transform_single if required."""

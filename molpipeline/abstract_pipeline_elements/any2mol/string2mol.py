@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import abc
+from typing import Any
 
 from rdkit import Chem
 
@@ -31,3 +32,8 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         -------
         str
         """
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Get parameters defining the class."""
+        return super().params
