@@ -1,6 +1,6 @@
 """Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
 from __future__ import annotations
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -88,7 +88,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         for pipeline_element in self._component_list:
             pipeline_element.fit(value_list)
 
-    def _transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
+    def _transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
         """Get output of each element and concatenate for output."""
         final_vector = []
         for pipeline_element in self._component_list:
@@ -99,4 +99,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             else:
                 vector = pipeline_element.transform_single(value)
             final_vector.append(vector)
+        if None in final_vector:
+            return None
         return np.hstack(final_vector)

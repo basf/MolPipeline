@@ -79,7 +79,10 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         """Create a copy of the object."""
         return MolToRDKitPhysChem(**self.params)
 
-    def _transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
-        return np.array(
+    def _transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
+        vec = np.array(
             [RDKIT_DESCRIPTOR_DICT[name](value) for name in self._descriptor_list]
         )
+        if np.any(np.isnan(vec)):
+            return None
+        return vec
