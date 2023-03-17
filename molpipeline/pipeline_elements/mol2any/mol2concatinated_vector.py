@@ -8,7 +8,7 @@ from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
-    NONE_HANDLING_OPTIONS,
+    NoneHandlingOptions,
 )
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
@@ -20,10 +20,11 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     _component_list: list[MolToAnyPipelineElement]
 
+    # pylint: disable=R0913
     def __init__(
         self,
         component_list: list[MolToAnyPipelineElement],
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "MolToConcatenatedVector",
         n_jobs: int = 1,

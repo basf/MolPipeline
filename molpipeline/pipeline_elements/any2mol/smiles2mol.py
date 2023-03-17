@@ -7,7 +7,7 @@ from rdkit import Chem
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
-from molpipeline.abstract_pipeline_elements.core import NONE_HANDLING_OPTIONS
+from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
 from molpipeline.utils.molpipe_types import OptionalMol
 
 
@@ -16,7 +16,7 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
 
     def __init__(
         self,
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "smiles2mol",
         n_jobs: int = 1,

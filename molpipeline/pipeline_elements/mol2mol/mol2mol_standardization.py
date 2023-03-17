@@ -7,7 +7,7 @@ from rdkit.Chem import SaltRemover as rdkit_SaltRemover
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
 from molpipeline.abstract_pipeline_elements.core import (
-    NONE_HANDLING_OPTIONS,
+    NoneHandlingOptions,
     MolToMolPipelineElement as _MolToMolPipelineElement,
 )
 from molpipeline.utils.molpipe_types import OptionalMol
@@ -18,7 +18,7 @@ class RemoveChargePipelineElement(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "RemoveChargePipe",
         n_jobs: int = 1,
@@ -47,7 +47,7 @@ class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "MetalDisconnectorPipe",
         n_jobs: int = 1,
@@ -77,7 +77,7 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "SaltRemoverPipelineElement",
         n_jobs: int = 1,

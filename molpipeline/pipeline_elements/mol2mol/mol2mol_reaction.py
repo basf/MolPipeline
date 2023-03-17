@@ -11,7 +11,7 @@ from rdkit.Chem import AllChem
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement,
-    NONE_HANDLING_OPTIONS,
+    NoneHandlingOptions,
 )
 from molpipeline.utils.molpipe_types import OptionalMol
 
@@ -28,7 +28,7 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         reaction: AllChem.ChemicalReaction,
         additive_list: list[Chem.Mol],
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "MolToMolReactionPipelineElement",
         n_jobs: int = 1,
@@ -46,7 +46,9 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         name: str
             Name of PipelineElement
         """
-        super().__init__(name, n_jobs)
+        super().__init__(
+            name=name, n_jobs=n_jobs, none_handling=none_handling, fill_value=fill_value
+        )
         self.reaction = reaction
         self.additive_list = additive_list
         self.handle_multi = handle_multi

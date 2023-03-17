@@ -3,6 +3,8 @@ from sklearn.pipeline import Pipeline as SkPipeline
 from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline.pipeline import MolPipeline
+
+# from molpipeline.sklearn_pipeline import Pipeline as SkPipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
@@ -15,7 +17,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.utils.matrices import are_equal
 
-from utils.fingerprints import make_sparse_fp
+from tests.utils.fingerprints import make_sparse_fp
 
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
@@ -70,18 +72,25 @@ class PipelineTest(unittest.TestCase):
         m_pipeline = MolPipeline(pipeline_element_list)
 
         first_half = m_pipeline[:2]
-        self.assertTrue(first_half.pipeline_elements[0] is pipeline_element_list[0])
-        self.assertTrue(first_half.pipeline_elements[1] is pipeline_element_list[1])
-
         second_half = m_pipeline[2:]
-        self.assertTrue(second_half.pipeline_elements[0] is pipeline_element_list[2])
-        self.assertTrue(second_half.pipeline_elements[1] is pipeline_element_list[3])
+        self.assertEqual(
+            first_half.pipeline_elements[0].params, pipeline_element_list[0].params
+        )
+        self.assertEqual(
+            first_half.pipeline_elements[1].params, pipeline_element_list[1].params
+        )
+        self.assertEqual(
+            second_half.pipeline_elements[0].params, pipeline_element_list[2].params
+        )
+        self.assertEqual(
+            second_half.pipeline_elements[1].params, pipeline_element_list[3].params
+        )
 
         concatenated_pipeline = first_half + second_half
         for concat_element, original_element in zip(
             concatenated_pipeline.pipeline_elements, pipeline_element_list
         ):
-            self.assertTrue(concat_element is original_element)
+            self.assertEqual(concat_element.params, original_element.params)
 
     def test_salt_removal(self) -> None:
         smiles_with_salt_list = ["CCO-[Na]", "CCC(=O)[O-].[Li+]", "CCC(=O)-O-[K]"]

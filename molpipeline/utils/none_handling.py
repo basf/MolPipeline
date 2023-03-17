@@ -1,13 +1,19 @@
-from typing import Any, Union
+"""Classes and functions for detecting and handling None values."""
+
+from typing import Any, Union, overload
 import numpy as np
 import numpy.typing as npt
 
 
+# pylint: disable=R0903
 class NoneCollector:
+    """Collects None values and can fill Dummy values to matrices where None values were removed."""
+
     fill_value: Any
     none_indices: list[int]
 
     def __init__(self, fill_value: Any = None) -> None:
+        """Initialize NoneCollector."""
         self.fill_value = fill_value
         self.none_indices = []
 
@@ -24,7 +30,19 @@ class NoneCollector:
             raise AssertionError()
         return filled_list
 
-    def _fill_numpy_arr(self, value_array: npt.NDArray[Any]) -> npt.NDArray[np.float_]:
+    @overload
+    def _fill_numpy_arr(
+        self, value_array: npt.NDArray[np.float_]
+    ) -> npt.NDArray[np.float_]:
+        """Return a float array when receiving a float array."""
+
+    @overload
+    def _fill_numpy_arr(
+        self, value_array: npt.NDArray[np.int_]
+    ) -> npt.NDArray[np.int_]:
+        """Return a int array when receiving a int array."""
+
+    def _fill_numpy_arr(self, value_array: npt.NDArray[Any]) -> npt.NDArray[Any]:
         fill_value = self.fill_value
         if fill_value is None:
             fill_value = np.nan
@@ -33,7 +51,8 @@ class NoneCollector:
         has_value_indices = np.ones(output_shape[0], dtype=bool)
         has_value_indices[self.none_indices] = False
 
-        output_matrix = np.ones(output_shape) * fill_value
+        output_matrix: npt.NDArray[Any]
+        output_matrix = np.ones(output_shape, dtype=value_array.dtype) * fill_value
         output_matrix[has_value_indices, ...] = value_array
         return output_matrix
 
@@ -41,6 +60,7 @@ class NoneCollector:
         self,
         value_container: Union[list[Any], npt.NDArray[Any]],
     ) -> Union[list[Any], npt.NDArray[Any]]:
+        """Insert dummy values at the positions in the value container."""
         if isinstance(value_container, list):
             return self._fill_list(value_container)
         if isinstance(value_container, np.ndarray):

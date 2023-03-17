@@ -9,7 +9,7 @@ from molpipeline.utils.molpipe_types import OptionalMol
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 from molpipeline.utils.none_handling import NoneCollector
 
-NONE_HANDLING_OPTIONS = Literal["raise", "record_remove", "fill_dummy"]
+NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 
 
 class ABCPipelineElement(abc.ABC):
@@ -21,7 +21,7 @@ class ABCPipelineElement(abc.ABC):
 
     def __init__(
         self,
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "ABCPipelineElement",
         n_jobs: int = 1,
@@ -60,11 +60,13 @@ class ABCPipelineElement(abc.ABC):
         self._n_jobs = check_available_cores(n_jobs)
 
     @property
-    def none_handling(self) -> NONE_HANDLING_OPTIONS:
+    def none_handling(self) -> NoneHandlingOptions:
+        """Get string which determines the handling of nones."""
         return self._none_handling
 
     @none_handling.setter
-    def none_handling(self, none_handling: NONE_HANDLING_OPTIONS) -> None:
+    def none_handling(self, none_handling: NoneHandlingOptions) -> None:
+        """Set string which determines the handling of nones."""
         valid_options = ["raise", "record_remove", "fill_dummy"]
         if none_handling not in valid_options:
             raise ValueError(
@@ -154,7 +156,7 @@ class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
 
     def __init__(
         self,
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "MolToMolPipelineElement",
         n_jobs: int = 1,
@@ -192,7 +194,7 @@ class AnyToMolPipelineElement(ABCPipelineElement, abc.ABC):
 
     def __init__(
         self,
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "AnyToMolPipelineElement",
         n_jobs: int = 1,
@@ -224,7 +226,7 @@ class MolToAnyPipelineElement(ABCPipelineElement, abc.ABC):
 
     def __init__(
         self,
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "MolToAnyPipelineElement",
         n_jobs: int = 1,

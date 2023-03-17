@@ -12,7 +12,7 @@ from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
-    NONE_HANDLING_OPTIONS,
+    NoneHandlingOptions,
 )
 from molpipeline.utils.multi_proc import wrap_parallelizable_task
 
@@ -29,7 +29,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         normalize: bool = True,
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: float = np.nan,
         mean: Optional[npt.NDArray[np.float_]] = None,
         std: Optional[npt.NDArray[np.float_]] = None,
@@ -72,6 +72,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     @property
     def params(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
+        param_dict: dict[str, Any]
         param_dict = {"normalize": self._normalize}
         param_dict.update(super().params)
 
@@ -97,7 +98,9 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         self._std[np.where(self._std == 0)] = 1
         normalized_matrix = self._normalize_matrix(value_matrix)
         if self.none_handling == "fill_dummy":
-            return self.none_collector.fill_with_dummy(normalized_matrix)
+            final_matrix: npt.NDArray[np.float_]
+            final_matrix = self.none_collector.fill_with_dummy(normalized_matrix)  # type: ignore
+            return final_matrix
         return normalized_matrix
 
     def _normalize_matrix(

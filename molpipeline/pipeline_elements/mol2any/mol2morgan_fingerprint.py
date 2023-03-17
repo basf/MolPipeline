@@ -182,7 +182,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
 
     @property
     def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
+        """Get all parameters defining the object."""
         parms = super().params
         parms.update(
             {

@@ -80,7 +80,7 @@ class NoneTest(unittest.TestCase):
         out = pipeline.transform(TEST_SMILES)
         out2 = pipeline2.fit_transform(TEST_SMILES)
         self.assertEqual(out.shape, out2.shape)
-        self.assertTrue(np.max(np.abs(out-out2)) < 0.000001)
+        self.assertTrue(np.max(np.abs(out - out2)) < 0.000001)
 
     def test_dummy_fill_physchem_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
@@ -90,7 +90,7 @@ class NoneTest(unittest.TestCase):
                 MolToRDKitPhysChem(),
             ],
             handle_nones="fill_dummy",
-            fill_value=10
+            fill_value=10,
         )
         pipeline2 = pipeline.copy()
         pipeline.fit(TEST_SMILES)
@@ -98,4 +98,4 @@ class NoneTest(unittest.TestCase):
         out2 = pipeline2.fit_transform(TEST_SMILES)
         self.assertEqual(out.shape, out2.shape)
         self.assertEqual(out.shape, (2, 206))
-        self.assertTrue(np.nanmax(np.abs(out-out2)) < 0.000001)
+        self.assertTrue(np.nanmax(np.abs(out - out2)) < 0.000001)

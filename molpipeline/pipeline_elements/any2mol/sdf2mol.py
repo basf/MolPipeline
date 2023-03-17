@@ -8,7 +8,7 @@ from rdkit import Chem
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
-from molpipeline.abstract_pipeline_elements.core import NONE_HANDLING_OPTIONS
+from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
 from molpipeline.utils.molpipe_types import OptionalMol
 
 
@@ -18,10 +18,11 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
     identifier: str
     mol_counter: int
 
+    # pylint: disable=R0913
     def __init__(
         self,
         identifier: str = "enumerate",
-        none_handling: NONE_HANDLING_OPTIONS = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "SDF2Mol",
         n_jobs: int = 1,
@@ -46,7 +47,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
     @property
     def params(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        params = super(SDFToMolPipelineElement, self).params
+        params = super().params
         params["identifier"] = self.identifier
         return params
 

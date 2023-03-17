@@ -18,6 +18,7 @@ class MolPipeline:
 
     handle_nones: Literal["raise", "record_remove", "fill_dummy"]
 
+    # pylint: disable=R0913
     def __init__(
         self,
         pipeline_element_list: list[ABCPipelineElement],
@@ -52,6 +53,7 @@ class MolPipeline:
 
     @property
     def params(self) -> dict[str, Any]:
+        """Get all parameters defining the object."""
         return {
             "pipeline_element_list": self._pipeline_element_list,
             "n_jobs": self.n_jobs,
@@ -171,7 +173,8 @@ class MolPipeline:
                     if transformed_value is None:
                         if self.handle_nones == "raise":
                             raise ValueError(f"Encountered None in position: {i}")
-                        elif self.handle_nones in ["record_remove", "fill_dummy"]:
+
+                        if self.handle_nones in ["record_remove", "fill_dummy"]:
                             self.none_collector.none_indices.append(i)
                             continue
                         raise AssertionError(
@@ -184,7 +187,7 @@ class MolPipeline:
                 if transformed_value is None:
                     if self.handle_nones == "raise":
                         raise ValueError(f"Encountered None in position: {i}")
-                    elif self.handle_nones in ["record_remove", "fill_dummy"]:
+                    if self.handle_nones in ["record_remove", "fill_dummy"]:
                         self.none_collector.none_indices.append(i)
                         continue
                     raise AssertionError("This part of the code should be unreachable!")
@@ -206,10 +209,11 @@ class MolPipeline:
         if isinstance(element_slice, list):
             element_slice_copy = [element.copy() for element in element_slice]
             return MolPipeline(element_slice_copy, **parameter)
-        elif isinstance(element_slice, ABCPipelineElement):
+
+        if isinstance(element_slice, ABCPipelineElement):
             return MolPipeline([element_slice.copy()], **parameter)
-        else:
-            raise AssertionError(f"Unexpected Element type: {type(element_slice)}")
+
+        raise AssertionError(f"Unexpected Element type: {type(element_slice)}")
 
     def __add__(self, other: Union[ABCPipelineElement, MolPipeline]) -> MolPipeline:
         """Concatenate two Pipelines or add a PipelineElement."""

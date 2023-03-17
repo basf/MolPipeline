@@ -25,10 +25,10 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return self._n_bits
 
     def assemble_output(
-        self, row_dict_iterable: Iterable[dict[int, int]]
+        self, value_list: Iterable[dict[int, int]]
     ) -> sparse.csr_matrix:
         """Transform output of all transform_single operations to matrix."""
-        return sparse_from_index_value_dicts(row_dict_iterable, self._n_bits)
+        return sparse_from_index_value_dicts(value_list, self._n_bits)
 
     def transform(self, value_list: list[Chem.Mol]) -> sparse.csr_matrix:
         """Transform the list of molecules to sparse matrix."""
@@ -52,6 +52,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.ABC):
     """Abstract Class for Morgan fingerprints."""
 
+    # pylint: disable=R0913
     def __init__(
         self,
         radius: int = 2,
@@ -91,6 +92,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         """Get object parameters relevant for copying the class."""
         params = super().params
         params.update({"radius": self.radius, "use_features": self.use_features})
+        params = {k: v for k, v in params.items() if k != "fill_value"}
         return params
 
     @property
