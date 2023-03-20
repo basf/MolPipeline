@@ -99,9 +99,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         normalized_matrix = self._normalize_matrix(value_matrix)
         if self.none_handling == "fill_dummy":
             final_matrix: npt.NDArray[np.float_]
-            final_matrix = self.none_collector.fill_with_dummy(
-                normalized_matrix
-            )
+            final_matrix = self.none_collector.fill_with_dummy(normalized_matrix)
             return final_matrix
         return normalized_matrix
 
