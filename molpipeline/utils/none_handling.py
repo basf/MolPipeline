@@ -1,7 +1,7 @@
 """Classes and functions for detecting and handling None values."""
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any, TypeVar, List
 import numpy as np
 import numpy.typing as npt
 
@@ -9,7 +9,7 @@ Number = TypeVar("Number", int, float)
 AnyNumpyElement = TypeVar("AnyNumpyElement", bound=np.generic)
 
 # mypy: ignore-errors
-AnyIterable = TypeVar("AnyIterable", list[Number], npt.NDArray[AnyNumpyElement])
+AnyIterable = TypeVar("AnyIterable", List[Number], npt.NDArray[AnyNumpyElement])
 
 
 # pylint: disable=R0903
