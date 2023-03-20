@@ -99,7 +99,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         normalized_matrix = self._normalize_matrix(value_matrix)
         if self.none_handling == "fill_dummy":
             final_matrix: npt.NDArray[np.float_]
-            final_matrix = self.none_collector.fill_with_dummy(   # mypy: ignore
+            final_matrix = self.none_collector.fill_with_dummy(
                 normalized_matrix
             )
             return final_matrix
@@ -118,14 +118,17 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         descriptor_matrix: npt.NDArray[np.float_] = super().transform(value_list)
         return descriptor_matrix
 
-    def transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
+    def transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
         """Normalize _transform_single if required."""
+        feature_vector = self._transform_single(value)
+        if feature_vector is None:
+            return None
         if self._normalize:
-            return self._normalize_matrix(self._transform_single(value))
-        return self._transform_single(value)
+            return self._normalize_matrix(feature_vector)
+        return feature_vector
 
     @abc.abstractmethod
-    def _transform_single(self, value: Chem.Mol) -> npt.NDArray[np.float_]:
+    def _transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters

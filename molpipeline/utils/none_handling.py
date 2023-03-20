@@ -1,9 +1,15 @@
 """Classes and functions for detecting and handling None values."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, TypeVar
 import numpy as np
 import numpy.typing as npt
+
+Number = TypeVar("Number", int, float)
+AnyNumpyElement = TypeVar("AnyNumpyElement", bound=np.generic)
+
+# mypy: ignore-errors
+AnyIterable = TypeVar("AnyIterable", list[Number], npt.NDArray[AnyNumpyElement])
 
 
 # pylint: disable=R0903
@@ -18,7 +24,7 @@ class NoneCollector:
         self.fill_value = fill_value
         self.none_indices = []
 
-    def _fill_list(self, list_to_fill: list[Any]) -> list[Any]:
+    def _fill_list(self, list_to_fill: list[Number]) -> list[Number]:
         filled_list = []
         next_value_pos = 0
         for index in range(len(list_to_fill) + len(self.none_indices)):
@@ -31,7 +37,9 @@ class NoneCollector:
             raise AssertionError()
         return filled_list
 
-    def _fill_numpy_arr(self, value_array: npt.NDArray[Any]) -> npt.NDArray[Any]:
+    def _fill_numpy_arr(
+        self, value_array: npt.NDArray[AnyNumpyElement]
+    ) -> npt.NDArray[AnyNumpyElement]:
         fill_value = self.fill_value
         if fill_value is None:
             fill_value = np.nan
@@ -47,8 +55,8 @@ class NoneCollector:
 
     def fill_with_dummy(
         self,
-        value_container: Union[list[Any], npt.NDArray[Any]],
-    ) -> Union[list[Any], npt.NDArray[Any]]:
+        value_container: AnyIterable,
+    ) -> AnyIterable:
         """Insert dummy values at the positions in the value container."""
         if isinstance(value_container, list):
             return self._fill_list(value_container)
