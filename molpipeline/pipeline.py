@@ -16,8 +16,6 @@ class MolPipeline:
     _n_jobs: int
     _pipeline_element_list: list[ABCPipelineElement]
 
-    handle_nones: Literal["raise", "record_remove", "fill_dummy"]
-
     # pylint: disable=R0913
     def __init__(
         self,
@@ -29,17 +27,29 @@ class MolPipeline:
     ):
         """Initialize MolPipeline."""
         self._pipeline_element_list = pipeline_element_list
+
+        self.n_jobs = n_jobs
+        self.name = name
+        self.handle_nones = handle_nones
+        self.none_collector = NoneCollector(fill_value=fill_value)
+
+    @property
+    def handle_nones(self) -> Literal["raise", "record_remove", "fill_dummy"]:
+        """Get string defining the handling of Nones."""
+        return self._handle_nones
+
+    @handle_nones.setter
+    def handle_nones(
+        self, handle_nones: Literal["raise", "record_remove", "fill_dummy"]
+    ) -> None:
+        """Set string defining the handling of Nones."""
+        self._handle_nones = handle_nones
         if handle_nones == "raise":
             for element in self.pipeline_elements:
                 element.none_handling = "raise"
         if handle_nones in ["record_remove", "fill_dummy"]:
             for element in self.pipeline_elements:
                 element.none_handling = "record_remove"
-
-        self.n_jobs = n_jobs
-        self.name = name
-        self.handle_nones = handle_nones
-        self.none_collector = NoneCollector(fill_value=fill_value)
 
     @property
     def n_jobs(self) -> int:
