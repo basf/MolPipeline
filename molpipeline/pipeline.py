@@ -135,9 +135,9 @@ class MolPipeline:
             none_values = p_element.none_collector.none_indices
             surviving_indices = np.delete(surviving_indices, none_values)
 
+        nan_indices = np.delete(all_indices, surviving_indices)
+        self.none_collector.none_indices = list(nan_indices)
         if self.handle_nones == "fill_dummy":
-            nan_indices = np.delete(all_indices, surviving_indices)
-            self.none_collector.none_indices = list(nan_indices)
             return self.none_collector.fill_with_dummy(iter_input)
 
         return iter_input
