@@ -14,7 +14,7 @@ from molpipeline.utils.molpipe_types import OptionalMol
 
 
 class RemoveChargePipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes charges in a molecule, if possible."""
+    """MolToMolPipelineElement which returns charge-parent of a molecule, if possible."""
 
     def __init__(
         self,
@@ -100,3 +100,33 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
     def _transform_single(self, value: Chem.Mol) -> OptionalMol:
         """Remove metal ions."""
         return self._salt_remover.StripMol(value)
+
+
+class UnchargePipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes charges in a molecule, if possible."""
+
+    def __init__(
+        self,
+        none_handling: NoneHandlingOptions = "raise",
+        fill_value: Any = None,
+        name: str = "UnchargePipe",
+        n_jobs: int = 1,
+    ) -> None:
+        """Initialize UnchargePipelineElement."""
+        super().__init__(
+            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
+        )
+        self._uncharger = rdMolStandardize.Uncharger()
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all parameters defining the object."""
+        return {"name": self.name, "n_jobs": self.n_jobs}
+
+    def copy(self) -> UnchargePipelineElement:
+        """Create a copy of the object."""
+        return UnchargePipelineElement(**self.params)
+
+    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+        """Remove charges of molecule."""
+        return self._uncharger.uncharge(value)
