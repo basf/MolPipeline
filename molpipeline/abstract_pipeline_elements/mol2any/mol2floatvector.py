@@ -57,6 +57,15 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             if std.shape[0] == self.n_features:
                 self._std = std
 
+    @classmethod
+    def from_json(cls, json_dict: dict[str, Any]) -> MolToDescriptorPipelineElement:
+        """Create object from json dict."""
+        if "mean" in json_dict:
+            json_dict["mean"] = np.array(json_dict["mean"])
+        if "std" in json_dict:
+            json_dict["std"] = np.array(json_dict["std"])
+        return super().from_json(json_dict)
+
     @property
     @abc.abstractmethod
     def n_features(self) -> int:
@@ -110,6 +119,15 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             scaled_matrix = (value_matrix - self._mean) / self._std
             return scaled_matrix
         return value_matrix
+
+    def to_json(self) -> dict[str, Any]:
+        """Return json representation of object."""
+        json_dict = super().to_json()
+        if hasattr(self, "_mean"):
+            json_dict["mean"] = self._mean.tolist()
+        if hasattr(self, "_std"):
+            json_dict["std"] = self._std.tolist()
+        return json_dict
 
     def transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix."""

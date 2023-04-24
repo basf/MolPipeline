@@ -3,6 +3,12 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 from typing import Any, Iterable, Literal
+
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
+
 from rdkit import Chem
 
 from molpipeline.utils.molpipe_types import OptionalMol
@@ -43,6 +49,17 @@ class ABCPipelineElement(abc.ABC):
         self.none_handling = none_handling
         self.n_jobs = n_jobs
         self.none_collector = NoneCollector(fill_value)
+
+    @classmethod
+    def from_json(cls, json_dict: dict[str, Any]) -> Self:
+        """Create object from json dict."""
+        specified_class = json_dict.pop("type")
+        specified_module = json_dict.pop("module")
+        if specified_module != cls.__module__:
+            raise ValueError(f"Cannot create {cls.__name__} from {specified_module}")
+        if specified_class != cls.__name__:
+            raise ValueError(f"Cannot create {cls.__name__} from {specified_class}")
+        return cls(**json_dict)
 
     @property
     def input_type(self) -> type:
@@ -136,6 +153,15 @@ class ABCPipelineElement(abc.ABC):
         if self.none_handling == "record_remove":
             return output
         return output
+
+    def to_json(self) -> dict[str, Any]:
+        """Return a all definig attributes of object as dict."""
+        json_dict = {
+            "type": self.__class__.__name__,
+            "module": self.__class__.__module__,
+        }
+        json_dict.update(self.params)
+        return json_dict
 
     def finish(self) -> None:
         """Inform object that iteration has been finished. Does in most cases nothing.
