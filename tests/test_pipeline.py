@@ -1,14 +1,15 @@
 import unittest
+
 from sklearn.pipeline import Pipeline as SkPipeline
 from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline.pipeline import MolPipeline
 
-# from molpipeline.sklearn_pipeline import Pipeline as SkPipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
+from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     RemoveChargePipelineElement,
     MetalDisconnectorPipelineElement,
@@ -110,6 +111,30 @@ class PipelineTest(unittest.TestCase):
             generated_smiles, smiles_without_salt_list
         ):
             self.assertEqual(generated_smiles, smiles_without_salt)
+
+    def test_json_generation(self) -> None:
+        """Test that the json representation of a pipeline can be loaded back into a pipeline."""
+
+        # Create pipeline
+        pipeline_element_list = [
+            SmilesToMolPipelineElement(),
+            MetalDisconnectorPipelineElement(),
+            SaltRemoverPipelineElement(),
+            MolToRDKitPhysChem(),
+        ]
+        m_pipeline = MolPipeline(pipeline_element_list)
+
+        # Convert pipeline to json
+        json_str = m_pipeline.to_json()
+
+        # Recreate pipeline from json
+        loaded_pipeline = MolPipeline.from_json(json_str)
+
+        # Compare pipeline elements
+        for loaded_element, original_element in zip(
+            loaded_pipeline.pipeline_elements, pipeline_element_list
+        ):
+            self.assertEqual(loaded_element.params, original_element.params)
 
 
 if __name__ == "__main__":

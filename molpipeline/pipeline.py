@@ -33,6 +33,20 @@ class MolPipeline:
         self.handle_nones = handle_nones
         self.none_collector = NoneCollector(fill_value=fill_value)
 
+    @classmethod
+    def from_json(cls, json_dict: dict[str, Any]) -> MolPipeline:
+        """Create object from json dict."""
+        # Transform pipeline elements from json to objects.
+        element_json_list = json_dict.pop("pipeline_element_list")
+        element_list = []
+        for element_json in element_json_list:
+            mod = __import__(element_json["module"], fromlist=[element_json["type"]])
+            element_class = getattr(mod, element_json["type"])
+            element_list.append(element_class.from_json(element_json))
+        # Replace json list with list of constructed pipeline elements.
+        json_dict["pipeline_element_list"] = element_list
+        return cls(**json_dict)
+
     @property
     def handle_nones(self) -> Literal["raise", "record_remove", "fill_dummy"]:
         """Get string defining the handling of Nones."""
@@ -65,7 +79,7 @@ class MolPipeline:
     def params(self) -> dict[str, Any]:
         """Get all parameters defining the object."""
         return {
-            "pipeline_element_list": self._pipeline_element_list,
+            "pipeline_element_list": self.pipeline_elements,
             "n_jobs": self.n_jobs,
             "name": self.name,
             "handle_nones": self.handle_nones,
@@ -141,6 +155,14 @@ class MolPipeline:
             return self.none_collector.fill_with_dummy(iter_input)
 
         return iter_input
+
+    def to_json(self) -> dict[str, Any]:
+        """Convert the pipeline to a json string."""
+        json_dict = self.params
+        json_dict["pipeline_element_list"] = [
+            p_element.to_json() for p_element in self.pipeline_elements
+        ]
+        return json_dict
 
     def _transform_single(self, input_value: Any) -> Any:
         iter_value = input_value
