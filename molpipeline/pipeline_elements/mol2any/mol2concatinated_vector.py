@@ -47,6 +47,17 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         for component in self._component_list:
             component.n_jobs = self.n_jobs
 
+    @classmethod
+    def from_json(cls, json_dict: dict[str, Any]) -> MolToConcatenatedVector:
+        """Create object from json representation."""
+        component_list = [
+            MolToFingerprintPipelineElement.from_json(component)
+            for component in json_dict["component_list"]
+        ]
+        params = dict(json_dict)
+        params["component_list"] = component_list
+        return super().from_json(params)
+
     @property
     def component_list(self) -> list[MolToAnyPipelineElement]:
         """Get component_list."""
@@ -61,8 +72,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
                 "component_list": [
                     component.copy() for component in self.component_list
                 ],
-                "name": self.name,
-                "n_jobs": self.n_jobs,
             }
         )
         return params
@@ -77,6 +86,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     ) -> npt.NDArray[np.float_]:
         """Transform output of all transform_single operations to matrix."""
         return np.vstack(list(value_list))
+
+    def to_json(self) -> dict[str, Any]:
+        """Return json representation of the object."""
+        json_dict = super().to_json()
+        json_dict["component_list"] = [
+            component.to_json() for component in self.component_list
+        ]
+        return json_dict
 
     def transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix."""
@@ -98,7 +115,11 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
                 vector[list(bit_dict.keys())] = np.array(list(bit_dict.values()))
             else:
                 vector = pipeline_element.transform_single(value)
+
+            if vector is None:
+                break
+
             final_vector.append(vector)
-        if None in final_vector:
-            return None
-        return np.hstack(final_vector)
+        else:  # no break
+            return np.hstack(final_vector)
+        return None
