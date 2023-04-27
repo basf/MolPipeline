@@ -1,6 +1,10 @@
 """Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
 from __future__ import annotations
 from typing import Any, Iterable, Optional
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt
@@ -49,7 +53,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             component.n_jobs = self.n_jobs
 
     @classmethod
-    def from_json(cls, json_dict: dict[str, Any]) -> MolToConcatenatedVector:
+    def from_json(cls, json_dict: dict[str, Any]) -> Self:
         """Create object from json representation."""
         params = dict(json_dict)  # copy, because the dict is modified
         component_json_list = params.pop("component_list")
