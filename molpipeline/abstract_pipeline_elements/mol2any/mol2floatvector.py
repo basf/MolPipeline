@@ -123,13 +123,6 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             return scaled_matrix
         return value_matrix
 
-    def to_json(self) -> dict[str, Any]:
-        """Return json representation of object."""
-        json_dict = super().to_json()
-        if self.additional_attributes:
-            json_dict["additional_attributes"] = self.additional_attributes
-        return json_dict
-
     def transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix."""
         descriptor_matrix: npt.NDArray[np.float_] = super().transform(value_list)
