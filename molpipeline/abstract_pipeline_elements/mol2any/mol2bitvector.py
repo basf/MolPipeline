@@ -92,7 +92,9 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         """Get object parameters relevant for copying the class."""
         params = super().parameters
         params.update({"radius": self.radius, "use_features": self.use_features})
-        params = {k: v for k, v in params.items() if k != "fill_value"}  # remove fill_value
+        params = {
+            k: v for k, v in params.items() if k != "fill_value"
+        }  # remove fill_value
         return params
 
     @property

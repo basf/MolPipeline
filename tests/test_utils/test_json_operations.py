@@ -3,7 +3,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 
-from molpipeline.utils.json_operations import sklearn_model_from_json, sklearn_model_to_json
+from molpipeline.utils.json_operations import (
+    sklearn_model_from_json,
+    sklearn_model_to_json,
+)
 
 
 class JsonConversionTest(unittest.TestCase):
@@ -29,7 +32,9 @@ class JsonConversionTest(unittest.TestCase):
         recreated_steps = recreated_params.pop("steps")
 
         # Separate comparison of the steps as models cannot be compared directly
-        for (orig_name, orig_obj), (recreated_name, recreated_obj) in zip(original_steps, recreated_steps):
+        for (orig_name, orig_obj), (recreated_name, recreated_obj) in zip(
+            original_steps, recreated_steps
+        ):
             # Remove the model from the original params
             del original_params[orig_name]
             del recreated_params[recreated_name]
@@ -38,5 +43,6 @@ class JsonConversionTest(unittest.TestCase):
             self.assertEqual(type(orig_obj), type(recreated_obj))
         self.assertEqual(original_params, recreated_params)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

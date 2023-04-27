@@ -11,7 +11,10 @@ from sklearn.base import clone
 
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
-from molpipeline.utils.json_operations import sklearn_model_from_json, sklearn_model_to_json
+from molpipeline.utils.json_operations import (
+    sklearn_model_from_json,
+    sklearn_model_to_json,
+)
 
 NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 

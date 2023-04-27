@@ -53,7 +53,9 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """Create object from json representation."""
         params = dict(json_dict)  # copy, because the dict is modified
         component_json_list = params.pop("component_list")
-        component_list = [pipeline_element_from_json(component) for component in component_json_list]
+        component_list = [
+            pipeline_element_from_json(component) for component in component_json_list
+        ]
         params["component_list"] = component_list
         return super().from_json(params)
 

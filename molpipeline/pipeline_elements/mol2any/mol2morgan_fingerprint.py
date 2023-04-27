@@ -73,7 +73,6 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         parameters["n_bits"] = self._n_bits
         return parameters
 
-
     def _transform_single(self, value: RDKitMol) -> dict[int, int]:
         """Transform a single compound to a dictionary.
 

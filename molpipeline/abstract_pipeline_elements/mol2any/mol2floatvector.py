@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import abc
 from typing import Any, Iterable, Optional
+
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:

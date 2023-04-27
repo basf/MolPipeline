@@ -67,7 +67,7 @@ class ABCPipelineElement(abc.ABC):
             if not hasattr(loaded_pipeline_element, key):
                 raise ValueError(
                     f"Cannot set attribute {key} on {cls.__name__} from {specified_class}"
-                    )
+                )
             setattr(loaded_pipeline_element, key, value)
         return loaded_pipeline_element
 
@@ -183,7 +183,7 @@ class ABCPipelineElement(abc.ABC):
 
     def to_json(self) -> dict[str, Any]:
         """Return all defining attributes of object as dict."""
-        json_dict = {
+        json_dict: dict[str, Any] = {
             "type": self.__class__.__name__,
             "module": self.__class__.__module__,
         }
