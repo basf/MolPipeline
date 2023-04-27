@@ -11,6 +11,7 @@ from sklearn.base import clone
 
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
+from molpipeline.utils.json_operations import sklearn_model_from_json, sklearn_model_to_json
 
 NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 
@@ -206,6 +207,20 @@ class PipelineModel:
         final_output = self._finalize_output(ml_output)
         return final_output
 
+    def to_json(self) -> dict[str, Any]:
+        """Transform model parameters to json format.
+
+        Returns
+        -------
+        dict[str, Any]
+        """
+        return {
+            "mol_pipeline": self._mol_pipeline.to_json(),
+            "skl_model": sklearn_model_to_json(self._skl_model),
+            "none_indices": self.none_indices,
+            "handle_nones": self.handle_nones,
+        }
+
     def transform(
         self, molecule_iterable: Iterable[Any], **tranformparams: dict[Any, Any]
     ) -> npt.NDArray[Any]:
@@ -268,7 +283,19 @@ class PipelineModel:
         return parameter_dict
 
     def set_params(self, **params: dict[str, Any]) -> PipelineModel:
-        """Set the parameters of this estimator."""
+        """Set the parameters of this estimator.
+
+        Implemented for compatibility with sklearn GridSearchCV.
+
+        Parameters
+        ----------
+        params: dict[str, Any]
+            Dictionary of model parameters.
+
+        Returns
+        -------
+
+        """
         if "mol_pipeline" in params:
             mol_pipeline = params.pop("mol_pipeline")
             if not isinstance(mol_pipeline, MolPipeline):

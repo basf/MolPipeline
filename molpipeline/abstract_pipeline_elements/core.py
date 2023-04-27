@@ -2,6 +2,7 @@
 from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
+import copy
 from typing import Any, Iterable, Literal
 
 try:
@@ -9,7 +10,7 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-from rdkit import Chem
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.utils.molpipe_types import OptionalMol
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
@@ -53,13 +54,32 @@ class ABCPipelineElement(abc.ABC):
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
         """Create object from json dict."""
-        specified_class = json_dict.pop("type")
-        specified_module = json_dict.pop("module")
+        json_dict_copy = dict(json_dict)
+        specified_class = json_dict_copy.pop("type")
+        specified_module = json_dict_copy.pop("module")
         if specified_module != cls.__module__:
             raise ValueError(f"Cannot create {cls.__name__} from {specified_module}")
         if specified_class != cls.__name__:
             raise ValueError(f"Cannot create {cls.__name__} from {specified_class}")
-        return cls(**json_dict)
+        additional_attributes = json_dict_copy.pop("additional_attributes")
+        loaded_pipeline_element = cls(**json_dict_copy)
+        for key, value in additional_attributes.items():
+            if not hasattr(loaded_pipeline_element, key):
+                raise ValueError(
+                    f"Cannot set attribute {key} on {cls.__name__} from {specified_class}"
+                    )
+            setattr(loaded_pipeline_element, key, value)
+        return loaded_pipeline_element
+
+    @property
+    def additional_attributes(self) -> dict[str, Any]:
+        """Any attribute relevant for recreating and exact copy, which is not a parameter.
+
+        Returns
+        -------
+        dict[str, Any]
+        """
+        return {}
 
     @property
     def input_type(self) -> type:
@@ -97,8 +117,8 @@ class ABCPipelineElement(abc.ABC):
         return self._output_type
 
     @property
-    def params(self) -> dict[str, Any]:
-        """Any parameter relevant for creating and exact copy."""
+    def parameters(self) -> dict[str, Any]:
+        """Return the parameters of the object."""
         return {
             "name": self.name,
             "none_handling": self.none_handling,
@@ -106,9 +126,16 @@ class ABCPipelineElement(abc.ABC):
             "fill_value": self.none_collector.fill_value,
         }
 
-    @abc.abstractmethod
-    def copy(self) -> ABCPipelineElement:
+    def copy(self) -> Self:
         """Copy the object."""
+        recreated_object = self.__class__(**self.parameters)
+        for key, value in self.additional_attributes.items():
+            if not hasattr(recreated_object, key):
+                raise AssertionError(
+                    f"Cannot set attribute {key} on {self.__class__.__name__}. This should not happen!"
+                )
+            setattr(recreated_object, key, copy.copy(value))
+        return recreated_object
 
     def fit(self, value_list: Any) -> None:
         """Fit object to input_values. Does often nothing."""
@@ -155,12 +182,13 @@ class ABCPipelineElement(abc.ABC):
         return output
 
     def to_json(self) -> dict[str, Any]:
-        """Return a all definig attributes of object as dict."""
+        """Return all defining attributes of object as dict."""
         json_dict = {
             "type": self.__class__.__name__,
             "module": self.__class__.__module__,
         }
-        json_dict.update(self.params)
+        json_dict.update(self.parameters)
+        json_dict["additional_attributes"] = self.additional_attributes
         return json_dict
 
     def finish(self) -> None:
@@ -177,8 +205,8 @@ class ABCPipelineElement(abc.ABC):
 class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
     """Abstract PipelineElement where input and outputs are molecules."""
 
-    _input_type = Chem.Mol
-    _output_type = Chem.Mol
+    _input_type = RDKitMol
+    _output_type = RDKitMol
 
     def __init__(
         self,
@@ -204,19 +232,14 @@ class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
         return self._transform_single(value)
 
     @abc.abstractmethod
-    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Transform the molecule according to child dependent rules."""
-
-    @property
-    def params(self) -> dict[str, Any]:
-        """Get object parameters relevant for copying the class."""
-        return super().params
 
 
 class AnyToMolPipelineElement(ABCPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
-    _output_type = Chem.Mol
+    _output_type = RDKitMol
 
     def __init__(
         self,
@@ -239,16 +262,11 @@ class AnyToMolPipelineElement(ABCPipelineElement, abc.ABC):
     def _transform_single(self, value: Any) -> OptionalMol:
         """Transform the input specified in each child to molecules."""
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Get object parameters relevant for copying the class."""
-        return super().params
-
 
 class MolToAnyPipelineElement(ABCPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
-    _input_type = Chem.Mol
+    _input_type = RDKitMol
 
     def __init__(
         self,
@@ -263,10 +281,10 @@ class MolToAnyPipelineElement(ABCPipelineElement, abc.ABC):
         )
 
     @abc.abstractmethod
-    def _transform_single(self, value: Chem.Mol) -> Any:
+    def _transform_single(self, value: RDKitMol) -> Any:
         """Transform the molecules to the input specified in each child."""
 
     @property
-    def params(self) -> dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         """Get object parameters relevant for copying the class."""
-        return super().params
+        return super().parameters

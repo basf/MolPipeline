@@ -6,6 +6,7 @@ from typing import Any, Literal, Union
 
 import numpy as np
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
+from molpipeline.utils.json_operations import pipeline_element_from_json
 from molpipeline.utils.multi_proc import check_available_cores
 from molpipeline.utils.none_handling import NoneCollector
 
@@ -37,15 +38,14 @@ class MolPipeline:
     def from_json(cls, json_dict: dict[str, Any]) -> MolPipeline:
         """Create object from json dict."""
         # Transform pipeline elements from json to objects.
-        element_json_list = json_dict.pop("pipeline_element_list")
+        json_dict_copy = dict(json_dict)  # copy, because the dict is modified
+        element_json_list = json_dict_copy.pop("pipeline_element_list")
         element_list = []
         for element_json in element_json_list:
-            mod = __import__(element_json["module"], fromlist=[element_json["type"]])
-            element_class = getattr(mod, element_json["type"])
-            element_list.append(element_class.from_json(element_json))
+            element_list.append(pipeline_element_from_json(element_json))
         # Replace json list with list of constructed pipeline elements.
-        json_dict["pipeline_element_list"] = element_list
-        return cls(**json_dict)
+        json_dict_copy["pipeline_element_list"] = element_list
+        return cls(**json_dict_copy)
 
     @property
     def handle_nones(self) -> Literal["raise", "record_remove", "fill_dummy"]:

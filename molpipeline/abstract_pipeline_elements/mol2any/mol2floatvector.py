@@ -5,10 +5,14 @@ from __future__ import annotations
 
 import abc
 from typing import Any, Iterable, Optional
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt
-from rdkit import Chem
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
@@ -21,8 +25,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
 
     _normalize: bool
-    _mean: npt.NDArray[np.float_]
-    _std: npt.NDArray[np.float_]
+    _mean: Optional[npt.NDArray[np.float_]]
+    _std: Optional[npt.NDArray[np.float_]]
 
     def __init__(
         self,
@@ -31,8 +35,6 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         n_jobs: int = 1,
         none_handling: NoneHandlingOptions = "raise",
         fill_value: float = np.nan,
-        mean: Optional[npt.NDArray[np.float_]] = None,
-        std: Optional[npt.NDArray[np.float_]] = None,
     ) -> None:
         """Initialize MolToDescriptorPipelineElement.
 
@@ -46,25 +48,21 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
         )
         self._normalize = normalize
-        if mean is not None:
-            if len(mean.shape) > 1:
-                raise ValueError("Expected a 1-dimensional vector as mean.")
-            if mean.shape[0] == self.n_features:
-                self._mean = mean
-        if std is not None:
-            if len(std.shape) > 1:
-                raise ValueError("Expected a 1-dimensional vector as std.")
-            if std.shape[0] == self.n_features:
-                self._std = std
+        self._mean = None
+        self._std = None
 
     @classmethod
-    def from_json(cls, json_dict: dict[str, Any]) -> MolToDescriptorPipelineElement:
+    def from_json(cls, json_dict: dict[str, Any]) -> Self:
         """Create object from json dict."""
-        if "mean" in json_dict:
-            json_dict["mean"] = np.array(json_dict["mean"])
-        if "std" in json_dict:
-            json_dict["std"] = np.array(json_dict["std"])
-        return super().from_json(json_dict)
+        json_dict_copy = dict(json_dict)  # copy, because the dict is modified
+        additional_attributes = json_dict_copy.pop("additional_attributes", None)
+        if additional_attributes:
+            additional_attributes = {
+                "mean": np.array(additional_attributes["mean"]),
+                "std": np.array(additional_attributes["std"]),
+            }
+        json_dict_copy["additional_attributes"] = additional_attributes
+        return super().from_json(json_dict_copy)
 
     @property
     @abc.abstractmethod
@@ -79,23 +77,26 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         return np.vstack(list(value_list))
 
     @property
-    def params(self) -> dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
+        params = super().parameters
+        params["normalize"] = self._normalize
+        return params
+
+    @property
+    def additional_attributes(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        param_dict: dict[str, Any]
-        param_dict = {"normalize": self._normalize}
-        param_dict.update(super().params)
+        attribute_dict = super().additional_attributes
+        if self._mean is not None:
+            attribute_dict["mean"] = self._mean
+        if self._std is not None:
+            attribute_dict["std"] = self._std
+        return attribute_dict
 
-        if hasattr(self, "_mean"):
-            param_dict["mean"] = self._mean
-        if hasattr(self, "_std"):
-            param_dict["std"] = self._std
-        return param_dict
-
-    def fit(self, value_list: list[Chem.Mol]) -> None:
+    def fit(self, value_list: list[RDKitMol]) -> None:
         """Fit object to data."""
         self.fit_transform(value_list)
 
-    def fit_transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
+    def fit_transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
         """Fit object to data and return the accordingly transformed data."""
         array_list = wrap_parallelizable_task(
             self._transform_single, value_list, self.n_jobs
@@ -123,18 +124,16 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     def to_json(self) -> dict[str, Any]:
         """Return json representation of object."""
         json_dict = super().to_json()
-        if hasattr(self, "_mean"):
-            json_dict["mean"] = self._mean.tolist()
-        if hasattr(self, "_std"):
-            json_dict["std"] = self._std.tolist()
+        if self.additional_attributes:
+            json_dict["additional_attributes"] = self.additional_attributes
         return json_dict
 
-    def transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
+    def transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix."""
         descriptor_matrix: npt.NDArray[np.float_] = super().transform(value_list)
         return descriptor_matrix
 
-    def transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
+    def transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
         """Normalize _transform_single if required."""
         feature_vector = self._transform_single(value)
         if feature_vector is None:
@@ -144,7 +143,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         return feature_vector
 
     @abc.abstractmethod
-    def _transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
+    def _transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters

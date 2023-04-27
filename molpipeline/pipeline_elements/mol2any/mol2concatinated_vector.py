@@ -13,6 +13,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
 )
+from molpipeline.utils.json_operations import pipeline_element_from_json
 
 
 class MolToConcatenatedVector(MolToAnyPipelineElement):
@@ -50,11 +51,9 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> MolToConcatenatedVector:
         """Create object from json representation."""
-        component_list = [
-            MolToFingerprintPipelineElement.from_json(component)
-            for component in json_dict["component_list"]
-        ]
-        params = dict(json_dict)
+        params = dict(json_dict)  # copy, because the dict is modified
+        component_json_list = params.pop("component_list")
+        component_list = [pipeline_element_from_json(component) for component in component_json_list]
         params["component_list"] = component_list
         return super().from_json(params)
 
@@ -64,9 +63,9 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         return self._component_list[:]
 
     @property
-    def params(self) -> dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        params = super().params
+        params = super().parameters
         params.update(
             {
                 "component_list": [
@@ -75,10 +74,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             }
         )
         return params
-
-    def copy(self) -> MolToConcatenatedVector:
-        """Create a copy of the object."""
-        return MolToConcatenatedVector(**self.params)
 
     def assemble_output(
         self,

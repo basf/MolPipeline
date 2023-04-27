@@ -45,15 +45,11 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         self.mol_counter = 0
 
     @property
-    def params(self) -> dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        params = super().params
+        params = super().parameters
         params["identifier"] = self.identifier
         return params
-
-    def copy(self) -> SDFToMolPipelineElement:
-        """Create a copy of the object."""
-        return SDFToMolPipelineElement(**self.params)
 
     def finish(self) -> None:
         """Reset the mol counter which assigns identifiers."""

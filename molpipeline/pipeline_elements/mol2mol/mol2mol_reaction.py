@@ -54,15 +54,13 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         self.handle_multi = handle_multi
 
     @property
-    def params(self) -> dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        return {
-            "reaction": AllChem.ChemicalReaction(self.reaction),
-            "additive_list": [Chem.Mol(additive) for additive in self.additive_list],
-            "handle_multi": self.handle_multi,
-            "name": self.name,
-            "n_jobs": self.n_jobs,
-        }
+        parameters = super().parameters
+        parameters["reaction"] = self.reaction
+        parameters["additive_list"] = self.additive_list
+        parameters["handle_multi"] = self.handle_multi
+        return parameters
 
     @property
     def reaction(self) -> AllChem.ChemicalReaction:
@@ -75,10 +73,6 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         if not isinstance(reaction, AllChem.ChemicalReaction):
             raise TypeError("Not a Chemical reaction!")
         self._reaction = reaction
-
-    def copy(self) -> MolToMolReactionPipelineElement:
-        """Create a copy of the object."""
-        return MolToMolReactionPipelineElement(**self.params)
 
     def _transform_single(self, value: Chem.Mol) -> OptionalMol:
         """Apply reaction to molecule."""
