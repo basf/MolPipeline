@@ -1,3 +1,5 @@
+"""Contains functions for loading and saving pipeline elements and models to json files."""
+
 from __future__ import annotations
 from typing import Any
 
@@ -8,7 +10,7 @@ from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 
 
 def pipeline_element_from_json(json_dict: dict[str, Any]) -> ABCPipelineElement:
-    """Finds the class for the given PipelineElement and loads it with specified parameters.
+    """Find the class for the given PipelineElement and loads it with specified parameters.
 
     Parameters
     ----------

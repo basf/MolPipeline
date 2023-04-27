@@ -12,7 +12,6 @@ from sklearn.base import clone
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
 from molpipeline.utils.json_operations import (
-    sklearn_model_from_json,
     sklearn_model_to_json,
 )
 
@@ -297,7 +296,7 @@ class PipelineModel:
 
         Returns
         -------
-
+        PipelineModel
         """
         if "mol_pipeline" in params:
             mol_pipeline = params.pop("mol_pipeline")

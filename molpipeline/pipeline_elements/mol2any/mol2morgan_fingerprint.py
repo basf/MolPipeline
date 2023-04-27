@@ -5,7 +5,6 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 from typing import Any, Iterable, Literal, Optional
 
 import numpy as np
-from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from scipy import sparse

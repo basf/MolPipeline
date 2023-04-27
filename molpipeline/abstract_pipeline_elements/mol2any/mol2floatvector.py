@@ -79,6 +79,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
     @property
     def parameters(self) -> dict[str, Any]:
+        """Return all parameters defined during object initialization."""
         params = super().parameters
         params["normalize"] = self._normalize
         return params
