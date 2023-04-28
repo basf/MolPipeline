@@ -119,6 +119,15 @@ class ABCPipelineElement(abc.ABC):
     @property
     def parameters(self) -> dict[str, Any]:
         """Return the parameters of the object."""
+        return self.get_parameters()
+
+    @parameters.setter
+    def parameters(self, parameters: dict[str, Any]) -> None:
+        """Set the parameters of the object."""
+        self.set_parameters(parameters)
+
+    def get_parameters(self) -> dict[str, Any]:
+        """Return the parameters of the object."""
         return {
             "name": self.name,
             "none_handling": self.none_handling,
@@ -126,9 +135,8 @@ class ABCPipelineElement(abc.ABC):
             "fill_value": self.none_collector.fill_value,
         }
 
-    @parameters.setter
-    def parameters(self, parameters: dict[str, Any]) -> None:
-        """Set the parameters of the object."""
+    def set_parameters(self, parameters: dict[str, Any]) -> None:
+        """As the setter function cannot be assessed with super(), this works as a proxy."""
         for att_name, att_value in parameters.items():
             if not hasattr(self, att_name):
                 ValueError(
@@ -293,8 +301,3 @@ class MolToAnyPipelineElement(ABCPipelineElement, abc.ABC):
     @abc.abstractmethod
     def _transform_single(self, value: RDKitMol) -> Any:
         """Transform the molecules to the input specified in each child."""
-
-    @property
-    def parameters(self) -> dict[str, Any]:
-        """Get object parameters relevant for copying the class."""
-        return super().parameters
