@@ -126,6 +126,16 @@ class ABCPipelineElement(abc.ABC):
             "fill_value": self.none_collector.fill_value,
         }
 
+    @parameters.setter
+    def parameters(self, parameters: dict[str, Any]) -> None:
+        """Set the parameters of the object."""
+        for att_name, att_value in parameters.items():
+            if not hasattr(self, att_name):
+                ValueError(
+                    f"Cannot set attribute {att_name} on {self.__class__.__name__}"
+                )
+            setattr(self, att_name, att_value)
+
     def copy(self) -> Self:
         """Copy the object."""
         recreated_object = self.__class__(**self.parameters)
