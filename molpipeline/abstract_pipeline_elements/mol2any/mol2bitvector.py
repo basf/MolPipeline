@@ -97,7 +97,6 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         parameters.pop("fill_value", None)
         return parameters
 
-
     def set_parameters(self, parameters: dict[str, Any]) -> None:
         """Set parameters."""
         super().set_parameters(parameters)

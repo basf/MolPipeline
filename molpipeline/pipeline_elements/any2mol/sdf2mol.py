@@ -55,7 +55,6 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         if "identifier" in parameters:
             self.identifier = parameters["identifier"]
 
-
     def finish(self) -> None:
         """Reset the mol counter which assigns identifiers."""
         self.mol_counter = 0
