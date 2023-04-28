@@ -83,11 +83,12 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         params["normalize"] = self._normalize
         return params
 
-    def set_parameters(self, parameters: dict[str, Any]) -> None:
+    def set_parameters(self, parameters: dict[str, Any]) -> Self:
         """Set parameters."""
         super().set_parameters(parameters)
         if "normalize" in parameters:
             self._normalize = parameters["normalize"]
+        return self
 
     @property
     def additional_attributes(self) -> dict[str, Any]:
@@ -99,9 +100,10 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             attribute_dict["std"] = self._std
         return attribute_dict
 
-    def fit(self, value_list: list[RDKitMol]) -> None:
+    def fit(self, value_list: list[RDKitMol]) -> Self:
         """Fit object to data."""
         self.fit_transform(value_list)
+        return self
 
     def fit_transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
         """Fit object to data and return the accordingly transformed data."""
