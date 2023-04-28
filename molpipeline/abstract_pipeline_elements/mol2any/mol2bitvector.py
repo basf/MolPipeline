@@ -87,15 +87,24 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
                 f"Number of bits has to be a positive integer! (Received: {radius})"
             )
 
-    @property
-    def parameters(self) -> dict[str, Any]:
+    def get_parameters(self) -> dict[str, Any]:
         """Get object parameters relevant for copying the class."""
-        params = super().parameters
-        params.update({"radius": self.radius, "use_features": self.use_features})
-        params = {
-            k: v for k, v in params.items() if k != "fill_value"
-        }  # remove fill_value
-        return params
+        parameters = super().get_parameters()
+        parameters["radius"] = self.radius
+        parameters["use_features"] = self.use_features
+
+        # remove fill_value from parameters
+        parameters.pop("fill_value", None)
+        return parameters
+
+
+    def set_parameters(self, parameters: dict[str, Any]) -> None:
+        """Set parameters."""
+        super().set_parameters(parameters)
+        if "radius" in parameters:
+            self._radius = parameters["radius"]
+        if "use_features" in parameters:
+            self._use_features = parameters["use_features"]
 
     @property
     def radius(self) -> int:
