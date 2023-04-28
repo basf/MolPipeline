@@ -110,10 +110,20 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         output: npt.NDArray[np.float_] = super().transform(value_list)
         return output
 
-    def fit(self, value_list: list[Chem.Mol]) -> None:
-        """Fit each pipeline element."""
+    def fit(self, value_list: list[Chem.Mol]) -> Self:
+        """Fit each pipeline element.
+
+        Parameters
+        ----------
+        value_list: list[Chem.Mol]
+            List of molecules used to fit the pipeline elements creating the concatenated vector.
+        Returns
+        -------
+
+        """
         for pipeline_element in self._component_list:
             pipeline_element.fit(value_list)
+        return self
 
     def _transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
         """Get output of each element and concatenate for output."""

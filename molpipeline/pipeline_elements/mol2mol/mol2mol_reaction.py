@@ -54,7 +54,13 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         self.handle_multi = handle_multi
 
     def get_parameters(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
+        """Return all parameters defining the object.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing all parameters defining the object.
+        """
         parameters = super().get_parameters()
         parameters["reaction"] = self.reaction
         parameters["additive_list"] = self.additive_list

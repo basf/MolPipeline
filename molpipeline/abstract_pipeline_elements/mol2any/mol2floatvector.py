@@ -54,7 +54,18 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
-        """Create object from json dict."""
+        """Create object from json dict.
+
+        Parameters
+        ----------
+        json_dict: dict[str, Any]
+            Dictionary containing all parameters relevant to initialize the object.
+
+        Returns
+        -------
+        Self
+            Object created from json_dict.
+        """
         json_dict_copy = dict(json_dict)  # copy, because the dict is modified
         additional_attributes = json_dict_copy.pop("additional_attributes", None)
         if additional_attributes:
@@ -74,17 +85,45 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         self,
         value_list: Iterable[npt.NDArray[np.float_]],
     ) -> npt.NDArray[np.float_]:
-        """Transform output of all transform_single operations to matrix."""
+        """Transform output of all transform_single operations to matrix.
+
+        Parameters
+        ----------
+        value_list: Iterable[npt.NDArray[np.float_]]
+            List of numpy arrays with calculated descriptor values of each molecule.
+
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            Matrix with descriptor values of each molecule.
+        """
         return np.vstack(list(value_list))
 
     def get_parameters(self) -> dict[str, Any]:
-        """Return all parameters defined during object initialization."""
+        """Return all parameters defined during object initialization.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing all parameters relevant to initialize the object with same properties.
+        """
         params = super().get_parameters()
         params["normalize"] = self._normalize
         return params
 
     def set_parameters(self, parameters: dict[str, Any]) -> Self:
-        """Set parameters."""
+        """Set parameters.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dictionary with parameter names and corresponding values.
+
+        Returns
+        -------
+        Self
+            Object with updated parameters.
+        """
         super().set_parameters(parameters)
         if "normalize" in parameters:
             self._normalize = parameters["normalize"]
@@ -101,12 +140,35 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         return attribute_dict
 
     def fit(self, value_list: list[RDKitMol]) -> Self:
-        """Fit object to data."""
+        """Fit object to data.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of RDKit molecules to which the Pipeline element is fitted.
+
+        Returns
+        -------
+        Self
+            Fitted MolToDescriptorPipelineElement.
+        """
         self.fit_transform(value_list)
         return self
 
     def fit_transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
-        """Fit object to data and return the accordingly transformed data."""
+        """Fit object to data and return the accordingly transformed data.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of RDKit molecules to which the Pipeline element is fitted and for which the descriptor vectors
+            are calculated subsequently.
+
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            Matrix with descriptor values of molecules.
+        """
         array_list = wrap_parallelizable_task(
             self._transform_single, value_list, self.n_jobs
         )
@@ -134,12 +196,34 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         return value_matrix
 
     def transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
-        """Transform the list of molecules to sparse matrix."""
+        """Transform the list of molecules to sparse matrix.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of RDKit molecules for which the descriptor vectors are calculated.
+
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            Matrix with descriptor values of molecules.
+        """
         descriptor_matrix: npt.NDArray[np.float_] = super().transform(value_list)
         return descriptor_matrix
 
     def transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
-        """Normalize _transform_single if required."""
+        """Normalize _transform_single if required.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            RDKit molecule for which the descriptor vector is calculated.
+
+        Returns
+        -------
+        Optional[npt.NDArray[np.float_]]
+            Vector with descriptor values of molecule, or None if the descriptor could not be calculated.
+        """
         feature_vector = self._transform_single(value)
         if feature_vector is None:
             return None

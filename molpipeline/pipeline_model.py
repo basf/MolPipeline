@@ -40,7 +40,7 @@ class PipelineModel:
             Sklearn Model.
         handle_nones: Literal["raise", "record_remove", "fill_dummy"]
             Parameter defining the handling of nones.
-        fill_value:
+        fill_value: Any
             If handle_nones == "fill_dummy": Mols which are None are substituted with fill_value in
             final output.
         """

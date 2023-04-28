@@ -66,15 +66,31 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             )
 
     def get_parameters(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
+        """Return all parameters defining the object.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary of parameters.
+        """
         parameters = super().get_parameters()
         parameters["n_bits"] = self._n_bits
         return parameters
 
     def set_parameters(self, parameters: dict[str, Any]) -> None:
-        """Set parameters."""
+        """Set parameters.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dictionary of parameter names and values.
+        Returns
+        -------
+        None
+        """
         super().set_parameters(parameters)
-        self._n_bits = parameters["n_bits"]
+        if "n_bits" in parameters:
+            self._n_bits = parameters["n_bits"]
 
     def _transform_single(self, value: RDKitMol) -> dict[int, int]:
         """Transform a single compound to a dictionary.

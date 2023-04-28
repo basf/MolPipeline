@@ -32,11 +32,34 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     def assemble_output(
         self, value_list: Iterable[dict[int, int]]
     ) -> sparse.csr_matrix:
-        """Transform output of all transform_single operations to matrix."""
+        """Transform output of all transform_single operations to matrix.
+
+        Parameters
+        ----------
+        value_list: Iterable[dict[int, int]]
+            Iterable of dicts which encode the rows of the feature matrix. Keys: column index, values: column value.
+            Each dict represents one molecule.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Sparse matrix of Morgan-fingerprint features.
+        """
         return sparse_from_index_value_dicts(value_list, self._n_bits)
 
     def transform(self, value_list: list[RDKitMol]) -> sparse.csr_matrix:
-        """Transform the list of molecules to sparse matrix."""
+        """Transform the list of molecules to sparse matrix of Morgan-fingerprint features.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of RDKit molecules which are transformed to a sparse matrix.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Sparse matrix of Morgan-fingerprint features.
+        """
         return super().transform(value_list)
 
     @abc.abstractmethod
@@ -93,7 +116,13 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
             )
 
     def get_parameters(self) -> dict[str, Any]:
-        """Get object parameters relevant for copying the class."""
+        """Get object parameters relevant for copying the class.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary of parameter names and values.
+        """
         parameters = super().get_parameters()
         parameters["radius"] = self.radius
         parameters["use_features"] = self.use_features
@@ -111,7 +140,8 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
             Dictionary of parameter names and values.
         Returns
         -------
-        None
+        Self
+            PipelineElement with updated parameters.
         """
         super().set_parameters(parameters)
         if "radius" in parameters:
