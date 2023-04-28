@@ -84,7 +84,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         return params
 
     def set_parameters(self, parameters: dict[str, Any]) -> None:
-        """Set parameters. """
+        """Set parameters."""
         super().set_parameters(parameters)
         if "normalize" in parameters:
             self._normalize = parameters["normalize"]
@@ -112,7 +112,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         value_matrix = self.assemble_output(array_list)
         self._mean = np.nanmean(value_matrix, axis=0)
         _std: npt.NDArray[np.float_] = np.nanstd(value_matrix, axis=0)
-        _std[np.where(_std == 0)] = 1.  # avoid division by zero
+        _std[np.where(_std == 0)] = 1.0  # avoid division by zero
         self._std = _std
         normalized_matrix = self._normalize_matrix(value_matrix)
         if self.none_handling == "fill_dummy":
@@ -122,8 +122,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         return normalized_matrix
 
     def _normalize_matrix(
-            self,
-            value_matrix: npt.NDArray[np.float_]
+        self, value_matrix: npt.NDArray[np.float_]
     ) -> npt.NDArray[np.float_]:
         if self._normalize:
             if self._mean is None or self._std is None:
