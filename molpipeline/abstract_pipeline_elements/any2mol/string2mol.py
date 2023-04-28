@@ -1,5 +1,6 @@
 """Abstract classes for creating rdkit molecules from string representations."""
 from __future__ import annotations
+from typing import Any
 
 import abc
 
