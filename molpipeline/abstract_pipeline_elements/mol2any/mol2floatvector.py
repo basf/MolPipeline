@@ -77,12 +77,17 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """Transform output of all transform_single operations to matrix."""
         return np.vstack(list(value_list))
 
-    @property
-    def parameters(self) -> dict[str, Any]:
+    def get_parameters(self) -> dict[str, Any]:
         """Return all parameters defined during object initialization."""
-        params = super().parameters
+        params = super().get_parameters()
         params["normalize"] = self._normalize
         return params
+
+    def set_parameters(self, parameters: dict[str, Any]) -> None:
+        """Set parameters. """
+        super().set_parameters(parameters)
+        if "normalize" in parameters:
+            self._normalize = parameters["normalize"]
 
     @property
     def additional_attributes(self) -> dict[str, Any]:
@@ -106,8 +111,9 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         array_list = super()._catch_nones(array_list)
         value_matrix = self.assemble_output(array_list)
         self._mean = np.nanmean(value_matrix, axis=0)
-        self._std = np.nanstd(value_matrix, axis=0)
-        self._std[np.where(self._std == 0)] = 1
+        _std: npt.NDArray[np.float_] = np.nanstd(value_matrix, axis=0)
+        _std[np.where(_std == 0)] = 1.  # avoid division by zero
+        self._std = _std
         normalized_matrix = self._normalize_matrix(value_matrix)
         if self.none_handling == "fill_dummy":
             final_matrix: npt.NDArray[np.float_]
@@ -116,9 +122,12 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         return normalized_matrix
 
     def _normalize_matrix(
-        self, value_matrix: npt.NDArray[np.float_]
+            self,
+            value_matrix: npt.NDArray[np.float_]
     ) -> npt.NDArray[np.float_]:
         if self._normalize:
+            if self._mean is None or self._std is None:
+                raise ValueError("Model appears not to be fitted.")
             scaled_matrix = (value_matrix - self._mean) / self._std
             return scaled_matrix
         return value_matrix
