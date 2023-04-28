@@ -65,12 +65,16 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
                 f"Number of bits has to be a positive integer! (Received: {n_bits})"
             )
 
-    @property
-    def parameters(self) -> dict[str, Any]:
+    def get_parameters(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        parameters = super().parameters
+        parameters = super().get_parameters()
         parameters["n_bits"] = self._n_bits
         return parameters
+
+    def set_parameters(self, parameters: dict[str, Any]) -> None:
+        """Set parameters."""
+        super().set_parameters(parameters)
+        self._n_bits = parameters["n_bits"]
 
     def _transform_single(self, value: RDKitMol) -> dict[int, int]:
         """Transform a single compound to a dictionary.
@@ -172,18 +176,23 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         """Return whether the fingerprint is counted, or not."""
         return self._counted
 
-    @property
-    def parameters(self) -> dict[str, Any]:
+    def get_parameters(self) -> dict[str, Any]:
         """Get all parameters defining the object."""
-        parms = super().parameters
-        parms.update(
-            {
-                "counted": self.counted,
-                "ignore_unknown": self.ignore_unknown,
-                "bit_mapping": self._bit_mapping.copy(),
-            }
-        )
-        return parms
+        parameters = super().parameters
+        parameters["counted"] = self.counted
+        parameters["ignore_unknown"] = self.ignore_unknown
+        parameters["bit_mapping"] = self._bit_mapping.copy()
+        return parameters
+
+    def set_parameters(self, parameters: dict[str, Any]) -> None:
+        """Set all parameters defining the object."""
+        super().set_parameters(parameters)
+        if "counted" in parameters:
+            self._counted = parameters["counted"]
+        if "ignore_unknown" in parameters:
+            self.ignore_unknown = parameters["ignore_unknown"]
+        if "bit_mapping" in parameters:
+            self._bit_mapping = parameters["bit_mapping"]
 
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule."""
