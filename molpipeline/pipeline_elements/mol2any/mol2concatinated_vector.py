@@ -6,7 +6,6 @@ try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import Self
-
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
