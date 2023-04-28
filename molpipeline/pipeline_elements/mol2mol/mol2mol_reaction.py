@@ -7,6 +7,7 @@ from typing import Any, Literal
 import warnings
 
 from rdkit import Chem
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import AllChem
 
 from molpipeline.abstract_pipeline_elements.core import (
@@ -19,14 +20,14 @@ from molpipeline.utils.molpipe_types import OptionalMol
 class MolToMolReactionPipelineElement(MolToMolPipelineElement):
     """PipelineElement which transforms the input according to the specified reaction."""
 
-    additive_list: list[Chem.Mol]
+    additive_list: list[RDKitMol]
     handle_multi: Literal["pass", "warn", "raise"]
     _reaction: AllChem.ChemicalReaction
 
     def __init__(
         self,
         reaction: AllChem.ChemicalReaction,
-        additive_list: list[Chem.Mol],
+        additive_list: list[RDKitMol],
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
         none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
@@ -74,10 +75,10 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
             raise TypeError("Not a Chemical reaction!")
         self._reaction = reaction
 
-    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Apply reaction to molecule."""
         mol = value  # Only value to keep signature consistent.
-        reactant_list: list[Chem.Mol] = list(self.additive_list)
+        reactant_list: list[RDKitMol] = list(self.additive_list)
         reactant_list.append(mol)
         product_list = self.reaction.RunReactants(reactant_list)
 
