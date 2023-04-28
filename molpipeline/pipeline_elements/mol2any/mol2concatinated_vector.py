@@ -71,8 +71,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     def get_parameters(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
         parameters = super().get_parameters()
-        parameters["component_list"] = [component.copy() for component in self.component_list]
-        parameters["component_parameter_list"] = [component.parameters for component in self.component_list]
+        parameters["component_list"] = [
+            component.copy() for component in self.component_list
+        ]
+        parameters["component_parameter_list"] = [
+            component.parameters for component in self.component_list
+        ]
         return parameters
 
     def set_parameters(self, parameters: dict[str, Any]) -> None:
@@ -81,8 +85,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         if "component_list" in parameters:
             self._component_list = parameters["component_list"]
         if "component_parameter_list" in parameters:
-            for i, component_parameters in enumerate(parameters["component_parameter_list"]):
-                self._component_list[i].parameters = component_parameters
+            for i, c_parameters in enumerate(parameters["component_parameter_list"]):
+                self._component_list[i].parameters = c_parameters
         for component in self._component_list:
             component.n_jobs = self.n_jobs
 
