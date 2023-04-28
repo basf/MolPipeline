@@ -20,6 +20,7 @@ def pipeline_element_from_json(json_dict: dict[str, Any]) -> ABCPipelineElement:
     Returns
     -------
     ABCPipelineElement
+        PipelineElement specified in the json file with correspondingly specified parameters.
     """
     module_str: str = json_dict["module"]
     class_str: str = json_dict["type"]

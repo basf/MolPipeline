@@ -83,7 +83,20 @@ class PipelineModel:
     def _fit_transform_molpipeline(
         self, molecule_iterable: Iterable[Any], y_values: Optional[Iterable[Any]]
     ) -> tuple[Any, Optional[npt.NDArray[np.float_]]]:
-        """Fit and transform the molpipeline."""
+        """Fit and transform the molpipeline.
+
+        Parameters
+        ----------
+        molecule_iterable: Iterable[Any]
+            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, etc.).
+                Input depends on the first element of the mol_pipeline.
+        y_values: Optional[Iterable[Any]]
+            Values expected as output, used for ML training. Not required for unsupervised learning.
+        Returns
+        -------
+        tuple[Any, Optional[npt.NDArray[np.float_]]]
+            Tuple of transformed input and raw output. X values which are None and corresponding y values are removed.
+        """
         ml_input = self._mol_pipeline.fit_transform(molecule_iterable)
         if len(self.none_indices) > 0 and self.handle_nones == "raise":
             raise ValueError(f"Encountered Nones during fit at {self.none_indices}")
@@ -102,10 +115,12 @@ class PipelineModel:
         Parameters
         ----------
         molecule_iterable: Iterable[Any]
-            Iterable of molecules.
+            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, etc.).
+            Input depends on the first element of the mol_pipeline.
         Returns
         -------
         Any
+            Output of molpipeline transformation without applying the sklearn method.
         """
         ml_input = self._mol_pipeline.transform(molecule_iterable)
         if len(self.none_indices) > 0 and self.handle_nones == "raise":
@@ -140,6 +155,7 @@ class PipelineModel:
         Returns
         -------
         self
+            Fitted PipelineModel.
         """
         # pylint: disable=E0633
         # bug: pylint does not recognize overload
@@ -169,6 +185,7 @@ class PipelineModel:
         Returns
         -------
         npt.NDArray[Any]
+            Transformed input.
         """
         # pylint: disable=E0633
         # bug: pylint does not recognize overload
@@ -199,6 +216,7 @@ class PipelineModel:
         Returns
         -------
         npt.NDArray[Any]
+            Prediction for input.
         """
         # pylint: disable=E0633
         # bug: pylint does not recognize overload
@@ -215,6 +233,7 @@ class PipelineModel:
         Returns
         -------
         dict[str, Any]
+            Model parameters in json format.
         """
         return {
             "mol_pipeline": self._mol_pipeline.to_json(),
@@ -238,6 +257,7 @@ class PipelineModel:
         Returns
         -------
         npt.NDArray[Any]
+            Output of transformation.
         """
         ml_input = self.molpipeline_transform(molecule_iterable)
         ml_output = self._skl_model.transform(ml_input, **tranformparams)
@@ -259,6 +279,7 @@ class PipelineModel:
         Returns
         -------
         npt.NDArray[Any]
+            Array of predicted values.
         """
         ml_input = self.molpipeline_transform(molecule_iterable)
         ml_output = self._skl_model.predict(ml_input, **predictparams)
@@ -266,7 +287,17 @@ class PipelineModel:
         return final_output
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get parameters for this estimator."""
+        """Get parameters for this estimator.
+
+        Parameters
+        ----------
+        deep: bool
+            If True, create a deep copy of the parmeters.
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary of parameter names and corresponding values.
+        """
         if deep:
             parameter_dict = {
                 "mol_pipeline": self._mol_pipeline.copy(),
