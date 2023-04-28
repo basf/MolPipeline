@@ -300,6 +300,7 @@ class PipelineModel:
         Returns
         -------
         PipelineModel
+            PipelineModel with updated parameters.
         """
         params = dict(params)
 
