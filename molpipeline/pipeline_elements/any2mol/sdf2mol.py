@@ -51,6 +51,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         return params
 
     def set_parameters(self, parameters: dict[str, Any]) -> None:
+        """Set parameters of the object."""
         super().set_parameters(parameters)
         if "identifier" in parameters:
             self.identifier = parameters["identifier"]
