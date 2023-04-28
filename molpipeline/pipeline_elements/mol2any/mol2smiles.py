@@ -31,15 +31,6 @@ class MolToSmilesPipelineElement(_MolToStringPipelineElement):
             none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
         )
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        return super().params
-
-    def copy(self) -> MolToSmilesPipelineElement:
-        """Create a copy of the object."""
-        return MolToSmilesPipelineElement(**self.params)
-
     def _transform_single(self, value: Chem.Mol) -> str:
         """Transform a molecule to a SMILES string."""
         return str(Chem.MolToSmiles(value))

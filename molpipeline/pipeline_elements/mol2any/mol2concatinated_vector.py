@@ -2,6 +2,10 @@
 from __future__ import annotations
 from typing import Any, Iterable, Optional
 
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
@@ -13,6 +17,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
 )
+from molpipeline.utils.json_operations import pipeline_element_from_json
 
 
 class MolToConcatenatedVector(MolToAnyPipelineElement):
@@ -48,13 +53,13 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             component.n_jobs = self.n_jobs
 
     @classmethod
-    def from_json(cls, json_dict: dict[str, Any]) -> MolToConcatenatedVector:
+    def from_json(cls, json_dict: dict[str, Any]) -> Self:
         """Create object from json representation."""
+        params = dict(json_dict)  # copy, because the dict is modified
+        component_json_list = params.pop("component_list")
         component_list = [
-            MolToFingerprintPipelineElement.from_json(component)
-            for component in json_dict["component_list"]
+            pipeline_element_from_json(component) for component in component_json_list
         ]
-        params = dict(json_dict)
         params["component_list"] = component_list
         return super().from_json(params)
 
@@ -63,22 +68,27 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """Get component_list."""
         return self._component_list[:]
 
-    @property
-    def params(self) -> dict[str, Any]:
+    def get_parameters(self) -> dict[str, Any]:
         """Return all parameters defining the object."""
-        params = super().params
-        params.update(
-            {
-                "component_list": [
-                    component.copy() for component in self.component_list
-                ],
-            }
-        )
-        return params
+        parameters = super().get_parameters()
+        parameters["component_list"] = [
+            component.copy() for component in self.component_list
+        ]
+        parameters["component_parameter_list"] = [
+            component.parameters for component in self.component_list
+        ]
+        return parameters
 
-    def copy(self) -> MolToConcatenatedVector:
-        """Create a copy of the object."""
-        return MolToConcatenatedVector(**self.params)
+    def set_parameters(self, parameters: dict[str, Any]) -> None:
+        """Set parameters."""
+        super().set_parameters(parameters)
+        if "component_list" in parameters:
+            self._component_list = parameters["component_list"]
+        if "component_parameter_list" in parameters:
+            for i, c_parameters in enumerate(parameters["component_parameter_list"]):
+                self._component_list[i].parameters = c_parameters
+        for component in self._component_list:
+            component.n_jobs = self.n_jobs
 
     def assemble_output(
         self,

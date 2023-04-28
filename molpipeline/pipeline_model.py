@@ -11,6 +11,9 @@ from sklearn.base import clone
 
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
+from molpipeline.utils.json_operations import (
+    sklearn_model_to_json,
+)
 
 NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 
@@ -206,6 +209,20 @@ class PipelineModel:
         final_output = self._finalize_output(ml_output)
         return final_output
 
+    def to_json(self) -> dict[str, Any]:
+        """Transform model parameters to json format.
+
+        Returns
+        -------
+        dict[str, Any]
+        """
+        return {
+            "mol_pipeline": self._mol_pipeline.to_json(),
+            "skl_model": sklearn_model_to_json(self._skl_model),
+            "none_indices": self.none_indices,
+            "handle_nones": self.handle_nones,
+        }
+
     def transform(
         self, molecule_iterable: Iterable[Any], **tranformparams: dict[Any, Any]
     ) -> npt.NDArray[Any]:
@@ -253,41 +270,64 @@ class PipelineModel:
         if deep:
             parameter_dict = {
                 "mol_pipeline": self._mol_pipeline.copy(),
+                "mol_pipeline_parameters": self._mol_pipeline.parameters,
                 "sklearn_model": clone(self._skl_model),
+                "sklearn_model_parameters": self._skl_model.get_params(),
                 "handle_nones": str(self.handle_nones),
                 "fill_value": copy.copy(self._none_collector.fill_value),
             }
-            """Get parameters for this estimator."""
             return parameter_dict
         parameter_dict = {
             "mol_pipeline": self._mol_pipeline,
+            "mol_pipeline_parameters": self._mol_pipeline.parameters,
             "sklearn_model": self._skl_model,
+            "sklearn_model_parameters": self._skl_model.get_params(),
             "handle_nones": self.handle_nones,
             "fill_value": self._none_collector.fill_value,
         }
         return parameter_dict
 
     def set_params(self, **params: dict[str, Any]) -> PipelineModel:
-        """Set the parameters of this estimator."""
+        """Set the parameters of this estimator.
+
+        Implemented for compatibility with sklearn GridSearchCV.
+
+        Parameters
+        ----------
+        params: dict[str, Any]
+            Dictionary of model parameters.
+
+        Returns
+        -------
+        PipelineModel
+            PipelineModel with updated parameters.
+        """
+        params = dict(params)
+
         if "mol_pipeline" in params:
             mol_pipeline = params.pop("mol_pipeline")
             if not isinstance(mol_pipeline, MolPipeline):
                 raise TypeError(f"Not a MoleculePipeline: {type(mol_pipeline)}")
             self._mol_pipeline = mol_pipeline
+
+        self._mol_pipeline.parameters = params.pop("mol_pipeline_parameters", {})
+
         if "handle_nones" in params:
             value = params.pop("handle_nones")
             if value not in get_args(NoneHandlingOptions):
                 raise TypeError(f"Invalid selection for NoneHandlingOptions: {value}")
             self.handle_nones = value  # type: ignore
+
         if "fill_value" in params:
             self._none_collector.fill_value = params.pop("fill_value")
+
         if "sklearn_model" in params:
             skl_model = params.pop("sklearn_model")
             if not hasattr(skl_model, "set_params"):
                 raise TypeError(
                     "Potentially not an SKLearn model, as it does not have the function set_params!"
                 )
-            if params:
-                skl_model.set_params(**params)
-            self._skl_model = skl_model
+
+        if "sklearn_model_parameters" in params:
+            self._skl_model.set_params(**params.pop("sklearn_model_parameters"))
         return self

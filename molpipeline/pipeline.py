@@ -6,6 +6,7 @@ from typing import Any, Literal, Union
 
 import numpy as np
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
+from molpipeline.utils.json_operations import pipeline_element_from_json
 from molpipeline.utils.multi_proc import check_available_cores
 from molpipeline.utils.none_handling import NoneCollector
 
@@ -37,15 +38,14 @@ class MolPipeline:
     def from_json(cls, json_dict: dict[str, Any]) -> MolPipeline:
         """Create object from json dict."""
         # Transform pipeline elements from json to objects.
-        element_json_list = json_dict.pop("pipeline_element_list")
+        json_dict_copy = dict(json_dict)  # copy, because the dict is modified
+        element_json_list = json_dict_copy.pop("pipeline_element_list")
         element_list = []
         for element_json in element_json_list:
-            mod = __import__(element_json["module"], fromlist=[element_json["type"]])
-            element_class = getattr(mod, element_json["type"])
-            element_list.append(element_class.from_json(element_json))
+            element_list.append(pipeline_element_from_json(element_json))
         # Replace json list with list of constructed pipeline elements.
-        json_dict["pipeline_element_list"] = element_list
-        return cls(**json_dict)
+        json_dict_copy["pipeline_element_list"] = element_list
+        return cls(**json_dict_copy)
 
     @property
     def handle_nones(self) -> Literal["raise", "record_remove", "fill_dummy"]:
@@ -76,7 +76,7 @@ class MolPipeline:
         self._n_jobs = check_available_cores(requested_jobs)
 
     @property
-    def params(self) -> dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         """Get all parameters defining the object."""
         return {
             "pipeline_element_list": self.pipeline_elements,
@@ -86,9 +86,23 @@ class MolPipeline:
             "fill_value": self.none_collector.fill_value,
         }
 
+    @parameters.setter
+    def parameters(self, parameter_dict: dict[str, Any]) -> None:
+        """Set parameters of the pipeline and pipeline elements."""
+        if "pipeline_element_list" in parameter_dict:
+            self._pipeline_element_list = parameter_dict["pipeline_element_list"]
+        if "n_jobs" in parameter_dict:
+            self.n_jobs = parameter_dict["n_jobs"]
+        if "handle_nones" in parameter_dict:
+            self.handle_nones = parameter_dict["handle_nones"]
+        if "fill_value" in parameter_dict:
+            self.none_collector.fill_value = parameter_dict["fill_value"]
+        if "name" in parameter_dict:
+            self.name = parameter_dict["name"]
+
     @property
     def pipeline_elements(self) -> list[ABCPipelineElement]:
-        """Get a copy of the list of pipeline elements."""
+        """Get a shallow copy from the list of pipeline elements."""
         return self._pipeline_element_list[:]  # [:] to create shallow copy.
 
     def fit(
@@ -158,7 +172,7 @@ class MolPipeline:
 
     def to_json(self) -> dict[str, Any]:
         """Convert the pipeline to a json string."""
-        json_dict = self.params
+        json_dict = self.parameters
         json_dict["pipeline_element_list"] = [
             p_element.to_json() for p_element in self.pipeline_elements
         ]
@@ -232,12 +246,10 @@ class MolPipeline:
 
     def __getitem__(self, index: slice) -> MolPipeline:
         """Get new MolPipeline with a slice of elements."""
-        element_slice = self.pipeline_elements[index]
-        parameter = {
-            key: value
-            for key, value in self.params.items()
-            if key != "pipeline_element_list"
-        }
+        parameter = self.parameters
+        pipeline_element_list = parameter.pop("pipeline_element_list")
+        element_slice = pipeline_element_list[index]
+
         if isinstance(element_slice, list):
             element_slice_copy = [element.copy() for element in element_slice]
             return MolPipeline(element_slice_copy, **parameter)
@@ -252,7 +264,7 @@ class MolPipeline:
         pipeline_element_list = self.pipeline_elements[:]
         parameter = {
             key: value
-            for key, value in self.params.items()
+            for key, value in self.parameters.items()
             if key != "pipeline_element_list"
         }
         if isinstance(other, ABCPipelineElement):

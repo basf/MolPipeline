@@ -37,8 +37,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         n_jobs: int = 1,
         none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
-        mean: Optional[npt.NDArray[np.float_]] = None,
-        std: Optional[npt.NDArray[np.float_]] = None,
     ) -> None:
         """Initialize MolToRDKitPhysChem.
 
@@ -56,8 +54,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             n_jobs=n_jobs,
             none_handling=none_handling,
             fill_value=fill_value,
-            mean=mean,
-            std=std,
         )
 
     @property
@@ -69,15 +65,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
     def descriptor_list(self) -> list[str]:
         """Return a copy of the descriptor list."""
         return self._descriptor_list[:]
-
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        return super().params
-
-    def copy(self) -> MolToRDKitPhysChem:
-        """Create a copy of the object."""
-        return MolToRDKitPhysChem(**self.params)
 
     def _transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
         vec = np.array(

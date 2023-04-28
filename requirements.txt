@@ -4,3 +4,4 @@ rdkit
 scipy
 setuptools
 scikit-learn
+typing_extensions

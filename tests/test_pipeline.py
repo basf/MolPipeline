@@ -75,23 +75,27 @@ class PipelineTest(unittest.TestCase):
         first_half = m_pipeline[:2]
         second_half = m_pipeline[2:]
         self.assertEqual(
-            first_half.pipeline_elements[0].params, pipeline_element_list[0].params
+            first_half.pipeline_elements[0].parameters,
+            pipeline_element_list[0].parameters,
         )
         self.assertEqual(
-            first_half.pipeline_elements[1].params, pipeline_element_list[1].params
+            first_half.pipeline_elements[1].parameters,
+            pipeline_element_list[1].parameters,
         )
         self.assertEqual(
-            second_half.pipeline_elements[0].params, pipeline_element_list[2].params
+            second_half.pipeline_elements[0].parameters,
+            pipeline_element_list[2].parameters,
         )
         self.assertEqual(
-            second_half.pipeline_elements[1].params, pipeline_element_list[3].params
+            second_half.pipeline_elements[1].parameters,
+            pipeline_element_list[3].parameters,
         )
 
         concatenated_pipeline = first_half + second_half
         for concat_element, original_element in zip(
             concatenated_pipeline.pipeline_elements, pipeline_element_list
         ):
-            self.assertEqual(concat_element.params, original_element.params)
+            self.assertEqual(concat_element.parameters, original_element.parameters)
 
     def test_salt_removal(self) -> None:
         smiles_with_salt_list = ["CCO-[Na]", "CCC(=O)[O-].[Li+]", "CCC(=O)-O-[K]"]
@@ -134,7 +138,7 @@ class PipelineTest(unittest.TestCase):
         for loaded_element, original_element in zip(
             loaded_pipeline.pipeline_elements, pipeline_element_list
         ):
-            self.assertEqual(loaded_element.params, original_element.params)
+            self.assertEqual(loaded_element.parameters, original_element.parameters)
 
 
 if __name__ == "__main__":
