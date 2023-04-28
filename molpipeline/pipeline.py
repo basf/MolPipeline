@@ -80,9 +80,6 @@ class MolPipeline:
         """Get all parameters defining the object."""
         return {
             "pipeline_element_list": self.pipeline_elements,
-            "pipeline_element_parameters": [
-                p_ele.parameters for p_ele in self.pipeline_elements
-            ],
             "n_jobs": self.n_jobs,
             "name": self.name,
             "handle_nones": self.handle_nones,
@@ -94,11 +91,6 @@ class MolPipeline:
         """Set parameters of the pipeline and pipeline elements."""
         if "pipeline_element_list" in parameter_dict:
             self._pipeline_element_list = parameter_dict["pipeline_element_list"]
-        if "pipeline_element_parameters" in parameter_dict:
-            for i, pipeline_element_parameters in enumerate(
-                parameter_dict["pipeline_element_parameters"]
-            ):
-                self._pipeline_element_list[i].parameters = pipeline_element_parameters
         if "n_jobs" in parameter_dict:
             self.n_jobs = parameter_dict["n_jobs"]
         if "handle_nones" in parameter_dict:
@@ -110,7 +102,7 @@ class MolPipeline:
 
     @property
     def pipeline_elements(self) -> list[ABCPipelineElement]:
-        """Get a copy of the list of pipeline elements."""
+        """Get a shallow copy from the list of pipeline elements."""
         return self._pipeline_element_list[:]  # [:] to create shallow copy.
 
     def fit(
@@ -254,12 +246,10 @@ class MolPipeline:
 
     def __getitem__(self, index: slice) -> MolPipeline:
         """Get new MolPipeline with a slice of elements."""
-        element_slice = self.pipeline_elements[index]
-        parameter = {
-            key: value
-            for key, value in self.parameters.items()
-            if key != "pipeline_element_list"
-        }
+        parameter = self.parameters
+        pipeline_element_list = parameter.pop("pipeline_element_list")
+        element_slice = pipeline_element_list[index]
+
         if isinstance(element_slice, list):
             element_slice_copy = [element.copy() for element in element_slice]
             return MolPipeline(element_slice_copy, **parameter)
