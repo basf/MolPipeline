@@ -6,7 +6,6 @@ from __future__ import annotations
 from typing import Any, Literal
 import warnings
 
-from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import AllChem
 
