@@ -90,7 +90,7 @@ class MolPipeline:
         }
 
     @parameters.setter
-    def parameters(self, parameter_dict) -> None:
+    def parameters(self, parameter_dict: dict[str, Any]) -> None:
         """Set parameters of the pipeline and pipeline elements."""
         if "pipeline_element_list" in parameter_dict:
             self._pipeline_element_list = parameter_dict["pipeline_element_list"]
