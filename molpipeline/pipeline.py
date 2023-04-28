@@ -95,7 +95,9 @@ class MolPipeline:
         if "pipeline_element_list" in parameter_dict:
             self._pipeline_element_list = parameter_dict["pipeline_element_list"]
         if "pipeline_element_parameters" in parameter_dict:
-            for i, pipeline_element_parameters in enumerate(parameter_dict["pipeline_element_parameters"]):
+            for i, pipeline_element_parameters in enumerate(
+                parameter_dict["pipeline_element_parameters"]
+            ):
                 self._pipeline_element_list[i].parameters = pipeline_element_parameters
         if "n_jobs" in parameter_dict:
             self.n_jobs = parameter_dict["n_jobs"]
@@ -105,7 +107,6 @@ class MolPipeline:
             self.none_collector.fill_value = parameter_dict["fill_value"]
         if "name" in parameter_dict:
             self.name = parameter_dict["name"]
-
 
     @property
     def pipeline_elements(self) -> list[ABCPipelineElement]:
