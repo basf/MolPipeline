@@ -3,6 +3,11 @@
 from __future__ import annotations
 from typing import Any
 
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
+
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
@@ -56,7 +61,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         params["identifier"] = self.identifier
         return params
 
-    def set_parameters(self, parameters: dict[str, Any]) -> None:
+    def set_parameters(self, parameters: dict[str, Any]) -> Self:
         """Set parameters of the object.
 
         Parameters
@@ -66,11 +71,12 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
 
         Returns
         -------
-        None
+        Self
         """
         super().set_parameters(parameters)
         if "identifier" in parameters:
             self.identifier = parameters["identifier"]
+        return self
 
     def finish(self) -> None:
         """Reset the mol counter which assigns identifiers."""

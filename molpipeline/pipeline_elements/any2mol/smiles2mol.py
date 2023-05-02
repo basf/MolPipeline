@@ -1,8 +1,10 @@
 """Classes ment to transform given input to a RDKit molecule."""
+
 from __future__ import annotations
 
 from typing import Any
 from rdkit import Chem
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
@@ -45,7 +47,7 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
         OptionalMol
             Rdkit molecule if valid SMILES, else None.
         """
-        mol: Chem.Mol = Chem.MolFromSmiles(value)
+        mol: RDKitMol = Chem.MolFromSmiles(value)
         if not mol:
             return None
         mol.SetProp("identifier", value)
