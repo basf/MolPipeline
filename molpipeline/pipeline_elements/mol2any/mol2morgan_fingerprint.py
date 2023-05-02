@@ -3,6 +3,7 @@
 from __future__ import annotations  # for all the python 3.8 users out there.
 
 from typing import Any, Iterable, Literal, Optional
+
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
