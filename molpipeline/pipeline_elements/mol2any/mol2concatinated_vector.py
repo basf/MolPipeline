@@ -8,7 +8,7 @@ except ImportError:
     from typing_extensions import Self
 import numpy as np
 import numpy.typing as npt
-from rdkit import Chem
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
@@ -79,7 +79,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ]
         return parameters
 
-    def set_parameters(self, parameters: dict[str, Any]) -> None:
+    def set_parameters(self, parameters: dict[str, Any]) -> Self:
         """Set parameters."""
         super().set_parameters(parameters)
         if "component_list" in parameters:
@@ -89,6 +89,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
                 self._component_list[i].parameters = c_parameters
         for component in self._component_list:
             component.n_jobs = self.n_jobs
+        return self
 
     def assemble_output(
         self,
@@ -105,27 +106,27 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ]
         return json_dict
 
-    def transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
+    def transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix."""
         output: npt.NDArray[np.float_] = super().transform(value_list)
         return output
 
-    def fit(self, value_list: list[Chem.Mol]) -> Self:
+    def fit(self, value_list: list[RDKitMol]) -> Self:
         """Fit each pipeline element.
 
         Parameters
         ----------
-        value_list: list[Chem.Mol]
+        value_list: list[RDKitMol]
             List of molecules used to fit the pipeline elements creating the concatenated vector.
         Returns
         -------
-
+        Self
         """
         for pipeline_element in self._component_list:
             pipeline_element.fit(value_list)
         return self
 
-    def _transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
+    def _transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
         """Get output of each element and concatenate for output."""
         final_vector = []
         for pipeline_element in self._component_list:
