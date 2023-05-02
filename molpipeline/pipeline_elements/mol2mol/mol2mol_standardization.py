@@ -47,11 +47,10 @@ class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
         super().__init__(
             none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
         )
-        self._metal_disconnector = rdMolStandardize.MetalDisconnector()
 
     def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Cleave bonds with metals."""
-        return self._metal_disconnector.Disconnect(value)
+        return rdMolStandardize.MetalDisconnector().Disconnect(value)
 
 
 class SaltRemoverPipelineElement(_MolToMolPipelineElement):
