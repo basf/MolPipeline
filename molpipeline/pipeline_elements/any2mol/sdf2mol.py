@@ -72,6 +72,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         Returns
         -------
         Self
+            SDFToMolPipelineElement with updated parameters.
         """
         super().set_parameters(parameters)
         if "identifier" in parameters:

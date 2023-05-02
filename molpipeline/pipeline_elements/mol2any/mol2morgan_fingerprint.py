@@ -3,6 +3,10 @@
 from __future__ import annotations  # for all the python 3.8 users out there.
 
 from typing import Any, Iterable, Literal, Optional
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 
 import numpy as np
 from rdkit.Chem import AllChem
@@ -77,7 +81,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         parameters["n_bits"] = self._n_bits
         return parameters
 
-    def set_parameters(self, parameters: dict[str, Any]) -> None:
+    def set_parameters(self, parameters: dict[str, Any]) -> Self:
         """Set parameters.
 
         Parameters
@@ -86,11 +90,13 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             Dictionary of parameter names and values.
         Returns
         -------
-        None
+        Self
+            MolToFoldedMorganFingerprint pipeline element with updated parameters.
         """
         super().set_parameters(parameters)
         if "n_bits" in parameters:
             self._n_bits = parameters["n_bits"]
+        return self
 
     def _transform_single(self, value: RDKitMol) -> dict[int, int]:
         """Transform a single compound to a dictionary.
@@ -193,15 +199,32 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         return self._counted
 
     def get_parameters(self) -> dict[str, Any]:
-        """Get all parameters defining the object."""
+        """Get all parameters defining the object.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary of parameters defining the object.
+        """
         parameters = super().parameters
         parameters["counted"] = self.counted
         parameters["ignore_unknown"] = self.ignore_unknown
         parameters["bit_mapping"] = self._bit_mapping.copy()
         return parameters
 
-    def set_parameters(self, parameters: dict[str, Any]) -> None:
-        """Set all parameters defining the object."""
+    def set_parameters(self, parameters: dict[str, Any]) -> Self:
+        """Set all parameters defining the object.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dictionary of parameter names and values to be set.
+
+        Returns
+        -------
+        Self
+            MolToUnfoldedMorganFingerprint pipeline element with updated parameters.
+        """
         super().set_parameters(parameters)
         if "counted" in parameters:
             self._counted = parameters["counted"]
@@ -209,6 +232,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             self.ignore_unknown = parameters["ignore_unknown"]
         if "bit_mapping" in parameters:
             self._bit_mapping = parameters["bit_mapping"]
+        return self
 
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule."""
@@ -222,12 +246,35 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         bit_info = {self._bit_mapping[k]: v for k, v in original_bit_info.items()}
         return bit_info
 
-    def fit(self, value_list: list[RDKitMol]) -> None:
-        """Determine all features and assign each a unique position in the fingerprint-vector."""
+    def fit(self, value_list: list[RDKitMol]) -> Self:
+        """Determine all features and assign each a unique position in the fingerprint-vector.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of molecules used for fitting.
+
+        Returns
+        -------
+        Self
+            The fitted MolToUnfoldedMorganFingerprint pipeline element.
+        """
         _ = self._fit(value_list)
+        return self
 
     def fit_transform(self, value_list: list[RDKitMol]) -> sparse.csr_matrix:
-        """Create a feature mapping based on input and apply it for transformation."""
+        """Create a feature mapping based on input and apply it for transformation.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of molecules to fit and transform.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Fingerprint-matrix of shape (len(value_list), n_features).
+        """
         hash_count_list = self._fit(value_list)
         mapped_feature_count_dicts = [
             self._map_feature_dict(f_dict) for f_dict in hash_count_list
@@ -235,13 +282,34 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         return self.assemble_output(mapped_feature_count_dicts)
 
     def _transform_single(self, value: RDKitMol) -> dict[int, int]:
-        """Return a dict, where the key is the feature-position and the value is the count."""
+        """Return a dict, where the key is the feature-position and the value is the count.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule for which the fingerprint is generated.
+
+        Returns
+        -------
+        dict[int, int]
+            Dictionary with feature-position as key and count as value.
+        """
         feature_count_dict = self._pretransform_single(value)
         bit_count_dict = self._map_feature_dict(feature_count_dict)
         return bit_count_dict
 
     def _create_mapping(self, feature_hash_dict_list: Iterable[dict[int, int]]) -> None:
-        """Create a mapping from feature hash to bit position."""
+        """Create a mapping from feature hash to bit position.
+
+        Parameters
+        ----------
+        feature_hash_dict_list: Iterable[dict[int, int]]
+            List of feature hash dicts from molecules presented during fitting.
+
+        Returns
+        -------
+        None
+        """
         unraveled_features = [
             f for f_dict in feature_hash_dict_list for f in f_dict.keys()
         ]
@@ -257,6 +325,17 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         self._n_bits = len(self._bit_mapping)
 
     def _fit(self, mol_obj_list: list[RDKitMol]) -> list[dict[int, int]]:
+        """Transform and return all molecules to feature hashes, create mapping from obtained hashes.
+
+        Parameters
+        ----------
+        mol_obj_list: list[RDKitMol]
+            List of molecules presented during fitting which are used to create the mapping.
+        Returns
+        -------
+        list[dict[int, int]]
+            List of feature hash dicts for input molecules.
+        """
         hash_count_list = [
             self._pretransform_single(mol_obj) for mol_obj in mol_obj_list
         ]
@@ -264,15 +343,16 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         return hash_count_list
 
     def _map_feature_dict(self, feature_count_dict: dict[int, int]) -> dict[int, int]:
-        """Transform a dict of feature hash and occurrence to a dict of bit-pos and occurence.
+        """Transform a dict of feature hash and occurrence to a dict of bit-pos and occurrence.
 
         Parameters
         ----------
         feature_count_dict: dict[int, int]
-
+            A dictionary with feature-hash and count.
         Returns
         -------
         dict[int, int]
+            A dictionary with bit-position for given feature hashes and respective counts as values.
         """
         mapped_count_dict = {}
         for feature_hash, feature_count in feature_count_dict.items():
@@ -287,7 +367,18 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         return mapped_count_dict
 
     def _pretransform_single(self, mol: RDKitMol) -> dict[int, int]:
-        """Return a dict, where the key is the feature-hash and the value is the count."""
+        """Return a dict, where the key is the feature-hash and the value is the count.
+
+        Parameters
+        ----------
+        mol: RDKitMol
+            Molecule for which features are derived.
+
+        Returns
+        -------
+        dict[int, int]
+            A dictionary with feature-hash and count.
+        """
         morgan_features = AllChem.GetMorganFingerprint(
             mol, self.radius, useFeatures=self.use_features
         )

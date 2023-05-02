@@ -4,6 +4,10 @@
 from __future__ import annotations
 
 from typing import Any, Literal
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 import warnings
 
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
@@ -67,8 +71,19 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         parameters["handle_multi"] = self.handle_multi
         return parameters
 
-    def set_parameters(self, parameters: dict[str, Any]) -> None:
-        """Set the parameters."""
+    def set_parameters(self, parameters: dict[str, Any]) -> Self:
+        """Set the parameters.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dictionary containing parameters to be set.
+
+        Returns
+        -------
+        Self
+            MolToMolReactionPipelineElement with updated parameters.
+        """
         super().set_parameters(parameters)
         if "reaction" in parameters:
             self.reaction = parameters["reaction"]
@@ -76,6 +91,7 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
             self.additive_list = parameters["additive_list"]
         if "handle_multi" in parameters:
             self.handle_multi = parameters["handle_multi"]
+        return self
 
     @property
     def reaction(self) -> AllChem.ChemicalReaction:

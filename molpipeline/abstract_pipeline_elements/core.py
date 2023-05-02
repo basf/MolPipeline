@@ -51,6 +51,24 @@ class ABCPipelineElement(abc.ABC):
         self.n_jobs = n_jobs
         self.none_collector = NoneCollector(fill_value)
 
+    def __eq__(self, other: Any) -> bool:
+        """Check weather the two elements are equal.
+
+        Parameters
+        ----------
+        other: Any
+            Other element to compare to.
+        Returns
+        -------
+        bool
+            True if the two elements are equal.
+        """
+        if not isinstance(other, ABCPipelineElement):
+            return False
+        if not self.__class__ == other.__class__:
+            return False
+        return self.to_json() == other.to_json()
+
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
         """Create object from json dict.
@@ -331,7 +349,7 @@ class ABCPipelineElement(abc.ABC):
         Returns
         -------
         dict[str, Any]
-            A dictionary with all attributes nessessary to initialize a object with same parameters.
+            A dictionary with all attributes necessary to initialize a object with same parameters.
         """
         json_dict: dict[str, Any] = {
             "type": self.__class__.__name__,

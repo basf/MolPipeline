@@ -309,7 +309,7 @@ class MolPipeline:
                 yield transformed_value
         self._finish()
 
-    def copy(self) -> Self:
+    def copy(self) -> MolPipeline:
         """Return a copy of the MolPipeline.
 
         PipelineElements are copied as well and thus are not linked to the original.
@@ -322,7 +322,17 @@ class MolPipeline:
         return self[:]
 
     def __getitem__(self, index: slice) -> MolPipeline:
-        """Get new MolPipeline with a slice of elements."""
+        """Get new MolPipeline with a slice of elements.
+
+        Parameters
+        ----------
+        index: slice
+            Slice which specifies the elements to be included in the new MolPipeline.
+        Returns
+        -------
+        MolPipeline
+            New MolPipeline with the specified elements.
+        """
         parameter = self.parameters
         pipeline_element_list = parameter.pop("pipeline_element_list")
         element_slice = pipeline_element_list[index]

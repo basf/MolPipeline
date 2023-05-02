@@ -301,7 +301,6 @@ class PipelineModel:
         if deep:
             parameter_dict = {
                 "mol_pipeline": self._mol_pipeline.copy(),
-                "mol_pipeline_parameters": self._mol_pipeline.parameters,
                 "sklearn_model": clone(self._skl_model),
                 "sklearn_model_parameters": self._skl_model.get_params(),
                 "handle_nones": str(self.handle_nones),
@@ -310,7 +309,6 @@ class PipelineModel:
             return parameter_dict
         parameter_dict = {
             "mol_pipeline": self._mol_pipeline,
-            "mol_pipeline_parameters": self._mol_pipeline.parameters,
             "sklearn_model": self._skl_model,
             "sklearn_model_parameters": self._skl_model.get_params(),
             "handle_nones": self.handle_nones,

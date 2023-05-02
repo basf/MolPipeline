@@ -54,7 +54,17 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
-        """Create object from json representation."""
+        """Create object from json representation.
+
+        Parameters
+        ----------
+        json_dict: dict[str, Any]
+            Json representation of object.
+        Returns
+        -------
+        Self
+            Mol2ConcatenatedVector pipeline element specified by json_dict.
+        """
         params = dict(json_dict)  # copy, because the dict is modified
         component_json_list = params.pop("component_list")
         component_list = [
@@ -69,7 +79,13 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         return self._component_list[:]
 
     def get_parameters(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
+        """Return all parameters defining the object.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters defining the object.
+        """
         parameters = super().get_parameters()
         parameters["component_list"] = [
             component.copy() for component in self.component_list
@@ -80,7 +96,17 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         return parameters
 
     def set_parameters(self, parameters: dict[str, Any]) -> Self:
-        """Set parameters."""
+        """Set parameters.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameters to set.
+        Returns
+        -------
+        Self
+            Mol2ConcatenatedVector object with updated parameters.
+        """
         super().set_parameters(parameters)
         if "component_list" in parameters:
             self._component_list = parameters["component_list"]
@@ -95,11 +121,27 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         self,
         value_list: Iterable[npt.NDArray[np.float_]],
     ) -> npt.NDArray[np.float_]:
-        """Transform output of all transform_single operations to matrix."""
+        """Transform output of all transform_single operations to matrix.
+
+        Parameters
+        ----------
+        value_list: Iterable[npt.NDArray[np.float_]]
+            List of molecular descriptors or fingerprints which are concatenated to a single matrix.
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+        """
         return np.vstack(list(value_list))
 
     def to_json(self) -> dict[str, Any]:
-        """Return json representation of the object."""
+        """Return json representation of the object.
+
+        Returns
+        -------
+        dict[str, Any]
+            Json representation of the object.
+        """
         json_dict = super().to_json()
         json_dict["component_list"] = [
             component.to_json() for component in self.component_list
@@ -107,7 +149,17 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         return json_dict
 
     def transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
-        """Transform the list of molecules to sparse matrix."""
+        """Transform the list of molecules to sparse matrix.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of molecules to transform.
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+        """
         output: npt.NDArray[np.float_] = super().transform(value_list)
         return output
 
@@ -121,6 +173,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Returns
         -------
         Self
+            Fitted pipelineelement.
         """
         for pipeline_element in self._component_list:
             pipeline_element.fit(value_list)
