@@ -1,11 +1,18 @@
 """Defines the pipeline which handles pipeline elements."""
 from __future__ import annotations
 
+import copy
 import multiprocessing
 from typing import Any, Literal, Union
 
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
+
 import numpy as np
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
+from molpipeline.utils.json_operations import pipeline_element_from_json
 from molpipeline.utils.multi_proc import check_available_cores
 from molpipeline.utils.none_handling import NoneCollector
 
@@ -34,29 +41,55 @@ class MolPipeline:
         self.none_collector = NoneCollector(fill_value=fill_value)
 
     @classmethod
-    def from_json(cls, json_dict: dict[str, Any]) -> MolPipeline:
-        """Create object from json dict."""
+    def from_json(cls, json_dict: dict[str, Any]) -> Self:
+        """Create object from json dict.
+
+        Parameters
+        ----------
+        json_dict: dict[str, Any]
+            Json dict containing the parameters to create the object.
+        Returns
+        -------
+        MolPipeline:
+            MolPipeline created from the json dict.
+        """
         # Transform pipeline elements from json to objects.
-        element_json_list = json_dict.pop("pipeline_element_list")
+        json_dict_copy = dict(json_dict)  # copy, because the dict is modified
+        element_json_list = json_dict_copy.pop("pipeline_element_list")
         element_list = []
         for element_json in element_json_list:
-            mod = __import__(element_json["module"], fromlist=[element_json["type"]])
-            element_class = getattr(mod, element_json["type"])
-            element_list.append(element_class.from_json(element_json))
+            element_list.append(pipeline_element_from_json(element_json))
         # Replace json list with list of constructed pipeline elements.
-        json_dict["pipeline_element_list"] = element_list
-        return cls(**json_dict)
+        json_dict_copy["pipeline_element_list"] = element_list
+        return cls(**json_dict_copy)
 
     @property
     def handle_nones(self) -> Literal["raise", "record_remove", "fill_dummy"]:
-        """Get string defining the handling of Nones."""
+        """Get string defining the handling of Nones.
+
+        Returns
+        -------
+        Literal["raise", "record_remove", "fill_dummy"]
+        """
         return self._handle_nones
 
     @handle_nones.setter
     def handle_nones(
         self, handle_nones: Literal["raise", "record_remove", "fill_dummy"]
     ) -> None:
-        """Set string defining the handling of Nones."""
+        """Set string defining the handling of Nones.
+
+        Parameters
+        ----------
+        handle_nones: Literal["raise", "record_remove", "fill_dummy"]
+            Specifies how molecules which map to None are handled:
+            - raise: Raises an error if a None is encountered.
+            - record_remove: Removes the molecule from the list and records the position.
+            - fill_dummy: Fills the output with a dummy value on the position of the None.
+        Returns
+        -------
+        None
+        """
         self._handle_nones = handle_nones
         if handle_nones == "raise":
             for element in self.pipeline_elements:
@@ -72,23 +105,96 @@ class MolPipeline:
 
     @n_jobs.setter
     def n_jobs(self, requested_jobs: int) -> None:
-        """Set the number of cores to use in transformation step."""
+        """Set the number of cores to use in transformation step.
+
+        Parameters
+        ----------
+        requested_jobs: int
+            Number of cores requested for transformation steps.
+            If fewer cores than requested are available, the number of cores is set to maximum available.
+        Returns
+        -------
+        None
+        """
         self._n_jobs = check_available_cores(requested_jobs)
 
     @property
-    def params(self) -> dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         """Get all parameters defining the object."""
+        return self.get_params()
+
+    @parameters.setter
+    def parameters(self, parameter_dict: dict[str, Any]) -> None:
+        """Set parameters of the pipeline and pipeline elements.
+
+        Parameters
+        ----------
+        parameter_dict: dict[str, Any]
+            Dictionary containing the parameter names and corresponding values to be set.
+
+        Returns
+        -------
+        None
+        """
+        self.set_params(parameter_dict)
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get all parameters defining the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing the parameter names and corresponding values.
+        """
+        if deep:
+            return {
+                "pipeline_element_list": self.pipeline_elements,
+                "n_jobs": self.n_jobs,
+                "name": self.name,
+                "handle_nones": copy.copy(self.handle_nones),
+                "fill_value": copy.copy(self.none_collector.fill_value),
+            }
         return {
-            "pipeline_element_list": self.pipeline_elements,
+            "pipeline_element_list": self._pipeline_element_list,
             "n_jobs": self.n_jobs,
             "name": self.name,
             "handle_nones": self.handle_nones,
             "fill_value": self.none_collector.fill_value,
         }
 
+    def set_params(self, parameter_dict: dict[str, Any]) -> Self:
+        """Set parameters of the pipeline and pipeline elements.
+
+        Parameters
+        ----------
+        parameter_dict: dict[str, Any]
+            Dictionary containing the parameter names and corresponding values to be set.
+
+        Returns
+        -------
+        Self
+            MolPipeline object with updated parameters.
+        """
+        if "pipeline_element_list" in parameter_dict:
+            self._pipeline_element_list = parameter_dict["pipeline_element_list"]
+        if "n_jobs" in parameter_dict:
+            self.n_jobs = parameter_dict["n_jobs"]
+        if "handle_nones" in parameter_dict:
+            self.handle_nones = parameter_dict["handle_nones"]
+        if "fill_value" in parameter_dict:
+            self.none_collector.fill_value = parameter_dict["fill_value"]
+        if "name" in parameter_dict:
+            self.name = parameter_dict["name"]
+        return self
+
     @property
     def pipeline_elements(self) -> list[ABCPipelineElement]:
-        """Get a copy of the list of pipeline elements."""
+        """Get a shallow copy from the list of pipeline elements."""
         return self._pipeline_element_list[:]  # [:] to create shallow copy.
 
     def fit(
@@ -157,8 +263,14 @@ class MolPipeline:
         return iter_input
 
     def to_json(self) -> dict[str, Any]:
-        """Convert the pipeline to a json string."""
-        json_dict = self.params
+        """Convert the pipeline to a json string.
+
+        Returns
+        -------
+        dict[str, Any]
+            Json representation of the pipeline.
+        """
+        json_dict = self.parameters
         json_dict["pipeline_element_list"] = [
             p_element.to_json() for p_element in self.pipeline_elements
         ]
@@ -173,7 +285,18 @@ class MolPipeline:
         return iter_value
 
     def transform(self, x_input: Any) -> Any:
-        """Transform the input according to the sequence of provided PipelineElements."""
+        """Transform the input according to the sequence of provided PipelineElements.
+
+        Parameters
+        ----------
+        x_input: Any
+            Molecular representations which are subsequently transformed.
+
+        Returns
+        -------
+        Any
+            Transformed molecular representations.
+        """
         self.none_collector.none_indices = []
         last_element = self._pipeline_element_list[-1]
         if hasattr(last_element, "assemble_output"):
@@ -227,17 +350,33 @@ class MolPipeline:
         self._finish()
 
     def copy(self) -> MolPipeline:
-        """Return a copy of the MolPipeline."""
+        """Return a copy of the MolPipeline.
+
+        PipelineElements are copied as well and thus are not linked to the original.
+
+        Returns
+        -------
+        MolPipeline
+            A copy of the MolPipeline.
+        """
         return self[:]
 
     def __getitem__(self, index: slice) -> MolPipeline:
-        """Get new MolPipeline with a slice of elements."""
-        element_slice = self.pipeline_elements[index]
-        parameter = {
-            key: value
-            for key, value in self.params.items()
-            if key != "pipeline_element_list"
-        }
+        """Get new MolPipeline with a slice of elements.
+
+        Parameters
+        ----------
+        index: slice
+            Slice which specifies the elements to be included in the new MolPipeline.
+        Returns
+        -------
+        MolPipeline
+            New MolPipeline with the specified elements.
+        """
+        parameter = self.parameters
+        pipeline_element_list = parameter.pop("pipeline_element_list")
+        element_slice = pipeline_element_list[index]
+
         if isinstance(element_slice, list):
             element_slice_copy = [element.copy() for element in element_slice]
             return MolPipeline(element_slice_copy, **parameter)
@@ -252,7 +391,7 @@ class MolPipeline:
         pipeline_element_list = self.pipeline_elements[:]
         parameter = {
             key: value
-            for key, value in self.params.items()
+            for key, value in self.parameters.items()
             if key != "pipeline_element_list"
         }
         if isinstance(other, ABCPipelineElement):

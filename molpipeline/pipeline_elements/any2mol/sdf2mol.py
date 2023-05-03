@@ -3,6 +3,12 @@
 from __future__ import annotations
 from typing import Any
 
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
+
+import copy
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
@@ -44,16 +50,43 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         self.identifier = identifier
         self.mol_counter = 0
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        params = super().params
-        params["identifier"] = self.identifier
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Return all parameters defining the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing all parameters defining the object.
+        """
+        params = super().get_params(deep)
+        if deep:
+            params["identifier"] = copy.copy(self.identifier)
+        else:
+            params["identifier"] = self.identifier
         return params
 
-    def copy(self) -> SDFToMolPipelineElement:
-        """Create a copy of the object."""
-        return SDFToMolPipelineElement(**self.params)
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """Set parameters of the object.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dictionary containing all parameters defining the object.
+
+        Returns
+        -------
+        Self
+            SDFToMolPipelineElement with updated parameters.
+        """
+        super().set_params(parameters)
+        if "identifier" in parameters:
+            self.identifier = parameters["identifier"]
+        return self
 
     def finish(self) -> None:
         """Reset the mol counter which assigns identifiers."""

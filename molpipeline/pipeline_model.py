@@ -11,6 +11,10 @@ from sklearn.base import clone
 
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
+from molpipeline.utils.json_operations import (
+    sklearn_model_from_json,
+    sklearn_model_to_json,
+)
 
 NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 
@@ -37,7 +41,7 @@ class PipelineModel:
             Sklearn Model.
         handle_nones: Literal["raise", "record_remove", "fill_dummy"]
             Parameter defining the handling of nones.
-        fill_value:
+        fill_value: Any
             If handle_nones == "fill_dummy": Mols which are None are substituted with fill_value in
             final output.
         """
@@ -48,6 +52,26 @@ class PipelineModel:
         self._mol_pipeline.none_collector = NoneCollector(fill_value)
 
         self._skl_model = sklearn_model
+
+    @classmethod
+    def from_json(cls, json_dict: dict[str, Any]) -> PipelineModel:
+        """Create PipelineModel from json dict.
+
+        Parameters
+        ----------
+        json_dict: dict[str, Any]
+            Json dict containing the information of the PipelineModel.
+
+        Returns
+        -------
+        PipelineModel
+            PipelineModel created from json dict.
+        """
+        mol_pipeline = MolPipeline.from_json(json_dict["mol_pipeline"])
+        skl_model = sklearn_model_from_json(json_dict["skl_model"])
+        return cls(
+            mol_pipeline, skl_model, json_dict["handle_nones"], json_dict["fill_value"]
+        )
 
     @property
     def none_indices(self) -> list[int]:
@@ -80,7 +104,20 @@ class PipelineModel:
     def _fit_transform_molpipeline(
         self, molecule_iterable: Iterable[Any], y_values: Optional[Iterable[Any]]
     ) -> tuple[Any, Optional[npt.NDArray[np.float_]]]:
-        """Fit and transform the molpipeline."""
+        """Fit and transform the molpipeline.
+
+        Parameters
+        ----------
+        molecule_iterable: Iterable[Any]
+            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, etc.).
+                Input depends on the first element of the mol_pipeline.
+        y_values: Optional[Iterable[Any]]
+            Values expected as output, used for ML training. Not required for unsupervised learning.
+        Returns
+        -------
+        tuple[Any, Optional[npt.NDArray[np.float_]]]
+            Tuple of transformed input and raw output. X values which are None and corresponding y values are removed.
+        """
         ml_input = self._mol_pipeline.fit_transform(molecule_iterable)
         if len(self.none_indices) > 0 and self.handle_nones == "raise":
             raise ValueError(f"Encountered Nones during fit at {self.none_indices}")
@@ -99,10 +136,12 @@ class PipelineModel:
         Parameters
         ----------
         molecule_iterable: Iterable[Any]
-            Iterable of molecules.
+            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, etc.).
+            Input depends on the first element of the mol_pipeline.
         Returns
         -------
         Any
+            Output of molpipeline transformation without applying the sklearn method.
         """
         ml_input = self._mol_pipeline.transform(molecule_iterable)
         if len(self.none_indices) > 0 and self.handle_nones == "raise":
@@ -137,6 +176,7 @@ class PipelineModel:
         Returns
         -------
         self
+            Fitted PipelineModel.
         """
         # pylint: disable=E0633
         # bug: pylint does not recognize overload
@@ -166,6 +206,7 @@ class PipelineModel:
         Returns
         -------
         npt.NDArray[Any]
+            Transformed input.
         """
         # pylint: disable=E0633
         # bug: pylint does not recognize overload
@@ -196,6 +237,7 @@ class PipelineModel:
         Returns
         -------
         npt.NDArray[Any]
+            Prediction for input.
         """
         # pylint: disable=E0633
         # bug: pylint does not recognize overload
@@ -205,6 +247,21 @@ class PipelineModel:
         ml_output = self._skl_model.fit_predict(ml_input, y_values, **fitparams)
         final_output = self._finalize_output(ml_output)
         return final_output
+
+    def to_json(self) -> dict[str, Any]:
+        """Transform model parameters to json format.
+
+        Returns
+        -------
+        dict[str, Any]
+            Model parameters in json format.
+        """
+        return {
+            "mol_pipeline": self._mol_pipeline.to_json(),
+            "skl_model": sklearn_model_to_json(self._skl_model),
+            "fill_value": copy.copy(self._none_collector.fill_value),
+            "handle_nones": copy.copy(self.handle_nones),
+        }
 
     def transform(
         self, molecule_iterable: Iterable[Any], **tranformparams: dict[Any, Any]
@@ -221,6 +278,7 @@ class PipelineModel:
         Returns
         -------
         npt.NDArray[Any]
+            Output of transformation.
         """
         ml_input = self.molpipeline_transform(molecule_iterable)
         ml_output = self._skl_model.transform(ml_input, **tranformparams)
@@ -242,6 +300,7 @@ class PipelineModel:
         Returns
         -------
         npt.NDArray[Any]
+            Array of predicted values.
         """
         ml_input = self.molpipeline_transform(molecule_iterable)
         ml_output = self._skl_model.predict(ml_input, **predictparams)
@@ -249,7 +308,17 @@ class PipelineModel:
         return final_output
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get parameters for this estimator."""
+        """Get parameters for this estimator.
+
+        Parameters
+        ----------
+        deep: bool
+            If True, create a deep copy of the parmeters.
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary of parameter names and corresponding values.
+        """
         if deep:
             parameter_dict = {
                 "mol_pipeline": self._mol_pipeline.copy(),
@@ -257,8 +326,8 @@ class PipelineModel:
                 "handle_nones": str(self.handle_nones),
                 "fill_value": copy.copy(self._none_collector.fill_value),
             }
-            """Get parameters for this estimator."""
             return parameter_dict
+
         parameter_dict = {
             "mol_pipeline": self._mol_pipeline,
             "sklearn_model": self._skl_model,
@@ -268,26 +337,44 @@ class PipelineModel:
         return parameter_dict
 
     def set_params(self, **params: dict[str, Any]) -> PipelineModel:
-        """Set the parameters of this estimator."""
+        """Set the parameters of this estimator.
+
+        Implemented for compatibility with sklearn GridSearchCV.
+
+        Parameters
+        ----------
+        params: dict[str, Any]
+            Dictionary of model parameters.
+
+        Returns
+        -------
+        PipelineModel
+            PipelineModel with updated parameters.
+        """
+        params = dict(params)
+
         if "mol_pipeline" in params:
             mol_pipeline = params.pop("mol_pipeline")
             if not isinstance(mol_pipeline, MolPipeline):
                 raise TypeError(f"Not a MoleculePipeline: {type(mol_pipeline)}")
             self._mol_pipeline = mol_pipeline
-        if "handle_nones" in params:
-            value = params.pop("handle_nones")
-            if value not in get_args(NoneHandlingOptions):
-                raise TypeError(f"Invalid selection for NoneHandlingOptions: {value}")
-            self.handle_nones = value  # type: ignore
-        if "fill_value" in params:
-            self._none_collector.fill_value = params.pop("fill_value")
+
         if "sklearn_model" in params:
             skl_model = params.pop("sklearn_model")
             if not hasattr(skl_model, "set_params"):
                 raise TypeError(
                     "Potentially not an SKLearn model, as it does not have the function set_params!"
                 )
-            if params:
-                skl_model.set_params(**params)
-            self._skl_model = skl_model
+
+        if "handle_nones" in params:
+            value = params.pop("handle_nones")
+            if value not in get_args(NoneHandlingOptions):
+                raise TypeError(f"Invalid selection for NoneHandlingOptions: {value}")
+            self.handle_nones = value  # type: ignore
+
+        if "fill_value" in params:
+            self._none_collector.fill_value = params.pop("fill_value")
+
+        # All remaining parameters are passed to the sklearn model.
+        self._skl_model.set_params(**params)
         return self

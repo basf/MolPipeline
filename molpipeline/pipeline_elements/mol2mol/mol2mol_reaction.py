@@ -4,9 +4,15 @@
 from __future__ import annotations
 
 from typing import Any, Literal
+
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 import warnings
 
-from rdkit import Chem
+import copy
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import AllChem
 
 from molpipeline.abstract_pipeline_elements.core import (
@@ -19,14 +25,14 @@ from molpipeline.utils.molpipe_types import OptionalMol
 class MolToMolReactionPipelineElement(MolToMolPipelineElement):
     """PipelineElement which transforms the input according to the specified reaction."""
 
-    additive_list: list[Chem.Mol]
+    additive_list: list[RDKitMol]
     handle_multi: Literal["pass", "warn", "raise"]
     _reaction: AllChem.ChemicalReaction
 
     def __init__(
         self,
         reaction: AllChem.ChemicalReaction,
-        additive_list: list[Chem.Mol],
+        additive_list: list[RDKitMol],
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
         none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
@@ -53,16 +59,53 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         self.additive_list = additive_list
         self.handle_multi = handle_multi
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        return {
-            "reaction": AllChem.ChemicalReaction(self.reaction),
-            "additive_list": [Chem.Mol(additive) for additive in self.additive_list],
-            "handle_multi": self.handle_multi,
-            "name": self.name,
-            "n_jobs": self.n_jobs,
-        }
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Return all parameters defining the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing all parameters defining the object.
+        """
+        parameters = super().get_params(deep)
+        if deep:
+            parameters["reaction"] = AllChem.ChemicalReaction(self.reaction)
+            parameters["additive_list"] = [
+                RDKitMol(additive) for additive in self.additive_list
+            ]
+            parameters["handle_multi"] = copy.copy(self.handle_multi)
+        else:
+            parameters["reaction"] = self.reaction
+            parameters["additive_list"] = self.additive_list
+            parameters["handle_multi"] = self.handle_multi
+        return parameters
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """Set the parameters.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dictionary containing parameters to be set.
+
+        Returns
+        -------
+        Self
+            MolToMolReactionPipelineElement with updated parameters.
+        """
+        super().set_params(parameters)
+        if "reaction" in parameters:
+            self.reaction = parameters["reaction"]
+        if "additive_list" in parameters:
+            self.additive_list = parameters["additive_list"]
+        if "handle_multi" in parameters:
+            self.handle_multi = parameters["handle_multi"]
+        return self
 
     @property
     def reaction(self) -> AllChem.ChemicalReaction:
@@ -71,19 +114,24 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
 
     @reaction.setter
     def reaction(self, reaction: AllChem.ChemicalReaction) -> None:
-        """Set the reaction which is applied to the input molecule."""
+        """Set the reaction which is applied to the input molecule.
+
+        Parameters
+        ----------
+        reaction: AllChem.ChemicalReaction
+            Reaction which is applied to molecules.
+        Returns
+        -------
+        None
+        """
         if not isinstance(reaction, AllChem.ChemicalReaction):
             raise TypeError("Not a Chemical reaction!")
         self._reaction = reaction
 
-    def copy(self) -> MolToMolReactionPipelineElement:
-        """Create a copy of the object."""
-        return MolToMolReactionPipelineElement(**self.params)
-
-    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Apply reaction to molecule."""
         mol = value  # Only value to keep signature consistent.
-        reactant_list: list[Chem.Mol] = list(self.additive_list)
+        reactant_list: list[RDKitMol] = list(self.additive_list)
         reactant_list.append(mol)
         product_list = self.reaction.RunReactants(reactant_list)
 
