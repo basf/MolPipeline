@@ -63,7 +63,7 @@ class ABCPipelineElement(abc.ABC):
         Returns
         -------
         Self
-            Object speciefied by json_dict.
+            Object specified by json_dict.
         """
         json_dict_copy = dict(json_dict)
         specified_class = json_dict_copy.pop("type")
@@ -72,7 +72,7 @@ class ABCPipelineElement(abc.ABC):
             raise ValueError(f"Cannot create {cls.__name__} from {specified_module}")
         if specified_class != cls.__name__:
             raise ValueError(f"Cannot create {cls.__name__} from {specified_class}")
-        additional_attributes = json_dict_copy.pop("additional_attributes")
+        additional_attributes = json_dict_copy.pop("additional_attributes", {})
         loaded_pipeline_element = cls(**json_dict_copy)
         for key, value in additional_attributes.items():
             if not hasattr(loaded_pipeline_element, key):
@@ -351,7 +351,8 @@ class ABCPipelineElement(abc.ABC):
             "module": self.__class__.__module__,
         }
         json_dict.update(self.parameters)
-        json_dict["additional_attributes"] = self.additional_attributes
+        if self.additional_attributes:
+            json_dict["additional_attributes"] = self.additional_attributes
         return json_dict
 
     def finish(self) -> None:
