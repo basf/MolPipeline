@@ -12,6 +12,7 @@ from sklearn.base import clone
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
 from molpipeline.utils.json_operations import (
+    sklearn_model_from_json,
     sklearn_model_to_json,
 )
 
@@ -51,6 +52,24 @@ class PipelineModel:
         self._mol_pipeline.none_collector = NoneCollector(fill_value)
 
         self._skl_model = sklearn_model
+
+    @classmethod
+    def from_json(cls, json_dict: dict[str, Any]) -> PipelineModel:
+        """Create PipelineModel from json dict.
+
+        Parameters
+        ----------
+        json_dict: dict[str, Any]
+            Json dict containing the information of the PipelineModel.
+
+        Returns
+        -------
+        PipelineModel
+            PipelineModel created from json dict.
+        """
+        mol_pipeline = MolPipeline.from_json(json_dict["mol_pipeline"])
+        skl_model = sklearn_model_from_json(json_dict["skl_model"])
+        return cls(mol_pipeline, skl_model, json_dict["handle_nones"], json_dict["fill_value"])
 
     @property
     def none_indices(self) -> list[int]:
@@ -238,8 +257,8 @@ class PipelineModel:
         return {
             "mol_pipeline": self._mol_pipeline.to_json(),
             "skl_model": sklearn_model_to_json(self._skl_model),
-            "none_indices": self.none_indices,
-            "handle_nones": self.handle_nones,
+            "fill_value": copy.copy(self._none_collector.fill_value),
+            "handle_nones": copy.copy(self.handle_nones),
         }
 
     def transform(
@@ -302,15 +321,14 @@ class PipelineModel:
             parameter_dict = {
                 "mol_pipeline": self._mol_pipeline.copy(),
                 "sklearn_model": clone(self._skl_model),
-                "sklearn_model_parameters": self._skl_model.get_params(),
                 "handle_nones": str(self.handle_nones),
                 "fill_value": copy.copy(self._none_collector.fill_value),
             }
             return parameter_dict
+
         parameter_dict = {
             "mol_pipeline": self._mol_pipeline,
             "sklearn_model": self._skl_model,
-            "sklearn_model_parameters": self._skl_model.get_params(),
             "handle_nones": self.handle_nones,
             "fill_value": self._none_collector.fill_value,
         }
@@ -339,7 +357,12 @@ class PipelineModel:
                 raise TypeError(f"Not a MoleculePipeline: {type(mol_pipeline)}")
             self._mol_pipeline = mol_pipeline
 
-        self._mol_pipeline.parameters = params.pop("mol_pipeline_parameters", {})
+        if "sklearn_model" in params:
+            skl_model = params.pop("sklearn_model")
+            if not hasattr(skl_model, "set_params"):
+                raise TypeError(
+                    "Potentially not an SKLearn model, as it does not have the function set_params!"
+                )
 
         if "handle_nones" in params:
             value = params.pop("handle_nones")
@@ -350,13 +373,6 @@ class PipelineModel:
         if "fill_value" in params:
             self._none_collector.fill_value = params.pop("fill_value")
 
-        if "sklearn_model" in params:
-            skl_model = params.pop("sklearn_model")
-            if not hasattr(skl_model, "set_params"):
-                raise TypeError(
-                    "Potentially not an SKLearn model, as it does not have the function set_params!"
-                )
-
-        if "sklearn_model_parameters" in params:
-            self._skl_model.set_params(**params.pop("sklearn_model_parameters"))
+        # All remaining parameters are passed to the sklearn model.
+        self._skl_model.set_params(**params)
         return self
