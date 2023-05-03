@@ -10,6 +10,7 @@ try:
 except ImportError:
     from typing_extensions import Self
 
+import copy
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from scipy import sparse
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
@@ -115,17 +116,26 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
                 f"Number of bits has to be a positive integer! (Received: {radius})"
             )
 
-    def get_params(self) -> dict[str, Any]:
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get object parameters relevant for copying the class.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
 
         Returns
         -------
         dict[str, Any]
             Dictionary of parameter names and values.
         """
-        parameters = super().get_params()
-        parameters["radius"] = self.radius
-        parameters["use_features"] = self.use_features
+        parameters = super().get_params(deep)
+        if deep:
+            parameters["radius"] = copy.copy(self.radius)
+            parameters["use_features"] = copy.copy(self.use_features)
+        else:
+            parameters["radius"] = self.radius
+            parameters["use_features"] = self.use_features
 
         # remove fill_value from parameters
         parameters.pop("fill_value", None)

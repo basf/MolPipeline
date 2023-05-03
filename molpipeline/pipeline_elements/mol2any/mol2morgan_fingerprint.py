@@ -9,6 +9,7 @@ try:
 except ImportError:
     from typing_extensions import Self
 
+import copy
 import numpy as np
 from rdkit.Chem import AllChem
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
@@ -70,16 +71,24 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
                 f"Number of bits has to be a positive integer! (Received: {n_bits})"
             )
 
-    def get_params(self) -> dict[str, Any]:
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
 
         Returns
         -------
         dict[str, Any]
             Dictionary of parameters.
         """
-        parameters = super().get_params()
-        parameters["n_bits"] = self._n_bits
+        parameters = super().get_params(deep)
+        if deep:
+            parameters["n_bits"] = copy.copy(self._n_bits)
+        else:
+            parameters["n_bits"] = self._n_bits
         return parameters
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
@@ -140,7 +149,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
     """
 
-    _bit_mapping: dict[int, int]
+    _bit_mapping: Optional[dict[int, int]]
     _counted: bool
 
     # pylint: disable=R0913
@@ -151,25 +160,30 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         counted: bool = False,
         ignore_unknown: bool = False,
         none_handling: Literal["raise", "record_remove"] = "raise",
-        bit_mapping: Optional[dict[int, int]] = None,
         name: str = "Mol2UnfoldedMorganFingerprint",
         n_jobs: int = 1,
-    ):
+    ) -> None:
         """Initialize Mol2UnfoldedMorganFingerprint.
 
         Parameters
         ----------
-        counted: bool
-            False: bits are binary: on if present in molecule, off if not present
-            True: bits are positive integers and give the occurrence of their respective features in the molecule
         radius: int
             radius of the circular fingerprint [1]. Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
         use_features: bool
             Instead of atoms, features are encoded in the fingerprint. [2]
+        counted: bool
+            False: bits are binary: on if present in molecule, off if not present
+            True: bits are positive integers and give the occurrence of their respective features in the molecule
+        ignore_unknown: bool
+            If True, features not seen in the fit method are ignored. If False, they cause an error.
         name: str
             Name of PipelineElement
         n_jobs: int
             Number of cores to use.
+
+        Returns
+        -------
+        None
 
         References
         ----------
@@ -191,26 +205,92 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         if not isinstance(ignore_unknown, bool):
             raise TypeError("The argument 'ignore_unknown' must be a bool!")
         self.ignore_unknown = ignore_unknown
-        if bit_mapping:
-            self._bit_mapping = bit_mapping
+        self._bit_mapping = None
+
+    @property
+    def additional_attributes(self) -> dict[str, Any]:
+        """Return additional attributes of the element."""
+        additional_attributes = super().additional_attributes
+        if self._bit_mapping is not None:
+            additional_attributes["bit_mapping"] = {
+                int(k): int(v) for k, v in self._bit_mapping.items()
+            }
+        return additional_attributes
+
+    @property
+    def bit_mapping(self) -> dict[int, int]:
+        """Return the bit mapping.
+
+        Raises
+        ------
+        ValueError
+            If the fingerprint has not been fitted yet.
+        """
+        if self._bit_mapping is None:
+            raise ValueError(
+                "The fingerprint has not been fitted yet. Please call the fit method first."
+            )
+        return self._bit_mapping
+
+    @bit_mapping.setter
+    def bit_mapping(self, bit_mapping: dict[int, int]) -> None:
+        """Set the bit mapping.
+
+        Parameters
+        ----------
+        bit_mapping: dict[int, int]
+            Mapping for feature hashes to bit-positions.
+
+        Returns
+        -------
+        None
+        """
+        self._bit_mapping = bit_mapping
+
+    @property
+    def _n_bits(self) -> int:
+        """Return the number of bits."""
+        return len(self.bit_mapping)
+
+    @_n_bits.setter
+    def _n_bits(self, n_bits: int) -> None:
+        """Set the number of bits.
+
+        Parameters
+        ----------
+        n_bits: int
+
+        Returns
+        -------
+        None
+        """
+        raise AttributeError("The number of bits is defined by the bit mapping.")
 
     @property
     def counted(self) -> bool:
         """Return whether the fingerprint is counted, or not."""
         return self._counted
 
-    def get_params(self) -> dict[str, Any]:
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get all parameters defining the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
 
         Returns
         -------
         dict[str, Any]
             Dictionary of parameters defining the object.
         """
-        parameters = super().parameters
-        parameters["counted"] = self.counted
-        parameters["ignore_unknown"] = self.ignore_unknown
-        parameters["bit_mapping"] = self._bit_mapping.copy()
+        parameters = super().get_params(deep)
+        if deep:
+            parameters["counted"] = copy.copy(self._counted)
+            parameters["ignore_unknown"] = copy.copy(self.ignore_unknown)
+        else:
+            parameters["counted"] = self.counted
+            parameters["ignore_unknown"] = self.ignore_unknown
         return parameters
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
@@ -232,7 +312,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         if "ignore_unknown" in parameters:
             self.ignore_unknown = parameters["ignore_unknown"]
         if "bit_mapping" in parameters:
-            self._bit_mapping = parameters["bit_mapping"]
+            self.bit_mapping = parameters["bit_mapping"]
         return self
 
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
@@ -244,7 +324,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             useFeatures=self.use_features,
             bitInfo=original_bit_info,
         )
-        bit_info = {self._bit_mapping[k]: v for k, v in original_bit_info.items()}
+        bit_info = {self.bit_mapping[k]: v for k, v in original_bit_info.items()}
         return bit_info
 
     def fit(self, value_list: list[RDKitMol]) -> Self:
@@ -320,10 +400,9 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         feature_order = sorted(
             unique_features, key=lambda f: (feature_hash_count_dict[f], f), reverse=True
         )
-        self._bit_mapping = dict(
+        self.bit_mapping = dict(
             {feature: idx for idx, feature in enumerate(feature_order)}
         )
-        self._n_bits = len(self._bit_mapping)
 
     def _fit(self, mol_obj_list: list[RDKitMol]) -> list[dict[int, int]]:
         """Transform and return all molecules to feature hashes, create mapping from obtained hashes.
@@ -357,7 +436,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         """
         mapped_count_dict = {}
         for feature_hash, feature_count in feature_count_dict.items():
-            bit_position = self._bit_mapping.get(feature_hash)
+            bit_position = self.bit_mapping.get(feature_hash)
             if bit_position is None:
                 if self.ignore_unknown:
                     continue

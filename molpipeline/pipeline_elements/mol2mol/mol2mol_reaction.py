@@ -11,6 +11,7 @@ except ImportError:
     from typing_extensions import Self
 import warnings
 
+import copy
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import AllChem
 
@@ -58,18 +59,30 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         self.additive_list = additive_list
         self.handle_multi = handle_multi
 
-    def get_params(self) -> dict[str, Any]:
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
 
         Returns
         -------
         dict[str, Any]
             Dictionary containing all parameters defining the object.
         """
-        parameters = super().get_params()
-        parameters["reaction"] = self.reaction
-        parameters["additive_list"] = self.additive_list
-        parameters["handle_multi"] = self.handle_multi
+        parameters = super().get_params(deep)
+        if deep:
+            parameters["reaction"] = AllChem.ChemicalReaction(self.reaction)
+            parameters["additive_list"] = [
+                RDKitMol(additive) for additive in self.additive_list
+            ]
+            parameters["handle_multi"] = copy.copy(self.handle_multi)
+        else:
+            parameters["reaction"] = self.reaction
+            parameters["additive_list"] = self.additive_list
+            parameters["handle_multi"] = self.handle_multi
         return parameters
 
     def set_params(self, parameters: dict[str, Any]) -> Self:

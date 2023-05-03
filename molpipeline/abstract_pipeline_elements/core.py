@@ -170,20 +170,33 @@ class ABCPipelineElement(abc.ABC):
         """
         self.set_params(parameters)
 
-    def get_params(self) -> dict[str, Any]:
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return the parameters of the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
 
         Returns
         -------
         dict[str, Any]
             Parameters of the object.
         """
-        return {
-            "name": self.name,
-            "none_handling": self.none_handling,
-            "n_jobs": self.n_jobs,
-            "fill_value": self.none_collector.fill_value,
-        }
+        if deep:
+            return {
+                "name": copy.copy(self.name),
+                "none_handling": copy.copy(self.none_handling),
+                "n_jobs": copy.copy(self.n_jobs),
+                "fill_value": copy.copy(self.none_collector.fill_value),
+            }
+        else:
+            return {
+                "name": self.name,
+                "none_handling": self.none_handling,
+                "n_jobs": self.n_jobs,
+                "fill_value": self.none_collector.fill_value,
+            }
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
         """As the setter function cannot be assessed with super(), this method is implemented for inheritance.

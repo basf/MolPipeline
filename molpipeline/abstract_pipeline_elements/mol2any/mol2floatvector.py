@@ -11,6 +11,7 @@ try:
 except ImportError:
     from typing_extensions import Self
 
+import copy
 import numpy as np
 import numpy.typing as npt
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
@@ -99,16 +100,24 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """
         return np.vstack(list(value_list))
 
-    def get_params(self) -> dict[str, Any]:
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defined during object initialization.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
 
         Returns
         -------
         dict[str, Any]
             Dictionary containing all parameters relevant to initialize the object with same properties.
         """
-        params = super().get_params()
-        params["normalize"] = self._normalize
+        params = super().get_params(deep)
+        if deep:
+            params["normalize"] = copy.copy(self._normalize)
+        else:
+            params["normalize"] = self._normalize
         return params
 
     def set_params(self, parameters: dict[str, Any]) -> Self:

@@ -1,6 +1,7 @@
 """Defines the pipeline which handles pipeline elements."""
 from __future__ import annotations
 
+import copy
 import multiprocessing
 from typing import Any, Literal, Union
 
@@ -120,13 +121,7 @@ class MolPipeline:
     @property
     def parameters(self) -> dict[str, Any]:
         """Get all parameters defining the object."""
-        return {
-            "pipeline_element_list": self.pipeline_elements,
-            "n_jobs": self.n_jobs,
-            "name": self.name,
-            "handle_nones": self.handle_nones,
-            "fill_value": self.none_collector.fill_value,
-        }
+        return self.get_params()
 
     @parameters.setter
     def parameters(self, parameter_dict: dict[str, Any]) -> None:
@@ -141,6 +136,50 @@ class MolPipeline:
         -------
         None
         """
+        self.set_params(parameter_dict)
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get all parameters defining the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing the parameter names and corresponding values.
+        """
+        if deep:
+            return {
+                "pipeline_element_list": self.pipeline_elements,
+                "n_jobs": self.n_jobs,
+                "name": self.name,
+                "handle_nones": copy.copy(self.handle_nones),
+                "fill_value": copy.copy(self.none_collector.fill_value),
+            }
+        return {
+            "pipeline_element_list": self._pipeline_element_list,
+            "n_jobs": self.n_jobs,
+            "name": self.name,
+            "handle_nones": self.handle_nones,
+            "fill_value": self.none_collector.fill_value,
+        }
+
+    def set_params(self, parameter_dict: dict[str, Any]) -> Self:
+        """Set parameters of the pipeline and pipeline elements.
+
+        Parameters
+        ----------
+        parameter_dict: dict[str, Any]
+            Dictionary containing the parameter names and corresponding values to be set.
+
+        Returns
+        -------
+        Self
+            MolPipeline object with updated parameters.
+        """
         if "pipeline_element_list" in parameter_dict:
             self._pipeline_element_list = parameter_dict["pipeline_element_list"]
         if "n_jobs" in parameter_dict:
@@ -151,6 +190,7 @@ class MolPipeline:
             self.none_collector.fill_value = parameter_dict["fill_value"]
         if "name" in parameter_dict:
             self.name = parameter_dict["name"]
+        return self
 
     @property
     def pipeline_elements(self) -> list[ABCPipelineElement]:

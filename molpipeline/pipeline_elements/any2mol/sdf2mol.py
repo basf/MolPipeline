@@ -8,6 +8,7 @@ try:
 except ImportError:
     from typing_extensions import Self
 
+import copy
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
@@ -49,16 +50,24 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         self.identifier = identifier
         self.mol_counter = 0
 
-    def get_params(self) -> dict[str, Any]:
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
 
         Returns
         -------
         dict[str, Any]
             Dictionary containing all parameters defining the object.
         """
-        params = super().get_params()
-        params["identifier"] = self.identifier
+        params = super().get_params(deep)
+        if deep:
+            params["identifier"] = copy.copy(self.identifier)
+        else:
+            params["identifier"] = self.identifier
         return params
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
