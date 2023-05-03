@@ -51,24 +51,6 @@ class ABCPipelineElement(abc.ABC):
         self.n_jobs = n_jobs
         self.none_collector = NoneCollector(fill_value)
 
-    def __eq__(self, other: Any) -> bool:
-        """Check weather the two elements are equal.
-
-        Parameters
-        ----------
-        other: Any
-            Other element to compare to.
-        Returns
-        -------
-        bool
-            True if the two elements are equal.
-        """
-        if not isinstance(other, ABCPipelineElement):
-            return False
-        if not self.__class__ == other.__class__:
-            return False
-        return self.to_json() == other.to_json()
-
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
         """Create object from json dict.
@@ -172,7 +154,7 @@ class ABCPipelineElement(abc.ABC):
     @property
     def parameters(self) -> dict[str, Any]:
         """Return the parameters of the object."""
-        return self.get_parameters()
+        return self.get_params()
 
     @parameters.setter
     def parameters(self, parameters: dict[str, Any]) -> None:
@@ -186,9 +168,9 @@ class ABCPipelineElement(abc.ABC):
         -------
         None
         """
-        self.set_parameters(parameters)
+        self.set_params(parameters)
 
-    def get_parameters(self) -> dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """Return the parameters of the object.
 
         Returns
@@ -203,7 +185,7 @@ class ABCPipelineElement(abc.ABC):
             "fill_value": self.none_collector.fill_value,
         }
 
-    def set_parameters(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, parameters: dict[str, Any]) -> Self:
         """As the setter function cannot be assessed with super(), this method is implemented for inheritance.
 
         Parameters

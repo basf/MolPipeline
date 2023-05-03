@@ -78,7 +78,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """Get component_list."""
         return self._component_list[:]
 
-    def get_parameters(self) -> dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """Return all parameters defining the object.
 
         Returns
@@ -86,7 +86,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         dict[str, Any]
             Parameters defining the object.
         """
-        parameters = super().get_parameters()
+        parameters = super().get_params()
         parameters["component_list"] = [
             component.copy() for component in self.component_list
         ]
@@ -95,7 +95,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ]
         return parameters
 
-    def set_parameters(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, parameters: dict[str, Any]) -> Self:
         """Set parameters.
 
         Parameters
@@ -107,7 +107,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Self
             Mol2ConcatenatedVector object with updated parameters.
         """
-        super().set_parameters(parameters)
+        super().set_params(parameters)
         if "component_list" in parameters:
             self._component_list = parameters["component_list"]
         if "component_parameter_list" in parameters:

@@ -58,7 +58,7 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         self.additive_list = additive_list
         self.handle_multi = handle_multi
 
-    def get_parameters(self) -> dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """Return all parameters defining the object.
 
         Returns
@@ -66,13 +66,13 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         dict[str, Any]
             Dictionary containing all parameters defining the object.
         """
-        parameters = super().get_parameters()
+        parameters = super().get_params()
         parameters["reaction"] = self.reaction
         parameters["additive_list"] = self.additive_list
         parameters["handle_multi"] = self.handle_multi
         return parameters
 
-    def set_parameters(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, parameters: dict[str, Any]) -> Self:
         """Set the parameters.
 
         Parameters
@@ -85,7 +85,7 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         Self
             MolToMolReactionPipelineElement with updated parameters.
         """
-        super().set_parameters(parameters)
+        super().set_params(parameters)
         if "reaction" in parameters:
             self.reaction = parameters["reaction"]
         if "additive_list" in parameters:

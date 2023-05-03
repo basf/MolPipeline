@@ -49,7 +49,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         self.identifier = identifier
         self.mol_counter = 0
 
-    def get_parameters(self) -> dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """Return all parameters defining the object.
 
         Returns
@@ -57,11 +57,11 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         dict[str, Any]
             Dictionary containing all parameters defining the object.
         """
-        params = super().get_parameters()
+        params = super().get_params()
         params["identifier"] = self.identifier
         return params
 
-    def set_parameters(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, parameters: dict[str, Any]) -> Self:
         """Set parameters of the object.
 
         Parameters
@@ -74,7 +74,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         Self
             SDFToMolPipelineElement with updated parameters.
         """
-        super().set_parameters(parameters)
+        super().set_params(parameters)
         if "identifier" in parameters:
             self.identifier = parameters["identifier"]
         return self

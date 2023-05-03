@@ -70,7 +70,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
                 f"Number of bits has to be a positive integer! (Received: {n_bits})"
             )
 
-    def get_parameters(self) -> dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """Return all parameters defining the object.
 
         Returns
@@ -78,11 +78,11 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         dict[str, Any]
             Dictionary of parameters.
         """
-        parameters = super().get_parameters()
+        parameters = super().get_params()
         parameters["n_bits"] = self._n_bits
         return parameters
 
-    def set_parameters(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, parameters: dict[str, Any]) -> Self:
         """Set parameters.
 
         Parameters
@@ -94,7 +94,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         Self
             MolToFoldedMorganFingerprint pipeline element with updated parameters.
         """
-        super().set_parameters(parameters)
+        super().set_params(parameters)
         if "n_bits" in parameters:
             self._n_bits = parameters["n_bits"]
         return self
@@ -199,7 +199,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         """Return whether the fingerprint is counted, or not."""
         return self._counted
 
-    def get_parameters(self) -> dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """Get all parameters defining the object.
 
         Returns
@@ -213,7 +213,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         parameters["bit_mapping"] = self._bit_mapping.copy()
         return parameters
 
-    def set_parameters(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, parameters: dict[str, Any]) -> Self:
         """Set all parameters defining the object.
 
         Parameters
@@ -226,7 +226,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         Self
             MolToUnfoldedMorganFingerprint pipeline element with updated parameters.
         """
-        super().set_parameters(parameters)
+        super().set_params(parameters)
         if "counted" in parameters:
             self._counted = parameters["counted"]
         if "ignore_unknown" in parameters:

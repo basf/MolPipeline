@@ -99,7 +99,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """
         return np.vstack(list(value_list))
 
-    def get_parameters(self) -> dict[str, Any]:
+    def get_params(self) -> dict[str, Any]:
         """Return all parameters defined during object initialization.
 
         Returns
@@ -107,11 +107,11 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         dict[str, Any]
             Dictionary containing all parameters relevant to initialize the object with same properties.
         """
-        params = super().get_parameters()
+        params = super().get_params()
         params["normalize"] = self._normalize
         return params
 
-    def set_parameters(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, parameters: dict[str, Any]) -> Self:
         """Set parameters.
 
         Parameters
@@ -124,7 +124,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Self
             Object with updated parameters.
         """
-        super().set_parameters(parameters)
+        super().set_params(parameters)
         if "normalize" in parameters:
             self._normalize = parameters["normalize"]
         return self
