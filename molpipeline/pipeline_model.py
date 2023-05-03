@@ -69,7 +69,9 @@ class PipelineModel:
         """
         mol_pipeline = MolPipeline.from_json(json_dict["mol_pipeline"])
         skl_model = sklearn_model_from_json(json_dict["skl_model"])
-        return cls(mol_pipeline, skl_model, json_dict["handle_nones"], json_dict["fill_value"])
+        return cls(
+            mol_pipeline, skl_model, json_dict["handle_nones"], json_dict["fill_value"]
+        )
 
     @property
     def none_indices(self) -> list[int]:
