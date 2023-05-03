@@ -13,7 +13,18 @@ class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
     _output_type = str
 
     def transform(self, value_list: list[Chem.Mol]) -> list[str]:
-        """Transform the list of molecules to sparse matrix."""
+        """Transform the list of molecules to sparse matrix.
+
+        Parameters
+        ----------
+        value_list: list[Chem.Mol]
+            List of RDKit molecules which are transformed to a string representation.
+
+        Returns
+        -------
+        list[str]
+            List of string representations of the molecules.
+        """
         string_list: list[str] = super().transform(value_list)
         return string_list
 

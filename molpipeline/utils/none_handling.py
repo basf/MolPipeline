@@ -57,7 +57,17 @@ class NoneCollector:
         self,
         value_container: AnyIterable,
     ) -> AnyIterable:
-        """Insert dummy values at the positions in the value container."""
+        """Insert dummy values at the positions in the value container.
+
+        Parameters
+        ----------
+        value_container: AnyIterable
+            Iterable to fill with dummy values.
+        Returns
+        -------
+        AnyIterable
+            Iterable where dummy values were inserted to replace molecules which could not be processed.
+        """
         if isinstance(value_container, list):
             return self._fill_list(value_container)
         if isinstance(value_container, np.ndarray):

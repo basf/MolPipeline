@@ -7,6 +7,7 @@ from typing import Any, Callable, Optional
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import Descriptors
 
 from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
@@ -37,8 +38,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         n_jobs: int = 1,
         none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
-        mean: Optional[npt.NDArray[np.float_]] = None,
-        std: Optional[npt.NDArray[np.float_]] = None,
     ) -> None:
         """Initialize MolToRDKitPhysChem.
 
@@ -56,8 +55,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             n_jobs=n_jobs,
             none_handling=none_handling,
             fill_value=fill_value,
-            mean=mean,
-            std=std,
         )
 
     @property
@@ -70,16 +67,19 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         """Return a copy of the descriptor list."""
         return self._descriptor_list[:]
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        return super().params
+    def _transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
+        """Transform a single molecule to a descriptor vector.
 
-    def copy(self) -> MolToRDKitPhysChem:
-        """Create a copy of the object."""
-        return MolToRDKitPhysChem(**self.params)
+        Parameters
+        ----------
+        value: RDKitMol
+            RDKit molecule to transform.
 
-    def _transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
+        Returns
+        -------
+        Optional[npt.NDArray[np.float_]]
+            Descriptor vector for given molecule. None if calculation failed.
+        """
         vec = np.array(
             [RDKIT_DESCRIPTOR_DICT[name](value) for name in self._descriptor_list]
         )

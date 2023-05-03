@@ -5,7 +5,13 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 import abc
 from typing import Any, Iterable, Literal
 
-from rdkit import Chem
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
+
+import copy
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from scipy import sparse
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
@@ -27,20 +33,43 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     def assemble_output(
         self, value_list: Iterable[dict[int, int]]
     ) -> sparse.csr_matrix:
-        """Transform output of all transform_single operations to matrix."""
+        """Transform output of all transform_single operations to matrix.
+
+        Parameters
+        ----------
+        value_list: Iterable[dict[int, int]]
+            Iterable of dicts which encode the rows of the feature matrix. Keys: column index, values: column value.
+            Each dict represents one molecule.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Sparse matrix of Morgan-fingerprint features.
+        """
         return sparse_from_index_value_dicts(value_list, self._n_bits)
 
-    def transform(self, value_list: list[Chem.Mol]) -> sparse.csr_matrix:
-        """Transform the list of molecules to sparse matrix."""
+    def transform(self, value_list: list[RDKitMol]) -> sparse.csr_matrix:
+        """Transform the list of molecules to sparse matrix of Morgan-fingerprint features.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of RDKit molecules which are transformed to a sparse matrix.
+
+        Returns
+        -------
+        sparse.csr_matrix
+            Sparse matrix of Morgan-fingerprint features.
+        """
         return super().transform(value_list)
 
     @abc.abstractmethod
-    def _transform_single(self, value: Chem.Mol) -> dict[int, int]:
+    def _transform_single(self, value: RDKitMol) -> dict[int, int]:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters
         ----------
-        value: Chem.Mol
+        value: RDKitMol
             RDKit molecule which is encoded by the fingerprint.
         Returns
         -------
@@ -87,13 +116,49 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
                 f"Number of bits has to be a positive integer! (Received: {radius})"
             )
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Get object parameters relevant for copying the class."""
-        params = super().params
-        params.update({"radius": self.radius, "use_features": self.use_features})
-        params = {k: v for k, v in params.items() if k != "fill_value"}
-        return params
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get object parameters relevant for copying the class.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary of parameter names and values.
+        """
+        parameters = super().get_params(deep)
+        if deep:
+            parameters["radius"] = copy.copy(self.radius)
+            parameters["use_features"] = copy.copy(self.use_features)
+        else:
+            parameters["radius"] = self.radius
+            parameters["use_features"] = self.use_features
+
+        # remove fill_value from parameters
+        parameters.pop("fill_value", None)
+        return parameters
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """Set parameters.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dictionary of parameter names and values.
+        Returns
+        -------
+        Self
+            PipelineElement with updated parameters.
+        """
+        super().set_params(parameters)
+        if "radius" in parameters:
+            self._radius = parameters["radius"]
+        if "use_features" in parameters:
+            self._use_features = parameters["use_features"]
+        return self
 
     @property
     def radius(self) -> int:
@@ -106,14 +171,24 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         return self._use_features
 
     @abc.abstractmethod
-    def _explain_rdmol(self, mol_obj: Chem.Mol) -> dict[int, list[tuple[int, int]]]:
+    def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule."""
         raise NotImplementedError
 
     def bit2atom_mapping(
-        self, mol_obj: Chem.Mol
+        self, mol_obj: RDKitMol
     ) -> dict[int, list[CircularAtomEnvironment]]:
-        """Obtain set of atoms for all features."""
+        """Obtain set of atoms for all features.
+
+        Parameters
+        ----------
+        mol_obj: RDKitMol
+            RDKit molecule to be encoded.
+        Returns
+        -------
+        dict[int, list[CircularAtomEnvironment]]
+            Dictionary with mapping from bit to encoded AtomEnvironments (which contain atom indices).
+        """
         bit2atom_dict = self._explain_rdmol(mol_obj)
         result_dict: dict[int, list[CircularAtomEnvironment]] = {}
         # Iterating over all present bits and respective matches

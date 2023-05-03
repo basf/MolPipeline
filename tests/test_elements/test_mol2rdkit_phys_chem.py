@@ -14,6 +14,14 @@ data_path = os.path.join(os.path.abspath(this_file), "../test_data/mol_descripto
 
 class TestMol2RDKitPhyschem(unittest.TestCase):
     def test_descriptor_calculation(self) -> None:
+        """Test if the calculation of RDKitPhysChem Descriptors works as expected.
+
+        Compared to precalculated values.
+
+        Returns
+        -------
+        None
+        """
         expected_df = pd.read_csv(data_path, sep="\t")
         descriptor_names = expected_df.drop(columns=["smiles"]).columns.tolist()
         smi2mol = SmilesToMolPipelineElement()
@@ -30,6 +38,12 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         self.assertTrue(difference.max() < 0.0001)  # add assertion here
 
     def test_descriptor_normalization(self) -> None:
+        """Test if the normalization of RDKitPhysChem Descriptors works as expected.
+
+        Returns
+        -------
+        None
+        """
         smi2mol = SmilesToMolPipelineElement()
         property_element = MolToRDKitPhysChem(normalize=True)
         pipeline = MolPipeline([smi2mol, property_element])

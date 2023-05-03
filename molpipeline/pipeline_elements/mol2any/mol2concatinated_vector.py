@@ -2,9 +2,13 @@
 from __future__ import annotations
 from typing import Any, Iterable, Optional
 
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 import numpy as np
 import numpy.typing as npt
-from rdkit import Chem
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
@@ -13,6 +17,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
 )
+from molpipeline.utils.json_operations import pipeline_element_from_json
 
 
 class MolToConcatenatedVector(MolToAnyPipelineElement):
@@ -48,13 +53,23 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             component.n_jobs = self.n_jobs
 
     @classmethod
-    def from_json(cls, json_dict: dict[str, Any]) -> MolToConcatenatedVector:
-        """Create object from json representation."""
+    def from_json(cls, json_dict: dict[str, Any]) -> Self:
+        """Create object from json representation.
+
+        Parameters
+        ----------
+        json_dict: dict[str, Any]
+            Json representation of object.
+        Returns
+        -------
+        Self
+            Mol2ConcatenatedVector pipeline element specified by json_dict.
+        """
+        params = dict(json_dict)  # copy, because the dict is modified
+        component_json_list = params.pop("component_list")
         component_list = [
-            MolToFingerprintPipelineElement.from_json(component)
-            for component in json_dict["component_list"]
+            pipeline_element_from_json(component) for component in component_json_list
         ]
-        params = dict(json_dict)
         params["component_list"] = component_list
         return super().from_json(params)
 
@@ -63,49 +78,110 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """Get component_list."""
         return self._component_list[:]
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        params = super().params
-        params.update(
-            {
-                "component_list": [
-                    component.copy() for component in self.component_list
-                ],
-            }
-        )
-        return params
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Return all parameters defining the object.
 
-    def copy(self) -> MolToConcatenatedVector:
-        """Create a copy of the object."""
-        return MolToConcatenatedVector(**self.params)
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters defining the object.
+        """
+        parameters = super().get_params(deep)
+        if deep:
+            parameters["component_list"] = [
+                component.copy() for component in self.component_list
+            ]
+        else:
+            parameters["component_list"] = self.component_list
+        return parameters
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """Set parameters.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameters to set.
+        Returns
+        -------
+        Self
+            Mol2ConcatenatedVector object with updated parameters.
+        """
+        super().set_params(parameters)
+        if "component_list" in parameters:
+            self._component_list = parameters["component_list"]
+        for component in self._component_list:
+            component.n_jobs = self.n_jobs
+        return self
 
     def assemble_output(
         self,
         value_list: Iterable[npt.NDArray[np.float_]],
     ) -> npt.NDArray[np.float_]:
-        """Transform output of all transform_single operations to matrix."""
+        """Transform output of all transform_single operations to matrix.
+
+        Parameters
+        ----------
+        value_list: Iterable[npt.NDArray[np.float_]]
+            List of molecular descriptors or fingerprints which are concatenated to a single matrix.
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+        """
         return np.vstack(list(value_list))
 
     def to_json(self) -> dict[str, Any]:
-        """Return json representation of the object."""
+        """Return json representation of the object.
+
+        Returns
+        -------
+        dict[str, Any]
+            Json representation of the object.
+        """
         json_dict = super().to_json()
         json_dict["component_list"] = [
             component.to_json() for component in self.component_list
         ]
         return json_dict
 
-    def transform(self, value_list: list[Chem.Mol]) -> npt.NDArray[np.float_]:
-        """Transform the list of molecules to sparse matrix."""
+    def transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
+        """Transform the list of molecules to sparse matrix.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of molecules to transform.
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+        """
         output: npt.NDArray[np.float_] = super().transform(value_list)
         return output
 
-    def fit(self, value_list: list[Chem.Mol]) -> None:
-        """Fit each pipeline element."""
+    def fit(self, value_list: list[RDKitMol]) -> Self:
+        """Fit each pipeline element.
+
+        Parameters
+        ----------
+        value_list: list[RDKitMol]
+            List of molecules used to fit the pipeline elements creating the concatenated vector.
+        Returns
+        -------
+        Self
+            Fitted pipelineelement.
+        """
         for pipeline_element in self._component_list:
             pipeline_element.fit(value_list)
+        return self
 
-    def _transform_single(self, value: Chem.Mol) -> Optional[npt.NDArray[np.float_]]:
+    def _transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
         """Get output of each element and concatenate for output."""
         final_vector = []
         for pipeline_element in self._component_list:

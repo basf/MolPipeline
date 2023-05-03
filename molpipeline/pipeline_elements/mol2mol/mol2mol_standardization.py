@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import Any
 
-from rdkit import Chem
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
@@ -28,16 +28,7 @@ class RemoveChargePipelineElement(_MolToMolPipelineElement):
             none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
         )
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        return {"name": self.name, "n_jobs": self.n_jobs}
-
-    def copy(self) -> RemoveChargePipelineElement:
-        """Create a copy of the object."""
-        return RemoveChargePipelineElement(**self.params)
-
-    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove charges of molecule."""
         return rdMolStandardize.ChargeParent(value)
 
@@ -56,20 +47,10 @@ class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
         super().__init__(
             none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
         )
-        self._metal_disconnector = rdMolStandardize.MetalDisconnector()
 
-    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Cleave bonds with metals."""
-        return self._metal_disconnector.Disconnect(value)
-
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        return {"name": self.name, "n_jobs": self.n_jobs}
-
-    def copy(self) -> MetalDisconnectorPipelineElement:
-        """Create a copy of the object."""
-        return MetalDisconnectorPipelineElement(**self.params)
+        return rdMolStandardize.MetalDisconnector().Disconnect(value)
 
 
 class SaltRemoverPipelineElement(_MolToMolPipelineElement):
@@ -88,16 +69,7 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
         )
         self._salt_remover = rdkit_SaltRemover.SaltRemover()
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        return {"name": self.name, "n_jobs": self.n_jobs}
-
-    def copy(self) -> SaltRemoverPipelineElement:
-        """Create a copy of the object."""
-        return SaltRemoverPipelineElement(**self.params)
-
-    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove metal ions."""
         return self._salt_remover.StripMol(value)
 
@@ -118,15 +90,6 @@ class UnchargePipelineElement(_MolToMolPipelineElement):
         )
         self._uncharger = rdMolStandardize.Uncharger()
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        return {"name": self.name, "n_jobs": self.n_jobs}
-
-    def copy(self) -> UnchargePipelineElement:
-        """Create a copy of the object."""
-        return UnchargePipelineElement(**self.params)
-
-    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove charges of molecule."""
         return self._uncharger.uncharge(value)

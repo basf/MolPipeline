@@ -2,6 +2,7 @@
 from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
+import copy
 from typing import Any, Iterable, Literal
 
 try:
@@ -9,7 +10,7 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-from rdkit import Chem
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.utils.molpipe_types import OptionalMol
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
@@ -52,14 +53,44 @@ class ABCPipelineElement(abc.ABC):
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
-        """Create object from json dict."""
-        specified_class = json_dict.pop("type")
-        specified_module = json_dict.pop("module")
+        """Create object from json dict.
+
+        Parameters
+        ----------
+        json_dict: dict[str, Any]
+            Json with parameters to initialize the object.
+
+        Returns
+        -------
+        Self
+            Object specified by json_dict.
+        """
+        json_dict_copy = dict(json_dict)
+        specified_class = json_dict_copy.pop("type")
+        specified_module = json_dict_copy.pop("module")
         if specified_module != cls.__module__:
             raise ValueError(f"Cannot create {cls.__name__} from {specified_module}")
         if specified_class != cls.__name__:
             raise ValueError(f"Cannot create {cls.__name__} from {specified_class}")
-        return cls(**json_dict)
+        additional_attributes = json_dict_copy.pop("additional_attributes", {})
+        loaded_pipeline_element = cls(**json_dict_copy)
+        for key, value in additional_attributes.items():
+            if not hasattr(loaded_pipeline_element, key):
+                raise ValueError(
+                    f"Cannot set attribute {key} on {cls.__name__} from {specified_class}"
+                )
+            setattr(loaded_pipeline_element, key, value)
+        return loaded_pipeline_element
+
+    @property
+    def additional_attributes(self) -> dict[str, Any]:
+        """Any attribute relevant for recreating and exact copy, which is not a parameter.
+
+        Returns
+        -------
+        dict[str, Any]
+        """
+        return {}
 
     @property
     def input_type(self) -> type:
@@ -73,7 +104,16 @@ class ABCPipelineElement(abc.ABC):
 
     @n_jobs.setter
     def n_jobs(self, n_jobs: int) -> None:
-        """Set the number of cores."""
+        """Set the number of cores.
+
+        Parameters
+        ----------
+        n_jobs: int
+            Number of cores used for processing.
+        Returns
+        -------
+        None
+        """
         self._n_jobs = check_available_cores(n_jobs)
 
     @property
@@ -83,7 +123,22 @@ class ABCPipelineElement(abc.ABC):
 
     @none_handling.setter
     def none_handling(self, none_handling: NoneHandlingOptions) -> None:
-        """Set string which determines the handling of nones."""
+        """Set string which determines the handling of nones.
+
+        None values originate from molecules for which the transformation from the PipelineElement cannot be applied,
+        or molecular representations are corrupted (e.g. invalid SMILES).
+
+        Parameters
+        ----------
+        none_handling: Literal["raise", "record_remove", "fill_dummy"]
+            Behaviour when encountering None values originated from unprocessable molecules.
+            - raise: Raises an error if a None is encountered.
+            - record_remove: Removes the molecule from the list and records the position.
+            - fill_dummy: Fills the output with a dummy value on the position of the None.
+        Returns
+        -------
+        None
+        """
         valid_options = ["raise", "record_remove", "fill_dummy"]
         if none_handling not in valid_options:
             raise ValueError(
@@ -97,29 +152,134 @@ class ABCPipelineElement(abc.ABC):
         return self._output_type
 
     @property
-    def params(self) -> dict[str, Any]:
-        """Any parameter relevant for creating and exact copy."""
-        return {
-            "name": self.name,
-            "none_handling": self.none_handling,
-            "n_jobs": self.n_jobs,
-            "fill_value": self.none_collector.fill_value,
-        }
+    def parameters(self) -> dict[str, Any]:
+        """Return the parameters of the object."""
+        return self.get_params()
 
-    @abc.abstractmethod
-    def copy(self) -> ABCPipelineElement:
-        """Copy the object."""
+    @parameters.setter
+    def parameters(self, parameters: dict[str, Any]) -> None:
+        """Set the parameters of the object.
 
-    def fit(self, value_list: Any) -> None:
-        """Fit object to input_values. Does often nothing."""
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Object parameters as a dictionary.
+        Returns
+        -------
+        None
+        """
+        self.set_params(parameters)
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Return the parameters of the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters of the object.
+        """
+        if deep:
+            return {
+                "name": copy.copy(self.name),
+                "none_handling": copy.copy(self.none_handling),
+                "n_jobs": copy.copy(self.n_jobs),
+                "fill_value": copy.copy(self.none_collector.fill_value),
+            }
+        else:
+            return {
+                "name": self.name,
+                "none_handling": self.none_handling,
+                "n_jobs": self.n_jobs,
+                "fill_value": self.none_collector.fill_value,
+            }
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """As the setter function cannot be assessed with super(), this method is implemented for inheritance.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameters to be set.
+
+        Returns
+        -------
+        Self
+            Self with updated parameters.
+        """
+        for att_name, att_value in parameters.items():
+            if not hasattr(self, att_name):
+                ValueError(
+                    f"Cannot set attribute {att_name} on {self.__class__.__name__}"
+                )
+            setattr(self, att_name, att_value)
+        return self
+
+    def copy(self) -> Self:
+        """Copy the object.
+
+        Returns
+        -------
+        Self
+            Copy of the object.
+        """
+        recreated_object = self.__class__(**self.parameters)
+        for key, value in self.additional_attributes.items():
+            if not hasattr(recreated_object, key):
+                raise AssertionError(
+                    f"Cannot set attribute {key} on {self.__class__.__name__}. This should not happen!"
+                )
+            setattr(recreated_object, key, copy.copy(value))
+        return recreated_object
+
+    def fit(self, value_list: Any) -> Self:
+        """Fit object to input_values.
+
+        Most objects might not need fitting, but it is implemented for consitency for all PipelineElements.
+
+        Parameters
+        ----------
+        value_list: Any
+            List of molecule representations.
+
+        Returns
+        -------
+        Self
+            Fitted object.
+        """
+        return self
 
     def fit_transform(self, value_list: Any) -> Any:
-        """Apply fit function and subsequently transform the input."""
+        """Apply fit function and subsequently transform the input.
+
+        Parameters
+        ----------
+        value_list: Any
+            Apply transformation specified in transform_single to all molecules in the value_list.
+        Returns
+        -------
+        Any
+            List of molecules in new representation.
+        """
         self.fit(value_list)
         return self.transform(value_list)
 
     def transform_single(self, value: Any) -> Any:
-        """Transform the input to the new Output."""
+        """Transform a single molecule to the new representation.
+
+        Parameters
+        ----------
+        value: Any
+            Current representation of the molecule. (Eg. SMILES, RDKit Mol, ...)
+        Returns
+        -------
+        Any
+            New representation of the molecule. (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
+        """
         return self._transform_single(value)
 
     def _apply_to_all(self, value_list: Any) -> Any:
@@ -139,11 +299,35 @@ class ABCPipelineElement(abc.ABC):
         return output_rows
 
     def assemble_output(self, value_list: Iterable[Any]) -> Any:
-        """Aggregate rows, which in most cases is just return the list."""
+        """Aggregate rows, which in most cases is just return the list.
+
+        Some representations might be better representd as a single object. For example a list of vectors can
+        be transformed to a matrix.
+
+        Parameters
+        ----------
+        value_list: Iterable[Any]
+            Iterable of transformed rows.
+        Returns
+        -------
+        Any
+            Aggregated output. This can also be the original input.
+        """
         return list(value_list)
 
     def transform(self, value_list: Any) -> Any:
-        """Transform input_values according to object rules."""
+        """Transform input_values according to object rules.
+
+        Parameters
+        ----------
+        value_list: Any
+            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, PhysChem vectors etc.).
+            Input depends on the concrete PipelineElement.
+        Returns
+        -------
+        Any
+            Transformed input_values.
+        """
         output_rows = self._apply_to_all(value_list)
         output_rows = self._catch_nones(output_rows)
         output = self.assemble_output(output_rows)
@@ -155,12 +339,20 @@ class ABCPipelineElement(abc.ABC):
         return output
 
     def to_json(self) -> dict[str, Any]:
-        """Return a all definig attributes of object as dict."""
-        json_dict = {
+        """Return all defining attributes of object as dict.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with all attributes necessary to initialize a object with same parameters.
+        """
+        json_dict: dict[str, Any] = {
             "type": self.__class__.__name__,
             "module": self.__class__.__module__,
         }
-        json_dict.update(self.params)
+        json_dict.update(self.parameters)
+        if self.additional_attributes:
+            json_dict["additional_attributes"] = self.additional_attributes
         return json_dict
 
     def finish(self) -> None:
@@ -177,8 +369,8 @@ class ABCPipelineElement(abc.ABC):
 class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
     """Abstract PipelineElement where input and outputs are molecules."""
 
-    _input_type = Chem.Mol
-    _output_type = Chem.Mol
+    _input_type = RDKitMol
+    _output_type = RDKitMol
 
     def __init__(
         self,
@@ -204,19 +396,14 @@ class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
         return self._transform_single(value)
 
     @abc.abstractmethod
-    def _transform_single(self, value: Chem.Mol) -> OptionalMol:
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Transform the molecule according to child dependent rules."""
-
-    @property
-    def params(self) -> dict[str, Any]:
-        """Get object parameters relevant for copying the class."""
-        return super().params
 
 
 class AnyToMolPipelineElement(ABCPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
-    _output_type = Chem.Mol
+    _output_type = RDKitMol
 
     def __init__(
         self,
@@ -239,16 +426,11 @@ class AnyToMolPipelineElement(ABCPipelineElement, abc.ABC):
     def _transform_single(self, value: Any) -> OptionalMol:
         """Transform the input specified in each child to molecules."""
 
-    @property
-    def params(self) -> dict[str, Any]:
-        """Get object parameters relevant for copying the class."""
-        return super().params
-
 
 class MolToAnyPipelineElement(ABCPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
-    _input_type = Chem.Mol
+    _input_type = RDKitMol
 
     def __init__(
         self,
@@ -263,10 +445,5 @@ class MolToAnyPipelineElement(ABCPipelineElement, abc.ABC):
         )
 
     @abc.abstractmethod
-    def _transform_single(self, value: Chem.Mol) -> Any:
+    def _transform_single(self, value: RDKitMol) -> Any:
         """Transform the molecules to the input specified in each child."""
-
-    @property
-    def params(self) -> dict[str, Any]:
-        """Get object parameters relevant for copying the class."""
-        return super().params

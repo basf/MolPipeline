@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import abc
-from typing import Any
 
 from rdkit import Chem
 
@@ -17,7 +16,18 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
     _output_type = Chem.Mol
 
     def transform(self, value_list: list[str]) -> list[OptionalMol]:
-        """Transform the list of molecules to sparse matrix."""
+        """Transform the list of molecules to sparse matrix.
+
+        Parameters
+        ----------
+        value_list: list[str]
+            List of string representations of molecules which are transformed to RDKit molecules.
+
+        Returns
+        -------
+        list[OptionalMol]
+            List of RDKit molecules. If a string representation could not be transformed to a molecule, None is returned.
+        """
         return super().transform(value_list)
 
     @abc.abstractmethod
@@ -32,8 +42,3 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         -------
         str
         """
-
-    @property
-    def params(self) -> dict[str, Any]:
-        """Get parameters defining the class."""
-        return super().params
