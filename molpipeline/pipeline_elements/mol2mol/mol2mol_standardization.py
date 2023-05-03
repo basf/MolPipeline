@@ -67,11 +67,10 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
         super().__init__(
             none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
         )
-        self._salt_remover = rdkit_SaltRemover.SaltRemover()
 
     def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove metal ions."""
-        return self._salt_remover.StripMol(value)
+        return rdkit_SaltRemover.SaltRemover().StripMol(value)
 
 
 class UnchargePipelineElement(_MolToMolPipelineElement):
@@ -88,8 +87,7 @@ class UnchargePipelineElement(_MolToMolPipelineElement):
         super().__init__(
             none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
         )
-        self._uncharger = rdMolStandardize.Uncharger()
 
     def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove charges of molecule."""
-        return self._uncharger.uncharge(value)
+        return rdMolStandardize.Uncharger().uncharge(value)
