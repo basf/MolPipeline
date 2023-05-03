@@ -17,8 +17,13 @@ FP_SIZE = 2048
 EXPECTED_OUTPUT = make_sparse_fp(TEST_SMILES[:-1], FP_RADIUS, FP_SIZE)
 
 
-class PipelineTest(unittest.TestCase):
+class FoldedMorganFingerprintTest(unittest.TestCase):
     def test_fit_transform_single_core(self) -> None:
+        """Test if the generation of the fingerprint matrix works as expected.
+        Returns
+        -------
+        None
+        """
         # Create pipeline
         pipeline = MolPipeline(
             [

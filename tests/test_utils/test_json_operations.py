@@ -11,16 +11,34 @@ from molpipeline.utils.json_operations import (
 
 class JsonConversionTest(unittest.TestCase):
     def test_rf_reconstruction(self) -> None:
+        """Test if the sklearn-rf can be reconstructed from json.
+
+        Returns
+        -------
+        None
+        """
         rf = RandomForestClassifier(n_estimators=200)
         recreated_rf = sklearn_model_from_json(sklearn_model_to_json(rf))
         self.assertEqual(rf.get_params(), recreated_rf.get_params())
 
     def test_svc_reconstruction(self) -> None:
+        """Test if the sklearn-svc can be reconstructed from json.
+
+        Returns
+        -------
+        None
+        """
         svc = SVC()
         recreated_svc = sklearn_model_from_json(sklearn_model_to_json(svc))
         self.assertEqual(svc.get_params(), recreated_svc.get_params())
 
     def test_pipeline_reconstruction(self) -> None:
+        """Test if the sklearn-pipleine can be reconstructed from json.
+
+        Returns
+        -------
+        None
+        """
         rf = RandomForestClassifier(n_estimators=200)
         svc = SVC()
         pipeline = Pipeline([("rf", rf), ("svc", svc)])

@@ -30,6 +30,12 @@ EXPECTED_OUTPUT = make_sparse_fp(TEST_SMILES, FP_RADIUS, FP_SIZE)
 
 class PipelineTest(unittest.TestCase):
     def test_fit_transform_single_core(self) -> None:
+        """Test if the generation of the fingerprint matrix works as expected.
+
+        Returns
+        -------
+        None
+        """
         # Create pipeline
         pipeline = MolPipeline(
             [
@@ -45,6 +51,12 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
     def test_sklearn_pipeline(self) -> None:
+        """Test if the pipeline can be used in a sklearn pipeline.
+
+        Returns
+        -------
+        None
+        """
         m_pipeline = MolPipeline(
             [
                 SmilesToMolPipelineElement(),
@@ -64,6 +76,12 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(pred_val, true_val)
 
     def test_slicing(self) -> None:
+        """Test if the pipeline can be sliced correctly.
+
+        Returns
+        -------
+        None
+        """
         pipeline_element_list = [
             SmilesToMolPipelineElement(),
             MetalDisconnectorPipelineElement(),
@@ -98,6 +116,12 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(concat_element.parameters, original_element.parameters)
 
     def test_salt_removal(self) -> None:
+        """Test if salts are correctly removed from molecules.
+
+        Returns
+        -------
+        None
+        """
         smiles_with_salt_list = ["CCO-[Na]", "CCC(=O)[O-].[Li+]", "CCC(=O)-O-[K]"]
         smiles_without_salt_list = ["CCO", "CCC(=O)O", "CCC(=O)O"]
 
@@ -117,7 +141,12 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(generated_smiles, smiles_without_salt)
 
     def test_json_generation(self) -> None:
-        """Test that the json representation of a pipeline can be loaded back into a pipeline."""
+        """Test that the json representation of a pipeline can be loaded back into a pipeline.
+
+        Returns
+        -------
+        None
+        """
 
         # Create pipeline
         pipeline_element_list = [
