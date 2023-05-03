@@ -22,6 +22,7 @@ from tests.utils.fingerprints import make_sparse_fp
 
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
+FAULTY_TEST_SMILES = ["CCCXAS"]
 CONTAINS_OX = [0, 1, 1, 0, 1, 0]
 FP_RADIUS = 2
 FP_SIZE = 2048
@@ -168,6 +169,27 @@ class PipelineTest(unittest.TestCase):
             loaded_pipeline.pipeline_elements, pipeline_element_list
         ):
             self.assertEqual(loaded_element.parameters, original_element.parameters)
+
+    def test_fit_transform_record_remove_nones(self) -> None:
+        """Test if the generation of the fingerprint matrix works as expected.
+        Returns
+        -------
+        None
+        """
+        # Create pipeline
+        pipeline = MolPipeline(
+            [
+                SmilesToMolPipelineElement(),
+                MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
+            ],
+            handle_nones="record_remove",
+        )
+
+        # Run pipeline
+        matrix = pipeline.fit_transform(TEST_SMILES + FAULTY_TEST_SMILES)
+
+        # Compare with expected output (Which is the same as the output without the faulty smiles)
+        self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
 
 if __name__ == "__main__":
