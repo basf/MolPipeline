@@ -13,6 +13,26 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.utils.molpipe_types import OptionalMol
 
 
+class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
+
+    def __init__(
+        self,
+        none_handling: NoneHandlingOptions = "raise",
+        fill_value: Any = None,
+        name: str = "MetalDisconnectorPipe",
+        n_jobs: int = 1,
+    ) -> None:
+        """Initialize MetalDisconnectorPipelineElement."""
+        super().__init__(
+            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
+        )
+
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
+        """Cleave bonds with metals."""
+        return rdMolStandardize.MetalDisconnector().Disconnect(value)
+
+
 class RemoveChargePipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which returns charge-parent of a molecule, if possible."""
 
@@ -32,25 +52,6 @@ class RemoveChargePipelineElement(_MolToMolPipelineElement):
         """Remove charges of molecule."""
         return rdMolStandardize.ChargeParent(value)
 
-
-class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
-
-    def __init__(
-        self,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
-        name: str = "MetalDisconnectorPipe",
-        n_jobs: int = 1,
-    ) -> None:
-        """Initialize MetalDisconnectorPipelineElement."""
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
-
-    def _transform_single(self, value: RDKitMol) -> OptionalMol:
-        """Cleave bonds with metals."""
-        return rdMolStandardize.MetalDisconnector().Disconnect(value)
 
 
 class SaltRemoverPipelineElement(_MolToMolPipelineElement):
