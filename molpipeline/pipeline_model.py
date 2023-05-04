@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, get_args, Iterable, Literal, Optional, overload
+from typing import Any, get_args, Iterable, Optional, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -11,12 +11,11 @@ from sklearn.base import clone
 
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
+from molpipeline.utils.molpipe_types import NoneHandlingOptions
 from molpipeline.utils.json_operations import (
     sklearn_model_from_json,
     sklearn_model_to_json,
 )
-
-NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 
 
 class PipelineModel:

@@ -3,7 +3,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import Any, Iterable, Literal
+from typing import Any, Iterable
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -12,11 +12,9 @@ except ImportError:
 
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
-from molpipeline.utils.molpipe_types import OptionalMol
+from molpipeline.utils.molpipe_types import OptionalMol, NoneHandlingOptions
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 from molpipeline.utils.none_handling import NoneCollector
-
-NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 
 
 class ABCPipelineElement(abc.ABC):
