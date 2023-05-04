@@ -75,7 +75,6 @@ class RemoveStereoInformationPipelineElement(_MolToMolPipelineElement):
         return copy_mol
 
 
-
 class SaltRemoverPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes metal ions from molecule."""
 
@@ -93,7 +92,10 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
 
     def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove metal ions."""
-        return rdkit_SaltRemover.SaltRemover().StripMol(value)
+        salt_less_mol = rdkit_SaltRemover.SaltRemover().StripMol(value)
+        if value.GetNumAtoms() == 0:
+            return None
+        return salt_less_mol
 
 
 class UnchargePipelineElement(_MolToMolPipelineElement):
