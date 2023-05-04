@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
+from rdkit.Chem import rdmolops
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
@@ -51,6 +52,27 @@ class RemoveChargePipelineElement(_MolToMolPipelineElement):
     def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove charges of molecule."""
         return rdMolStandardize.ChargeParent(value)
+
+class RemoveStereoInformationPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes stereo-information from the molecule."""
+
+    def __init__(
+        self,
+        none_handling: NoneHandlingOptions = "raise",
+        fill_value: Any = None,
+        name: str = "RemoveStereoInformationPipelineElement",
+        n_jobs: int = 1,
+    ) -> None:
+        """Initialize RemoveStereoInformationPipelineElement."""
+        super().__init__(
+            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
+        )
+
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
+        """Remove stereo-information in molecule."""
+        copy_mol = RDKitMol(value)
+        rdmolops.RemoveStereochemistry(copy_mol)
+        return copy_mol
 
 
 
