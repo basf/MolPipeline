@@ -22,7 +22,7 @@ from tests.utils.fingerprints import make_sparse_fp
 
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
-FAULTY_TEST_SMILES = ["CCCXAS"]
+FAULTY_TEST_SMILES = ["CCCXAS", ""]
 CONTAINS_OX = [0, 1, 1, 0, 1, 0]
 FP_RADIUS = 2
 FP_SIZE = 2048

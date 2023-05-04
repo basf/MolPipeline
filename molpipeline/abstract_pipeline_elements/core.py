@@ -3,7 +3,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import Any, Iterable, Literal
+from typing import Any, Iterable
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -12,11 +12,9 @@ except ImportError:
 
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
-from molpipeline.utils.molpipe_types import OptionalMol
+from molpipeline.utils.molpipe_types import OptionalMol, NoneHandlingOptions
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 from molpipeline.utils.none_handling import NoneCollector
-
-NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 
 
 class ABCPipelineElement(abc.ABC):
@@ -271,6 +269,8 @@ class ABCPipelineElement(abc.ABC):
     def transform_single(self, value: Any) -> Any:
         """Transform a single molecule to the new representation.
 
+        Empty molecules are mapped to None.
+
         Parameters
         ----------
         value: Any
@@ -280,6 +280,9 @@ class ABCPipelineElement(abc.ABC):
         Any
             New representation of the molecule. (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
         """
+        if isinstance(value, RDKitMol):
+            if value.GetNumAtoms() == 0:
+                return None
         return self._transform_single(value)
 
     def _apply_to_all(self, value_list: Any) -> Any:

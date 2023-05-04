@@ -68,7 +68,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             Object created from json_dict.
         """
         json_dict_copy = dict(json_dict)  # copy, because the dict is modified
-        additional_attributes = json_dict_copy.pop("additional_attributes", None)
+        additional_attributes = json_dict_copy.pop("additional_attributes", {})
         if additional_attributes:
             additional_attributes = {
                 "mean": np.array(additional_attributes["mean"]),
