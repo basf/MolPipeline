@@ -53,6 +53,7 @@ class RemoveChargePipelineElement(_MolToMolPipelineElement):
         """Remove charges of molecule."""
         return rdMolStandardize.ChargeParent(value)
 
+
 class RemoveStereoInformationPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes stereo-information from the molecule."""
 
