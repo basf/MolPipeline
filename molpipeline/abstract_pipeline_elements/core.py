@@ -269,6 +269,8 @@ class ABCPipelineElement(abc.ABC):
     def transform_single(self, value: Any) -> Any:
         """Transform a single molecule to the new representation.
 
+        Empty molecules are mapped to None.
+
         Parameters
         ----------
         value: Any
@@ -278,6 +280,9 @@ class ABCPipelineElement(abc.ABC):
         Any
             New representation of the molecule. (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
         """
+        if isinstance(value, RDKitMol):
+            if value.GetNumAtoms() == 0:
+                return None
         return self._transform_single(value)
 
     def _apply_to_all(self, value_list: Any) -> Any:
