@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import multiprocessing
+import warnings
 from typing import Any, Literal, Union
 
 try:
@@ -11,10 +12,12 @@ except ImportError:
     from typing_extensions import Self
 
 import numpy as np
+import warnings
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.utils.json_operations import pipeline_element_from_json
 from molpipeline.utils.multi_proc import check_available_cores
 from molpipeline.utils.none_handling import NoneCollector
+from molpipeline.utils.molpipe_types import NoneHandlingOptions
 
 
 class MolPipeline:
@@ -27,17 +30,37 @@ class MolPipeline:
     def __init__(
         self,
         pipeline_element_list: list[ABCPipelineElement],
-        handle_nones: Literal["raise", "record_remove", "fill_dummy"] = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = np.nan,
         n_jobs: int = 1,
         name: str = "MolPipeline",
+        handle_nones: Optional[NoneHandlingOptions] = None,
     ):
-        """Initialize MolPipeline."""
+        """Initialize MolPipeline.
+
+        Parameters
+        ----------
+        pipeline_element_list: list[ABCPipelineElement]
+            List of Pipeline Elements which form the pipeline.
+        none_handling: NoneHandlingOptions
+            Defines how Nones are handled.
+        fill_value: Any
+            Value used to fill Nones. Only important if none_handling is "fill_dummy".
+        n_jobs:
+            Number of cores used.
+        name: str
+            Name of pipeline.
+        handle_nones: Optional[NoneHandlingOptions]
+            For backwards compatibility. If not None, this value is used for none_handling.
+        """
         self._pipeline_element_list = pipeline_element_list
 
         self.n_jobs = n_jobs
         self.name = name
-        self.handle_nones = handle_nones
+        self.none_handling = none_handling
+        if handle_nones is not None:
+            warnings.warn("handle_nones is deprecated. Use none_handling instead.")
+            self.none_handling = handle_nones
         self.none_collector = NoneCollector(fill_value=fill_value)
 
     @classmethod
@@ -64,24 +87,24 @@ class MolPipeline:
         return cls(**json_dict_copy)
 
     @property
-    def handle_nones(self) -> Literal["raise", "record_remove", "fill_dummy"]:
+    def none_handling(self) -> Literal["raise", "record_remove", "fill_dummy"]:
         """Get string defining the handling of Nones.
 
         Returns
         -------
         Literal["raise", "record_remove", "fill_dummy"]
         """
-        return self._handle_nones
+        return self._none_handling
 
-    @handle_nones.setter
-    def handle_nones(
-        self, handle_nones: Literal["raise", "record_remove", "fill_dummy"]
+    @none_handling.setter
+    def none_handling(
+        self, none_handling: Literal["raise", "record_remove", "fill_dummy"]
     ) -> None:
         """Set string defining the handling of Nones.
 
         Parameters
         ----------
-        handle_nones: Literal["raise", "record_remove", "fill_dummy"]
+        none_handling: Literal["raise", "record_remove", "fill_dummy"]
             Specifies how molecules which map to None are handled:
             - raise: Raises an error if a None is encountered.
             - record_remove: Removes the molecule from the list and records the position.
@@ -90,16 +113,16 @@ class MolPipeline:
         -------
         None
         """
-        self._handle_nones = handle_nones
-        if handle_nones == "raise":
+        self._none_handling = none_handling
+        if none_handling == "raise":
             for element in self._pipeline_element_list:
                 element.none_handling = "raise"
-        elif handle_nones in ["record_remove", "fill_dummy"]:
+        elif none_handling in ["record_remove", "fill_dummy"]:
             for element in self._pipeline_element_list:
                 element.none_handling = "record_remove"
         else:
             raise ValueError(
-                f"handle_nones must be one of ['raise', 'record_remove', 'fill_dummy'], but is {handle_nones}."
+                f"none_handling must be one of ['raise', 'record_remove', 'fill_dummy'], but is {none_handling}."
             )
 
     @property
@@ -165,14 +188,14 @@ class MolPipeline:
                 "pipeline_element_list": self.pipeline_elements,
                 "n_jobs": self.n_jobs,
                 "name": self.name,
-                "handle_nones": copy.copy(self.handle_nones),
+                "none_handling": copy.copy(self.none_handling),
                 "fill_value": copy.copy(self.none_collector.fill_value),
             }
         return {
             "pipeline_element_list": self._pipeline_element_list,
             "n_jobs": self.n_jobs,
             "name": self.name,
-            "handle_nones": self.handle_nones,
+            "none_handling": self.none_handling,
             "fill_value": self.none_collector.fill_value,
         }
 
@@ -193,8 +216,8 @@ class MolPipeline:
             self._pipeline_element_list = parameter_dict["pipeline_element_list"]
         if "n_jobs" in parameter_dict:
             self.n_jobs = parameter_dict["n_jobs"]
-        if "handle_nones" in parameter_dict:
-            self.handle_nones = parameter_dict["handle_nones"]
+        if "none_handling" in parameter_dict:
+            self.none_handling = parameter_dict["none_handling"]
         if "fill_value" in parameter_dict:
             self.none_collector.fill_value = parameter_dict["fill_value"]
         if "name" in parameter_dict:
@@ -266,7 +289,7 @@ class MolPipeline:
 
         nan_indices = np.delete(all_indices, surviving_indices)
         self.none_collector.none_indices = list(nan_indices)
-        if self.handle_nones == "fill_dummy":
+        if self.none_handling == "fill_dummy":
             return self.none_collector.fill_with_dummy(iter_input)
 
         return iter_input
@@ -319,7 +342,7 @@ class MolPipeline:
         else:
             output = list(self._transform_iterator(x_input))
 
-        if self.handle_nones == "fill_dummy":
+        if self.none_handling == "fill_dummy":
             return self.none_collector.fill_with_dummy(output)
         return output
 
@@ -335,10 +358,10 @@ class MolPipeline:
                     pool.imap(self._transform_single, x_input)
                 ):
                     if transformed_value is None:
-                        if self.handle_nones == "raise":
+                        if self.none_handling == "raise":
                             raise ValueError(f"Encountered None in position: {i}")
 
-                        if self.handle_nones in ["record_remove", "fill_dummy"]:
+                        if self.none_handling in ["record_remove", "fill_dummy"]:
                             self.none_collector.none_indices.append(i)
                             continue
                         raise AssertionError(
@@ -349,9 +372,9 @@ class MolPipeline:
             for i, value in enumerate(x_input):
                 transformed_value = self._transform_single(value)
                 if transformed_value is None:
-                    if self.handle_nones == "raise":
+                    if self.none_handling == "raise":
                         raise ValueError(f"Encountered None in position: {i}")
-                    if self.handle_nones in ["record_remove", "fill_dummy"]:
+                    if self.none_handling in ["record_remove", "fill_dummy"]:
                         self.none_collector.none_indices.append(i)
                         continue
                     raise AssertionError("This part of the code should be unreachable!")
