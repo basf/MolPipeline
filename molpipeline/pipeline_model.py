@@ -105,7 +105,8 @@ class PipelineModel:
         """
         self._n_jobs = n_jobs
         self._mol_pipeline.n_jobs = n_jobs
-        self._skl_model.set_params(n_jobs=n_jobs)
+        if hasattr(self._skl_model, "n_jobs"):
+            self._skl_model.set_params(n_jobs=n_jobs)
 
     @property
     def none_handling(self) -> NoneHandlingOptions:
