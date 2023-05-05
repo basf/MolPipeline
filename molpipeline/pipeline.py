@@ -92,11 +92,15 @@ class MolPipeline:
         """
         self._handle_nones = handle_nones
         if handle_nones == "raise":
-            for element in self.pipeline_elements:
+            for element in self._pipeline_element_list:
                 element.none_handling = "raise"
-        if handle_nones in ["record_remove", "fill_dummy"]:
-            for element in self.pipeline_elements:
+        elif handle_nones in ["record_remove", "fill_dummy"]:
+            for element in self._pipeline_element_list:
                 element.none_handling = "record_remove"
+        else:
+            raise ValueError(
+                f"handle_nones must be one of ['raise', 'record_remove', 'fill_dummy'], but is {handle_nones}."
+            )
 
     @property
     def n_jobs(self) -> int:
@@ -117,6 +121,11 @@ class MolPipeline:
         None
         """
         self._n_jobs = check_available_cores(requested_jobs)
+
+    @property
+    def none_indices(self) -> list[int]:
+        """Get list of indices of None values."""
+        return self.none_collector.none_indices
 
     @property
     def parameters(self) -> dict[str, Any]:
