@@ -45,10 +45,10 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         n_jobs: int:
             Number of cores used.
         """
+        self._component_list = component_list
         super().__init__(
             none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
         )
-        self._component_list = component_list
         for component in self._component_list:
             component.n_jobs = self.n_jobs
 
@@ -76,7 +76,29 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     @property
     def component_list(self) -> list[MolToAnyPipelineElement]:
         """Get component_list."""
-        return self._component_list[:]
+        return self._component_list
+
+    @property
+    def none_handling(self) -> NoneHandlingOptions:
+        """Get none_handling."""
+        return self._none_handling
+
+    @none_handling.setter
+    def none_handling(self, none_handling: NoneHandlingOptions) -> None:
+        """Set none_handling.
+
+        Parameters
+        ----------
+        none_handling: NoneHandlingOptions
+            How to handle None values.
+
+        Returns
+        -------
+        None
+        """
+        self._none_handling = none_handling
+        for component in self._component_list:
+            component.none_handling = none_handling
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -117,6 +139,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             self._component_list = parameters["component_list"]
         for component in self._component_list:
             component.n_jobs = self.n_jobs
+            component.none_handling = self.none_handling
         return self
 
     def assemble_output(
