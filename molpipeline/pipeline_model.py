@@ -61,8 +61,6 @@ class PipelineModel:
             warnings.warn("handle_nones is deprecated. Use none_handling instead.")
             self.none_handling = handle_nones
 
-
-
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> PipelineModel:
         """Create PipelineModel from json dict.
@@ -136,7 +134,9 @@ class PipelineModel:
         elif none_handling == "record_remove" or none_handling == "fill_dummy":
             self._mol_pipeline.none_handling = "record_remove"
         else:
-            raise NotImplementedError(f"This is a bug. {none_handling} must be included.")
+            raise NotImplementedError(
+                f"This is a bug. {none_handling} must be included."
+            )
 
     @property
     def none_indices(self) -> list[int]:
