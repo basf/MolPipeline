@@ -30,6 +30,7 @@ class PipelineModel:
         none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = np.nan,
         n_jobs: int = 1,
+        handle_nones: Optional[NoneHandlingOptions] = None,
     ) -> None:
         """Initialize the MLPipeline.
 
@@ -46,15 +47,20 @@ class PipelineModel:
             final output.
         n_jobs: int
             Number of cores used.
+        handle_nones: Optional[NoneHandlingOptions]
+            For backwards compatibility. If not None, this value is used for none_handling.
         """
-        self.none_handling = none_handling
-
         self._mol_pipeline = mol_pipeline
-        self._mol_pipeline.none_handling = "record_remove"
         self._mol_pipeline.none_collector = NoneCollector(fill_value)
-
         self._skl_model = sklearn_model
         self.n_jobs = n_jobs
+
+        self.none_handling = none_handling
+        if handle_nones is not None:
+            warnings.warn("handle_nones is deprecated. Use none_handling instead.")
+            self.none_handling = handle_nones
+
+
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> PipelineModel:
@@ -101,6 +107,35 @@ class PipelineModel:
         self._n_jobs = n_jobs
         self._mol_pipeline.n_jobs = n_jobs
         self._skl_model.set_params(n_jobs=n_jobs)
+
+    @property
+    def none_handling(self) -> NoneHandlingOptions:
+        """Get none_handling."""
+        return self._none_handling
+
+    @none_handling.setter
+    def none_handling(self, none_handling: NoneHandlingOptions) -> None:
+        """Set none_handling.
+
+        Parameters
+        ----------
+        none_handling: NoneHandlingOptions
+            Parameter defining the handling of nones.
+        Returns
+        -------
+        None
+        """
+        if none_handling not in get_args(NoneHandlingOptions):
+            raise ValueError(
+                f"none_handling must be one of {get_args(NoneHandlingOptions)}, but is {none_handling}."
+            )
+        self._none_handling = none_handling
+        if none_handling == "raise":
+            self._mol_pipeline.none_handling = "raise"
+        elif none_handling == "record_remove" or none_handling == "fill_dummy":
+            self._mol_pipeline.none_handling = "record_remove"
+        else:
+            raise NotImplementedError(f"This is a bug. {none_handling} must be included.")
 
     @property
     def none_indices(self) -> list[int]:
