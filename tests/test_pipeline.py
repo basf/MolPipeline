@@ -97,25 +97,25 @@ class PipelineTest(unittest.TestCase):
         first_half = m_pipeline[:2]
         second_half = m_pipeline[2:]
         self.assertEqual(
-            first_half.pipeline_elements[0].parameters,
+            first_half.element_list[0].parameters,
             pipeline_element_list[0].parameters,
         )
         self.assertEqual(
-            first_half.pipeline_elements[1].parameters,
+            first_half.element_list[1].parameters,
             pipeline_element_list[1].parameters,
         )
         self.assertEqual(
-            second_half.pipeline_elements[0].parameters,
+            second_half.element_list[0].parameters,
             pipeline_element_list[2].parameters,
         )
         self.assertEqual(
-            second_half.pipeline_elements[1].parameters,
+            second_half.element_list[1].parameters,
             pipeline_element_list[3].parameters,
         )
 
         concatenated_pipeline = first_half + second_half
         for concat_element, original_element in zip(
-            concatenated_pipeline.pipeline_elements, pipeline_element_list
+            concatenated_pipeline.element_list, pipeline_element_list
         ):
             self.assertEqual(concat_element.parameters, original_element.parameters)
 
@@ -169,7 +169,7 @@ class PipelineTest(unittest.TestCase):
 
         # Compare pipeline elements
         for loaded_element, original_element in zip(
-            loaded_pipeline.pipeline_elements, pipeline_element_list
+            loaded_pipeline.element_list, pipeline_element_list
         ):
             self.assertEqual(loaded_element.parameters, original_element.parameters)
 
@@ -218,18 +218,20 @@ class PipelineTest(unittest.TestCase):
 
         # Run pipeline
         self.assertEqual(pipeline.none_handling, "record_remove")
-        self.assertEqual(pipeline.pipeline_elements[0].none_handling, "record_remove")
-        self.assertEqual(pipeline.pipeline_elements[1].none_handling, "record_remove")
-        concat_element = pipeline.pipeline_elements[1]
+        self.assertEqual(pipeline.element_list[0].none_handling, "record_remove")
+        self.assertEqual(pipeline.element_list[1].none_handling, "record_remove")
+        concat_element = pipeline.element_list[1]
         if not isinstance(concat_element, MolToConcatenatedVector):
-            raise TypeError("Expected MolToConcatenatedVector, got {}".format(type(concat_element)))
-        for element in concat_element.pipeline_elements:
+            raise TypeError(
+                "Expected MolToConcatenatedVector, got {}".format(type(concat_element))
+            )
+        for element in concat_element.element_list:
             self.assertEqual(element.none_handling, "record_remove")
         pipeline.none_handling = "record_remove"
         self.assertEqual(pipeline.none_handling, "record_remove")
-        self.assertEqual(pipeline.pipeline_elements[0].none_handling, "record_remove")
-        self.assertEqual(pipeline.pipeline_elements[1].none_handling, "record_remove")
-        for element in concat_element.pipeline_elements:
+        self.assertEqual(pipeline.element_list[0].none_handling, "record_remove")
+        self.assertEqual(pipeline.element_list[1].none_handling, "record_remove")
+        for element in concat_element.element_list:
             self.assertEqual(element.none_handling, "record_remove")
 
 
