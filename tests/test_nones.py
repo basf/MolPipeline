@@ -32,7 +32,7 @@ class NoneTest(unittest.TestCase):
                 SmilesToMolPipelineElement(),
                 MolToSmilesPipelineElement(),
             ],
-            handle_nones="fill_dummy",
+            none_handling="fill_dummy",
             fill_value=None,
         )
         out = pipeline.transform(TEST_SMILES)
@@ -46,7 +46,7 @@ class NoneTest(unittest.TestCase):
                 SmilesToMolPipelineElement(),
                 MolToSmilesPipelineElement(),
             ],
-            handle_nones="record_remove",
+            none_handling="record_remove",
         )
         out = pipeline.transform(TEST_SMILES)
         self.assertEqual(len(out), 1)
@@ -61,7 +61,7 @@ class NoneTest(unittest.TestCase):
                 SmilesToMolPipelineElement(),
                 MolToFoldedMorganFingerprint(),
             ],
-            handle_nones="record_remove",
+            none_handling="record_remove",
         )
         out = pipeline.transform(TEST_SMILES)
         self.assertEqual(out.shape, (1, 2048))
@@ -73,7 +73,7 @@ class NoneTest(unittest.TestCase):
                 SmilesToMolPipelineElement(),
                 MolToRDKitPhysChem(),
             ],
-            handle_nones="record_remove",
+            none_handling="record_remove",
         )
         pipeline2 = pipeline.copy()
         pipeline.fit(TEST_SMILES)
@@ -89,7 +89,7 @@ class NoneTest(unittest.TestCase):
                 SmilesToMolPipelineElement(),
                 MolToRDKitPhysChem(),
             ],
-            handle_nones="fill_dummy",
+            none_handling="fill_dummy",
             fill_value=10,
         )
         pipeline2 = pipeline.copy()

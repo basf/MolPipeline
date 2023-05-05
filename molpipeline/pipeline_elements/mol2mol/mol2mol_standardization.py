@@ -94,7 +94,7 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
     def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove metal ions."""
         salt_less_mol = rdkit_SaltRemover.SaltRemover().StripMol(value)
-        if value.GetNumAtoms() == 0:
+        if salt_less_mol.GetNumAtoms() == 0:
             return None
         return salt_less_mol
 

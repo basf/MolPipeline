@@ -8,6 +8,7 @@ from typing import Any, get_args, Iterable, Optional, overload
 import numpy as np
 import numpy.typing as npt
 from sklearn.base import clone
+import warnings
 
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
@@ -27,8 +28,10 @@ class PipelineModel:
         self,
         mol_pipeline: MolPipeline,
         sklearn_model: Any,
-        handle_nones: NoneHandlingOptions = "raise",
+        none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = np.nan,
+        n_jobs: int = 1,
+        handle_nones: Optional[NoneHandlingOptions] = None,
     ) -> None:
         """Initialize the MLPipeline.
 
@@ -38,19 +41,25 @@ class PipelineModel:
             MolPipeline for preprocessing molecules.
         sklearn_model: Any
             Sklearn Model.
-        handle_nones: Literal["raise", "record_remove", "fill_dummy"]
+        none_handling: Literal["raise", "record_remove", "fill_dummy"]
             Parameter defining the handling of nones.
         fill_value: Any
-            If handle_nones == "fill_dummy": Mols which are None are substituted with fill_value in
+            If none_handling == "fill_dummy": Mols which are None are substituted with fill_value in
             final output.
+        n_jobs: int
+            Number of cores used.
+        handle_nones: Optional[NoneHandlingOptions]
+            For backwards compatibility. If not None, this value is used for none_handling.
         """
-        self.handle_nones = handle_nones
-
         self._mol_pipeline = mol_pipeline
-        self._mol_pipeline.handle_nones = "record_remove"
         self._mol_pipeline.none_collector = NoneCollector(fill_value)
-
         self._skl_model = sklearn_model
+        self.n_jobs = n_jobs
+
+        self.none_handling = none_handling
+        if handle_nones is not None:
+            warnings.warn("handle_nones is deprecated. Use none_handling instead.")
+            self.none_handling = handle_nones
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> PipelineModel:
@@ -69,8 +78,65 @@ class PipelineModel:
         mol_pipeline = MolPipeline.from_json(json_dict["mol_pipeline"])
         skl_model = sklearn_model_from_json(json_dict["skl_model"])
         return cls(
-            mol_pipeline, skl_model, json_dict["handle_nones"], json_dict["fill_value"]
+            mol_pipeline, skl_model, json_dict["none_handling"], json_dict["fill_value"]
         )
+
+    @property
+    def mol_pipeline(self) -> MolPipeline:
+        """Get the mol_pipeline."""
+        return self._mol_pipeline
+
+    @property
+    def n_jobs(self) -> int:
+        """Get number of cores used."""
+        return self._n_jobs
+
+    @n_jobs.setter
+    def n_jobs(self, n_jobs: int) -> None:
+        """Set number of cores used.
+
+        Parameters
+        ----------
+        n_jobs: int
+            Number of cores used.
+        Returns
+        -------
+        None
+        """
+        self._n_jobs = n_jobs
+        self._mol_pipeline.n_jobs = n_jobs
+        self._skl_model.set_params(n_jobs=n_jobs)
+
+    @property
+    def none_handling(self) -> NoneHandlingOptions:
+        """Get none_handling."""
+        return self._none_handling
+
+    @none_handling.setter
+    def none_handling(self, none_handling: NoneHandlingOptions) -> None:
+        """Set none_handling.
+
+        Parameters
+        ----------
+        none_handling: NoneHandlingOptions
+            Parameter defining the handling of nones.
+        Returns
+        -------
+        None
+        """
+        if none_handling not in get_args(NoneHandlingOptions):
+            raise ValueError(
+                f"none_handling must be one of {get_args(NoneHandlingOptions)}, but is {none_handling}."
+            )
+        self._none_handling = none_handling
+        if none_handling == "raise":
+            self._mol_pipeline.none_handling = "raise"
+        elif none_handling == "record_remove" or none_handling == "fill_dummy":
+            self._mol_pipeline.none_handling = "record_remove"
+        else:
+            raise NotImplementedError(
+                f"This is a bug. {none_handling} must be included."
+            )
 
     @property
     def none_indices(self) -> list[int]:
@@ -118,7 +184,7 @@ class PipelineModel:
             Tuple of transformed input and raw output. X values which are None and corresponding y values are removed.
         """
         ml_input = self._mol_pipeline.fit_transform(molecule_iterable)
-        if len(self.none_indices) > 0 and self.handle_nones == "raise":
+        if len(self.none_indices) > 0 and self.none_handling == "raise":
             raise ValueError(f"Encountered Nones during fit at {self.none_indices}")
 
         if y_values is not None:
@@ -143,7 +209,7 @@ class PipelineModel:
             Output of molpipeline transformation without applying the sklearn method.
         """
         ml_input = self._mol_pipeline.transform(molecule_iterable)
-        if len(self.none_indices) > 0 and self.handle_nones == "raise":
+        if len(self.none_indices) > 0 and self.none_handling == "raise":
             raise ValueError(f"Encountered Nones during fit at {self.none_indices}")
         return ml_input
 
@@ -151,7 +217,7 @@ class PipelineModel:
         self, output: npt.NDArray[np.float_]
     ) -> npt.NDArray[np.float_]:
         if len(self.none_indices) > 0:
-            if self.handle_nones == "fill_dummy":
+            if self.none_handling == "fill_dummy":
                 output = self._none_collector.fill_with_dummy(output)
         return output
 
@@ -259,7 +325,7 @@ class PipelineModel:
             "mol_pipeline": self._mol_pipeline.to_json(),
             "skl_model": sklearn_model_to_json(self._skl_model),
             "fill_value": copy.copy(self._none_collector.fill_value),
-            "handle_nones": copy.copy(self.handle_nones),
+            "none_handling": copy.copy(self.none_handling),
         }
 
     def transform(
@@ -306,6 +372,30 @@ class PipelineModel:
         final_output = self._finalize_output(ml_output)
         return final_output
 
+    def predict_proba(
+        self, molecule_iterable: Iterable[Any], **predictparams: dict[Any, Any]
+    ) -> npt.NDArray[Any]:
+        """Predict the input.
+
+        Parameters
+        ----------
+        molecule_iterable: Iterable[Any]
+            Iterable of molecules.
+        predictparams: dict[Any, Any]
+            Parameter for SKLearn pipeline
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Array of predicted values.
+        """
+        if not hasattr(self._skl_model, "predict_proba"):
+            raise AttributeError("Model does not support predict_proba!")
+        ml_input = self.molpipeline_transform(molecule_iterable)
+        ml_output = self._skl_model.predict_proba(ml_input, **predictparams)
+        final_output = self._finalize_output(ml_output)
+        return final_output
+
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters for this estimator.
 
@@ -322,7 +412,7 @@ class PipelineModel:
             parameter_dict = {
                 "mol_pipeline": self._mol_pipeline.copy(),
                 "sklearn_model": clone(self._skl_model),
-                "handle_nones": str(self.handle_nones),
+                "none_handling": str(self.none_handling),
                 "fill_value": copy.copy(self._none_collector.fill_value),
             }
             return parameter_dict
@@ -330,7 +420,7 @@ class PipelineModel:
         parameter_dict = {
             "mol_pipeline": self._mol_pipeline,
             "sklearn_model": self._skl_model,
-            "handle_nones": self.handle_nones,
+            "none_handling": self.none_handling,
             "fill_value": self._none_collector.fill_value,
         }
         return parameter_dict
@@ -365,11 +455,11 @@ class PipelineModel:
                     "Potentially not an SKLearn model, as it does not have the function set_params!"
                 )
 
-        if "handle_nones" in params:
-            value = params.pop("handle_nones")
+        if "none_handling" in params:
+            value = params.pop("none_handling")
             if value not in get_args(NoneHandlingOptions):
                 raise TypeError(f"Invalid selection for NoneHandlingOptions: {value}")
-            self.handle_nones = value  # type: ignore
+            self.none_handling = value  # type: ignore
 
         if "fill_value" in params:
             self._none_collector.fill_value = params.pop("fill_value")
