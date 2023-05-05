@@ -29,6 +29,7 @@ class PipelineModel:
         sklearn_model: Any,
         handle_nones: NoneHandlingOptions = "raise",
         fill_value: Any = np.nan,
+        n_jobs: int = 1,
     ) -> None:
         """Initialize the MLPipeline.
 
@@ -43,6 +44,8 @@ class PipelineModel:
         fill_value: Any
             If handle_nones == "fill_dummy": Mols which are None are substituted with fill_value in
             final output.
+        n_jobs: int
+            Number of cores used.
         """
         self.handle_nones = handle_nones
 
@@ -51,6 +54,7 @@ class PipelineModel:
         self._mol_pipeline.none_collector = NoneCollector(fill_value)
 
         self._skl_model = sklearn_model
+        self.n_jobs = n_jobs
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> PipelineModel:
@@ -71,6 +75,32 @@ class PipelineModel:
         return cls(
             mol_pipeline, skl_model, json_dict["handle_nones"], json_dict["fill_value"]
         )
+
+    @property
+    def mol_pipeline(self) -> MolPipeline:
+        """Get the mol_pipeline."""
+        return self._mol_pipeline
+
+    @property
+    def n_jobs(self) -> int:
+        """Get number of cores used."""
+        return self._n_jobs
+
+    @n_jobs.setter
+    def n_jobs(self, n_jobs: int) -> None:
+        """Set number of cores used.
+
+        Parameters
+        ----------
+        n_jobs: int
+            Number of cores used.
+        Returns
+        -------
+        None
+        """
+        self._n_jobs = n_jobs
+        self._mol_pipeline.n_jobs = n_jobs
+        self._skl_model.set_params(n_jobs=n_jobs)
 
     @property
     def none_indices(self) -> list[int]:
@@ -303,6 +333,32 @@ class PipelineModel:
         """
         ml_input = self.molpipeline_transform(molecule_iterable)
         ml_output = self._skl_model.predict(ml_input, **predictparams)
+        final_output = self._finalize_output(ml_output)
+        return final_output
+
+    def predict_proba(
+        self, molecule_iterable: Iterable[Any], **predictparams: dict[Any, Any]
+    ) -> npt.NDArray[Any]:
+        """Predict the input.
+
+        Parameters
+        ----------
+        molecule_iterable: Iterable[Any]
+            Iterable of molecules.
+        predictparams: dict[Any, Any]
+            Parameter for SKLearn pipeline
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Array of predicted values.
+        """
+        if not hasattr(self._skl_model, "predict_proba"):
+            raise AttributeError(
+                "Model does not support predict_proba!"
+            )
+        ml_input = self.molpipeline_transform(molecule_iterable)
+        ml_output = self._skl_model.predict_proba(ml_input, **predictparams)
         final_output = self._finalize_output(ml_output)
         return final_output
 
