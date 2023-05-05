@@ -354,9 +354,7 @@ class PipelineModel:
             Array of predicted values.
         """
         if not hasattr(self._skl_model, "predict_proba"):
-            raise AttributeError(
-                "Model does not support predict_proba!"
-            )
+            raise AttributeError("Model does not support predict_proba!")
         ml_input = self.molpipeline_transform(molecule_iterable)
         ml_output = self._skl_model.predict_proba(ml_input, **predictparams)
         final_output = self._finalize_output(ml_output)
