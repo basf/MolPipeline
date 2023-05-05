@@ -51,4 +51,8 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
         if not mol:
             return None
         mol.SetProp("identifier", value)
+
+        # Map molecules without atoms to None
+        if mol.GetNumAtoms() == 0:
+            return None
         return mol
