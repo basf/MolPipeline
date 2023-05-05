@@ -46,14 +46,14 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         mol_list = [Chem.MolFromSmiles(smi) for smi in smiles]
         output3 = np.hstack(
             [
-                concat_vector_elmnt.pipeline_elements[0].transform(mol_list),
-                concat_vector_elmnt.pipeline_elements[1].transform(mol_list).toarray(),
+                concat_vector_elmnt.element_list[0].transform(mol_list),
+                concat_vector_elmnt.element_list[1].transform(mol_list).toarray(),
             ]
         )
         pyschem_component: MolToRDKitPhysChem
-        pyschem_component = concat_vector_elmnt.pipeline_elements[0]  # type: ignore
+        pyschem_component = concat_vector_elmnt.element_list[0]  # type: ignore
         morgan_component: MolToFoldedMorganFingerprint
-        morgan_component = concat_vector_elmnt.pipeline_elements[1]  # type: ignore
+        morgan_component = concat_vector_elmnt.element_list[1]  # type: ignore
         expected_shape = (
             len(smiles),
             (pyschem_component.n_features + morgan_component.n_bits),
