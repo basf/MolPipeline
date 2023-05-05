@@ -6,6 +6,9 @@ from sklearn.tree import DecisionTreeClassifier
 from molpipeline.pipeline import MolPipeline
 
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.mol2any.mol2concatinated_vector import (
+    MolToConcatenatedVector,
+)
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
@@ -22,7 +25,7 @@ from tests.utils.fingerprints import make_sparse_fp
 
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
-FAULTY_TEST_SMILES = ["CCCXAS", ""]
+FAULTY_TEST_SMILES = ["CCCXAS", "", "O=C(O)C(F)(F)F"]
 CONTAINS_OX = [0, 1, 1, 0, 1, 0]
 FP_RADIUS = 2
 FP_SIZE = 2048
@@ -180,9 +183,10 @@ class PipelineTest(unittest.TestCase):
         pipeline = MolPipeline(
             [
                 SmilesToMolPipelineElement(),
+                SaltRemoverPipelineElement(),  # To test if the pipline can handle mols with become None in pipeline
                 MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
             ],
-            handle_nones="record_remove",
+            none_handling="record_remove",
         )
 
         # Run pipeline
@@ -190,6 +194,43 @@ class PipelineTest(unittest.TestCase):
 
         # Compare with expected output (Which is the same as the output without the faulty smiles)
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
+
+    def test_none_handling_forwarding(self) -> None:
+        """Test if the none handling is forwarded to individual elements correctly.
+
+        Returns
+        -------
+        None
+        """
+        # Create pipeline
+        pipeline = MolPipeline(
+            [
+                SmilesToMolPipelineElement(),
+                MolToConcatenatedVector(
+                    [
+                        MolToRDKitPhysChem(),
+                        MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
+                    ]
+                ),
+            ],
+            none_handling="record_remove",
+        )
+
+        # Run pipeline
+        self.assertEqual(pipeline.none_handling, "record_remove")
+        self.assertEqual(pipeline.pipeline_elements[0].none_handling, "record_remove")
+        self.assertEqual(pipeline.pipeline_elements[1].none_handling, "record_remove")
+        concat_element = pipeline.pipeline_elements[1]
+        if not isinstance(concat_element, MolToConcatenatedVector):
+            raise TypeError("Expected MolToConcatenatedVector, got {}".format(type(concat_element)))
+        for element in concat_element.pipeline_elements:
+            self.assertEqual(element.none_handling, "record_remove")
+        pipeline.none_handling = "record_remove"
+        self.assertEqual(pipeline.none_handling, "record_remove")
+        self.assertEqual(pipeline.pipeline_elements[0].none_handling, "record_remove")
+        self.assertEqual(pipeline.pipeline_elements[1].none_handling, "record_remove")
+        for element in concat_element.pipeline_elements:
+            self.assertEqual(element.none_handling, "record_remove")
 
 
 if __name__ == "__main__":
