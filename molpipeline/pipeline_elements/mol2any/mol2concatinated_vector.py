@@ -23,12 +23,12 @@ from molpipeline.utils.json_operations import pipeline_element_from_json
 class MolToConcatenatedVector(MolToAnyPipelineElement):
     """Creates a concatenated descriptor vectored from multiple MolToAny PipelineElements."""
 
-    _component_list: list[MolToAnyPipelineElement]
+    _element_list: list[MolToAnyPipelineElement]
 
     # pylint: disable=R0913
     def __init__(
         self,
-        component_list: list[MolToAnyPipelineElement],
+        element_list: list[MolToAnyPipelineElement],
         none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
         name: str = "MolToConcatenatedVector",
@@ -38,19 +38,19 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        component_list: list[MolToAnyPipelineElement]
+        element_list: list[MolToAnyPipelineElement]
             List of Pipeline Elements of which the output is concatenated.
         name: str
             name of pipeline.
         n_jobs: int:
             Number of cores used.
         """
+        self._element_list = element_list
         super().__init__(
             none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
         )
-        self._component_list = component_list
-        for component in self._component_list:
-            component.n_jobs = self.n_jobs
+        for element in self._element_list:
+            element.n_jobs = self.n_jobs
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
@@ -66,17 +66,40 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Mol2ConcatenatedVector pipeline element specified by json_dict.
         """
         params = dict(json_dict)  # copy, because the dict is modified
-        component_json_list = params.pop("component_list")
-        component_list = [
-            pipeline_element_from_json(component) for component in component_json_list
+        pipeline_element_json_list = params.pop("element_list")
+        pipeline_element_list = [
+            pipeline_element_from_json(element)
+            for element in pipeline_element_json_list
         ]
-        params["component_list"] = component_list
+        params["pipeline_element_list"] = pipeline_element_list
         return super().from_json(params)
 
     @property
-    def component_list(self) -> list[MolToAnyPipelineElement]:
-        """Get component_list."""
-        return self._component_list[:]
+    def element_list(self) -> list[MolToAnyPipelineElement]:
+        """Get pipeline elements."""
+        return self._element_list
+
+    @property
+    def none_handling(self) -> NoneHandlingOptions:
+        """Get none_handling."""
+        return self._none_handling
+
+    @none_handling.setter
+    def none_handling(self, none_handling: NoneHandlingOptions) -> None:
+        """Set none_handling.
+
+        Parameters
+        ----------
+        none_handling: NoneHandlingOptions
+            How to handle None values.
+
+        Returns
+        -------
+        None
+        """
+        self._none_handling = none_handling
+        for element in self._element_list:
+            element.none_handling = none_handling
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -93,11 +116,11 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """
         parameters = super().get_params(deep)
         if deep:
-            parameters["component_list"] = [
-                component.copy() for component in self.component_list
+            parameters["element_list"] = [
+                element.copy() for element in self.element_list
             ]
         else:
-            parameters["component_list"] = self.component_list
+            parameters["element_list"] = self.element_list
         return parameters
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
@@ -113,10 +136,11 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Mol2ConcatenatedVector object with updated parameters.
         """
         super().set_params(parameters)
-        if "component_list" in parameters:
-            self._component_list = parameters["component_list"]
-        for component in self._component_list:
-            component.n_jobs = self.n_jobs
+        if "element_list" in parameters:
+            self._element_list = parameters["element_list"]
+        for element in self._element_list:
+            element.n_jobs = self.n_jobs
+            element.none_handling = self.none_handling
         return self
 
     def assemble_output(
@@ -145,9 +169,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Json representation of the object.
         """
         json_dict = super().to_json()
-        json_dict["component_list"] = [
-            component.to_json() for component in self.component_list
-        ]
+        json_dict["element_list"] = [element.to_json() for element in self.element_list]
         return json_dict
 
     def transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
@@ -177,14 +199,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Self
             Fitted pipelineelement.
         """
-        for pipeline_element in self._component_list:
+        for pipeline_element in self._element_list:
             pipeline_element.fit(value_list)
         return self
 
     def _transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
         """Get output of each element and concatenate for output."""
         final_vector = []
-        for pipeline_element in self._component_list:
+        for pipeline_element in self._element_list:
             if isinstance(pipeline_element, MolToFingerprintPipelineElement):
                 bit_dict = pipeline_element.transform_single(value)
                 vector = np.zeros(pipeline_element.n_bits)
