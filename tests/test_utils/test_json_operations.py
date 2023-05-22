@@ -4,9 +4,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 
 from molpipeline.utils.json_operations import (
+    dict_with_function_from_str_dict,
+    dict_with_function_to_str_dict,
     sklearn_model_from_json,
     sklearn_model_to_json,
 )
+from molpipeline.utils.multi_proc import check_available_cores
 
 
 class JsonConversionTest(unittest.TestCase):
@@ -61,6 +64,23 @@ class JsonConversionTest(unittest.TestCase):
             self.assertEqual(type(orig_obj), type(recreated_obj))
         self.assertEqual(original_params, recreated_params)
 
+    def test_function_dict_json(self) -> None:
+        """Test if a dict with objects can be reconstructed from json.
+
+        Returns
+        -------
+        None
+        """
+        function_dict = {
+            "dummy1": {"check_available_cores": check_available_cores},
+            "dummy2": str,
+            "dummy3": 1,
+        }
+        function_json = dict_with_function_to_str_dict(function_dict)
+        recreated_function_dict = dict_with_function_from_str_dict(function_json)
+        self.assertEqual(function_dict, recreated_function_dict)
+
 
 if __name__ == "__main__":
     unittest.main()
+

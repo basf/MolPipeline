@@ -1,7 +1,7 @@
 """Contains functions for loading and saving pipeline elements and models to json files."""
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, Callable, Union
 
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
@@ -29,6 +29,65 @@ def pipeline_element_from_json(json_dict: dict[str, Any]) -> ABCPipelineElement:
     return pipeline_element_class.from_json(json_dict)
 
 
+def dict_with_function_to_str_dict(json_dict: dict[str, Any]) -> dict[str, Any]:
+    """Find functions in the dictionary and replace them with their string representation
+
+    Parameters
+    ----------
+    json_dict: dict[str, Any]
+        Dictionary to be transformed to a json file.
+
+    Returns
+    -------
+    str
+        Json file containing the dictionary.
+    """
+    out_dict = {}
+    for key, value in json_dict.items():
+        # If there is a good method to detect classes this could be extended to classes
+        # May need a method to get class attributes.
+        if callable(value):
+            out_dict[key] = "load_from_constructor"
+            out_dict[key + "_construction_config"] = {
+                "module": value.__module__,
+                "type": value.__name__,
+            }
+        elif isinstance(value, dict):
+            out_dict[key] = dict_with_function_to_str_dict(value)
+        else:
+            out_dict[key] = value
+    return out_dict
+
+
+def dict_with_function_from_str_dict(json_dict: dict[str, Any]) -> dict[str, Any]:
+    """Find string representation of functions in the dictionary and replace them with their implementation.
+
+    Parameters
+    ----------
+    json_dict: dict[str, Any]
+        Dictionary with string representations of functions.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary with proper functions.
+    """
+    out_dict = {}
+    for key, value in json_dict.items():
+        if key.endswith("_construction_config"):
+            continue
+        if value == "load_from_constructor":
+            module_str: str = json_dict[key + "_construction_config"]["module"]
+            obj_str: str = json_dict[key + "_construction_config"]["type"]
+            obj_module = __import__(module_str, fromlist=[obj_str])
+            out_dict[key] = getattr(obj_module, obj_str)
+        elif isinstance(value, dict):
+            out_dict[key] = dict_with_function_from_str_dict(value)
+        else:
+            out_dict[key] = value
+    return out_dict
+
+
 def sklearn_model_to_json(model: BaseEstimator) -> dict[str, Any]:
     """Extract the parameters of a sklearn model (or pipeline) and transform them to a json file.
 
@@ -53,7 +112,8 @@ def sklearn_model_to_json(model: BaseEstimator) -> dict[str, Any]:
         json_dict["memory"] = model.memory
         json_dict["verbose"] = model.verbose
         return json_dict
-    json_dict.update(model.get_params())
+    model_params = model.get_params()
+    json_dict.update(dict_with_function_to_str_dict(model_params))
     return json_dict
 
 
@@ -81,5 +141,5 @@ def sklearn_model_from_json(model_dict: dict[str, Any]) -> BaseEstimator:
         return Pipeline(
             steps, memory=model_dict["memory"], verbose=model_dict["verbose"]
         )
-
-    return model_class(**model_dict)
+    model_params = dict_with_function_from_str_dict(model_dict)
+    return model_class(**model_params)
