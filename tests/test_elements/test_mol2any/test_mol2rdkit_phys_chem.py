@@ -9,7 +9,7 @@ from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKit
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 
 this_file = os.path.dirname(__file__)
-data_path = os.path.join(os.path.abspath(this_file), "../test_data/mol_descriptors.tsv")
+data_path = os.path.join(os.path.abspath(this_file), "../../test_data/mol_descriptors.tsv")
 
 
 class TestMol2RDKitPhyschem(unittest.TestCase):
