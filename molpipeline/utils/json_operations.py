@@ -1,7 +1,7 @@
 """Contains functions for loading and saving pipeline elements and models to json files."""
 
 from __future__ import annotations
-from typing import Any, Callable, Union
+from typing import Any
 
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
@@ -30,7 +30,7 @@ def pipeline_element_from_json(json_dict: dict[str, Any]) -> ABCPipelineElement:
 
 
 def dict_with_function_to_str_dict(json_dict: dict[str, Any]) -> dict[str, Any]:
-    """Find functions in the dictionary and replace them with their string representation
+    """Find functions in the dictionary and replace them with their string representation.
 
     Parameters
     ----------
