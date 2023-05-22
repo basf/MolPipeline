@@ -42,7 +42,7 @@ def dict_with_function_to_str_dict(json_dict: dict[str, Any]) -> dict[str, Any]:
     str
         Json file containing the dictionary.
     """
-    out_dict = {}
+    out_dict: dict[str, Any] = {}
     for key, value in json_dict.items():
         # If there is a good method to detect classes this could be extended to classes
         # May need a method to get class attributes.
