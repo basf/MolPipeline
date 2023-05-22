@@ -29,63 +29,88 @@ def pipeline_element_from_json(json_dict: dict[str, Any]) -> ABCPipelineElement:
     return pipeline_element_class.from_json(json_dict)
 
 
-def dict_with_function_to_str_dict(json_dict: dict[str, Any]) -> dict[str, Any]:
-    """Find functions in the dictionary and replace them with their string representation.
+def transform_functions2string(value: Any) -> Any:
+    """Transform functions to string representation.
+
+    If the value is a function, it is transformed to a dictionary containing the module and the class name.
+    If the value is a dictionary, the function is called recursively for each value.
+    If the value is a list, the function is called recursively for each value.
+    Else the value is returned as is.
 
     Parameters
     ----------
-    json_dict: dict[str, Any]
-        Dictionary to be transformed to a json file.
+    value: Any
+        Value which is transformed.
 
     Returns
     -------
-    str
+    Any
         Json file containing the dictionary.
     """
-    out_dict: dict[str, Any] = {}
-    for key, value in json_dict.items():
-        # If there is a good method to detect classes this could be extended to classes
-        # May need a method to get class attributes.
-        if callable(value):
-            out_dict[key] = "load_from_constructor"
-            out_dict[key + "_construction_config"] = {
-                "module": value.__module__,
-                "type": value.__name__,
-            }
-        elif isinstance(value, dict):
-            out_dict[key] = dict_with_function_to_str_dict(value)
-        else:
-            out_dict[key] = value
-    return out_dict
+    if callable(value):
+        out_dict = {
+            "load_from_constructor": True,
+            "type": value.__name__,
+            "module": value.__module__,
+        }
+        return out_dict
+
+    if isinstance(value, dict):
+        out_dict = {}
+        for key, value in value.items():
+            out_dict[key] = transform_functions2string(value)
+        return out_dict
+
+    elif isinstance(value, list):
+        out_list = []
+        for value in value:
+            out_list.append(transform_functions2string(value))
+        return out_list
+
+    return value
 
 
-def dict_with_function_from_str_dict(json_dict: dict[str, Any]) -> dict[str, Any]:
-    """Find string representation of functions in the dictionary and replace them with their implementation.
+def transform_string2function(value: Any) -> Any:
+    """Transform string representation of functions to actual functions.
+
+    If the value is a dictionary containing the key "load_from_constructor" and the value is True,
+    the function is loaded from the module and class name.
+    If the value is a dictionary, the function is called recursively for each value.
+    If the value is a list, the function is called recursively for each value.
+    Else the value is returned as is.
 
     Parameters
     ----------
-    json_dict: dict[str, Any]
-        Dictionary with string representations of functions.
+    value: Any
+        Object to be transformed
 
     Returns
     -------
-    dict[str, Any]
-        Dictionary with proper functions.
+    Any
+        Json file containing the dictionary.
     """
-    out_dict = {}
-    for key, value in json_dict.items():
-        if key.endswith("_construction_config"):
-            continue
-        if value == "load_from_constructor":
-            module_str: str = json_dict[key + "_construction_config"]["module"]
-            obj_str: str = json_dict[key + "_construction_config"]["type"]
-            obj_module = __import__(module_str, fromlist=[obj_str])
-            out_dict[key] = getattr(obj_module, obj_str)
-        elif isinstance(value, dict):
-            out_dict[key] = dict_with_function_from_str_dict(value)
+    if isinstance(value, dict):
+        if "load_from_constructor" in value:
+            if value["load_from_constructor"]:
+                module_str: str = value["module"]
+                class_str: str = value["type"]
+                class_module = __import__(module_str, fromlist=[class_str])
+                return getattr(class_module, class_str)
+            else:
+                return value
         else:
-            out_dict[key] = value
-    return out_dict
+            out_dict = {}
+            for key, value in value.items():
+                out_dict[key] = transform_string2function(value)
+            return out_dict
+
+    if isinstance(value, list):
+        out_list = []
+        for value in value:
+            out_list.append(transform_string2function(value))
+        return out_list
+
+    return value
 
 
 def sklearn_model_to_json(model: BaseEstimator) -> dict[str, Any]:
@@ -113,7 +138,7 @@ def sklearn_model_to_json(model: BaseEstimator) -> dict[str, Any]:
         json_dict["verbose"] = model.verbose
         return json_dict
     model_params = model.get_params()
-    json_dict.update(dict_with_function_to_str_dict(model_params))
+    json_dict.update(transform_functions2string(model_params))
     return json_dict
 
 
@@ -141,5 +166,5 @@ def sklearn_model_from_json(model_dict: dict[str, Any]) -> BaseEstimator:
         return Pipeline(
             steps, memory=model_dict["memory"], verbose=model_dict["verbose"]
         )
-    model_params = dict_with_function_from_str_dict(model_dict)
+    model_params = transform_string2function(model_dict)
     return model_class(**model_params)

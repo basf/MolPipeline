@@ -4,8 +4,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 
 from molpipeline.utils.json_operations import (
-    dict_with_function_from_str_dict,
-    dict_with_function_to_str_dict,
+    transform_functions2string,
+    transform_string2function,
     sklearn_model_from_json,
     sklearn_model_to_json,
 )
@@ -75,9 +75,10 @@ class JsonConversionTest(unittest.TestCase):
             "dummy1": {"check_available_cores": check_available_cores},
             "dummy2": str,
             "dummy3": 1,
+            "dummy4": [check_available_cores, check_available_cores, "test"],
         }
-        function_json = dict_with_function_to_str_dict(function_dict)
-        recreated_function_dict = dict_with_function_from_str_dict(function_json)
+        function_json = transform_functions2string(function_dict)
+        recreated_function_dict = transform_string2function(function_json)
         self.assertEqual(function_dict, recreated_function_dict)
 
 
