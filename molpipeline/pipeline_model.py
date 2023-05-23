@@ -155,6 +155,11 @@ class PipelineModel:
         """Get the none_collector."""
         return self._mol_pipeline.none_collector
 
+    @property
+    def ml_model(self) -> Any:
+        """Get the ml_model."""
+        return self._skl_model
+
     def _remove_nones(self, value_iterable: Iterable[Any]) -> npt.NDArray[Any]:
         value_array = np.array(list(value_iterable))
         if len(self.none_indices) > 0:
