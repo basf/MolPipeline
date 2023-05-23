@@ -94,7 +94,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         return vec
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get parameters.
+        """Get the parameters of the pipeline element.
 
         Parameters
         ----------
@@ -104,7 +104,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Returns
         -------
         dict[str, Any]
-            Parameters
+            Parameter of the pipeline element.
         """
         parent_dict = dict(super().get_params(deep=deep))
         if deep:
