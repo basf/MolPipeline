@@ -71,7 +71,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             pipeline_element_from_json(element)
             for element in pipeline_element_json_list
         ]
-        params["pipeline_element_list"] = pipeline_element_list
+        params["element_list"] = pipeline_element_list
         return super().from_json(params)
 
     @property
