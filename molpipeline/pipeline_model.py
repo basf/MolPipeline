@@ -12,7 +12,7 @@ import warnings
 
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
-from molpipeline.utils.molpipe_types import NoneHandlingOptions
+from molpipeline.utils.molpipeline_types import NoneHandlingOptions
 from molpipeline.utils.json_operations import (
     sklearn_model_from_json,
     sklearn_model_to_json,

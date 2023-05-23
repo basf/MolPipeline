@@ -12,7 +12,7 @@ except ImportError:
 
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
-from molpipeline.utils.molpipe_types import OptionalMol, NoneHandlingOptions
+from molpipeline.utils.molpipeline_types import OptionalMol, NoneHandlingOptions
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 from molpipeline.utils.none_handling import NoneCollector
 

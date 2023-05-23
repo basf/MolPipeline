@@ -16,7 +16,7 @@ from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.utils.json_operations import pipeline_element_from_json
 from molpipeline.utils.multi_proc import check_available_cores
 from molpipeline.utils.none_handling import NoneCollector
-from molpipeline.utils.molpipe_types import NoneHandlingOptions
+from molpipeline.utils.molpipeline_types import NoneHandlingOptions
 
 
 class MolPipeline:

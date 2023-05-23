@@ -15,7 +15,7 @@ from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
 from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
-from molpipeline.utils.molpipe_types import OptionalMol
+from molpipeline.utils.molpipeline_types import OptionalMol
 
 
 class SDFToMolPipelineElement(_StringToMolPipelineElement):

@@ -11,7 +11,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     NoneHandlingOptions,
     MolToMolPipelineElement as _MolToMolPipelineElement,
 )
-from molpipeline.utils.molpipe_types import OptionalMol
+from molpipeline.utils.molpipeline_types import OptionalMol
 
 
 class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):

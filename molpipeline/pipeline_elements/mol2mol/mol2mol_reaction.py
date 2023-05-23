@@ -19,7 +19,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement,
     NoneHandlingOptions,
 )
-from molpipeline.utils.molpipe_types import OptionalMol
+from molpipeline.utils.molpipeline_types import OptionalMol
 
 
 class MolToMolReactionPipelineElement(MolToMolPipelineElement):

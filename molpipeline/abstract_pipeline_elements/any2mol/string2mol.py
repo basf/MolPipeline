@@ -6,7 +6,7 @@ import abc
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.core import AnyToMolPipelineElement
-from molpipeline.utils.molpipe_types import OptionalMol
+from molpipeline.utils.molpipeline_types import OptionalMol
 
 
 class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
