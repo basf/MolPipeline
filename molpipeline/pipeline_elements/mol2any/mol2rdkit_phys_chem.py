@@ -3,7 +3,12 @@
 
 from __future__ import annotations
 from typing import Any, Callable, Optional
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 
+import copy
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
@@ -86,3 +91,43 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         if np.any(np.isnan(vec)):
             return None
         return vec
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters.
+
+        Parameters
+        ----------
+        deep: bool
+            If true create a deep copy of the parameters
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters
+        """
+        parent_dict = dict(super().get_params(deep=deep))
+        if deep:
+            parent_dict["descriptor_list"] = copy.deepcopy(self._descriptor_list)
+        else:
+            parent_dict["descriptor_list"] = self._descriptor_list
+        return parent_dict
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """Set parameters.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameters to set
+
+        Returns
+        -------
+        Self
+            Self
+        """
+        parameters_shallow_copy = dict(parameters)
+        descriptor_list = parameters_shallow_copy.pop("descriptor_list", None)
+        if descriptor_list is not None:
+            self._descriptor_list = descriptor_list
+        super().set_params(parameters_shallow_copy)
+        return self
