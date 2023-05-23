@@ -145,6 +145,12 @@ class PipelineModel:
         return self._mol_pipeline.none_collector.none_indices
 
     @property
+    def _none_collector(self) -> NoneCollector:
+        """Get the none_collector."""
+        warnings.warn("_none_collector is deprecated. Use none_collector instead.")
+        return self._mol_pipeline.none_collector
+
+    @property
     def none_collector(self) -> NoneCollector:
         """Get the none_collector."""
         return self._mol_pipeline.none_collector
