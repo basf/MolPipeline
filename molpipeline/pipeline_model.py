@@ -145,7 +145,7 @@ class PipelineModel:
         return self._mol_pipeline.none_collector.none_indices
 
     @property
-    def _none_collector(self) -> NoneCollector:
+    def none_collector(self) -> NoneCollector:
         """Get the none_collector."""
         return self._mol_pipeline.none_collector
 
@@ -219,7 +219,7 @@ class PipelineModel:
     ) -> npt.NDArray[np.float_]:
         if len(self.none_indices) > 0:
             if self.none_handling == "fill_dummy":
-                output = self._none_collector.fill_with_dummy(output)
+                output = self.none_collector.fill_with_dummy(output)
         return output
 
     def fit(
@@ -325,7 +325,7 @@ class PipelineModel:
         return {
             "mol_pipeline": self._mol_pipeline.to_json(),
             "skl_model": sklearn_model_to_json(self._skl_model),
-            "fill_value": copy.copy(self._none_collector.fill_value),
+            "fill_value": copy.copy(self.none_collector.fill_value),
             "none_handling": copy.copy(self.none_handling),
         }
 
@@ -414,7 +414,7 @@ class PipelineModel:
                 "mol_pipeline": self._mol_pipeline.copy(),
                 "sklearn_model": clone(self._skl_model),
                 "none_handling": str(self.none_handling),
-                "fill_value": copy.copy(self._none_collector.fill_value),
+                "fill_value": copy.copy(self.none_collector.fill_value),
             }
             return parameter_dict
 
@@ -422,7 +422,7 @@ class PipelineModel:
             "mol_pipeline": self._mol_pipeline,
             "sklearn_model": self._skl_model,
             "none_handling": self.none_handling,
-            "fill_value": self._none_collector.fill_value,
+            "fill_value": self.none_collector.fill_value,
         }
         return parameter_dict
 
@@ -463,7 +463,7 @@ class PipelineModel:
             self.none_handling = value  # type: ignore
 
         if "fill_value" in params:
-            self._none_collector.fill_value = params.pop("fill_value")
+            self.none_collector.fill_value = params.pop("fill_value")
 
         # All remaining parameters are passed to the sklearn model.
         self._skl_model.set_params(**params)
