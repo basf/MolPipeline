@@ -82,6 +82,11 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     def n_features(self) -> int:
         """Return the number of features."""
 
+    @property
+    def normalize(self) -> bool:
+        """Return whether the output is normalized."""
+        return self._normalize
+
     def assemble_output(
         self,
         value_list: Iterable[npt.NDArray[np.float_]],
