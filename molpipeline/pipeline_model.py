@@ -454,6 +454,9 @@ class PipelineModel:
         """
         params = dict(params)
 
+        if "n_jobs" in params:
+            self.n_jobs = params.pop("n_jobs")
+
         if "mol_pipeline" in params:
             mol_pipeline = params.pop("mol_pipeline")
             if not isinstance(mol_pipeline, MolPipeline):
