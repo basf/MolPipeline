@@ -71,8 +71,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         additional_attributes = json_dict_copy.pop("additional_attributes", {})
         if additional_attributes:
             additional_attributes = {
-                "mean": np.array(additional_attributes["mean"]),
-                "std": np.array(additional_attributes["std"]),
+                "_mean": np.array(additional_attributes["_mean"]),
+                "_std": np.array(additional_attributes["_std"]),
             }
         json_dict_copy["additional_attributes"] = additional_attributes
         return super().from_json(json_dict_copy)
@@ -148,9 +148,9 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """Return all parameters defining the object."""
         attribute_dict = super().additional_attributes
         if self._mean is not None:
-            attribute_dict["mean"] = self._mean
+            attribute_dict["_mean"] = self._mean
         if self._std is not None:
-            attribute_dict["std"] = self._std
+            attribute_dict["_std"] = self._std
         return attribute_dict
 
     def fit(self, value_list: list[RDKitMol]) -> Self:
