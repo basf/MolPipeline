@@ -24,6 +24,36 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     _n_bits: int
     _output_type = sparse.csr_matrix
+    _sparse_output: bool
+
+    def __init__(
+        self,
+        sparse_output: bool = True,
+        none_handling: Literal["raise", "record_remove", "fill_dummy"] = "raise",
+        fill_value: Any = None,
+        name: str = "MolToFingerprintPipelineElement",
+        n_jobs: int = 1,
+    ):
+        """Initialize abstract class.
+
+        Parameters
+        ----------
+        sparse_output: bool, optional
+            True: return sparse matrix, False: return matrix as dense numpy array.
+        none_handling: Literal["raise", "record_remove", "fill_dummy"], optional
+            Specifies how to handle None values in the input list.
+        name: str
+            Name of PipelineElement.
+        n_jobs:
+            Number of jobs.
+        """
+        super().__init__(
+            name=name,
+            n_jobs=n_jobs,
+            none_handling=none_handling,
+            fill_value=fill_value,
+        )
+        self._sparse_output = sparse_output
 
     @property
     def n_bits(self) -> int:
@@ -46,7 +76,51 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         sparse.csr_matrix
             Sparse matrix of Morgan-fingerprint features.
         """
-        return sparse_from_index_value_dicts(value_list, self._n_bits)
+        sparse_matrix = sparse_from_index_value_dicts(value_list, self._n_bits)
+        if not self._sparse_output:
+            sparse_matrix = sparse_matrix.toarray()
+        return sparse_matrix
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get object parameters relevant for copying the class.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary of parameter names and values.
+        """
+        parameters = super().get_params(deep)
+        if deep:
+            parameters["_sparse_output"] = copy.copy(self._sparse_output)
+        else:
+            parameters["_sparse_output"] = self._sparse_output
+
+        return parameters
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """Set object parameters relevant for copying the class.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dictionary of parameter names and values.
+
+        Returns
+        -------
+        Self
+            Copied object with updated parameters.
+        """
+        parameter_dict_copy = dict(parameters)
+        _sparse_output = parameter_dict_copy.pop("_sparse_output", None)
+        if _sparse_output is not None:
+            self._sparse_output = _sparse_output
+        super().set_params(parameter_dict_copy)
+        return self
 
     def transform(self, value_list: list[RDKitMol]) -> sparse.csr_matrix:
         """Transform the list of molecules to sparse matrix of Morgan-fingerprint features.
@@ -86,6 +160,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         self,
         radius: int = 2,
         use_features: bool = False,
+        sparse_output: bool = True,
         none_handling: Literal["raise", "record_remove"] = "raise",
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
@@ -98,12 +173,17 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
             Radius of fingerprint.
         use_features: bool
             Whether to represent atoms by element or category (donor, acceptor. etc.)
+        sparse_output: bool, optional
+            True: return sparse matrix, False: return matrix as dense numpy array.
+        none_handling: Literal["raise", "record_remove"], optional
+            Specifies how to handle None values in the input list.
         name: str
             Name of PipelineElement.
         n_jobs:
             Number of jobs.
         """
         super().__init__(
+            sparse_output=sparse_output,
             name=name,
             n_jobs=n_jobs,
             none_handling=none_handling,

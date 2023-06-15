@@ -33,6 +33,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         radius: int = 2,
         use_features: bool = False,
         n_bits: int = 2048,
+        sparse_output: bool = True,
         none_handling: Literal["raise", "record_remove"] = "raise",
         name: str = "Mol2FoldedMorganFingerprint",
         n_jobs: int = 1,
@@ -45,6 +46,8 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             radius of the circular fingerprint [1]. Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
         use_features: bool
             Instead of atoms, features are encoded in the fingerprint. [2]
+        sparse_output: bool
+            True: return sparse matrix, False: return matrix as dense numpy array.
         n_bits: int
             Size of fingerprint.
         name: str
@@ -60,6 +63,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         super().__init__(
             radius=radius,
             use_features=use_features,
+            sparse_output=sparse_output,
             name=name,
             n_jobs=n_jobs,
             none_handling=none_handling,
@@ -158,6 +162,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         radius: int = 2,
         use_features: bool = False,
         counted: bool = False,
+        sparse_output: bool = True,
         ignore_unknown: bool = False,
         none_handling: Literal["raise", "record_remove"] = "raise",
         name: str = "Mol2UnfoldedMorganFingerprint",
@@ -174,6 +179,8 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         counted: bool
             False: bits are binary: on if present in molecule, off if not present
             True: bits are positive integers and give the occurrence of their respective features in the molecule
+        sparse_output: bool
+            True: return sparse matrix, False: return matrix as dense numpy array.
         ignore_unknown: bool
             If True, features not seen in the fit method are ignored. If False, they cause an error.
         name: str
@@ -193,6 +200,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         super().__init__(
             radius=radius,
             use_features=use_features,
+            sparse_output=sparse_output,
             name=name,
             n_jobs=n_jobs,
             none_handling=none_handling,
