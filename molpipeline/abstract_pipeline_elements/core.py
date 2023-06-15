@@ -5,6 +5,8 @@ import abc
 import copy
 from typing import Any, Iterable
 
+import numpy as np
+
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
@@ -355,7 +357,13 @@ class ABCPipelineElement(abc.ABC):
         }
         json_dict.update(self.parameters)
         if self.additional_attributes:
-            json_dict["additional_attributes"] = self.additional_attributes
+            adittional_attributes = {}
+            for key, value in self.additional_attributes.items():
+                if isinstance(value, np.ndarray):
+                    adittional_attributes[key] = value.tolist()
+                else:
+                    adittional_attributes[key] = value
+            json_dict["additional_attributes"] = adittional_attributes
         return json_dict
 
     def finish(self) -> None:
