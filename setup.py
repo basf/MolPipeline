@@ -1,7 +1,7 @@
 """Everything relevant to install molpipeline."""
 from setuptools import setup, find_packages
 
-with open("requirements.txt") as requirement_file:
+with open("requirements.txt", mode="r", encoding="utf-8") as requirement_file:
     requirement_list = requirement_file.read().splitlines()
 
 setup(
