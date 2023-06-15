@@ -96,9 +96,9 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         """
         parameters = super().get_params(deep)
         if deep:
-            parameters["_sparse_output"] = copy.copy(self._sparse_output)
+            parameters["sparse_output"] = copy.copy(self._sparse_output)
         else:
-            parameters["_sparse_output"] = self._sparse_output
+            parameters["sparse_output"] = self._sparse_output
 
         return parameters
 
