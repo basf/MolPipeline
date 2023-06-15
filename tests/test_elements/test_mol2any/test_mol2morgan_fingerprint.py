@@ -17,6 +17,23 @@ test_smiles = [
 
 
 class TestMol2MorganFingerprint(unittest.TestCase):
+
+    def test_can_be_constructed(self) -> None:
+        """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed.
+
+        Returns
+        -------
+        None
+        """
+        mol_fp = MolToFoldedMorganFingerprint()
+        mol_fp_copy = mol_fp.copy()
+        self.assertTrue(mol_fp_copy is not mol_fp)
+        for key, value in mol_fp.get_params().items():
+            self.assertEqual(value, mol_fp_copy.get_params()[key])
+        mol_fp_recreated = MolToFoldedMorganFingerprint(**mol_fp.get_params())
+        for key, value in mol_fp.get_params().items():
+            self.assertEqual(value, mol_fp_recreated.get_params()[key])
+
     def test_spase_dense_accordance(self) -> None:
         """Test if the calculation of RDKitPhysChem Descriptors works as expected.
 
