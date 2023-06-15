@@ -5,7 +5,7 @@ requirement_list = open("requirements.txt").read().splitlines()
 
 setup(
     name="molpipeline",
-    version="0.3.5",
+    version="0.3.6",
     packages=find_packages(),
     url="",
     license="",
