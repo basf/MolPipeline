@@ -17,7 +17,6 @@ test_smiles = [
 
 
 class TestMol2MorganFingerprint(unittest.TestCase):
-
     def test_spase_dense_accordance(self) -> None:
         """Test if the calculation of RDKitPhysChem Descriptors works as expected.
 
@@ -28,8 +27,12 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         None
         """
         smi2mol = SmilesToMolPipelineElement()
-        sparse_morgan = MolToFoldedMorganFingerprint(radius=2, n_bits=1024, sparse_output=True)
-        dense_morgan = MolToFoldedMorganFingerprint(radius=2, n_bits=1024, sparse_output=False)
+        sparse_morgan = MolToFoldedMorganFingerprint(
+            radius=2, n_bits=1024, sparse_output=True
+        )
+        dense_morgan = MolToFoldedMorganFingerprint(
+            radius=2, n_bits=1024, sparse_output=False
+        )
         sparse_pipeline = MolPipeline([smi2mol, sparse_morgan])
         dense_pipeline = MolPipeline([smi2mol, dense_morgan])
 
