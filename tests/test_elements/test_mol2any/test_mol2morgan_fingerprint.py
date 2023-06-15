@@ -17,7 +17,6 @@ test_smiles = [
 
 
 class TestMol2MorganFingerprint(unittest.TestCase):
-
     def test_can_be_constructed(self) -> None:
         """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed.
 
