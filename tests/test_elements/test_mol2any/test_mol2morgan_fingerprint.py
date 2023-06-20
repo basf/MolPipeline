@@ -33,8 +33,8 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         for key, value in mol_fp.get_params().items():
             self.assertEqual(value, mol_fp_recreated.get_params()[key])
 
-    def test_spase_dense_accordance(self) -> None:
-        """Test if the calculation of RDKitPhysChem Descriptors works as expected.
+    def test_sparse_dense_accordance(self) -> None:
+        """Test if the calculation of Morgan fingprints in dense and sparse are equal.
 
         Compared to precalculated values.
 
