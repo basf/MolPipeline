@@ -3,13 +3,13 @@ from typing import Any, Union
 
 import numpy.typing as npt
 
-from molpipeline.utils.molpipeline_types import _AnyPredictor, _AnyTransformer
+from molpipeline.utils.molpipeline_types import AnyPredictor, AnyTransformer
 
 
 class PostPredictionPipeline:
     def __init__(
             self,
-            step_list: list[tuple[str, Union[_AnyPredictor, _AnyTransformer]]],
+            step_list: list[tuple[str, Union[AnyPredictor, AnyTransformer]]],
             name: str = "PostPredictionPipeline"
     ) -> None:
         """Initialize PostPredictionPipeline.
