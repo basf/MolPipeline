@@ -1,3 +1,4 @@
+"""Post prediction pipeline for modifying the predictions of a model."""
 from __future__ import annotations
 from typing import Any, Union
 
@@ -7,6 +8,19 @@ from molpipeline.utils.molpipeline_types import AnyPredictor, AnyTransformer
 
 
 class PostPredictionPipeline:
+    """Pipeline for post prediction processing.
+
+    Attributes
+    ----------
+    _name: str
+        Name of the pipeline.
+    _pipeline_elements: list[tuple[str, Union[AnyPredictor, AnyTransformer]]]
+        List of tuples containing the name and the pipeline element.
+    """
+
+    name: str
+    pipeline_elements: list[tuple[str, Union[AnyPredictor, AnyTransformer]]]
+
     def __init__(
             self,
             step_list: list[tuple[str, Union[AnyPredictor, AnyTransformer]]],
@@ -28,10 +42,12 @@ class PostPredictionPipeline:
         Parameters
         ----------
         X: npt.NDArray[Any]
+            Features used to derive the prediction.
 
         Returns
         -------
         npt.NDArray[Any]
+            Predicted values for X.
         """
         X_t = X
         for name, step in self._pipeline_elements:
@@ -49,11 +65,14 @@ class PostPredictionPipeline:
         Parameters
         ----------
         X: npt.NDArray[Any]
+            Features to fit the model with.
         y: npt.NDArray[Any]
+            Target values to fit the model with.
 
         Returns
         -------
         npt.NDArray[Any]
+            Predictions of the fitted model for X.
         """
         X_t = X
         for name, step in self._pipeline_elements:

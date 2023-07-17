@@ -1,3 +1,4 @@
+"""Contains functions for molecular similarity."""
 from typing import Union
 import numpy as np
 import numpy.typing as npt
@@ -5,7 +6,8 @@ from scipy import sparse
 
 
 def tanimoto_similarity_sparse(
-    matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix
+    matrix_a: sparse.csr_matrix,
+    matrix_b: sparse.csr_matrix
 ) -> npt.NDArray[np.float_]:
     """Calculate a matrix of tanimoto similarities between feature matrix a and b.
 
@@ -28,7 +30,8 @@ def tanimoto_similarity_sparse(
 
 
 def tanimoto_distance_sparse(
-    matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix
+    matrix_a: sparse.csr_matrix,
+    matrix_b: sparse.csr_matrix
 ) -> npt.NDArray[np.float_]:
     """Calculate a matrix of tanimoto distance between feature matrix a and b.
 
@@ -48,8 +51,21 @@ def tanimoto_distance_sparse(
     return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)
 
 
-def self_tanimoto_distance(matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]]):
+def self_tanimoto_distance(
+        matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]]
+) -> npt.NDArray[np.float_]:
+    """Calculate a matrix of tanimoto distance between feature matrix a and itself.
 
+    Parameters
+    ----------
+    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]]
+        Feature matrix A.
+
+    Returns
+    -------
+    npt.NDArray[np.float_]
+        Square matrix of similarity values between all instances in the matrix.
+    """
     if isinstance(matrix_a, np.ndarray):
         sparse_matrix = sparse.csr_matrix(matrix_a)
     elif isinstance(matrix_a, sparse.csr_matrix):
