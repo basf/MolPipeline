@@ -6,8 +6,7 @@ from scipy import sparse
 
 
 def tanimoto_similarity_sparse(
-    matrix_a: sparse.csr_matrix,
-    matrix_b: sparse.csr_matrix
+    matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix
 ) -> npt.NDArray[np.float_]:
     """Calculate a matrix of tanimoto similarities between feature matrix a and b.
 
@@ -30,8 +29,7 @@ def tanimoto_similarity_sparse(
 
 
 def tanimoto_distance_sparse(
-    matrix_a: sparse.csr_matrix,
-    matrix_b: sparse.csr_matrix
+    matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix
 ) -> npt.NDArray[np.float_]:
     """Calculate a matrix of tanimoto distance between feature matrix a and b.
 
@@ -52,7 +50,7 @@ def tanimoto_distance_sparse(
 
 
 def self_tanimoto_distance(
-        matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]]
+    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]]
 ) -> npt.NDArray[np.float_]:
     """Calculate a matrix of tanimoto distance between feature matrix a and itself.
 

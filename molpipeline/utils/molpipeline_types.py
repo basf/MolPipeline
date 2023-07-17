@@ -1,11 +1,6 @@
 """Definition of types used in molpipeline."""
 from __future__ import annotations
-from typing import (
-    Any,
-    Literal,
-    Optional,
-    Protocol
-)
+from typing import Any, Literal, Optional, Protocol
 
 import numpy.typing as npt
 
@@ -53,7 +48,9 @@ class AnyPredictor(Protocol):
 class AnyTransformer(Protocol):
     """Protocol for transformers."""
 
-    def fit_transform(self, X: npt.NDArray[Any], y: npt.NDArray[Any]) -> npt.NDArray[Any]:
+    def fit_transform(
+        self, X: npt.NDArray[Any], y: npt.NDArray[Any]
+    ) -> npt.NDArray[Any]:
         """Fit the model with X and return the transformed array.
 
         Parameters

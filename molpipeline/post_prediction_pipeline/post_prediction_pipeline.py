@@ -22,9 +22,9 @@ class PostPredictionPipeline:
     pipeline_elements: list[tuple[str, Union[AnyPredictor, AnyTransformer]]]
 
     def __init__(
-            self,
-            step_list: list[tuple[str, Union[AnyPredictor, AnyTransformer]]],
-            name: str = "PostPredictionPipeline"
+        self,
+        step_list: list[tuple[str, Union[AnyPredictor, AnyTransformer]]],
+        name: str = "PostPredictionPipeline",
     ) -> None:
         """Initialize PostPredictionPipeline.
 
@@ -56,7 +56,9 @@ class PostPredictionPipeline:
             elif hasattr(step, "predict"):
                 X_t = step.predict(X_t)
             else:
-                raise ValueError(f"Step {name} has neither transform nor predict method.")
+                raise ValueError(
+                    f"Step {name} has neither transform nor predict method."
+                )
         return X_t
 
     def fit_predict(self, X: npt.NDArray[Any], y: npt.NDArray[Any]) -> npt.NDArray[Any]:
@@ -81,5 +83,7 @@ class PostPredictionPipeline:
             elif hasattr(step, "fit_predict"):
                 X_t = step.fit_predict(X_t, y)
             else:
-                raise ValueError(f"Step {name} has neither fit_transform nor fit_predict method.")
+                raise ValueError(
+                    f"Step {name} has neither fit_transform nor fit_predict method."
+                )
         return X_t
