@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import Any, Protocol, Union
+from typing import Any, Union
 
 import numpy.typing as npt
 
+from molpipeline.utils.molpipeline_types import _AnyPredictor, _AnyTransformer
 
 
 class PostPredictionPipeline:
