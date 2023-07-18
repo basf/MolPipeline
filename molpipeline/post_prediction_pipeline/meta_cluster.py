@@ -83,7 +83,6 @@ class ClusterMerging:
         # Initialise dictionaries
         cluster_dict = {}  # cluster_id: category_counts
         cluster_magnitude = {}  # cluster_id: magnitude, aka norm of category_counts
-
         # Determine the category counts and magnitude for each cluster
         for cluster_id in np.unique(X):
             cluster_members = np.where(X == cluster_id)[0]
@@ -92,9 +91,9 @@ class ClusterMerging:
             # Count the number of each category in the cluster
             cluster_category_counts = []
             for category in unique_categories:
-                category_members = sum(member_categories == category)
+                category_members = int(sum(member_categories == category))
                 cluster_category_counts.append(category_members)
-            cluster_dict[cluster_id] = np.array(cluster_category_counts)
+            cluster_dict[cluster_id] = np.array(cluster_category_counts, dtype=np.int_)
 
             # The magnitude of the cluster is the norm of the category counts
             magnitude = float(np.linalg.norm(cluster_category_counts))
@@ -107,9 +106,8 @@ class ClusterMerging:
             reverse=True,
         )
         optimal_meta_cluster_pop = category_counts / self.n_clusters
-
-        meta_cluster_population = np.zeros((self.n_clusters, len(unique_categories)))
-        meta_cluster_vector = np.full_like(y, np.nan)
+        meta_cluster_population = np.zeros((self.n_clusters, len(unique_categories)), dtype=np.int_)
+        meta_cluster_vector = np.full_like(y, -1, dtype=np.int_)
         for cluster_id in cluster_order:
             cluster_vec = cluster_dict[cluster_id]
             meta_cluster_delta = meta_cluster_population - optimal_meta_cluster_pop
