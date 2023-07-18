@@ -24,6 +24,7 @@ class AnyPredictor(Protocol):
             Model input.
         y: npt.NDArray[Any]
             Target values.
+
         Returns
         -------
         npt.NDArray[Any]
@@ -39,6 +40,7 @@ class AnyPredictor(Protocol):
             Model input.
         y: npt.NDArray[Any]
             Target values.
+
         Returns
         -------
         None
@@ -59,6 +61,7 @@ class AnyTransformer(Protocol):
             Model input.
         y: npt.NDArray[Any]
             Target values.
+
         Returns
         -------
         npt.NDArray[Any]
@@ -74,6 +77,7 @@ class AnyTransformer(Protocol):
             Model input.
         y: npt.NDArray[Any]
             Target values.
+
         Returns
         -------
         None

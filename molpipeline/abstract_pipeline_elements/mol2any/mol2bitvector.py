@@ -145,6 +145,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         ----------
         value: RDKitMol
             RDKit molecule which is encoded by the fingerprint.
+
         Returns
         -------
         dict[int, int]
@@ -228,6 +229,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         ----------
         parameters: dict[str, Any]
             Dictionary of parameter names and values.
+
         Returns
         -------
         Self
@@ -264,6 +266,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         ----------
         mol_obj: RDKitMol
             RDKit molecule to be encoded.
+
         Returns
         -------
         dict[int, list[CircularAtomEnvironment]]

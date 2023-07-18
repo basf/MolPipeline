@@ -63,6 +63,7 @@ class NoneCollector:
         ----------
         value_container: AnyIterable
             Iterable to fill with dummy values.
+
         Returns
         -------
         AnyIterable

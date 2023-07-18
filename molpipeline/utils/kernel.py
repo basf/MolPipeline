@@ -16,6 +16,7 @@ def tanimoto_similarity_sparse(
         Feature matrix A.
     matrix_b: sparse.csr_matrix
         Feature matrix B.
+
     Returns
     -------
     npt.NDArray[np.float_]
@@ -41,6 +42,7 @@ def tanimoto_distance_sparse(
         Feature matrix A.
     matrix_b: sparse.csr_matrix
         Feature matrix B.
+
     Returns
     -------
     npt.NDArray[np.float_]

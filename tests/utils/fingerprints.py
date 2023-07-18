@@ -21,6 +21,7 @@ def make_sparse_fp(
         Radius of features.
     n_bits: int
         Obtained features will be mapped to a vector of size n_bits.
+
     Returns
     -------
     sparse.csr_matrix
