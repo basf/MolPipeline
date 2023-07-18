@@ -1,6 +1,6 @@
 """Module for merging clusters to optimise the number of each category in the final meta clusters."""
 from __future__ import annotations
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -124,3 +124,33 @@ class ClusterMerging:
             meta_cluster_population[best_meta_cluster] += cluster_vec
             meta_cluster_vector[X == cluster_id] = best_meta_cluster
         return meta_cluster_vector
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters for this estimator.
+
+        Parameters
+        ----------
+        deep: bool
+            Whether to recursively get the parameters from the estimators.
+
+        Returns
+        -------
+        dict
+            Parameters of this estimator.
+        """
+        return {"n_clusters": self.n_clusters}
+
+    def set_params(self, **parameters: Any) -> None:
+        """Set the parameters of this estimator.
+
+        Parameters
+        ----------
+        parameters: dict
+            Parameters to set in the estimator.
+
+        Returns
+        -------
+        None
+        """
+        n_clusters = parameters.get("n_clusters", self.n_clusters)
+        self.n_clusters = n_clusters
