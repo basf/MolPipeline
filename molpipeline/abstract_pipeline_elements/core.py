@@ -66,8 +66,8 @@ class ABCPipelineElement(abc.ABC):
             Object specified by json_dict.
         """
         json_dict_copy = dict(json_dict)
-        specified_class = json_dict_copy.pop("type")
-        specified_module = json_dict_copy.pop("module")
+        specified_class = json_dict_copy.pop("__name__")
+        specified_module = json_dict_copy.pop("__module__")
         if specified_module != cls.__module__:
             raise ValueError(f"Cannot create {cls.__name__} from {specified_module}")
         if specified_class != cls.__name__:
@@ -110,6 +110,7 @@ class ABCPipelineElement(abc.ABC):
         ----------
         n_jobs: int
             Number of cores used for processing.
+
         Returns
         -------
         None
@@ -135,6 +136,7 @@ class ABCPipelineElement(abc.ABC):
             - raise: Raises an error if a None is encountered.
             - record_remove: Removes the molecule from the list and records the position.
             - fill_dummy: Fills the output with a dummy value on the position of the None.
+
         Returns
         -------
         None
@@ -164,6 +166,7 @@ class ABCPipelineElement(abc.ABC):
         ----------
         parameters: dict[str, Any]
             Object parameters as a dictionary.
+
         Returns
         -------
         None
@@ -260,6 +263,7 @@ class ABCPipelineElement(abc.ABC):
         ----------
         value_list: Any
             Apply transformation specified in transform_single to all molecules in the value_list.
+
         Returns
         -------
         Any
@@ -277,6 +281,7 @@ class ABCPipelineElement(abc.ABC):
         ----------
         value: Any
             Current representation of the molecule. (Eg. SMILES, RDKit Mol, ...)
+
         Returns
         -------
         Any
@@ -313,6 +318,7 @@ class ABCPipelineElement(abc.ABC):
         ----------
         value_list: Iterable[Any]
             Iterable of transformed rows.
+
         Returns
         -------
         Any
@@ -328,6 +334,7 @@ class ABCPipelineElement(abc.ABC):
         value_list: Any
             Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, PhysChem vectors etc.).
             Input depends on the concrete PipelineElement.
+
         Returns
         -------
         Any
@@ -352,8 +359,8 @@ class ABCPipelineElement(abc.ABC):
             A dictionary with all attributes necessary to initialize a object with same parameters.
         """
         json_dict: dict[str, Any] = {
-            "type": self.__class__.__name__,
-            "module": self.__class__.__module__,
+            "__name__": self.__class__.__name__,
+            "__module__": self.__class__.__module__,
         }
         json_dict.update(self.parameters)
         if self.additional_attributes:
