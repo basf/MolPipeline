@@ -282,9 +282,11 @@ class MolPipeline:
         surviving_indices = np.arange(len(iter_input))
         all_indices = np.arange(len(iter_input))
         for p_element in self._element_list:
+            p_element.n_jobs = self.n_jobs
             iter_input = p_element.fit_transform(iter_input)
             none_values = p_element.none_collector.none_indices
             surviving_indices = np.delete(surviving_indices, none_values)
+            p_element.n_jobs = 1
 
         nan_indices = np.delete(all_indices, surviving_indices)
         self.none_collector.none_indices = list(nan_indices)
