@@ -106,7 +106,9 @@ class ClusterMerging:
             reverse=True,
         )
         optimal_meta_cluster_pop = category_counts / self.n_clusters
-        meta_cluster_population = np.zeros((self.n_clusters, len(unique_categories)), dtype=np.int_)
+        meta_cluster_population = np.zeros(
+            (self.n_clusters, len(unique_categories)), dtype=np.int_
+        )
         meta_cluster_vector = np.full_like(y, -1, dtype=np.int_)
         for cluster_id in cluster_order:
             cluster_vec = cluster_dict[cluster_id]

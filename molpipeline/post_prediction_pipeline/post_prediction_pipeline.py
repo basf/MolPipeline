@@ -124,5 +124,5 @@ class PostPredictionPipeline:
         params: dict[str, Any]
             Parameter names mapped to their values.
         """
-        params: dict[str, Any] = {'name': self._name, 'step_list': self._step_list}
+        params: dict[str, Any] = {"name": self._name, "step_list": self._step_list}
         return params
