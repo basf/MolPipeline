@@ -5,14 +5,6 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
-from typing import TypeVar
-
-import numpy as np
 import numpy.typing as npt
 from chemprop.v2 import data as cp_data
 from chemprop.v2.data import MoleculeDatapoint
@@ -78,4 +70,5 @@ class MolToChemprop(MolToAnyPipelineElement):
         return vec
 
     def n_features(self) -> int:
+        """Return number of features of the output of this PipelineElement."""
         return 1
