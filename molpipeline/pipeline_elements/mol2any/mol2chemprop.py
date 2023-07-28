@@ -4,10 +4,17 @@
 from __future__ import annotations
 
 from typing import Any, Optional
+import warnings
 
-import numpy.typing as npt
-from chemprop.v2 import data as cp_data
-from chemprop.v2.data import MoleculeDatapoint
+try:
+    from chemprop.v2 import data as cp_data
+    from chemprop.v2.data import MoleculeDatapoint
+except ImportError:
+    warnings.warn(
+        "chemprop not installed. MolToChemprop will not work.",
+        ImportWarning,
+    )
+
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
     NoneHandlingOptions,
@@ -16,13 +23,11 @@ from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 
-
 class MolToChemprop(MolToAnyPipelineElement):
     """PipelineElement for creating a graph representation based on chemprop molecule classes."""
 
     def __init__(
         self,
-        normalize: bool = True,
         name: str = "Mol2Chemprop",
         n_jobs: int = 1,
         none_handling: NoneHandlingOptions = "raise",
@@ -32,8 +37,6 @@ class MolToChemprop(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        normalize: bool
-            Whether to normalize the output vector.
         name: str
             Name of the pipeline element. Defaults to "Mol2Chemprop".
         n_jobs: int
@@ -50,10 +53,8 @@ class MolToChemprop(MolToAnyPipelineElement):
             fill_value=fill_value,
         )
 
-    def _transform_single(
-        self, value: RDKitMol
-    ) -> Optional[npt.NDArray[MoleculeDatapoint]]:
-        """Transform a single molecule to a descriptor vector.
+    def _transform_single(self, value: RDKitMol) -> Optional[MoleculeDatapoint]:
+        """Transform a single molecule to a ChemProp MoleculeDataPoint.
 
         Parameters
         ----------
@@ -62,24 +63,12 @@ class MolToChemprop(MolToAnyPipelineElement):
 
         Returns
         -------
-        Optional[npt.NDArray[MoleculeDatapoint]]
-            Descriptor vector for given molecule. None if calculation failed.
+        Optional[MoleculeDatapoint]
+            Molecular representation used as input for ChemProp. None if transformation failed.
         """
-        smiles = Chem.MolToSmiles(
-            value
-        )  # TODO this should not be needed in case chemprop includes a class which uses RDKit
-        if smiles:
-            chemprop_mol_dp = cp_data.MoleculeDatapoint(smiles, None)
-        else:
-            chemprop_mol_dp = None
-        return chemprop_mol_dp
+        # TODO this should not be needed in case chemprop includes a class which uses RDKit
+        smiles = Chem.MolToSmiles(value)
+        if not smiles:
+            return None
 
-    def n_features(self) -> int:
-        """Return the number of features in the output vector.
-
-        Returns
-        -------
-        int
-            Number of features in the output vector.
-        """
-        return 1
+        return cp_data.MoleculeDatapoint(smiles, None)
