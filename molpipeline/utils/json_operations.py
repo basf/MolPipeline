@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import types
+import warnings
 from typing import Any
 
 from sklearn.base import BaseEstimator
@@ -206,17 +207,18 @@ def recursive_to_json(obj: Any) -> Any:
         iter_list = [recursive_to_json(value) for value in obj]
         iterable_type = type(obj)
         return iterable_type(iter_list)
+    object_dict: dict[str, Any] = {
+        "__name__": obj.__class__.__name__,
+        "__module__": obj.__class__.__module__,
+        "__init__": True,
+    }
     if hasattr(obj, "get_params"):
-        model_params_deep: dict[str, Any] = {
-            "__name__": obj.__class__.__name__,
-            "__module__": obj.__class__.__module__,
-            "__init__": True,
-        }
         model_params = obj.get_params()
         for key, value in model_params.items():
-            model_params_deep[key] = recursive_to_json(value)
-        return model_params_deep
-    return obj
+            object_dict[key] = recursive_to_json(value)
+        return object_dict
+    warnings.warn("Object has no get_params method. No parameters for initialization are retained.")
+    return object_dict
 
 
 def recursive_from_json(obj: Any) -> Any:
