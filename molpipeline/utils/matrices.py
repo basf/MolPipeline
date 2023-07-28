@@ -19,6 +19,7 @@ def sparse_from_index_value_dicts(
         Iterable of dicts of which each holds column positions and values.
     n_columns: int
         Total number of columns
+
     Returns
     -------
     sparse.csr_matrix
@@ -46,6 +47,7 @@ def are_equal(matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix) -> bool:
         Matrix A to compare.
     matrix_b: sparse.csr_matrix
         Matrix B to compare.
+
     Returns
     -------
     bool

@@ -8,14 +8,15 @@ from typing import Any, get_args, Iterable, Optional, overload
 import numpy as np
 import numpy.typing as npt
 from sklearn.base import clone
+from sklearn.utils.metaestimators import available_if
 import warnings
 
 from molpipeline.pipeline import MolPipeline
 from molpipeline.utils.none_handling import NoneCollector
 from molpipeline.utils.molpipeline_types import NoneHandlingOptions
 from molpipeline.utils.json_operations import (
-    sklearn_model_from_json,
-    sklearn_model_to_json,
+    recursive_to_json,
+    recursive_from_json,
 )
 
 
@@ -76,7 +77,7 @@ class PipelineModel:
             PipelineModel created from json dict.
         """
         mol_pipeline = MolPipeline.from_json(json_dict["mol_pipeline"])
-        skl_model = sklearn_model_from_json(json_dict["skl_model"])
+        skl_model = recursive_from_json(json_dict["skl_model"])
         return cls(
             mol_pipeline, skl_model, json_dict["none_handling"], json_dict["fill_value"]
         )
@@ -99,6 +100,7 @@ class PipelineModel:
         ----------
         n_jobs: int
             Number of cores used.
+
         Returns
         -------
         None
@@ -121,6 +123,7 @@ class PipelineModel:
         ----------
         none_handling: NoneHandlingOptions
             Parameter defining the handling of nones.
+
         Returns
         -------
         None
@@ -160,6 +163,12 @@ class PipelineModel:
         """Get the ml_model."""
         return self._skl_model
 
+    def _can_fit_transfrom(self) -> bool:
+        return hasattr(self.ml_model, "fit_transform")
+
+    def _can_fit_predict(self) -> bool:
+        return hasattr(self.ml_model, "fit_predict")
+
     def _remove_nones(self, value_iterable: Iterable[Any]) -> npt.NDArray[Any]:
         value_array = np.array(list(value_iterable))
         if len(self.none_indices) > 0:
@@ -190,6 +199,7 @@ class PipelineModel:
                 Input depends on the first element of the mol_pipeline.
         y_values: Optional[Iterable[Any]]
             Values expected as output, used for ML training. Not required for unsupervised learning.
+
         Returns
         -------
         tuple[Any, Optional[npt.NDArray[np.float_]]]
@@ -215,6 +225,7 @@ class PipelineModel:
         molecule_iterable: Iterable[Any]
             Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, etc.).
             Input depends on the first element of the mol_pipeline.
+
         Returns
         -------
         Any
@@ -263,6 +274,7 @@ class PipelineModel:
         self._skl_model.fit(ml_input, y_values, **fitparams)
         return self
 
+    @available_if(_can_fit_transfrom)
     def fit_transform(
         self,
         molecule_iterable: Iterable[Any],
@@ -294,6 +306,7 @@ class PipelineModel:
         final_output = self._finalize_output(ml_output)
         return final_output
 
+    @available_if(_can_fit_predict)
     def fit_predict(
         self,
         molecule_iterable: Iterable[Any],
@@ -335,7 +348,7 @@ class PipelineModel:
         """
         return {
             "mol_pipeline": self._mol_pipeline.to_json(),
-            "skl_model": sklearn_model_to_json(self._skl_model),
+            "skl_model": recursive_to_json(self._skl_model),
             "fill_value": copy.copy(self.none_collector.fill_value),
             "none_handling": copy.copy(self.none_handling),
         }
@@ -363,7 +376,7 @@ class PipelineModel:
         return final_output
 
     def predict(
-        self, molecule_iterable: Iterable[Any], **predictparams: dict[Any, Any]
+        self, molecule_iterable: Iterable[Any], **predictparams: Any
     ) -> npt.NDArray[Any]:
         """Predict the input.
 
@@ -371,7 +384,7 @@ class PipelineModel:
         ----------
         molecule_iterable: Iterable[Any]
             Iterable of molecules.
-        predictparams: dict[Any, Any]
+        predictparams: Any
             Parameter for SKLearn pipeline
 
         Returns
@@ -415,6 +428,7 @@ class PipelineModel:
         ----------
         deep: bool
             If True, create a deep copy of the parmeters.
+
         Returns
         -------
         dict[str, Any]

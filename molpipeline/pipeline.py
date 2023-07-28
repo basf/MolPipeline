@@ -70,6 +70,7 @@ class MolPipeline:
         ----------
         json_dict: dict[str, Any]
             Json dict containing the parameters to create the object.
+
         Returns
         -------
         MolPipeline:
@@ -108,6 +109,7 @@ class MolPipeline:
             - raise: Raises an error if a None is encountered.
             - record_remove: Removes the molecule from the list and records the position.
             - fill_dummy: Fills the output with a dummy value on the position of the None.
+
         Returns
         -------
         None
@@ -138,6 +140,7 @@ class MolPipeline:
         requested_jobs: int
             Number of cores requested for transformation steps.
             If fewer cores than requested are available, the number of cores is set to maximum available.
+
         Returns
         -------
         None
@@ -401,6 +404,7 @@ class MolPipeline:
         ----------
         index: slice
             Slice which specifies the elements to be included in the new MolPipeline.
+
         Returns
         -------
         MolPipeline

@@ -102,6 +102,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         ----------
         parameters: dict[str, Any]
             Dictionary of parameter names and values.
+
         Returns
         -------
         Self
@@ -419,6 +420,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         ----------
         mol_obj_list: list[RDKitMol]
             List of molecules presented during fitting which are used to create the mapping.
+
         Returns
         -------
         list[dict[int, int]]
@@ -437,6 +439,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         ----------
         feature_count_dict: dict[int, int]
             A dictionary with feature-hash and count.
+
         Returns
         -------
         dict[int, int]

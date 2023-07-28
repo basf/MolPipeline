@@ -60,6 +60,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         json_dict: dict[str, Any]
             Json representation of object.
+
         Returns
         -------
         Self
@@ -130,6 +131,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         parameters: dict[str, Any]
             Parameters to set.
+
         Returns
         -------
         Self
@@ -153,6 +155,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         value_list: Iterable[npt.NDArray[np.float_]]
             List of molecular descriptors or fingerprints which are concatenated to a single matrix.
+
         Returns
         -------
         npt.NDArray[np.float_]
@@ -179,6 +182,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         value_list: list[RDKitMol]
             List of molecules to transform.
+
         Returns
         -------
         npt.NDArray[np.float_]
@@ -194,6 +198,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         value_list: list[RDKitMol]
             List of molecules used to fit the pipeline elements creating the concatenated vector.
+
         Returns
         -------
         Self

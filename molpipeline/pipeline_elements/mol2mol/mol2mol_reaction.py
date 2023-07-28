@@ -120,6 +120,7 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         ----------
         reaction: AllChem.ChemicalReaction
             Reaction which is applied to molecules.
+
         Returns
         -------
         None
