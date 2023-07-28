@@ -15,11 +15,10 @@ from molpipeline.abstract_pipeline_elements.core import (
 from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
-# MoleculeDatapoint = TypeVar("MoleculeDatapoint", bound=np.generic, covariant=True)
 
 
 class MolToChemprop(MolToAnyPipelineElement):
-    """PipelineElement for creating a Descriptor vector based on RDKit phys-chem properties."""
+    """PipelineElement for creating a graüh representation based on chemprop molecule classes."""
 
     def __init__(
         self,
@@ -29,14 +28,20 @@ class MolToChemprop(MolToAnyPipelineElement):
         none_handling: NoneHandlingOptions = "raise",
         fill_value: Any = None,
     ) -> None:
-        """Initialize MolToRDKitPhysChem.
+        """Initialize MolToChemprop.
 
         Parameters
         ----------
-        descriptor_list: Optional[list[str]]
         normalize: bool
+            Whether to normalize the output vector.
         name: str
+            Name of the pipeline element. Defaults to "Mol2Chemprop".
         n_jobs: int
+            Number of parallel jobs to use. Defaults to 1.
+        none_handling: NoneHandlingOptions
+            How to handle None values. Defaults to "raise".
+        fill_value: Any
+            Value to fill None values with. Defaults to None.
         """
         super().__init__(
             name=name,
@@ -57,17 +62,17 @@ class MolToChemprop(MolToAnyPipelineElement):
 
         Returns
         -------
-        Optional[npt.NDArray[np.float_]]
+        Optional[npt.NDArray[MoleculeDatapoint]]
             Descriptor vector for given molecule. None if calculation failed.
         """
         smiles = Chem.MolToSmiles(
             value
         )  # TODO this should not be needed in case chemprop includes a class which uses RDKit
         if smiles:
-            vec = cp_data.MoleculeDatapoint(smiles, None)
+            chemprop_mol_dp = cp_data.MoleculeDatapoint(smiles, None)
         else:
-            vec = None
-        return vec
+            chemprop_mol_dp = None
+        return chemprop_mol_dp
 
     def n_features(self) -> int:
         """Return the number of features in the output vector.
