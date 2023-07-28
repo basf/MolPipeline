@@ -207,16 +207,22 @@ def recursive_to_json(obj: Any) -> Any:
         iter_list = [recursive_to_json(value) for value in obj]
         iterable_type = type(obj)
         return iterable_type(iter_list)
+
+    # If neither of the above, it is assumed to be an object.
     object_dict: dict[str, Any] = {
         "__name__": obj.__class__.__name__,
         "__module__": obj.__class__.__module__,
         "__init__": True,
     }
+    # If the object is a sklearn model, the parameters for initialization are extracted.
     if hasattr(obj, "get_params"):
         model_params = obj.get_params()
         for key, value in model_params.items():
             object_dict[key] = recursive_to_json(value)
         return object_dict
+
+    # If the object is not a sklearn model, a warning is raised
+    # as it might not be possible to recreate the object.
     warnings.warn("Object has no get_params method. No parameters for initialization are retained.")
     return object_dict
 
