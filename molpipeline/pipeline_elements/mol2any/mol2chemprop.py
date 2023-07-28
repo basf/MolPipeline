@@ -70,5 +70,11 @@ class MolToChemprop(MolToAnyPipelineElement):
         return vec
 
     def n_features(self) -> int:
-        """Return number of features of the output of this PipelineElement."""
+        """Return the number of features in the output vector.
+
+        Returns 
+        -------
+        int
+            Number of features in the output vector.
+        """
         return 1
