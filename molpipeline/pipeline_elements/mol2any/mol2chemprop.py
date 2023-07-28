@@ -18,7 +18,7 @@ from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 
 class MolToChemprop(MolToAnyPipelineElement):
-    """PipelineElement for creating a graüh representation based on chemprop molecule classes."""
+    """PipelineElement for creating a graph representation based on chemprop molecule classes."""
 
     def __init__(
         self,
