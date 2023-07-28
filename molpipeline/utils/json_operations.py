@@ -1,6 +1,7 @@
 """Contains functions for loading and saving pipeline elements and models to json files."""
 
 from __future__ import annotations
+import types
 from typing import Any
 
 from sklearn.base import BaseEstimator
@@ -193,7 +194,7 @@ def recursive_to_json(obj: Any) -> Any:
     if isinstance(obj, (str, int, float, bool)):
         return obj
 
-    if callable(obj):
+    if isinstance(obj, types.FunctionType):
         return {
             "__name__": obj.__name__,
             "__module__": obj.__module__,
