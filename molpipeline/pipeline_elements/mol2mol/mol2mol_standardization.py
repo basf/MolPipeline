@@ -34,7 +34,7 @@ class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
         mol = rdMolStandardize.MetalDisconnector().Disconnect(value)
         if mol is not None:
             # sometimes the molecule is not sanitized after disconnecting, e.g. RingInfo is not updated.
-            sanitize_flag = SanitizeMol(mol)
+            SanitizeMol(mol)
         return mol
 
 
