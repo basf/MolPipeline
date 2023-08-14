@@ -1,4 +1,4 @@
-"""Classes to filter molecule lists"""
+"""Classes to filter molecule lists."""
 
 from __future__ import annotations
 from typing import Any, Optional
