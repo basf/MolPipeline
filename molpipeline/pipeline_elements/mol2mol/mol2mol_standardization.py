@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
-from rdkit.Chem import rdmolops
+from rdkit.Chem import rdmolops, SanitizeMol
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
@@ -31,7 +31,11 @@ class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
 
     def _transform_single(self, value: RDKitMol) -> OptionalMol:
         """Cleave bonds with metals."""
-        return rdMolStandardize.MetalDisconnector().Disconnect(value)
+        mol = rdMolStandardize.MetalDisconnector().Disconnect(value)
+        if mol is not None:
+            # sometimes the molecule is not sanitized after disconnecting, e.g. RingInfo is not updated.
+            sanitize_flag = SanitizeMol(mol)
+        return mol
 
 
 class RemoveChargePipelineElement(_MolToMolPipelineElement):
