@@ -1,0 +1,66 @@
+"""Classes to filter molecule lists"""
+
+from __future__ import annotations
+from typing import Any, Optional
+
+from molpipeline.abstract_pipeline_elements.core import (
+    NoneHandlingOptions,
+    MolToMolPipelineElement as _MolToMolPipelineElement,
+)
+from molpipeline.utils.molpipeline_types import RDKitMol, OptionalMol
+
+
+class ElementFilterPipelineElement(_MolToMolPipelineElement):
+    """ElementFilterPipelineElement which removes molecules containing chemical elements other than specified."""
+
+    def __init__(
+        self,
+        allowed_element_numbers: Optional[list[int]] = None,
+        none_handling: NoneHandlingOptions = "raise",
+        fill_value: Any = None,
+        name: str = "ElementFilterPipe",
+        n_jobs: int = 1,
+    ) -> None:
+        """Initialize ElementFilterPipelineElement.
+
+        Parameters
+        ----------
+        allowed_element_numbers: list[int]
+            List of atomic numbers of elements to allowed in molecules. Per default allowed elements are:
+            H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
+        none_handling: NoneHandlingOptions, optional (default: "raise")
+            How to handle None values in the input data.
+        fill_value: Any, optional (default: None)
+            Value to fill None values with.
+        name: str, optional (default: "ElementFilterPipe")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        """
+        super().__init__(
+            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
+        )
+        if allowed_element_numbers is None:
+            allowed_element_numbers = [
+                1,
+                5,
+                6,
+                7,
+                8,
+                9,
+                14,
+                15,
+                16,
+                17,
+                34,
+                35,
+                53,
+            ]
+        self.allowed_element_numbers: set[int] = set(allowed_element_numbers)
+
+    def _transform_single(self, value: RDKitMol) -> OptionalMol:
+        """Remove molecule containing chemical elements that are not allowed."""
+        for atom in value.GetAtoms():
+            if atom.GetAtomicNum() not in self.allowed_element_numbers:
+                return None
+        return value
