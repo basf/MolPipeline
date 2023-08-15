@@ -24,6 +24,7 @@ class ABCPipelineElement(abc.ABC):
 
     _input_type: type
     _output_type: type
+    _requires_fitting: bool = False
     name: str
 
     def __init__(
@@ -50,6 +51,7 @@ class ABCPipelineElement(abc.ABC):
         self.none_handling = none_handling
         self.n_jobs = n_jobs
         self.none_collector = NoneCollector(fill_value)
+        self._is_fitted = False
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
@@ -96,6 +98,11 @@ class ABCPipelineElement(abc.ABC):
     def input_type(self) -> type:
         """Return the input type."""
         return self._input_type
+
+    @property
+    def is_fitted(self) -> bool:
+        """Return whether the object is fitted or not."""
+        return self._is_fitted
 
     @property
     def n_jobs(self) -> int:
@@ -172,6 +179,11 @@ class ABCPipelineElement(abc.ABC):
         None
         """
         self.set_params(parameters)
+
+    @property
+    def requires_fitting(self) -> bool:
+        """Return whether the object requires fitting or not."""
+        return self._requires_fitting
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return the parameters of the object.
@@ -254,6 +266,7 @@ class ABCPipelineElement(abc.ABC):
         Self
             Fitted object.
         """
+        self._is_fitted = True
         return self
 
     def fit_transform(self, value_list: Any) -> Any:
