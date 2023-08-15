@@ -284,12 +284,63 @@ class MolPipeline:
         _ = fit_params  # Making pylint happy
         surviving_indices = np.arange(len(iter_input))
         all_indices = np.arange(len(iter_input))
+
+        # new representation of components from MolPipeline in which
+        # elements which require no fitting are grouped together
+        # this improves performance
+        iter_element_list: list[Union[ABCPipelineElement, MolPipeline]] = []
+
+        # Elements which require fitting are grouped together in the meta_element_list
+        meta_element_list: list[ABCPipelineElement] = []
         for p_element in self._element_list:
-            p_element.n_jobs = self.n_jobs
-            iter_input = p_element.fit_transform(iter_input)
-            none_values = p_element.none_collector.none_indices
+            # Add elements which require no fitting to the meta_element_list
+            if not p_element.requires_fitting:
+                meta_element_list.append(p_element)
+            # If the element requires fitting, the meta_element_list (which is composed of the prior elements)
+            # is transformed into a MolPipeline element and added to the iter_element_list
+            else:
+                # the meta_element_list is transformed into a MolPipeline element
+                if meta_element_list:
+                    meta_pipeline = MolPipeline(meta_element_list, handle_nones=p_element.none_handling)
+                    iter_element_list.append(meta_pipeline)
+                meta_element_list = []
+                iter_element_list.append(p_element)
+
+        # Add the last meta_element_list to the iter_element_list
+        if meta_element_list:
+            meta_pipeline = MolPipeline(meta_element_list)
+            iter_element_list.append(meta_pipeline)
+
+        for i_element in iter_element_list:
+            i_element.n_jobs = self.n_jobs
+            # every MolPipeline element consists of elements which require no fitting
+            if isinstance(i_element, MolPipeline):
+                iter_input = i_element.transform(iter_input)
+            iter_input = i_element.fit_transform(iter_input)
+            none_values = i_element.none_collector.none_indices
             surviving_indices = np.delete(surviving_indices, none_values)
-            p_element.n_jobs = 1
+            i_element.n_jobs = 1
+
+        parameter_list = []
+        for i_element in iter_element_list:
+            if isinstance(i_element, MolPipeline):
+                for p_element in i_element.element_list:
+                    parameter_list.append(p_element.get_params())
+            elif isinstance(i_element, ABCPipelineElement):
+                parameter_list.append(i_element.get_params())
+            else:
+                raise AssertionError(
+                    "Meta element is neither a MolPipeline nor a ABCPipelineElement."
+                )
+
+        if not len(parameter_list) == len(self._element_list):
+            print(iter_element_list)
+            raise AssertionError(
+                "Number of parameters does not match number of elements."
+                f"({len(parameter_list)} != {len(self._element_list)})"
+            )
+        for p_element, parameter_dict in zip(self._element_list, parameter_list):
+            p_element.set_params(parameter_dict)
 
         nan_indices = np.delete(all_indices, surviving_indices)
         self.none_collector.none_indices = list(nan_indices)
