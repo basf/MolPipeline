@@ -51,7 +51,9 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         )
         for element in self._element_list:
             element.n_jobs = self.n_jobs
-        self._requires_fitting = any(element._requires_fitting for element in element_list)
+        self._requires_fitting = any(
+            element._requires_fitting for element in element_list
+        )
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
@@ -138,9 +140,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Self
             Mol2ConcatenatedVector object with updated parameters.
         """
-        super().set_params(parameters)
-        if "element_list" in parameters:
-            self._element_list = parameters["element_list"]
+        parameter_copy = dict(parameters)
+        element_list = parameter_copy.pop("element_list", None)
+        if element_list is not None:
+            self._element_list = element_list
+
+        super().set_params(parameter_copy)
         for element in self._element_list:
             element.n_jobs = self.n_jobs
             element.none_handling = self.none_handling
