@@ -138,9 +138,11 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Self
             Object with updated parameters.
         """
-        super().set_params(parameters)
-        if "normalize" in parameters:
+        parameter_copy = dict(parameters)
+        normalize = parameter_copy.pop("normalize", None)
+        if normalize is not None:
             self._normalize = parameters["normalize"]
+        super().set_params(parameter_copy)
         return self
 
     @property

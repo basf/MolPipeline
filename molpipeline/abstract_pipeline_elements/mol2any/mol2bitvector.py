@@ -235,11 +235,17 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         Self
             PipelineElement with updated parameters.
         """
-        super().set_params(parameters)
-        if "radius" in parameters:
+        parameter_copy = dict(parameters)
+        radius = parameter_copy.pop("radius", None)
+        use_features = parameter_copy.pop("use_features", None)
+
+        # explicitly check for None, since 0 is a valid value
+        if radius is not None:
             self._radius = parameters["radius"]
-        if "use_features" in parameters:
+        # explicitly check for None, since False is a valid value
+        if use_features is not None:
             self._use_features = parameters["use_features"]
+        super().set_params(parameter_copy)
         return self
 
     @property

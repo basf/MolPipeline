@@ -108,9 +108,12 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         Self
             MolToFoldedMorganFingerprint pipeline element with updated parameters.
         """
-        super().set_params(parameters)
-        if "n_bits" in parameters:
-            self._n_bits = parameters["n_bits"]
+        parameter_copy = dict(parameters)
+        n_bits = parameter_copy.pop("n_bits", None)
+        if n_bits is not None:
+            self._n_bits = n_bits
+        super().set_params(parameter_copy)
+
         return self
 
     def _transform_single(self, value: RDKitMol) -> dict[int, int]:
