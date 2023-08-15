@@ -51,6 +51,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         )
         for element in self._element_list:
             element.n_jobs = self.n_jobs
+        self._requires_fitting = any(element._requires_fitting for element in element_list)
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:

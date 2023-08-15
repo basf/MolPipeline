@@ -62,6 +62,8 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             none_handling=none_handling,
             fill_value=fill_value,
         )
+        if normalize:
+            self._requires_fitting = True
 
     @property
     def n_features(self) -> int:
