@@ -301,14 +301,16 @@ class MolPipeline:
             else:
                 # the meta_element_list is transformed into a MolPipeline element
                 if meta_element_list:
-                    meta_pipeline = MolPipeline(meta_element_list, handle_nones=p_element.none_handling)
+                    meta_pipeline = MolPipeline(
+                        meta_element_list, handle_nones=p_element.none_handling
+                    )
                     iter_element_list.append(meta_pipeline)
                 meta_element_list = []
                 iter_element_list.append(p_element)
 
         # Add the last meta_element_list to the iter_element_list
         if meta_element_list:
-            meta_pipeline = MolPipeline(meta_element_list)
+            meta_pipeline = MolPipeline(meta_element_list, handle_nones="record_remove")
             iter_element_list.append(meta_pipeline)
 
         for i_element in iter_element_list:
@@ -316,7 +318,8 @@ class MolPipeline:
             # every MolPipeline element consists of elements which require no fitting
             if isinstance(i_element, MolPipeline):
                 iter_input = i_element.transform(iter_input)
-            iter_input = i_element.fit_transform(iter_input)
+            else:
+                iter_input = i_element.fit_transform(iter_input)
             none_values = i_element.none_collector.none_indices
             surviving_indices = np.delete(surviving_indices, none_values)
             i_element.n_jobs = 1
