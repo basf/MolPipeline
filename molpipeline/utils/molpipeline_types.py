@@ -1,6 +1,10 @@
 """Definition of types used in molpipeline."""
 from __future__ import annotations
 from typing import Any, Literal, Optional, Protocol
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 
 import numpy.typing as npt
 
@@ -28,7 +32,7 @@ class AnySklearnEstimator(Protocol):
             Parameter names mapped to their values.
         """
 
-    def set_params(self, **params: Any) -> None:
+    def set_params(self, **params: Any) -> Self:
         """Set the parameters of this estimator.
 
         Parameters
@@ -45,14 +49,14 @@ class AnySklearnEstimator(Protocol):
 class AnyPredictor(AnySklearnEstimator, Protocol):
     """Protocol for predictors."""
 
-    def fit_predict(self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any) -> npt.NDArray[Any]:
+    def fit_predict(self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any) -> npt.NDArray[Any]:
         """Fit the model with X and return predictions.
 
         Parameters
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: npt.NDArray[Any]
+        y: Optional[npt.NDArray[Any]]
             Target values.
         fit_params: Any
             Additional parameters for fitting.
@@ -63,14 +67,14 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
             Predictions.
         """
 
-    def fit(self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any) -> None:
+    def fit(self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any) -> None:
         """Fit the model with X.
 
         Parameters
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: npt.NDArray[Any]
+        y: Optional[npt.NDArray[Any]]
             Target values.
         fit_params: Any
             Additional parameters for fitting.
@@ -86,7 +90,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
     """Protocol for transformers."""
 
     def fit_transform(
-        self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any
+        self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return the transformed array.
 
@@ -94,7 +98,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: npt.NDArray[Any]
+        y: Optional[npt.NDArray[Any]]
             Target values.
         fit_params: Any
             Additional parameters for fitting.
@@ -106,14 +110,14 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
             Transformed array.
         """
 
-    def fit(self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any) -> None:
+    def fit(self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any) -> None:
         """Fit the model with X.
 
         Parameters
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: npt.NDArray[Any]
+        y: Optional[npt.NDArray[Any]]
             Target values.
         fit_params: Any
             Additional parameters for fitting.
