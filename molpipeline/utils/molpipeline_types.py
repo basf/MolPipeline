@@ -12,7 +12,37 @@ OptionalMol = Optional[RDKitMol]
 NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 
 
-class AnyPredictor(Protocol):
+class AnySklearnEstimator(Protocol):
+    """Protocol for sklearn estimators."""
+    def get_params(self, deep: bool) -> dict[str, Any]:
+        """Get parameters for this estimator.
+
+        Parameters
+        ----------
+        deep: bool
+            If True, will return the parameters for this estimator.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameter names mapped to their values.
+        """
+
+    def set_params(self, **params: Any) -> None:
+        """Set the parameters of this estimator.
+
+        Parameters
+        ----------
+        params: Any
+            Estimator parameters.
+
+        Returns
+        -------
+        None
+        """
+
+
+class AnyPredictor(AnySklearnEstimator, Protocol):
     """Protocol for predictors."""
 
     def fit_predict(self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any) -> npt.NDArray[Any]:
@@ -52,7 +82,7 @@ class AnyPredictor(Protocol):
         """
 
 
-class AnyTransformer(Protocol):
+class AnyTransformer(AnySklearnEstimator, Protocol):
     """Protocol for transformers."""
 
     def fit_transform(
