@@ -15,7 +15,7 @@ NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 class AnyPredictor(Protocol):
     """Protocol for predictors."""
 
-    def fit_predict(self, X: npt.NDArray[Any], y: npt.NDArray[Any]) -> npt.NDArray[Any]:
+    def fit_predict(self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any) -> npt.NDArray[Any]:
         """Fit the model with X and return predictions.
 
         Parameters
@@ -24,6 +24,8 @@ class AnyPredictor(Protocol):
             Model input.
         y: npt.NDArray[Any]
             Target values.
+        fit_params: Any
+            Additional parameters for fitting.
 
         Returns
         -------
@@ -31,7 +33,7 @@ class AnyPredictor(Protocol):
             Predictions.
         """
 
-    def fit(self, X: npt.NDArray[Any], y: npt.NDArray[Any]) -> None:
+    def fit(self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any) -> None:
         """Fit the model with X.
 
         Parameters
@@ -40,6 +42,9 @@ class AnyPredictor(Protocol):
             Model input.
         y: npt.NDArray[Any]
             Target values.
+        fit_params: Any
+            Additional parameters for fitting.
+
 
         Returns
         -------
@@ -51,7 +56,7 @@ class AnyTransformer(Protocol):
     """Protocol for transformers."""
 
     def fit_transform(
-        self, X: npt.NDArray[Any], y: npt.NDArray[Any]
+        self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return the transformed array.
 
@@ -61,6 +66,9 @@ class AnyTransformer(Protocol):
             Model input.
         y: npt.NDArray[Any]
             Target values.
+        fit_params: Any
+            Additional parameters for fitting.
+
 
         Returns
         -------
@@ -68,7 +76,7 @@ class AnyTransformer(Protocol):
             Transformed array.
         """
 
-    def fit(self, X: npt.NDArray[Any], y: npt.NDArray[Any]) -> None:
+    def fit(self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any) -> None:
         """Fit the model with X.
 
         Parameters
@@ -77,6 +85,9 @@ class AnyTransformer(Protocol):
             Model input.
         y: npt.NDArray[Any]
             Target values.
+        fit_params: Any
+            Additional parameters for fitting.
+
 
         Returns
         -------
