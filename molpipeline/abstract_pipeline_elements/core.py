@@ -156,6 +156,11 @@ class ABCPipelineElement(abc.ABC):
         self._none_handling = none_handling
 
     @property
+    def none_indices(self) -> list[int]:
+        """Get indices of None values."""
+        return self.none_collector.none_indices
+
+    @property
     def output_type(self) -> type:
         """Return the output type."""
         return self._output_type
