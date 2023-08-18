@@ -1,6 +1,7 @@
 """Definition of types used in molpipeline."""
 from __future__ import annotations
 from typing import Any, Literal, Optional, Protocol
+
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
@@ -18,6 +19,7 @@ NoneHandlingOptions = Literal["raise", "record_remove", "fill_dummy"]
 
 class AnySklearnEstimator(Protocol):
     """Protocol for sklearn estimators."""
+
     def get_params(self, deep: bool) -> dict[str, Any]:
         """Get parameters for this estimator.
 
@@ -49,7 +51,9 @@ class AnySklearnEstimator(Protocol):
 class AnyPredictor(AnySklearnEstimator, Protocol):
     """Protocol for predictors."""
 
-    def fit_predict(self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any) -> npt.NDArray[Any]:
+    def fit_predict(
+        self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any
+    ) -> npt.NDArray[Any]:
         """Fit the model with X and return predictions.
 
         Parameters
@@ -67,7 +71,9 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
             Predictions.
         """
 
-    def fit(self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any) -> None:
+    def fit(
+        self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any
+    ) -> Self:
         """Fit the model with X.
 
         Parameters
@@ -110,7 +116,9 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
             Transformed array.
         """
 
-    def fit(self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any) -> None:
+    def fit(
+        self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any
+    ) -> Self:
         """Fit the model with X.
 
         Parameters
