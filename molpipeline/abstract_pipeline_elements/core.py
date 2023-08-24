@@ -3,34 +3,44 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import Any, Iterable
-
-import numpy as np
+from typing import Any, Iterable, Union, TYPE_CHECKING
 
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import Self
 
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
+import numpy as np
 
-from molpipeline.utils.molpipeline_types import OptionalMol, NoneHandlingOptions
+from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
-from molpipeline.utils.none_handling import NoneCollector
+
+if TYPE_CHECKING:  # Avoid circular imports
+    from molpipeline.utils.none_handling import NoneFilter
+
+
+class InvalidInstance:
+    def __init__(self, element: TransformingPipelineElement, message: str) -> None:
+        self.element = element
+        self.message = message
+
+
+class RemovedInstance:
+    def __init__(self, filter_element: NoneFilter) -> None:
+        self.filter_element = filter_element
+
+
+OptionalMol = Union[RDKitMol, InvalidInstance]
 
 
 class ABCPipelineElement(abc.ABC):
     """Ancestor of all PipelineElements."""
 
-    _input_type: type
-    _output_type: type
-    _requires_fitting: bool = False
     name: str
+    _requires_fitting: bool = False
 
     def __init__(
         self,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "ABCPipelineElement",
         n_jobs: int = 1,
     ) -> None:
@@ -38,20 +48,13 @@ class ABCPipelineElement(abc.ABC):
 
         Parameters
         ----------
-        none_handling: Literal["raise", "record_remove"]
-            Behaviour when encountering None values, aka. unprocessable molecules.
-        fill_value: Any
-            value used for the NoneHandler.
         name: str
             Name of PipelineElement
         n_jobs: int
             Number of cores used for processing.
         """
         self.name = name
-        self.none_handling = none_handling
         self.n_jobs = n_jobs
-        self.none_collector = NoneCollector(fill_value)
-        self._is_fitted = False
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
@@ -95,16 +98,6 @@ class ABCPipelineElement(abc.ABC):
         return {}
 
     @property
-    def input_type(self) -> type:
-        """Return the input type."""
-        return self._input_type
-
-    @property
-    def is_fitted(self) -> bool:
-        """Return whether the object is fitted or not."""
-        return self._is_fitted
-
-    @property
     def n_jobs(self) -> int:
         """Get the number of cores."""
         return self._n_jobs
@@ -124,41 +117,142 @@ class ABCPipelineElement(abc.ABC):
         """
         self._n_jobs = check_available_cores(n_jobs)
 
-    @property
-    def none_handling(self) -> NoneHandlingOptions:
-        """Get string which determines the handling of nones."""
-        return self._none_handling
-
-    @none_handling.setter
-    def none_handling(self, none_handling: NoneHandlingOptions) -> None:
-        """Set string which determines the handling of nones.
-
-        None values originate from molecules for which the transformation from the PipelineElement cannot be applied,
-        or molecular representations are corrupted (e.g. invalid SMILES).
+    @abc.abstractmethod
+    def transform_single(self, value: Any) -> Any:
+        """Transform a single value.
 
         Parameters
         ----------
-        none_handling: Literal["raise", "record_remove", "fill_dummy"]
-            Behaviour when encountering None values originated from unprocessable molecules.
-            - raise: Raises an error if a None is encountered.
-            - record_remove: Removes the molecule from the list and records the position.
-            - fill_dummy: Fills the output with a dummy value on the position of the None.
+        value: Any
+            Value to be transformed.
 
         Returns
         -------
-        None
+        Any
+            Transformed value.
         """
-        valid_options = ["raise", "record_remove", "fill_dummy"]
-        if none_handling not in valid_options:
-            raise ValueError(
-                f"{none_handling} is not a valid option. Please choose from f{valid_options}"
-            )
-        self._none_handling = none_handling
 
     @property
-    def none_indices(self) -> list[int]:
-        """Get indices of None values."""
-        return self.none_collector.none_indices
+    def requires_fitting(self) -> bool:
+        """Return whether the object requires fitting or not."""
+        return self._requires_fitting
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Return the parameters of the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters of the object.
+        """
+        if deep:
+            return {
+                "name": copy.copy(self.name),
+                "n_jobs": copy.copy(self.n_jobs),
+            }
+        else:
+            return {
+                "name": self.name,
+                "n_jobs": self.n_jobs,
+            }
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """As the setter function cannot be assessed with super(), this method is implemented for inheritance.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameters to be set.
+
+        Returns
+        -------
+        Self
+            Self with updated parameters.
+        """
+        for att_name, att_value in parameters.items():
+            if not hasattr(self, att_name):
+                ValueError(
+                    f"Cannot set attribute {att_name} on {self.__class__.__name__}"
+                )
+            setattr(self, att_name, att_value)
+        return self
+
+    def finish(self) -> None:
+        """Inform object that iteration has been finished. Does in most cases nothing.
+
+        Called after all transform singles have been processed. From MolPipeline
+        """
+
+    @abc.abstractmethod
+    def fit_transform(self, value_list: Any) -> Any:
+        """Apply fit function and subsequently transform the input.
+
+        Parameters
+        ----------
+        value_list: Any
+            Apply transformation specified in transform_single to all molecules in the value_list.
+
+        Returns
+        -------
+        Any
+            List of instances in new representation.
+        """
+
+    @abc.abstractmethod
+    def transform(self, value_list: Any) -> Any:
+        """Transform input_values according to object rules.
+
+        Parameters
+        ----------
+        value_list: Any
+            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, PhysChem vectors etc.).
+            Input depends on the concrete PipelineElement.
+
+        Returns
+        -------
+        Any
+            Transformed input_values.
+        """
+
+
+class TransformingPipelineElement(ABCPipelineElement):
+    """Ancestor of all PipelineElements."""
+
+    _input_type: type
+    _output_type: type
+    name: str
+
+    def __init__(
+        self,
+        name: str = "ABCPipelineElement",
+        n_jobs: int = 1,
+    ) -> None:
+        """Initialize ABCPipelineElement.
+
+        Parameters
+        ----------
+        name: str
+            Name of PipelineElement
+        n_jobs: int
+            Number of cores used for processing.
+        """
+        super().__init__(name=name, n_jobs=n_jobs)
+        self._is_fitted = False
+
+    @property
+    def input_type(self) -> type:
+        """Return the input type."""
+        return self._input_type
+
+    @property
+    def is_fitted(self) -> bool:
+        """Return whether the object is fitted or not."""
+        return self._is_fitted
 
     @property
     def output_type(self) -> type:
@@ -184,60 +278,6 @@ class ABCPipelineElement(abc.ABC):
         None
         """
         self.set_params(parameters)
-
-    @property
-    def requires_fitting(self) -> bool:
-        """Return whether the object requires fitting or not."""
-        return self._requires_fitting
-
-    def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Return the parameters of the object.
-
-        Parameters
-        ----------
-        deep: bool
-            If True get a deep copy of the parameters.
-
-        Returns
-        -------
-        dict[str, Any]
-            Parameters of the object.
-        """
-        if deep:
-            return {
-                "name": copy.copy(self.name),
-                "none_handling": copy.copy(self.none_handling),
-                "n_jobs": copy.copy(self.n_jobs),
-                "fill_value": copy.copy(self.none_collector.fill_value),
-            }
-        else:
-            return {
-                "name": self.name,
-                "none_handling": self.none_handling,
-                "n_jobs": self.n_jobs,
-                "fill_value": self.none_collector.fill_value,
-            }
-
-    def set_params(self, parameters: dict[str, Any]) -> Self:
-        """As the setter function cannot be assessed with super(), this method is implemented for inheritance.
-
-        Parameters
-        ----------
-        parameters: dict[str, Any]
-            Parameters to be set.
-
-        Returns
-        -------
-        Self
-            Self with updated parameters.
-        """
-        for att_name, att_value in parameters.items():
-            if not hasattr(self, att_name):
-                ValueError(
-                    f"Cannot set attribute {att_name} on {self.__class__.__name__}"
-                )
-            setattr(self, att_name, att_value)
-        return self
 
     def copy(self) -> Self:
         """Copy the object.
@@ -293,7 +333,7 @@ class ABCPipelineElement(abc.ABC):
     def transform_single(self, value: Any) -> Any:
         """Transform a single molecule to the new representation.
 
-        Empty molecules are mapped to None.
+        RemovedMolecule objects are passed without change, as no transformations are applicable.
 
         Parameters
         ----------
@@ -305,9 +345,14 @@ class ABCPipelineElement(abc.ABC):
         Any
             New representation of the molecule. (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
         """
+        if isinstance(value, InvalidInstance):
+            return value
         if isinstance(value, RDKitMol):
             if value.GetNumAtoms() == 0:
-                return None
+                return InvalidInstance(
+                    message="No atoms remaining after transformation.",
+                    element=self,
+                )
         return self._transform_single(value)
 
     def _apply_to_all(self, value_list: Any) -> Any:
@@ -316,15 +361,6 @@ class ABCPipelineElement(abc.ABC):
             self.transform_single, value_list, self.n_jobs
         )
         return output_values
-
-    def _catch_nones(self, value_list: list[Any]) -> list[Any]:
-        none_rows = [idx for idx, row in enumerate(value_list) if row is None]
-        if len(none_rows) > 0 and self.none_handling == "raise":
-            raise ValueError(f"Encountered None for the following indices: {none_rows}")
-
-        self.none_collector.none_indices = none_rows
-        output_rows = [row for row in value_list if row is not None]
-        return output_rows
 
     def assemble_output(self, value_list: Iterable[Any]) -> Any:
         """Aggregate rows, which in most cases is just return the list.
@@ -359,13 +395,8 @@ class ABCPipelineElement(abc.ABC):
             Transformed input_values.
         """
         output_rows = self._apply_to_all(value_list)
-        output_rows = self._catch_nones(output_rows)
         output = self.assemble_output(output_rows)
         self.finish()
-        if self.none_handling == "fill_dummy":
-            return self.none_collector.fill_with_dummy(output)
-        if self.none_handling == "record_remove":
-            return output
         return output
 
     def to_json(self) -> dict[str, Any]:
@@ -391,18 +422,12 @@ class ABCPipelineElement(abc.ABC):
             json_dict["additional_attributes"] = adittional_attributes
         return json_dict
 
-    def finish(self) -> None:
-        """Inform object that iteration has been finished. Does in most cases nothing.
-
-        Called after all transform singles have been processed. From MolPipeline
-        """
-
     @abc.abstractmethod
     def _transform_single(self, value: Any) -> Any:
         """Transform the molecule according to child dependent rules."""
 
 
-class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
+class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
     """Abstract PipelineElement where input and outputs are molecules."""
 
     _input_type = RDKitMol
@@ -410,15 +435,11 @@ class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
 
     def __init__(
         self,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "MolToMolPipelineElement",
         n_jobs: int = 1,
     ) -> None:
         """Initialize MolToMolPipelineElement."""
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs)
 
     def transform(self, value_list: list[OptionalMol]) -> list[OptionalMol]:
         """Transform list of molecules to list of molecules."""
@@ -436,22 +457,18 @@ class MolToMolPipelineElement(ABCPipelineElement, abc.ABC):
         """Transform the molecule according to child dependent rules."""
 
 
-class AnyToMolPipelineElement(ABCPipelineElement, abc.ABC):
+class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
     _output_type = RDKitMol
 
     def __init__(
         self,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "AnyToMolPipelineElement",
         n_jobs: int = 1,
     ) -> None:
         """Initialize AnyToMolPipelineElement."""
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs)
 
     def transform(self, value_list: Any) -> list[OptionalMol]:
         """Transform list of molecules to list of molecules."""
@@ -463,22 +480,18 @@ class AnyToMolPipelineElement(ABCPipelineElement, abc.ABC):
         """Transform the input specified in each child to molecules."""
 
 
-class MolToAnyPipelineElement(ABCPipelineElement, abc.ABC):
+class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
     _input_type = RDKitMol
 
     def __init__(
         self,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "MolToAnyPipelineElement",
         n_jobs: int = 1,
     ) -> None:
         """Initialize MolToAnyPipelineElement."""
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs)
 
     @abc.abstractmethod
     def _transform_single(self, value: RDKitMol) -> Any:
