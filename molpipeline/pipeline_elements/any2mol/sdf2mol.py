@@ -10,11 +10,12 @@ except ImportError:
 
 import copy
 from rdkit import Chem
-
+from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
+)
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
-from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
 from molpipeline.utils.molpipeline_types import OptionalMol
 
 
@@ -28,8 +29,6 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
     def __init__(
         self,
         identifier: str = "enumerate",
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "SDF2Mol",
         n_jobs: int = 1,
     ) -> None:
@@ -44,9 +43,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         n_jobs: int
             Number of cores used for processing.
         """
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs)
         self.identifier = identifier
         self.mol_counter = 0
 
@@ -95,6 +92,8 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
     def _transform_single(self, value: str) -> OptionalMol:
         """Transform an SDF-strings to a rdkit molecule."""
         mol = Chem.MolFromMolBlock(value)
+        if mol is None:
+            return InvalidInstance(self, "Invalid SDF string!")
         if self.identifier == "smiles":
             mol.SetProp("identifier", self.mol_counter)
         self.mol_counter += 1
