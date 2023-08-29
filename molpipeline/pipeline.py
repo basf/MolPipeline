@@ -449,7 +449,7 @@ class _MolPipeline:
 
 
 # Cannot be moved to utils.molpipeline_types due to circular imports
-_Step = tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
+_Step = tuple[int, str, Union[AnyTransformer, AnyPredictor]]
 _AggStep = tuple[list[int], list[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_Step, _AggStep]
 
