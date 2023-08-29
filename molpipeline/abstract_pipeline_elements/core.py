@@ -3,16 +3,18 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import Any, Iterable, Union, TYPE_CHECKING
+from typing import Any, Iterable, Optional, Union, TYPE_CHECKING
 
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import Self
 
-import numpy as np
+from uuid import uuid4
 
+import numpy as np
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
+
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 
 if TYPE_CHECKING:  # Avoid circular imports
@@ -20,8 +22,8 @@ if TYPE_CHECKING:  # Avoid circular imports
 
 
 class InvalidInstance:
-    def __init__(self, element: TransformingPipelineElement, message: str) -> None:
-        self.element = element
+    def __init__(self, element_id: str, message: str) -> None:
+        self.element_id = element_id
         self.message = message
 
 
@@ -38,11 +40,13 @@ class ABCPipelineElement(abc.ABC):
 
     name: str
     _requires_fitting: bool = False
+    uuid: str
 
     def __init__(
         self,
         name: str = "ABCPipelineElement",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize ABCPipelineElement.
 
@@ -55,6 +59,10 @@ class ABCPipelineElement(abc.ABC):
         """
         self.name = name
         self.n_jobs = n_jobs
+        if uuid is None:
+            self.uuid = str(uuid4())
+        else:
+            self.uuid = uuid
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
@@ -87,6 +95,53 @@ class ABCPipelineElement(abc.ABC):
             setattr(loaded_pipeline_element, key, value)
         return loaded_pipeline_element
 
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Return the parameters of the object.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters of the object.
+        """
+        if deep:
+            return {
+                "name": copy.copy(self.name),
+                "n_jobs": copy.copy(self.n_jobs),
+                "uuid": copy.copy(self.uuid),
+            }
+        else:
+            return {
+                "name": self.name,
+                "n_jobs": self.n_jobs,
+                "uuid": self.uuid,
+            }
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """As the setter function cannot be assessed with super(), this method is implemented for inheritance.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameters to be set.
+
+        Returns
+        -------
+        Self
+            Self with updated parameters.
+        """
+        for att_name, att_value in parameters.items():
+            if not hasattr(self, att_name):
+                ValueError(
+                    f"Cannot set attribute {att_name} on {self.__class__.__name__}"
+                )
+            setattr(self, att_name, att_value)
+        return self
+
     @property
     def additional_attributes(self) -> dict[str, Any]:
         """Any attribute relevant for recreating and exact copy, which is not a parameter.
@@ -117,76 +172,33 @@ class ABCPipelineElement(abc.ABC):
         """
         self._n_jobs = check_available_cores(n_jobs)
 
-    @abc.abstractmethod
-    def transform_single(self, value: Any) -> Any:
-        """Transform a single value.
-
-        Parameters
-        ----------
-        value: Any
-            Value to be transformed.
-
-        Returns
-        -------
-        Any
-            Transformed value.
-        """
-
     @property
     def requires_fitting(self) -> bool:
         """Return whether the object requires fitting or not."""
         return self._requires_fitting
-
-    def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Return the parameters of the object.
-
-        Parameters
-        ----------
-        deep: bool
-            If True get a deep copy of the parameters.
-
-        Returns
-        -------
-        dict[str, Any]
-            Parameters of the object.
-        """
-        if deep:
-            return {
-                "name": copy.copy(self.name),
-                "n_jobs": copy.copy(self.n_jobs),
-            }
-        else:
-            return {
-                "name": self.name,
-                "n_jobs": self.n_jobs,
-            }
-
-    def set_params(self, parameters: dict[str, Any]) -> Self:
-        """As the setter function cannot be assessed with super(), this method is implemented for inheritance.
-
-        Parameters
-        ----------
-        parameters: dict[str, Any]
-            Parameters to be set.
-
-        Returns
-        -------
-        Self
-            Self with updated parameters.
-        """
-        for att_name, att_value in parameters.items():
-            if not hasattr(self, att_name):
-                ValueError(
-                    f"Cannot set attribute {att_name} on {self.__class__.__name__}"
-                )
-            setattr(self, att_name, att_value)
-        return self
 
     def finish(self) -> None:
         """Inform object that iteration has been finished. Does in most cases nothing.
 
         Called after all transform singles have been processed. From MolPipeline
         """
+
+    def fit_to_result(self, value_list: Any) -> Self:
+        """Fit object to result of transformed values.
+
+        Fit object to the result of the transform function. This is useful catching nones and removed molecules.
+
+        Parameters
+        ----------
+        value_list: Any
+            List of molecule representations.
+
+        Returns
+        -------
+        Self
+            Fitted object.
+        """
+        return self
 
     @abc.abstractmethod
     def fit_transform(self, value_list: Any) -> Any:
@@ -219,6 +231,21 @@ class ABCPipelineElement(abc.ABC):
             Transformed input_values.
         """
 
+    @abc.abstractmethod
+    def transform_single(self, value: Any) -> Any:
+        """Transform a single value.
+
+        Parameters
+        ----------
+        value: Any
+            Value to be transformed.
+
+        Returns
+        -------
+        Any
+            Transformed value.
+        """
+
 
 class TransformingPipelineElement(ABCPipelineElement):
     """Ancestor of all PipelineElements."""
@@ -231,6 +258,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         self,
         name: str = "ABCPipelineElement",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize ABCPipelineElement.
 
@@ -241,7 +269,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         n_jobs: int
             Number of cores used for processing.
         """
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self._is_fitted = False
 
     @property
@@ -311,8 +339,26 @@ class TransformingPipelineElement(ABCPipelineElement):
         Self
             Fitted object.
         """
-        self._is_fitted = True
+        _ = self.fit_transform(value_list)
         return self
+
+    def fit_to_result(self, value_list: Any) -> Self:
+        """Fit object to result of transformed values.
+
+        Fit object to the result of the transform function. This is useful catching nones and removed molecules.
+
+        Parameters
+        ----------
+        value_list: Any
+            List of molecule representations.
+
+        Returns
+        -------
+        Self
+            Fitted object.
+        """
+        self._is_fitted = True
+        return super().fit_to_result(value_list)
 
     def fit_transform(self, value_list: Any) -> Any:
         """Apply fit function and subsequently transform the input.
@@ -327,7 +373,13 @@ class TransformingPipelineElement(ABCPipelineElement):
         Any
             List of molecules in new representation.
         """
-        self.fit(value_list)
+        self._is_fitted = True
+        if self.requires_fitting:
+            pre_value_list = self.pretransform(value_list)
+            self.fit_to_result(pre_value_list)
+            output_list = self.finalize_list(pre_value_list)
+            if hasattr(self, "assemble_output"):
+                return self.assemble_output(output_list)
         return self.transform(value_list)
 
     def transform_single(self, value: Any) -> Any:
@@ -347,20 +399,10 @@ class TransformingPipelineElement(ABCPipelineElement):
         """
         if isinstance(value, InvalidInstance):
             return value
-        if isinstance(value, RDKitMol):
-            if value.GetNumAtoms() == 0:
-                return InvalidInstance(
-                    message="No atoms remaining after transformation.",
-                    element=self,
-                )
-        return self._transform_single(value)
-
-    def _apply_to_all(self, value_list: Any) -> Any:
-        """Transform input_values according to object rules."""
-        output_values = wrap_parallelizable_task(
-            self.transform_single, value_list, self.n_jobs
-        )
-        return output_values
+        pre_value = self.pretransform_single(value)
+        if isinstance(pre_value, InvalidInstance):
+            return pre_value
+        return self.finalize_single(pre_value)
 
     def assemble_output(self, value_list: Iterable[Any]) -> Any:
         """Aggregate rows, which in most cases is just return the list.
@@ -380,6 +422,31 @@ class TransformingPipelineElement(ABCPipelineElement):
         """
         return list(value_list)
 
+    @abc.abstractmethod
+    def pretransform_single(self, value: Any) -> Any:
+        """Transform the molecule according to child dependent rules."""
+
+    def finalize_single(self, value: Any) -> Any:
+        """Finalize the molecule according to child dependent rules."""
+        # Final cleanup of the molecule
+        if isinstance(value, RDKitMol):
+            if value.GetNumAtoms() == 0:
+                return InvalidInstance(self.uuid, "Empty molecule")
+        return value
+
+    def pretransform(self, value_list: Any) -> Any:
+        """Transform input_values according to object rules without fitting specifics."""
+        output_values = wrap_parallelizable_task(
+            self.pretransform_single, value_list, self.n_jobs
+        )
+        return output_values
+
+    def finalize_list(self, value_list: Any) -> Any:
+        output_values = wrap_parallelizable_task(
+            self.finalize_single, value_list, self.n_jobs
+        )
+        return output_values
+
     def transform(self, value_list: Any) -> Any:
         """Transform input_values according to object rules.
 
@@ -394,7 +461,8 @@ class TransformingPipelineElement(ABCPipelineElement):
         Any
             Transformed input_values.
         """
-        output_rows = self._apply_to_all(value_list)
+        output_rows = self.pretransform(value_list)
+        output_rows = self.finalize_list(output_rows)
         output = self.assemble_output(output_rows)
         self.finish()
         return output
@@ -422,10 +490,6 @@ class TransformingPipelineElement(ABCPipelineElement):
             json_dict["additional_attributes"] = adittional_attributes
         return json_dict
 
-    @abc.abstractmethod
-    def _transform_single(self, value: Any) -> Any:
-        """Transform the molecule according to child dependent rules."""
-
 
 class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
     """Abstract PipelineElement where input and outputs are molecules."""
@@ -437,9 +501,10 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         self,
         name: str = "MolToMolPipelineElement",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize MolToMolPipelineElement."""
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def transform(self, value_list: list[OptionalMol]) -> list[OptionalMol]:
         """Transform list of molecules to list of molecules."""
@@ -448,12 +513,10 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
 
     def transform_single(self, value: OptionalMol) -> OptionalMol:
         """Wrap the transform_single method to handle Nones."""
-        if not value:
-            return None
-        return self._transform_single(value)
+        return super().transform_single(value)
 
     @abc.abstractmethod
-    def _transform_single(self, value: RDKitMol) -> OptionalMol:
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Transform the molecule according to child dependent rules."""
 
 
@@ -466,9 +529,10 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         self,
         name: str = "AnyToMolPipelineElement",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize AnyToMolPipelineElement."""
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def transform(self, value_list: Any) -> list[OptionalMol]:
         """Transform list of molecules to list of molecules."""
@@ -476,7 +540,7 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         return mol_list
 
     @abc.abstractmethod
-    def _transform_single(self, value: Any) -> OptionalMol:
+    def pretransform_single(self, value: Any) -> OptionalMol:
         """Transform the input specified in each child to molecules."""
 
 
@@ -489,10 +553,11 @@ class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
         self,
         name: str = "MolToAnyPipelineElement",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize MolToAnyPipelineElement."""
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     @abc.abstractmethod
-    def _transform_single(self, value: RDKitMol) -> Any:
+    def pretransform_single(self, value: RDKitMol) -> Any:
         """Transform the molecules to the input specified in each child."""

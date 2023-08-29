@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -18,9 +18,8 @@ from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
-    NoneHandlingOptions,
+    InvalidInstance,
 )
-from molpipeline.utils.multi_proc import wrap_parallelizable_task
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
@@ -35,8 +34,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         normalize: bool = True,
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: float = np.nan,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize MolToDescriptorPipelineElement.
 
@@ -46,10 +44,10 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         name: str
         n_jobs: int
         """
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self._normalize = normalize
+        if self._normalize:
+            self._requires_fitting = True
         self._mean = None
         self._std = None
 
@@ -155,7 +153,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             attribute_dict["_std"] = self._std
         return attribute_dict
 
-    def fit(self, value_list: list[RDKitMol]) -> Self:
+    def fit_to_result(self, value_list: list[npt.NDArray[np.float_]]) -> Self:
         """Fit object to data.
 
         Parameters
@@ -168,38 +166,12 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Self
             Fitted MolToDescriptorPipelineElement.
         """
-        self.fit_transform(value_list)
-        return self
-
-    def fit_transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
-        """Fit object to data and return the accordingly transformed data.
-
-        Parameters
-        ----------
-        value_list: list[RDKitMol]
-            List of RDKit molecules to which the Pipeline element is fitted and for which the descriptor vectors
-            are calculated subsequently.
-
-        Returns
-        -------
-        npt.NDArray[np.float_]
-            Matrix with descriptor values of molecules.
-        """
-        array_list = wrap_parallelizable_task(
-            self._transform_single, value_list, self.n_jobs
-        )
-        array_list = super()._catch_nones(array_list)
-        value_matrix = self.assemble_output(array_list)
+        value_matrix = np.vstack(list(value_list))
         self._mean = np.nanmean(value_matrix, axis=0)
         _std: npt.NDArray[np.float_] = np.nanstd(value_matrix, axis=0)
         _std[np.where(_std == 0)] = 1.0  # avoid division by zero
         self._std = _std
-        normalized_matrix = self._normalize_matrix(value_matrix)
-        if self.none_handling == "fill_dummy":
-            final_matrix: npt.NDArray[np.float_]
-            final_matrix = self.none_collector.fill_with_dummy(normalized_matrix)
-            return final_matrix
-        return normalized_matrix
+        return self
 
     def _normalize_matrix(
         self, value_matrix: npt.NDArray[np.float_]
@@ -227,28 +199,15 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         descriptor_matrix: npt.NDArray[np.float_] = super().transform(value_list)
         return descriptor_matrix
 
-    def transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
-        """Normalize _transform_single if required.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            RDKit molecule for which the descriptor vector is calculated.
-
-        Returns
-        -------
-        Optional[npt.NDArray[np.float_]]
-            Vector with descriptor values of molecule, or None if the descriptor could not be calculated.
-        """
-        feature_vector = self._transform_single(value)
-        if feature_vector is None:
-            return None
-        if self._normalize:
-            return self._normalize_matrix(feature_vector)
-        return feature_vector
+    def finalize_single(self, value: Any) -> Any:
+        if self.normalize:
+            return self._normalize_matrix(value)
+        return value
 
     @abc.abstractmethod
-    def _transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
+    def pretransform_single(
+        self, value: RDKitMol
+    ) -> Union[npt.NDArray[np.float_], InvalidInstance]:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters

@@ -3,7 +3,7 @@
 from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
-from typing import Any, Iterable, Literal
+from typing import Any, Iterable, Optional
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -29,10 +29,9 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     def __init__(
         self,
         sparse_output: bool = True,
-        none_handling: Literal["raise", "record_remove", "fill_dummy"] = "raise",
-        fill_value: Any = None,
         name: str = "MolToFingerprintPipelineElement",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ):
         """Initialize abstract class.
 
@@ -40,8 +39,6 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         ----------
         sparse_output: bool, optional
             True: return sparse matrix, False: return matrix as dense numpy array.
-        none_handling: Literal["raise", "record_remove", "fill_dummy"], optional
-            Specifies how to handle None values in the input list.
         name: str
             Name of PipelineElement.
         n_jobs:
@@ -50,8 +47,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         super().__init__(
             name=name,
             n_jobs=n_jobs,
-            none_handling=none_handling,
-            fill_value=fill_value,
+            uuid=uuid,
         )
         self._sparse_output = sparse_output
 
@@ -138,7 +134,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return super().transform(value_list)
 
     @abc.abstractmethod
-    def _transform_single(self, value: RDKitMol) -> dict[int, int]:
+    def pretransform_single(self, value: RDKitMol) -> dict[int, int]:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters
@@ -162,9 +158,9 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         radius: int = 2,
         use_features: bool = False,
         sparse_output: bool = True,
-        none_handling: Literal["raise", "record_remove"] = "raise",
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ):
         """Initialize abstract class.
 
@@ -176,8 +172,6 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
             Whether to represent atoms by element or category (donor, acceptor. etc.)
         sparse_output: bool, optional
             True: return sparse matrix, False: return matrix as dense numpy array.
-        none_handling: Literal["raise", "record_remove"], optional
-            Specifies how to handle None values in the input list.
         name: str
             Name of PipelineElement.
         n_jobs:
@@ -187,7 +181,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
             sparse_output=sparse_output,
             name=name,
             n_jobs=n_jobs,
-            none_handling=none_handling,
+            uuid=uuid,
         )
         self._use_features = use_features
         if isinstance(radius, int) and radius >= 0:

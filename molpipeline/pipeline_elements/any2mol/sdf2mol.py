@@ -1,7 +1,7 @@
 """Class for Transforming SDF-strings to rdkit molecules."""
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, Optional
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -31,6 +31,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         identifier: str = "enumerate",
         name: str = "SDF2Mol",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize SDFToMolPipelineElement.
 
@@ -43,7 +44,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         n_jobs: int
             Number of cores used for processing.
         """
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.identifier = identifier
         self.mol_counter = 0
 
@@ -89,11 +90,11 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         """Reset the mol counter which assigns identifiers."""
         self.mol_counter = 0
 
-    def _transform_single(self, value: str) -> OptionalMol:
+    def pretransform_single(self, value: str) -> OptionalMol:
         """Transform an SDF-strings to a rdkit molecule."""
         mol = Chem.MolFromMolBlock(value)
         if mol is None:
-            return InvalidInstance(self, "Invalid SDF string!")
+            return InvalidInstance(self.uuid, "Invalid SDF string!")
         if self.identifier == "smiles":
             mol.SetProp("identifier", self.mol_counter)
         self.mol_counter += 1

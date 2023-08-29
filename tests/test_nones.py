@@ -5,7 +5,9 @@ import unittest
 import numpy as np
 from rdkit import RDLogger
 
-from molpipeline.pipeline import MolPipeline
+from sklearn.base import clone
+
+from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
@@ -14,12 +16,14 @@ from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import (
     MolToRDKitPhysChem,
 )
+from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
+from molpipeline.utils.none_handling import NoneFilter, NoneFiller
 
 rdlog = RDLogger.logger()
 rdlog.setLevel(RDLogger.CRITICAL)
 
-TEST_SMILES = ["NCCCO", "abc"]
-EXPECTED_OUTPUT = ["NCCCO", None]
+TEST_SMILES = ["NCCCO", "abc", "c1ccccc1"]
+EXPECTED_OUTPUT = ["NCCCO", None, "c1ccccc1"]
 
 
 class NoneTest(unittest.TestCase):
@@ -27,55 +31,70 @@ class NoneTest(unittest.TestCase):
 
     def test_none_dummy_fill_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-        pipeline = MolPipeline(
-            [
-                SmilesToMolPipelineElement(),
-                MolToSmilesPipelineElement(),
-            ],
-            none_handling="fill_dummy",
-            fill_value=None,
+
+        smi2mol = SmilesToMolPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+        remove_none = NoneFilter.from_element_list([smi2mol, mol2smi])
+        fill_none = PostPredictionWrapper(
+            NoneFiller.from_none_filter(remove_none, fill_value=None)
         )
-        out = pipeline.transform(TEST_SMILES)
+
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("mol2smi", mol2smi),
+                ("remove_none", remove_none),
+                ("fill_none", fill_none),
+            ]
+        )
+        out = pipeline.fit_transform(TEST_SMILES)
         for pred_val, true_val in zip(out, EXPECTED_OUTPUT):
             self.assertEqual(pred_val, true_val)
 
     def test_none_dummy_remove_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-        pipeline = MolPipeline(
+        smi2mol = SmilesToMolPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+        remove_none = NoneFilter.from_element_list([smi2mol, mol2smi])
+        pipeline = Pipeline(
             [
-                SmilesToMolPipelineElement(),
-                MolToSmilesPipelineElement(),
-            ],
-            none_handling="record_remove",
+                ("smi2mol", smi2mol),
+                ("mol2smi", mol2smi),
+                ("remove_none", remove_none),
+            ]
         )
         out = pipeline.transform(TEST_SMILES)
-        self.assertEqual(len(out), 1)
+        self.assertEqual(len(out), 2)
         self.assertEqual(out[0], EXPECTED_OUTPUT[0])
-        self.assertEqual(len(pipeline.none_collector.none_indices), 1)
-        self.assertEqual(pipeline.none_collector.none_indices[0], 1)
 
     def test_dummy_remove_morgan_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-        pipeline = MolPipeline(
+        smi2mol = SmilesToMolPipelineElement()
+        mol2morgan = MolToFoldedMorganFingerprint()
+        remove_none = NoneFilter.from_element_list([smi2mol, mol2morgan])
+        pipeline = Pipeline(
             [
-                SmilesToMolPipelineElement(),
-                MolToFoldedMorganFingerprint(),
+                ("smi2mol", smi2mol),
+                ("mol2morgan", mol2morgan),
+                ("remove_none", remove_none),
             ],
-            none_handling="record_remove",
         )
         out = pipeline.transform(TEST_SMILES)
-        self.assertEqual(out.shape, (1, 2048))
+        self.assertEqual(out.shape, (2, 2048))
 
     def test_dummy_remove_physchem_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-        pipeline = MolPipeline(
+        smi2mol = SmilesToMolPipelineElement()
+        mol2physchem = MolToRDKitPhysChem()
+        remove_none = NoneFilter.from_element_list([smi2mol, mol2physchem])
+        pipeline = Pipeline(
             [
-                SmilesToMolPipelineElement(),
-                MolToRDKitPhysChem(),
+                ("smi2mol", smi2mol),
+                ("mol2physchem", mol2physchem),
+                ("remove_none", remove_none),
             ],
-            none_handling="record_remove",
         )
-        pipeline2 = pipeline.copy()
+        pipeline2 = clone(pipeline)
         pipeline.fit(TEST_SMILES)
         out = pipeline.transform(TEST_SMILES)
         out2 = pipeline2.fit_transform(TEST_SMILES)
@@ -84,18 +103,27 @@ class NoneTest(unittest.TestCase):
 
     def test_dummy_fill_physchem_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-        pipeline = MolPipeline(
-            [
-                SmilesToMolPipelineElement(),
-                MolToRDKitPhysChem(),
-            ],
-            none_handling="fill_dummy",
-            fill_value=10,
+
+        smi2mol = SmilesToMolPipelineElement()
+        mol2physchem = MolToRDKitPhysChem()
+        remove_none = NoneFilter.from_element_list([smi2mol, mol2physchem])
+        fill_none = PostPredictionWrapper(
+            NoneFiller.from_none_filter(remove_none, fill_value=10)
         )
-        pipeline2 = pipeline.copy()
+
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("mol2physchem", mol2physchem),
+                ("remove_none", remove_none),
+                ("fill_none", fill_none),
+            ],
+            n_jobs=1,
+        )
+        pipeline2 = clone(pipeline)
         pipeline.fit(TEST_SMILES)
         out = pipeline.transform(TEST_SMILES)
         out2 = pipeline2.fit_transform(TEST_SMILES)
         self.assertEqual(out.shape, out2.shape)
-        self.assertEqual(out.shape, (2, 207))
+        self.assertEqual(out.shape, (3, 207))
         self.assertTrue(np.nanmax(np.abs(out - out2)) < 0.000001)

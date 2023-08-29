@@ -1,5 +1,5 @@
 import unittest
-from molpipeline.pipeline import MolPipeline
+from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     RemoveStereoInformationPipelineElement,
@@ -19,11 +19,14 @@ class MolStandardizationTest(unittest.TestCase):
         -------
         None
         """
-        stereo_removal_pipeline = MolPipeline(
+        smi2mol = SmilesToMolPipelineElement()
+        stereo_removal = RemoveStereoInformationPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+        stereo_removal_pipeline = Pipeline(
             [
-                SmilesToMolPipelineElement(),
-                RemoveStereoInformationPipelineElement(),
-                MolToSmilesPipelineElement(),
+                ("smi2mol", smi2mol),
+                ("stereo_removal", stereo_removal),
+                ("mol2smi", mol2smi),
             ]
         )
         stereo_removed_mol_list = stereo_removal_pipeline.fit_transform(STEREO_MOL_LIST)
@@ -41,10 +44,12 @@ class MolStandardizationTest(unittest.TestCase):
         smiles_uninitialized_ringinfo_after_disconnect = (
             "OC[C@H]1OC(S[Au])[C@H](O)[C@@H](O)[C@@H]1O"
         )
-        pipeline = MolPipeline(
+        smi2mol = SmilesToMolPipelineElement()
+        disconnect_metals = MetalDisconnectorPipelineElement()
+        pipeline = Pipeline(
             [
-                SmilesToMolPipelineElement(),
-                MetalDisconnectorPipelineElement(),
+                ("smi2mol", smi2mol),
+                ("disconnect_metals", disconnect_metals),
             ]
         )
         mols_processed = pipeline.fit_transform(

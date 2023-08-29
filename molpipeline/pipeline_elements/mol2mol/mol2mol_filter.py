@@ -18,6 +18,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         allowed_element_numbers: Optional[list[int]] = None,
         name: str = "ElementFilterPipe",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize ElementFilterPipelineElement.
 
@@ -35,7 +36,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         n_jobs: int, optional (default: 1)
             Number of parallel jobs to use.
         """
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if allowed_element_numbers is None:
             allowed_element_numbers = [
                 1,
@@ -54,13 +55,13 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
             ]
         self.allowed_element_numbers: set[int] = set(allowed_element_numbers)
 
-    def _transform_single(self, value: RDKitMol) -> OptionalMol:
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove molecule containing chemical elements that are not allowed."""
         unique_elements = set(atom.GetAtomicNum() for atom in value.GetAtoms())
         if not unique_elements.issubset(self.allowed_element_numbers):
             forbidden_elements = self.allowed_element_numbers - unique_elements
             return InvalidInstance(
-                self,
+                self.uuid,
                 f"Molecule contains following forbidden elements: {forbidden_elements}",
             )
         return value

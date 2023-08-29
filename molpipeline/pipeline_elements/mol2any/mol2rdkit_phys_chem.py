@@ -2,7 +2,7 @@
 # pylint: disable=too-many-arguments
 
 from __future__ import annotations
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -16,7 +16,7 @@ from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import Descriptors
 
-from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
@@ -42,8 +42,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         normalize: bool = True,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize MolToRDKitPhysChem.
 
@@ -59,8 +58,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             normalize=normalize,
             name=name,
             n_jobs=n_jobs,
-            none_handling=none_handling,
-            fill_value=fill_value,
+            uuid=uuid,
         )
         if normalize:
             self._requires_fitting = True
@@ -75,7 +73,9 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         """Return a copy of the descriptor list."""
         return self._descriptor_list[:]
 
-    def _transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
+    def pretransform_single(
+        self, value: RDKitMol
+    ) -> Union[npt.NDArray[np.float_], InvalidInstance]:
         """Transform a single molecule to a descriptor vector.
 
         Parameters
@@ -92,7 +92,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             [RDKIT_DESCRIPTOR_DICT[name](value) for name in self._descriptor_list]
         )
         if np.any(np.isnan(vec)):
-            return None
+            return InvalidInstance(self.uuid, "NaN in descriptor vector")
         return vec
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:

@@ -31,7 +31,7 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         return super().transform(value_list)
 
     @abc.abstractmethod
-    def _transform_single(self, value: str) -> Chem.Mol:
+    def pretransform_single(self, value: str) -> Chem.Mol:
         """Transform mol to a string.
 
         Parameters
