@@ -5,7 +5,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_reaction import (
 )
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     MetalDisconnectorPipelineElement,
-    RemoveChargePipelineElement,
+    ChargeParentPipelineElement,
     SaltRemoverPipelineElement,
     UnchargePipelineElement,
 )
@@ -13,7 +13,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
 __all__ = (
     "MolToMolReactionPipelineElement",
     "MetalDisconnectorPipelineElement",
-    "RemoveChargePipelineElement",
+    "ChargeParentPipelineElement",
     "SaltRemoverPipelineElement",
     "UnchargePipelineElement",
 )

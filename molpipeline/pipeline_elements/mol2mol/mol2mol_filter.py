@@ -56,7 +56,18 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         self.allowed_element_numbers: set[int] = set(allowed_element_numbers)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Remove molecule containing chemical elements that are not allowed."""
+        """Invalidate molecule containing chemical elements that are not allowed.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to check.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule if it contains only allowed elements, else InvalidInstance.
+        """
         unique_elements = set(atom.GetAtomicNum() for atom in value.GetAtoms())
         if not unique_elements.issubset(self.allowed_element_numbers):
             forbidden_elements = self.allowed_element_numbers - unique_elements

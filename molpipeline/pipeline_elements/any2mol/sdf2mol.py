@@ -43,6 +43,8 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
             Name of PipelineElement
         n_jobs: int
             Number of cores used for processing.
+        uuid: Optional[str], optional
+            uuid of PipelineElement, by default None
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.identifier = identifier
@@ -91,7 +93,18 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         self.mol_counter = 0
 
     def pretransform_single(self, value: str) -> OptionalMol:
-        """Transform an SDF-strings to a rdkit molecule."""
+        """Transform an SDF-strings to a rdkit molecule.
+
+        Parameters
+        ----------
+        value: str
+            SDF-string to transform to a molecule.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule if transformation was successful, else InvalidInstance.
+        """
         mol = Chem.MolFromMolBlock(value)
         if mol is None:
             return InvalidInstance(self.uuid, "Invalid SDF string!")

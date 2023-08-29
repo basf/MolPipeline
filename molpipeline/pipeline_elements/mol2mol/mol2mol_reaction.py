@@ -16,6 +16,7 @@ from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import AllChem
 
 from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
     MolToMolPipelineElement,
 )
 from molpipeline.utils.molpipeline_types import OptionalMol
@@ -130,7 +131,18 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         self._reaction = reaction
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Apply reaction to molecule."""
+        """Apply reaction to molecule.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to apply reaction to.
+
+        Returns
+        -------
+        OptionalMol
+            Product of reaction if possible, else InvalidInstance.
+        """
         mol = value  # Only value to keep signature consistent.
         reactant_list: list[RDKitMol] = list(self.additive_list)
         reactant_list.append(mol)
@@ -151,7 +163,7 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
                 )
 
         if len(product_list) == 0:
-            return None
+            return InvalidInstance(self.uuid, "Reaction did not yield any product.")
         product = product_list[0][0]
         AllChem.SanitizeMol(product)
         return product

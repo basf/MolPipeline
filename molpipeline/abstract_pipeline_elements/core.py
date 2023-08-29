@@ -22,14 +22,47 @@ if TYPE_CHECKING:  # Avoid circular imports
 
 
 class InvalidInstance:
+    """Object which is returned when an instance cannot be processed."""
+
     def __init__(self, element_id: str, message: str) -> None:
+        """Initialize InvalidInstance.
+
+        Parameters
+        ----------
+        element_id: str
+            UUID of the element.
+        message: str
+            Message why the instance is invalid.
+
+        Returns
+        -------
+        None
+        """
         self.element_id = element_id
         self.message = message
 
 
 class RemovedInstance:
-    def __init__(self, filter_element: NoneFilter) -> None:
+    """Object which is returned by a NoneFilter if an Invalid instance was removed."""
+
+    def __init__(
+        self, filter_element: NoneFilter, message: Optional[str] = None
+    ) -> None:
+        """Initialize RemovedInstance.
+
+        Parameters
+        ----------
+        filter_element: NoneFilter
+            FilterElement which removed the molecule.
+        message: Optional[str]
+            Optional message why the molecule was removed.
+
+        Returns
+        -------
+        None
+        """
         self.filter_element = filter_element
+        self.message = message
 
 
 OptionalMol = Union[RDKitMol, InvalidInstance]
@@ -424,24 +457,73 @@ class TransformingPipelineElement(ABCPipelineElement):
 
     @abc.abstractmethod
     def pretransform_single(self, value: Any) -> Any:
-        """Transform the molecule according to child dependent rules."""
+        """Transform the instance, but skips parameters learned during fitting.
+
+        This is the first step for the full transformation.
+        It is followed by the finalize_single method and assemble output which collects all single transformations.
+        These functions are split as they need to be accessed separately from outside the object.
+
+        Parameters
+        ----------
+        value: Any
+            Value to be pretransformed.
+
+        Returns
+        -------
+        Any
+            Pretransformed value. (Skips applying parameters learned during fitting)
+        """
 
     def finalize_single(self, value: Any) -> Any:
-        """Finalize the molecule according to child dependent rules."""
+        """Apply parameters learned during fitting to a single instance.
+
+        Parameters
+        ----------
+        value: Any
+            Value obtained from pretransform_single.
+
+        Returns
+        -------
+        Any
+            Finalized value.
+        """
         # Final cleanup of the molecule
         if isinstance(value, RDKitMol):
             if value.GetNumAtoms() == 0:
                 return InvalidInstance(self.uuid, "Empty molecule")
         return value
 
-    def pretransform(self, value_list: Any) -> Any:
-        """Transform input_values according to object rules without fitting specifics."""
+    def pretransform(self, value_list: Iterable[Any]) -> list[Any]:
+        """Transform input_values according to object rules without fitting specifics.
+
+        Parameters
+        ----------
+        value_list: Iterable[Any]
+            Iterable of instances to be pretransformed.
+
+        Returns
+        -------
+        list[Any]
+            Transformed input_values.
+        """
         output_values = wrap_parallelizable_task(
             self.pretransform_single, value_list, self.n_jobs
         )
         return output_values
 
-    def finalize_list(self, value_list: Any) -> Any:
+    def finalize_list(self, value_list: Iterable[Any]) -> list[Any]:
+        """Transform list of values according to parameters learned during fitting.
+
+        Parameters
+        ----------
+        value_list:  Iterable[Any]
+            List of values to be transformed.
+
+        Returns
+        -------
+        list[Any]
+            List of transformed values.
+        """
         output_values = wrap_parallelizable_task(
             self.finalize_single, value_list, self.n_jobs
         )
@@ -507,17 +589,52 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def transform(self, value_list: list[OptionalMol]) -> list[OptionalMol]:
-        """Transform list of molecules to list of molecules."""
+        """Transform list of molecules to list of molecules.
+
+        Parameters
+        ----------
+        value_list: list[OptionalMol]
+            List of molecules to be transformed.
+
+        Returns
+        -------
+        list[OptionalMol]
+            List of molecules or InvalidInstances, if corresponding transformation was not successful.
+        """
         mol_list: list[OptionalMol] = super().transform(value_list)  # Stupid mypy...
         return mol_list
 
     def transform_single(self, value: OptionalMol) -> OptionalMol:
-        """Wrap the transform_single method to handle Nones."""
+        """Apply pretransform_single and finalize_single in one step.
+
+        Parameters
+        ----------
+        value: OptionalMol
+            Molecule to be transformed.
+
+        Returns
+        -------
+        OptionalMol
+            Transformed molecule if transformation was successful, else InvalidInstance.
+        """
         return super().transform_single(value)
 
     @abc.abstractmethod
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Transform the molecule according to child dependent rules."""
+        """Transform the molecule to another molecule object.
+
+        Do not apply parameters learned during fitting.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to be transformed.
+
+        Returns
+        -------
+        OptionalMol
+            Transformed molecule if transformation was successful, else InvalidInstance.
+        """
 
 
 class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
@@ -535,13 +652,35 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def transform(self, value_list: Any) -> list[OptionalMol]:
-        """Transform list of molecules to list of molecules."""
+        """Transform list of instances to list of molecules.
+
+        Parameters
+        ----------
+        value_list: Any
+            Instances to be transformed to a list of molecules.
+
+        Returns
+        -------
+        list[OptionalMol]
+            List of molecules or InvalidInstances, if corresponding representation was invalid.
+        """
         mol_list: list[OptionalMol] = super().transform(value_list)  # Stupid mypy...
         return mol_list
 
     @abc.abstractmethod
     def pretransform_single(self, value: Any) -> OptionalMol:
-        """Transform the input specified in each child to molecules."""
+        """Transform the instance to a molecule, but skip parameters learned during fitting.
+
+        Parameters
+        ----------
+        value: Any
+            Representation to be transformed to a molecule.
+
+        Returns
+        -------
+        OptionalMol
+            Obtained molecule if valid representation, else InvalidInstance.
+        """
 
 
 class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
@@ -560,4 +699,15 @@ class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
 
     @abc.abstractmethod
     def pretransform_single(self, value: RDKitMol) -> Any:
-        """Transform the molecules to the input specified in each child."""
+        """Transform the molecule, but skip parameters learned during fitting.
+
+        Parameters
+        ----------
+        value: RDKitMOl
+            Molecule to be transformed.
+
+        Returns
+        -------
+        Any
+            Transformed molecule.
+        """

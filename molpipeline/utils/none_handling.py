@@ -69,11 +69,41 @@ class NoneFilter(ABCPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> Self:
+        """
+        Initialize NoneCollector from a list of Pipeline Elements.
+
+        Parameters
+        ----------
+        element_list: Iterable[TransformingPipelineElement]
+            List of Pipeline Elements for which None can be removed.
+        name: str, optional (default: "NoneFilter")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            UUID of the pipeline element.
+
+        Returns
+        -------
+        NoneFilter
+            Constructed NoneFilter object.
+        """
         element_ids = set([element.uuid for element in element_list])
         return cls(element_ids, name=name, n_jobs=n_jobs, uuid=uuid)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get parameters for this element."""
+        """Get parameters for this element.
+
+        Parameters
+        ----------
+        deep: bool
+            If True, will return a deep copy of parameters for this estimator.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameter names mapped to their values.
+        """
         params = super().get_params(deep=deep)
         if deep:
             params["element_ids"] = set(
@@ -84,7 +114,18 @@ class NoneFilter(ABCPipelineElement):
         return params
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
-        """Set parameters for this element."""
+        """Set parameters for this element.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dict of arameters to set.
+
+        Returns
+        -------
+        Self
+            Self with updated parameters.
+        """
         param_copy = dict(parameters)
         element_ids = param_copy.pop("element_ids", None)
         if element_ids is not None:
@@ -112,15 +153,56 @@ class NoneFilter(ABCPipelineElement):
         return False
 
     def fit(self, values: AnyIterable) -> Self:
-        """Transform values and return a list without the None values."""
+        """Fit to input values.
+
+        Only for compatibility with sklearn Pipelines.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Values used for fitting. (Not really used)
+
+        Returns
+        -------
+        Self
+            Fitted NoneFilter.
+        """
         return self
 
     def fit_transform(self, values: AnyIterable) -> AnyIterable:
-        """Transform values and return a list without the None values."""
+        """Transform values and return a list without the None values.
+
+        So far fit does nothing and hence is only called for consitency.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Iterable to which element is fitted and which is subsequently transformed.
+
+        Returns
+        -------
+        AnyIterable
+            Iterable where invalid instances were removed.
+        """
         self.fit(values)
         return self.transform(values)
 
     def co_transform(self, values: AnyIterable) -> AnyIterable:
+        """Remove rows at positions which contained discarded values during transformation.
+
+        This ensures that rows of this instance maintain a one to one correspondence with the rows of data seen during
+        transformation.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Values to be transformed.
+
+        Returns
+        -------
+        AnyIterable
+            Input where rows are removed.
+        """
         if self.n_total != len(values):
             raise ValueError("Length of values does not match length of values in fit")
         if isinstance(values, list):
@@ -134,7 +216,20 @@ class NoneFilter(ABCPipelineElement):
         raise TypeError(f"Unexpected Type: {type(values)}")
 
     def transform(self, values: AnyIterable) -> AnyIterable:
-        """Transform values and return a list without the None values."""
+        """Transform values and return a list without the None values.
+
+        IMPORTANT: Changes number of elements in the iterable.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Iterable of which according invalid instances are removed.
+
+        Returns
+        -------
+        AnyIterable
+            Iterable where invalid instances were removed.
+        """
         self.n_total = len(values)
         self.none_indices = []
         for i, value in enumerate(values):
@@ -157,7 +252,7 @@ class NoneFilter(ABCPipelineElement):
         """
         if self.check_removal(value):
             return RemovedInstance(
-                filter_element=self,  # type: ignore
+                filter_element=self, message=value.message  # type: ignore
             )
         return value
 
@@ -256,7 +351,26 @@ class NoneFiller(ABCPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> Self:
-        """Initialize NoneFiller."""
+        """Initialize NoneFiller from a NoneFilter object.
+
+        Parameters
+        ----------
+        none_filter: NoneFilter
+            NoneFilter to use for filling removed values.
+        fill_value: Any
+            Value which is used to fill removed values.
+        name: str, optional (default: "NoneFiller")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            UUID of the pipeline element.
+
+        Returns
+        -------
+        NoneFiller
+            Constructed NoneFiller object.
+        """
         filler = cls(
             none_filter_id=none_filter.uuid,
             fill_value=fill_value,
@@ -268,7 +382,18 @@ class NoneFiller(ABCPipelineElement):
         return filler
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get parameters for this element."""
+        """Get parameters for this element.
+
+        Parameters
+        ----------
+        deep: bool
+            If True, will return a deep copy of parameters for this estimator.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameter names mapped to their values.
+        """
         params = super().get_params(deep=deep)
         if deep:
             params["none_filter_id"] = str(self.none_filter_id)
@@ -280,28 +405,75 @@ class NoneFiller(ABCPipelineElement):
 
     @property
     def none_filter(self) -> NoneFilter:
+        """Return the NoneFilter."""
         if self._none_filter is None:
             raise ValueError("NoneFilter not set")
         return self._none_filter
 
     @none_filter.setter
     def none_filter(self, none_filter: NoneFilter) -> None:
+        """Set the NoneFilter.
+
+        Parameters
+        ----------
+        none_filter: NoneFilter
+            NoneFilter to set.
+        """
         self._none_filter = none_filter
 
-    def select_none_filter(self, none_filter_list: list[NoneFilter]) -> None:
-        """Select the NoneFilter from a list of NoneFilters."""
+    def select_none_filter(self, none_filter_list: list[NoneFilter]) -> Self:
+        """Select the NoneFilter from a list of NoneFilters.
+
+        Parameters
+        ----------
+        none_filter_list: list[NoneFilter]
+            List of NoneFilters to select from.
+
+        Returns
+        -------
+        Self
+            NoneFiller with updated NoneFilter.
+        """
         for none_filter in none_filter_list:
             if none_filter.uuid == self.none_filter_id:
                 self.none_filter = none_filter
                 break
         else:
             raise ValueError(f"NoneFilter with id {self.none_filter_id} not found")
+        return self
 
     def fit(self, values: AnyIterable) -> Self:
-        """Transform values and return a list without the None values."""
+        """Fit to input values.
+
+        Only for compatibility with sklearn Pipelines.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Values used for fitting.
+
+        Returns
+        -------
+        Self
+            Fitted NoneFiller.
+        """
         return self
 
     def fit_transform(self, values: AnyIterable) -> AnyIterable:
+        """Transform values and return a list without the Invalid values.
+
+        So far fit does nothing and hence is only called for consitency.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Iterable to which element is fitted and which is subsequently transformed.
+
+        Returns
+        -------
+        AnyIterable
+            Iterable where invalid instances were removed.
+        """
         self.fit(values)
         return self.transform(values)
 
@@ -323,7 +495,20 @@ class NoneFiller(ABCPipelineElement):
         return value
 
     def transform(self, values: AnyIterable) -> AnyIterable:
-        """Transform values and return a list without the None values."""
+        """Transform iterable of values by removing invalid instances.
+
+        IMPORTANT: Changes number of elements in the iterable.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Iterable of which according invalid instances are removed.
+
+        Returns
+        -------
+        AnyIterable
+            Iterable where invalid instances were removed.
+        """
         if len(values) != self.none_filter.n_total - len(self.none_filter.none_indices):
             print(self.none_filter.none_indices)
             raise ValueError(

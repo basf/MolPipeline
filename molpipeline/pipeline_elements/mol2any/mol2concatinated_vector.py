@@ -180,7 +180,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Returns
         -------
         Self
-            Fitted pipelineelement.
+            Fitted pipeline element.
         """
         for pipeline_element in self._element_list:
             pipeline_element.fit(value_list)
@@ -188,8 +188,20 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[list[Union[npt.NDArray[np.float_], dict[int, int]]], InvalidInstance,]:
-        """Get output of each element and concatenate for output."""
+    ) -> Union[list[Union[npt.NDArray[np.float_], dict[int, int]]], InvalidInstance]:
+        """Get pretransform of each element and concatenate for output.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to be transformed.
+
+        Returns
+        -------
+        Union[list[Union[npt.NDArray[np.float_], dict[int, int]]], InvalidInstance]
+            List of pretransformed values of each pipeline element.
+            If any element returns None, InvalidInstance is returned.
+        """
         final_vector = []
         error_message = ""
         for pipeline_element in self._element_list:
@@ -241,7 +253,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Self
             Fitted pipeline element.
         """
-
         for element, value in zip(self._element_list, zip(*value_list)):
             element.fit_to_result(value)
         return self

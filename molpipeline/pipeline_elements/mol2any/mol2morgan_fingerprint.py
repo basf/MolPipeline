@@ -119,7 +119,17 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
     def pretransform_single(self, value: RDKitMol) -> dict[int, int]:
         """Transform a single compound to a dictionary.
 
-        Keys denote the featreu position, values the count. Here always 1.
+        Keys denote the feature position, values the count. Here always 1.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule for which the fingerprint is generated.
+
+        Returns
+        -------
+        dict[int, int]
+            Dictionary with feature-position as key and count as value.
         """
         fingerprint_vector = AllChem.GetMorganFingerprintAsBitVect(
             value, self.radius, useFeatures=self._use_features, nBits=self._n_bits

@@ -108,7 +108,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        deep: bool
+        deep: bool, default=True
             If True get a deep copy of the parameters.
 
         Returns
@@ -199,7 +199,19 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         descriptor_matrix: npt.NDArray[np.float_] = super().transform(value_list)
         return descriptor_matrix
 
-    def finalize_single(self, value: Any) -> Any:
+    def finalize_single(self, value: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+        """Finalize single value. Here: normalize vector.
+
+        Parameters
+        ----------
+        value: Any
+            Single value to be finalized.
+
+        Returns
+        -------
+        Any
+            Finalized value.
+        """
         if self.normalize:
             return self._normalize_matrix(value)
         return value
@@ -213,6 +225,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         value: Chem.Mol
+            Molecule to be transformed to descriptor vector.
 
         Returns
         -------

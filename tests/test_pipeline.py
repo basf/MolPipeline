@@ -10,7 +10,7 @@ from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
 )
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
-    RemoveChargePipelineElement,
+    ChargeParentPipelineElement,
     MetalDisconnectorPipelineElement,
     SaltRemoverPipelineElement,
 )
@@ -91,7 +91,7 @@ class PipelineTest(unittest.TestCase):
         smi2mol = SmilesToMolPipelineElement()
         disconnect_metal = MetalDisconnectorPipelineElement()
         salt_remover = SaltRemoverPipelineElement()
-        remove_charge = RemoveChargePipelineElement()
+        remove_charge = ChargeParentPipelineElement()
         mol2smi = MolToSmilesPipelineElement()
 
         salt_remover_pipeline = Pipeline(

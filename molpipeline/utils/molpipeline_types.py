@@ -70,7 +70,8 @@ class AnySklearnEstimator(Protocol):
 
         Returns
         -------
-        None
+        Self
+            Estimator with updated parameters.
         """
 
     def fit(
@@ -90,7 +91,8 @@ class AnySklearnEstimator(Protocol):
 
         Returns
         -------
-        None
+        Self
+            Fitted estimator.
         """
 
 
