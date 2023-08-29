@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import abc
 from multiprocessing import Pool
-from typing import Any, Iterable, Literal, Optional, Union, TypeVar
+from typing import Any, Iterable, List, Literal, Optional, Union, Tuple, TypeVar
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -449,8 +449,8 @@ class _MolPipeline:
 
 
 # Cannot be moved to utils.molpipeline_types due to circular imports
-_Step = tuple[int, str, Union[AnyTransformer, AnyPredictor]]
-_AggStep = tuple[list[int], list[str], _MolPipeline]
+_Step = Tuple[int, str, Union[AnyTransformer, AnyPredictor]]
+_AggStep = Tuple[List[int], List[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_Step, _AggStep]
 
 
