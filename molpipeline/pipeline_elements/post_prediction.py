@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Union, Optional, Self
+from typing import Any, Union, Optional
+
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 
 from numpy import typing as npt
 from sklearn.base import BaseEstimator, TransformerMixin
