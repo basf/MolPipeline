@@ -18,7 +18,7 @@ from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 
 if TYPE_CHECKING:  # Avoid circular imports
-    from molpipeline.utils.none_handling import NoneFilter
+    from molpipeline.pipeline_elements.none_handling import NoneFilter
 
 
 class InvalidInstance:

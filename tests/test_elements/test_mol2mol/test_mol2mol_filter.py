@@ -5,7 +5,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
     ElementFilterPipelineElement,
 )
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
-from molpipeline.utils.none_handling import NoneFilter
+from molpipeline.pipeline_elements.none_handling import NoneFilter
 
 SMILES_ANTIMONY = "[SbH6+3]"
 SMILES_BENZENE = "c1ccccc1"

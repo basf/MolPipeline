@@ -42,11 +42,14 @@ from molpipeline.utils.molpipeline_types import (
     AnyTransformer,
     NumberIterable,
 )
-from molpipeline.utils.none_handling import (
+from molpipeline.pipeline_elements.none_handling import (
     NoneFilter,
     NoneFiller,
     _MultipleNoneFilter,
 )
+
+
+__all__ = ["Pipeline", "PostPredictionWrapper"]
 
 
 _T = TypeVar("_T")

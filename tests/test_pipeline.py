@@ -20,7 +20,7 @@ from molpipeline.utils.json_operations import (
     recursive_from_json,
     recursive_to_json,
 )
-from molpipeline.utils.none_handling import NoneFilter
+from molpipeline.pipeline_elements.none_handling import NoneFilter
 from tests.utils.fingerprints import make_sparse_fp
 
 

@@ -17,7 +17,7 @@ from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import (
     MolToRDKitPhysChem,
 )
 from molpipeline.pipeline import PostPredictionWrapper
-from molpipeline.utils.none_handling import NoneFilter, NoneFiller
+from molpipeline.pipeline_elements.none_handling import NoneFilter, NoneFiller
 
 rdlog = RDLogger.logger()
 rdlog.setLevel(RDLogger.CRITICAL)
