@@ -1,6 +1,6 @@
 """Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
 from __future__ import annotations
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -8,16 +8,16 @@ except ImportError:
     from typing_extensions import Self
 import numpy as np
 import numpy.typing as npt
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
     MolToAnyPipelineElement,
-    NoneHandlingOptions,
 )
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
 )
 from molpipeline.utils.json_operations import pipeline_element_from_json
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToConcatenatedVector(MolToAnyPipelineElement):
@@ -29,10 +29,9 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     def __init__(
         self,
         element_list: list[MolToAnyPipelineElement],
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "MolToConcatenatedVector",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize MolToConcatenatedVector.
 
@@ -46,11 +45,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Number of cores used.
         """
         self._element_list = element_list
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         for element in self._element_list:
             element.n_jobs = self.n_jobs
+        self._requires_fitting = any(
+            element._requires_fitting for element in element_list
+        )
 
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
@@ -79,28 +79,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     def element_list(self) -> list[MolToAnyPipelineElement]:
         """Get pipeline elements."""
         return self._element_list
-
-    @property
-    def none_handling(self) -> NoneHandlingOptions:
-        """Get none_handling."""
-        return self._none_handling
-
-    @none_handling.setter
-    def none_handling(self, none_handling: NoneHandlingOptions) -> None:
-        """Set none_handling.
-
-        Parameters
-        ----------
-        none_handling: NoneHandlingOptions
-            How to handle None values.
-
-        Returns
-        -------
-        None
-        """
-        self._none_handling = none_handling
-        for element in self._element_list:
-            element.none_handling = none_handling
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -137,12 +115,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Self
             Mol2ConcatenatedVector object with updated parameters.
         """
-        super().set_params(parameters)
-        if "element_list" in parameters:
-            self._element_list = parameters["element_list"]
-        for element in self._element_list:
-            element.n_jobs = self.n_jobs
-            element.none_handling = self.none_handling
+        parameter_copy = dict(parameters)
+        element_list = parameter_copy.pop("element_list", None)
+        if element_list is not None:
+            self._element_list = element_list
+
+        super().set_params(parameter_copy)
         return self
 
     def assemble_output(
@@ -202,27 +180,79 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Returns
         -------
         Self
-            Fitted pipelineelement.
+            Fitted pipeline element.
         """
         for pipeline_element in self._element_list:
             pipeline_element.fit(value_list)
         return self
 
-    def _transform_single(self, value: RDKitMol) -> Optional[npt.NDArray[np.float_]]:
-        """Get output of each element and concatenate for output."""
-        final_vector = []
-        for pipeline_element in self._element_list:
-            if isinstance(pipeline_element, MolToFingerprintPipelineElement):
-                bit_dict = pipeline_element.transform_single(value)
-                vector = np.zeros(pipeline_element.n_bits)
-                vector[list(bit_dict.keys())] = np.array(list(bit_dict.values()))
-            else:
-                vector = pipeline_element.transform_single(value)
+    def pretransform_single(
+        self, value: RDKitMol
+    ) -> Union[list[Union[npt.NDArray[np.float_], dict[int, int]]], InvalidInstance]:
+        """Get pretransform of each element and concatenate for output.
 
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to be transformed.
+
+        Returns
+        -------
+        Union[list[Union[npt.NDArray[np.float_], dict[int, int]]], InvalidInstance]
+            List of pretransformed values of each pipeline element.
+            If any element returns None, InvalidInstance is returned.
+        """
+        final_vector = []
+        error_message = ""
+        for pipeline_element in self._element_list:
+            vector = pipeline_element.pretransform_single(value)
             if vector is None:
+                error_message += f"{pipeline_element.name} returned None. "
                 break
 
             final_vector.append(vector)
         else:  # no break
-            return np.hstack(final_vector)
-        return None
+            return final_vector
+        return InvalidInstance(self.uuid, error_message)
+
+    def finalize_single(self, value: Any) -> Any:
+        """Finalize the output of transform_single.
+
+        Parameters
+        ----------
+        value: Any
+            Output of transform_single.
+
+        Returns
+        -------
+        Any
+            Finalized output.
+        """
+        final_vector_list = []
+        for element, sub_value in zip(self._element_list, value):
+            final_value = element.finalize_single(sub_value)
+            if isinstance(element, MolToFingerprintPipelineElement):
+                vector = np.zeros(element.n_bits)
+                vector[list(final_value.keys())] = np.array(list(final_value.values()))
+                final_value = vector
+            if not isinstance(final_value, np.ndarray):
+                final_value = np.array(final_value)
+            final_vector_list.append(final_value)
+        return np.hstack(final_vector_list)
+
+    def fit_to_result(self, value_list: Any) -> Self:
+        """Fit the pipeline element to the result of transform_single.
+
+        Parameters
+        ----------
+        value_list: Any
+            Output of transform_single.
+
+        Returns
+        -------
+        Self
+            Fitted pipeline element.
+        """
+        for element, value in zip(self._element_list, zip(*value_list)):
+            element.fit_to_result(value)
+        return self

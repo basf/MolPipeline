@@ -6,9 +6,9 @@ import warnings
 from typing import Any
 
 from sklearn.base import BaseEstimator
-from sklearn.pipeline import Pipeline
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
+from molpipeline.pipeline import Pipeline
 
 
 def pipeline_element_from_json(json_dict: dict[str, Any]) -> ABCPipelineElement:
@@ -216,6 +216,16 @@ def recursive_to_json(obj: Any) -> Any:
     }
     # If the object is a sklearn model, the parameters for initialization are extracted.
     if hasattr(obj, "get_params"):
+        if isinstance(obj, Pipeline):
+            object_dict["steps"] = [
+                (step_name, recursive_to_json(step_model))
+                for (step_name, step_model) in obj.steps
+            ]
+            object_dict["memory"] = obj.memory
+            object_dict["verbose"] = obj.verbose
+            object_dict["n_jobs"] = obj.n_jobs
+            object_dict["raise_nones"] = obj.raise_nones
+            return object_dict
         model_params = obj.get_params()
         for key, value in model_params.items():
             object_dict[key] = recursive_to_json(value)

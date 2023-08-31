@@ -29,14 +29,15 @@ class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return string_list
 
     @abc.abstractmethod
-    def _transform_single(self, value: Chem.Mol) -> str:
+    def pretransform_single(self, value: Chem.Mol) -> str:
         """Transform mol to a string.
 
         Parameters
         ----------
         value: Chem.Mol
-
+            Molecule to be transformed to SMILES representation.
         Returns
         -------
         str
+            SMILES representation of molecule.
         """

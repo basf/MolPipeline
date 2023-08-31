@@ -1,11 +1,11 @@
 """Classes to filter molecule lists."""
 
 from __future__ import annotations
-from typing import Any, Optional
+from typing import Optional
 
 from molpipeline.abstract_pipeline_elements.core import (
-    NoneHandlingOptions,
     MolToMolPipelineElement as _MolToMolPipelineElement,
+    InvalidInstance,
 )
 from molpipeline.utils.molpipeline_types import RDKitMol, OptionalMol
 
@@ -16,10 +16,9 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
     def __init__(
         self,
         allowed_element_numbers: Optional[list[int]] = None,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "ElementFilterPipe",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize ElementFilterPipelineElement.
 
@@ -37,9 +36,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         n_jobs: int, optional (default: 1)
             Number of parallel jobs to use.
         """
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if allowed_element_numbers is None:
             allowed_element_numbers = [
                 1,
@@ -58,9 +55,24 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
             ]
         self.allowed_element_numbers: set[int] = set(allowed_element_numbers)
 
-    def _transform_single(self, value: RDKitMol) -> OptionalMol:
-        """Remove molecule containing chemical elements that are not allowed."""
-        for atom in value.GetAtoms():
-            if atom.GetAtomicNum() not in self.allowed_element_numbers:
-                return None
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Invalidate molecule containing chemical elements that are not allowed.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to check.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule if it contains only allowed elements, else InvalidInstance.
+        """
+        unique_elements = set(atom.GetAtomicNum() for atom in value.GetAtoms())
+        if not unique_elements.issubset(self.allowed_element_numbers):
+            forbidden_elements = self.allowed_element_numbers - unique_elements
+            return InvalidInstance(
+                self.uuid,
+                f"Molecule contains following forbidden elements: {forbidden_elements}",
+            )
         return value

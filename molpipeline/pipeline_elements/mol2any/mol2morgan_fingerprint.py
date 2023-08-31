@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Any, Iterable, Literal, Optional
+from typing import Any, Iterable, Optional
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -34,9 +34,9 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         use_features: bool = False,
         n_bits: int = 2048,
         sparse_output: bool = True,
-        none_handling: Literal["raise", "record_remove"] = "raise",
         name: str = "Mol2FoldedMorganFingerprint",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize Mol2FoldedMorganFingerprint.
 
@@ -66,7 +66,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             sparse_output=sparse_output,
             name=name,
             n_jobs=n_jobs,
-            none_handling=none_handling,
+            uuid=uuid,
         )
         if isinstance(n_bits, int) and n_bits >= 0:
             self._n_bits = n_bits
@@ -108,15 +108,28 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         Self
             MolToFoldedMorganFingerprint pipeline element with updated parameters.
         """
-        super().set_params(parameters)
-        if "n_bits" in parameters:
-            self._n_bits = parameters["n_bits"]
+        parameter_copy = dict(parameters)
+        n_bits = parameter_copy.pop("n_bits", None)
+        if n_bits is not None:
+            self._n_bits = n_bits
+        super().set_params(parameter_copy)
+
         return self
 
-    def _transform_single(self, value: RDKitMol) -> dict[int, int]:
+    def pretransform_single(self, value: RDKitMol) -> dict[int, int]:
         """Transform a single compound to a dictionary.
 
-        Keys denote the featreu position, values the count. Here always 1.
+        Keys denote the feature position, values the count. Here always 1.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule for which the fingerprint is generated.
+
+        Returns
+        -------
+        dict[int, int]
+            Dictionary with feature-position as key and count as value.
         """
         fingerprint_vector = AllChem.GetMorganFingerprintAsBitVect(
             value, self.radius, useFeatures=self._use_features, nBits=self._n_bits
@@ -165,7 +178,6 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         counted: bool = False,
         sparse_output: bool = True,
         ignore_unknown: bool = False,
-        none_handling: Literal["raise", "record_remove"] = "raise",
         name: str = "Mol2UnfoldedMorganFingerprint",
         n_jobs: int = 1,
     ) -> None:
@@ -204,7 +216,6 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             sparse_output=sparse_output,
             name=name,
             n_jobs=n_jobs,
-            none_handling=none_handling,
         )
 
         if not isinstance(counted, bool):
@@ -371,7 +382,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         ]
         return self.assemble_output(mapped_feature_count_dicts)
 
-    def _transform_single(self, value: RDKitMol) -> dict[int, int]:
+    def pretransform_single(self, value: RDKitMol) -> dict[int, int]:
         """Return a dict, where the key is the feature-position and the value is the count.
 
         Parameters

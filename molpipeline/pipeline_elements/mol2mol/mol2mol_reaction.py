@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -16,8 +16,8 @@ from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import AllChem
 
 from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
     MolToMolPipelineElement,
-    NoneHandlingOptions,
 )
 from molpipeline.utils.molpipeline_types import OptionalMol
 
@@ -34,10 +34,9 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         reaction: AllChem.ChemicalReaction,
         additive_list: list[RDKitMol],
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "MolToMolReactionPipelineElement",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize MolToMolReactionPipelineElement.
 
@@ -53,7 +52,9 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
             Name of PipelineElement
         """
         super().__init__(
-            name=name, n_jobs=n_jobs, none_handling=none_handling, fill_value=fill_value
+            name=name,
+            n_jobs=n_jobs,
+            uuid=uuid,
         )
         self.reaction = reaction
         self.additive_list = additive_list
@@ -129,8 +130,19 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
             raise TypeError("Not a Chemical reaction!")
         self._reaction = reaction
 
-    def _transform_single(self, value: RDKitMol) -> OptionalMol:
-        """Apply reaction to molecule."""
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Apply reaction to molecule.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to apply reaction to.
+
+        Returns
+        -------
+        OptionalMol
+            Product of reaction if possible, else InvalidInstance.
+        """
         mol = value  # Only value to keep signature consistent.
         reactant_list: list[RDKitMol] = list(self.additive_list)
         reactant_list.append(mol)
@@ -151,7 +163,7 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
                 )
 
         if len(product_list) == 0:
-            return None
+            return InvalidInstance(self.uuid, "Reaction did not yield any product.")
         product = product_list[0][0]
         AllChem.SanitizeMol(product)
         return product

@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 import unittest
 
-from molpipeline.pipeline import MolPipeline
+from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import (
     MolToRDKitPhysChem,
     DEFAULT_DESCRIPTORS,
@@ -248,7 +248,12 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         property_element = MolToRDKitPhysChem(
             normalize=False, descriptor_list=descriptor_names
         )
-        pipeline = MolPipeline([smi2mol, property_element])
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("property_element", property_element),
+            ]
+        )
         smiles = expected_df["smiles"].tolist()
         property_vector = expected_df[descriptor_names].values
 
@@ -266,7 +271,12 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         """
         smi2mol = SmilesToMolPipelineElement()
         property_element = MolToRDKitPhysChem(normalize=True)
-        pipeline = MolPipeline([smi2mol, property_element])
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("property_element", property_element),
+            ]
+        )
 
         smiles = [
             "CC",

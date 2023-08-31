@@ -1,7 +1,7 @@
 """Class for Transforming SDF-strings to rdkit molecules."""
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, Optional
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -10,11 +10,12 @@ except ImportError:
 
 import copy
 from rdkit import Chem
-
+from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
+)
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
-from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
 from molpipeline.utils.molpipeline_types import OptionalMol
 
 
@@ -28,10 +29,9 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
     def __init__(
         self,
         identifier: str = "enumerate",
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "SDF2Mol",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize SDFToMolPipelineElement.
 
@@ -43,10 +43,10 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
             Name of PipelineElement
         n_jobs: int
             Number of cores used for processing.
+        uuid: Optional[str], optional
+            uuid of PipelineElement, by default None
         """
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.identifier = identifier
         self.mol_counter = 0
 
@@ -92,9 +92,22 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         """Reset the mol counter which assigns identifiers."""
         self.mol_counter = 0
 
-    def _transform_single(self, value: str) -> OptionalMol:
-        """Transform an SDF-strings to a rdkit molecule."""
+    def pretransform_single(self, value: str) -> OptionalMol:
+        """Transform an SDF-strings to a rdkit molecule.
+
+        Parameters
+        ----------
+        value: str
+            SDF-string to transform to a molecule.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule if transformation was successful, else InvalidInstance.
+        """
         mol = Chem.MolFromMolBlock(value)
+        if mol is None:
+            return InvalidInstance(self.uuid, "Invalid SDF string!")
         if self.identifier == "smiles":
             mol.SetProp("identifier", self.mol_counter)
         self.mol_counter += 1

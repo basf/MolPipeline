@@ -1,10 +1,10 @@
 """Classes for transforming rdkit molecules to inchi."""
 from __future__ import annotations
-from typing import Any
+
+from typing import Optional
 
 from rdkit import Chem
 
-from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
 from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
     MolToStringPipelineElement as _MolToStringPipelineElement,
 )
@@ -16,29 +16,28 @@ class MolToInchiPipelineElement(_MolToStringPipelineElement):
 
     def __init__(
         self,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "Mol2Inchi",
         n_jobs: int = 1,
-    ):
+        uuid: Optional[str] = None,
+    ) -> None:
         """Initialize MolToInchiPipelineElement.
 
         Parameters
         ----------
-        none_handling: NoneHandlingOptions
-            how to handle None values
-        fill_value: Any
-            value to fill None values with
         name: str
             name of PipelineElement
         n_jobs: int
             number of jobs to use for parallelization
-        """
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        uuid: Optional[str], optional
+            uuid of PipelineElement, by default None
 
-    def _transform_single(self, value: RDKitMol) -> str:
+        Returns
+        -------
+        None
+        """
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+
+    def pretransform_single(self, value: RDKitMol) -> str:
         """Transform a molecule to a INCHI-key string.
 
         Parameters
@@ -59,29 +58,24 @@ class MolToInchiKeyPipelineElement(_MolToStringPipelineElement):
 
     def __init__(
         self,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "Mol2InchiKey",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ):
         """Initialize MolToInchiKeyPipelineElement.
 
         Parameters
         ----------
-        none_handling: NoneHandlingOptions
-            how to handle None values
-        fill_value: Any
-            value to fill None values with
         name: str
             name of PipelineElement
         n_jobs: int
             number of jobs to use for parallelization
+        uuid: Optional[str], optional
+            uuid of PipelineElement, by default None
         """
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
-    def _transform_single(self, value: RDKitMol) -> str:
+    def pretransform_single(self, value: RDKitMol) -> str:
         """Transform a molecule to an INCHI-key string.
 
         Parameters
@@ -92,5 +86,6 @@ class MolToInchiKeyPipelineElement(_MolToStringPipelineElement):
         Returns
         -------
         str
+            INCHI-key of molecule.
         """
         return str(Chem.MolToInchiKey(value))

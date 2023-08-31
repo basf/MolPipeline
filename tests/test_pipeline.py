@@ -1,26 +1,26 @@
 import unittest
 
-from sklearn.pipeline import Pipeline as SkPipeline
 from sklearn.tree import DecisionTreeClassifier
 
-from molpipeline.pipeline import MolPipeline
+from molpipeline.pipeline import Pipeline
 
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.mol2any.mol2concatinated_vector import (
-    MolToConcatenatedVector,
-)
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
-    RemoveChargePipelineElement,
+    ChargeParentPipelineElement,
     MetalDisconnectorPipelineElement,
     SaltRemoverPipelineElement,
 )
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.utils.matrices import are_equal
-
+from molpipeline.utils.json_operations import (
+    recursive_from_json,
+    recursive_to_json,
+)
+from molpipeline.pipeline_elements.none_handling import NoneFilter
 from tests.utils.fingerprints import make_sparse_fp
 
 
@@ -41,10 +41,12 @@ class PipelineTest(unittest.TestCase):
         None
         """
         # Create pipeline
-        pipeline = MolPipeline(
+        smi2mol = SmilesToMolPipelineElement()
+        mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
+        pipeline = Pipeline(
             [
-                SmilesToMolPipelineElement(),
-                MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
+                ("smi2mol", smi2mol),
+                ("morgan", mol2morgan),
             ]
         )
 
@@ -61,16 +63,13 @@ class PipelineTest(unittest.TestCase):
         -------
         None
         """
-        m_pipeline = MolPipeline(
-            [
-                SmilesToMolPipelineElement(),
-                MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
-            ]
-        )
+        smi2mol = SmilesToMolPipelineElement()
+        mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
-        s_pipeline = SkPipeline(
+        s_pipeline = Pipeline(
             [
-                ("mol_pipeline", m_pipeline),
+                ("smi2mol", smi2mol),
+                ("morgan", mol2morgan),
                 ("decision_tree", d_tree),
             ]
         )
@@ -78,46 +77,6 @@ class PipelineTest(unittest.TestCase):
         predicted_value_array = s_pipeline.predict(TEST_SMILES)
         for pred_val, true_val in zip(predicted_value_array, CONTAINS_OX):
             self.assertEqual(pred_val, true_val)
-
-    def test_slicing(self) -> None:
-        """Test if the pipeline can be sliced correctly.
-
-        Returns
-        -------
-        None
-        """
-        pipeline_element_list = [
-            SmilesToMolPipelineElement(),
-            MetalDisconnectorPipelineElement(),
-            SaltRemoverPipelineElement(),
-            MolToSmilesPipelineElement(),
-        ]
-        m_pipeline = MolPipeline(pipeline_element_list)
-
-        first_half = m_pipeline[:2]
-        second_half = m_pipeline[2:]
-        self.assertEqual(
-            first_half.element_list[0].parameters,
-            pipeline_element_list[0].parameters,
-        )
-        self.assertEqual(
-            first_half.element_list[1].parameters,
-            pipeline_element_list[1].parameters,
-        )
-        self.assertEqual(
-            second_half.element_list[0].parameters,
-            pipeline_element_list[2].parameters,
-        )
-        self.assertEqual(
-            second_half.element_list[1].parameters,
-            pipeline_element_list[3].parameters,
-        )
-
-        concatenated_pipeline = first_half + second_half
-        for concat_element, original_element in zip(
-            concatenated_pipeline.element_list, pipeline_element_list
-        ):
-            self.assertEqual(concat_element.parameters, original_element.parameters)
 
     def test_salt_removal(self) -> None:
         """Test if salts are correctly removed from molecules.
@@ -129,13 +88,19 @@ class PipelineTest(unittest.TestCase):
         smiles_with_salt_list = ["CCO-[Na]", "CCC(=O)[O-].[Li+]", "CCC(=O)-O-[K]"]
         smiles_without_salt_list = ["CCO", "CCC(=O)O", "CCC(=O)O"]
 
-        salt_remover_pipeline = MolPipeline(
+        smi2mol = SmilesToMolPipelineElement()
+        disconnect_metal = MetalDisconnectorPipelineElement()
+        salt_remover = SaltRemoverPipelineElement()
+        remove_charge = ChargeParentPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+
+        salt_remover_pipeline = Pipeline(
             [
-                SmilesToMolPipelineElement(),
-                MetalDisconnectorPipelineElement(),
-                SaltRemoverPipelineElement(),
-                RemoveChargePipelineElement(),
-                MolToSmilesPipelineElement(),
+                ("smi2mol", smi2mol),
+                ("disconnect_metal", disconnect_metal),
+                ("salt_remover", salt_remover),
+                ("remove_charge", remove_charge),
+                ("mol2smi", mol2smi),
             ]
         )
         generated_smiles = salt_remover_pipeline.transform(smiles_with_salt_list)
@@ -153,25 +118,37 @@ class PipelineTest(unittest.TestCase):
         """
 
         # Create pipeline
+        smi2mol = SmilesToMolPipelineElement()
+        metal_disconnector = MetalDisconnectorPipelineElement()
+        salt_remover = SaltRemoverPipelineElement()
+        physchem = MolToRDKitPhysChem()
         pipeline_element_list = [
-            SmilesToMolPipelineElement(),
-            MetalDisconnectorPipelineElement(),
-            SaltRemoverPipelineElement(),
-            MolToRDKitPhysChem(),
+            smi2mol,
+            metal_disconnector,
+            salt_remover,
+            physchem,
         ]
-        m_pipeline = MolPipeline(pipeline_element_list)
+        m_pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("metal_disconnector", metal_disconnector),
+                ("salt_remover", salt_remover),
+                ("physchem", physchem),
+            ]
+        )
 
         # Convert pipeline to json
-        json_str = m_pipeline.to_json()
-
+        json_str = recursive_to_json(m_pipeline)
         # Recreate pipeline from json
-        loaded_pipeline = MolPipeline.from_json(json_str)
-
+        loaded_pipeline: Pipeline = recursive_from_json(json_str)
+        self.assertTrue(isinstance(loaded_pipeline, Pipeline))
         # Compare pipeline elements
         for loaded_element, original_element in zip(
-            loaded_pipeline.element_list, pipeline_element_list
+            loaded_pipeline.steps, pipeline_element_list
         ):
-            self.assertEqual(loaded_element.parameters, original_element.parameters)
+            self.assertEqual(
+                loaded_element[1].get_params(), original_element.get_params()
+            )
 
     def test_fit_transform_record_remove_nones(self) -> None:
         """Test if the generation of the fingerprint matrix works as expected.
@@ -179,60 +156,24 @@ class PipelineTest(unittest.TestCase):
         -------
         None
         """
+        smi2mol = SmilesToMolPipelineElement()
+        salt_remover = SaltRemoverPipelineElement()
+        mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
+        remove_none = NoneFilter.from_element_list([smi2mol, salt_remover, mol2morgan])
         # Create pipeline
-        pipeline = MolPipeline(
+        pipeline = Pipeline(
             [
-                SmilesToMolPipelineElement(),
-                SaltRemoverPipelineElement(),  # To test if the pipline can handle mols with become None in pipeline
-                MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
+                ("smi2mol", smi2mol),
+                ("salt_remover", salt_remover),
+                ("morgan", mol2morgan),
+                ("remove_none", remove_none),
             ],
-            none_handling="record_remove",
         )
 
         # Run pipeline
         matrix = pipeline.fit_transform(TEST_SMILES + FAULTY_TEST_SMILES)
-
         # Compare with expected output (Which is the same as the output without the faulty smiles)
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
-
-    def test_none_handling_forwarding(self) -> None:
-        """Test if the none handling is forwarded to individual elements correctly.
-
-        Returns
-        -------
-        None
-        """
-        # Create pipeline
-        pipeline = MolPipeline(
-            [
-                SmilesToMolPipelineElement(),
-                MolToConcatenatedVector(
-                    [
-                        MolToRDKitPhysChem(),
-                        MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE),
-                    ]
-                ),
-            ],
-            none_handling="record_remove",
-        )
-
-        # Run pipeline
-        self.assertEqual(pipeline.none_handling, "record_remove")
-        self.assertEqual(pipeline.element_list[0].none_handling, "record_remove")
-        self.assertEqual(pipeline.element_list[1].none_handling, "record_remove")
-        concat_element = pipeline.element_list[1]
-        if not isinstance(concat_element, MolToConcatenatedVector):
-            raise TypeError(
-                "Expected MolToConcatenatedVector, got {}".format(type(concat_element))
-            )
-        for element in concat_element.element_list:
-            self.assertEqual(element.none_handling, "record_remove")
-        pipeline.none_handling = "record_remove"
-        self.assertEqual(pipeline.none_handling, "record_remove")
-        self.assertEqual(pipeline.element_list[0].none_handling, "record_remove")
-        self.assertEqual(pipeline.element_list[1].none_handling, "record_remove")
-        for element in concat_element.element_list:
-            self.assertEqual(element.none_handling, "record_remove")
 
 
 if __name__ == "__main__":

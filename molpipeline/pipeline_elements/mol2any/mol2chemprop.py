@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Optional
 import warnings
 
 try:
@@ -17,7 +17,6 @@ except ImportError:
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
-    NoneHandlingOptions,
 )
 from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
@@ -30,8 +29,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         self,
         name: str = "Mol2Chemprop",
         n_jobs: int = 1,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize MolToChemprop.
 
@@ -49,11 +47,10 @@ class MolToChemprop(MolToAnyPipelineElement):
         super().__init__(
             name=name,
             n_jobs=n_jobs,
-            none_handling=none_handling,
-            fill_value=fill_value,
+            uuid=uuid,
         )
 
-    def _transform_single(self, value: RDKitMol) -> Optional[MoleculeDatapoint]:
+    def pretransform_single(self, value: RDKitMol) -> Optional[MoleculeDatapoint]:
         """Transform a single molecule to a ChemProp MoleculeDataPoint.
 
         Parameters

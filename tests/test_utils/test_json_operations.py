@@ -1,6 +1,5 @@
 import unittest
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 
 from molpipeline.utils.json_operations import (
@@ -10,6 +9,7 @@ from molpipeline.utils.json_operations import (
     sklearn_model_to_json,
 )
 from molpipeline.utils.multi_proc import check_available_cores
+from molpipeline.pipeline import Pipeline
 
 
 class JsonConversionTest(unittest.TestCase):

@@ -1,15 +1,17 @@
 """Classes ment to transform given input to a RDKit molecule."""
 
 from __future__ import annotations
+from typing import Optional
 
-from typing import Any
 from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
+from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
+)
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
-from molpipeline.abstract_pipeline_elements.core import NoneHandlingOptions
 from molpipeline.utils.molpipeline_types import OptionalMol
 
 
@@ -18,10 +20,9 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
 
     def __init__(
         self,
-        none_handling: NoneHandlingOptions = "raise",
-        fill_value: Any = None,
         name: str = "smiles2mol",
         n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize SmilesToMolPipelineElement.
 
@@ -30,11 +31,9 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
         name: str
             Name of PipelineElement
         """
-        super().__init__(
-            none_handling=none_handling, fill_value=fill_value, name=name, n_jobs=n_jobs
-        )
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
-    def _transform_single(self, value: str) -> OptionalMol:
+    def pretransform_single(self, value: str) -> OptionalMol:
         """Transform Smiles string to molecule.
 
         Parameters
@@ -49,10 +48,6 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
         """
         mol: RDKitMol = Chem.MolFromSmiles(value)
         if not mol:
-            return None
+            return InvalidInstance(self.uuid, f"Invalid SMILES: {value}")
         mol.SetProp("identifier", value)
-
-        # Map molecules without atoms to None
-        if mol.GetNumAtoms() == 0:
-            return None
         return mol

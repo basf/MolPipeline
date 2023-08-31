@@ -3,7 +3,7 @@
 import numpy as np
 import unittest
 
-from molpipeline.pipeline import MolPipeline
+from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
@@ -49,8 +49,18 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         dense_morgan = MolToFoldedMorganFingerprint(
             radius=2, n_bits=1024, sparse_output=False
         )
-        sparse_pipeline = MolPipeline([smi2mol, sparse_morgan])
-        dense_pipeline = MolPipeline([smi2mol, dense_morgan])
+        sparse_pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("sparse_morgan", sparse_morgan),
+            ],
+        )
+        dense_pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("dense_morgan", dense_morgan),
+            ],
+        )
 
         sparse_output = sparse_pipeline.fit_transform(test_smiles)
         dense_output = dense_pipeline.fit_transform(test_smiles)

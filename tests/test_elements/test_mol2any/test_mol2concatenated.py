@@ -3,7 +3,7 @@ import unittest
 
 from rdkit import Chem
 
-from molpipeline.pipeline import MolPipeline
+from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 from molpipeline.pipeline_elements.mol2any.mol2concatinated_vector import (
     MolToConcatenatedVector,
@@ -26,7 +26,12 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             [MolToRDKitPhysChem(normalize=True), MolToFoldedMorganFingerprint()]
         )
         smi2mol = SmilesToMolPipelineElement()
-        pipeline = MolPipeline([smi2mol, concat_vector_elmnt])
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("concat_vector_elmnt", concat_vector_elmnt),
+            ]
+        )
 
         smiles = [
             "CC",
@@ -58,7 +63,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             len(smiles),
             (pyschem_component.n_features + morgan_component.n_bits),
         )
-        self.assertTrue(output.shape == expected_shape)
+        self.assertEquals(output.shape, expected_shape)
         self.assertTrue(np.abs(output - output2).max() < 0.00001)
         self.assertTrue(np.abs(output - output3).max() < 0.00001)
 

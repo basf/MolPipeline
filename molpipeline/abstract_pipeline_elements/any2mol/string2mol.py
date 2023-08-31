@@ -31,14 +31,16 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         return super().transform(value_list)
 
     @abc.abstractmethod
-    def _transform_single(self, value: str) -> Chem.Mol:
+    def pretransform_single(self, value: str) -> OptionalMol:
         """Transform mol to a string.
 
         Parameters
         ----------
-        value: Chem.Mol
+        value: str
+            Representation transformed to a RDKit molecule.
 
         Returns
         -------
-        str
+        OptionalMol
+            RDKit molecule if representation was valid, else InvalidInstance.
         """
