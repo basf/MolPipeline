@@ -6,7 +6,7 @@ with open("requirements.txt", mode="r", encoding="utf-8") as requirement_file:
 
 setup(
     name="molpipeline",
-    version="0.4.3",
+    version="0.5.0",
     packages=find_packages(),
     url="",
     license="",
