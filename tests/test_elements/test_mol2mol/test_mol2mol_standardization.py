@@ -126,9 +126,7 @@ class MolStandardizationTest(unittest.TestCase):
             "Oc1c(cccc3)c3nc2ccncc12",
             "CN=c1nc[nH]cc1",
         ]
-        canonical_tautomer_list = [
-            "O=c1c2ccccc2[nH]c2ccncc12",
-            "CNc1ccncn1"]
+        canonical_tautomer_list = ["O=c1c2ccccc2[nH]c2ccncc12", "CNc1ccncn1"]
 
         smi2mol = SmilesToMolPipelineElement()
         canonical_tautomer = CanonicalizeTautomerPipelineElement()
