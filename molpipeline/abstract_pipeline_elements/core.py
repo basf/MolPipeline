@@ -42,9 +42,7 @@ class InvalidInstance:
 class RemovedInstance:
     """Object which is returned by a NoneFilter if an Invalid instance was removed."""
 
-    def __init__(
-        self, filter_element_id: str, message: Optional[str] = None
-    ) -> None:
+    def __init__(self, filter_element_id: str, message: Optional[str] = None) -> None:
         """Initialize RemovedInstance.
 
         Parameters

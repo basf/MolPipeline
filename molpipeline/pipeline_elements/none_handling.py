@@ -490,7 +490,10 @@ class NoneFiller(ABCPipelineElement):
         Any
             Transformed value.
         """
-        if isinstance(value, RemovedInstance) and value.filter_element_id == self.none_filter.uuid:
+        if (
+            isinstance(value, RemovedInstance)
+            and value.filter_element_id == self.none_filter.uuid
+        ):
             return self.fill_value
         return value
 
