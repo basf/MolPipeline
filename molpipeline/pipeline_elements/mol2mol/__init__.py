@@ -4,22 +4,22 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_reaction import (
     MolToMolReactionPipelineElement,
 )
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
-    MetalDisconnectorPipelineElement,
     ChargeParentPipelineElement,
+    DeduplicateFragmentsBySmilesElement,
+    DeduplicateFragmentsByInchiElement,
+    MetalDisconnectorPipelineElement,
     RemoveStereoInformationPipelineElement,
     SaltRemoverPipelineElement,
     UnchargePipelineElement,
-    DeduplicateFragmentsBySmilesElement,
-    DeduplicateFragmentsByInchiElement,
 )
 
 __all__ = (
     "ChargeParentPipelineElement",
-    "MolToMolReactionPipelineElement",
+    "DeduplicateFragmentsBySmilesElement",
+    "DeduplicateFragmentsByInchiElement",
     "MetalDisconnectorPipelineElement",
+    "MolToMolReactionPipelineElement",
     "RemoveStereoInformationPipelineElement",
     "SaltRemoverPipelineElement",
     "UnchargePipelineElement",
-    "DeduplicateFragmentsBySmilesElement",
-    "DeduplicateFragmentsByInchiElement",
 )
