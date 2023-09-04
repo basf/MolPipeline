@@ -16,6 +16,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     MetalDisconnectorPipelineElement,
     RemoveStereoInformationPipelineElement,
     SaltRemoverPipelineElement,
+    SolventRemoverPipelineElement,
     UnchargePipelineElement,
 )
 
@@ -31,5 +32,6 @@ __all__ = (
     "MolToMolReactionPipelineElement",
     "RemoveStereoInformationPipelineElement",
     "SaltRemoverPipelineElement",
+    "SolventRemoverPipelineElement",
     "UnchargePipelineElement",
 )

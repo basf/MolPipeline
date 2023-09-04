@@ -5,6 +5,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
     DeduplicateFragmentsBySmilesPipelineElement,
     DeduplicateFragmentsByInchiPipelineElement,
+    SolventRemoverPipelineElement,
     LargestFragmentChooserPipelineElement,
     MetalDisconnectorPipelineElement,
     RemoveStereoInformationPipelineElement,
@@ -159,6 +160,52 @@ class MolStandardizationTest(unittest.TestCase):
             [
                 ("smi2mol", smi2mol),
                 ("largest_fragment_chooser", largest_fragment_chooser),
+                ("mol2smi", mol2smi),
+            ]
+        )
+        mols_processed = pipeline.fit_transform(mol_list)
+        self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
+
+    def test_solvent_removal_pipeline_element(self) -> None:
+        """Test if solvent removal pipeline element works as expected.
+
+        Returns
+        -------
+        None
+        """
+
+        mol_list = [
+            "[OH2].c1ccccc1",
+            "ClCCl.c1ccccc1",
+            "ClC(Cl)Cl.c1ccccc1",
+            "CCOC(=O)C.c1ccccc1",
+            "CO.c1ccccc1",
+            "CC(C)O.c1ccccc1",
+            "CC(=O)C.c1ccccc1",
+            "CS(=O)C.c1ccccc1",
+            "CCO.c1ccccc1",
+            "[OH2].ClCCl.ClC(Cl)Cl.CCOC(=O)C.CO.CC(C)O.CC(=O)C.CS(=O)C.CCO.c1ccccc1",
+        ]
+        expected_largest_fragment_smiles_list = [
+            "c1ccccc1",
+            "c1ccccc1",
+            "c1ccccc1",
+            "c1ccccc1",
+            "c1ccccc1",
+            "c1ccccc1",
+            "c1ccccc1",
+            "c1ccccc1",
+            "c1ccccc1",
+            "c1ccccc1",
+        ]
+
+        smi2mol = SmilesToMolPipelineElement()
+        fragment_remover = SolventRemoverPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("fragment_remover", fragment_remover),
                 ("mol2smi", mol2smi),
             ]
         )

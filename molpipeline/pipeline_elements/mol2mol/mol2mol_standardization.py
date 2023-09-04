@@ -1,7 +1,12 @@
 """Classes for standardizing molecules."""
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
+
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 
 from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
@@ -168,6 +173,116 @@ class DeduplicateFragmentsBySmilesPipelineElement(_MolToMolPipelineElement):
             combined_fragments = unique_fragments[0]
         else:
             combined_fragments = Chem.CombineMols(*unique_fragments)
+        for key, value in value.GetPropsAsDict(includeComputed=False).items():
+            combined_fragments.SetProp(key, value)
+        return combined_fragments
+
+
+class SolventRemoverPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes defined fragments from a molecule."""
+
+    solvent_smiles_list: list[str]
+    _solvent_mol_list: list[RDKitMol]
+
+    def __init__(
+        self,
+        solvent_smiles_list: Optional[list[str]] = None,
+        name: str = "SolventRemoverPipelineElement",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize SolventRemoverPipelineElement.
+
+        Taken from ChEMBL structure pipeline:
+        https://github.com/chembl/ChEMBL_Structure_Pipeline/blob/master/chembl_structure_pipeline/data/solvents.smi
+
+        Parameters
+        ----------
+        solvent_smiles_list: list[str], optional
+            List of SMILES of fragments to remove, by default None which uses the default solvent list:
+             - WATER	[OH2]
+             - DICHLOROMETHANE	ClCCl
+             - TRICHLOROMETHANE	ClC(Cl)Cl
+             - ETHYL ACETATE	CCOC(=O)C
+             - METHANOL	CO
+             - PROPAN-2-OL	CC(C)O
+             - ACETONE	CC(=O)C
+             - DMSO	CS(=O)C
+             - ETHANOL	CCO
+        name: str, optional (default: "SolventRemoverPipelineElement")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+        """
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        if solvent_smiles_list is None:
+            solvent_smiles_list = [
+                "[OH2]",
+                "ClCCl",
+                "ClC(Cl)Cl",
+                "CCOC(=O)C",
+                "CO",
+                "CC(C)O",
+                "CC(=O)C",
+                "CS(=O)C",
+                "CCO",
+            ]
+        self.solvent_smiles_list = solvent_smiles_list
+        self._solvent_mol_list = [
+            Chem.MolFromSmiles(smiles) for smiles in solvent_smiles_list
+        ]
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Return parameters of pipeline element."""
+        params = super().get_params(deep=deep)
+        params["solvent_smiles_list"] = self.solvent_smiles_list
+        return params
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """Set parameters of pipeline element."""
+        param_copy = dict(parameters)
+        solvent_smiles_list = param_copy.pop("solvent_smiles_list", None)
+        if solvent_smiles_list is not None:
+            self.solvent_smiles_list = solvent_smiles_list
+            self._solvent_mol_list = [
+                Chem.MolFromSmiles(smiles) for smiles in solvent_smiles_list
+            ]
+        super().set_params(param_copy)
+        return self
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Remove all fragments from molecule.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to remove fragments from.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule without fragments if possible, else InvalidInstance.
+        """
+        kept_fragments = []
+        for fragment in Chem.GetMolFrags(value, asMols=True):
+            n_atoms_f = fragment.GetNumAtoms()
+            n_bonds_f = fragment.GetNumBonds()
+            for solvent_mol in self._solvent_mol_list:
+                if (
+                    n_atoms_f == solvent_mol.GetNumAtoms()
+                    and n_bonds_f == solvent_mol.GetNumBonds()
+                    and fragment.HasSubstructMatch(solvent_mol)
+                ):
+                    break  # if it matches, stop searching
+            else:  # no break: no match
+                kept_fragments.append(fragment)
+        if len(kept_fragments) == 0:
+            return InvalidInstance(self.uuid, "All fragments were removed.")
+        if len(kept_fragments) == 1:
+            combined_fragments = kept_fragments[0]
+        else:
+            combined_fragments = Chem.CombineMols(*kept_fragments)
         for key, value in value.GetPropsAsDict(includeComputed=False).items():
             combined_fragments.SetProp(key, value)
         return combined_fragments
