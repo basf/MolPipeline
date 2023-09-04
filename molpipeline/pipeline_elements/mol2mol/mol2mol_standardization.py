@@ -45,48 +45,6 @@ class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
         return enumerator.Canonicalize(value)
 
 
-class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
-
-    def __init__(
-        self,
-        name: str = "MetalDisconnectorPipe",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize MetalDisconnectorPipelineElement.
-
-        Parameters
-        ----------
-        name: str
-            Name of PipelineElement
-        n_jobs: int
-            Number of jobs to use for parallelization
-        uuid: Optional[str], optional
-            uuid of PipelineElement, by default None
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
-    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Cleave bonds with metals.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            Molecule to disconnect metals from.
-
-        Returns
-        -------
-        OptionalMol
-            Molecule without bonds to metals if possible, else InvalidInstance.
-        """
-        mol = rdMolStandardize.MetalDisconnector().Disconnect(value)
-        if mol is not None:
-            # sometimes the molecule is not sanitized after disconnecting, e.g. RingInfo is not updated.
-            SanitizeMol(mol)
-        return mol
-
-
 class ChargeParentPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which returns charge-parent of a molecule, if possible."""
 
@@ -213,6 +171,48 @@ class DeduplicateFragmentsByInchiElement(_MolToMolPipelineElement):
         for key, value in value.GetPropsAsDict(includeComputed=False).items():
             combined_fragments.SetProp(key, value)
         return combined_fragments
+
+
+class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
+
+    def __init__(
+        self,
+        name: str = "MetalDisconnectorPipe",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize MetalDisconnectorPipelineElement.
+
+        Parameters
+        ----------
+        name: str
+            Name of PipelineElement
+        n_jobs: int
+            Number of jobs to use for parallelization
+        uuid: Optional[str], optional
+            uuid of PipelineElement, by default None
+        """
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Cleave bonds with metals.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to disconnect metals from.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule without bonds to metals if possible, else InvalidInstance.
+        """
+        mol = rdMolStandardize.MetalDisconnector().Disconnect(value)
+        if mol is not None:
+            # sometimes the molecule is not sanitized after disconnecting, e.g. RingInfo is not updated.
+            SanitizeMol(mol)
+        return mol
 
 
 class RemoveStereoInformationPipelineElement(_MolToMolPipelineElement):
