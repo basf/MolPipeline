@@ -25,7 +25,7 @@ from sklearn.utils import (
     _print_elapsed_time,
 )
 from sklearn.utils.validation import check_memory
-
+from rdkit.rdBase import BlockLogs
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
@@ -414,6 +414,7 @@ class _MolPipeline:
         Any
             Transformed molecular representations.
         """
+        log_block = BlockLogs()
         agg_filter = self._filter_elements_agg
         for filter_element in self._filter_elements:
             filter_element.none_indices = []
@@ -434,6 +435,7 @@ class _MolPipeline:
                 else:
                     yield transformed_value
         self._finish()
+        del log_block
 
     def co_transform(self, x_input: NumberIterable) -> NumberIterable:
         """Filter flagged rows from the input.
