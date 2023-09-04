@@ -96,6 +96,96 @@ class ChargeParentPipelineElement(_MolToMolPipelineElement):
         return rdMolStandardize.ChargeParent(value)
 
 
+class DeduplicateFragmentsBySmilesElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes duplicate fragments from a molecule.
+
+    Duplicates are detected by comparing the SMILES of the fragments.
+    """
+
+    def __int__(
+        self,
+        name: str = "UniqueFragmentsBySmiles",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize UniqueFragmentsBySmilesElement."""
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Remove duplicate fragments from molecule.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to remove duplicate fragments from.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule without duplicate fragments if possible, else InvalidInstance.
+        """
+        fragments = Chem.GetMolFrags(value, asMols=True)
+        fragment_smiles = [Chem.MolToSmiles(fragment) for fragment in fragments]
+        unique_fragment_list = sorted(set(fragment_smiles))
+        unique_fragments = [
+            Chem.MolFromSmiles(smiles) for smiles in unique_fragment_list
+        ]
+        if None in unique_fragments:
+            return InvalidInstance(
+                self.uuid, "Could not recreate molecule from SMILES."
+            )
+        if len(unique_fragments) == 1:
+            combined_fragments = unique_fragments[0]
+        else:
+            combined_fragments = Chem.CombineMols(*unique_fragments)
+        for key, value in value.GetPropsAsDict(includeComputed=False).items():
+            combined_fragments.SetProp(key, value)
+        return combined_fragments
+
+
+class DeduplicateFragmentsByInchiElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes duplicate fragments from a molecule.
+
+    Duplicates are detected by comparing the InChI of the fragments.
+    """
+
+    def __int__(
+        self,
+        name: str = "UniqueFragmentsByInchi",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize UniqueFragmentsByInchiElement."""
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Remove duplicate fragments from molecule.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to remove duplicate fragments from.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule without duplicate fragments if possible, else InvalidInstance.
+        """
+        fragments = Chem.GetMolFrags(value, asMols=True)
+        fragment_inchis = [Chem.MolToInchi(fragment) for fragment in fragments]
+        unique_fragment_list = sorted(set(fragment_inchis))
+        unique_fragments = [Chem.MolFromInchi(inchi) for inchi in unique_fragment_list]
+        if None in unique_fragments:
+            return InvalidInstance(self.uuid, "Could not recreate molecule from InChI.")
+        if len(unique_fragments) == 1:
+            combined_fragments = unique_fragments[0]
+        else:
+            combined_fragments = Chem.CombineMols(*unique_fragments)
+        for key, value in value.GetPropsAsDict(includeComputed=False).items():
+            combined_fragments.SetProp(key, value)
+        return combined_fragments
+
+
 class RemoveStereoInformationPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes stereo-information from the molecule."""
 
@@ -201,93 +291,3 @@ class UnchargePipelineElement(_MolToMolPipelineElement):
             Uncharged molecule if possible, else InvalidInstance.
         """
         return rdMolStandardize.Uncharger().uncharge(value)
-
-
-class DeduplicateFragmentsBySmilesElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes duplicate fragments from a molecule.
-
-    Duplicates are detected by comparing the SMILES of the fragments.
-    """
-
-    def __int__(
-        self,
-        name: str = "UniqueFragmentsBySmiles",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize UniqueFragmentsBySmilesElement."""
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
-    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Remove duplicate fragments from molecule.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            Molecule to remove duplicate fragments from.
-
-        Returns
-        -------
-        OptionalMol
-            Molecule without duplicate fragments if possible, else InvalidInstance.
-        """
-        fragments = Chem.GetMolFrags(value, asMols=True)
-        fragment_smiles = [Chem.MolToSmiles(fragment) for fragment in fragments]
-        unique_fragment_list = sorted(set(fragment_smiles))
-        unique_fragments = [
-            Chem.MolFromSmiles(smiles) for smiles in unique_fragment_list
-        ]
-        if None in unique_fragments:
-            return InvalidInstance(
-                self.uuid, "Could not recreate molecule from SMILES."
-            )
-        if len(unique_fragments) == 1:
-            combined_fragments = unique_fragments[0]
-        else:
-            combined_fragments = Chem.CombineMols(*unique_fragments)
-        for key, value in value.GetPropsAsDict(includeComputed=False).items():
-            combined_fragments.SetProp(key, value)
-        return combined_fragments
-
-
-class DeduplicateFragmentsByInchiElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes duplicate fragments from a molecule.
-
-    Duplicates are detected by comparing the InChI of the fragments.
-    """
-
-    def __int__(
-        self,
-        name: str = "UniqueFragmentsByInchi",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize UniqueFragmentsByInchiElement."""
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
-    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Remove duplicate fragments from molecule.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            Molecule to remove duplicate fragments from.
-
-        Returns
-        -------
-        OptionalMol
-            Molecule without duplicate fragments if possible, else InvalidInstance.
-        """
-        fragments = Chem.GetMolFrags(value, asMols=True)
-        fragment_inchis = [Chem.MolToInchi(fragment) for fragment in fragments]
-        unique_fragment_list = sorted(set(fragment_inchis))
-        unique_fragments = [Chem.MolFromInchi(inchi) for inchi in unique_fragment_list]
-        if None in unique_fragments:
-            return InvalidInstance(self.uuid, "Could not recreate molecule from InChI.")
-        if len(unique_fragments) == 1:
-            combined_fragments = unique_fragments[0]
-        else:
-            combined_fragments = Chem.CombineMols(*unique_fragments)
-        for key, value in value.GetPropsAsDict(includeComputed=False).items():
-            combined_fragments.SetProp(key, value)
-        return combined_fragments
