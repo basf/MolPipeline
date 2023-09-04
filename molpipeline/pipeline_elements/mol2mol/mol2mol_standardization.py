@@ -397,7 +397,9 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
         """
         params = super().get_params(deep=deep)
         if deep:
-            params["solvent_smiles_list"] = [str(smi) for smi in self.solvent_smiles_list]
+            params["solvent_smiles_list"] = [
+                str(smi) for smi in self.solvent_smiles_list
+            ]
         else:
             params["solvent_smiles_list"] = self.solvent_smiles_list
         return params
