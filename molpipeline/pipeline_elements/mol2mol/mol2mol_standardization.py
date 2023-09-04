@@ -203,7 +203,7 @@ class UnchargePipelineElement(_MolToMolPipelineElement):
         return rdMolStandardize.Uncharger().uncharge(value)
 
 
-class UniqueFragmentsBySmilesElement(_MolToMolPipelineElement):
+class DeduplicateFragmentsBySmilesElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes duplicate fragments from a molecule.
 
     Duplicates are detected by comparing the SMILES of the fragments.
@@ -250,7 +250,7 @@ class UniqueFragmentsBySmilesElement(_MolToMolPipelineElement):
         return combined_fragments
 
 
-class UniqueFragmentsByInchiElement(_MolToMolPipelineElement):
+class DeduplicateFragmentsByInchiElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes duplicate fragments from a molecule.
 
     Duplicates are detected by comparing the InChI of the fragments.

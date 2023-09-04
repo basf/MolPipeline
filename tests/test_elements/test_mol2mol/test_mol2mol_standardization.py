@@ -4,8 +4,8 @@ from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipeline
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     RemoveStereoInformationPipelineElement,
     MetalDisconnectorPipelineElement,
-    UniqueFragmentsBySmilesElement,
-    UniqueFragmentsByInchiElement,
+    DeduplicateFragmentsBySmilesElement,
+    DeduplicateFragmentsByInchiElement,
 )
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 
@@ -76,7 +76,7 @@ class MolStandardizationTest(unittest.TestCase):
         expected_unique_fragment_smiles_list = ["C.CC", "c1ccccc1"]
 
         smi2mol = SmilesToMolPipelineElement()
-        unique_fragments = UniqueFragmentsBySmilesElement()
+        unique_fragments = DeduplicateFragmentsBySmilesElement()
         mol2smi = MolToSmilesPipelineElement()
         pipeline = Pipeline(
             [
@@ -102,7 +102,7 @@ class MolStandardizationTest(unittest.TestCase):
         expected_unique_fragment_smiles_list = ["C.CC", "c1ccccc1"]
 
         smi2mol = SmilesToMolPipelineElement()
-        unique_fragments = UniqueFragmentsByInchiElement()
+        unique_fragments = DeduplicateFragmentsByInchiElement()
         mol2smi = MolToSmilesPipelineElement()
         pipeline = Pipeline(
             [
