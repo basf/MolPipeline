@@ -16,6 +16,35 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.utils.molpipeline_types import OptionalMol
 
 
+class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which canonicalizes tautomers of a molecule."""
+
+    def __init__(
+        self,
+        name: str = "CanonicalizeTautomerPipelineElement",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize CanonicalizeTautomerPipelineElement."""
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Canonicalize tautomers of molecule.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to canonicalize tautomers from.
+
+        Returns
+        -------
+        OptionalMol
+            Canonicalized molecule if possible, else InvalidInstance.
+        """
+        enumerator = rdMolStandardize.TautomerEnumerator()
+        return enumerator.Canonicalize(value)
+
+
 class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
 
@@ -291,32 +320,3 @@ class UnchargePipelineElement(_MolToMolPipelineElement):
             Uncharged molecule if possible, else InvalidInstance.
         """
         return rdMolStandardize.Uncharger().uncharge(value)
-
-
-class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which canonicalizes tautomers of a molecule."""
-
-    def __init__(
-        self,
-        name: str = "CanonicalizeTautomerPipelineElement",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize CanonicalizeTautomerPipelineElement."""
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
-    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Canonicalize tautomers of molecule.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            Molecule to canonicalize tautomers from.
-
-        Returns
-        -------
-        OptionalMol
-            Canonicalized molecule if possible, else InvalidInstance.
-        """
-        enumerator = rdMolStandardize.TautomerEnumerator()
-        return enumerator.Canonicalize(value)
