@@ -2,6 +2,7 @@ import unittest
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
+    CanonicalizeTautomerPipelineElement,
     RemoveStereoInformationPipelineElement,
     MetalDisconnectorPipelineElement,
     DeduplicateFragmentsBySmilesElement,
@@ -63,7 +64,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(mols_processed[0].GetRingInfo().NumRings(), 1)
 
     def test_duplicate_fragment_by_smiles_removal(self) -> None:
-        """Test metal disconnector returns valid molecules containing ring info.
+        """Test if duplicate fragements are correctly removed by DeduplicateFragmentsBySmilesElement.
 
         Returns
         -------
@@ -89,7 +90,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(expected_unique_fragment_smiles_list, mols_processed)
 
     def test_duplicate_fragment_by_inchi_removal(self) -> None:
-        """Test metal disconnector returns valid molecules containing ring info.
+        """Test if duplicate fragements are correctly removed by DeduplicateFragmentsByInchiElement.
 
         Returns
         -------
@@ -113,6 +114,34 @@ class MolStandardizationTest(unittest.TestCase):
         )
         mols_processed = pipeline.fit_transform(duplicate_fragment_smiles_lust)
         self.assertEqual(expected_unique_fragment_smiles_list, mols_processed)
+
+    def test_tautomer_canonicalization(self) -> None:
+        """Test if correct tautomers are generated.
+
+        Returns
+        -------
+        None
+        """
+        non_canonical_tautomer_list = [
+            "Oc1c(cccc3)c3nc2ccncc12",
+            "CN=c1nc[nH]cc1",
+        ]
+        canonical_tautomer_list = [
+            "O=c1c2ccccc2[nH]c2ccncc12",
+            "CNc1ccncn1"]
+
+        smi2mol = SmilesToMolPipelineElement()
+        canonical_tautomer = CanonicalizeTautomerPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("canonical_tautomer", canonical_tautomer),
+                ("mol2smi", mol2smi),
+            ]
+        )
+        mols_processed = pipeline.fit_transform(non_canonical_tautomer_list)
+        self.assertEqual(canonical_tautomer_list, mols_processed)
 
 
 if __name__ == "__main__":
