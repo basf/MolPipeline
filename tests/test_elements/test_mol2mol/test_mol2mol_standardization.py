@@ -3,10 +3,11 @@ from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
-    RemoveStereoInformationPipelineElement,
-    MetalDisconnectorPipelineElement,
     DeduplicateFragmentsBySmilesPipelineElement,
     DeduplicateFragmentsByInchiPipelineElement,
+    LargestFragmentChooserPipelineElement,
+    MetalDisconnectorPipelineElement,
+    RemoveStereoInformationPipelineElement,
 )
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 
@@ -140,6 +141,29 @@ class MolStandardizationTest(unittest.TestCase):
         )
         mols_processed = pipeline.fit_transform(non_canonical_tautomer_list)
         self.assertEqual(canonical_tautomer_list, mols_processed)
+
+    def test_largest_fragment_chooser_element(self) -> None:
+        """Test if largest fragment chooser element works as expected.
+
+        Returns
+        -------
+        None
+        """
+        mol_list = ["CCC.CC.C", "c1ccccc1.[Na+].[Cl-]"]
+        expected_largest_fragment_smiles_list = ["CCC", "c1ccccc1"]
+
+        smi2mol = SmilesToMolPipelineElement()
+        largest_fragment_chooser = LargestFragmentChooserPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("largest_fragment_chooser", largest_fragment_chooser),
+                ("mol2smi", mol2smi),
+            ]
+        )
+        mols_processed = pipeline.fit_transform(mol_list)
+        self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
 
 
 if __name__ == "__main__":

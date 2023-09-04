@@ -173,6 +173,34 @@ class DeduplicateFragmentsBySmilesPipelineElement(_MolToMolPipelineElement):
         return combined_fragments
 
 
+class LargestFragmentChooserPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which returns the largest fragment of a molecule."""
+
+    def __init__(
+        self,
+        name: str = "LargestFragmentChooserPipelineElement",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize LargestFragmentChooserPipelineElement."""
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Return largest fragment of molecule.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to remove charges from.
+
+        Returns
+        -------
+        OptionalMol
+            Largest fragment of molecule if possible, else InvalidInstance.
+        """
+        return rdMolStandardize.LargestFragmentChooser().choose(value)
+
+
 class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
 
