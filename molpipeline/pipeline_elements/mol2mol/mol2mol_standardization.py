@@ -383,13 +383,38 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
         ]
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Return parameters of pipeline element."""
+        """Return parameters of pipeline element.
+
+        Parameters
+        ----------
+        deep: bool, optional (default: True)
+            If True, return a deep copy of the parameters, else only a shallow copy.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters of pipeline element.
+        """
         params = super().get_params(deep=deep)
-        params["solvent_smiles_list"] = self.solvent_smiles_list
+        if deep:
+            params["solvent_smiles_list"] = [str(smi) for smi in self.solvent_smiles_list]
+        else:
+            params["solvent_smiles_list"] = self.solvent_smiles_list
         return params
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
-        """Set parameters of pipeline element."""
+        """Set parameters of pipeline element.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameters to set.
+
+        Returns
+        -------
+        Self
+            Pipeline element with set parameters.
+        """
         param_copy = dict(parameters)
         solvent_smiles_list = param_copy.pop("solvent_smiles_list", None)
         if solvent_smiles_list is not None:
