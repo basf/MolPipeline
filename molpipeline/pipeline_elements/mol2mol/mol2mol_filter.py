@@ -3,6 +3,8 @@
 from __future__ import annotations
 from typing import Optional
 
+from rdkit import Chem
+
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
     InvalidInstance,
@@ -16,7 +18,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
     def __init__(
         self,
         allowed_element_numbers: Optional[list[int]] = None,
-        name: str = "ElementFilterPipe",
+        name: str = "ElementFilterPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
@@ -27,14 +29,12 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         allowed_element_numbers: list[int]
             List of atomic numbers of elements to allowed in molecules. Per default allowed elements are:
             H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
-        none_handling: NoneHandlingOptions, optional (default: "raise")
-            How to handle None values in the input data.
-        fill_value: Any, optional (default: None)
-            Value to fill None values with.
         name: str, optional (default: "ElementFilterPipe")
             Name of the pipeline element.
         n_jobs: int, optional (default: 1)
             Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            Unique identifier of the pipeline element.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if allowed_element_numbers is None:
@@ -74,5 +74,49 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
             return InvalidInstance(
                 self.uuid,
                 f"Molecule contains following forbidden elements: {forbidden_elements}",
+            )
+        return value
+
+
+class MixtureFilterPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes molecules composed of multiple fragments."""
+
+    def __int__(
+        self,
+        name: str = "MixtureFilterPipelineElement",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize MixtureFilterPipelineElement.
+
+        Parameters
+        ----------
+        name: str, optional (default: "MixtureFilterPipe")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            Unique identifier of the pipeline element.
+        """
+        super().__init__(name=name, n_jobs=n_jobs)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Invalidate molecule containing multiple fragments.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to check.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule if it contains only one fragment, else InvalidInstance.
+        """
+        fragments = Chem.GetMolFrags(value)
+        if len(fragments) > 1:
+            return InvalidInstance(
+                self.uuid,
+                f"Molecule contains multiple fragments: {fragments}",
             )
         return value

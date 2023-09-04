@@ -5,6 +5,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_reaction import (
 )
 from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
     ElementFilterPipelineElement,
+    MixtureFilterPipelineElement,
 )
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
@@ -26,6 +27,7 @@ __all__ = (
     "ElementFilterPipelineElement",
     "LargestFragmentChooserPipelineElement",
     "MetalDisconnectorPipelineElement",
+    "MixtureFilterPipelineElement",
     "MolToMolReactionPipelineElement",
     "RemoveStereoInformationPipelineElement",
     "SaltRemoverPipelineElement",
