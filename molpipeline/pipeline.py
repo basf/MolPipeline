@@ -335,7 +335,9 @@ class _MolPipeline:
                     none_filter.none_indices.append(new_idx)
             none_filter.n_total = len(iter_idx_array)
             iter_idx_array = none_filter.co_transform(iter_idx_array)
-        none_filler_list = [ele for ele in self._element_list if isinstance(ele, NoneFiller)]
+        none_filler_list = [
+            ele for ele in self._element_list if isinstance(ele, NoneFiller)
+        ]
         for none_filler in none_filler_list:
             none_filler.select_none_filter(self._filter_elements)
             iter_input = none_filler.transform(iter_input)

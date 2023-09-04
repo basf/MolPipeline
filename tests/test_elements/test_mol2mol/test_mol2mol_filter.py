@@ -82,9 +82,7 @@ class MolFilterTest(unittest.TestCase):
         smi2mol = SmilesToMolPipelineElement()
         mixture_filter = MixtureFilterPipelineElement()
         mol2smi = MolToSmilesPipelineElement()
-        none_filter = NoneFilter.from_element_list(
-            [smi2mol, mixture_filter, mol2smi]
-        )
+        none_filter = NoneFilter.from_element_list([smi2mol, mixture_filter, mol2smi])
         none_filler = NoneFiller.from_none_filter(none_filter, None)
 
         pipeline = Pipeline(
