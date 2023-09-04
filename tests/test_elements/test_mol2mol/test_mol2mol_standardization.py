@@ -85,9 +85,7 @@ class MolStandardizationTest(unittest.TestCase):
                 ("mol2smi", mol2smi),
             ]
         )
-        mols_processed = pipeline.fit_transform(
-            duplicate_fragment_smiles_lust
-        )
+        mols_processed = pipeline.fit_transform(duplicate_fragment_smiles_lust)
         self.assertEqual(expected_unique_fragment_smiles_list, mols_processed)
 
     def test_duplicate_fragment_by_inchi_removal(self) -> None:
@@ -113,9 +111,7 @@ class MolStandardizationTest(unittest.TestCase):
                 ("mol2smi", mol2smi),
             ]
         )
-        mols_processed = pipeline.fit_transform(
-            duplicate_fragment_smiles_lust
-        )
+        mols_processed = pipeline.fit_transform(duplicate_fragment_smiles_lust)
         self.assertEqual(expected_unique_fragment_smiles_list, mols_processed)
 
 

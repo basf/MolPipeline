@@ -208,7 +208,13 @@ class UniqueFragmentsBySmilesElement(_MolToMolPipelineElement):
 
     Duplicates are detected by comparing the SMILES of the fragments.
     """
-    def __int__(self, name: str = "UniqueFragmentsBySmiles", n_jobs: int = 1, uuid: Optional[str] = None) -> None:
+
+    def __int__(
+        self,
+        name: str = "UniqueFragmentsBySmiles",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
         """Initialize UniqueFragmentsBySmilesElement."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
@@ -228,9 +234,13 @@ class UniqueFragmentsBySmilesElement(_MolToMolPipelineElement):
         fragments = Chem.GetMolFrags(value, asMols=True)
         fragment_smiles = [Chem.MolToSmiles(fragment) for fragment in fragments]
         unique_fragment_list = sorted(set(fragment_smiles))
-        unique_fragments = [Chem.MolFromSmiles(smiles) for smiles in unique_fragment_list]
+        unique_fragments = [
+            Chem.MolFromSmiles(smiles) for smiles in unique_fragment_list
+        ]
         if None in unique_fragments:
-            return InvalidInstance(self.uuid, "Could not recreate molecule from SMILES.")
+            return InvalidInstance(
+                self.uuid, "Could not recreate molecule from SMILES."
+            )
         if len(unique_fragments) == 1:
             combined_fragments = unique_fragments[0]
         else:
@@ -245,7 +255,13 @@ class UniqueFragmentsByInchiElement(_MolToMolPipelineElement):
 
     Duplicates are detected by comparing the InChI of the fragments.
     """
-    def __int__(self, name: str = "UniqueFragmentsByInchi", n_jobs: int = 1, uuid: Optional[str] = None) -> None:
+
+    def __int__(
+        self,
+        name: str = "UniqueFragmentsByInchi",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
         """Initialize UniqueFragmentsByInchiElement."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
