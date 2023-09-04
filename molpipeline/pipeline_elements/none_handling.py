@@ -252,7 +252,7 @@ class NoneFilter(ABCPipelineElement):
         """
         if self.check_removal(value):
             return RemovedInstance(
-                filter_element=self, message=value.message  # type: ignore
+                filter_element_id=self.uuid, message=value.message  # type: ignore
             )
         return value
 
@@ -308,7 +308,7 @@ class _MultipleNoneFilter:
             raise TypeError(f"Unexpected Type: {type(value)}")
 
         for none_filter in self.none_filter_list:
-            if value.filter_element is none_filter:
+            if value.filter_element_id == none_filter.uuid:
                 new_index = index
                 for prior_remover in self.prior_remover_dict[none_filter]:
                     new_index -= len(prior_remover.none_indices)
@@ -316,7 +316,7 @@ class _MultipleNoneFilter:
                 break
         else:
             raise ValueError(
-                f"Invalid instance not captured by any NoneFilter: {value.filter_element}"
+                f"Invalid instance not captured by any NoneFilter: {value.filter_element_id}"
             )
 
 
@@ -490,7 +490,7 @@ class NoneFiller(ABCPipelineElement):
         Any
             Transformed value.
         """
-        if isinstance(value, RemovedInstance) and value.filter_element == self:
+        if isinstance(value, RemovedInstance) and value.filter_element_id == self.none_filter.uuid:
             return self.fill_value
         return value
 

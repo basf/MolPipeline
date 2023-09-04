@@ -3,7 +3,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import Any, Iterable, Optional, Union, TYPE_CHECKING
+from typing import Any, Iterable, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -16,9 +16,6 @@ import numpy as np
 from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
-
-if TYPE_CHECKING:  # Avoid circular imports
-    from molpipeline.pipeline_elements.none_handling import NoneFilter
 
 
 class InvalidInstance:
@@ -46,13 +43,13 @@ class RemovedInstance:
     """Object which is returned by a NoneFilter if an Invalid instance was removed."""
 
     def __init__(
-        self, filter_element: NoneFilter, message: Optional[str] = None
+        self, filter_element_id: str, message: Optional[str] = None
     ) -> None:
         """Initialize RemovedInstance.
 
         Parameters
         ----------
-        filter_element: NoneFilter
+        filter_element: str
             FilterElement which removed the molecule.
         message: Optional[str]
             Optional message why the molecule was removed.
@@ -61,7 +58,7 @@ class RemovedInstance:
         -------
         None
         """
-        self.filter_element = filter_element
+        self.filter_element_id = filter_element_id
         self.message = message
 
 
