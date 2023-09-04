@@ -83,7 +83,7 @@ class ChargeParentPipelineElement(_MolToMolPipelineElement):
         return rdMolStandardize.ChargeParent(value)
 
 
-class DeduplicateFragmentsBySmilesElement(_MolToMolPipelineElement):
+class DeduplicateFragmentsBySmilesPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes duplicate fragments from a molecule.
 
     Duplicates are detected by comparing the SMILES of the fragments.
@@ -91,11 +91,11 @@ class DeduplicateFragmentsBySmilesElement(_MolToMolPipelineElement):
 
     def __int__(
         self,
-        name: str = "UniqueFragmentsBySmiles",
+        name: str = "DeduplicateFragmentsBySmilesPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize UniqueFragmentsBySmilesElement."""
+        """Initialize DeduplicateFragmentsBySmilesPipelineElement."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -130,7 +130,7 @@ class DeduplicateFragmentsBySmilesElement(_MolToMolPipelineElement):
         return combined_fragments
 
 
-class DeduplicateFragmentsByInchiElement(_MolToMolPipelineElement):
+class DeduplicateFragmentsByInchiPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes duplicate fragments from a molecule.
 
     Duplicates are detected by comparing the InChI of the fragments.
@@ -138,11 +138,11 @@ class DeduplicateFragmentsByInchiElement(_MolToMolPipelineElement):
 
     def __int__(
         self,
-        name: str = "UniqueFragmentsByInchi",
+        name: str = "DeduplicateFragmentsByInchiPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize UniqueFragmentsByInchiElement."""
+        """Initialize DeduplicateFragmentsByInchiPipelineElement."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:

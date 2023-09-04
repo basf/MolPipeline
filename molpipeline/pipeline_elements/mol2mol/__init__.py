@@ -9,8 +9,8 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
     ChargeParentPipelineElement,
-    DeduplicateFragmentsBySmilesElement,
-    DeduplicateFragmentsByInchiElement,
+    DeduplicateFragmentsBySmilesPipelineElement,
+    DeduplicateFragmentsByInchiPipelineElement,
     MetalDisconnectorPipelineElement,
     RemoveStereoInformationPipelineElement,
     SaltRemoverPipelineElement,
@@ -20,8 +20,8 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
 __all__ = (
     "CanonicalizeTautomerPipelineElement",
     "ChargeParentPipelineElement",
-    "DeduplicateFragmentsBySmilesElement",
-    "DeduplicateFragmentsByInchiElement",
+    "DeduplicateFragmentsBySmilesPipelineElement",
+    "DeduplicateFragmentsByInchiPipelineElement",
     "ElementFilterPipelineElement",
     "MetalDisconnectorPipelineElement",
     "MolToMolReactionPipelineElement",
