@@ -70,7 +70,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         """
         unique_elements = set(atom.GetAtomicNum() for atom in value.GetAtoms())
         if not unique_elements.issubset(self.allowed_element_numbers):
-            forbidden_elements = self.allowed_element_numbers - unique_elements
+            forbidden_elements = unique_elements - self.allowed_element_numbers
             return InvalidInstance(
                 self.uuid,
                 f"Molecule contains following forbidden elements: {forbidden_elements}",
