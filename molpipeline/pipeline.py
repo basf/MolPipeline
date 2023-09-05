@@ -26,9 +26,11 @@ from sklearn.utils import (
 )
 from sklearn.utils.validation import check_memory
 from rdkit.rdBase import BlockLogs
+from rdkit.Chem.rdchem import MolSanitizeException
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
+    InvalidInstance,
     RemovedInstance,
     TransformingPipelineElement,
 )
@@ -346,7 +348,15 @@ class _MolPipeline:
     def transform_single(self, input_value: Any) -> Any:
         iter_value = input_value
         for p_element in self._element_list:
-            iter_value = p_element.transform_single(iter_value)
+            try:
+                iter_value = p_element.transform_single(iter_value)
+            except MolSanitizeException as err:
+                return InvalidInstance(
+                    p_element.uuid,
+                    f"RDKit MolSanitizeException: {err.args}",
+                    p_element.name,
+                )
+
         return iter_value
 
     def pretransform(self, x_input: Any) -> Any:
