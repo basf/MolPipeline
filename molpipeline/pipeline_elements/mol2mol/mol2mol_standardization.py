@@ -152,7 +152,7 @@ class DeduplicateFragmentsBySmilesPipelineElement(_MolToMolPipelineElement):
     Duplicates are detected by comparing the SMILES of the fragments.
     """
 
-    def __int__(
+    def __init__(
         self,
         name: str = "DeduplicateFragmentsBySmilesPipelineElement",
         n_jobs: int = 1,
