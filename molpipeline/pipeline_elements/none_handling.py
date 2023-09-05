@@ -1,7 +1,7 @@
 """Classes and functions for detecting and handling None values."""
 from __future__ import annotations
 
-from typing import Any, Iterable, Optional, TypeVar
+from typing import Any, Iterable, Optional
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -18,13 +18,9 @@ from molpipeline.abstract_pipeline_elements.core import (
 )
 from molpipeline.utils.molpipeline_types import (
     AnyIterable,
-    AnyType,
     AnyNumpyElement,
     Number,
 )
-
-
-_T = TypeVar("_T")
 
 
 # pylint: disable=R0903
@@ -88,7 +84,7 @@ class NoneFilter(ABCPipelineElement):
         NoneFilter
             Constructed NoneFilter object.
         """
-        element_ids = set([element.uuid for element in element_list])
+        element_ids = {element.uuid for element in element_list}
         return cls(element_ids, name=name, n_jobs=n_jobs, uuid=uuid)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
@@ -106,9 +102,7 @@ class NoneFilter(ABCPipelineElement):
         """
         params = super().get_params(deep=deep)
         if deep:
-            params["element_ids"] = set(
-                [str(element_id) for element_id in self.element_ids]
-            )
+            params["element_ids"] = {str(element_id) for element_id in self.element_ids}
         else:
             params["element_ids"] = self.element_ids
         return params
@@ -135,7 +129,7 @@ class NoneFilter(ABCPipelineElement):
         super().set_params(**param_copy)
         return self
 
-    def check_removal(self, value: AnyType) -> bool:
+    def check_removal(self, value: Any) -> bool:
         """Check if value should be removed.
 
         Parameters
@@ -152,7 +146,7 @@ class NoneFilter(ABCPipelineElement):
             return True
         return False
 
-    def fit(self, values: AnyIterable) -> Self:
+    def fit(self, values: AnyIterable) -> Self:  # pylint: disable=unused-argument
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
@@ -442,7 +436,7 @@ class NoneFiller(ABCPipelineElement):
             raise ValueError(f"NoneFilter with id {self.none_filter_id} not found")
         return self
 
-    def fit(self, values: AnyIterable) -> Self:
+    def fit(self, values: AnyIterable) -> Self:  # pylint: disable=unused-argument
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.

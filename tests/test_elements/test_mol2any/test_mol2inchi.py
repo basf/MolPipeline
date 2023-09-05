@@ -1,3 +1,4 @@
+"""Unittests for testing conversion of molecules to InChI and InChIKey."""
 import unittest
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
@@ -7,14 +8,17 @@ from molpipeline.pipeline_elements.mol2any.mol2inchi import (
     MolToInchiKeyPipelineElement,
 )
 
+# pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
 SMILES_BENZENE = "c1ccccc1"
 SMILES_CHLOROBENZENE = "Clc1ccccc1"
-SMILES_Cl_Br = "NC(Cl)(Br)C(=O)O"
+SMILES_CL_BR = "NC(Cl)(Br)C(=O)O"
 SMILES_METAL_AU = "OC[C@H]1OC(S[Au])[C@H](O)[C@@H](O)[C@@H]1O"
 
 
 class TestMol2Inchi(unittest.TestCase):
+    """Test case for testing conversion of molecules to InChI and InChIKey."""
+
     def test_to_inchi(self) -> None:
         """Test if smiles converted correctly to inchi string.
 

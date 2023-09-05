@@ -1,3 +1,4 @@
+"""Test elements for standardizing molecules."""
 import unittest
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
@@ -17,6 +18,8 @@ NON_STEREO_MOL_LIST = ["FC(Cl)Br"]
 
 
 class MolStandardizationTest(unittest.TestCase):
+    """Test if the mol2mol standardization elements work as expected."""
+
     def test_stereo_removal(self) -> None:
         """Test if stereo-information is removed correctly.
 

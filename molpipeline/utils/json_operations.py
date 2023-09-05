@@ -59,14 +59,14 @@ def transform_functions2string(value: Any) -> Any:
 
     if isinstance(value, dict):
         out_dict = {}
-        for key, value in value.items():
-            out_dict[key] = transform_functions2string(value)
+        for dict_key, dict_value in value.items():
+            out_dict[dict_key] = transform_functions2string(dict_value)
         return out_dict
 
-    elif isinstance(value, list):
+    if isinstance(value, list):
         out_list = []
-        for value in value:
-            out_list.append(transform_functions2string(value))
+        for list_value in value:
+            out_list.append(transform_functions2string(list_value))
         return out_list
 
     return value
@@ -98,18 +98,16 @@ def transform_string2function(value: Any) -> Any:
                 class_str: str = value["__name__"]
                 class_module = __import__(module_str, fromlist=[class_str])
                 return getattr(class_module, class_str)
-            else:
-                return value
-        else:
-            out_dict = {}
-            for key, value in value.items():
-                out_dict[key] = transform_string2function(value)
-            return out_dict
+            return value
+        out_dict = {}
+        for dict_key, dict_value in value.items():
+            out_dict[dict_key] = transform_string2function(dict_value)
+        return out_dict
 
     if isinstance(value, list):
         out_list = []
-        for value in value:
-            out_list.append(transform_string2function(value))
+        for list_value in value:
+            out_list.append(transform_string2function(list_value))
         return out_list
 
     return value
@@ -189,10 +187,7 @@ def recursive_to_json(obj: Any) -> Any:
     dict[str, Any]
         Json file containing the dictionary.
     """
-    if obj is None:
-        return None
-
-    if isinstance(obj, (str, int, float, bool)):
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
         return obj
 
     if isinstance(obj, types.FunctionType):
@@ -224,18 +219,16 @@ def recursive_to_json(obj: Any) -> Any:
             object_dict["memory"] = obj.memory
             object_dict["verbose"] = obj.verbose
             object_dict["n_jobs"] = obj.n_jobs
-            object_dict["raise_nones"] = obj.raise_nones
-            return object_dict
-        model_params = obj.get_params()
-        for key, value in model_params.items():
-            object_dict[key] = recursive_to_json(value)
-        return object_dict
-
-    # If the object is not a sklearn model, a warning is raised
-    # as it might not be possible to recreate the object.
-    warnings.warn(
-        f"{type(obj)} has no get_params method. No parameters for initialization are retained."
-    )
+        else:
+            model_params = obj.get_params()
+            for key, value in model_params.items():
+                object_dict[key] = recursive_to_json(value)
+    else:
+        # If the object is not a sklearn model, a warning is raised
+        # as it might not be possible to recreate the object.
+        warnings.warn(
+            f"{type(obj)} has no get_params method. No parameters for initialization are retained."
+        )
     return object_dict
 
 
@@ -252,9 +245,7 @@ def recursive_from_json(obj: Any) -> Any:
     Any
         Object specified in the json file.
     """
-    if obj is None:
-        return None
-    if isinstance(obj, (str, int, float, bool)):
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
         return obj
 
     if isinstance(obj, dict):

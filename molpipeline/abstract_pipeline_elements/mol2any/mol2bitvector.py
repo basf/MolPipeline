@@ -11,12 +11,12 @@ except ImportError:
     from typing_extensions import Self
 
 import copy
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from scipy import sparse
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.utils.matrices import sparse_from_index_value_dicts
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
@@ -118,12 +118,12 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         super().set_params(parameter_dict_copy)
         return self
 
-    def transform(self, value_list: list[RDKitMol]) -> sparse.csr_matrix:
+    def transform(self, values: list[RDKitMol]) -> sparse.csr_matrix:
         """Transform the list of molecules to sparse matrix of Morgan-fingerprint features.
 
         Parameters
         ----------
-        value_list: list[RDKitMol]
+        values: list[RDKitMol]
             List of RDKit molecules which are transformed to a sparse matrix.
 
         Returns
@@ -131,7 +131,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         sparse.csr_matrix
             Sparse matrix of Morgan-fingerprint features.
         """
-        return super().transform(value_list)
+        return super().transform(values)
 
     @abc.abstractmethod
     def pretransform_single(self, value: RDKitMol) -> dict[int, int]:

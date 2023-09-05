@@ -153,12 +153,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         json_dict["element_list"] = [element.to_json() for element in self.element_list]
         return json_dict
 
-    def transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
+    def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix.
 
         Parameters
         ----------
-        value_list: list[RDKitMol]
+        values: list[RDKitMol]
             List of molecules to transform.
 
         Returns
@@ -166,7 +166,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         npt.NDArray[np.float_]
             Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
         """
-        output: npt.NDArray[np.float_] = super().transform(value_list)
+        output: npt.NDArray[np.float_] = super().transform(values)
         return output
 
     def fit(self, value_list: list[RDKitMol]) -> Self:
@@ -240,12 +240,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             final_vector_list.append(final_value)
         return np.hstack(final_vector_list)
 
-    def fit_to_result(self, value_list: Any) -> Self:
+    def fit_to_result(self, values: Any) -> Self:
         """Fit the pipeline element to the result of transform_single.
 
         Parameters
         ----------
-        value_list: Any
+        values: Any
             Output of transform_single.
 
         Returns
@@ -253,6 +253,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Self
             Fitted pipeline element.
         """
-        for element, value in zip(self._element_list, zip(*value_list)):
+        for element, value in zip(self._element_list, zip(*values)):
             element.fit_to_result(value)
         return self

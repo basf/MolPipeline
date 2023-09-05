@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Any, List, Optional, Protocol, TypeVar
+from typing import Any, List, Optional, Protocol, TypeVar, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -11,16 +11,20 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
+from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
 
-from molpipeline.abstract_pipeline_elements.core import OptionalMol
+from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
+    OptionalMol,
+    RDKitMol,
+)
+
 
 __all__ = [
     "AnyNumpyElement",
     "AnyPredictor",
     "AnySklearnEstimator",
     "AnyTransformer",
-    "AnyType",
     "AnyIterable",
     "AnySklearnEstimator",
     "Number",
@@ -33,13 +37,14 @@ __all__ = [
 
 AnyNumpyElement = TypeVar("AnyNumpyElement", bound=np.generic)
 
-AnyType = TypeVar("AnyType")
+_T = TypeVar("_T")
 # mypy: ignore-errors
-AnyIterable = TypeVar("AnyIterable", List[AnyType], npt.NDArray[AnyType])
+AnyIterable = TypeVar("AnyIterable", List[_T], npt.NDArray[_T])
 
 # mypy: ignore-errors
 NumberIterable = TypeVar("NumberIterable", List[Number], npt.NDArray[Number])
-_T = TypeVar("_T")
+OptionalMol = Union[RDKitMol, InvalidInstance]
+
 TypeConserverdIterable = TypeVar("TypeConserverdIterable", List[_T], npt.NDArray[_T])
 
 
@@ -75,7 +80,10 @@ class AnySklearnEstimator(Protocol):
         """
 
     def fit(
-        self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any
+        self,
+        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        y: Optional[npt.NDArray[Any]],  # pylint: disable=invalid-name
+        **fit_params: Any,
     ) -> Self:
         """Fit the model with X.
 
@@ -100,7 +108,10 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
     """Protocol for predictors."""
 
     def fit_predict(
-        self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any
+        self,
+        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        y: Optional[npt.NDArray[Any]],  # pylint: disable=invalid-name
+        **fit_params: Any,
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return predictions.
 
@@ -124,7 +135,10 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
     """Protocol for transformers."""
 
     def fit_transform(
-        self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]], **fit_params: Any
+        self,
+        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        y: Optional[npt.NDArray[Any]],  # pylint: disable=invalid-name
+        **fit_params: Any,
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return the transformed array.
 

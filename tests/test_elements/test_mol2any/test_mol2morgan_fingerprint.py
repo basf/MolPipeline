@@ -1,7 +1,6 @@
 """Tests for the MolToFoldedMorganFingerprint pipeline element."""
-
-import numpy as np
 import unittest
+import numpy as np
 
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
@@ -17,6 +16,8 @@ test_smiles = [
 
 
 class TestMol2MorganFingerprint(unittest.TestCase):
+    """Unittest for MolToFoldedMorganFingerprint, which calculates folded Morgan Fingerprints."""
+
     def test_can_be_constructed(self) -> None:
         """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed.
 

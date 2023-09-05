@@ -14,12 +14,12 @@ except ImportError:
 import copy
 import numpy as np
 import numpy.typing as npt
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
     InvalidInstance,
 )
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
@@ -153,12 +153,12 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             attribute_dict["_std"] = self._std
         return attribute_dict
 
-    def fit_to_result(self, value_list: list[npt.NDArray[np.float_]]) -> Self:
+    def fit_to_result(self, values: list[npt.NDArray[np.float_]]) -> Self:
         """Fit object to data.
 
         Parameters
         ----------
-        value_list: list[RDKitMol]
+        values: list[RDKitMol]
             List of RDKit molecules to which the Pipeline element is fitted.
 
         Returns
@@ -166,7 +166,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Self
             Fitted MolToDescriptorPipelineElement.
         """
-        value_matrix = np.vstack(list(value_list))
+        value_matrix = np.vstack(list(values))
         self._mean = np.nanmean(value_matrix, axis=0)
         _std: npt.NDArray[np.float_] = np.nanstd(value_matrix, axis=0)
         _std[np.where(_std == 0)] = 1.0  # avoid division by zero
@@ -183,12 +183,12 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             return scaled_matrix
         return value_matrix
 
-    def transform(self, value_list: list[RDKitMol]) -> npt.NDArray[np.float_]:
+    def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix.
 
         Parameters
         ----------
-        value_list: list[RDKitMol]
+        values: list[RDKitMol]
             List of RDKit molecules for which the descriptor vectors are calculated.
 
         Returns
@@ -196,7 +196,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         npt.NDArray[np.float_]
             Matrix with descriptor values of molecules.
         """
-        descriptor_matrix: npt.NDArray[np.float_] = super().transform(value_list)
+        descriptor_matrix: npt.NDArray[np.float_] = super().transform(values)
         return descriptor_matrix
 
     def finalize_single(self, value: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:

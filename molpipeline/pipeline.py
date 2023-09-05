@@ -114,8 +114,7 @@ class _MolPipeline:
         return [
             element
             for element in self._element_list
-            if isinstance(element, TransformingPipelineElement)
-            or isinstance(element, _MolPipeline)
+            if isinstance(element, (TransformingPipelineElement, _MolPipeline))
         ]
 
     @property
@@ -251,7 +250,7 @@ class _MolPipeline:
     def fit(
         self,
         x_input: Any,
-        y: Any = None,
+        y: Any = None,  # pylint: disable=invalid-name
         **fit_params: dict[Any, Any],
     ) -> Self:
         """Fit the MolPipeline according to x_input.
@@ -260,7 +259,7 @@ class _MolPipeline:
         ----------
         x_input: Any
             Molecular representations which are subsequently processed.
-        y_input: Any
+        y: Any
             Optional label of input. Only for SKlearn compatibility.
         fit_params: Any
             Parameters. Only for SKlearn compatibility.
@@ -278,7 +277,7 @@ class _MolPipeline:
     def fit_transform(
         self,
         x_input: Any,
-        y: Any = None,
+        y: Any = None,  # pylint: disable=invalid-name
         **fit_params: dict[str, Any],
     ) -> Any:
         """Fit the MolPipeline according to x_input and return the transformed molecules.
@@ -315,8 +314,8 @@ class _MolPipeline:
             for none_filter in self._filter_elements:
                 iter_input = none_filter.transform(iter_input)
                 for idx in none_filter.none_indices:
-                    original_idx = iter_idx_array[idx]
-                    removed_rows[none_filter].append(original_idx)
+                    idx = iter_idx_array[idx]
+                    removed_rows[none_filter].append(idx)
                 iter_idx_array = none_filter.co_transform(iter_idx_array)
             if i_element.requires_fitting:
                 if isinstance(i_element, _MolPipeline):
@@ -332,8 +331,8 @@ class _MolPipeline:
         for none_filter in self._filter_elements:
             removed_idx_list = removed_rows[none_filter]
             none_filter.none_indices = []
-            for new_idx, old_idx in enumerate(iter_idx_array):
-                if old_idx in removed_idx_list:
+            for new_idx, idx in enumerate(iter_idx_array):
+                if idx in removed_idx_list:
                     none_filter.none_indices.append(new_idx)
             none_filter.n_total = len(iter_idx_array)
             iter_idx_array = none_filter.co_transform(iter_idx_array)
@@ -346,6 +345,18 @@ class _MolPipeline:
         return iter_input
 
     def transform_single(self, input_value: Any) -> Any:
+        """Transform a single input according to the sequence of provided PipelineElements.
+
+        Parameters
+        ----------
+        input_value: Any
+            Molecular representation which is subsequently transformed.
+
+        Returns
+        -------
+        Any
+            Transformed molecular representation.
+        """
         iter_value = input_value
         for p_element in self._element_list:
             try:
@@ -406,11 +417,7 @@ class _MolPipeline:
         last_element = self._transforming_elements[-1]
         if hasattr(last_element, "assemble_output"):
             return last_element.assemble_output(value_list)
-        else:
-            return list(value_list)
-
-    def apply_to_all(self, x_input: Any) -> list[Any]:
-        return list(self._transform_iterator(x_input))
+        return list(value_list)
 
     def _finish(self) -> None:
         """Inform each pipeline element that the iterations have finished."""
@@ -539,20 +546,20 @@ class Pipeline(_Pipeline):
 
         # validate estimators
         non_post_processing_steps = [e for _, _, e in self._agg_non_postpred_steps()]
-        transformers = non_post_processing_steps[:-1]
+        transformer_list = non_post_processing_steps[:-1]
         estimator = non_post_processing_steps[-1]
 
-        for t in transformers:
-            if t is None or t == "passthrough":
+        for transformer in transformer_list:
+            if transformer is None or transformer == "passthrough":
                 continue
-            if not (hasattr(t, "fit") or hasattr(t, "fit_transform")) or not hasattr(
-                t, "transform"
-            ):
+            if not (
+                hasattr(transformer, "fit") or hasattr(transformer, "fit_transform")
+            ) or not hasattr(transformer, "transform"):
                 raise TypeError(
-                    "All intermediate steps should be "
-                    "transformers and implement fit and transform "
-                    "or be the string 'passthrough' "
-                    "'%s' (type %s) doesn't" % (t, type(t))
+                    f"All intermediate steps should be "
+                    f"transformers and implement fit and transform "
+                    f"or be the string 'passthrough' "
+                    f"'{transformer}' (type {type(transformer)}) doesn't"
                 )
 
         # We allow last estimator to be None as an identity transformation
@@ -562,9 +569,9 @@ class Pipeline(_Pipeline):
             and not hasattr(estimator, "fit")
         ):
             raise TypeError(
-                "Last step of Pipeline should implement fit "
-                "or be the string 'passthrough'. "
-                "'%s' (type %s) doesn't" % (estimator, type(estimator))
+                f"Last step of Pipeline should implement fit "
+                f"or be the string 'passthrough'. "
+                f"'{estimator}' (type {type(estimator)}) doesn't"
             )
 
         # validate post-processing steps
@@ -617,6 +624,7 @@ class Pipeline(_Pipeline):
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
+            # pylint: disable=protected-access
             return self._final_estimator._estimator_type
         return None
 
@@ -629,7 +637,13 @@ class Pipeline(_Pipeline):
         last_element = element_list[-1]
         return last_element[2]
 
-    def _fit(self, X: Any, y: Any = None, **fit_params_steps: Any) -> tuple[Any, Any]:
+    # pylint: disable=too-many-locals
+    def _fit(
+        self,
+        X: Any,  # pylint: disable=invalid-name
+        y: Any = None,  # pylint: disable=invalid-name
+        **fit_params_steps: Any,
+    ) -> tuple[Any, Any]:
         # shallow copy of steps - this should really be steps_
         self.steps = list(self.steps)
         self._validate_steps()
@@ -654,9 +668,9 @@ class Pipeline(_Pipeline):
                 fit_parameter = {
                     "element_parameters": [fit_params_steps[n] for n in name]
                 }
+            elif isinstance(name, list):
+                raise AssertionError()
             else:
-                if isinstance(name, list):
-                    raise AssertionError()
                 fit_parameter = fit_params_steps[name]
             # Fit or load from cache the current transformer
             X, fitted_transformer = fit_transform_one_cached(
@@ -673,20 +687,14 @@ class Pipeline(_Pipeline):
             # from the cache.
             if isinstance(fitted_transformer, _MolPipeline):
                 ele_list = fitted_transformer.element_list
-                if not isinstance(name, list):
+                if not isinstance(name, list) or not isinstance(step_idx, list):
                     raise AssertionError()
-                if not isinstance(step_idx, list):
-                    raise AssertionError()
-                if not len(name) == len(step_idx) == len(ele_list):
-                    raise AssertionError()
-                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list):
+                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=True):
                     self.steps[idx_i] = (name_i, ele_i)
                 y = fitted_transformer.co_transform(y)
+            elif isinstance(name, list) or isinstance(step_idx, list):
+                raise AssertionError()
             else:
-                if isinstance(name, list):
-                    raise AssertionError()
-                if isinstance(step_idx, list):
-                    raise AssertionError()
                 self.steps[step_idx] = (name, fitted_transformer)
         return X, y
 
@@ -774,7 +782,7 @@ class Pipeline(_Pipeline):
             Pipeline with fitted steps.
         """
         fit_params_steps = self._check_fit_params(**fit_params)
-        Xt, yt = self._fit(X, y, **fit_params_steps)
+        Xt, yt = self._fit(X, y, **fit_params_steps)  # pylint: disable=invalid-name
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 fit_params_last_step = fit_params_steps[self.steps[-1][0]]
@@ -822,31 +830,29 @@ class Pipeline(_Pipeline):
             Transformed samples.
         """
         fit_params_steps = self._check_fit_params(**fit_params)
-        Xt, yt = self._fit(X, y, **fit_params_steps)
+        iter_input, iter_label = self._fit(X, y, **fit_params_steps)
         last_step = self._final_estimator
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if last_step == "passthrough":
-                Xt = Xt
+                pass
             else:
                 fit_params_last_step = fit_params_steps[self.steps[-1][0]]
                 if hasattr(last_step, "fit_transform"):
-                    Xt = last_step.fit_transform(Xt, yt, **fit_params_last_step)
+                    iter_input = last_step.fit_transform(
+                        iter_input, iter_label, **fit_params_last_step
+                    )
                 elif hasattr(last_step, "transform") and hasattr(last_step, "fit"):
-                    last_step.fit(Xt, yt, **fit_params_last_step)
-                    Xt = last_step.transform(Xt)
+                    last_step.fit(iter_input, iter_label, **fit_params_last_step)
+                    iter_input = last_step.transform(iter_input)
                 else:
                     raise TypeError(
-                        "fit_transform of the final estimator"
-                        " {} {} does not "
-                        "match fit_transform of Pipeline {}".format(
-                            last_step.__class__.__name__,
-                            fit_params_last_step,
-                            self.__class__.__name__,
-                        )
+                        f"fit_transform of the final estimator"
+                        f" {last_step.__class__.__name__} {fit_params_last_step} does not "
+                        f"match fit_transform of Pipeline {self.__class__.__name__}"
                     )
-            for post_name, post_element in self._post_processing_steps():
-                Xt = post_element.transform(Xt)
-        return Xt
+            for _, post_element in self._post_processing_steps():
+                iter_input = post_element.transform(iter_input)
+        return iter_input
 
     @available_if(_final_estimator_has("predict"))
     def predict(self, X: Any, **predict_params: Any) -> Any:
@@ -877,22 +883,25 @@ class Pipeline(_Pipeline):
         y_pred : ndarray
             Result of calling `predict` on the final estimator.
         """
-        Xt = X
-        for _, name, transform in self._iter(with_final=False):
+        iter_input = X
+        for _, _, transform in self._iter(with_final=False):
             if hasattr(transform, "transform"):
-                Xt = transform.transform(Xt)
+                iter_input = transform.transform(iter_input)
             else:
                 raise AssertionError(
                     f"Non transformer ocurred in transformation step: {transform}."
                 )
         if self._final_estimator == "passthrough":
-            return Xt
-        if hasattr(self._final_estimator, "predict"):
-            return self._final_estimator.predict(Xt, **predict_params)
+            pass
+        elif hasattr(self._final_estimator, "predict"):
+            iter_input = self._final_estimator.predict(iter_input, **predict_params)
         else:
             raise AssertionError(
                 "Final estimator does not implement predict, hence this function should not be available."
             )
+        for _, post_element in self._post_processing_steps():
+            iter_input = post_element.transform(iter_input)
+        return iter_input
 
     @available_if(_final_estimator_has("fit_predict"))
     @_fit_context(
@@ -928,22 +937,24 @@ class Pipeline(_Pipeline):
             Result of calling `fit_predict` on the final estimator.
         """
         fit_params_steps = self._check_fit_params(**fit_params)
-        Xt, yt = self._fit(X, y, **fit_params_steps)
+        iter_input, iter_label = self._fit(
+            X, y, **fit_params_steps
+        )  # pylint: disable=invalid-name
 
         fit_params_last_step = fit_params_steps[self.steps[-1][0]]
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator == "passthrough":
-                y_pred = Xt
+                y_pred = iter_input
             elif hasattr(self._final_estimator, "fit_predict"):
                 y_pred = self._final_estimator.fit_predict(
-                    Xt, yt, **fit_params_last_step
+                    iter_input, iter_label, **fit_params_last_step
                 )
             else:
                 raise AssertionError(
                     "Final estimator does not implement fit_predict, hence this function should not be available."
                 )
-            for post_name, post_element in self._post_processing_steps():
-                y_pred = post_element.fit_transform(y_pred, yt)
+            for _, post_element in self._post_processing_steps():
+                y_pred = post_element.fit_transform(y_pred, iter_label)
         return y_pred
 
     def _can_transform(self) -> bool:
@@ -974,14 +985,14 @@ class Pipeline(_Pipeline):
         Xt : ndarray of shape (n_samples, n_transformed_features)
             Transformed data.
         """
-        Xt = X
+        iter_input = X
         for _, _, transform in self._iter():
             if hasattr(transform, "transform"):
-                Xt = transform.transform(Xt)
+                iter_input = transform.transform(iter_input)
             else:
                 raise AssertionError(
                     "Non transformer ocurred in transformation step. This should have been caught in the validation step."
                 )
-        for post_name, post_element in self._post_processing_steps():
-            Xt = post_element.transform(Xt)
-        return Xt
+        for _, post_element in self._post_processing_steps():
+            iter_input = post_element.transform(iter_input)
+        return iter_input

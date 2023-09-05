@@ -12,12 +12,12 @@ except ImportError:
 import copy
 import numpy as np
 from rdkit.Chem import AllChem
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from scipy import sparse
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     ABCMorganFingerprintPipelineElement,
 )
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
@@ -363,12 +363,12 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         _ = self._fit(value_list)
         return self
 
-    def fit_transform(self, value_list: list[RDKitMol]) -> sparse.csr_matrix:
+    def fit_transform(self, values: list[RDKitMol]) -> sparse.csr_matrix:
         """Create a feature mapping based on input and apply it for transformation.
 
         Parameters
         ----------
-        value_list: list[RDKitMol]
+        values: list[RDKitMol]
             List of molecules to fit and transform.
 
         Returns
@@ -376,7 +376,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         sparse.csr_matrix
             Fingerprint-matrix of shape (len(value_list), n_features).
         """
-        hash_count_list = self._fit(value_list)
+        hash_count_list = self._fit(values)
         mapped_feature_count_dicts = [
             self._map_feature_dict(f_dict) for f_dict in hash_count_list
         ]

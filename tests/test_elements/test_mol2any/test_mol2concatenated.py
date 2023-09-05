@@ -1,6 +1,7 @@
-import numpy as np
+"""Test construction of concatenated fingerprints."""
 import unittest
 
+import numpy as np
 from rdkit import Chem
 
 from molpipeline.pipeline import Pipeline
@@ -15,6 +16,8 @@ from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipeline
 
 
 class TestConcatenatedFingerprint(unittest.TestCase):
+    """Unittest for MolToConcatenatedVector, which calculates concatenated fingerprints."""
+
     def test_generation(self) -> None:
         """Test if the feature concatenation works as expected.
 
@@ -22,14 +25,14 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         -------
         None
         """
-        concat_vector_elmnt = MolToConcatenatedVector(
+        concat_vector_element = MolToConcatenatedVector(
             [MolToRDKitPhysChem(normalize=True), MolToFoldedMorganFingerprint()]
         )
         smi2mol = SmilesToMolPipelineElement()
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
-                ("concat_vector_elmnt", concat_vector_elmnt),
+                ("concat_vector_element", concat_vector_element),
             ]
         )
 
@@ -51,19 +54,19 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         mol_list = [Chem.MolFromSmiles(smi) for smi in smiles]
         output3 = np.hstack(
             [
-                concat_vector_elmnt.element_list[0].transform(mol_list),
-                concat_vector_elmnt.element_list[1].transform(mol_list).toarray(),
+                concat_vector_element.element_list[0].transform(mol_list),
+                concat_vector_element.element_list[1].transform(mol_list).toarray(),
             ]
         )
         pyschem_component: MolToRDKitPhysChem
-        pyschem_component = concat_vector_elmnt.element_list[0]  # type: ignore
+        pyschem_component = concat_vector_element.element_list[0]  # type: ignore
         morgan_component: MolToFoldedMorganFingerprint
-        morgan_component = concat_vector_elmnt.element_list[1]  # type: ignore
+        morgan_component = concat_vector_element.element_list[1]  # type: ignore
         expected_shape = (
             len(smiles),
             (pyschem_component.n_features + morgan_component.n_bits),
         )
-        self.assertEquals(output.shape, expected_shape)
+        self.assertEqual(output.shape, expected_shape)
         self.assertTrue(np.abs(output - output2).max() < 0.00001)
         self.assertTrue(np.abs(output - output3).max() < 0.00001)
 

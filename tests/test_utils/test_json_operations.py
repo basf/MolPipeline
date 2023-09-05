@@ -1,4 +1,6 @@
+"""Tests conversion of sklearn models to json and back."""
 import unittest
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
@@ -13,6 +15,8 @@ from molpipeline.pipeline import Pipeline
 
 
 class JsonConversionTest(unittest.TestCase):
+    """Unittest for conversion of sklearn models to json and back."""
+
     def test_rf_reconstruction(self) -> None:
         """Test if the sklearn-rf can be reconstructed from json.
 
@@ -20,9 +24,9 @@ class JsonConversionTest(unittest.TestCase):
         -------
         None
         """
-        rf = RandomForestClassifier(n_estimators=200)
-        recreated_rf = sklearn_model_from_json(sklearn_model_to_json(rf))
-        self.assertEqual(rf.get_params(), recreated_rf.get_params())
+        random_forest = RandomForestClassifier(n_estimators=200)
+        recreated_rf = sklearn_model_from_json(sklearn_model_to_json(random_forest))
+        self.assertEqual(random_forest.get_params(), recreated_rf.get_params())
 
     def test_svc_reconstruction(self) -> None:
         """Test if the sklearn-svc can be reconstructed from json.
@@ -42,9 +46,9 @@ class JsonConversionTest(unittest.TestCase):
         -------
         None
         """
-        rf = RandomForestClassifier(n_estimators=200)
+        random_forest = RandomForestClassifier(n_estimators=200)
         svc = SVC()
-        pipeline = Pipeline([("rf", rf), ("svc", svc)])
+        pipeline = Pipeline([("rf", random_forest), ("svc", svc)])
         recreated_pipeline = sklearn_model_from_json(sklearn_model_to_json(pipeline))
 
         original_params = pipeline.get_params()

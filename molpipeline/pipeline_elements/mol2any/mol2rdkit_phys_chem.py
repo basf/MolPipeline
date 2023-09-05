@@ -13,13 +13,14 @@ import copy
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import Descriptors
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
+from molpipeline.utils.molpipeline_types import RDKitMol
+
 
 RDKIT_DESCRIPTOR_DICT: dict[str, Callable[[Chem.Mol], float]]
 RDKIT_DESCRIPTOR_DICT = dict(Descriptors.descList)

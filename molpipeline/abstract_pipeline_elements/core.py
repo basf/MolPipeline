@@ -11,14 +11,13 @@ except ImportError:
     from typing_extensions import Self
 
 from uuid import uuid4
-
 import numpy as np
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
+from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
 
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 
 
-class InvalidInstance:
+class InvalidInstance:  # pylint: disable=too-few-public-methods
     """Object which is returned when an instance cannot be processed."""
 
     def __init__(
@@ -50,7 +49,10 @@ class InvalidInstance:
         )
 
 
-class RemovedInstance:
+OptionalMol = Union[RDKitMol, InvalidInstance]
+
+
+class RemovedInstance:  # pylint: disable=too-few-public-methods
     """Object which is returned by a NoneFilter if an Invalid instance was removed."""
 
     def __init__(self, filter_element_id: str, message: Optional[str] = None) -> None:
@@ -70,8 +72,9 @@ class RemovedInstance:
         self.filter_element_id = filter_element_id
         self.message = message
 
-
-OptionalMol = Union[RDKitMol, InvalidInstance]
+    def __repr__(self) -> str:
+        """Return string representation of RemovedInstance."""
+        return f"RemovedInstance({self.filter_element_id}, {self.message})"
 
 
 class ABCPipelineElement(abc.ABC):
@@ -153,12 +156,12 @@ class ABCPipelineElement(abc.ABC):
                 "n_jobs": copy.copy(self.n_jobs),
                 "uuid": copy.copy(self.uuid),
             }
-        else:
-            return {
-                "name": self.name,
-                "n_jobs": self.n_jobs,
-                "uuid": self.uuid,
-            }
+
+        return {
+            "name": self.name,
+            "n_jobs": self.n_jobs,
+            "uuid": self.uuid,
+        }
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
         """As the setter function cannot be assessed with super(), this method is implemented for inheritance.
@@ -175,7 +178,7 @@ class ABCPipelineElement(abc.ABC):
         """
         for att_name, att_value in parameters.items():
             if not hasattr(self, att_name):
-                ValueError(
+                raise ValueError(
                     f"Cannot set attribute {att_name} on {self.__class__.__name__}"
                 )
             setattr(self, att_name, att_value)
@@ -222,14 +225,14 @@ class ABCPipelineElement(abc.ABC):
         Called after all transform singles have been processed. From MolPipeline
         """
 
-    def fit_to_result(self, value_list: Any) -> Self:
+    def fit_to_result(self, values: Any) -> Self:  # pylint: disable=unused-argument
         """Fit object to result of transformed values.
 
         Fit object to the result of the transform function. This is useful catching nones and removed molecules.
 
         Parameters
         ----------
-        value_list: Any
+        values: Any
             List of molecule representations.
 
         Returns
@@ -240,12 +243,12 @@ class ABCPipelineElement(abc.ABC):
         return self
 
     @abc.abstractmethod
-    def fit_transform(self, value_list: Any) -> Any:
+    def fit_transform(self, values: Any) -> Any:
         """Apply fit function and subsequently transform the input.
 
         Parameters
         ----------
-        value_list: Any
+        values: Any
             Apply transformation specified in transform_single to all molecules in the value_list.
 
         Returns
@@ -255,12 +258,12 @@ class ABCPipelineElement(abc.ABC):
         """
 
     @abc.abstractmethod
-    def transform(self, value_list: Any) -> Any:
+    def transform(self, values: Any) -> Any:
         """Transform input_values according to object rules.
 
         Parameters
         ----------
-        value_list: Any
+        values: Any
             Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, PhysChem vectors etc.).
             Input depends on the concrete PipelineElement.
 
@@ -381,14 +384,14 @@ class TransformingPipelineElement(ABCPipelineElement):
         _ = self.fit_transform(value_list)
         return self
 
-    def fit_to_result(self, value_list: Any) -> Self:
+    def fit_to_result(self, values: Any) -> Self:
         """Fit object to result of transformed values.
 
         Fit object to the result of the transform function. This is useful catching nones and removed molecules.
 
         Parameters
         ----------
-        value_list: Any
+        values: Any
             List of molecule representations.
 
         Returns
@@ -397,14 +400,14 @@ class TransformingPipelineElement(ABCPipelineElement):
             Fitted object.
         """
         self._is_fitted = True
-        return super().fit_to_result(value_list)
+        return super().fit_to_result(values)
 
-    def fit_transform(self, value_list: Any) -> Any:
+    def fit_transform(self, values: Any) -> Any:
         """Apply fit function and subsequently transform the input.
 
         Parameters
         ----------
-        value_list: Any
+        values: Any
             Apply transformation specified in transform_single to all molecules in the value_list.
 
         Returns
@@ -414,12 +417,12 @@ class TransformingPipelineElement(ABCPipelineElement):
         """
         self._is_fitted = True
         if self.requires_fitting:
-            pre_value_list = self.pretransform(value_list)
+            pre_value_list = self.pretransform(values)
             self.fit_to_result(pre_value_list)
             output_list = self.finalize_list(pre_value_list)
             if hasattr(self, "assemble_output"):
                 return self.assemble_output(output_list)
-        return self.transform(value_list)
+        return self.transform(values)
 
     def transform_single(self, value: Any) -> Any:
         """Transform a single molecule to the new representation.
@@ -535,12 +538,12 @@ class TransformingPipelineElement(ABCPipelineElement):
         )
         return output_values
 
-    def transform(self, value_list: Any) -> Any:
+    def transform(self, values: Any) -> Any:
         """Transform input_values according to object rules.
 
         Parameters
         ----------
-        value_list: Any
+        values: Any
             Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules, PhysChem vectors etc.).
             Input depends on the concrete PipelineElement.
 
@@ -549,7 +552,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         Any
             Transformed input_values.
         """
-        output_rows = self.pretransform(value_list)
+        output_rows = self.pretransform(values)
         output_rows = self.finalize_list(output_rows)
         output = self.assemble_output(output_rows)
         self.finish()
@@ -594,12 +597,12 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         """Initialize MolToMolPipelineElement."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
-    def transform(self, value_list: list[OptionalMol]) -> list[OptionalMol]:
+    def transform(self, values: list[OptionalMol]) -> list[OptionalMol]:
         """Transform list of molecules to list of molecules.
 
         Parameters
         ----------
-        value_list: list[OptionalMol]
+        values: list[OptionalMol]
             List of molecules to be transformed.
 
         Returns
@@ -607,7 +610,7 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         list[OptionalMol]
             List of molecules or InvalidInstances, if corresponding transformation was not successful.
         """
-        mol_list: list[OptionalMol] = super().transform(value_list)  # Stupid mypy...
+        mol_list: list[OptionalMol] = super().transform(values)  # Stupid mypy...
         return mol_list
 
     def transform_single(self, value: OptionalMol) -> OptionalMol:
@@ -657,12 +660,12 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         """Initialize AnyToMolPipelineElement."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
-    def transform(self, value_list: Any) -> list[OptionalMol]:
+    def transform(self, values: Any) -> list[OptionalMol]:
         """Transform list of instances to list of molecules.
 
         Parameters
         ----------
-        value_list: Any
+        values: Any
             Instances to be transformed to a list of molecules.
 
         Returns
@@ -670,7 +673,7 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         list[OptionalMol]
             List of molecules or InvalidInstances, if corresponding representation was invalid.
         """
-        mol_list: list[OptionalMol] = super().transform(value_list)  # Stupid mypy...
+        mol_list: list[OptionalMol] = super().transform(values)  # Stupid mypy...
         return mol_list
 
     @abc.abstractmethod

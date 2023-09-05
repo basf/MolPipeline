@@ -12,14 +12,13 @@ except ImportError:
 import warnings
 
 import copy
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 from rdkit.Chem import AllChem
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
     MolToMolPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import OptionalMol
+from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class MolToMolReactionPipelineElement(MolToMolPipelineElement):

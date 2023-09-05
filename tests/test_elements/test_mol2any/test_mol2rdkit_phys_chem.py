@@ -1,7 +1,9 @@
-import numpy as np
-import pandas as pd
+"""Test generation of RDKitPhysChem Descriptors."""
 from pathlib import Path
 import unittest
+
+import numpy as np
+import pandas as pd
 
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import (
@@ -15,6 +17,8 @@ data_path = Path(__file__).parents[2] / "test_data" / "mol_descriptors.tsv"
 
 
 class TestMol2RDKitPhyschem(unittest.TestCase):
+    """Unittest for MolToRDKitPhysChem, which calculates RDKitPhysChem Descriptors."""
+
     def test_descriptor_list(self) -> None:
         """Test if the descriptor list is as expected.
 
@@ -277,7 +281,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
                 ("property_element", property_element),
             ]
         )
-
+        # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
         smiles = [
             "CC",
             "CCC",

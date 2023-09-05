@@ -33,8 +33,8 @@ class ClusterMerging:
 
     def fit(
         self,
-        X: npt.NDArray[np.int_],
-        y: npt.NDArray[np.int_],
+        X: npt.NDArray[np.int_],  # pylint: disable=invalid-name
+        y: npt.NDArray[np.int_],  # pylint: disable=invalid-name
     ) -> None:
         """Fit the model with X, which is a cluster assignment.
 
@@ -53,10 +53,11 @@ class ClusterMerging:
         """
         self.fit_predict(X, y)
 
+    # pylint: disable=too-many-locals
     def fit_predict(
         self,
-        X: npt.NDArray[np.int_],
-        y: Optional[npt.NDArray[np.int_]] = None,
+        X: npt.NDArray[np.int_],  # pylint: disable=invalid-name
+        y: Optional[npt.NDArray[np.int_]] = None,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.int_]:
         """Predict the best meta clusters for X, which is a cluster assignment.
 
@@ -138,6 +139,8 @@ class ClusterMerging:
         dict
             Parameters of this estimator.
         """
+        if deep:
+            return {"n_clusters": int(self.n_clusters)}
         return {"n_clusters": self.n_clusters}
 
     def set_params(self, **parameters: Any) -> None:

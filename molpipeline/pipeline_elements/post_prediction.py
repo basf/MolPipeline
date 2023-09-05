@@ -25,12 +25,12 @@ class PostPredictionTransformation(BaseEstimator, TransformerMixin, abc.ABC):
     """
 
     @abc.abstractmethod
-    def transform(self, Xt: Any) -> Any:
+    def transform(self, X: Any) -> Any:  # pylint: disable=invalid-name
         """Transform data.
 
         Parameters
         ----------
-        Xt: npt.NDArray[Any]
+        X: npt.NDArray[Any]
             Input data.
 
         Returns
@@ -58,7 +58,11 @@ class PostPredictionWrapper(PostPredictionTransformation):
         """
         self.estimator = estimator
 
-    def fit(self, X: npt.NDArray[Any], y: Optional[npt.NDArray[Any]] = None) -> Self:
+    def fit(
+        self,
+        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        y: Optional[npt.NDArray[Any]] = None,  # pylint: disable=invalid-name
+    ) -> Self:
         """Fit PostPredictionWrapper.
 
         Parameters
@@ -79,7 +83,9 @@ class PostPredictionWrapper(PostPredictionTransformation):
             self.estimator.fit(X, y)
         return self
 
-    def transform(self, X: npt.NDArray[Any]) -> npt.NDArray[Any]:
+    def transform(
+        self, X: npt.NDArray[Any]  # pylint: disable=invalid-name
+    ) -> npt.NDArray[Any]:
         """Transform data.
 
         Parameters
@@ -132,7 +138,9 @@ class PostPredictionWrapper(PostPredictionTransformation):
             f"Estimator {self.estimator} has neither fit_predict nor fit_transform method."
         )
 
-    def inverse_transform(self, X: npt.NDArray[Any]) -> npt.NDArray[Any]:
+    def inverse_transform(
+        self, X: npt.NDArray[Any]  # pylint: disable=invalid-name
+    ) -> npt.NDArray[Any]:
         """Inverse transform data.
 
         Parameters

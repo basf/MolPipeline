@@ -15,11 +15,12 @@ except ImportError:
         ImportWarning,
     )
 
+from rdkit import Chem
+
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
 )
-from rdkit import Chem
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToChemprop(MolToAnyPipelineElement):
@@ -63,7 +64,6 @@ class MolToChemprop(MolToAnyPipelineElement):
         Optional[MoleculeDatapoint]
             Molecular representation used as input for ChemProp. None if transformation failed.
         """
-        # TODO this should not be needed in case chemprop includes a class which uses RDKit
         smiles = Chem.MolToSmiles(value)
         if not smiles:
             return None

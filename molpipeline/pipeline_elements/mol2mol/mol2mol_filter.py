@@ -1,7 +1,7 @@
 """Classes to filter molecule lists."""
 
 from __future__ import annotations
-from typing import Optional
+from typing import Any, Optional
 
 from rdkit import Chem
 
@@ -54,6 +54,28 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
                 53,
             ]
         self.allowed_element_numbers: set[int] = set(allowed_element_numbers)
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters of ElementFilterPipelineElement.
+
+        Parameters
+        ----------
+        deep: bool, optional (default: True)
+            If True, return the parameters of all subobjects that are PipelineElements.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters of ElementFilterPipelineElement.
+        """
+        params = super().get_params(deep=deep)
+        if deep:
+            params["allowed_element_numbers"] = [
+                int(atom) for atom in self.allowed_element_numbers
+            ]
+        else:
+            params["allowed_element_numbers"] = self.allowed_element_numbers
+        return params
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Invalidate molecule containing chemical elements that are not allowed.

@@ -9,8 +9,7 @@ except ImportError:
     from typing_extensions import Self
 
 from rdkit import Chem
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
-from rdkit.Chem import rdmolops, SanitizeMol
+from rdkit.Chem import rdmolops, SanitizeMol  # pylint: disable=no-name-in-module
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
@@ -18,7 +17,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
     InvalidInstance,
 )
-from molpipeline.utils.molpipeline_types import OptionalMol
+from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
@@ -141,8 +140,8 @@ class DeduplicateFragmentsByInchiPipelineElement(_MolToMolPipelineElement):
         combined_fragments = unique_fragments[0]
         for fragment in unique_fragments[1:]:
             combined_fragments = Chem.CombineMols(combined_fragments, fragment)
-        for key, value in value.GetPropsAsDict(includeComputed=False).items():
-            combined_fragments.SetProp(key, value)
+        for dict_key, dict_value in value.GetPropsAsDict(includeComputed=False).items():
+            combined_fragments.SetProp(dict_key, dict_value)
         return combined_fragments
 
 
@@ -189,8 +188,8 @@ class DeduplicateFragmentsBySmilesPipelineElement(_MolToMolPipelineElement):
         combined_fragments = unique_fragments[0]
         for fragment in unique_fragments[1:]:
             combined_fragments = Chem.CombineMols(combined_fragments, fragment)
-        for key, value in value.GetPropsAsDict(includeComputed=False).items():
-            combined_fragments.SetProp(key, value)
+        for dict_key, dict_value in value.GetPropsAsDict(includeComputed=False).items():
+            combined_fragments.SetProp(dict_key, dict_value)
         return combined_fragments
 
 
@@ -474,8 +473,8 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
         combined_fragments = kept_fragments[0]
         for fragment in kept_fragments[1:]:
             combined_fragments = Chem.CombineMols(combined_fragments, fragment)
-        for key, value in value.GetPropsAsDict(includeComputed=False).items():
-            combined_fragments.SetProp(key, value)
+        for dict_key, dict_value in value.GetPropsAsDict(includeComputed=False).items():
+            combined_fragments.SetProp(dict_key, dict_value)
         return combined_fragments
 
 

@@ -1,3 +1,4 @@
+"""Test MolFilter, which invalidate molecules based on criteria defined in the respective filter."""
 import unittest
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
@@ -11,14 +12,17 @@ from molpipeline.pipeline_elements.none_handling import (
     NoneFiller,
 )
 
+# pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
 SMILES_BENZENE = "c1ccccc1"
 SMILES_CHLOROBENZENE = "Clc1ccccc1"
-SMILES_Cl_Br = "NC(Cl)(Br)C(=O)O"
+SMILES_CL_BR = "NC(Cl)(Br)C(=O)O"
 SMILES_METAL_AU = "OC[C@H]1OC(S[Au])[C@H](O)[C@@H](O)[C@@H]1O"
 
 
 class MolFilterTest(unittest.TestCase):
+    """Unittest for MolFilter, which invalidate molecules based on criteria defined in the respective filter."""
+
     def test_element_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed chemical elements.
 
@@ -27,23 +31,24 @@ class MolFilterTest(unittest.TestCase):
         None
         """
         smiles2mol = SmilesToMolPipelineElement()
-        element_filter = ElementFilterPipelineElement(
-            allowed_element_numbers=[
-                1,
-                5,
-                6,
-                7,
-                8,
-                9,
-                14,
-                15,
-                16,
-                17,
-                34,
-                35,
-                53,
-            ],
-        )
+        default_atoms = [
+            1,
+            5,
+            6,
+            7,
+            8,
+            9,
+            14,
+            15,
+            16,
+            17,
+            34,
+            35,
+            53,
+        ]
+
+        element_filter = ElementFilterPipelineElement()
+        self.assertEqual(element_filter.allowed_element_numbers, default_atoms)
         mol2smiles = MolToSmilesPipelineElement()
         none_filter = NoneFilter.from_element_list(
             [smiles2mol, element_filter, mol2smiles]
@@ -62,11 +67,11 @@ class MolFilterTest(unittest.TestCase):
                 SMILES_BENZENE,
                 SMILES_CHLOROBENZENE,
                 SMILES_METAL_AU,
-                SMILES_Cl_Br,
+                SMILES_CL_BR,
             ]
         )
         self.assertEqual(
-            filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_Cl_Br]
+            filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_CL_BR]
         )
 
     def test_invalidate_mixtures(self) -> None:

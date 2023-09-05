@@ -1,3 +1,4 @@
+"""Test functionality of the pipeline class."""
 import unittest
 
 from sklearn.tree import DecisionTreeClassifier
@@ -33,6 +34,8 @@ EXPECTED_OUTPUT = make_sparse_fp(TEST_SMILES, FP_RADIUS, FP_SIZE)
 
 
 class PipelineTest(unittest.TestCase):
+    """Unit test for the functionality of the pipeline class."""
+
     def test_fit_transform_single_core(self) -> None:
         """Test if the generation of the fingerprint matrix works as expected.
 

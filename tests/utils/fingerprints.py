@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from scipy import sparse
 from rdkit import Chem
-from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
+
+# pylint: disable=no-name-in-module
+from rdkit.Chem.AllChem import (
+    GetMorganFingerprintAsBitVect,
+)
 
 
 def make_sparse_fp(
@@ -29,7 +33,7 @@ def make_sparse_fp(
     """
     vector_list = []
     for smiles in smiles_list:
-        mol = Chem.MolFromSmiles(smiles)
+        mol = Chem.MolFromSmiles(smiles)  # pylint: disable=no-member
         vector = GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=n_bits)
         vector_list.append(sparse.csr_matrix(vector))
     return sparse.vstack(vector_list)

@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Optional
 
 from rdkit import Chem
-from rdkit.Chem import Mol as RDKitMol  # type: ignore[import]
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -12,7 +11,10 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import OptionalMol
+from molpipeline.utils.molpipeline_types import (
+    OptionalMol,
+    RDKitMol,
+)
 
 
 class SmilesToMolPipelineElement(_StringToMolPipelineElement):
