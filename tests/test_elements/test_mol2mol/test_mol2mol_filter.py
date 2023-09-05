@@ -31,7 +31,7 @@ class MolFilterTest(unittest.TestCase):
         None
         """
         smiles2mol = SmilesToMolPipelineElement()
-        default_atoms = [
+        default_atoms = {
             1,
             5,
             6,
@@ -45,7 +45,7 @@ class MolFilterTest(unittest.TestCase):
             34,
             35,
             53,
-        ]
+        }
 
         element_filter = ElementFilterPipelineElement()
         self.assertEqual(element_filter.allowed_element_numbers, default_atoms)
