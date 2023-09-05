@@ -101,8 +101,9 @@ class MolStandardizationTest(unittest.TestCase):
         duplicate_fragment_smiles_lust = [
             "CC.CC.C",
             "c1ccccc1.C1=C-C=C-C=C1",
+            "CCC.CC.CC.C",
         ]
-        expected_unique_fragment_smiles_list = ["C.CC", "c1ccccc1"]
+        expected_unique_fragment_smiles_list = ["C.CC", "c1ccccc1", "C.CC.CCC"]
 
         smi2mol = SmilesToMolPipelineElement()
         unique_fragments = DeduplicateFragmentsByInchiPipelineElement()

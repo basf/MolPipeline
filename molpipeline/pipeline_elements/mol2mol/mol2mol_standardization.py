@@ -122,10 +122,9 @@ class DeduplicateFragmentsByInchiPipelineElement(_MolToMolPipelineElement):
         unique_fragments = [Chem.MolFromInchi(inchi) for inchi in unique_fragment_list]
         if None in unique_fragments:
             return InvalidInstance(self.uuid, "Could not recreate molecule from InChI.")
-        if len(unique_fragments) == 1:
-            combined_fragments = unique_fragments[0]
-        else:
-            combined_fragments = Chem.CombineMols(*unique_fragments)
+        combined_fragments = unique_fragments[0]
+        for fragment in unique_fragments[1:]:
+            combined_fragments = Chem.CombineMols(combined_fragments, fragment)
         for key, value in value.GetPropsAsDict(includeComputed=False).items():
             combined_fragments.SetProp(key, value)
         return combined_fragments
@@ -169,10 +168,9 @@ class DeduplicateFragmentsBySmilesPipelineElement(_MolToMolPipelineElement):
             return InvalidInstance(
                 self.uuid, "Could not recreate molecule from SMILES."
             )
-        if len(unique_fragments) == 1:
-            combined_fragments = unique_fragments[0]
-        else:
-            combined_fragments = Chem.CombineMols(*unique_fragments)
+        combined_fragments = unique_fragments[0]
+        for fragment in unique_fragments[1:]:
+            combined_fragments = Chem.CombineMols(combined_fragments, fragment)
         for key, value in value.GetPropsAsDict(includeComputed=False).items():
             combined_fragments.SetProp(key, value)
         return combined_fragments
@@ -455,10 +453,9 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
                 kept_fragments.append(fragment)
         if len(kept_fragments) == 0:
             return InvalidInstance(self.uuid, "All fragments were removed.")
-        if len(kept_fragments) == 1:
-            combined_fragments = kept_fragments[0]
-        else:
-            combined_fragments = Chem.CombineMols(*kept_fragments)
+        combined_fragments = kept_fragments[0]
+        for fragment in kept_fragments[1:]:
+            combined_fragments = Chem.CombineMols(combined_fragments, fragment)
         for key, value in value.GetPropsAsDict(includeComputed=False).items():
             combined_fragments.SetProp(key, value)
         return combined_fragments
