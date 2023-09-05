@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["dependencies"]
+name = "molpipeline"
+authors = [
+    {name = "Christian W. Feldmann"},
+]
+description = "Integration of rdkit functionality into sklearn pipelines."
+version = "0.6.0"
+
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements.txt"}
