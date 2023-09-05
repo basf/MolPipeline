@@ -3,6 +3,7 @@ import unittest
 
 from sklearn.tree import DecisionTreeClassifier
 
+from tests.utils.fingerprints import make_sparse_fp
 from molpipeline.pipeline import Pipeline
 
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
@@ -22,7 +23,6 @@ from molpipeline.utils.json_operations import (
     recursive_to_json,
 )
 from molpipeline.pipeline_elements.none_handling import NoneFilter
-from tests.utils.fingerprints import make_sparse_fp
 
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
