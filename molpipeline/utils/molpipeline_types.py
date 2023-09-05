@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Any, List, Optional, Protocol, TypeVar, Union
+from typing import Any, List, Optional, Protocol, TypeVar
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -11,10 +11,8 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
-from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
 
 from molpipeline.abstract_pipeline_elements.core import (
-    InvalidInstance,
     OptionalMol,
     RDKitMol,
 )
@@ -43,7 +41,6 @@ AnyIterable = TypeVar("AnyIterable", List[_T], npt.NDArray[_T])
 
 # mypy: ignore-errors
 NumberIterable = TypeVar("NumberIterable", List[Number], npt.NDArray[Number])
-OptionalMol = Union[RDKitMol, InvalidInstance]
 
 TypeConserverdIterable = TypeVar("TypeConserverdIterable", List[_T], npt.NDArray[_T])
 

@@ -637,7 +637,7 @@ class Pipeline(_Pipeline):
         last_element = element_list[-1]
         return last_element[2]
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-branches
     def _fit(
         self,
         X: Any,  # pylint: disable=invalid-name
@@ -689,7 +689,9 @@ class Pipeline(_Pipeline):
                 ele_list = fitted_transformer.element_list
                 if not isinstance(name, list) or not isinstance(step_idx, list):
                     raise AssertionError()
-                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=True):
+                if not len(name) == len(step_idx) == len(ele_list):
+                    raise AssertionError()
+                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list):
                     self.steps[idx_i] = (name_i, ele_i)
                 y = fitted_transformer.co_transform(y)
             elif isinstance(name, list) or isinstance(step_idx, list):
