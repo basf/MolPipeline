@@ -43,7 +43,7 @@ class InvalidInstance:
         self.message = message
         self.element_name = element_name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return string representation of InvalidInstance."""
         return (
             f"InvalidInstance({self.element_name or self.element_id}, {self.message})"
