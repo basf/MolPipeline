@@ -163,7 +163,9 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
                 )
 
         if len(product_list) == 0:
-            return InvalidInstance(self.uuid, "Reaction did not yield any product.")
+            return InvalidInstance(
+                self.uuid, "Reaction did not yield any product.", self.name
+            )
         product = product_list[0][0]
         AllChem.SanitizeMol(product)
         return product

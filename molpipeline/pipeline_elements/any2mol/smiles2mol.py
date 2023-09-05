@@ -48,6 +48,10 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
         """
         mol: RDKitMol = Chem.MolFromSmiles(value)
         if not mol:
-            return InvalidInstance(self.uuid, f"Invalid SMILES: {value}")
+            return InvalidInstance(
+                self.uuid,
+                f"Invalid SMILES: {value}",
+                self.name,
+            )
         mol.SetProp("identifier", value)
         return mol

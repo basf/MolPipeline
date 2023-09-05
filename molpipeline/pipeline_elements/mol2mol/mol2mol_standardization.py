@@ -100,7 +100,21 @@ class DeduplicateFragmentsByInchiPipelineElement(_MolToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize DeduplicateFragmentsByInchiPipelineElement."""
+        """Initialize DeduplicateFragmentsByInchiPipelineElement.
+
+        Parameters
+        ----------
+        name: str, optional (default: "DeduplicateFragmentsByInchiPipelineElement")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            Unique identifier of the pipeline element.
+
+        Returns
+        -------
+        None
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -121,7 +135,9 @@ class DeduplicateFragmentsByInchiPipelineElement(_MolToMolPipelineElement):
         unique_fragment_list = sorted(set(fragment_inchis))
         unique_fragments = [Chem.MolFromInchi(inchi) for inchi in unique_fragment_list]
         if None in unique_fragments:
-            return InvalidInstance(self.uuid, "Could not recreate molecule from InChI.")
+            return InvalidInstance(
+                self.uuid, "Could not recreate molecule from InChI.", self.name
+            )
         combined_fragments = unique_fragments[0]
         for fragment in unique_fragments[1:]:
             combined_fragments = Chem.CombineMols(combined_fragments, fragment)
@@ -166,7 +182,9 @@ class DeduplicateFragmentsBySmilesPipelineElement(_MolToMolPipelineElement):
         ]
         if None in unique_fragments:
             return InvalidInstance(
-                self.uuid, "Could not recreate molecule from SMILES."
+                self.uuid,
+                "Could not recreate molecule from SMILES.",
+                self.name,
             )
         combined_fragments = unique_fragments[0]
         for fragment in unique_fragments[1:]:
@@ -452,7 +470,7 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
             else:  # no break: no match
                 kept_fragments.append(fragment)
         if len(kept_fragments) == 0:
-            return InvalidInstance(self.uuid, "All fragments were removed.")
+            return InvalidInstance(self.uuid, "All fragments were removed.", self.name)
         combined_fragments = kept_fragments[0]
         for fragment in kept_fragments[1:]:
             combined_fragments = Chem.CombineMols(combined_fragments, fragment)

@@ -21,7 +21,9 @@ from molpipeline.utils.multi_proc import check_available_cores, wrap_paralleliza
 class InvalidInstance:
     """Object which is returned when an instance cannot be processed."""
 
-    def __init__(self, element_id: str, message: str) -> None:
+    def __init__(
+        self, element_id: str, message: str, element_name: Optional[str] = None
+    ) -> None:
         """Initialize InvalidInstance.
 
         Parameters
@@ -30,6 +32,8 @@ class InvalidInstance:
             UUID of the element.
         message: str
             Message why the instance is invalid.
+        element_name: Optional[str]
+            Name of the element. Might be more descriptive than the UUID.
 
         Returns
         -------
@@ -37,6 +41,13 @@ class InvalidInstance:
         """
         self.element_id = element_id
         self.message = message
+        self.element_name = element_name
+
+    def __repr__(self):
+        """Return string representation of InvalidInstance."""
+        return (
+            f"InvalidInstance({self.element_name or self.element_id}, {self.message})"
+        )
 
 
 class RemovedInstance:
@@ -485,7 +496,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         # Final cleanup of the molecule
         if isinstance(value, RDKitMol):
             if value.GetNumAtoms() == 0:
-                return InvalidInstance(self.uuid, "Empty molecule")
+                return InvalidInstance(self.uuid, "Empty molecule", self.name)
         return value
 
     def pretransform(self, value_list: Iterable[Any]) -> list[Any]:

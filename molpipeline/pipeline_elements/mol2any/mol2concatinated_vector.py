@@ -213,7 +213,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             final_vector.append(vector)
         else:  # no break
             return final_vector
-        return InvalidInstance(self.uuid, error_message)
+        return InvalidInstance(self.uuid, error_message, self.name)
 
     def finalize_single(self, value: Any) -> Any:
         """Finalize the output of transform_single.

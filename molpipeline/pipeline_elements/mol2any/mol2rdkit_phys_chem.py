@@ -92,7 +92,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             [RDKIT_DESCRIPTOR_DICT[name](value) for name in self._descriptor_list]
         )
         if np.any(np.isnan(vec)):
-            return InvalidInstance(self.uuid, "NaN in descriptor vector")
+            return InvalidInstance(self.uuid, "NaN in descriptor vector", self.name)
         return vec
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:

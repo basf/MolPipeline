@@ -74,6 +74,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
             return InvalidInstance(
                 self.uuid,
                 f"Molecule contains following forbidden elements: {forbidden_elements}",
+                self.name,
             )
         return value
 
@@ -118,5 +119,6 @@ class MixtureFilterPipelineElement(_MolToMolPipelineElement):
             return InvalidInstance(
                 self.uuid,
                 f"Molecule contains multiple fragments: {fragments}",
+                self.name,
             )
         return value

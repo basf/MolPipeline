@@ -107,7 +107,11 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         """
         mol = Chem.MolFromMolBlock(value)
         if mol is None:
-            return InvalidInstance(self.uuid, "Invalid SDF string!")
+            return InvalidInstance(
+                self.uuid,
+                "Invalid SDF string!",
+                self.name,
+            )
         if self.identifier == "smiles":
             mol.SetProp("identifier", self.mol_counter)
         self.mol_counter += 1
