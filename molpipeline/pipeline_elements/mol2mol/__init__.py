@@ -7,6 +7,10 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
     ElementFilterPipelineElement,
     MixtureFilterPipelineElement,
 )
+from molpipeline.pipeline_elements.mol2mol.mol2mol_scaffolds import (
+    MakeScaffoldGenericPipelineElement,
+    MurckoScaffoldPipelineElement,
+)
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
     ChargeParentPipelineElement,
@@ -27,9 +31,11 @@ __all__ = (
     "DeduplicateFragmentsBySmilesPipelineElement",
     "ElementFilterPipelineElement",
     "LargestFragmentChooserPipelineElement",
+    "MakeScaffoldGenericPipelineElement",
     "MetalDisconnectorPipelineElement",
     "MixtureFilterPipelineElement",
     "MolToMolReactionPipelineElement",
+    "MurckoScaffoldPipelineElement",
     "RemoveStereoInformationPipelineElement",
     "SaltRemoverPipelineElement",
     "SolventRemoverPipelineElement",
