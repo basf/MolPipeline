@@ -41,8 +41,17 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         normalize: bool
-        name: str
-        n_jobs: int
+            If True, the output is normalized accoding to parameters determined during fitting.
+        name: str:
+            Name of the PipelineElement.
+        n_jobs: int:
+            Number of jobs to use for parallelization.
+        uuid: Optional[str]
+            UUID of the PipelineElement.
+
+        Returns
+        -------
+        None
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self._normalize = normalize
