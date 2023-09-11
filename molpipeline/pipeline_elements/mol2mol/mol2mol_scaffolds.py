@@ -63,10 +63,10 @@ class MakeScaffoldGenericPipelineElement(_MolToMolPipelineElement):
     """
 
     def __init__(
-            self,
-            name: str = "MakeScaffoldGenericPipelineElement",
-            n_jobs: int = 1,
-            uuid: Optional[str] = None,
+        self,
+        name: str = "MakeScaffoldGenericPipelineElement",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
     ) -> None:
         """Initialize MakeScaffoldGenericPipelineElement.
 
