@@ -443,7 +443,7 @@ class _MolPipeline:
             filter_element.none_indices = []
         if self.n_jobs > 1:
             with Pool(self.n_jobs) as pool:
-                iter_func = pool.imap(self.transform_single, x_input)
+                iter_func = pool.imap(self.transform_single, x_input, chunksize=256)
                 for i, transformed_value in enumerate(iter_func):
                     if isinstance(transformed_value, RemovedInstance):
                         agg_filter.register_removed(i, transformed_value)
@@ -853,7 +853,7 @@ class Pipeline(_Pipeline):
                         f"match fit_transform of Pipeline {self.__class__.__name__}"
                     )
             for _, post_element in self._post_processing_steps():
-                iter_input = post_element.transform(iter_input)
+                iter_input = post_element.fit_transform(iter_input, iter_label)
         return iter_input
 
     @available_if(_final_estimator_has("predict"))
