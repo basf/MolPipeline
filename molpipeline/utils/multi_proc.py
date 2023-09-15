@@ -65,3 +65,15 @@ def wrap_parallelizable_task(
 
     with multiprocessing.Pool(n_jobs) as pool:
         return pool.map(task, value_list)
+
+
+def calc_chunksize(n_jobs: int, len_iterable: int, factor: int = 4) -> int:
+    """Calculate the chunksize for chunking an iterable of len_iterable length for processing with n_jobs.
+
+    This function corresponds to the implementation in `multiprocessing.pool.Pool._map_async` and
+    was inspired from: https://stackoverflow.com/a/54032744
+    """
+    chunksize, extra = divmod(len_iterable, n_jobs * factor)
+    if extra:
+        chunksize += 1
+    return chunksize
