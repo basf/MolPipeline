@@ -72,6 +72,20 @@ def calc_chunksize(n_jobs: int, len_iterable: int, factor: int = 4) -> int:
 
     This function corresponds to the implementation in `multiprocessing.pool.Pool._map_async` and
     was inspired from: https://stackoverflow.com/a/54032744
+
+    Parameters
+    ----------
+    n_jobs: int
+        Number of jobs.
+    len_iterable: int
+        Length of iterable.
+    factor: int
+        Factor used by the heuristic to scale the number of workers.
+
+    Returns
+    -------
+    int
+        Chunksize.
     """
     chunksize, extra = divmod(len_iterable, n_jobs * factor)
     if extra:
