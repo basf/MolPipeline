@@ -14,12 +14,13 @@ import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
 from rdkit.Chem import Descriptors
+from sklearn.preprocessing import StandardScaler
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol, AnySklearnEstimator
 
 
 RDKIT_DESCRIPTOR_DICT: dict[str, Callable[[Chem.Mol], float]]
@@ -40,7 +41,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
     def __init__(
         self,
         descriptor_list: Optional[list[str]] = None,
-        normalize: bool = True,
+        standardizer: Optional[AnySklearnEstimator] = StandardScaler(),
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -50,19 +51,17 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         descriptor_list: Optional[list[str]]
-        normalize: bool
+        standardizer: bool
         name: str
         n_jobs: int
         """
         self._descriptor_list = descriptor_list or DEFAULT_DESCRIPTORS
         super().__init__(
-            normalize=normalize,
+            standardizer=standardizer,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
         )
-        if normalize:
-            self._requires_fitting = True
 
     @property
     def n_features(self) -> int:

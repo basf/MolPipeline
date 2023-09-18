@@ -4,6 +4,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import (
@@ -250,7 +251,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         descriptor_names = expected_df.drop(columns=["smiles"]).columns.tolist()
         smi2mol = SmilesToMolPipelineElement()
         property_element = MolToRDKitPhysChem(
-            normalize=False, descriptor_list=descriptor_names
+            standardizer=None, descriptor_list=descriptor_names
         )
         pipeline = Pipeline(
             [
@@ -274,7 +275,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         None
         """
         smi2mol = SmilesToMolPipelineElement()
-        property_element = MolToRDKitPhysChem(normalize=True)
+        property_element = MolToRDKitPhysChem(standardizer=StandardScaler())
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),

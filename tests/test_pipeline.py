@@ -2,7 +2,7 @@
 import unittest
 
 from sklearn.tree import DecisionTreeClassifier
-
+from sklearn.base import BaseEstimator
 from tests.utils.fingerprints import make_sparse_fp
 from molpipeline.pipeline import Pipeline
 
@@ -149,9 +149,13 @@ class PipelineTest(unittest.TestCase):
         for loaded_element, original_element in zip(
             loaded_pipeline.steps, pipeline_element_list
         ):
-            self.assertEqual(
-                loaded_element[1].get_params(), original_element.get_params()
-            )
+            loaded_params = loaded_element[1].get_params()
+            original_params = original_element.get_params()
+            for key, value in loaded_params.items():
+                if isinstance(value, BaseEstimator):
+                    self.assertEqual(type(value), type(original_params[key]))
+                else:
+                    self.assertEqual(loaded_params[key], original_params[key])
 
     def test_fit_transform_record_remove_nones(self) -> None:
         """Test if the generation of the fingerprint matrix works as expected.

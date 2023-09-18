@@ -11,27 +11,26 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-import copy
 import numpy as np
 import numpy.typing as npt
+from sklearn.base import clone
+from sklearn.preprocessing import StandardScaler
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
     InvalidInstance,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol, AnyTransformer
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
 
-    _normalize: bool
-    _mean: Optional[npt.NDArray[np.float_]]
-    _std: Optional[npt.NDArray[np.float_]]
+    _standardizer: Optional[AnyTransformer]
 
     def __init__(
         self,
-        normalize: bool = True,
+        standardizer: Optional[AnyTransformer] = StandardScaler(),
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -40,8 +39,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        normalize: bool
-            If True, the output is normalized accoding to parameters determined during fitting.
+        standardizer: Optional[AnyTransformer], default=StandardScaler()
+           The output is post_processed accoding to the standardizer if not None.
         name: str:
             Name of the PipelineElement.
         n_jobs: int:
@@ -54,8 +53,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         None
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-        self._normalize = normalize
-        if self._normalize:
+        self._standardizer = standardizer
+        if self._standardizer is not None:
             self._requires_fitting = True
         self._mean = None
         self._std = None
@@ -78,7 +77,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         additional_attributes = json_dict_copy.pop("additional_attributes", {})
         if additional_attributes:
             additional_attributes = {
-                "_mean": np.array(additional_attributes["_mean"]),
+                "stan": np.array(additional_attributes["_mean"]),
                 "_std": np.array(additional_attributes["_std"]),
             }
         json_dict_copy["additional_attributes"] = additional_attributes
@@ -88,11 +87,6 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     @abc.abstractmethod
     def n_features(self) -> int:
         """Return the number of features."""
-
-    @property
-    def normalize(self) -> bool:
-        """Return whether the output is normalized."""
-        return self._normalize
 
     def assemble_output(
         self,
@@ -127,9 +121,9 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """
         params = super().get_params(deep)
         if deep:
-            params["normalize"] = copy.copy(self._normalize)
+            params["standardizer"] = clone(self._standardizer)
         else:
-            params["normalize"] = self._normalize
+            params["standardizer"] = self._standardizer
         return params
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
@@ -146,21 +140,11 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             Object with updated parameters.
         """
         parameter_copy = dict(parameters)
-        normalize = parameter_copy.pop("normalize", None)
-        if normalize is not None:
-            self._normalize = parameters["normalize"]
+        standardizer = parameter_copy.pop("standardizer", None)
+        if standardizer is not None:
+            self._standardizer= standardizer
         super().set_params(parameter_copy)
         return self
-
-    @property
-    def additional_attributes(self) -> dict[str, Any]:
-        """Return all parameters defining the object."""
-        attribute_dict = super().additional_attributes
-        if self._mean is not None:
-            attribute_dict["_mean"] = self._mean
-        if self._std is not None:
-            attribute_dict["_std"] = self._std
-        return attribute_dict
 
     def fit_to_result(self, values: list[npt.NDArray[np.float_]]) -> Self:
         """Fit object to data.
@@ -176,20 +160,15 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             Fitted MolToDescriptorPipelineElement.
         """
         value_matrix = np.vstack(list(values))
-        self._mean = np.nanmean(value_matrix, axis=0)
-        _std: npt.NDArray[np.float_] = np.nanstd(value_matrix, axis=0)
-        _std[np.where(_std == 0)] = 1.0  # avoid division by zero
-        self._std = _std
+        if self._standardizer is not None:
+            self._standardizer.fit(value_matrix)
         return self
 
     def _normalize_matrix(
         self, value_matrix: npt.NDArray[np.float_]
     ) -> npt.NDArray[np.float_]:
-        if self._normalize:
-            if self._mean is None or self._std is None:
-                raise ValueError("Model appears not to be fitted.")
-            scaled_matrix = (value_matrix - self._mean) / self._std
-            return scaled_matrix
+        if self._standardizer is not None:
+            return self._standardizer.transform(value_matrix)
         return value_matrix
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float_]:
@@ -209,7 +188,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         return descriptor_matrix
 
     def finalize_single(self, value: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
-        """Finalize single value. Here: normalize vector.
+        """Finalize single value. Here: standardize vector.
 
         Parameters
         ----------
@@ -221,8 +200,9 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Any
             Finalized value.
         """
-        if self.normalize:
-            return self._normalize_matrix(value)
+        if self._standardizer is not None:
+            standadized_value = self._standardizer.transform(value.reshape(1, -1))
+            return standadized_value.reshape(-1)
         return value
 
     @abc.abstractmethod
