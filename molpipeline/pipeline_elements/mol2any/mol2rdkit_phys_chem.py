@@ -20,7 +20,7 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol, AnySklearnEstimator
+from molpipeline.utils.molpipeline_types import RDKitMol, AnyTransformer
 
 
 RDKIT_DESCRIPTOR_DICT: dict[str, Callable[[Chem.Mol], float]]
@@ -41,7 +41,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
     def __init__(
         self,
         descriptor_list: Optional[list[str]] = None,
-        standardizer: Optional[AnySklearnEstimator] = StandardScaler(),
+        standardizer: Optional[AnyTransformer] = StandardScaler(),
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
