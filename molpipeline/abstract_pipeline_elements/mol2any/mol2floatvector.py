@@ -161,7 +161,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """
         value_matrix = np.vstack(list(values))
         if self._standardizer is not None:
-            self._standardizer.fit(value_matrix)
+            self._standardizer.fit(value_matrix, None)
         return self
 
     def _normalize_matrix(
