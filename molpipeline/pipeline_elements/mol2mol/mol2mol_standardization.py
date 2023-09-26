@@ -391,7 +391,17 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
 
     @solvent_smiles_list.setter
     def solvent_smiles_list(self, solvent_smiles_list: list[str]) -> None:
-        """Set the smiles list."""
+        """Set the smiles list.
+
+        Parameters
+        ----------
+        solvent_smiles_list: list[str]
+            List of SMILES of fragments to remove.
+
+        Returns
+        -------
+        None
+        """
         self._solvent_smiles_list = solvent_smiles_list
         solvent_mol_list = []
         for smiles in solvent_smiles_list:
