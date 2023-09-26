@@ -163,6 +163,10 @@ class DeduplicateFragmentsByMolHashPipelineElement(_MolToMolPipelineElement):
             (rdMolHash.MolHash(fragment, self.hashing_method), fragment)
             for fragment in fragments
         ]
+        if len(fragment_hash_list) == 0:
+            return InvalidInstance(
+                self.uuid, "Molecule contains no fragments.", self.name
+            )
         unique_fragment_hashes = {fragment_hash_list[0][0]}
         recombined_fragment = fragment_hash_list[0][1]
         for fragment_hash, fragment in fragment_hash_list[1:]:
