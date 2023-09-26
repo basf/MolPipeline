@@ -3,7 +3,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, NamedTuple, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -17,30 +17,12 @@ from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 
 
-class InvalidInstance:  # pylint: disable=too-few-public-methods
+class InvalidInstance(NamedTuple):
     """Object which is returned when an instance cannot be processed."""
 
-    def __init__(
-        self, element_id: str, message: str, element_name: Optional[str] = None
-    ) -> None:
-        """Initialize InvalidInstance.
-
-        Parameters
-        ----------
-        element_id: str
-            UUID of the element.
-        message: str
-            Message why the instance is invalid.
-        element_name: Optional[str]
-            Name of the element. Might be more descriptive than the UUID.
-
-        Returns
-        -------
-        None
-        """
-        self.element_id = element_id
-        self.message = message
-        self.element_name = element_name
+    element_id: str
+    message: str
+    element_name: Optional[str] = None
 
     def __repr__(self) -> str:
         """Return string representation of InvalidInstance."""
