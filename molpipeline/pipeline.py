@@ -34,7 +34,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     RemovedInstance,
     TransformingPipelineElement,
 )
-from molpipeline.utils.multi_proc import check_available_cores
+from molpipeline.utils.multi_proc import check_available_cores, calc_chunksize
 from molpipeline.utils.molpipeline_types import (
     AnyPredictor,
     AnyTransformer,
@@ -443,7 +443,11 @@ class _MolPipeline:
             filter_element.none_indices = []
         if self.n_jobs > 1:
             with Pool(self.n_jobs) as pool:
-                iter_func = pool.imap(self.transform_single, x_input, chunksize=256)
+                iter_func = pool.imap(
+                    self.transform_single,
+                    x_input,
+                    chunksize=calc_chunksize(self.n_jobs, len(x_input)),
+                )
                 for i, transformed_value in enumerate(iter_func):
                     if isinstance(transformed_value, RemovedInstance):
                         agg_filter.register_removed(i, transformed_value)
