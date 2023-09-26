@@ -18,7 +18,18 @@ from molpipeline.utils.multi_proc import check_available_cores, wrap_paralleliza
 
 
 class InvalidInstance(NamedTuple):
-    """Object which is returned when an instance cannot be processed."""
+    """Object which is returned when an instance cannot be processed.
+
+    Attributes
+    ----------
+    element_id: str
+        Id of the element which could not be processed.
+    message: str
+        Message why the element could not be processed.
+    element_name: Optional[str]
+        Optional name of the element which could not be processed.
+        The name of the pipeline element is often more descriptive than the id.
+    """
 
     element_id: str
     message: str
