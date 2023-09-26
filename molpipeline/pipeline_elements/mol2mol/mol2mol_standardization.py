@@ -331,7 +331,6 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
 class SolventRemoverPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes defined fragments from a molecule."""
 
-    solvent_smiles_list: list[str]
     _solvent_mol_list: list[RDKitMol]
 
     def __init__(
@@ -379,9 +378,28 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
                 "CCO",
             ]
         self.solvent_smiles_list = solvent_smiles_list
-        self._solvent_mol_list = [
-            Chem.MolFromSmiles(smiles) for smiles in solvent_smiles_list
-        ]
+
+    @property
+    def solvent_mol_list(self) -> list[RDKitMol]:
+        """Return molecule representation of smiles list."""
+        return self._solvent_mol_list
+
+    @property
+    def solvent_smiles_list(self) -> list[str]:
+        """Return the smiles list."""
+        return self._solvent_smiles_list
+
+    @solvent_smiles_list.setter
+    def solvent_smiles_list(self, solvent_smiles_list: list[str]) -> None:
+        """Set the smiles list."""
+        self._solvent_smiles_list = solvent_smiles_list
+        solvent_mol_list = []
+        for smiles in solvent_smiles_list:
+            mol = Chem.MolFromSmiles(smiles)
+            if mol is None:
+                raise ValueError(f"Could not convert {smiles} to a molecule.")
+            solvent_mol_list.append(mol)
+        self._solvent_mol_list = solvent_mol_list
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return parameters of pipeline element.
@@ -422,9 +440,6 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
         solvent_smiles_list = param_copy.pop("solvent_smiles_list", None)
         if solvent_smiles_list is not None:
             self.solvent_smiles_list = solvent_smiles_list
-            self._solvent_mol_list = [
-                Chem.MolFromSmiles(smiles) for smiles in solvent_smiles_list
-            ]
         super().set_params(param_copy)
         return self
 
