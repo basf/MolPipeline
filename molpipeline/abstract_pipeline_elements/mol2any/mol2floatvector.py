@@ -142,7 +142,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         parameter_copy = dict(parameters)
         standardizer = parameter_copy.pop("standardizer", None)
         if standardizer is not None:
-            self._standardizer= standardizer
+            self._standardizer = standardizer
         super().set_params(parameter_copy)
         return self
 
