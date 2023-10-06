@@ -238,6 +238,7 @@ class Pipeline(_Pipeline):
                 raise AssertionError()
             else:
                 fit_parameter = fit_params_steps[name]
+
             # Fit or load from cache the current transformer
             X, fitted_transformer = fit_transform_one_cached(
                 cloned_transformer,
