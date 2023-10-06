@@ -37,7 +37,6 @@ class _MolPipeline:
     _n_jobs: int
     _element_list: list[ABCPipelineElement]
     _requires_fitting: bool
-    _removed_rows: tuple[int, dict[int, str]]  # (total rows in array, {index: reason})
 
     def __init__(
         self,
