@@ -434,6 +434,7 @@ class _MolPipeline:
                         agg_filter.register_removed(i, transformed_value)
                 else:
                     yield transformed_value
+        agg_filter.set_total(len(x_input))
         self._finish()
         del log_block
 
@@ -450,4 +451,4 @@ class _MolPipeline:
         Any
             Filtered molecular representations.
         """
-        return self._filter_elements_agg.transform(x_input)
+        return self._filter_elements_agg.co_transform(x_input)

@@ -312,6 +312,21 @@ class _MultipleNoneFilter:
             raise ValueError(
                 f"Invalid instance not captured by any NoneFilter: {value.filter_element_id}"
             )
+    def set_total(self, total: int) -> None:
+        """Set the total number of instances.
+
+        Parameters
+        ----------
+        total: int
+            Total number of instances seen during transformation.
+
+        Returns
+        -------
+        None
+        """
+        for none_filter in self.none_filter_list:
+            none_filter.n_total = total
+            total -= len(none_filter.none_indices)
 
 
 class NoneFiller(ABCPipelineElement):
