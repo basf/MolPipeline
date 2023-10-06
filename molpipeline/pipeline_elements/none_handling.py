@@ -507,7 +507,6 @@ class NoneFiller(ABCPipelineElement):
             Iterable where invalid instances were removed.
         """
         if len(values) != self.none_filter.n_total - len(self.none_filter.none_indices):
-            print(self.none_filter.none_indices)
             raise ValueError(
                 f"Length of values does not match length of values in fit. "
                 f"Expected: {self.none_filter.n_total -len(self.none_filter.none_indices)}  - Received :{len(values)}"
