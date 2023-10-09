@@ -312,6 +312,7 @@ class _MultipleNoneFilter:
             raise ValueError(
                 f"Invalid instance not captured by any NoneFilter: {value.filter_element_id}"
             )
+
     def set_total(self, total: int) -> None:
         """Set the total number of instances.
 
