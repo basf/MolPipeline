@@ -10,6 +10,7 @@ authors = [
 ]
 description = "Integration of rdkit functionality into sklearn pipelines."
 version = "0.6.1"
+readme = "README.md"
 
 [tool.setuptools.dynamic]
 dependencies = {file = "requirements.txt"}
