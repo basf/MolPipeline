@@ -9,6 +9,7 @@ except ImportError:
     from typing_extensions import Self
 
 import joblib
+import numpy.typing as npt
 from sklearn.base import (
     _fit_context,  # pylint: disable=protected-access
     clone,
@@ -565,3 +566,15 @@ class Pipeline(_Pipeline):
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)
         return iter_input
+    
+    @property
+    def classes_(self) -> list[Any] | npt.NDArray[Any]:
+        """Return the classes of the last element, which is not a PostPredictionTransformation.
+
+        Returns
+        -------
+        list[Any] | npt.NDArray[Any]
+            Classes presented during fitting.
+        """
+        steps = [step for step in self.steps if not isinstance(step[1], PostPredictionTransformation)]
+        return steps[-1][1].classes_
