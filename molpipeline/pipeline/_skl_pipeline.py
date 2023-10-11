@@ -12,6 +12,7 @@ import joblib
 import numpy.typing as npt
 from sklearn.base import (
     _fit_context,  # pylint: disable=protected-access
+    ClassifierMixin,
     clone,
 )
 from sklearn.utils.metaestimators import available_if
@@ -576,9 +577,12 @@ class Pipeline(_Pipeline):
         list[Any] | npt.NDArray[Any]
             Classes presented during fitting.
         """
-        steps = [
+        check_last = [
             step
             for step in self.steps
             if not isinstance(step[1], PostPredictionTransformation)
         ]
-        return steps[-1][1].classes_
+        last_step = check_last[-1][1]
+        if isinstance(last_step, ClassifierMixin):
+            return last_step.classes_
+        raise ValueError("Last step is not a classifier")
