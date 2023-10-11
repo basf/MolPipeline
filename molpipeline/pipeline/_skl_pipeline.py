@@ -570,13 +570,7 @@ class Pipeline(_Pipeline):
 
     @property
     def classes_(self) -> list[Any] | npt.NDArray[Any]:
-        """Return the classes of the last element, which is not a PostPredictionTransformation.
-
-        Returns
-        -------
-        list[Any] | npt.NDArray[Any]
-            Classes presented during fitting.
-        """
+        """Return the classes of the last element, which is not a PostPredictionTransformation."""
         check_last = [
             step
             for step in self.steps
