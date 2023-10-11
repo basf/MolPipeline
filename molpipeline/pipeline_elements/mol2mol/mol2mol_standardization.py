@@ -1,7 +1,7 @@
 """Classes for standardizing molecules."""
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -12,12 +12,35 @@ from rdkit import Chem
 from rdkit.Chem import rdmolops, SanitizeMol  # pylint: disable=no-name-in-module
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
 from rdkit.Chem.MolStandardize import rdMolStandardize
+from rdkit.Chem import rdMolHash
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
     InvalidInstance,
 )
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
+
+
+MolHashing = Union[
+    "rdMolHash.HashFunction.AnonymousGraph",
+    "rdMolHash.HashFunction.ArthorSubstructureOrder",
+    "rdMolHash.HashFunction.AtomBondCounts",
+    "rdMolHash.HashFunction.CanonicalSmiles",
+    "rdMolHash.HashFunction.DegreeVector",
+    "rdMolHash.HashFunction.ElementGraph",
+    "rdMolHash.HashFunction.ExtendedMurcko",
+    "rdMolHash.HashFunction.HetAtomProtomer",
+    "rdMolHash.HashFunction.HetAtomTautomer",
+    "rdMolHash.HashFunction.HetAtomTautomerv2",
+    "rdMolHash.HashFunction.Mesomer",
+    "rdMolHash.HashFunction.MolFormula",
+    "rdMolHash.HashFunction.MurckoScaffold",
+    "rdMolHash.HashFunction.NetCharge",
+    "rdMolHash.HashFunction.RedoxPair",
+    "rdMolHash.HashFunction.Regioisomer",
+    "rdMolHash.HashFunction.SmallWorldIndexBR",
+    "rdMolHash.HashFunction.SmallWorldIndexBRL",
+]
 
 
 class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
@@ -87,24 +110,29 @@ class ChargeParentPipelineElement(_MolToMolPipelineElement):
         return rdMolStandardize.ChargeParent(value)
 
 
-class DeduplicateFragmentsByInchiPipelineElement(_MolToMolPipelineElement):
+class DeduplicateFragmentsByMolHashPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes duplicate fragments from a molecule.
 
-    Duplicates are detected by comparing the InChI of the fragments.
+    Duplicates are detected by comparing the MolHashes of the fragments.
     """
+
+    hashing_method: MolHashing
 
     def __init__(
         self,
-        name: str = "DeduplicateFragmentsByInchiPipelineElement",
+        name: str = "DeduplicateFragmentsByMolHashPipelineElement",
+        hashing_method: MolHashing = rdMolHash.HashFunction.HetAtomTautomer,
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize DeduplicateFragmentsByInchiPipelineElement.
+        """Initialize DeduplicateFragmentsByMolHashPipelineElement.
 
         Parameters
         ----------
         name: str, optional (default: "DeduplicateFragmentsByInchiPipelineElement")
             Name of the pipeline element.
+        hashing_method: MolHashing, optional (default: rdMolHash.HashFunction.HetAtomTautomer)
+            MolHashing method to use for comparing fragments.
         n_jobs: int, optional (default: 1)
             Number of parallel jobs to use.
         uuid: str, optional (default: None)
@@ -115,6 +143,7 @@ class DeduplicateFragmentsByInchiPipelineElement(_MolToMolPipelineElement):
         None
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        self.hashing_method = hashing_method
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove duplicate fragments from molecule.
@@ -130,67 +159,24 @@ class DeduplicateFragmentsByInchiPipelineElement(_MolToMolPipelineElement):
             Molecule without duplicate fragments if possible, else InvalidInstance.
         """
         fragments = Chem.GetMolFrags(value, asMols=True)
-        fragment_inchis = [Chem.MolToInchi(fragment) for fragment in fragments]
-        unique_fragment_list = sorted(set(fragment_inchis))
-        unique_fragments = [Chem.MolFromInchi(inchi) for inchi in unique_fragment_list]
-        if None in unique_fragments:
-            return InvalidInstance(
-                self.uuid, "Could not recreate molecule from InChI.", self.name
-            )
-        combined_fragments = unique_fragments[0]
-        for fragment in unique_fragments[1:]:
-            combined_fragments = Chem.CombineMols(combined_fragments, fragment)
-        for dict_key, dict_value in value.GetPropsAsDict(includeComputed=False).items():
-            combined_fragments.SetProp(dict_key, dict_value)
-        return combined_fragments
-
-
-class DeduplicateFragmentsBySmilesPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes duplicate fragments from a molecule.
-
-    Duplicates are detected by comparing the SMILES of the fragments.
-    """
-
-    def __init__(
-        self,
-        name: str = "DeduplicateFragmentsBySmilesPipelineElement",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize DeduplicateFragmentsBySmilesPipelineElement."""
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
-    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Remove duplicate fragments from molecule.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            Molecule to remove duplicate fragments from.
-
-        Returns
-        -------
-        OptionalMol
-            Molecule without duplicate fragments if possible, else InvalidInstance.
-        """
-        fragments = Chem.GetMolFrags(value, asMols=True)
-        fragment_smiles = [Chem.MolToSmiles(fragment) for fragment in fragments]
-        unique_fragment_list = sorted(set(fragment_smiles))
-        unique_fragments = [
-            Chem.MolFromSmiles(smiles) for smiles in unique_fragment_list
+        fragment_hash_list = [
+            (rdMolHash.MolHash(fragment, self.hashing_method), fragment)
+            for fragment in fragments
         ]
-        if None in unique_fragments:
+        if len(fragment_hash_list) == 0:
             return InvalidInstance(
-                self.uuid,
-                "Could not recreate molecule from SMILES.",
-                self.name,
+                self.uuid, "Molecule contains no fragments.", self.name
             )
-        combined_fragments = unique_fragments[0]
-        for fragment in unique_fragments[1:]:
-            combined_fragments = Chem.CombineMols(combined_fragments, fragment)
+        unique_fragment_hashes = {fragment_hash_list[0][0]}
+        recombined_fragment = fragment_hash_list[0][1]
+        for fragment_hash, fragment in fragment_hash_list[1:]:
+            if fragment_hash not in unique_fragment_hashes:
+                unique_fragment_hashes.add(fragment_hash)
+                recombined_fragment = Chem.CombineMols(recombined_fragment, fragment)
+
         for dict_key, dict_value in value.GetPropsAsDict(includeComputed=False).items():
-            combined_fragments.SetProp(dict_key, dict_value)
-        return combined_fragments
+            recombined_fragment.SetProp(dict_key, dict_value)
+        return recombined_fragment
 
 
 class LargestFragmentChooserPipelineElement(_MolToMolPipelineElement):
@@ -345,7 +331,6 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
 class SolventRemoverPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes defined fragments from a molecule."""
 
-    solvent_smiles_list: list[str]
     _solvent_mol_list: list[RDKitMol]
 
     def __init__(
@@ -393,9 +378,38 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
                 "CCO",
             ]
         self.solvent_smiles_list = solvent_smiles_list
-        self._solvent_mol_list = [
-            Chem.MolFromSmiles(smiles) for smiles in solvent_smiles_list
-        ]
+
+    @property
+    def solvent_mol_list(self) -> list[RDKitMol]:
+        """Return molecule representation of smiles list."""
+        return self._solvent_mol_list
+
+    @property
+    def solvent_smiles_list(self) -> list[str]:
+        """Return the smiles list."""
+        return self._solvent_smiles_list
+
+    @solvent_smiles_list.setter
+    def solvent_smiles_list(self, solvent_smiles_list: list[str]) -> None:
+        """Set the smiles list.
+
+        Parameters
+        ----------
+        solvent_smiles_list: list[str]
+            List of SMILES of fragments to remove.
+
+        Returns
+        -------
+        None
+        """
+        self._solvent_smiles_list = solvent_smiles_list
+        solvent_mol_list = []
+        for smiles in solvent_smiles_list:
+            mol = Chem.MolFromSmiles(smiles)
+            if mol is None:
+                raise ValueError(f"Could not convert {smiles} to a molecule.")
+            solvent_mol_list.append(mol)
+        self._solvent_mol_list = solvent_mol_list
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return parameters of pipeline element.
@@ -436,9 +450,6 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
         solvent_smiles_list = param_copy.pop("solvent_smiles_list", None)
         if solvent_smiles_list is not None:
             self.solvent_smiles_list = solvent_smiles_list
-            self._solvent_mol_list = [
-                Chem.MolFromSmiles(smiles) for smiles in solvent_smiles_list
-            ]
         super().set_params(param_copy)
         return self
 

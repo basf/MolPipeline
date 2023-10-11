@@ -313,6 +313,22 @@ class _MultipleNoneFilter:
                 f"Invalid instance not captured by any NoneFilter: {value.filter_element_id}"
             )
 
+    def set_total(self, total: int) -> None:
+        """Set the total number of instances.
+
+        Parameters
+        ----------
+        total: int
+            Total number of instances seen during transformation.
+
+        Returns
+        -------
+        None
+        """
+        for none_filter in self.none_filter_list:
+            none_filter.n_total = total
+            total -= len(none_filter.none_indices)
+
 
 class NoneFiller(ABCPipelineElement):
     """Fill None values with a Dummy value."""
@@ -507,7 +523,6 @@ class NoneFiller(ABCPipelineElement):
             Iterable where invalid instances were removed.
         """
         if len(values) != self.none_filter.n_total - len(self.none_filter.none_indices):
-            print(self.none_filter.none_indices)
             raise ValueError(
                 f"Length of values does not match length of values in fit. "
                 f"Expected: {self.none_filter.n_total -len(self.none_filter.none_indices)}  - Received :{len(values)}"

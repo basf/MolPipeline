@@ -9,7 +9,8 @@ authors = [
     {name = "Christian W. Feldmann"},
 ]
 description = "Integration of rdkit functionality into sklearn pipelines."
-version = "0.6.0"
+version = "0.6.1"
+readme = "README.md"
 
 [tool.setuptools.dynamic]
 dependencies = {file = "requirements.txt"}

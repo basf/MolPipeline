@@ -154,3 +154,20 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         npt.NDArray[Any]
             Transformed array.
         """
+
+    def transform(
+        self,
+        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+    ) -> npt.NDArray[Any]:
+        """Transform and return X according to object protocol.
+
+        Parameters
+        ----------
+        X: npt.NDArray[Any]
+            Model input.
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Transformed array.
+        """

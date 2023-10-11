@@ -14,8 +14,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_scaffolds import (
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
     ChargeParentPipelineElement,
-    DeduplicateFragmentsByInchiPipelineElement,
-    DeduplicateFragmentsBySmilesPipelineElement,
+    DeduplicateFragmentsByMolHashPipelineElement,
     LargestFragmentChooserPipelineElement,
     MetalDisconnectorPipelineElement,
     RemoveStereoInformationPipelineElement,
@@ -27,8 +26,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
 __all__ = (
     "CanonicalizeTautomerPipelineElement",
     "ChargeParentPipelineElement",
-    "DeduplicateFragmentsByInchiPipelineElement",
-    "DeduplicateFragmentsBySmilesPipelineElement",
+    "DeduplicateFragmentsByMolHashPipelineElement",
     "ElementFilterPipelineElement",
     "LargestFragmentChooserPipelineElement",
     "MakeScaffoldGenericPipelineElement",

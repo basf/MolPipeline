@@ -4,8 +4,7 @@ from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
-    DeduplicateFragmentsBySmilesPipelineElement,
-    DeduplicateFragmentsByInchiPipelineElement,
+    DeduplicateFragmentsByMolHashPipelineElement,
     SolventRemoverPipelineElement,
     LargestFragmentChooserPipelineElement,
     MetalDisconnectorPipelineElement,
@@ -68,33 +67,7 @@ class MolStandardizationTest(unittest.TestCase):
         # a pre-condition assert from within RDkit.
         self.assertEqual(mols_processed[0].GetRingInfo().NumRings(), 1)
 
-    def test_duplicate_fragment_by_smiles_removal(self) -> None:
-        """Test if duplicate fragements are correctly removed by DeduplicateFragmentsBySmilesElement.
-
-        Returns
-        -------
-        None
-        """
-        duplicate_fragment_smiles_lust = [
-            "CC.CC.C",
-            "c1ccccc1.C1=C-C=C-C=C1",
-        ]
-        expected_unique_fragment_smiles_list = ["C.CC", "c1ccccc1"]
-
-        smi2mol = SmilesToMolPipelineElement()
-        unique_fragments = DeduplicateFragmentsBySmilesPipelineElement()
-        mol2smi = MolToSmilesPipelineElement()
-        pipeline = Pipeline(
-            [
-                ("smi2mol", smi2mol),
-                ("unique_fragments", unique_fragments),
-                ("mol2smi", mol2smi),
-            ]
-        )
-        mols_processed = pipeline.fit_transform(duplicate_fragment_smiles_lust)
-        self.assertEqual(expected_unique_fragment_smiles_list, mols_processed)
-
-    def test_duplicate_fragment_by_inchi_removal(self) -> None:
+    def test_duplicate_fragment_by_hash_removal(self) -> None:
         """Test if duplicate fragements are correctly removed by DeduplicateFragmentsByInchiElement.
 
         Returns
@@ -105,11 +78,17 @@ class MolStandardizationTest(unittest.TestCase):
             "CC.CC.C",
             "c1ccccc1.C1=C-C=C-C=C1",
             "CCC.CC.CC.C",
+            "CC1=C[NH]C=N1.CC1=CN=C[NH]1",
         ]
-        expected_unique_fragment_smiles_list = ["C.CC", "c1ccccc1", "C.CC.CCC"]
+        expected_unique_fragment_smiles_list = [
+            "C.CC",
+            "c1ccccc1",
+            "C.CC.CCC",
+            "Cc1c[nH]cn1",
+        ]
 
         smi2mol = SmilesToMolPipelineElement()
-        unique_fragments = DeduplicateFragmentsByInchiPipelineElement()
+        unique_fragments = DeduplicateFragmentsByMolHashPipelineElement()
         mol2smi = MolToSmilesPipelineElement()
         pipeline = Pipeline(
             [

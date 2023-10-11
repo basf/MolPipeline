@@ -48,6 +48,12 @@ class SmilesToMolPipelineElement(_StringToMolPipelineElement):
         OptionalMol
             Rdkit molecule if valid SMILES, else None.
         """
+        if value is None:
+            return InvalidInstance(
+                self.uuid,
+                f"Invalid SMILES: {value}",
+                self.name,
+            )
         mol: RDKitMol = Chem.MolFromSmiles(value)
         if not mol:
             return InvalidInstance(

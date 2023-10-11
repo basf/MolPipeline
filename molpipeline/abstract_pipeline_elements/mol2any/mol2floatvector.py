@@ -142,7 +142,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         parameter_copy = dict(parameters)
         standardizer = parameter_copy.pop("standardizer", None)
         if standardizer is not None:
-            self._standardizer= standardizer
+            self._standardizer = standardizer
         super().set_params(parameter_copy)
         return self
 
@@ -161,7 +161,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """
         value_matrix = np.vstack(list(values))
         if self._standardizer is not None:
-            self._standardizer.fit(value_matrix)
+            self._standardizer.fit(value_matrix, None)
         return self
 
     def _normalize_matrix(
