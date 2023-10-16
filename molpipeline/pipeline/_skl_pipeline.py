@@ -9,8 +9,10 @@ except ImportError:
     from typing_extensions import Self
 
 import joblib
+import numpy.typing as npt
 from sklearn.base import (
     _fit_context,  # pylint: disable=protected-access
+    ClassifierMixin,
     clone,
 )
 from sklearn.utils.metaestimators import available_if
@@ -565,3 +567,16 @@ class Pipeline(_Pipeline):
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)
         return iter_input
+
+    @property
+    def classes_(self) -> list[Any] | npt.NDArray[Any]:
+        """Return the classes of the last element, which is not a PostPredictionTransformation."""
+        check_last = [
+            step
+            for step in self.steps
+            if not isinstance(step[1], PostPredictionTransformation)
+        ]
+        last_step = check_last[-1][1]
+        if isinstance(last_step, ClassifierMixin):
+            return last_step.classes_
+        raise ValueError("Last step is not a classifier")
