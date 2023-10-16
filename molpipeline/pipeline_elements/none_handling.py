@@ -413,6 +413,27 @@ class NoneFiller(ABCPipelineElement):
             params["fill_value"] = self.fill_value
         return params
 
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """Set parameters for this element.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameter dict.
+
+        Returns
+        -------
+        self
+            The instance itself.
+        """
+        parameter_copy = dict(parameters)
+        if "none_filter_id" in parameter_copy:
+            self.none_filter_id = parameter_copy.pop("none_filter_id")
+        if "fill_value" in parameter_copy:
+            self.fill_value = parameter_copy.pop("fill_value")
+        super().set_params(parameter_copy)
+        return self
+
     @property
     def none_filter(self) -> NoneFilter:
         """Return the NoneFilter."""
