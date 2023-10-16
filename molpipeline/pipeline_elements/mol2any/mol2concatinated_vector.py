@@ -8,6 +8,7 @@ except ImportError:
     from typing_extensions import Self
 import numpy as np
 import numpy.typing as npt
+from sklearn.base import clone
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -23,12 +24,12 @@ from molpipeline.utils.molpipeline_types import RDKitMol
 class MolToConcatenatedVector(MolToAnyPipelineElement):
     """Creates a concatenated descriptor vectored from multiple MolToAny PipelineElements."""
 
-    _element_list: list[MolToAnyPipelineElement]
+    _element_list: list[tuple[str, MolToAnyPipelineElement]]
 
     # pylint: disable=R0913
     def __init__(
         self,
-        element_list: list[MolToAnyPipelineElement],
+        element_list: list[tuple[str, MolToAnyPipelineElement]],
         name: str = "MolToConcatenatedVector",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -46,10 +47,10 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """
         self._element_list = element_list
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-        for element in self._element_list:
+        for _, element in self._element_list:
             element.n_jobs = self.n_jobs
         self._requires_fitting = any(
-            element._requires_fitting for element in element_list
+            element[1]._requires_fitting for element in element_list
         )
 
     @classmethod
@@ -76,7 +77,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         return super().from_json(params)
 
     @property
-    def element_list(self) -> list[MolToAnyPipelineElement]:
+    def element_list(self) -> list[tuple[str, MolToAnyPipelineElement]]:
         """Get pipeline elements."""
         return self._element_list
 
@@ -96,10 +97,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         parameters = super().get_params(deep)
         if deep:
             parameters["element_list"] = [
-                element.copy() for element in self.element_list
+                (str(name), clone(ele)) for name, ele in self.element_list
             ]
         else:
             parameters["element_list"] = self.element_list
+        for name, element in self.element_list:
+            for key, value in element.get_params().items():
+                parameters[f"{name}__{key}"] = value
+
         return parameters
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
@@ -119,7 +124,26 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         element_list = parameter_copy.pop("element_list", None)
         if element_list is not None:
             self._element_list = element_list
-
+        step_params: dict[str, dict[str, Any]] = {}
+        step_dict = dict(self._element_list)
+        to_delte_list = []
+        for parm, value in parameters.items():
+            if "__" not in parm:
+                continue
+            param_split = parm.split("__")
+            param_header = param_split[0]
+            # Check if parameter addresses an element
+            if param_header not in step_dict:
+                continue
+            param_tail = "__".join(param_split[1:])
+            if param_header not in step_params:
+                step_params[param_header] = {}
+            step_params[param_header][param_tail] = value
+            to_delte_list.append(parm)
+        for to_delete in to_delte_list:
+            _ = parameter_copy.pop(to_delete, None)
+        for step, params in step_params.items():
+            step_dict[step].set_params(params)
         super().set_params(parameter_copy)
         return self
 
@@ -140,18 +164,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
         """
         return np.vstack(list(value_list))
-
-    def to_json(self) -> dict[str, Any]:
-        """Return json representation of the object.
-
-        Returns
-        -------
-        dict[str, Any]
-            Json representation of the object.
-        """
-        json_dict = super().to_json()
-        json_dict["element_list"] = [element.to_json() for element in self.element_list]
-        return json_dict
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float_]:
         """Transform the list of molecules to sparse matrix.
@@ -183,7 +195,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Fitted pipeline element.
         """
         for pipeline_element in self._element_list:
-            pipeline_element.fit(value_list)
+            pipeline_element[1].fit(value_list)
         return self
 
     def pretransform_single(
@@ -204,10 +216,10 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """
         final_vector = []
         error_message = ""
-        for pipeline_element in self._element_list:
+        for name, pipeline_element in self._element_list:
             vector = pipeline_element.pretransform_single(value)
             if vector is None:
-                error_message += f"{pipeline_element.name} returned None. "
+                error_message += f"{self.name}__{name} returned None. "
                 break
 
             final_vector.append(vector)
@@ -229,7 +241,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Finalized output.
         """
         final_vector_list = []
-        for element, sub_value in zip(self._element_list, value):
+        for (_, element), sub_value in zip(self._element_list, value):
             final_value = element.finalize_single(sub_value)
             if isinstance(element, MolToFingerprintPipelineElement):
                 vector = np.zeros(element.n_bits)
@@ -254,5 +266,5 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Fitted pipeline element.
         """
         for element, value in zip(self._element_list, zip(*values)):
-            element.fit_to_result(value)
+            element[1].fit_to_result(value)
         return self
