@@ -29,7 +29,10 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         concat_vector_element = MolToConcatenatedVector(
             [
                 ("RDKitPhysChem", MolToRDKitPhysChem(standardizer=StandardScaler())),
-                ("MorganFP", MolToFoldedMorganFingerprint(),)
+                (
+                    "MorganFP",
+                    MolToFoldedMorganFingerprint(),
+                ),
             ]
         )
         smi2mol = SmilesToMolPipelineElement()
