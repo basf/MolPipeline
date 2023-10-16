@@ -66,12 +66,12 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             ]
         )
         pyschem_component: MolToRDKitPhysChem
-        pyschem_component = concat_vector_element.element_list[0]  # type: ignore
+        pyschem_component = concat_vector_element.element_list[0][1]  # type: ignore
         morgan_component: MolToFoldedMorganFingerprint
-        morgan_component = concat_vector_element.element_list[1]  # type: ignore
+        morgan_component = concat_vector_element.element_list[1][1]  # type: ignore
         expected_shape = (
             len(smiles),
-            (pyschem_component[1].n_features + morgan_component[1].n_bits),
+            (pyschem_component.n_features + morgan_component.n_bits),
         )
         self.assertEqual(output.shape, expected_shape)
         self.assertTrue(np.abs(output - output2).max() < 0.00001)
