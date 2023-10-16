@@ -99,8 +99,8 @@ class Pipeline(_Pipeline):
         ]
         for step in self.steps:
             if isinstance(step[1], PostPredictionWrapper):
-                if isinstance(step[1].estimator, NoneFiller):
-                    none_filler_list.append(step[1].estimator)
+                if isinstance(step[1].wrapped_estimator, NoneFiller):
+                    none_filler_list.append(step[1].wrapped_estimator)
         for none_filler in none_filler_list:
             none_filler.select_none_filter(none_filter_list)
 
