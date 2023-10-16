@@ -13,6 +13,7 @@ except ImportError:
 from numpy import typing as npt
 from sklearn.base import BaseEstimator, clone, TransformerMixin
 
+from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.pipeline_elements.none_handling import NoneFiller
 from molpipeline.utils.molpipeline_types import AnyPredictor, AnyTransformer
 
@@ -65,7 +66,10 @@ class PostPredictionWrapper(PostPredictionTransformation):
         """
         self.wrapped_estimator = wrapped_estimator
         if kwargs:
-            self.wrapped_estimator.set_params(**kwargs)
+            if isinstance(self.wrapped_estimator, ABCPipelineElement):
+                self.wrapped_estimator.set_params(kwargs)
+            else:
+                self.wrapped_estimator.set_params(**kwargs)
 
     def fit(
         self,
@@ -210,5 +214,8 @@ class PostPredictionWrapper(PostPredictionTransformation):
         if wrapped_estimator:
             self.wrapped_estimator = wrapped_estimator
         if param_copy:
-            self.wrapped_estimator.set_params(**param_copy)
+            if isinstance(self.wrapped_estimator, ABCPipelineElement):
+                self.wrapped_estimator.set_params(param_copy)
+            else:
+                self.wrapped_estimator.set_params(**param_copy)
         return self
