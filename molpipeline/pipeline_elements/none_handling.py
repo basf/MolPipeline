@@ -407,7 +407,10 @@ class NoneFiller(ABCPipelineElement):
         params = super().get_params(deep=deep)
         if deep:
             params["none_filter_id"] = str(self.none_filter_id)
-            params["fill_value"] = type(self.fill_value)(self.fill_value)
+            if self.fill_value is not None:
+                params["fill_value"] = type(self.fill_value)(self.fill_value)
+            else:
+                params["fill_value"] = None
         else:
             params["none_filter_id"] = self.none_filter_id
             params["fill_value"] = self.fill_value
