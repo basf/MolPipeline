@@ -33,6 +33,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         name: str = "MolToConcatenatedVector",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize MolToConcatenatedVector.
 
@@ -52,7 +53,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         self._requires_fitting = any(
             element[1]._requires_fitting for element in element_list
         )
-
+        self.set_params(kwargs)
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
         """Create object from json representation.

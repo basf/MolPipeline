@@ -70,7 +70,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
                 self.wrapped_estimator.set_params(kwargs)
             else:
                 self.wrapped_estimator.set_params(**kwargs)
-
+        
     def fit(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
