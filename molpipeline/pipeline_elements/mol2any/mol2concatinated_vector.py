@@ -103,7 +103,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         else:
             parameters["element_list"] = self.element_list
         for name, element in self.element_list:
-            for key, value in element.get_params().items():
+            for key, value in element.get_params(deep=deep).items():
                 parameters[f"{name}__{key}"] = value
 
         return parameters
@@ -127,7 +127,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             self._element_list = element_list
         step_params: dict[str, dict[str, Any]] = {}
         step_dict = dict(self._element_list)
-        to_delte_list = []
+        to_delete_list = []
         for parm, value in parameters.items():
             if "__" not in parm:
                 continue
@@ -140,8 +140,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             if param_header not in step_params:
                 step_params[param_header] = {}
             step_params[param_header][param_tail] = value
-            to_delte_list.append(parm)
-        for to_delete in to_delte_list:
+            to_delete_list.append(parm)
+        for to_delete in to_delete_list:
             _ = parameter_copy.pop(to_delete, None)
         for step, params in step_params.items():
             step_dict[step].set_params(params)
