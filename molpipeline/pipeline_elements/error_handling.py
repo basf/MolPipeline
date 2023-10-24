@@ -342,7 +342,7 @@ class ErrorReplacer(ABCPipelineElement):
     """Fill None values with a Dummy value."""
 
     fill_value: Any
-    error_replacer_id: str
+    error_filter_id: str
     _error_filter: Optional[ErrorFilter]
     n_total: int
 
@@ -356,7 +356,7 @@ class ErrorReplacer(ABCPipelineElement):
     ) -> None:
         """Initialize ErrorReplacer."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-        self.error_replacer_id = error_filter_id
+        self.error_filter_id = error_filter_id
         self._error_filter = None
         self.fill_value = fill_value
 
@@ -414,13 +414,13 @@ class ErrorReplacer(ABCPipelineElement):
         """
         params = super().get_params(deep=deep)
         if deep:
-            params["error_replacer_id"] = str(self.error_replacer_id)
+            params["error_filter_id"] = str(self.error_filter_id)
             if self.fill_value is not None:
                 params["fill_value"] = type(self.fill_value)(self.fill_value)
             else:
                 params["fill_value"] = None
         else:
-            params["error_replacer_id"] = self.error_replacer_id
+            params["error_filter_id"] = self.error_filter_id
             params["fill_value"] = self.fill_value
         return params
 
@@ -439,7 +439,7 @@ class ErrorReplacer(ABCPipelineElement):
         """
         parameter_copy = dict(parameters)
         if "error_filter_id" in parameter_copy:
-            self.error_replacer_id = parameter_copy.pop("error_filter_id")
+            self.error_filter_id = parameter_copy.pop("error_filter_id")
         if "fill_value" in parameter_copy:
             self.fill_value = parameter_copy.pop("fill_value")
         super().set_params(parameter_copy)
@@ -477,11 +477,11 @@ class ErrorReplacer(ABCPipelineElement):
             ErrorReplacer with updated ErrorFilter.
         """
         for error_filter in error_filter_list:
-            if error_filter.uuid == self.error_replacer_id:
+            if error_filter.uuid == self.error_filter_id:
                 self.error_filter = error_filter
                 break
         else:
-            raise ValueError(f"ErrorFilter with id {self.error_replacer_id} not found")
+            raise ValueError(f"ErrorFilter with id {self.error_filter_id} not found")
         return self
 
     def fit(self, values: AnyIterable) -> Self:  # pylint: disable=unused-argument
