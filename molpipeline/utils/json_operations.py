@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 import types
+import typing
 import warnings
 from typing import Any
 
-from sklearn.base import BaseEstimator
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.pipeline import Pipeline
@@ -113,64 +113,73 @@ def transform_string2function(value: Any) -> Any:
     return value
 
 
-def sklearn_model_to_json(model: BaseEstimator) -> dict[str, Any]:
-    """Extract the parameters of a sklearn model (or pipeline) and transform them to a json file.
+_U = typing.TypeVar("_U", str, int, float, bool, None)
+
+
+@typing.overload
+def builtin_to_json(obj: _U) -> _U:
+    ...
+
+
+@typing.overload
+def builtin_to_json(obj: list[Any]) -> list[Any]:
+    ...
+
+
+@typing.overload
+def builtin_to_json(obj: tuple[Any, ...]) -> tuple[Any, ...]:
+    ...
+
+
+@typing.overload
+def builtin_to_json(
+    obj: types.FunctionType | set[Any] | dict[Any, Any]
+) -> dict[str, Any]:
+    ...
+
+
+def builtin_to_json(obj: Any) -> Any:
+    """Transform a builtin object to an object savable as json file.
 
     Parameters
     ----------
-    model: BaseEstimator
-        Model of which the parameters are extracted.
+    obj: PythonNative
+        Object to be transformed. Can be a string, int, float, bool, list, tuple, dict, callable or a set.
 
     Returns
     -------
-    dict[str, Any]
-        Dictionary containing the model parameters.
+    Any
+        Json file containing the dictionary.
     """
-    json_dict = {
-        "__name__": model.__class__.__name__,
-        "__module__": model.__class__.__module__,
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
+        return obj
+
+    if isinstance(obj, types.FunctionType):
+        return {
+            "__name__": obj.__name__,
+            "__module__": obj.__module__,
+            "__init__": False,
+        }
+    if isinstance(obj, dict):
+        return {
+            recursive_to_json(key): recursive_to_json(value)
+            for key, value in obj.items()
+        }
+    if isinstance(obj, (list, tuple)):
+        iter_list = [recursive_to_json(value) for value in obj]
+        iterable_type = type(obj)
+        return iterable_type(iter_list)
+
+    object_dict: dict[str, Any] = {
+        "__name__": obj.__class__.__name__,
+        "__module__": obj.__class__.__module__,
+        "__init__": True,
     }
-    if isinstance(model, Pipeline):
-        json_dict["steps"] = [
-            (step_name, sklearn_model_to_json(step_model))
-            for (step_name, step_model) in model.steps
-        ]
-        json_dict["memory"] = model.memory
-        json_dict["verbose"] = model.verbose
-        return json_dict
-    model_params = model.get_params()
-    json_dict.update(transform_functions2string(model_params))
-    return json_dict
-
-
-def sklearn_model_from_json(model_dict: dict[str, Any]) -> BaseEstimator:
-    """Create a parameterized but untrained model from a json file.
-
-    Parameters
-    ----------
-    model_dict: dict[str, Any]
-        Dictionary containing the model parameters.
-
-    Returns
-    -------
-    BaseEstimator
-        Sklearn model with the parameters specified in the json file.
-    """
-    model_module_str: str = model_dict.pop("__module__")
-    model_class_str: str = model_dict.pop("__name__")
-    _ = model_dict.pop("__init__", None)  # For compatibility with new json files
-    class_module = __import__(model_module_str, fromlist=[model_class_str])
-    model_class = getattr(class_module, model_class_str)
-    if model_class is Pipeline:
-        steps = [
-            (step_name, sklearn_model_from_json(step_model))
-            for (step_name, step_model) in model_dict["steps"]
-        ]
-        return Pipeline(
-            steps, memory=model_dict["memory"], verbose=model_dict["verbose"]
-        )
-    model_params = transform_string2function(model_dict)
-    return model_class(**model_params)
+    # If the object is a sklearn model, the parameters for initialization are extracted.
+    if isinstance(obj, set):
+        object_dict["__set_items__"] = [recursive_to_json(value) for value in obj]
+        return object_dict
+    raise TypeError(f"Unexpected Type: {type(obj)}")
 
 
 def recursive_to_json(obj: Any) -> Any:
@@ -187,21 +196,14 @@ def recursive_to_json(obj: Any) -> Any:
     dict[str, Any]
         Json file containing the dictionary.
     """
-    if isinstance(obj, (str, int, float, bool)) or obj is None:
-        return obj
+    if obj is None:
+        return None
 
-    if isinstance(obj, types.FunctionType):
-        return {
-            "__name__": obj.__name__,
-            "__module__": obj.__module__,
-            "__init__": False,
-        }
-    if isinstance(obj, dict):
-        return {key: recursive_to_json(value) for key, value in obj.items()}
-    if isinstance(obj, (list, tuple)):
-        iter_list = [recursive_to_json(value) for value in obj]
-        iterable_type = type(obj)
-        return iterable_type(iter_list)
+    if isinstance(
+        obj, (str, int, float, bool, dict, types.FunctionType, list, set, tuple)
+    ):
+        return_value = builtin_to_json(obj)
+        return return_value
 
     # If neither of the above, it is assumed to be an object.
     object_dict: dict[str, Any] = {
@@ -232,6 +234,48 @@ def recursive_to_json(obj: Any) -> Any:
     return object_dict
 
 
+def decode_dict(obj: dict[str, Any]) -> Any:
+    """Decode a dictionary to an object.
+
+    Parameters
+    ----------
+    obj: dict[str, Any]
+        Dictionary to be transformed
+
+    Returns
+    -------
+    Any
+        Object specified in the dictionary.
+    """
+    # Create copy
+    object_params_copy = dict(obj)
+
+    # For functions of classes
+    obj_module_str = object_params_copy.pop("__module__", None)
+    obj_class_str = object_params_copy.pop("__name__", None)
+    initialize = object_params_copy.pop("__init__", False)
+
+    # Convert remaining Values
+    converted_dict = {}
+    for key, value in object_params_copy.items():
+        converted_dict[key] = recursive_from_json(value)
+
+    # If the object is a function or a class
+    if obj_module_str and obj_class_str:
+        class_module = __import__(obj_module_str, fromlist=[obj_class_str])
+        obj_class = getattr(class_module, obj_class_str)
+        if not initialize:  # If the object is a function or should not be initialized
+            return obj_class
+        # If the object is a class, but has no parameters
+        if not converted_dict:
+            return obj_class()
+        if obj_class is set:
+            return set(converted_dict["__set_items__"])
+        # If the object is a class, and has parameters
+        return obj_class(**converted_dict)
+    return converted_dict
+
+
 def recursive_from_json(obj: Any) -> Any:
     """Recursively transform a json file to an object.
 
@@ -249,30 +293,7 @@ def recursive_from_json(obj: Any) -> Any:
         return obj
 
     if isinstance(obj, dict):
-        # Create copy
-        object_params_copy = dict(obj)
-        # For functions of classes
-        obj_module_str = object_params_copy.pop("__module__", None)
-        obj_class_str = object_params_copy.pop("__name__", None)
-        initialize = object_params_copy.pop("__init__", False)
-
-        # Remaining Values
-        converted_dict = {}
-        for key, value in object_params_copy.items():
-            converted_dict[key] = recursive_from_json(value)
-
-        # If the object is a function or a class
-        if obj_module_str and obj_class_str:
-            class_module = __import__(obj_module_str, fromlist=[obj_class_str])
-            obj_class = getattr(class_module, obj_class_str)
-            if not initialize:  # If the object is a function
-                return obj_class
-            # If the object is a class, but has no parameters
-            if not converted_dict:
-                return obj_class()
-            # If the object is a class, and has parameters
-            return obj_class(**converted_dict)
-        return converted_dict
+        return decode_dict(obj)
 
     if isinstance(obj, (list, tuple)):
         iter_list = [recursive_from_json(value) for value in obj]

@@ -7,8 +7,8 @@ from sklearn.svm import SVC
 from molpipeline.utils.json_operations import (
     transform_functions2string,
     transform_string2function,
-    sklearn_model_from_json,
-    sklearn_model_to_json,
+    recursive_from_json,
+    recursive_to_json,
 )
 from molpipeline.utils.multi_proc import check_available_cores
 from molpipeline.pipeline import Pipeline
@@ -25,7 +25,7 @@ class JsonConversionTest(unittest.TestCase):
         None
         """
         random_forest = RandomForestClassifier(n_estimators=200)
-        recreated_rf = sklearn_model_from_json(sklearn_model_to_json(random_forest))
+        recreated_rf = recursive_from_json(recursive_to_json(random_forest))
         self.assertEqual(random_forest.get_params(), recreated_rf.get_params())
 
     def test_svc_reconstruction(self) -> None:
@@ -36,7 +36,7 @@ class JsonConversionTest(unittest.TestCase):
         None
         """
         svc = SVC()
-        recreated_svc = sklearn_model_from_json(sklearn_model_to_json(svc))
+        recreated_svc = recursive_from_json(recursive_to_json(svc))
         self.assertEqual(svc.get_params(), recreated_svc.get_params())
 
     def test_pipeline_reconstruction(self) -> None:
@@ -49,7 +49,7 @@ class JsonConversionTest(unittest.TestCase):
         random_forest = RandomForestClassifier(n_estimators=200)
         svc = SVC()
         pipeline = Pipeline([("rf", random_forest), ("svc", svc)])
-        recreated_pipeline = sklearn_model_from_json(sklearn_model_to_json(pipeline))
+        recreated_pipeline = recursive_from_json(recursive_to_json(pipeline))
 
         original_params = pipeline.get_params()
         recreated_params = recreated_pipeline.get_params()
