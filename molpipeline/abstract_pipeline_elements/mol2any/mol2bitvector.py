@@ -114,7 +114,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         parameter_dict_copy = dict(parameters)
         sparse_output = parameter_dict_copy.pop("sparse_output", None)
         if sparse_output is not None:
-            self.sparse_output = sparse_output
+            self._sparse_output = sparse_output
         super().set_params(parameter_dict_copy)
         return self
 
