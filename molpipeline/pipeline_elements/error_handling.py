@@ -62,7 +62,7 @@ class ErrorFilter(ABCPipelineElement):
                 raise ValueError(
                     "If element_ids is None, filter_everything must be True"
                 )
-            element_ids = {}
+            element_ids = set()
         if not isinstance(element_ids, set):
             element_ids = set(element_ids)
         self.element_ids = element_ids
