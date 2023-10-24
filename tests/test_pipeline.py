@@ -22,7 +22,7 @@ from molpipeline.utils.json_operations import (
     recursive_from_json,
     recursive_to_json,
 )
-from molpipeline.pipeline_elements.none_handling import NoneFilter
+from molpipeline.pipeline_elements.error_handling import ErrorFilter
 
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
@@ -166,7 +166,7 @@ class PipelineTest(unittest.TestCase):
         smi2mol = SmilesToMolPipelineElement()
         salt_remover = SaltRemoverPipelineElement()
         mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
-        remove_none = NoneFilter.from_element_list([smi2mol, salt_remover, mol2morgan])
+        remove_none = ErrorFilter.from_element_list([smi2mol, salt_remover, mol2morgan])
         # Create pipeline
         pipeline = Pipeline(
             [

@@ -46,14 +46,14 @@ OptionalMol = Union[RDKitMol, InvalidInstance]
 
 
 class RemovedInstance:  # pylint: disable=too-few-public-methods
-    """Object which is returned by a NoneFilter if an Invalid instance was removed."""
+    """Object which is returned by a ErrorFilter if an Invalid instance was removed."""
 
     def __init__(self, filter_element_id: str, message: Optional[str] = None) -> None:
         """Initialize RemovedInstance.
 
         Parameters
         ----------
-        filter_element: str
+        filter_element_id: str
             FilterElement which removed the molecule.
         message: Optional[str]
             Optional message why the molecule was removed.

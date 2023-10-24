@@ -17,7 +17,7 @@ from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import (
     MolToRDKitPhysChem,
 )
 from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
-from molpipeline.pipeline_elements.none_handling import NoneFilter, NoneFiller
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 
 rdlog = RDLogger.logger()
 rdlog.setLevel(RDLogger.CRITICAL)
@@ -29,38 +29,38 @@ EXPECTED_OUTPUT = ["NCCCO", None, "c1ccccc1"]
 class NoneTest(unittest.TestCase):
     """Unittest for None Handling."""
 
-    def test_none_dummy_fill_molpipeline(self) -> None:
+    def test_error_dummy_fill_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
 
         smi2mol = SmilesToMolPipelineElement()
         mol2smi = MolToSmilesPipelineElement()
-        remove_none = NoneFilter.from_element_list([smi2mol, mol2smi])
-        fill_none = PostPredictionWrapper(
-            NoneFiller.from_none_filter(remove_none, fill_value=None)
+        remove_error = ErrorFilter.from_element_list([smi2mol, mol2smi])
+        replace_error = PostPredictionWrapper(
+            ErrorReplacer.from_error_filter(remove_error, fill_value=None)
         )
 
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
                 ("mol2smi", mol2smi),
-                ("remove_none", remove_none),
-                ("fill_none", fill_none),
+                ("remove_error", remove_error),
+                ("replace_error", replace_error),
             ]
         )
         out = pipeline.fit_transform(TEST_SMILES)
         for pred_val, true_val in zip(out, EXPECTED_OUTPUT):
             self.assertEqual(pred_val, true_val)
 
-    def test_none_dummy_remove_record_molpipeline(self) -> None:
+    def test_error_dummy_remove_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
         smi2mol = SmilesToMolPipelineElement()
         mol2smi = MolToSmilesPipelineElement()
-        remove_none = NoneFilter.from_element_list([smi2mol, mol2smi])
+        error_filter = ErrorFilter.from_element_list([smi2mol, mol2smi])
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
                 ("mol2smi", mol2smi),
-                ("remove_none", remove_none),
+                ("error_filter", error_filter),
             ]
         )
         out = pipeline.transform(TEST_SMILES)
@@ -71,12 +71,12 @@ class NoneTest(unittest.TestCase):
         """Assert that invalid smiles are transformed to None."""
         smi2mol = SmilesToMolPipelineElement()
         mol2morgan = MolToFoldedMorganFingerprint()
-        remove_none = NoneFilter.from_element_list([smi2mol, mol2morgan])
+        error_filter = ErrorFilter.from_element_list([smi2mol, mol2morgan])
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
                 ("mol2morgan", mol2morgan),
-                ("remove_none", remove_none),
+                ("error_filter", error_filter),
             ],
         )
         out = pipeline.transform(TEST_SMILES)
@@ -86,7 +86,7 @@ class NoneTest(unittest.TestCase):
         """Assert that invalid smiles are transformed to None."""
         smi2mol = SmilesToMolPipelineElement()
         mol2physchem = MolToRDKitPhysChem()
-        remove_none = NoneFilter.from_element_list([smi2mol, mol2physchem])
+        remove_none = ErrorFilter.from_element_list([smi2mol, mol2physchem])
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -106,9 +106,9 @@ class NoneTest(unittest.TestCase):
 
         smi2mol = SmilesToMolPipelineElement()
         mol2physchem = MolToRDKitPhysChem()
-        remove_none = NoneFilter.from_element_list([smi2mol, mol2physchem])
+        remove_none = ErrorFilter.from_element_list([smi2mol, mol2physchem])
         fill_none = PostPredictionWrapper(
-            NoneFiller.from_none_filter(remove_none, fill_value=10)
+            ErrorReplacer.from_error_filter(remove_none, fill_value=10)
         )
 
         pipeline = Pipeline(

@@ -7,9 +7,9 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
     MixtureFilterPipelineElement,
 )
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
-from molpipeline.pipeline_elements.none_handling import (
-    NoneFilter,
-    NoneFiller,
+from molpipeline.pipeline_elements.error_handling import (
+    ErrorFilter,
+    ErrorReplacer,
 )
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
@@ -50,7 +50,7 @@ class MolFilterTest(unittest.TestCase):
         element_filter = ElementFilterPipelineElement()
         self.assertEqual(element_filter.allowed_element_numbers, default_atoms)
         mol2smiles = MolToSmilesPipelineElement()
-        none_filter = NoneFilter.from_element_list(
+        error_filter = ErrorFilter.from_element_list(
             [smiles2mol, element_filter, mol2smiles]
         )
         pipeline = Pipeline(
@@ -58,7 +58,7 @@ class MolFilterTest(unittest.TestCase):
                 ("Smiles2Mol", smiles2mol),
                 ("ElementFilter", element_filter),
                 ("Mol2Smiles", mol2smiles),
-                ("NoneFilter", none_filter),
+                ("ErrorFilter", error_filter),
             ],
         )
         filtered_smiles = pipeline.fit_transform(
@@ -87,16 +87,16 @@ class MolFilterTest(unittest.TestCase):
         smi2mol = SmilesToMolPipelineElement()
         mixture_filter = MixtureFilterPipelineElement()
         mol2smi = MolToSmilesPipelineElement()
-        none_filter = NoneFilter.from_element_list([smi2mol, mixture_filter, mol2smi])
-        none_filler = NoneFiller.from_none_filter(none_filter, None)
+        error_filter = ErrorFilter.from_element_list([smi2mol, mixture_filter, mol2smi])
+        error_replacer = ErrorReplacer.from_error_filter(error_filter, None)
 
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
                 ("mixture_filter", mixture_filter),
                 ("mol2smi", mol2smi),
-                ("none_filter", none_filter),
-                ("none_filler", none_filler),
+                ("error_filter", error_filter),
+                ("error_replacer", error_replacer),
             ]
         )
         mols_processed = pipeline.fit_transform(mol_list)

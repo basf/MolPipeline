@@ -14,7 +14,7 @@ from numpy import typing as npt
 from sklearn.base import BaseEstimator, clone, TransformerMixin
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
-from molpipeline.pipeline_elements.none_handling import NoneFiller
+from molpipeline.pipeline_elements.error_handling import ErrorReplacer
 from molpipeline.utils.molpipeline_types import AnyPredictor, AnyTransformer
 
 
@@ -49,7 +49,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
 
     def __init__(
         self,
-        wrapped_estimator: Union[AnyPredictor, AnyTransformer, NoneFiller],
+        wrapped_estimator: Union[AnyPredictor, AnyTransformer, ErrorReplacer],
         **kwargs: Any,
     ) -> None:
         """Initialize PostPredictionWrapper.
@@ -90,7 +90,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
         Self
             Fitted PostPredictionWrapper.
         """
-        if isinstance(self.wrapped_estimator, NoneFiller):
+        if isinstance(self.wrapped_estimator, ErrorReplacer):
             self.wrapped_estimator.fit(X)
         else:
             self.wrapped_estimator.fit(X, y)
@@ -144,7 +144,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
         if hasattr(self.wrapped_estimator, "fit_predict"):
             return self.wrapped_estimator.fit_predict(X, y, **fit_params)
         if hasattr(self.wrapped_estimator, "fit_transform"):
-            if isinstance(self.wrapped_estimator, NoneFiller):
+            if isinstance(self.wrapped_estimator, ErrorReplacer):
                 return self.wrapped_estimator.fit_transform(X)
             return self.wrapped_estimator.fit_transform(X, y, **fit_params)
         raise AttributeError(

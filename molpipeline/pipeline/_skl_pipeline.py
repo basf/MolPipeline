@@ -31,9 +31,9 @@ from molpipeline.utils.molpipeline_types import (
     AnyPredictor,
     AnyTransformer,
 )
-from molpipeline.pipeline_elements.none_handling import (
-    NoneFilter,
-    NoneFiller,
+from molpipeline.pipeline_elements.error_handling import (
+    ErrorFilter,
+    ErrorReplacer,
 )
 from molpipeline.pipeline_elements.post_prediction import (
     PostPredictionTransformation,
@@ -93,18 +93,18 @@ class Pipeline(_Pipeline):
         self.n_jobs = n_jobs
         self.raise_nones = raise_nones
 
-        none_filler_list = [
-            n_filler for _, n_filler in self.steps if isinstance(n_filler, NoneFiller)
+        error_replacer_list = [
+            e_filler for _, e_filler in self.steps if isinstance(e_filler, ErrorReplacer)
         ]
-        none_filter_list = [
-            n_filter for _, n_filter in self.steps if isinstance(n_filter, NoneFilter)
+        error_filter_list = [
+            n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
         ]
         for step in self.steps:
             if isinstance(step[1], PostPredictionWrapper):
-                if isinstance(step[1].wrapped_estimator, NoneFiller):
-                    none_filler_list.append(step[1].wrapped_estimator)
-        for none_filler in none_filler_list:
-            none_filler.select_none_filter(none_filter_list)
+                if isinstance(step[1].wrapped_estimator, ErrorReplacer):
+                    error_replacer_list.append(step[1].wrapped_estimator)
+        for error_replacer in error_replacer_list:
+            error_replacer.select_error_filter(error_filter_list)
 
     def _validate_steps(self) -> None:
         names = [name for name, _ in self.steps]

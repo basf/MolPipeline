@@ -24,10 +24,10 @@ from molpipeline.utils.multi_proc import check_available_cores, calc_chunksize
 from molpipeline.utils.molpipeline_types import (
     NumberIterable,
 )
-from molpipeline.pipeline_elements.none_handling import (
-    NoneFilter,
-    NoneFiller,
-    _MultipleNoneFilter,
+from molpipeline.pipeline_elements.error_handling import (
+    ErrorFilter,
+    ErrorReplacer,
+    _MultipleErrorFilter,
 )
 
 
@@ -71,14 +71,16 @@ class _MolPipeline:
         self.raise_nones = raise_nones
 
     @property
-    def _filter_elements(self) -> list[NoneFilter]:
+    def _filter_elements(self) -> list[ErrorFilter]:
         return [
-            element for element in self._element_list if isinstance(element, NoneFilter)
+            element
+            for element in self._element_list
+            if isinstance(element, ErrorFilter)
         ]
 
     @property
-    def _filter_elements_agg(self) -> _MultipleNoneFilter:
-        return _MultipleNoneFilter(self._filter_elements)
+    def _filter_elements_agg(self) -> _MultipleErrorFilter:
+        return _MultipleErrorFilter(self._filter_elements)
 
     @property
     def _transforming_elements(
@@ -275,21 +277,21 @@ class _MolPipeline:
 
         # The meta elements merge steps which do not require fitting to improve parallelization
         iter_element_list = self._get_meta_element_list()
-        removed_rows: dict[NoneFilter, list[int]] = {}
-        for none_filter in self._filter_elements:
-            removed_rows[none_filter] = []
+        removed_rows: dict[ErrorFilter, list[int]] = {}
+        for error_filter in self._filter_elements:
+            removed_rows[error_filter] = []
         iter_idx_array = np.arange(len(iter_input))
         for i_element in iter_element_list:
             if not isinstance(i_element, (TransformingPipelineElement, _MolPipeline)):
                 continue
             i_element.n_jobs = self.n_jobs
             iter_input = i_element.pretransform(iter_input)
-            for none_filter in self._filter_elements:
-                iter_input = none_filter.transform(iter_input)
-                for idx in none_filter.none_indices:
+            for error_filter in self._filter_elements:
+                iter_input = error_filter.transform(iter_input)
+                for idx in error_filter.error_indices:
                     idx = iter_idx_array[idx]
-                    removed_rows[none_filter].append(idx)
-                iter_idx_array = none_filter.co_transform(iter_idx_array)
+                    removed_rows[error_filter].append(idx)
+                iter_idx_array = error_filter.co_transform(iter_idx_array)
             if i_element.requires_fitting:
                 if isinstance(i_element, _MolPipeline):
                     raise AssertionError("No subpipline should require fitting!")
@@ -301,20 +303,20 @@ class _MolPipeline:
 
         # Set removed rows to filter elements to allow for correct co_transform
         iter_idx_array = np.arange(len(x_input))
-        for none_filter in self._filter_elements:
-            removed_idx_list = removed_rows[none_filter]
-            none_filter.none_indices = []
+        for error_filter in self._filter_elements:
+            removed_idx_list = removed_rows[error_filter]
+            error_filter.error_indices = []
             for new_idx, idx in enumerate(iter_idx_array):
                 if idx in removed_idx_list:
-                    none_filter.none_indices.append(new_idx)
-            none_filter.n_total = len(iter_idx_array)
-            iter_idx_array = none_filter.co_transform(iter_idx_array)
-        none_filler_list = [
-            ele for ele in self._element_list if isinstance(ele, NoneFiller)
+                    error_filter.error_indices.append(new_idx)
+            error_filter.n_total = len(iter_idx_array)
+            iter_idx_array = error_filter.co_transform(iter_idx_array)
+        error_replacer_list = [
+            ele for ele in self._element_list if isinstance(ele, ErrorReplacer)
         ]
-        for none_filler in none_filler_list:
-            none_filler.select_none_filter(self._filter_elements)
-            iter_input = none_filler.transform(iter_input)
+        for error_replacer in error_replacer_list:
+            error_replacer.select_error_filter(self._filter_elements)
+            iter_input = error_replacer.transform(iter_input)
         return iter_input
 
     def transform_single(self, input_value: Any) -> Any:
@@ -413,7 +415,7 @@ class _MolPipeline:
         log_block = BlockLogs()
         agg_filter = self._filter_elements_agg
         for filter_element in self._filter_elements:
-            filter_element.none_indices = []
+            filter_element.error_indices = []
         if self.n_jobs > 1:
             with Pool(self.n_jobs) as pool:
                 iter_func = pool.imap(
