@@ -256,6 +256,7 @@ class ErrorFilter(ABCPipelineElement):
 
 
 class _MultipleErrorFilter:
+    """Combines multiple ErrorFilters into one object."""
     error_filter_list: list[ErrorFilter]
 
     def __init__(self, error_filter_list: list[ErrorFilter]) -> None:
