@@ -220,8 +220,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         error_message = ""
         for name, pipeline_element in self._element_list:
             vector = pipeline_element.pretransform_single(value)
-            if vector is None:
-                error_message += f"{self.name}__{name} returned None. "
+            if isinstance(vector, InvalidInstance):
+                error_message += f"{self.name}__{name} returned an InvalidInstance."
                 break
 
             final_vector.append(vector)
