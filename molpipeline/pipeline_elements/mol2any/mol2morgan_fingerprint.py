@@ -226,6 +226,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             raise TypeError("The argument 'ignore_unknown' must be a bool!")
         self.ignore_unknown = ignore_unknown
         self._bit_mapping = None
+        self._requires_fitting = True
 
     @property
     def additional_attributes(self) -> dict[str, Any]:
@@ -382,23 +383,6 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         ]
         return self.assemble_output(mapped_feature_count_dicts)
 
-    def pretransform_single(self, value: RDKitMol) -> dict[int, int]:
-        """Return a dict, where the key is the feature-position and the value is the count.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            Molecule for which the fingerprint is generated.
-
-        Returns
-        -------
-        dict[int, int]
-            Dictionary with feature-position as key and count as value.
-        """
-        feature_count_dict = self._pretransform_single(value)
-        bit_count_dict = self._map_feature_dict(feature_count_dict)
-        return bit_count_dict
-
     def _create_mapping(self, feature_hash_dict_list: Iterable[dict[int, int]]) -> None:
         """Create a mapping from feature hash to bit position.
 
@@ -438,10 +422,26 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             List of feature hash dicts for input molecules.
         """
         hash_count_list = [
-            self._pretransform_single(mol_obj) for mol_obj in mol_obj_list
+            self.pretransform_single(mol_obj) for mol_obj in mol_obj_list
         ]
-        self._create_mapping(hash_count_list)
+        self.fit_to_result(hash_count_list)
         return hash_count_list
+
+    def fit_to_result(self, values: Any) -> Self:
+        """Fit to the result of the output of the pretransform step.
+
+        Parameters
+        ----------
+        values: Any
+            Output of the pretransform method.
+
+        Returns
+        -------
+        Self
+            The fitted MolToUnfoldedMorganFingerprint pipeline element.
+        """
+        self._create_mapping(values)
+        return self
 
     def _map_feature_dict(self, feature_count_dict: dict[int, int]) -> dict[int, int]:
         """Transform a dict of feature hash and occurrence to a dict of bit-pos and occurrence.
@@ -468,12 +468,12 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             mapped_count_dict[bit_position] = feature_count
         return mapped_count_dict
 
-    def _pretransform_single(self, mol: RDKitMol) -> dict[int, int]:
+    def pretransform_single(self, value: RDKitMol) -> dict[int, int]:
         """Return a dict, where the key is the feature-hash and the value is the count.
 
         Parameters
         ----------
-        mol: RDKitMol
+        value: RDKitMol
             Molecule for which features are derived.
 
         Returns
@@ -482,7 +482,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             A dictionary with feature-hash and count.
         """
         morgan_features = AllChem.GetMorganFingerprint(
-            mol, self.radius, useFeatures=self.use_features
+            value, self.radius, useFeatures=self.use_features
         )
         morgan_feature_count_dict: dict[int, int] = morgan_features.GetNonzeroElements()
         if not self.counted:
@@ -490,3 +490,19 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
                 f_hash: 1 for f_hash in morgan_feature_count_dict
             }
         return morgan_feature_count_dict
+
+    def finalize_single(self, value: Any) -> Any:
+        """Finalize single value. Here: map hashes to bit pos.
+
+        Parameters
+        ----------
+        value: Any
+            Single value to be finalized.
+
+        Returns
+        -------
+        Any
+            Finalized value.
+        """
+        bit_count_dict = self._map_feature_dict(value)
+        return bit_count_dict
