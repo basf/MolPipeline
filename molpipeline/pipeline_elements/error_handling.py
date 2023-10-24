@@ -33,7 +33,7 @@ class ErrorFilter(ABCPipelineElement):
 
     element_ids: set[str]
     error_indices: list[int]
-    filler_everything: bool
+    filter_everything: bool
     n_total: int
 
     def __init__(
@@ -66,7 +66,7 @@ class ErrorFilter(ABCPipelineElement):
         if not isinstance(element_ids, set):
             element_ids = set(element_ids)
         self.element_ids = element_ids
-        self.filler_everything = filter_everything
+        self.filter_everything = filter_everything
         self.n_total = 0
         self._requires_fitting = True
 
@@ -98,7 +98,7 @@ class ErrorFilter(ABCPipelineElement):
             Constructed ErrorFilter object.
         """
         element_ids = {element.uuid for element in element_list}
-        return cls(element_ids, name=name, n_jobs=n_jobs, uuid=uuid)
+        return cls(element_ids, filter_everything=False, name=name, n_jobs=n_jobs, uuid=uuid)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters for this element.
@@ -114,6 +114,7 @@ class ErrorFilter(ABCPipelineElement):
             Parameter names mapped to their values.
         """
         params = super().get_params(deep=deep)
+        params["filter_everything"] = self.filter_everything
         if deep:
             params["element_ids"] = {str(element_id) for element_id in self.element_ids}
         else:
@@ -134,11 +135,13 @@ class ErrorFilter(ABCPipelineElement):
             Self with updated parameters.
         """
         param_copy = dict(parameters)
-        element_ids = param_copy.pop("element_ids", None)
-        if element_ids is not None:
+        if "element_ids" in param_copy:
+            element_ids = param_copy.pop("element_ids")
             if not isinstance(element_ids, set):
                 raise TypeError(f"Unexpected Type: {type(element_ids)}")
             self.element_ids = element_ids
+        if "filter_everything" in param_copy:
+            self.filter_everything = param_copy.pop("filter_everything")
         super().set_params(**param_copy)
         return self
 
@@ -157,7 +160,7 @@ class ErrorFilter(ABCPipelineElement):
         """
         if not isinstance(value, InvalidInstance):
             return False
-        if self.filler_everything or value.element_id in self.element_ids:
+        if self.filter_everything or value.element_id in self.element_ids:
             return True
         return False
 
