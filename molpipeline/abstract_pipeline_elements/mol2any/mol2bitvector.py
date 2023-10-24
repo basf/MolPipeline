@@ -112,9 +112,9 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             Copied object with updated parameters.
         """
         parameter_dict_copy = dict(parameters)
-        _sparse_output = parameter_dict_copy.pop("_sparse_output", None)
-        if _sparse_output is not None:
-            self._sparse_output = _sparse_output
+        sparse_output = parameter_dict_copy.pop("sparse_output", None)
+        if sparse_output is not None:
+            self._sparse_output = sparse_output
         super().set_params(parameter_dict_copy)
         return self
 

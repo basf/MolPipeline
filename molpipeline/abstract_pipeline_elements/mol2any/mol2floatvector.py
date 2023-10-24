@@ -121,7 +121,10 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         """
         params = super().get_params(deep)
         if deep:
-            params["standardizer"] = clone(self._standardizer)
+            if self._standardizer is not None:
+                params["standardizer"] = clone(self._standardizer)
+            else:
+                params["standardizer"] = None
         else:
             params["standardizer"] = self._standardizer
         return params

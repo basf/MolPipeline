@@ -198,7 +198,7 @@ def recursive_to_json(obj: Any) -> Any:
         }
     if isinstance(obj, dict):
         return {key: recursive_to_json(value) for key, value in obj.items()}
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, (list, tuple, set)):
         iter_list = [recursive_to_json(value) for value in obj]
         iterable_type = type(obj)
         return iterable_type(iter_list)
