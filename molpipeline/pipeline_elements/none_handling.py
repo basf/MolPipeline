@@ -31,7 +31,20 @@ class NoneFiller(ErrorReplacer):
 
     @classmethod
     def from_none_filter(cls, *args, **kwargs) -> ErrorReplacer:
-        """Backward compatibility with old naming for ErrorReplacer.from_error_filter."""
+        """Backward compatibility with old naming for ErrorReplacer.from_error_filter.
+
+        Parameters
+        ----------
+        args: Any
+            Arguments for ErrorReplacer.from_error_filter.
+        kwargs: Any
+            Keyword arguments for ErrorReplacer.from_error_filter.
+
+        Returns
+        -------
+        ErrorReplacer
+            ErrorReplacer instance.
+        """
         return super().from_error_filter(*args, **kwargs)
 
 
