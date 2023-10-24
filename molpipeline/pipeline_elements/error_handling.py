@@ -98,7 +98,9 @@ class ErrorFilter(ABCPipelineElement):
             Constructed ErrorFilter object.
         """
         element_ids = {element.uuid for element in element_list}
-        return cls(element_ids, filter_everything=False, name=name, n_jobs=n_jobs, uuid=uuid)
+        return cls(
+            element_ids, filter_everything=False, name=name, n_jobs=n_jobs, uuid=uuid
+        )
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters for this element.
