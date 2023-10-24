@@ -33,11 +33,13 @@ class ErrorFilter(ABCPipelineElement):
 
     element_ids: set[str]
     error_indices: list[int]
+    filler_everything: bool
     n_total: int
 
     def __init__(
         self,
-        element_ids: set[str],
+        element_ids: set[str] | None = None,
+        filter_everything: bool = False,
         name: str = "ErrorFilter",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -55,9 +57,16 @@ class ErrorFilter(ABCPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.error_indices = []
+        if element_ids is None:
+            if not filter_everything:
+                raise ValueError(
+                    "If element_ids is None, filter_everything must be True"
+                )
+            element_ids = {}
         if not isinstance(element_ids, set):
             element_ids = set(element_ids)
         self.element_ids = element_ids
+        self.filler_everything = filter_everything
         self.n_total = 0
         self._requires_fitting = True
 
@@ -146,7 +155,9 @@ class ErrorFilter(ABCPipelineElement):
         bool
             True if value should be removed.
         """
-        if isinstance(value, InvalidInstance) and value.element_id in self.element_ids:
+        if not isinstance(value, InvalidInstance):
+            return False
+        if self.filler_everything or value.element_id in self.element_ids:
             return True
         return False
 
