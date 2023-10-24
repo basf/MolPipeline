@@ -118,24 +118,68 @@ _U = typing.TypeVar("_U", str, int, float, bool, None)
 
 @typing.overload
 def builtin_to_json(obj: _U) -> _U:
-    ...
+    """Transform a builtin object to an object savable as json file.
+
+    Parameters
+    ----------
+    obj: str | int | float | bool | None
+        Object which would be transformed, but these types are just returned as is.
+
+    Returns
+    -------
+    str | int | float | bool | None
+        The same object as the input.
+    """
 
 
 @typing.overload
 def builtin_to_json(obj: list[Any]) -> list[Any]:
-    ...
+    """Transform a builtin object to an object savable as json file.
+
+    Parameters
+    ----------
+    obj: list[Any]
+        List of objects transformed recursively to json compatible objects.
+
+    Returns
+    -------
+    list[Any]
+        List of transformed objects.
+    """
 
 
 @typing.overload
 def builtin_to_json(obj: tuple[Any, ...]) -> tuple[Any, ...]:
-    ...
+    """Transform a builtin object to an object savable as json file.
+
+    Parameters
+    ----------
+    obj: tuple[Any]
+        Tuple of objects transformed recursively to json compatible objects.
+
+    Returns
+    -------
+    tuple[Any]
+        Tuple of transformed objects.
+    """
 
 
 @typing.overload
 def builtin_to_json(
     obj: types.FunctionType | set[Any] | dict[Any, Any]
 ) -> dict[str, Any]:
-    ...
+    """Transform a builtin object to an object savable as json file.
+
+    Parameters
+    ----------
+    obj: types.FunctionType | set[Any] | dict[Any, Any]
+        Object which are encoded as a dictionary in order to be json compatible.
+
+    Returns
+    -------
+    tuple[Any]
+        Tuple of transformed objects.
+    """
 
 
 def builtin_to_json(obj: Any) -> Any:
