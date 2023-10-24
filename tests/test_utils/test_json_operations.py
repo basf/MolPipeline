@@ -97,5 +97,6 @@ class JsonConversionTest(unittest.TestCase):
         recreated_set = recursive_from_json(test_set_json)
         self.assertEqual(test_set, recreated_set)
 
+
 if __name__ == "__main__":
     unittest.main()
