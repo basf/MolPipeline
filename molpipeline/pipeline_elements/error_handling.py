@@ -552,7 +552,9 @@ class ErrorReplacer(ABCPipelineElement):
         AnyIterable
             Iterable where invalid instances were removed.
         """
-        if len(values) != self.error_filter.n_total - len(self.error_filter.error_indices):
+        if len(values) != self.error_filter.n_total - len(
+            self.error_filter.error_indices
+        ):
             raise ValueError(
                 f"Length of values does not match length of values in fit. "
                 f"Expected: {self.error_filter.n_total -len(self.error_filter.error_indices)}  - Received :{len(values)}"

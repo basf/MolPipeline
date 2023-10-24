@@ -94,7 +94,9 @@ class Pipeline(_Pipeline):
         self.raise_nones = raise_nones
 
         error_replacer_list = [
-            e_filler for _, e_filler in self.steps if isinstance(e_filler, ErrorReplacer)
+            e_filler
+            for _, e_filler in self.steps
+            if isinstance(e_filler, ErrorReplacer)
         ]
         error_filter_list = [
             n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
