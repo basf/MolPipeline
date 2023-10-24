@@ -40,10 +40,6 @@ class MolToChemprop(MolToAnyPipelineElement):
             Name of the pipeline element. Defaults to "Mol2Chemprop".
         n_jobs: int
             Number of parallel jobs to use. Defaults to 1.
-        none_handling: NoneHandlingOptions
-            How to handle None values. Defaults to "raise".
-        fill_value: Any
-            Value to fill None values with. Defaults to None.
         """
         super().__init__(
             name=name,
