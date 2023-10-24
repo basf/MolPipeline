@@ -85,6 +85,17 @@ class JsonConversionTest(unittest.TestCase):
         recreated_function_dict = transform_string2function(function_json)
         self.assertEqual(function_dict, recreated_function_dict)
 
+    def test_set_transformation(self) -> None:
+        """Test if a set can be reconstructed from json.
+
+        Returns
+        -------
+
+        """
+        test_set = {1, "a", (1, "a")}
+        test_set_json = recursive_to_json(test_set)
+        recreated_set = recursive_from_json(test_set_json)
+        self.assertEqual(test_set, recreated_set)
 
 if __name__ == "__main__":
     unittest.main()
