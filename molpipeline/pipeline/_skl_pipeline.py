@@ -527,7 +527,7 @@ class Pipeline(_Pipeline):
             for _, post_element in self._post_processing_steps():
                 y_pred = post_element.fit_transform(y_pred, iter_label)
         return y_pred
-    
+
     @available_if(_final_estimator_has("predict_proba"))
     def predict_proba(self, X: Any, **predict_params: Any) -> Any:
         """Transform the data, and apply `predict_proba` with the final estimator.
@@ -568,7 +568,9 @@ class Pipeline(_Pipeline):
         if self._final_estimator == "passthrough":
             pass
         elif hasattr(self._final_estimator, "predict_proba"):
-            iter_input = self._final_estimator.predict_proba(iter_input, **predict_params)
+            iter_input = self._final_estimator.predict_proba(
+                iter_input, **predict_params
+            )
         else:
             raise AssertionError(
                 "Final estimator does not implement predict_proba, hence this function should not be available."

@@ -54,6 +54,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             element[1]._requires_fitting for element in element_list
         )
         self.set_params(kwargs)
+
     @classmethod
     def from_json(cls, json_dict: dict[str, Any]) -> Self:
         """Create object from json representation.
