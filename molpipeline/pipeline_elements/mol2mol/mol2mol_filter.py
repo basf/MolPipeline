@@ -1,7 +1,7 @@
 """Classes to filter molecule lists."""
 
 from __future__ import annotations
-from typing import Any, Optional
+from typing import Any, Optional, Self
 
 from rdkit import Chem
 
@@ -53,7 +53,10 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
                 35,
                 53,
             ]
-        self.allowed_element_numbers: set[int] = set(allowed_element_numbers)
+        if not isinstance(allowed_element_numbers, set):
+            self.allowed_element_numbers = set(allowed_element_numbers)
+        else:
+            self.allowed_element_numbers = allowed_element_numbers
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters of ElementFilterPipelineElement.
@@ -70,12 +73,31 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         """
         params = super().get_params(deep=deep)
         if deep:
-            params["allowed_element_numbers"] = [
+            params["allowed_element_numbers"] = {
                 int(atom) for atom in self.allowed_element_numbers
-            ]
+            }
         else:
             params["allowed_element_numbers"] = self.allowed_element_numbers
         return params
+
+    def set_params(self, parameters: dict[str, Any]) -> Self:
+        """Set parameters of ElementFilterPipelineElement.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameters to set.
+
+        Returns
+        -------
+        Self
+            Self.
+        """
+        parameter_copy = dict(parameters)
+        if "allowed_element_numbers" in parameter_copy:
+            self.allowed_element_numbers = parameter_copy.pop("allowed_element_numbers")
+        super().set_params(parameter_copy)
+        return self
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Invalidate molecule containing chemical elements that are not allowed.
