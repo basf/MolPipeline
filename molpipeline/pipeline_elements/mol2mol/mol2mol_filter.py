@@ -1,7 +1,11 @@
 """Classes to filter molecule lists."""
 
 from __future__ import annotations
-from typing import Any, Optional, Self
+from typing import Any, Optional
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 
 from rdkit import Chem
 
