@@ -336,6 +336,8 @@ class _MolPipeline:
         for p_element in self._element_list:
             try:
                 iter_value = p_element.transform_single(iter_value)
+                if isinstance(iter_value, RemovedInstance):
+                    return iter_value
             except MolSanitizeException as err:
                 return InvalidInstance(
                     p_element.uuid,
