@@ -3,6 +3,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
+import inspect
 from typing import Any, Iterable, NamedTuple, Optional, Union
 
 try:
@@ -14,7 +15,10 @@ from uuid import uuid4
 import numpy as np
 from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
 
-from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
+from molpipeline.utils.multi_proc import (
+    check_available_cores,
+    wrap_parallelizable_task,
+)
 
 
 class InvalidInstance(NamedTuple):
@@ -129,6 +133,37 @@ class ABCPipelineElement(abc.ABC):
                 )
             setattr(loaded_pipeline_element, key, value)
         return loaded_pipeline_element
+
+    def __repr__(self) -> str:
+        """Return string representation of object."""
+        parm_list = []
+        for key, value in self._get_non_default_parameters().items():
+            parm_list.append(f"{key}={value}")
+        parm_str = ", ".join(parm_list)
+        repr_str = f"{self.__class__.__name__}({parm_str})"
+        return repr_str
+
+    def _get_non_default_parameters(self) -> dict[str, Any]:
+        """Return all parameters which are not default.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary of non default parameters.
+        """
+        signature = inspect.signature(self.__class__.__init__)
+        self_params = self.get_params()
+        non_default_params = {}
+        for parm, value_default in signature.parameters.items():
+            if parm == "uuid":
+                continue
+            if value_default is inspect.Parameter.empty:
+                non_default_params[parm] = self_params[parm]
+                continue
+            if parm in self_params:
+                if value_default.default != self_params[parm]:
+                    non_default_params[parm] = self_params[parm]
+        return non_default_params
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return the parameters of the object.
