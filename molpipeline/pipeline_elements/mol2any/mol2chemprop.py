@@ -15,8 +15,6 @@ except ImportError:
         ImportWarning,
     )
 
-from rdkit import Chem
-
 from molpipeline.abstract_pipeline_elements.core import (
     MolToAnyPipelineElement,
 )
@@ -47,7 +45,7 @@ class MolToChemprop(MolToAnyPipelineElement):
             uuid=uuid,
         )
 
-    def pretransform_single(self, value: RDKitMol) -> Optional[MoleculeDatapoint]:
+    def pretransform_single(self, value: RDKitMol) -> MoleculeDatapoint:
         """Transform a single molecule to a ChemProp MoleculeDataPoint.
 
         Parameters
@@ -57,11 +55,7 @@ class MolToChemprop(MolToAnyPipelineElement):
 
         Returns
         -------
-        Optional[MoleculeDatapoint]
+        MoleculeDatapoint
             Molecular representation used as input for ChemProp. None if transformation failed.
         """
-        smiles = Chem.MolToSmiles(value)
-        if not smiles:
-            return None
-
-        return cp_data.MoleculeDatapoint(smiles, None)
+        return cp_data.MoleculeDatapoint(value)
