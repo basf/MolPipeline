@@ -145,5 +145,5 @@ class NoneTest(unittest.TestCase):
         out = pipeline.transform(TEST_SMILES)
         out2 = pipeline2.fit_transform(TEST_SMILES)
         self.assertEqual(out.shape, out2.shape)
-        self.assertEqual(out.shape, (3, 207))
+        self.assertEqual(out.shape, (3, 208))
         self.assertTrue(np.nanmax(np.abs(out - out2)) < 0.000001)

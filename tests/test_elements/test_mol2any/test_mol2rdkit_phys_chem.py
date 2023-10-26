@@ -27,7 +27,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         -------
         None
         """
-        expected_descriptors = [
+        expected_descriptors = {
             "MaxAbsEStateIndex",
             "MaxEStateIndex",
             "MinAbsEStateIndex",
@@ -108,6 +108,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
             "SlogP_VSA7",
             "SlogP_VSA8",
             "SlogP_VSA9",
+            "SPS",
             "TPSA",
             "EState_VSA1",
             "EState_VSA10",
@@ -235,8 +236,8 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
             "fr_thiophene",
             "fr_unbrch_alkane",
             "fr_urea",
-        ]
-        self.assertListEqual(expected_descriptors, DEFAULT_DESCRIPTORS)
+        }
+        self.assertSetEqual(expected_descriptors, set(DEFAULT_DESCRIPTORS))
 
     def test_descriptor_calculation(self) -> None:
         """Test if the calculation of RDKitPhysChem Descriptors works as expected.
