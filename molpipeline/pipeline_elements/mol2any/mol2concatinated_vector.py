@@ -159,13 +159,19 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         output: npt.NDArray[np.float_] = super().transform(values)
         return output
 
-    def fit(self, value_list: list[RDKitMol]) -> Self:
+    def fit(
+            self,
+            values: list[RDKitMol],
+            labels: Any = None,  # pylint: disable=unused-argument
+    ) -> Self:
         """Fit each pipeline element.
 
         Parameters
         ----------
-        value_list: list[RDKitMol]
+        values: list[RDKitMol]
             List of molecules used to fit the pipeline elements creating the concatenated vector.
+        labels: Any
+            Labels for the molecules. Not used.
 
         Returns
         -------
@@ -173,7 +179,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Fitted pipeline element.
         """
         for pipeline_element in self._element_list:
-            pipeline_element[1].fit(value_list)
+            pipeline_element[1].fit(values)
         return self
 
     def pretransform_single(
