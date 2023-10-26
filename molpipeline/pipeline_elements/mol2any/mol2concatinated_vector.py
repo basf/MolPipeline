@@ -17,7 +17,6 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
 )
-from molpipeline.utils.json_operations import pipeline_element_from_json
 from molpipeline.utils.molpipeline_types import RDKitMol
 
 
@@ -54,29 +53,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             element[1]._requires_fitting for element in element_list
         )
         self.set_params(kwargs)
-
-    @classmethod
-    def from_json(cls, json_dict: dict[str, Any]) -> Self:
-        """Create object from json representation.
-
-        Parameters
-        ----------
-        json_dict: dict[str, Any]
-            Json representation of object.
-
-        Returns
-        -------
-        Self
-            Mol2ConcatenatedVector pipeline element specified by json_dict.
-        """
-        params = dict(json_dict)  # copy, because the dict is modified
-        pipeline_element_json_list = params.pop("element_list")
-        pipeline_element_list = [
-            pipeline_element_from_json(element)
-            for element in pipeline_element_json_list
-        ]
-        params["element_list"] = pipeline_element_list
-        return super().from_json(params)
 
     @property
     def element_list(self) -> list[tuple[str, MolToAnyPipelineElement]]:
