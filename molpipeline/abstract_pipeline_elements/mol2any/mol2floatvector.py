@@ -59,30 +59,6 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         self._mean = None
         self._std = None
 
-    @classmethod
-    def from_json(cls, json_dict: dict[str, Any]) -> Self:
-        """Create object from json dict.
-
-        Parameters
-        ----------
-        json_dict: dict[str, Any]
-            Dictionary containing all parameters relevant to initialize the object.
-
-        Returns
-        -------
-        Self
-            Object created from json_dict.
-        """
-        json_dict_copy = dict(json_dict)  # copy, because the dict is modified
-        additional_attributes = json_dict_copy.pop("additional_attributes", {})
-        if additional_attributes:
-            additional_attributes = {
-                "stan": np.array(additional_attributes["_mean"]),
-                "_std": np.array(additional_attributes["_std"]),
-            }
-        json_dict_copy["additional_attributes"] = additional_attributes
-        return super().from_json(json_dict_copy)
-
     @property
     @abc.abstractmethod
     def n_features(self) -> int:
