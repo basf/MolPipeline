@@ -45,7 +45,7 @@ from molpipeline.pipeline._molpipeline import _MolPipeline
 # Type definitions
 _T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
-_Step = Tuple[int, str, Union[AnyTransformer, AnyPredictor]]
+_Step = Tuple[int, str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
 _AggStep = Tuple[List[int], List[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_Step, _AggStep]
 
@@ -201,7 +201,7 @@ class Pipeline(_Pipeline):
     @property
     def _final_estimator(
         self,
-    ) -> Union[Literal["passthrough"], AnyTransformer, AnyPredictor, _MolPipeline]:
+    ) -> Union[Literal["passthrough"], AnyTransformer, AnyPredictor, _MolPipeline, ABCPipelineElement]:
         """Return the lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())
         last_element = element_list[-1]
@@ -313,17 +313,26 @@ class Pipeline(_Pipeline):
                     index_list = [step[0] for step in aggregated_transformer_list]
                     name_list = [step[1] for step in aggregated_transformer_list]
                     transformer_list = [step[2] for step in aggregated_transformer_list]
-                    pipeline = _MolPipeline(transformer_list, n_jobs=self.n_jobs)
-                    yield index_list, name_list, pipeline
+                    if len(aggregated_transformer_list) == 1:
+                        yield index_list[0], name_list[0], transformer_list[0]
+                    else:
+                        pipeline = _MolPipeline(transformer_list, n_jobs=self.n_jobs)
+                        yield index_list, name_list, pipeline
                     aggregated_transformer_list = []
                 yield i, name_i, step_i
+
         # yield last step if anything remains
         if aggregated_transformer_list:
             index_list = [step[0] for step in aggregated_transformer_list]
             name_list = [step[1] for step in aggregated_transformer_list]
             transformer_list = [step[2] for step in aggregated_transformer_list]
-            pipeline = _MolPipeline(transformer_list, n_jobs=self.n_jobs)
-            yield index_list, name_list, pipeline
+
+            if len(aggregated_transformer_list) == 1:
+                yield index_list[0], name_list[0], transformer_list[0]
+
+            elif len(aggregated_transformer_list) > 1:
+                pipeline = _MolPipeline(transformer_list, n_jobs=self.n_jobs)
+                yield index_list, name_list, pipeline
 
     @_fit_context(
         # estimators in Pipeline.steps are not validated yet
