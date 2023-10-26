@@ -6,29 +6,7 @@ import typing
 import warnings
 from typing import Any
 
-
-from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.pipeline import Pipeline
-
-
-def pipeline_element_from_json(json_dict: dict[str, Any]) -> ABCPipelineElement:
-    """Find the class for the given PipelineElement and loads it with specified parameters.
-
-    Parameters
-    ----------
-    json_dict: dict[str, Any]
-        Dictionary containing the PipelineElement parameters.
-
-    Returns
-    -------
-    ABCPipelineElement
-        PipelineElement specified in the json file with correspondingly specified parameters.
-    """
-    module_str: str = json_dict["__module__"]
-    class_str: str = json_dict["__name__"]
-    class_module = __import__(module_str, fromlist=[class_str])
-    pipeline_element_class = getattr(class_module, class_str)
-    return pipeline_element_class.from_json(json_dict)
 
 
 def transform_functions2string(value: Any) -> Any:
