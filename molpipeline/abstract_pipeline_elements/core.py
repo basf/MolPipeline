@@ -103,37 +103,6 @@ class ABCPipelineElement(abc.ABC):
         else:
             self.uuid = uuid
 
-    @classmethod
-    def from_json(cls, json_dict: dict[str, Any]) -> Self:
-        """Create object from json dict.
-
-        Parameters
-        ----------
-        json_dict: dict[str, Any]
-            Json with parameters to initialize the object.
-
-        Returns
-        -------
-        Self
-            Object specified by json_dict.
-        """
-        json_dict_copy = dict(json_dict)
-        specified_class = json_dict_copy.pop("__name__")
-        specified_module = json_dict_copy.pop("__module__")
-        if specified_module != cls.__module__:
-            raise ValueError(f"Cannot create {cls.__name__} from {specified_module}")
-        if specified_class != cls.__name__:
-            raise ValueError(f"Cannot create {cls.__name__} from {specified_class}")
-        additional_attributes = json_dict_copy.pop("additional_attributes", {})
-        loaded_pipeline_element = cls(**json_dict_copy)
-        for key, value in additional_attributes.items():
-            if not hasattr(loaded_pipeline_element, key):
-                raise ValueError(
-                    f"Cannot set attribute {key} on {cls.__name__} from {specified_class}"
-                )
-            setattr(loaded_pipeline_element, key, value)
-        return loaded_pipeline_element
-
     def __repr__(self) -> str:
         """Return string representation of object."""
         parm_list = []
