@@ -349,9 +349,9 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         return bit_info
 
     def fit(
-            self,
-            values: list[RDKitMol],
-            labels: Any = None  # pylint: disable=unused-argument
+        self,
+        values: list[RDKitMol],
+        labels: Any = None,  # pylint: disable=unused-argument
     ) -> Self:
         """Determine all features and assign each a unique position in the fingerprint-vector.
 
@@ -371,9 +371,9 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         return self
 
     def fit_transform(
-            self,
-            values: list[RDKitMol],
-            labels: Any = None,  # pylint: disable=unused-argument
+        self,
+        values: list[RDKitMol],
+        labels: Any = None,  # pylint: disable=unused-argument
     ) -> sparse.csr_matrix:
         """Create a feature mapping based on input and apply it for transformation.
 

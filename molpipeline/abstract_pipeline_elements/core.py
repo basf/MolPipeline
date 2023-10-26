@@ -261,9 +261,9 @@ class ABCPipelineElement(abc.ABC):
 
     @abc.abstractmethod
     def fit_transform(
-            self,
-            values: Any,
-            labels: Any = None,
+        self,
+        values: Any,
+        labels: Any = None,
     ) -> Any:
         """Apply fit function and subsequently transform the input.
 
@@ -408,9 +408,9 @@ class TransformingPipelineElement(ABCPipelineElement):
         return super().fit_to_result(values)
 
     def fit_transform(
-            self,
-            values: Any,
-            labels: Any = None,
+        self,
+        values: Any,
+        labels: Any = None,
     ) -> Any:
         """Apply fit function and subsequently transform the input.
 

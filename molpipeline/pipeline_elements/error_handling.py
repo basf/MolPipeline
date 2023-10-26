@@ -166,7 +166,9 @@ class ErrorFilter(ABCPipelineElement):
             return True
         return False
 
-    def fit(self, values: AnyIterable, labels: Any = None) -> Self:  # pylint: disable=unused-argument
+    def fit(
+        self, values: AnyIterable, labels: Any = None
+    ) -> Self:  # pylint: disable=unused-argument
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
@@ -185,11 +187,7 @@ class ErrorFilter(ABCPipelineElement):
         """
         return self
 
-    def fit_transform(
-            self,
-            values: AnyIterable,
-            labels: Any = None
-    ) -> AnyIterable:
+    def fit_transform(self, values: AnyIterable, labels: Any = None) -> AnyIterable:
         """Transform values and return a list without the None values.
 
         So far fit does nothing and hence is only called for consitency.
@@ -524,9 +522,7 @@ class ErrorReplacer(ABCPipelineElement):
         return self
 
     def fit(
-            self,
-            values: AnyIterable,
-            labels: Any = None
+        self, values: AnyIterable, labels: Any = None
     ) -> Self:  # pylint: disable=unused-argument
         """Fit to input values.
 
@@ -547,9 +543,9 @@ class ErrorReplacer(ABCPipelineElement):
         return self
 
     def fit_transform(
-            self,
-            values: AnyIterable,
-            labels: Any = None,  # pylint: disable=unused-argument
+        self,
+        values: AnyIterable,
+        labels: Any = None,  # pylint: disable=unused-argument
     ) -> AnyIterable:
         """Transform values and return a list without the Invalid values.
 

@@ -201,7 +201,13 @@ class Pipeline(_Pipeline):
     @property
     def _final_estimator(
         self,
-    ) -> Union[Literal["passthrough"], AnyTransformer, AnyPredictor, _MolPipeline, ABCPipelineElement]:
+    ) -> Union[
+        Literal["passthrough"],
+        AnyTransformer,
+        AnyPredictor,
+        _MolPipeline,
+        ABCPipelineElement,
+    ]:
         """Return the lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())
         last_element = element_list[-1]

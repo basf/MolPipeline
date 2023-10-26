@@ -160,9 +160,9 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         return output
 
     def fit(
-            self,
-            values: list[RDKitMol],
-            labels: Any = None,  # pylint: disable=unused-argument
+        self,
+        values: list[RDKitMol],
+        labels: Any = None,  # pylint: disable=unused-argument
     ) -> Self:
         """Fit each pipeline element.
 
