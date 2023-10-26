@@ -264,7 +264,8 @@ class Pipeline(_Pipeline):
                     raise AssertionError()
                 for idx_i, name_i, ele_i in zip(step_idx, name, ele_list):
                     self.steps[idx_i] = (name_i, ele_i)
-                y = fitted_transformer.co_transform(y)
+                if y is not None:
+                    y = fitted_transformer.co_transform(y)
             elif isinstance(name, list) or isinstance(step_idx, list):
                 raise AssertionError()
             else:
