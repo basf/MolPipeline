@@ -49,7 +49,15 @@ class ErrorFilter(ABCPipelineElement):
         Parameters
         ----------
         element_ids: list[str]
-            List of Pipeline Elements for which None can be removed.
+            List of Pipeline Elements for which InvalidInstances can be removed.
+        filter_everything: bool, optional (default: True)
+            If True, element_ids are ignored and all InvalidInstances are removed.
+        name: str, optional (default: "ErrorFilter")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            UUID of the pipeline element.
 
         Returns
         -------
