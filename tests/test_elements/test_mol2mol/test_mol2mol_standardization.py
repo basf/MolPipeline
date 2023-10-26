@@ -5,10 +5,12 @@ from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipeline
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
     DeduplicateFragmentsByMolHashPipelineElement,
-    SolventRemoverPipelineElement,
     LargestFragmentChooserPipelineElement,
     MetalDisconnectorPipelineElement,
+    RemoveIsotopeInformationPipelineElement,
+    RemoveExplicitHydrogensPipelineElement,
     RemoveStereoInformationPipelineElement,
+    SolventRemoverPipelineElement,
 )
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 
@@ -189,6 +191,69 @@ class MolStandardizationTest(unittest.TestCase):
             [
                 ("smi2mol", smi2mol),
                 ("fragment_remover", fragment_remover),
+                ("mol2smi", mol2smi),
+            ]
+        )
+        mols_processed = pipeline.fit_transform(mol_list)
+        self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
+
+    def test_isotopeinfo_removal_pipeline_element(self) -> None:
+        """Test if isotopinfo removal pipeline element works as expected.
+
+        Returns
+        -------
+        None
+        """
+
+        mol_list = [
+            "[2H]c1ccccc1",
+            "CC[13CH2][19F]"
+        ]
+        expected_largest_fragment_smiles_list = [
+            "[H]c1ccccc1",
+            "CCCF"
+        ]
+
+        smi2mol = SmilesToMolPipelineElement()
+        fragment_remover = RemoveIsotopeInformationPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("isotope_info_remover", fragment_remover),
+                ("mol2smi", mol2smi),
+            ]
+        )
+        mols_processed = pipeline.fit_transform(mol_list)
+        self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
+
+    def test_explicit_hydrogen_removal_pipeline_element(self) -> None:
+        """Test if explicit hydrogen removal pipeline element works as expected.
+
+        Returns
+        -------
+        None
+        """
+
+        mol_list = [
+            "[H]c1ccccc1",
+            "Cc1cncn(-[H])1",
+            "[H][H]"
+        ]
+        expected_largest_fragment_smiles_list = [
+            "c1ccccc1",
+            "Cc1cnc[nH]1",
+            "[H][H]"
+        ]
+
+        smi2mol = SmilesToMolPipelineElement()
+        fragment_remover = RemoveExplicitHydrogensPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("explicit_hydrogen_remover", fragment_remover),
                 ("mol2smi", mol2smi),
             ]
         )
