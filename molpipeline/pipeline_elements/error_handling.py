@@ -166,7 +166,9 @@ class ErrorFilter(ABCPipelineElement):
             return True
         return False
 
-    def fit(self, values: AnyIterable) -> Self:  # pylint: disable=unused-argument
+    def fit(
+        self, values: AnyIterable, labels: Any = None
+    ) -> Self:  # pylint: disable=unused-argument
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
@@ -175,6 +177,8 @@ class ErrorFilter(ABCPipelineElement):
         ----------
         values: AnyIterable
             Values used for fitting. (Not really used)
+        labels: Any
+            Label used for fitting. (Not really used)
 
         Returns
         -------
@@ -183,7 +187,7 @@ class ErrorFilter(ABCPipelineElement):
         """
         return self
 
-    def fit_transform(self, values: AnyIterable) -> AnyIterable:
+    def fit_transform(self, values: AnyIterable, labels: Any = None) -> AnyIterable:
         """Transform values and return a list without the None values.
 
         So far fit does nothing and hence is only called for consitency.
@@ -192,13 +196,15 @@ class ErrorFilter(ABCPipelineElement):
         ----------
         values: AnyIterable
             Iterable to which element is fitted and which is subsequently transformed.
+        labels: Any
+            Label used for fitting. (Not used, but required for compatibility with sklearn)
 
         Returns
         -------
         AnyIterable
             Iterable where invalid instances were removed.
         """
-        self.fit(values)
+        self.fit(values, labels)
         return self.transform(values)
 
     def co_transform(self, values: AnyIterable) -> AnyIterable:
@@ -252,6 +258,21 @@ class ErrorFilter(ABCPipelineElement):
         return self.co_transform(values)
 
     def transform_single(self, value: Any) -> Any:
+        """Transform a single value.
+
+        Parameters
+        ----------
+        value: Any
+            Value to be transformed.
+
+        Returns
+        -------
+        Any
+            Transformed value.
+        """
+        return self.pretransform_single(value)
+
+    def pretransform_single(self, value: Any) -> Any:
         """Transform a single value.
 
         Parameters
@@ -500,7 +521,9 @@ class ErrorReplacer(ABCPipelineElement):
             raise ValueError(f"ErrorFilter with id {self.error_filter_id} not found")
         return self
 
-    def fit(self, values: AnyIterable) -> Self:  # pylint: disable=unused-argument
+    def fit(
+        self, values: AnyIterable, labels: Any = None
+    ) -> Self:  # pylint: disable=unused-argument
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
@@ -509,6 +532,8 @@ class ErrorReplacer(ABCPipelineElement):
         ----------
         values: AnyIterable
             Values used for fitting.
+        labels: Any
+            Label used for fitting. (Not used, but required for compatibility with sklearn)
 
         Returns
         -------
@@ -517,7 +542,11 @@ class ErrorReplacer(ABCPipelineElement):
         """
         return self
 
-    def fit_transform(self, values: AnyIterable) -> AnyIterable:
+    def fit_transform(
+        self,
+        values: AnyIterable,
+        labels: Any = None,  # pylint: disable=unused-argument
+    ) -> AnyIterable:
         """Transform values and return a list without the Invalid values.
 
         So far fit does nothing and hence is only called for consitency.
@@ -526,6 +555,8 @@ class ErrorReplacer(ABCPipelineElement):
         ----------
         values: AnyIterable
             Iterable to which element is fitted and which is subsequently transformed.
+        labels: Any
+            Label used for fitting. (Not used, but required for compatibility with sklearn)
 
         Returns
         -------
@@ -536,6 +567,21 @@ class ErrorReplacer(ABCPipelineElement):
         return self.transform(values)
 
     def transform_single(self, value: Any) -> Any:
+        """Transform a single value.
+
+        Parameters
+        ----------
+        value: Any
+            Value to be transformed.
+
+        Returns
+        -------
+        Any
+            Transformed value.
+        """
+        return self.pretransform_single(value)
+
+    def pretransform_single(self, value: Any) -> Any:
         """Transform a single value.
 
         Parameters

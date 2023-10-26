@@ -222,6 +222,26 @@ class ABCPipelineElement(abc.ABC):
         Called after all transform singles have been processed. From MolPipeline
         """
 
+    def fit(self, values: Any, labels: Any = None) -> Self:
+        """Fit object to input_values.
+
+        Most objects might not need fitting, but it is implemented for consitency for all PipelineElements.
+
+        Parameters
+        ----------
+        values: Any
+            List of molecule representations.
+        labels: Any
+            Optional label for fitting.
+
+        Returns
+        -------
+        Self
+            Fitted object.
+        """
+        _ = self.fit_transform(values, labels)
+        return self
+
     def fit_to_result(self, values: Any) -> Self:  # pylint: disable=unused-argument
         """Fit object to result of transformed values.
 
@@ -240,13 +260,19 @@ class ABCPipelineElement(abc.ABC):
         return self
 
     @abc.abstractmethod
-    def fit_transform(self, values: Any) -> Any:
+    def fit_transform(
+        self,
+        values: Any,
+        labels: Any = None,
+    ) -> Any:
         """Apply fit function and subsequently transform the input.
 
         Parameters
         ----------
         values: Any
             Apply transformation specified in transform_single to all molecules in the value_list.
+        labels: Any
+            Optional label for fitting.
 
         Returns
         -------
@@ -363,24 +389,6 @@ class TransformingPipelineElement(ABCPipelineElement):
             setattr(recreated_object, key, copy.copy(value))
         return recreated_object
 
-    def fit(self, value_list: Any) -> Self:
-        """Fit object to input_values.
-
-        Most objects might not need fitting, but it is implemented for consitency for all PipelineElements.
-
-        Parameters
-        ----------
-        value_list: Any
-            List of molecule representations.
-
-        Returns
-        -------
-        Self
-            Fitted object.
-        """
-        _ = self.fit_transform(value_list)
-        return self
-
     def fit_to_result(self, values: Any) -> Self:
         """Fit object to result of transformed values.
 
@@ -399,13 +407,19 @@ class TransformingPipelineElement(ABCPipelineElement):
         self._is_fitted = True
         return super().fit_to_result(values)
 
-    def fit_transform(self, values: Any) -> Any:
+    def fit_transform(
+        self,
+        values: Any,
+        labels: Any = None,
+    ) -> Any:
         """Apply fit function and subsequently transform the input.
 
         Parameters
         ----------
         values: Any
             Apply transformation specified in transform_single to all molecules in the value_list.
+        labels: Any
+            Optional label for fitting.
 
         Returns
         -------

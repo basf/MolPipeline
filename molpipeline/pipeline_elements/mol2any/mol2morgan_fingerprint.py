@@ -348,29 +348,41 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         bit_info = {self.bit_mapping[k]: v for k, v in original_bit_info.items()}
         return bit_info
 
-    def fit(self, value_list: list[RDKitMol]) -> Self:
+    def fit(
+        self,
+        values: list[RDKitMol],
+        labels: Any = None,  # pylint: disable=unused-argument
+    ) -> Self:
         """Determine all features and assign each a unique position in the fingerprint-vector.
 
         Parameters
         ----------
-        value_list: list[RDKitMol]
+        values: list[RDKitMol]
             List of molecules used for fitting.
+        labels: Any
+            Labels for the molecules. Not used.
 
         Returns
         -------
         Self
             The fitted MolToUnfoldedMorganFingerprint pipeline element.
         """
-        _ = self._fit(value_list)
+        _ = self._fit(values)
         return self
 
-    def fit_transform(self, values: list[RDKitMol]) -> sparse.csr_matrix:
+    def fit_transform(
+        self,
+        values: list[RDKitMol],
+        labels: Any = None,  # pylint: disable=unused-argument
+    ) -> sparse.csr_matrix:
         """Create a feature mapping based on input and apply it for transformation.
 
         Parameters
         ----------
         values: list[RDKitMol]
             List of molecules to fit and transform.
+        labels: Any
+            Labels for the molecules. Not used.
 
         Returns
         -------
