@@ -39,7 +39,7 @@ class ErrorFilter(ABCPipelineElement):
     def __init__(
         self,
         element_ids: set[str] | None = None,
-        filter_everything: bool = False,
+        filter_everything: bool = True,
         name: str = "ErrorFilter",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
