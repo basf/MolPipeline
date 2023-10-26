@@ -249,6 +249,67 @@ class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
         return mol
 
 
+class RemoveIsotopeInformationPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes isotope information of atoms in a molecule."""
+
+    def __init__(
+        self,
+        name: str = "RemoveIsotopeInformationPipelineElement",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize RemoveIsotopeInformationPipelineElement."""
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Remove isotope information of each atom.
+
+        Attention: Explicit hydrogen atoms are not made implicit.
+        You may need to use the RemoveExplicitHydrogensPipelineElement afterward.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to remove charges from.
+
+        Returns
+        -------
+        OptionalMol
+            Largest fragment of molecule if possible, else InvalidInstance.
+        """
+        for atom in value.GetAtoms():
+            atom.SetIsotope(0)
+        return value
+
+
+class RemoveExplicitHydrogensPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes explicit hydrogen atoms from a molecule."""
+
+    def __init__(
+        self,
+        name: str = "RemoveExplicitHydrogensPipelineElement",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize RemoveExplicitHydrogensPipelineElement."""
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Remove explicit hydrogen atoms.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to remove explicit hydrogen atoms from.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule without explicit hydrogen atoms if possible, else InvalidInstance.
+        """
+        return Chem.RemoveHs(value)
+
+
 class RemoveStereoInformationPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes stereo-information from the molecule."""
 
