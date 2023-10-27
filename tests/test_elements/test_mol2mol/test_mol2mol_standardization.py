@@ -205,14 +205,8 @@ class MolStandardizationTest(unittest.TestCase):
         None
         """
 
-        mol_list = [
-            "[2H]c1ccccc1",
-            "CC[13CH2][19F]"
-        ]
-        expected_largest_fragment_smiles_list = [
-            "[H]c1ccccc1",
-            "CCCF"
-        ]
+        mol_list = ["[2H]c1ccccc1", "CC[13CH2][19F]"]
+        expected_largest_fragment_smiles_list = ["[H]c1ccccc1", "CCCF"]
 
         smi2mol = SmilesToMolPipelineElement()
         fragment_remover = RemoveIsotopeInformationPipelineElement()
@@ -235,16 +229,8 @@ class MolStandardizationTest(unittest.TestCase):
         None
         """
 
-        mol_list = [
-            "[H]c1ccccc1",
-            "Cc1cncn(-[H])1",
-            "[H][H]"
-        ]
-        expected_largest_fragment_smiles_list = [
-            "c1ccccc1",
-            "Cc1cnc[nH]1",
-            "[H][H]"
-        ]
+        mol_list = ["[H]c1ccccc1", "Cc1cncn(-[H])1", "[H][H]"]
+        expected_largest_fragment_smiles_list = ["c1ccccc1", "Cc1cnc[nH]1", "[H][H]"]
 
         smi2mol = SmilesToMolPipelineElement()
         fragment_remover = RemoveExplicitHydrogensPipelineElement()
