@@ -1,5 +1,6 @@
 """Init."""
 
+from molpipeline.pipeline_elements.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
@@ -11,6 +12,7 @@ from molpipeline.pipeline_elements.mol2any.mol2concatinated_vector import (
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 
 __all__ = (
+    "MolToChemprop",
     "MolToSmilesPipelineElement",
     "MolToFoldedMorganFingerprint",
     "MolToUnfoldedMorganFingerprint",
