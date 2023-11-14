@@ -38,12 +38,12 @@ def ignored_value_scorer(
 
     needs_proba = isinstance(scorer, _ProbaScorer)
     needs_threshold = isinstance(scorer, _ThresholdScorer)
-    score_func = scorer._score_funcn  # pylint: disable=protected-access
+    score_func = scorer._score_func  # pylint: disable=protected-access
 
     def newscore(
-            y_true: Sequence[float | int],
-            y_pred: Sequence[float | int],
-            **kwargs: Any,
+        y_true: Sequence[float | int],
+        y_pred: Sequence[float | int],
+        **kwargs: Any,
     ) -> float:
         """Compute the score for the given prediction arrays.
 
@@ -61,21 +61,21 @@ def ignored_value_scorer(
         float
             The score for the given prediction arrays.
         """
-        retained_y_true = ~np.equal(y_true, ignore_value)
-        retained_y_pred = ~np.equal(y_pred, ignore_value)
+        if ignore_value is None or not np.isnan(ignore_value):
+            retained_y_true = ~np.equal(y_true, ignore_value)
+            retained_y_pred = ~np.equal(y_pred, ignore_value)
+        else:
+            retained_y_true = ~np.isnan(y_true)
+            retained_y_pred = ~np.isnan(y_pred)
+
         all_retained = retained_y_pred & retained_y_true
 
         if not np.all(all_retained):
             logger.warning(
                 f"Warning, prediction array contains NaN values, removing {sum(~all_retained)} elements"
             )
-
-        y_true_ = np.array(y_true)[all_retained]
-        y_pred_ = np.array(y_pred)[all_retained]
-        if np.any(np.isnan(y_true_)):
-            raise ValueError("y_true still contains NaN values")
-        if np.any(np.isnan(y_pred_)):
-            raise ValueError("y_pred still contains NaN values")
+        y_true_ = np.copy(np.array(y_true)[all_retained])
+        y_pred_ = np.copy(np.array(y_pred)[all_retained]).astype(np.float64)
         _kwargs = dict(kwargs)
         if "sample_weight" in _kwargs and _kwargs["sample_weight"] is not None:
             _kwargs["sample_weight"] = _kwargs["sample_weight"][all_retained]
