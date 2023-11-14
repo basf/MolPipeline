@@ -1,4 +1,5 @@
 joblib
+loguru
 numpy
 pandas
 rdkit >= 2023.9.1
