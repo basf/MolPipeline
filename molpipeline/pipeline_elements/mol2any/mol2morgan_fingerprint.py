@@ -10,6 +10,7 @@ except ImportError:
     from typing_extensions import Self
 
 import copy
+
 import numpy as np
 from rdkit.Chem import AllChem
 from scipy import sparse

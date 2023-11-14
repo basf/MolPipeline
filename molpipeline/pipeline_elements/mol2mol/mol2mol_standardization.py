@@ -9,17 +9,19 @@ except ImportError:
     from typing_extensions import Self
 
 from rdkit import Chem
-from rdkit.Chem import rdmolops, SanitizeMol  # pylint: disable=no-name-in-module
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
+from rdkit.Chem import (  # pylint: disable=no-name-in-module
+    SanitizeMol,
+    rdMolHash,
+    rdmolops,
+)
 from rdkit.Chem.MolStandardize import rdMolStandardize
-from rdkit.Chem import rdMolHash
 
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
-    InvalidInstance,
 )
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
-
 
 MolHashing = Union[
     "rdMolHash.HashFunction.AnonymousGraph",

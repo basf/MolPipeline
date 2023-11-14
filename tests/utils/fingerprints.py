@@ -1,13 +1,11 @@
 """Functions of fingerprints for comparing output with molpipline."""
 from __future__ import annotations
 
-from scipy import sparse
 from rdkit import Chem
 
 # pylint: disable=no-name-in-module
-from rdkit.Chem.AllChem import (
-    GetMorganFingerprintAsBitVect,
-)
+from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
+from scipy import sparse
 
 
 def make_sparse_fp(

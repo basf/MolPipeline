@@ -4,6 +4,7 @@ This is only relevant for explainable AI, where atoms need to be mapped to featu
 """
 
 from __future__ import annotations
+
 from rdkit import Chem
 
 

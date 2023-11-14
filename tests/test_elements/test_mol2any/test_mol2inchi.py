@@ -1,11 +1,11 @@
 """Unittests for testing conversion of molecules to InChI and InChIKey."""
 import unittest
+
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-
 from molpipeline.pipeline_elements.mol2any.mol2inchi import (
-    MolToInchiPipelineElement,
     MolToInchiKeyPipelineElement,
+    MolToInchiPipelineElement,
 )
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated

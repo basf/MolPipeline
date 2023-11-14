@@ -1,18 +1,19 @@
 """Test elements for standardizing molecules."""
 import unittest
+
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
     DeduplicateFragmentsByMolHashPipelineElement,
     LargestFragmentChooserPipelineElement,
     MetalDisconnectorPipelineElement,
-    RemoveIsotopeInformationPipelineElement,
     RemoveExplicitHydrogensPipelineElement,
+    RemoveIsotopeInformationPipelineElement,
     RemoveStereoInformationPipelineElement,
     SolventRemoverPipelineElement,
 )
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 
 STEREO_MOL_LIST = ["Br[C@@H](Cl)F"]
 NON_STEREO_MOL_LIST = ["FC(Cl)Br"]

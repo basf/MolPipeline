@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 
-from typing import Optional
 import warnings
+from typing import Optional
 
 try:
     from chemprop.v2 import data as cp_data
@@ -15,9 +15,7 @@ except ImportError:
         ImportWarning,
     )
 
-from molpipeline.abstract_pipeline_elements.core import (
-    MolToAnyPipelineElement,
-)
+from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.utils.molpipeline_types import RDKitMol
 
 

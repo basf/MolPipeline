@@ -1,11 +1,8 @@
 """Code for backward compatibility with old naming for ErrorHandling."""
-from typing import Any
 import warnings
+from typing import Any
 
-from molpipeline.pipeline_elements.error_handling import (
-    ErrorReplacer,
-    ErrorFilter,
-)
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 
 
 # pylint: disable=too-few-public-methods

@@ -9,9 +9,10 @@ try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import Self
-import warnings
 
 import copy
+import warnings
+
 from rdkit.Chem import AllChem
 
 from molpipeline.abstract_pipeline_elements.core import (

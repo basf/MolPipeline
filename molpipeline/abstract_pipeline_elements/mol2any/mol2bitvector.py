@@ -11,12 +11,13 @@ except ImportError:
     from typing_extensions import Self
 
 import copy
+
 from scipy import sparse
-from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.utils.matrices import sparse_from_index_value_dicts
 from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 
 class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):

@@ -1,29 +1,25 @@
 """Test functionality of the pipeline class."""
 import unittest
 
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.base import BaseEstimator
-from tests.utils.fingerprints import make_sparse_fp
-from molpipeline.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
 
+from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.error_handling import ErrorFilter
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
+from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     ChargeParentPipelineElement,
     MetalDisconnectorPipelineElement,
     SaltRemoverPipelineElement,
 )
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.matrices import are_equal
-from molpipeline.utils.json_operations import (
-    recursive_from_json,
-    recursive_to_json,
-)
-from molpipeline.pipeline_elements.error_handling import ErrorFilter
-
+from tests.utils.fingerprints import make_sparse_fp
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
 FAULTY_TEST_SMILES = ["CCCXAS", "", "O=C(O)C(F)(F)F"]

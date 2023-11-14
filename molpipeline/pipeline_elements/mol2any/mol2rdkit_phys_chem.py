@@ -2,6 +2,7 @@
 # pylint: disable=too-many-arguments
 
 from __future__ import annotations
+
 from typing import Any, Callable, Optional, Union
 
 try:
@@ -10,6 +11,7 @@ except ImportError:
     from typing_extensions import Self
 
 import copy
+
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
@@ -20,8 +22,7 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol, AnyTransformer
-
+from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 
 RDKIT_DESCRIPTOR_DICT: dict[str, Callable[[Chem.Mol], float]]
 RDKIT_DESCRIPTOR_DICT = dict(Descriptors.descList)

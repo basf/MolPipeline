@@ -4,20 +4,17 @@ import unittest
 
 import numpy as np
 from rdkit import RDLogger
-
 from sklearn.base import clone
 
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
-from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import (
-    MolToRDKitPhysChem,
-)
+from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
+from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 
 rdlog = RDLogger.logger()
 rdlog.setLevel(RDLogger.CRITICAL)

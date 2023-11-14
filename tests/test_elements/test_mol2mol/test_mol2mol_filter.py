@@ -1,15 +1,13 @@
 """Test MolFilter, which invalidate molecules based on criteria defined in the respective filter."""
 import unittest
+
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
+from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
     ElementFilterPipelineElement,
     MixtureFilterPipelineElement,
-)
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
-from molpipeline.pipeline_elements.error_handling import (
-    ErrorFilter,
-    ErrorReplacer,
 )
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated

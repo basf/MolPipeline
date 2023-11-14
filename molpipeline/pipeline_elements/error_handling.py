@@ -14,15 +14,10 @@ import numpy.typing as npt
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
     InvalidInstance,
-    TransformingPipelineElement,
     RemovedInstance,
+    TransformingPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import (
-    AnyIterable,
-    AnyNumpyElement,
-    Number,
-)
-
+from molpipeline.utils.molpipeline_types import AnyIterable, AnyNumpyElement, Number
 
 __all__ = ["ErrorReplacer", "ErrorFilter", "_MultipleErrorFilter"]
 

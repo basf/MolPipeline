@@ -1,20 +1,16 @@
 """Classes ment to transform given input to a RDKit molecule."""
 
 from __future__ import annotations
+
 from typing import Optional
 
 from rdkit import Chem
 
-from molpipeline.abstract_pipeline_elements.core import (
-    InvalidInstance,
-)
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import (
-    OptionalMol,
-    RDKitMol,
-)
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
+from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class SmilesToMolPipelineElement(_StringToMolPipelineElement):

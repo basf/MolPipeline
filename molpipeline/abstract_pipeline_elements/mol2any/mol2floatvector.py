@@ -17,10 +17,10 @@ from sklearn.base import clone
 from sklearn.preprocessing import StandardScaler
 
 from molpipeline.abstract_pipeline_elements.core import (
-    MolToAnyPipelineElement,
     InvalidInstance,
+    MolToAnyPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol, AnyTransformer
+from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):

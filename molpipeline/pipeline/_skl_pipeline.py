@@ -1,7 +1,7 @@
 """Defines a pipeline is exposed to the user, accessible via pipeline."""
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Literal, Optional, Union, Tuple, TypeVar
+from typing import Any, Iterable, List, Literal, Optional, Tuple, TypeVar, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -10,37 +10,22 @@ except ImportError:
 
 import joblib
 import numpy.typing as npt
-from sklearn.base import (
-    _fit_context,  # pylint: disable=protected-access
-    ClassifierMixin,
-    clone,
-)
+from sklearn.base import _fit_context  # pylint: disable=protected-access
+from sklearn.base import ClassifierMixin, clone
+from sklearn.pipeline import Pipeline as _Pipeline
+from sklearn.pipeline import _final_estimator_has, _fit_transform_one
+from sklearn.utils import _print_elapsed_time
 from sklearn.utils.metaestimators import available_if
-from sklearn.pipeline import (
-    Pipeline as _Pipeline,
-    _fit_transform_one,
-    _final_estimator_has,
-)
-from sklearn.utils import (
-    _print_elapsed_time,
-)
 from sklearn.utils.validation import check_memory
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
-from molpipeline.utils.molpipeline_types import (
-    AnyPredictor,
-    AnyTransformer,
-)
-from molpipeline.pipeline_elements.error_handling import (
-    ErrorFilter,
-    ErrorReplacer,
-)
+from molpipeline.pipeline._molpipeline import _MolPipeline
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 from molpipeline.pipeline_elements.post_prediction import (
     PostPredictionTransformation,
     PostPredictionWrapper,
 )
-from molpipeline.pipeline._molpipeline import _MolPipeline
-
+from molpipeline.utils.molpipeline_types import AnyPredictor, AnyTransformer
 
 # Type definitions
 _T = TypeVar("_T")

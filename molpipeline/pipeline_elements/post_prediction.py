@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Union, Optional
+from typing import Any, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -11,7 +11,7 @@ except ImportError:
     from typing_extensions import Self
 
 from numpy import typing as npt
-from sklearn.base import BaseEstimator, clone, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.pipeline_elements.error_handling import ErrorReplacer

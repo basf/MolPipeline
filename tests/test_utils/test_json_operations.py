@@ -4,14 +4,14 @@ import unittest
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
+from molpipeline.pipeline import Pipeline
 from molpipeline.utils.json_operations import (
-    transform_functions2string,
-    transform_string2function,
     recursive_from_json,
     recursive_to_json,
+    transform_functions2string,
+    transform_string2function,
 )
 from molpipeline.utils.multi_proc import check_available_cores
-from molpipeline.pipeline import Pipeline
 
 
 class JsonConversionTest(unittest.TestCase):

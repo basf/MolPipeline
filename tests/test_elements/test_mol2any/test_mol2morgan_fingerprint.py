@@ -1,12 +1,13 @@
 """Tests for the MolToFoldedMorganFingerprint pipeline element."""
 import unittest
+
 import numpy as np
 
 from molpipeline.pipeline import Pipeline
+from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 
 test_smiles = [
     "c1ccccc1",

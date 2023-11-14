@@ -1,6 +1,7 @@
 """Class for Transforming SDF-strings to rdkit molecules."""
 
 from __future__ import annotations
+
 from typing import Any, Optional
 
 try:
@@ -9,13 +10,13 @@ except ImportError:
     from typing_extensions import Self
 
 import copy
+
 from rdkit import Chem
-from molpipeline.abstract_pipeline_elements.core import (
-    InvalidInstance,
-)
+
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.utils.molpipeline_types import OptionalMol
 
 

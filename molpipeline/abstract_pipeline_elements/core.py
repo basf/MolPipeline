@@ -12,13 +12,11 @@ except ImportError:
     from typing_extensions import Self
 
 from uuid import uuid4
+
 import numpy as np
 from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
 
-from molpipeline.utils.multi_proc import (
-    check_available_cores,
-    wrap_parallelizable_task,
-)
+from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
 
 
 class InvalidInstance(NamedTuple):

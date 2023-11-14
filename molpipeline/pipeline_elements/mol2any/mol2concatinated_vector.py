@@ -1,11 +1,13 @@
 """Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
 from __future__ import annotations
+
 from typing import Any, Iterable, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import Self
+
 import numpy as np
 import numpy.typing as npt
 from sklearn.base import clone

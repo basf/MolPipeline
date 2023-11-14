@@ -10,9 +10,8 @@ except ImportError:
     from typing_extensions import Self
 
 import numpy as np
-
-from rdkit.rdBase import BlockLogs
 from rdkit.Chem.rdchem import MolSanitizeException
+from rdkit.rdBase import BlockLogs
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
@@ -20,15 +19,13 @@ from molpipeline.abstract_pipeline_elements.core import (
     RemovedInstance,
     TransformingPipelineElement,
 )
-from molpipeline.utils.multi_proc import check_available_cores, calc_chunksize
-from molpipeline.utils.molpipeline_types import (
-    NumberIterable,
-)
 from molpipeline.pipeline_elements.error_handling import (
     ErrorFilter,
     ErrorReplacer,
     _MultipleErrorFilter,
 )
+from molpipeline.utils.molpipeline_types import NumberIterable
+from molpipeline.utils.multi_proc import calc_chunksize, check_available_cores
 
 
 class _MolPipeline:

@@ -1,10 +1,9 @@
 """Utility functions for multiprocessing."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
-
 import multiprocessing
 import warnings
+from typing import Any, Callable, Iterable
 
 
 def check_available_cores(n_requested_cores: int) -> int:

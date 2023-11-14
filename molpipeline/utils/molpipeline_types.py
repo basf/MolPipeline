@@ -12,11 +12,7 @@ except ImportError:
 import numpy as np
 import numpy.typing as npt
 
-from molpipeline.abstract_pipeline_elements.core import (
-    OptionalMol,
-    RDKitMol,
-)
-
+from molpipeline.abstract_pipeline_elements.core import OptionalMol, RDKitMol
 
 __all__ = [
     "AnyNumpyElement",

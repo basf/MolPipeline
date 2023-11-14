@@ -1,6 +1,7 @@
 """Classes to filter molecule lists."""
 
 from __future__ import annotations
+
 from typing import Any, Optional
 
 try:
@@ -10,11 +11,11 @@ except ImportError:
 
 from rdkit import Chem
 
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
-    InvalidInstance,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol, OptionalMol
+from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class ElementFilterPipelineElement(_MolToMolPipelineElement):

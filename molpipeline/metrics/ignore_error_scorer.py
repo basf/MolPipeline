@@ -1,15 +1,16 @@
 """Scorer that ignores a given value in the prediction array."""
 from __future__ import annotations
+
 from typing import Any, Sequence
 
-from loguru import logger
 import numpy as np
-from sklearn.metrics._scorer import (
+from loguru import logger
+from sklearn import metrics
+from sklearn.metrics._scorer import (  # pylint: disable=protected-access
+    _BaseScorer,
     _ProbaScorer,
     _ThresholdScorer,
-    _BaseScorer,
-)  # pylint: disable=protected-access
-from sklearn import metrics
+)
 
 
 def ignored_value_scorer(
