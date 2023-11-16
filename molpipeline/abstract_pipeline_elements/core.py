@@ -6,6 +6,7 @@ import copy
 import inspect
 from typing import Any, Iterable, NamedTuple, Optional, Union
 
+
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
@@ -13,7 +14,9 @@ except ImportError:
 
 from uuid import uuid4
 
+from loguru import logger
 import numpy as np
+from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
 
 from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
@@ -635,7 +638,18 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         OptionalMol
             Transformed molecule if transformation was successful, else InvalidInstance.
         """
-        return super().transform_single(value)
+        try:
+            return super().transform_single(value)
+        except Exception as exc:
+            if isinstance(value, Chem.Mol):
+                logger.error(
+                    f"Failed to process: {Chem.MolToSmiles(value)} | ({self.name}) ({self.uuid})"
+                )
+            else:
+                logger.error(
+                    f"Failed to process: {value} ({type(value)}) | ({self.name}) ({self.uuid})"
+                )
+            raise exc
 
     @abc.abstractmethod
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
