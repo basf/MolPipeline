@@ -256,7 +256,9 @@ def recursive_to_json(obj: Any) -> Any:
             f"{type(obj)} has no get_params method. No parameters for initialization are retained."
         )
 
-    object_dict = {key: value for key, value in object_dict.items() if not re.match(".+__.+$", key)}
+    object_dict = {
+        key: value for key, value in object_dict.items() if not re.match(".+__.+$", key)
+    }
 
     return object_dict
 
