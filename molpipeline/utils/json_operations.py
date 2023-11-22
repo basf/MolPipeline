@@ -255,8 +255,8 @@ def recursive_to_json(obj: Any) -> Any:
         warnings.warn(
             f"{type(obj)} has no get_params method. No parameters for initialization are retained."
         )
-    
-    object_dict = {k :object_dict[k] for k in object_dict if not re.match('.+__.+$', k)}
+
+    object_dict = {k: object_dict[k] for k in object_dict if not re.match(".+__.+$", k)}
 
     return object_dict
 
