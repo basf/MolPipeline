@@ -1,6 +1,7 @@
 """Contains functions for loading and saving pipeline elements and models to json files."""
 
 from __future__ import annotations
+import re
 
 import types
 import typing
@@ -254,6 +255,9 @@ def recursive_to_json(obj: Any) -> Any:
         warnings.warn(
             f"{type(obj)} has no get_params method. No parameters for initialization are retained."
         )
+
+    object_dict = {key: value for key, value in object_dict.items() if not re.match(".+__.+$", k)}
+
     return object_dict
 
 
