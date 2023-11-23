@@ -246,7 +246,7 @@ def recursive_to_json(obj: Any) -> Any:
             object_dict["verbose"] = obj.verbose
             object_dict["n_jobs"] = obj.n_jobs
         else:
-            model_params = obj.get_params()
+            model_params = obj.get_params(deep=False)
             for key, value in model_params.items():
                 object_dict[key] = recursive_to_json(value)
     else:
@@ -255,10 +255,6 @@ def recursive_to_json(obj: Any) -> Any:
         warnings.warn(
             f"{type(obj)} has no get_params method. No parameters for initialization are retained."
         )
-
-    object_dict = {
-        key: value for key, value in object_dict.items() if not re.match(".+__.+$", key)
-    }
 
     return object_dict
 
