@@ -6,7 +6,6 @@ import copy
 import inspect
 from typing import Any, Iterable, NamedTuple, Optional, Union
 
-
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
@@ -14,8 +13,8 @@ except ImportError:
 
 from uuid import uuid4
 
-from loguru import logger
 import numpy as np
+from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
 

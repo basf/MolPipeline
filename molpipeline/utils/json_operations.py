@@ -1,8 +1,8 @@
 """Contains functions for loading and saving pipeline elements and models to json files."""
 
 from __future__ import annotations
-import re
 
+import re
 import types
 import typing
 import warnings
