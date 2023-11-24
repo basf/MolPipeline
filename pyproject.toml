@@ -10,7 +10,7 @@ authors = [
     {name = "Jennifer Hemmerich"},
 ]
 description = "Integration of rdkit functionality into sklearn pipelines."
-version = "0.6.3"
+version = "0.6.4"
 readme = "README.md"
 
 [tool.setuptools.dynamic]
