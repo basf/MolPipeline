@@ -3,7 +3,7 @@ loguru
 numpy
 pandas
 rdkit >= 2023.9.1
-scipy == 1.11.3
+scipy
 setuptools
 scikit-learn
 typing_extensions
