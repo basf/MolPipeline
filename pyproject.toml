@@ -16,5 +16,9 @@ readme = "README.md"
 [tool.setuptools.dynamic]
 dependencies = {file = "requirements.txt"}
 
+[tool.setuptools.dynamic.optional-dependencies]
+all = {file = ["requirements_chemprop.txt"]}
+chemprop = {file = ["requirements_chemprop.txt"]}
+
 [tool.setuptools.packages.find]
 exclude = ["tests", "docs"]

@@ -7,4 +7,3 @@ scipy
 setuptools
 scikit-learn
 typing_extensions
-chemprop @ https://github.com/cheminformaticsbasf/chemprop/archive/refs/heads/v2/dev.zip
