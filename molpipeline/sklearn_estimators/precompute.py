@@ -1,6 +1,8 @@
 """Sklearn estimators for precomputing similarity and distance matrices."""
 from __future__ import annotations
+
 from typing import Any
+
 try:
     from typing import Self  # pylint: disable=no-name-in-module
 except ImportError:
@@ -11,9 +13,7 @@ import numpy.typing as npt
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from molpipeline.utils.kernel import (
-    tanimoto_similarity_sparse,
-)
+from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 
 class PrecomputedTanimotoSimilarity(BaseEstimator, TransformerMixin):
@@ -24,6 +24,7 @@ class PrecomputedTanimotoSimilarity(BaseEstimator, TransformerMixin):
     training_matrix: npt.NDArray[np.float_] | csr_matrix | None
         Features seen during fit.
     """
+
     training_matrix: npt.NDArray[np.float_] | csr_matrix | None
 
     def __init__(self) -> None:
@@ -69,8 +70,7 @@ class PrecomputedTanimotoSimilarity(BaseEstimator, TransformerMixin):
         return self
 
     def transform(
-            self,
-            X: npt.NDArray[np.float_] | csr_matrix  # pylint: disable=invalid-name
+        self, X: npt.NDArray[np.float_] | csr_matrix  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float_]:
         """Transform the data.
 
@@ -122,6 +122,7 @@ class PrecomputedTanimotoDistance(BaseEstimator, TransformerMixin):
     training_matrix: npt.NDArray[np.float_] | csr_matrix | None
         Features seen during fit.
     """
+
     training_matrix: npt.NDArray[np.float_] | csr_matrix | None
 
     def __init__(self) -> None:
@@ -166,7 +167,8 @@ class PrecomputedTanimotoDistance(BaseEstimator, TransformerMixin):
         self.training_matrix = X
         return self
 
-    def transform(self, X: npt.NDArray[np.float_] | csr_matrix  # pylint: disable=invalid-name
+    def transform(
+        self, X: npt.NDArray[np.float_] | csr_matrix  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float_]:
         """Transform the data.
 
