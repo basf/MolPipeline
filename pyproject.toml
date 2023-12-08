@@ -8,6 +8,7 @@ name = "molpipeline"
 authors = [
     {name = "Christian W. Feldmann"},
     {name = "Jennifer Hemmerich"},
+    {name = "Jochen Sieg"}
 ]
 description = "Integration of rdkit functionality into sklearn pipelines."
 version = "0.6.4"
