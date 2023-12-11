@@ -5,6 +5,8 @@ import multiprocessing
 import warnings
 from typing import Any, Callable, Iterable
 
+from joblib import Parallel, delayed
+
 
 def check_available_cores(n_requested_cores: int) -> int:
     """Compare number of requested cores with available cores and return a (corrected) number.
@@ -62,8 +64,8 @@ def wrap_parallelizable_task(
     if n_jobs == 1:
         return [task(value) for value in value_list]
 
-    with multiprocessing.Pool(n_jobs) as pool:
-        return pool.map(task, value_list)
+    parallel = Parallel(n_jobs=n_jobs)
+    return parallel(delayed(task)(value) for value in value_list)
 
 
 def calc_chunksize(n_jobs: int, len_iterable: int, factor: int = 4) -> int:
