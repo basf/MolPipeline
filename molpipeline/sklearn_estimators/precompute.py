@@ -86,7 +86,7 @@ class PrecomputedTanimotoSimilarity(BaseEstimator, TransformerMixin):
         """
         if self.training_matrix is None:
             raise ValueError("Please fit the transformer before transforming!")
-        return self._sim(self.training_matrix, X)
+        return self._sim(X, self.training_matrix)
 
     def fit_transform(
         self,
@@ -184,7 +184,7 @@ class PrecomputedTanimotoDistance(BaseEstimator, TransformerMixin):
         """
         if self.training_matrix is None:
             raise ValueError("Please fit the transformer before transforming!")
-        return self._dist(self.training_matrix, X)
+        return self._dist(X, self.training_matrix)
 
     def fit_transform(
         self,
