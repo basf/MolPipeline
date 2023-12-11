@@ -77,6 +77,29 @@ class PipelineTest(unittest.TestCase):
         for pred_val, true_val in zip(predicted_value_array, CONTAINS_OX):
             self.assertEqual(pred_val, true_val)
 
+    def test_sklearn_pipeline_parallel(self) -> None:
+        """Test if the pipeline can be used in a sklearn pipeline.
+
+        Returns
+        -------
+        None
+        """
+        smi2mol = SmilesToMolPipelineElement()
+        mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
+        d_tree = DecisionTreeClassifier()
+        s_pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("morgan", mol2morgan),
+                ("decision_tree", d_tree),
+            ],
+            n_jobs=2,
+        )
+        s_pipeline.fit(TEST_SMILES, CONTAINS_OX)
+        out = s_pipeline.predict(TEST_SMILES)
+        for pred_val, true_val in zip(out, CONTAINS_OX):
+            self.assertEqual(pred_val, true_val)
+
     def test_salt_removal(self) -> None:
         """Test if salts are correctly removed from molecules.
 
