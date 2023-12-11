@@ -416,28 +416,19 @@ class _MolPipeline:
         agg_filter = self._filter_elements_agg
         for filter_element in self._filter_elements:
             filter_element.error_indices = []
-        if self.n_jobs > 1:
-            parallel = Parallel(
-                n_jobs=self.n_jobs,
-                return_as="generator",
-                batch_size=calc_chunksize(self.n_jobs, len(x_input)),
-            )
-            output_generator = parallel(
-                delayed(self.transform_single)(value) for value in x_input
-            )
-            for i, transformed_value in enumerate(output_generator):
-                if isinstance(transformed_value, RemovedInstance):
-                    agg_filter.register_removed(i, transformed_value)
-                else:
-                    yield transformed_value
-        else:
-            for i, value in enumerate(x_input):
-                transformed_value = self.transform_single(value)
-                if isinstance(transformed_value, RemovedInstance):
-                    if isinstance(transformed_value, RemovedInstance):
-                        agg_filter.register_removed(i, transformed_value)
-                else:
-                    yield transformed_value
+        parallel = Parallel(
+            n_jobs=self.n_jobs,
+            return_as="generator",
+            batch_size=calc_chunksize(self.n_jobs, len(x_input)),
+        )
+        output_generator = parallel(
+            delayed(self.transform_single)(value) for value in x_input
+        )
+        for i, transformed_value in enumerate(output_generator):
+            if isinstance(transformed_value, RemovedInstance):
+                agg_filter.register_removed(i, transformed_value)
+            else:
+                yield transformed_value
         agg_filter.set_total(len(x_input))
         self._finish()
         del log_block
