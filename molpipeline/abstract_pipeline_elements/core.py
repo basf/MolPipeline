@@ -14,11 +14,12 @@ except ImportError:
 from uuid import uuid4
 
 import numpy as np
+from joblib import Parallel, delayed
 from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
 
-from molpipeline.utils.multi_proc import check_available_cores, wrap_parallelizable_task
+from molpipeline.utils.multi_proc import check_available_cores
 
 
 class InvalidInstance(NamedTuple):
@@ -526,8 +527,9 @@ class TransformingPipelineElement(ABCPipelineElement):
         list[Any]
             Transformed input_values.
         """
-        output_values = wrap_parallelizable_task(
-            self.pretransform_single, value_list, self.n_jobs
+        parallel = Parallel(n_jobs=self.n_jobs)
+        output_values = parallel(
+            delayed(self.pretransform_single)(value) for value in value_list
         )
         return output_values
 
@@ -544,8 +546,9 @@ class TransformingPipelineElement(ABCPipelineElement):
         list[Any]
             List of transformed values.
         """
-        output_values = wrap_parallelizable_task(
-            self.finalize_single, value_list, self.n_jobs
+        parallel = Parallel(n_jobs=self.n_jobs)
+        output_values = parallel(
+            delayed(self.finalize_single)(value) for value in value_list
         )
         return output_values
 

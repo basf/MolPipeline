@@ -3,9 +3,6 @@ from __future__ import annotations
 
 import multiprocessing
 import warnings
-from typing import Any, Callable, Iterable
-
-from joblib import Parallel, delayed
 
 
 def check_available_cores(n_requested_cores: int) -> int:
@@ -40,32 +37,6 @@ def check_available_cores(n_requested_cores: int) -> int:
         return n_available_cores
 
     return n_requested_cores
-
-
-def wrap_parallelizable_task(
-    task: Callable[[Any], Any], value_list: Iterable[Any], n_jobs: int
-) -> list[Any]:
-    """Wrap any task and decide whether to use multiprocessing or not.
-
-    Parameters
-    ----------
-    task: Callable[[Any], Any]
-        Function to be parallelized.
-    value_list: Iterable[Any]
-        List of values for function input.
-    n_jobs: int
-        Number of cores to use.
-
-    Returns
-    -------
-    list[Any]
-        List of function outputs.
-    """
-    if n_jobs == 1:
-        return [task(value) for value in value_list]
-
-    parallel = Parallel(n_jobs=n_jobs)
-    return parallel(delayed(task)(value) for value in value_list)
 
 
 def calc_chunksize(n_jobs: int, len_iterable: int, factor: int = 4) -> int:
