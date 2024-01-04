@@ -24,7 +24,7 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
         ]
         linear_smiles: list[str] = ["CC", "CCC", "CCCN"]
 
-        estimator: MurckoScaffoldClustering = MurckoScaffoldClustering(
+        estimator_ignore_linear: MurckoScaffoldClustering = MurckoScaffoldClustering(
             n_jobs=1, linear_molecules_strategy="ignore"
         )
 
@@ -32,16 +32,18 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
         input_smiles = scaffold_smiles
         self.assertTrue(
             np.allclose(
-                adjusted_rand_score(estimator.fit_predict(input_smiles), [0, 1, 0]),
+                adjusted_rand_score(
+                    estimator_ignore_linear.fit_predict(input_smiles), [0, 1, 0]
+                ),
                 1.0,
                 atol=1e-10,
             )
         )
-        self.assertEqual(estimator.n_clusters_, 2)
+        self.assertEqual(estimator_ignore_linear.n_clusters_, 2)
 
         # test linear molecule handling. We expect the linear molecules to be clustered in the same cluster
         input_smiles = scaffold_smiles + linear_smiles
-        cluster_labels = estimator.fit_predict(input_smiles)
+        cluster_labels = estimator_ignore_linear.fit_predict(input_smiles)
         self.assertTrue(
             np.equal(
                 np.isnan(cluster_labels), [False, False, False, True, True, True]
@@ -56,10 +58,10 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
                 atol=1e-10,
             )
         )
-        self.assertEqual(estimator.n_clusters_, 2)
+        self.assertEqual(estimator_ignore_linear.n_clusters_, 2)
 
         # create new estimator with "own_cluster" strategy
-        estimator: MurckoScaffoldClustering = MurckoScaffoldClustering(
+        estimator_cluster_linear: MurckoScaffoldClustering = MurckoScaffoldClustering(
             n_jobs=1, linear_molecules_strategy="own_cluster"
         )
 
@@ -68,10 +70,11 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 adjusted_rand_score(
-                    estimator.fit_predict(input_smiles), [0, 1, 0, 2, 2, 2]
+                    estimator_cluster_linear.fit_predict(input_smiles),
+                    [0, 1, 0, 2, 2, 2],
                 ),
                 1.0,
                 atol=1e-10,
             )
         )
-        self.assertEqual(estimator.n_clusters_, 3)
+        self.assertEqual(estimator_cluster_linear.n_clusters_, 3)

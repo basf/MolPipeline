@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from numbers import Integral
+from typing import Any, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -17,7 +18,7 @@ from molpipeline.pipeline_elements.mol2mol import MurckoScaffoldPipelineElement
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 try:
-    from typing import Optional, Self
+    from typing import Self  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import Self
 
@@ -77,14 +78,14 @@ class _MurckoScaffoldClusteringHelperPipelineElement(MurckoScaffoldPipelineEleme
 class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     """Murcko scaffold clustering estimator."""
 
-    _parameter_constraints: dict = {
+    _parameter_constraints: dict[str, Any] = {
         "n_jobs": [Integral, None],
     }
 
     def __init__(
         self,
         *,
-        n_jobs=None,
+        n_jobs: int | None = None,
         linear_molecules_strategy: str = "ignore",
     ) -> None:
         """Initialize Murcko scaffold clustering estimator.
@@ -92,7 +93,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         Parameters
         ----------
         n_jobs : int | None
-            Number of jobs to use for parallelization.
+            Number of jobs to use for parallelization. None means 1.
         linear_molecules_strategy : str
             Strategy for handling linear molecules. Can be "ignore" or "own_cluster". "ignore" will
             ignore linear molecules and they will be replaced with NaN in the resulting clustering.
@@ -100,7 +101,9 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             a valid cluster label.
         """
         self.linear_molecules_strategy: str = linear_molecules_strategy
-        self.n_jobs: int | None = n_jobs
+        self.n_jobs: int = (
+            1 if n_jobs is None else n_jobs
+        )  # @TODO can we re-use n_jobs handling of sklearn (None will be 1 and -1 using all cores) ?
         self.n_clusters_: int | None = None
         self.labels_: npt.NDArray[np.int32] | None = None
 
@@ -108,7 +111,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
-        X: npt.NDArray[str] | list[str] | npt.NDArray[OptionalMol] | list[OptionalMol],
+        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],
         y: npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit Murcko scaffold clustering estimator.
@@ -131,7 +134,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     # pylint: disable=C0103,W0613
     def _fit(
         self,
-        X: npt.NDArray[str] | list[str] | npt.NDArray[OptionalMol] | list[OptionalMol],
+        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],
     ) -> Self:
         """Fit Murcko scaffold clustering estimator.
 
@@ -180,13 +183,15 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         )
 
         self.labels_ = cluster_pipeline.fit_transform(X, None)
+        if self.labels_ is None:
+            raise AssertionError("self.labels_ can not be None")
         self.n_clusters_ = len(np.unique(self.labels_[~np.isnan(self.labels_)]))
         return self
 
     # pylint: disable=C0103,W0613
     def fit_predict(
         self,
-        X: npt.NDArray[str] | list[str] | npt.NDArray[OptionalMol] | list[OptionalMol],
+        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],
         y: npt.NDArray[np.float64] | None = None,
     ) -> npt.NDArray[np.int32]:
         """Fit and predict Murcko scaffold clustering estimator.
