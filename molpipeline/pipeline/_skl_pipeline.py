@@ -51,9 +51,7 @@ class Pipeline(_Pipeline):
 
     def __init__(
         self,
-        steps: list[
-            tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
-        ],
+        steps: list[_Step],
         *,
         memory: Optional[Union[str, joblib.Memory]] = None,
         verbose: bool = False,
