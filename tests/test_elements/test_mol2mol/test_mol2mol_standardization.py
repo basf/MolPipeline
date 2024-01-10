@@ -6,7 +6,6 @@ from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipeline
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
-    UnchargePipelineElement,
     DeduplicateFragmentsByMolHashPipelineElement,
     LargestFragmentChooserPipelineElement,
     MetalDisconnectorPipelineElement,
@@ -15,6 +14,7 @@ from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     RemoveStereoInformationPipelineElement,
     SaltRemoverPipelineElement,
     SolventRemoverPipelineElement,
+    UnchargePipelineElement,
 )
 
 STEREO_MOL_LIST = ["Br[C@@H](Cl)F", "Br[C@H](Cl)F.I[C@@H](Cl)F"]
