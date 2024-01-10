@@ -33,20 +33,17 @@ __all__ = ["Pipeline"]
 # Type definitions
 _T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
-_Step = Tuple[int, str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
+
+_Step = Tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
+_IndexedStep = Tuple[int, str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
 _AggStep = Tuple[List[int], List[str], _MolPipeline]
-_AggregatedPipelineStep = Union[_Step, _AggStep]
+_AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
 
 
 class Pipeline(_Pipeline):
     """Defines the pipeline which handles pipeline elements."""
 
-    steps: list[
-        tuple[
-            str,
-            Union[AnyTransformer, AnyPredictor, ABCPipelineElement],
-        ],
-    ]
+    steps: list[_Step,]
     #  * Adapted methods from sklearn.pipeline.Pipeline *
 
     def __init__(
