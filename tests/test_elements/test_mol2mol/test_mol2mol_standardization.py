@@ -6,17 +6,19 @@ from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipeline
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
     CanonicalizeTautomerPipelineElement,
+    UnchargePipelineElement,
     DeduplicateFragmentsByMolHashPipelineElement,
     LargestFragmentChooserPipelineElement,
     MetalDisconnectorPipelineElement,
     RemoveExplicitHydrogensPipelineElement,
     RemoveIsotopeInformationPipelineElement,
     RemoveStereoInformationPipelineElement,
+    SaltRemoverPipelineElement,
     SolventRemoverPipelineElement,
 )
 
-STEREO_MOL_LIST = ["Br[C@@H](Cl)F"]
-NON_STEREO_MOL_LIST = ["FC(Cl)Br"]
+STEREO_MOL_LIST = ["Br[C@@H](Cl)F", "Br[C@H](Cl)F.I[C@@H](Cl)F"]
+NON_STEREO_MOL_LIST = ["FC(Cl)Br", "FC(Cl)Br.FC(Cl)I"]
 
 
 class MolStandardizationTest(unittest.TestCase):
@@ -113,8 +115,13 @@ class MolStandardizationTest(unittest.TestCase):
         non_canonical_tautomer_list = [
             "Oc1c(cccc3)c3nc2ccncc12",
             "CN=c1nc[nH]cc1",
+            "CN=c1nc[nH]cc1.Oc1c(cccc3)c3nc2ccncc12",
         ]
-        canonical_tautomer_list = ["O=c1c2ccccc2[nH]c2ccncc12", "CNc1ccncn1"]
+        canonical_tautomer_list = [
+            "O=c1c2ccccc2[nH]c2ccncc12",
+            "CNc1ccncn1",
+            "CNc1ccncn1.O=c1c2ccccc2[nH]c2ccncc12",
+        ]
 
         smi2mol = SmilesToMolPipelineElement()
         canonical_tautomer = CanonicalizeTautomerPipelineElement()
@@ -128,6 +135,29 @@ class MolStandardizationTest(unittest.TestCase):
         )
         mols_processed = pipeline.fit_transform(non_canonical_tautomer_list)
         self.assertEqual(canonical_tautomer_list, mols_processed)
+
+    def test_charge_neutralization(self) -> None:
+        """Test if charge neutralization works as expected.
+
+        Returns
+        -------
+        None
+        """
+        mol_list = ["CC(=O)-[O-]", "CC(=O)-[O-].C[NH+](C)C"]
+        expected_charge_neutralized_smiles_list = ["CC(=O)O", "CC(=O)O.CN(C)C"]
+
+        smi2mol = SmilesToMolPipelineElement()
+        charge_neutralizer = UnchargePipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("charge_neutralizer", charge_neutralizer),
+                ("mol2smi", mol2smi),
+            ]
+        )
+        mols_processed = pipeline.fit_transform(mol_list)
+        self.assertEqual(expected_charge_neutralized_smiles_list, mols_processed)
 
     def test_largest_fragment_chooser_element(self) -> None:
         """Test if largest fragment chooser element works as expected.
@@ -151,6 +181,35 @@ class MolStandardizationTest(unittest.TestCase):
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
+
+    def test_salt_removal_pipeline_element(self) -> None:
+        """Test if salt removal pipeline element works as expected.
+
+        Returns
+        -------
+        None
+        """
+
+        mol_list = [
+            "[Na+].ClCC(=O)[O-]",
+            "[Ca+2].BrCC(=O)[O-].CCC(=O)[O-]",
+        ]
+        expected_smiles_list = [
+            "O=C([O-])CCl",
+            "CCC(=O)[O-].O=C([O-])CBr",
+        ]
+        smitomol = SmilesToMolPipelineElement()
+        salt_remover = SaltRemoverPipelineElement()
+        mol2smi = MolToSmilesPipelineElement()
+        pipeline = Pipeline(
+            [
+                ("smitomol", smitomol),
+                ("salt_remover", salt_remover),
+                ("mol2smi", mol2smi),
+            ]
+        )
+        mols_processed = pipeline.fit_transform(mol_list)
+        self.assertEqual(expected_smiles_list, mols_processed)
 
     def test_solvent_removal_pipeline_element(self) -> None:
         """Test if solvent removal pipeline element works as expected.
