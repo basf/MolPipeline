@@ -25,7 +25,7 @@ from molpipeline.pipeline_elements.error_handling import (
     _MultipleErrorFilter,
 )
 from molpipeline.utils.molpipeline_types import NumberIterable
-from molpipeline.utils.multi_proc import calc_chunksize, check_available_cores
+from molpipeline.utils.multi_proc import check_available_cores
 
 
 class _MolPipeline:
@@ -419,7 +419,7 @@ class _MolPipeline:
         parallel = Parallel(
             n_jobs=self.n_jobs,
             return_as="generator",
-            batch_size=calc_chunksize(self.n_jobs, len(x_input)),
+            batch_size="auto",
         )
         output_generator = parallel(
             delayed(self.transform_single)(value) for value in x_input
