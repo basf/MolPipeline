@@ -97,6 +97,7 @@ class PipelineTest(unittest.TestCase):
         )
         s_pipeline.fit(TEST_SMILES, CONTAINS_OX)
         out = s_pipeline.predict(TEST_SMILES)
+        self.assertEqual(len(out), len(CONTAINS_OX))
         for pred_val, true_val in zip(out, CONTAINS_OX):
             self.assertEqual(pred_val, true_val)
 
