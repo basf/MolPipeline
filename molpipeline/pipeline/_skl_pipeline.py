@@ -54,7 +54,7 @@ class Pipeline(_Pipeline):
         verbose: bool = False,
         n_jobs: int = 1,
         raise_nones: bool = False,
-    ) -> None:
+    ):
         """Initialize Pipeline.
 
         Parameters
