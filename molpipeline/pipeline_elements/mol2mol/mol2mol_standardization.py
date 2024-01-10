@@ -440,7 +440,7 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
                 "CC(=O)C",
                 "CS(=O)C",
                 "CCO",
-                "CN(C)C)",
+                "CN(C)C",
             ]
         self.solvent_smiles_list = solvent_smiles_list
 
