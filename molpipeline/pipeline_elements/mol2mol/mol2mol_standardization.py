@@ -421,6 +421,7 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
              - ACETONE	CC(=O)C
              - DMSO	CS(=O)C
              - ETHANOL	CCO
+             - Trimethylamine	CN(C)C  # Not in ChEMBL list
         name: str, optional (default: "SolventRemoverPipelineElement")
             Name of the pipeline element.
         n_jobs: int, optional (default: 1)
@@ -439,6 +440,7 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
                 "CC(=O)C",
                 "CS(=O)C",
                 "CCO",
+                "CN(C)C)",
             ]
         self.solvent_smiles_list = solvent_smiles_list
 
