@@ -43,7 +43,7 @@ _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
 class Pipeline(_Pipeline):
     """Defines the pipeline which handles pipeline elements."""
 
-    steps: list[_Step,]
+    steps: list[_Step]
     #  * Adapted methods from sklearn.pipeline.Pipeline *
 
     def __init__(
