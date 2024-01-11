@@ -72,7 +72,10 @@ class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
 
 
 class ChargeParentPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which returns charge-parent of a molecule, if possible."""
+    """MolToMolPipelineElement which returns charge-parent of a molecule, if possible.
+
+    The charge-parent is the largest fragment after neutralization.
+    """
 
     def __init__(
         self,
