@@ -2,6 +2,7 @@
 
 from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
     ElementFilterPipelineElement,
+    EmptyMoleculeFilterPipelineElement,
     MixtureFilterPipelineElement,
 )
 from molpipeline.pipeline_elements.mol2mol.mol2mol_reaction import (
@@ -30,6 +31,7 @@ __all__ = (
     "ChargeParentPipelineElement",
     "DeduplicateFragmentsByMolHashPipelineElement",
     "ElementFilterPipelineElement",
+    "EmptyMoleculeFilterPipelineElement",
     "LargestFragmentChooserPipelineElement",
     "MakeScaffoldGenericPipelineElement",
     "MetalDisconnectorPipelineElement",
