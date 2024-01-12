@@ -1,7 +1,6 @@
 """Defines the pipeline which handles pipeline elements for molecular operations."""
 from __future__ import annotations
 
-from multiprocessing import Pool
 from typing import Any, Iterable, Union
 
 try:
@@ -10,6 +9,7 @@ except ImportError:
     from typing_extensions import Self
 
 import numpy as np
+from joblib import Parallel, delayed
 from rdkit.Chem.rdchem import MolSanitizeException
 from rdkit.rdBase import BlockLogs
 
@@ -25,7 +25,7 @@ from molpipeline.pipeline_elements.error_handling import (
     _MultipleErrorFilter,
 )
 from molpipeline.utils.molpipeline_types import NumberIterable
-from molpipeline.utils.multi_proc import calc_chunksize, check_available_cores
+from molpipeline.utils.multi_proc import check_available_cores
 
 
 class _MolPipeline:
@@ -416,26 +416,19 @@ class _MolPipeline:
         agg_filter = self._filter_elements_agg
         for filter_element in self._filter_elements:
             filter_element.error_indices = []
-        if self.n_jobs > 1:
-            with Pool(self.n_jobs) as pool:
-                iter_func = pool.imap(
-                    self.transform_single,
-                    x_input,
-                    chunksize=calc_chunksize(self.n_jobs, len(x_input)),
-                )
-                for i, transformed_value in enumerate(iter_func):
-                    if isinstance(transformed_value, RemovedInstance):
-                        agg_filter.register_removed(i, transformed_value)
-                    else:
-                        yield transformed_value
-        else:
-            for i, value in enumerate(x_input):
-                transformed_value = self.transform_single(value)
-                if isinstance(transformed_value, RemovedInstance):
-                    if isinstance(transformed_value, RemovedInstance):
-                        agg_filter.register_removed(i, transformed_value)
-                else:
-                    yield transformed_value
+        parallel = Parallel(
+            n_jobs=self.n_jobs,
+            return_as="generator",
+            batch_size="auto",
+        )
+        output_generator = parallel(
+            delayed(self.transform_single)(value) for value in x_input
+        )
+        for i, transformed_value in enumerate(output_generator):
+            if isinstance(transformed_value, RemovedInstance):
+                agg_filter.register_removed(i, transformed_value)
+            else:
+                yield transformed_value
         agg_filter.set_total(len(x_input))
         self._finish()
         del log_block
