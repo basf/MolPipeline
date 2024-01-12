@@ -360,7 +360,7 @@ class SaltRemoverPipelineElement(EmptyMolCheckerPipelineElement):
 
     def __init__(
         self,
-        remove_empty: bool =True,
+        remove_empty: bool = True,
         name: str = "SaltRemoverPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
