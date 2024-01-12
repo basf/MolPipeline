@@ -25,7 +25,7 @@ from molpipeline.pipeline_elements.post_prediction import (
     PostPredictionTransformation,
     PostPredictionWrapper,
 )
-from molpipeline.utils.molpipeline_types import AnyPredictor, AnyTransformer
+from molpipeline.utils.molpipeline_types import AnyPredictor, AnyStep, AnyTransformer
 
 __all__ = ["Pipeline"]
 
@@ -33,7 +33,7 @@ __all__ = ["Pipeline"]
 _T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
 
-_Step = Tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
+
 _IndexedStep = Tuple[int, str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
 _AggStep = Tuple[List[int], List[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
@@ -42,12 +42,12 @@ _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
 class Pipeline(_Pipeline):
     """Defines the pipeline which handles pipeline elements."""
 
-    steps: list[_Step]
+    steps: list[AnyStep]
     #  * Adapted methods from sklearn.pipeline.Pipeline *
 
     def __init__(
         self,
-        steps: list[_Step],
+        steps: list[AnyStep],
         *,
         memory: Optional[Union[str, joblib.Memory]] = None,
         verbose: bool = False,
