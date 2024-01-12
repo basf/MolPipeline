@@ -22,6 +22,11 @@ except ImportError:
     from typing_extensions import Self
 
 
+__all__ = [
+    "MurckoScaffoldClustering",
+]
+
+
 class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     """Murcko scaffold clustering estimator."""
 
