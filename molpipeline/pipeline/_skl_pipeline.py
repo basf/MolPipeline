@@ -25,7 +25,7 @@ from molpipeline.pipeline_elements.post_prediction import (
     PostPredictionTransformation,
     PostPredictionWrapper,
 )
-from molpipeline.utils.molpipeline_types import AnyPredictor, AnyTransformer, AnyStep
+from molpipeline.utils.molpipeline_types import AnyPredictor, AnyStep, AnyTransformer
 
 __all__ = ["Pipeline"]
 

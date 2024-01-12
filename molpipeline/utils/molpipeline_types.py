@@ -12,7 +12,11 @@ except ImportError:
 import numpy as np
 import numpy.typing as npt
 
-from molpipeline.abstract_pipeline_elements.core import OptionalMol, RDKitMol, ABCPipelineElement
+from molpipeline.abstract_pipeline_elements.core import (
+    ABCPipelineElement,
+    OptionalMol,
+    RDKitMol,
+)
 
 __all__ = [
     "AnyNumpyElement",
@@ -167,5 +171,6 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         npt.NDArray[Any]
             Transformed array.
         """
+
 
 AnyStep = Tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
