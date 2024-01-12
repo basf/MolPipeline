@@ -12,8 +12,9 @@ from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
 )
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
-from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
+from molpipeline.pipeline_elements.mol2mol import (
     ChargeParentPipelineElement,
+    EmptyMoleculeFilterPipelineElement,
     MetalDisconnectorPipelineElement,
     SaltRemoverPipelineElement,
 )
@@ -114,6 +115,7 @@ class PipelineTest(unittest.TestCase):
         smi2mol = SmilesToMolPipelineElement()
         disconnect_metal = MetalDisconnectorPipelineElement()
         salt_remover = SaltRemoverPipelineElement()
+        empty_mol_filter = EmptyMoleculeFilterPipelineElement()
         remove_charge = ChargeParentPipelineElement()
         mol2smi = MolToSmilesPipelineElement()
 
@@ -122,6 +124,7 @@ class PipelineTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("disconnect_metal", disconnect_metal),
                 ("salt_remover", salt_remover),
+                ("empty_mol_filter", empty_mol_filter),
                 ("remove_charge", remove_charge),
                 ("mol2smi", mol2smi),
             ]
@@ -186,12 +189,16 @@ class PipelineTest(unittest.TestCase):
         smi2mol = SmilesToMolPipelineElement()
         salt_remover = SaltRemoverPipelineElement()
         mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
-        remove_none = ErrorFilter.from_element_list([smi2mol, salt_remover, mol2morgan])
+        empty_mol_filter = EmptyMoleculeFilterPipelineElement()
+        remove_none = ErrorFilter.from_element_list(
+            [smi2mol, salt_remover, mol2morgan, empty_mol_filter]
+        )
         # Create pipeline
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
                 ("salt_remover", salt_remover),
+                ("empty_mol_filter", empty_mol_filter),
                 ("morgan", mol2morgan),
                 ("remove_none", remove_none),
             ],

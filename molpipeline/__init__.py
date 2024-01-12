@@ -1,1 +1,1 @@
-"""Init."""
+"""Initialize the molpipeline package."""
