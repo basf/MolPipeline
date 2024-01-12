@@ -18,9 +18,6 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
 )
-from molpipeline.abstract_pipeline_elements.mol2mol.standardization import (
-    EmptyMolCheckerPipelineElement,
-)
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 MolHashing = Union[
@@ -355,12 +352,11 @@ class RemoveStereoInformationPipelineElement(_MolToMolPipelineElement):
         return copy_mol
 
 
-class SaltRemoverPipelineElement(EmptyMolCheckerPipelineElement):
+class SaltRemoverPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes metal ions from molecule."""
 
     def __init__(
         self,
-        remove_empty: bool = True,
         name: str = "SaltRemoverPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -369,8 +365,6 @@ class SaltRemoverPipelineElement(EmptyMolCheckerPipelineElement):
 
         Parameters
         ----------
-        remove_empty: bool, optional (default: True)
-            If True, remove molecules with no atoms left.
         name: str
             Name of PipelineElement
         n_jobs: int
@@ -378,7 +372,7 @@ class SaltRemoverPipelineElement(EmptyMolCheckerPipelineElement):
         uuid: Optional[str], optional
             uuid of PipelineElement, by default None
         """
-        super().__init__(remove_empty=remove_empty, name=name, n_jobs=n_jobs, uuid=uuid)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove metal ions.
@@ -397,7 +391,7 @@ class SaltRemoverPipelineElement(EmptyMolCheckerPipelineElement):
         return salt_less_mol
 
 
-class SolventRemoverPipelineElement(EmptyMolCheckerPipelineElement):
+class SolventRemoverPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes defined fragments from a molecule."""
 
     _solvent_mol_list: list[RDKitMol]
@@ -405,7 +399,6 @@ class SolventRemoverPipelineElement(EmptyMolCheckerPipelineElement):
     def __init__(
         self,
         solvent_smiles_list: Optional[list[str]] = None,
-        remove_empty: bool = True,
         name: str = "SolventRemoverPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -429,15 +422,13 @@ class SolventRemoverPipelineElement(EmptyMolCheckerPipelineElement):
              - DMSO	CS(=O)C
              - ETHANOL	CCO
              - Trimethylamine	CN(C)C  # Not in ChEMBL list
-        remove_empty: bool, optional (default: True)
-            If True, remove molecules with no atoms left.
         name: str, optional (default: "SolventRemoverPipelineElement")
             Name of the pipeline element.
         n_jobs: int, optional (default: 1)
             Number of parallel jobs to use.
         uuid: str, optional (default: None)
         """
-        super().__init__(remove_empty=remove_empty, name=name, n_jobs=n_jobs, uuid=uuid)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if solvent_smiles_list is None:
             solvent_smiles_list = [
                 "[OH2]",
