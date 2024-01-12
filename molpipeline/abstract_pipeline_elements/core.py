@@ -508,10 +508,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         Any
             Finalized value.
         """
-        # Final cleanup of the molecule
-        if isinstance(value, RDKitMol):
-            if value.GetNumAtoms() == 0:
-                return InvalidInstance(self.uuid, "Empty molecule", self.name)
         return value
 
     def pretransform(self, value_list: Iterable[Any]) -> list[Any]:
