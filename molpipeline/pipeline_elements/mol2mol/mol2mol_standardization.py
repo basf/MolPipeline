@@ -10,11 +10,8 @@ except ImportError:
 
 from rdkit import Chem
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
-from rdkit.Chem import (  # pylint: disable=no-name-in-module
-    SanitizeMol,
-    rdMolHash,
-    rdmolops,
-)
+from rdkit.Chem import SanitizeMol  # pylint: disable=no-name-in-module
+from rdkit.Chem import rdMolHash, rdmolops
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
@@ -75,7 +72,10 @@ class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
 
 
 class ChargeParentPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which returns charge-parent of a molecule, if possible."""
+    """MolToMolPipelineElement which returns charge-parent of a molecule, if possible.
+
+    The charge-parent is the largest fragment after neutralization.
+    """
 
     def __init__(
         self,
@@ -421,6 +421,7 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
              - ACETONE	CC(=O)C
              - DMSO	CS(=O)C
              - ETHANOL	CCO
+             - Trimethylamine	CN(C)C  # Not in ChEMBL list
         name: str, optional (default: "SolventRemoverPipelineElement")
             Name of the pipeline element.
         n_jobs: int, optional (default: 1)
@@ -439,6 +440,7 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
                 "CC(=O)C",
                 "CS(=O)C",
                 "CCO",
+                "CN(C)C",
             ]
         self.solvent_smiles_list = solvent_smiles_list
 

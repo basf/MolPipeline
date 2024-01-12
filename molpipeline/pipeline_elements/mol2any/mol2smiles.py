@@ -18,7 +18,7 @@ class MolToSmilesPipelineElement(_MolToStringPipelineElement):
         name: str = "Mol2Smiles",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
-    ) -> None:
+    ):
         """Initialize MolToSmilesPipelineElement.
 
         Parameters
