@@ -164,11 +164,52 @@ class MixtureFilterPipelineElement(_MolToMolPipelineElement):
         OptionalMol
             Molecule if it contains only one fragment, else InvalidInstance.
         """
-        fragments = Chem.GetMolFrags(value)
+        fragments = Chem.GetMolFrags(value, asMols=True)
         if len(fragments) > 1:
+            smiles_fragments = [Chem.MolToSmiles(fragment) for fragment in fragments]
             return InvalidInstance(
                 self.uuid,
-                f"Molecule contains multiple fragments: {fragments}",
+                f"Molecule contains multiple fragments: {' '.join(smiles_fragments)}",
                 self.name,
             )
+        return value
+
+
+class EmptyMoleculeFilterPipelineElement(_MolToMolPipelineElement):
+    """MolToMolPipelineElement which removes empty molecules."""
+
+    def __init__(
+        self,
+        name: str = "EmptyMoleculeFilterPipelineElement",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize EmptyMoleculeFilterPipelineElement.
+
+        Parameters
+        ----------
+        name: str, optional (default: "EmptyMoleculeFilterPipe")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            Unique identifier of the pipeline element.
+        """
+        super().__init__(name=name, n_jobs=n_jobs)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Invalidate empty molecule.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to check.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule if it is not empty, else InvalidInstance.
+        """
+        if value.GetNumAtoms() == 0:
+            return InvalidInstance(self.uuid, "Molecule contains no atoms.", self.name)
         return value
