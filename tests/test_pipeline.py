@@ -190,7 +190,9 @@ class PipelineTest(unittest.TestCase):
         salt_remover = SaltRemoverPipelineElement()
         mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
         empty_mol_filter = EmptyMoleculeFilterPipelineElement()
-        remove_none = ErrorFilter.from_element_list([smi2mol, salt_remover, mol2morgan, empty_mol_filter])
+        remove_none = ErrorFilter.from_element_list(
+            [smi2mol, salt_remover, mol2morgan, empty_mol_filter]
+        )
         # Create pipeline
         pipeline = Pipeline(
             [
