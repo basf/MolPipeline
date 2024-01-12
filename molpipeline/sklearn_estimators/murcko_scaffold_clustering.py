@@ -13,7 +13,10 @@ from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 from molpipeline.pipeline_elements.mol2any import MolToSmilesPipelineElement
-from molpipeline.pipeline_elements.mol2mol import MurckoScaffoldPipelineElement
+from molpipeline.pipeline_elements.mol2mol import (
+    MurckoScaffoldPipelineElement,
+    EmptyMoleculeFilterPipelineElement,
+)
 from molpipeline.utils.molpipeline_types import AnyStep, OptionalMol
 
 try:
@@ -72,43 +75,47 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             Pipeline for the Murcko scaffold clustering estimator.
         """
         smi2mol = SmilesToMolPipelineElement()
+        empty_mol_filter1 = EmptyMoleculeFilterPipelineElement()
         murcko_scaffold = MurckoScaffoldPipelineElement()
+        empty_mol_filter2 = EmptyMoleculeFilterPipelineElement()
         mol2smi = MolToSmilesPipelineElement()
 
-        pipeline_step_list: list[AnyStep]
+        pipeline_step_list: list[AnyStep] = []
         if self.use_smiles:
-            pipeline_step_list = [
-                ("smi2mol", smi2mol),
-            ]
-            elements_to_filter = [smi2mol, mol2smi]
+            pipeline_step_list.append(("smi2mol", smi2mol))
         else:
             pipeline_step_list = []
-            elements_to_filter = [mol2smi]
 
         pipeline_step_list.extend(
             [
+                ("empty_mol_filter1", empty_mol_filter1),
                 ("murcko_scaffold", murcko_scaffold),
+                ("empty_mol_filter2", empty_mol_filter2),
                 ("mol2smi", mol2smi),
             ]
         )
 
         if self.linear_molecules_strategy == "ignore":
-            elements_to_filter.append(murcko_scaffold)
-            error_filter = ErrorFilter.from_element_list(elements_to_filter)
+            error_filter = ErrorFilter(filter_everything=True)
             pipeline_step_list.append(("error_filter", error_filter))
 
         elif self.linear_molecules_strategy == "own_cluster":
-            # Create and add error filter for smi2mol and mol2smi
-            error_filter = ErrorFilter.from_element_list(elements_to_filter)
+            # Create error filter for all errors except empty_mol_filter2
+            # This is needed to give linear molecules (empty scaffold) a valid cluster label
+            if self.use_smiles:
+                filter_ele_list = [smi2mol, empty_mol_filter1, murcko_scaffold, mol2smi]
+            else:
+                filter_ele_list = [empty_mol_filter1, murcko_scaffold, mol2smi]
+            error_filter = ErrorFilter.from_element_list(filter_ele_list)
             pipeline_step_list.append(("error_filter", error_filter))
 
             # Create and add separate error replacer for murcko_scaffold
-            murcko_filter = ErrorFilter.from_element_list([murcko_scaffold])
-            murck_replacer = ErrorReplacer.from_error_filter(murcko_filter, "linear")
+            no_scaffold_filter = ErrorFilter.from_element_list([empty_mol_filter2])
+            no_scaffold_replacer = ErrorReplacer.from_error_filter(no_scaffold_filter, "linear")
 
             # Directly add the error filter and replacer to the pipeline
-            pipeline_step_list.append(("murcko_error_filter", murcko_filter))
-            pipeline_step_list.append(("murcko_error_replacer", murck_replacer))
+            pipeline_step_list.append(("no_scaffold_filter", no_scaffold_filter))
+            pipeline_step_list.append(("no_scaffold_replacer", no_scaffold_replacer))
         else:
             raise ValueError(
                 f"Invalid value for linear_molecules_strategy: {self.linear_molecules_strategy}"
