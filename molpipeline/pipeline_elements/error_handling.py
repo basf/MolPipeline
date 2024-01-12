@@ -653,7 +653,7 @@ class ErrorReplacer(ABCPipelineElement):
         has_value_indices[self.error_filter.error_indices] = False
 
         output_matrix: npt.NDArray[Any]
-        output_matrix = np.ones(output_shape, dtype=value_array.dtype) * fill_value
+        output_matrix = np.full(output_shape, fill_value, dtype=value_array.dtype)
         output_matrix[has_value_indices, ...] = value_array
         return output_matrix
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import multiprocessing
 import warnings
-from typing import Any, Callable, Iterable
 
 
 def check_available_cores(n_requested_cores: int) -> int:
@@ -38,55 +37,3 @@ def check_available_cores(n_requested_cores: int) -> int:
         return n_available_cores
 
     return n_requested_cores
-
-
-def wrap_parallelizable_task(
-    task: Callable[[Any], Any], value_list: Iterable[Any], n_jobs: int
-) -> list[Any]:
-    """Wrap any task and decide whether to use multiprocessing or not.
-
-    Parameters
-    ----------
-    task: Callable[[Any], Any]
-        Function to be parallelized.
-    value_list: Iterable[Any]
-        List of values for function input.
-    n_jobs: int
-        Number of cores to use.
-
-    Returns
-    -------
-    list[Any]
-        List of function outputs.
-    """
-    if n_jobs == 1:
-        return [task(value) for value in value_list]
-
-    with multiprocessing.Pool(n_jobs) as pool:
-        return pool.map(task, value_list)
-
-
-def calc_chunksize(n_jobs: int, len_iterable: int, factor: int = 4) -> int:
-    """Calculate the chunksize for chunking an iterable of len_iterable length for processing with n_jobs.
-
-    This function corresponds to the implementation in `multiprocessing.pool.Pool._map_async` and
-    was inspired from: https://stackoverflow.com/a/54032744
-
-    Parameters
-    ----------
-    n_jobs: int
-        Number of jobs.
-    len_iterable: int
-        Length of iterable.
-    factor: int
-        Factor used by the heuristic to scale the number of workers.
-
-    Returns
-    -------
-    int
-        Chunksize.
-    """
-    chunksize, extra = divmod(len_iterable, n_jobs * factor)
-    if extra:
-        chunksize += 1
-    return chunksize

@@ -164,11 +164,12 @@ class MixtureFilterPipelineElement(_MolToMolPipelineElement):
         OptionalMol
             Molecule if it contains only one fragment, else InvalidInstance.
         """
-        fragments = Chem.GetMolFrags(value)
+        fragments = Chem.GetMolFrags(value, asMols=True)
         if len(fragments) > 1:
+            smiles_fragments = [Chem.MolToSmiles(fragment) for fragment in fragments]
             return InvalidInstance(
                 self.uuid,
-                f"Molecule contains multiple fragments: {fragments}",
+                f"Molecule contains multiple fragments: {' '.join(smiles_fragments)}",
                 self.name,
             )
         return value
