@@ -211,7 +211,5 @@ class EmptyMoleculeFilterPipelineElement(_MolToMolPipelineElement):
             Molecule if it is not empty, else InvalidInstance.
         """
         if value.GetNumAtoms() == 0:
-            return InvalidInstance(
-                self.uuid, "Molecule contains no atoms.", self.name
-            )
+            return InvalidInstance(self.uuid, "Molecule contains no atoms.", self.name)
         return value

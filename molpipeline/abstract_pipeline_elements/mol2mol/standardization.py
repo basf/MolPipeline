@@ -4,9 +4,9 @@ import abc
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
-    RDKitMol,
-    OptionalMol,
 )
+from molpipeline.abstract_pipeline_elements.core import OptionalMol, RDKitMol
+
 
 class EmptyMolCheckerPipelineElement(_MolToMolPipelineElement, abc.ABC):
     """EmptyMolCheckerPipelineElement which removes empty molecules."""
@@ -51,7 +51,5 @@ class EmptyMolCheckerPipelineElement(_MolToMolPipelineElement, abc.ABC):
             return value
         atoms = value.GetNumAtoms()
         if atoms == 0:
-            return InvalidInstance(
-                self.uuid, "Molecule contains no atoms.", self.name
-            )
+            return InvalidInstance(self.uuid, "Molecule contains no atoms.", self.name)
         return value
