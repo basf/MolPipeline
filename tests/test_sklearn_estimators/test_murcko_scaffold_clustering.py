@@ -25,7 +25,7 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
         """Test Murcko scaffold clustering estimator."""
 
         estimator_ignore_linear: MurckoScaffoldClustering = MurckoScaffoldClustering(
-            n_jobs=1, linear_molecules_strategy="ignore"
+            use_smiles=True, n_jobs=1, linear_molecules_strategy="ignore"
         )
 
         # test basic scaffold-based clustering works as intended
@@ -51,7 +51,7 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
         """Test Murcko scaffold clustering estimator."""
         # create new estimator with "own_cluster" strategy
         estimator_cluster_linear: MurckoScaffoldClustering = MurckoScaffoldClustering(
-            n_jobs=1, linear_molecules_strategy="own_cluster"
+            use_smiles=True, n_jobs=1, linear_molecules_strategy="own_cluster"
         )
 
         # test linear molecule handling. We expect the linear molecules to be clustered in the same cluster
