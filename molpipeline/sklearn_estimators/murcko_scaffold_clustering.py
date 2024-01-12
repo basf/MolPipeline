@@ -14,8 +14,8 @@ from molpipeline.pipeline_elements.any2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 from molpipeline.pipeline_elements.mol2any import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.mol2mol import (
-    MurckoScaffoldPipelineElement,
     EmptyMoleculeFilterPipelineElement,
+    MurckoScaffoldPipelineElement,
 )
 from molpipeline.utils.molpipeline_types import AnyStep, OptionalMol
 
@@ -111,7 +111,9 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
 
             # Create and add separate error replacer for murcko_scaffold
             no_scaffold_filter = ErrorFilter.from_element_list([empty_mol_filter2])
-            no_scaffold_replacer = ErrorReplacer.from_error_filter(no_scaffold_filter, "linear")
+            no_scaffold_replacer = ErrorReplacer.from_error_filter(
+                no_scaffold_filter, "linear"
+            )
 
             # Directly add the error filter and replacer to the pipeline
             pipeline_step_list.append(("no_scaffold_filter", no_scaffold_filter))
