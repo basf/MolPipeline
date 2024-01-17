@@ -15,7 +15,7 @@ class MolToBinaryPipelineElement(MolToAnyPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize MolToSmilesPipelineElement.
+        """Initialize MolToBinaryPipelineElement.
 
         Parameters
         ----------
@@ -33,7 +33,7 @@ class MolToBinaryPipelineElement(MolToAnyPipelineElement):
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: Chem.Mol) -> str:
-        """Transform a molecule to a SMILES string.
+        """Transform a molecule to a binary string.
 
         Parameters
         ----------

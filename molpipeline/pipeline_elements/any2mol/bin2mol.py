@@ -37,7 +37,7 @@ class BinaryToMolPipelineElement(AnyToMolPipelineElement):
         Parameters
         ----------
         value: str
-            SMILES string.
+            Binary string.
 
         Returns
         -------
