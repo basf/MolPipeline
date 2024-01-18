@@ -1,9 +1,17 @@
 """Defines a pipeline is exposed to the user, accessible via pipeline."""
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Literal, Optional, Sequence, Tuple, TypeVar, Union
-
-import numpy as np
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -11,6 +19,7 @@ except ImportError:
     from typing_extensions import Self
 
 import joblib
+import numpy as np
 import numpy.typing as npt
 from scipy.sparse import csr_matrix
 from sklearn.base import _fit_context  # pylint: disable=protected-access
@@ -28,7 +37,12 @@ from molpipeline.pipeline_elements.post_prediction import (
     PostPredictionTransformation,
     PostPredictionWrapper,
 )
-from molpipeline.utils.molpipeline_types import AnyPredictor, AnyStep, AnyTransformer
+from molpipeline.utils.molpipeline_types import (
+    AnyElement,
+    AnyPredictor,
+    AnyStep,
+    AnyTransformer,
+)
 
 __all__ = ["Pipeline"]
 
@@ -37,7 +51,7 @@ _T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
 
 
-_IndexedStep = Tuple[int, str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
+_IndexedStep = Tuple[int, str, AnyElement]
 _AggStep = Tuple[List[int], List[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
 
@@ -288,7 +302,7 @@ class Pipeline(_Pipeline):
     # * New implemented methods *
     def _non_post_processing_steps(
         self,
-    ) -> list[tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]]:
+    ) -> list[tuple[str, AnyElement]]:
         """Return all steps before the first PostPredictionTransformation."""
         non_post_processing_steps = []
         start_adding = False
@@ -486,7 +500,10 @@ class Pipeline(_Pipeline):
             if _is_empty(iter_input):
                 if isinstance(transform, _MolPipeline):
                     _ = transform.transform(iter_input)
+                iter_input = []
                 break
+            if transform == "passthrough":
+                continue
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(iter_input)
             else:
@@ -551,7 +568,7 @@ class Pipeline(_Pipeline):
                 y_pred = iter_input
             elif _is_empty(iter_input):
                 iter_input = []
-                y_pred = iter_input
+                y_pred = []
             elif hasattr(self._final_estimator, "fit_predict"):
                 y_pred = self._final_estimator.fit_predict(
                     iter_input, iter_label, **fit_params_last_step
@@ -597,6 +614,8 @@ class Pipeline(_Pipeline):
         for _, _, transform in self._iter(with_final=False):
             if _is_empty(iter_input):
                 break
+            if transform == "passthrough":
+                continue
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(iter_input)
             else:
@@ -655,6 +674,8 @@ class Pipeline(_Pipeline):
                     _ = transform.transform(iter_input)
                 iter_input = []
                 break
+            if transform == "passthrough":
+                continue
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(iter_input)
             else:
