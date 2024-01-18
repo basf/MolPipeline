@@ -19,12 +19,14 @@ from molpipeline.abstract_pipeline_elements.core import (
 )
 
 __all__ = [
+    "AnyElement",
     "AnyNumpyElement",
     "AnyPredictor",
     "AnySklearnEstimator",
     "AnyTransformer",
     "AnyIterable",
     "AnySklearnEstimator",
+    "AnyStep",
     "Number",
     "NumberIterable",
     "OptionalMol",
@@ -173,4 +175,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         """
 
 
-AnyStep = Tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]]]
+AnyElement = Union[
+    AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]
+]
+AnyStep = Tuple[str, AnyElement]
