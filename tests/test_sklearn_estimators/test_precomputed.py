@@ -4,18 +4,13 @@ import unittest
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 
-from molpipeline.utils.kernel import tanimoto_similarity_sparse
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 from molpipeline.pipeline_elements.mol2any import MolToFoldedMorganFingerprint
+from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
 from molpipeline.sklearn_estimators.precompute import PrecomputedTanimotoSimilarity
-from molpipeline.pipeline_elements.post_prediction import (
-    PostPredictionWrapper
-)
-from molpipeline.pipeline_elements.error_handling import (
-    ErrorReplacer,
-    ErrorFilter,
-)
+from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 COMPOUND_LIST = [
     "CCC",
@@ -47,7 +42,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
         morgan_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
-                ("mol2fp", MolToFoldedMorganFingerprint())
+                ("mol2fp", MolToFoldedMorganFingerprint()),
             ]
         )
         fingerprint = morgan_pipeline.fit_transform(COMPOUND_LIST)
@@ -58,7 +53,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", PrecomputedTanimotoSimilarity())
+                ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
             ]
         )
 
@@ -68,7 +63,9 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
 
         # Test transform
         reversed_pipeline_sim = full_pipeline.transform(COMPOUND_LIST[::-1])
-        reversed_self_similarity = tanimoto_similarity_sparse(fingerprint[::-1], fingerprint)
+        reversed_self_similarity = tanimoto_similarity_sparse(
+            fingerprint[::-1], fingerprint
+        )
         self.assertTrue((reversed_pipeline_sim == reversed_self_similarity).all())
 
     def test_fit_and_transform(self) -> None:
@@ -77,7 +74,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
         morgan_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
-                ("mol2fp", MolToFoldedMorganFingerprint())
+                ("mol2fp", MolToFoldedMorganFingerprint()),
             ]
         )
         fingerprint = morgan_pipeline.fit_transform(COMPOUND_LIST)
@@ -88,7 +85,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", PrecomputedTanimotoSimilarity())
+                ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
             ]
         )
         full_pipeline.fit(COMPOUND_LIST)
@@ -103,7 +100,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
                 ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
-                ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1))
+                ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1)),
             ]
         )
         full_pipeline.fit(COMPOUND_LIST, IS_AROMATIC)
@@ -118,7 +115,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
                 ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
-                ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1))
+                ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1)),
             ]
         )
         full_pipeline.fit(COMPOUND_LIST, IS_AROMATIC)
@@ -126,7 +123,9 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
         self.assertTrue((prediction == IS_AROMATIC).all())
 
         error_filter = ErrorFilter(filter_everything=True)
-        error_replacer = ErrorReplacer.from_error_filter(error_filter, fill_value=np.nan)
+        error_replacer = ErrorReplacer.from_error_filter(
+            error_filter, fill_value=np.nan
+        )
         # Test if the error handling works
         full_pipeline = Pipeline(
             [
@@ -136,11 +135,10 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
                 ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
                 ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1)),
                 ("error_replacer", PostPredictionWrapper(error_replacer)),
-
             ]
         )
         full_pipeline.fit(COMPOUND_LIST + ["C#C#C"], IS_AROMATIC + [False])
-        prediction = full_pipeline.predict(COMPOUND_LIST  + ["C#C#C"])
+        prediction = full_pipeline.predict(COMPOUND_LIST + ["C#C#C"])
         self.assertTrue((prediction[:-1] == IS_AROMATIC).all())
         self.assertTrue(np.isnan(prediction[-1]))
 
@@ -150,5 +148,3 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
 
         none_prediction = full_pipeline.predict([])
         self.assertTrue(none_prediction == [])
-
-
