@@ -24,7 +24,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         self,
         *,
         invalid_values: set[Any] | None = None,
-        to_numpy: bool = False,
+        return_as_numpy_array: bool = False,
         name: str = "dummy",
         uuid: Optional[str] = None,
         n_jobs: int = 1,
@@ -35,6 +35,8 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         ----------
         invalid_values: set[Any] | None, optional (default=None)
             Set of values to consider invalid.
+        return_as_numpy_array: bool, optional (default=False)
+            If True return output as numpy array, otherwise as list.
         name: str, optional (default="dummy")
             Name of PipelineElement
         uuid: str, optional (default=None)
@@ -44,7 +46,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         if invalid_values is None:
             invalid_values = set()
         self.invalid_values = invalid_values
-        self.to_numpy: bool = to_numpy
+        self.return_as_numpy_array: bool = return_as_numpy_array
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -62,10 +64,10 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         params = super().get_params(deep)
         if deep:
             params["invalid_values"] = copy.deepcopy(self.invalid_values)
-            params["to_numpy"] = copy.deepcopy(self.to_numpy)
+            params["return_as_numpy_array"] = copy.deepcopy(self.return_as_numpy_array)
         else:
             params["invalid_values"] = self.invalid_values
-            params["to_numpy"] = self.to_numpy
+            params["return_as_numpy_array"] = self.return_as_numpy_array
         return params
 
     def set_params(self, parameters: dict[str, Any]) -> Self:
@@ -84,8 +86,8 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         super().set_params(parameters)
         if "invalid_values" in parameters:
             self.invalid_values = parameters["invalid_values"]
-        if "to_numpy" in parameters:
-            self.invalid_values = parameters["to_numpy"]
+        if "return_as_numpy_array" in parameters:
+            self.invalid_values = parameters["return_as_numpy_array"]
         return self
 
     def pretransform_single(self, value: Any) -> Any:
@@ -125,6 +127,6 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         Any
             Aggregated output. This can also be the original input.
         """
-        if self.to_numpy:
+        if self.return_as_numpy_array:
             return np.array(list(value_list))
         return list(value_list)

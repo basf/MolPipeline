@@ -181,17 +181,16 @@ class NoneTest(unittest.TestCase):
             ),  # test object fill value with numpy array returned
         ]
 
-        for fill_value, test_values, to_numpy in test_tuples:
+        for fill_value, test_values, as_numpy_array in test_tuples:
             this_test_values: Any = test_values
-            if to_numpy:
+            if as_numpy_array:
                 this_test_values = np.array(test_values)
 
             mock2mock = MockTransformingPipelineElement(
                 invalid_values={
                     test_values[1]
                 },  # replaces element at index 1 with an invalid instance
-                to_numpy=to_numpy,
-                uuid="test1234",
+                return_as_numpy_array=as_numpy_array,
             )
             error_filter = ErrorFilter.from_element_list([mock2mock])
             error_replacer = ErrorReplacer.from_error_filter(
@@ -210,7 +209,7 @@ class NoneTest(unittest.TestCase):
             out = pipeline.transform(this_test_values)
             out2 = pipeline2.fit_transform(this_test_values)
 
-            if to_numpy:
+            if as_numpy_array:
                 self.assertTrue(isinstance(out, np.ndarray))
                 self.assertTrue(isinstance(out2, np.ndarray))
             else:
@@ -247,8 +246,7 @@ class NoneTest(unittest.TestCase):
 
         mock2mock = MockTransformingPipelineElement(
             invalid_values={test_values[1]},
-            to_numpy=True,
-            uuid="test1234",
+            return_as_numpy_array=True,
         )
         error_filter = ErrorFilter.from_element_list([mock2mock])
         error_replacer = ErrorReplacer.from_error_filter(
