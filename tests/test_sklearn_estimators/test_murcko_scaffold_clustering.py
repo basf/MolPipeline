@@ -106,3 +106,18 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
         self.assertListEqual(
             scaffold_cluster_labels2.tolist(), expected_scaffold_labels2
         )
+
+    def test_murcko_scaffold_clustering(self) -> None:
+        """Test Murcko scaffold clustering estimator for purely linear molecules."""
+        test_smiles_failing = [
+            "CCCCCCCCC(=CCCCCCCCC(=O)O)[N+](=O)[O-]",
+            "CN(C)C(=O)C(C)(C)NC(=O)OC(C)(C)C",
+        ]
+
+        pipe = MurckoScaffoldClustering(
+            make_generic=False,
+            n_jobs=1,
+            linear_molecules_strategy="ignore",
+        )
+        result = pipe.fit_predict(test_smiles_failing, None)
+        self.assertTrue(np.isnan(result).all())
