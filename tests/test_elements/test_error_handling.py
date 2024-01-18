@@ -224,11 +224,7 @@ class NoneTest(unittest.TestCase):
             self.assertEqual(out[2], this_test_values[2])
             self.assertEqual(out2[2], this_test_values[2])
 
-            if (
-                fill_value is not None
-                and not isinstance(fill_value, (list, dict))
-                and np.isnan(fill_value).all()
-            ):
+            if isinstance(fill_value, float) and np.isnan(fill_value).all():
                 self.assertTrue(np.isnan(out[1]).all())
                 self.assertTrue(np.isnan(out2[1]).all())
             else:
