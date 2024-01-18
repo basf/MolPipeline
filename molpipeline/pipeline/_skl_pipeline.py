@@ -1,7 +1,9 @@
 """Defines a pipeline is exposed to the user, accessible via pipeline."""
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Literal, Optional, Tuple, TypeVar, Union
+from typing import Any, Iterable, List, Literal, Optional, Sequence, Tuple, TypeVar, Union
+
+import numpy as np
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -10,6 +12,7 @@ except ImportError:
 
 import joblib
 import numpy.typing as npt
+from scipy.sparse import csr_matrix
 from sklearn.base import _fit_context  # pylint: disable=protected-access
 from sklearn.base import ClassifierMixin, clone
 from sklearn.pipeline import Pipeline as _Pipeline
@@ -37,6 +40,28 @@ _T = TypeVar("_T")
 _IndexedStep = Tuple[int, str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
 _AggStep = Tuple[List[int], List[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
+
+
+def _is_empty(value: Any) -> bool:
+    """Check if value is empty.
+
+    Parameters
+    ----------
+    value: Any
+        Value to be checked.
+
+    Returns
+    -------
+    bool
+        True if value is empty, False otherwise.
+    """
+    if isinstance(value, Sequence):
+        if len(value) == 0:
+            return True
+    if isinstance(value, (np.ndarray, csr_matrix)):
+        if value.shape[0] == 0:
+            return True
+    return False
 
 
 class Pipeline(_Pipeline):
@@ -406,6 +431,8 @@ class Pipeline(_Pipeline):
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if last_step == "passthrough":
                 pass
+            elif _is_empty(iter_input):
+                pass
             else:
                 fit_params_last_step = fit_params_steps[self.steps[-1][0]]
                 if hasattr(last_step, "fit_transform"):
@@ -456,6 +483,10 @@ class Pipeline(_Pipeline):
         """
         iter_input = X
         for _, _, transform in self._iter(with_final=False):
+            if _is_empty(iter_input):
+                if isinstance(transform, _MolPipeline):
+                    _ = transform.transform(iter_input)
+                break
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(iter_input)
             else:
@@ -464,6 +495,8 @@ class Pipeline(_Pipeline):
                 )
         if self._final_estimator == "passthrough":
             pass
+        elif _is_empty(iter_input):
+            iter_input = []
         elif hasattr(self._final_estimator, "predict"):
             iter_input = self._final_estimator.predict(iter_input, **predict_params)
         else:
@@ -516,6 +549,9 @@ class Pipeline(_Pipeline):
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator == "passthrough":
                 y_pred = iter_input
+            elif _is_empty(iter_input):
+                iter_input = []
+                y_pred = iter_input
             elif hasattr(self._final_estimator, "fit_predict"):
                 y_pred = self._final_estimator.fit_predict(
                     iter_input, iter_label, **fit_params_last_step
@@ -559,6 +595,8 @@ class Pipeline(_Pipeline):
         """
         iter_input = X
         for _, _, transform in self._iter(with_final=False):
+            if _is_empty(iter_input):
+                break
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(iter_input)
             else:
@@ -567,6 +605,8 @@ class Pipeline(_Pipeline):
                 )
         if self._final_estimator == "passthrough":
             pass
+        elif _is_empty(iter_input):
+            iter_input = []
         elif hasattr(self._final_estimator, "predict_proba"):
             iter_input = self._final_estimator.predict_proba(
                 iter_input, **predict_params
@@ -609,6 +649,12 @@ class Pipeline(_Pipeline):
         """
         iter_input = X
         for _, _, transform in self._iter():
+            if _is_empty(iter_input):
+                # This is done to prime the error filters
+                if isinstance(transform, _MolPipeline):
+                    _ = transform.transform(iter_input)
+                iter_input = []
+                break
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(iter_input)
             else:
