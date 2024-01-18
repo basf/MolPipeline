@@ -158,30 +158,18 @@ class NoneTest(unittest.TestCase):
         ]
 
         test_tuples = [
-            (42, test_values, False),  # test scalar fill value with list returned
-            (np.nan, test_values, False),  # test float fill value with list returned
-            ([], test_values, False),  # test object list fill value with list returned
-            ({}, test_values, False),  # test object dict fill value with list returned
-            (None, test_values, False),  # test None fill value with list returned
-            (42, test_values, True),  # test scalar fill value with numpy array returned
-            (
-                np.nan,
-                test_values,
-                True,
-            ),  # test float fill value with numpy array returned
-            (
-                {},
-                test_values,
-                True,
-            ),  # test object fill value with numpy array returned
-            (
-                None,
-                test_values,
-                True,
-            ),  # test object fill value with numpy array returned
+            (42, False),  # test scalar fill value with list returned
+            (np.nan, False),  # test float fill value with list returned
+            ([], False),  # test object list fill value with list returned
+            ({}, False),  # test object dict fill value with list returned
+            (None, False),  # test None fill value with list returned
+            (42, True),  # test scalar fill value with numpy array returned
+            (np.nan, True),  # test float fill value with numpy array returned
+            ({}, True),  # test object dict fill value with numpy array returned
+            (None, True),  # test None fill value with numpy array returned
         ]
 
-        for fill_value, test_values, as_numpy_array in test_tuples:
+        for fill_value, as_numpy_array in test_tuples:
             this_test_values: Any = test_values
             if as_numpy_array:
                 this_test_values = np.array(test_values)
