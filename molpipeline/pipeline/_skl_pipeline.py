@@ -297,12 +297,14 @@ class Pipeline(_Pipeline):
                 raise AssertionError()
             else:
                 self.steps[step_idx] = (name, fitted_transformer)
+            if _is_empty(X):
+                return np.array([]), np.array([])
         return X, y
 
     # * New implemented methods *
     def _non_post_processing_steps(
         self,
-    ) -> list[tuple[str, AnyElement]]:
+    ) -> list[AnyStep]:
         """Return all steps before the first PostPredictionTransformation."""
         non_post_processing_steps = []
         start_adding = False
