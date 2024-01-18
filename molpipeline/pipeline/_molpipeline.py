@@ -329,6 +329,7 @@ class _MolPipeline:
         Any
             Transformed molecular representation.
         """
+        log_block = BlockLogs()
         iter_value = input_value
         for p_element in self._element_list:
             try:
@@ -342,7 +343,7 @@ class _MolPipeline:
                     f"RDKit MolSanitizeException: {err.args}",
                     p_element.name,
                 )
-
+        del log_block
         return iter_value
 
     def pretransform(self, x_input: Any) -> Any:
@@ -412,7 +413,6 @@ class _MolPipeline:
         Any
             Transformed molecular representations.
         """
-        log_block = BlockLogs()
         agg_filter = self._filter_elements_agg
         for filter_element in self._filter_elements:
             filter_element.error_indices = []
@@ -431,7 +431,6 @@ class _MolPipeline:
                 yield transformed_value
         agg_filter.set_total(len(x_input))
         self._finish()
-        del log_block
 
     def co_transform(self, x_input: NumberIterable) -> NumberIterable:
         """Filter flagged rows from the input.

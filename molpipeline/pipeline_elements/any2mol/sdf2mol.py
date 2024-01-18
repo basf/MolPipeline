@@ -106,6 +106,12 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         OptionalMol
             Molecule if transformation was successful, else InvalidInstance.
         """
+        if not isinstance(value, (str, bytes)):
+            return InvalidInstance(
+                self.uuid,
+                "Invalid SDF string!",
+                self.name,
+            )
         mol = Chem.MolFromMolBlock(value)
         if mol is None:
             return InvalidInstance(

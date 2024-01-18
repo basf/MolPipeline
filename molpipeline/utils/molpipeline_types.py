@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Any, List, Optional, Protocol, TypeVar
+from typing import Any, List, Optional, Protocol, Tuple, TypeVar, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -12,7 +12,11 @@ except ImportError:
 import numpy as np
 import numpy.typing as npt
 
-from molpipeline.abstract_pipeline_elements.core import OptionalMol, RDKitMol
+from molpipeline.abstract_pipeline_elements.core import (
+    ABCPipelineElement,
+    OptionalMol,
+    RDKitMol,
+)
 
 __all__ = [
     "AnyNumpyElement",
@@ -167,3 +171,6 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         npt.NDArray[Any]
             Transformed array.
         """
+
+
+AnyStep = Tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
