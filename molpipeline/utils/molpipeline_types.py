@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Any, List, Optional, Protocol, Tuple, TypeVar, Union
+from typing import Any, List, Literal, Optional, Protocol, Tuple, TypeVar, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -173,4 +173,4 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         """
 
 
-AnyStep = Tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
+AnyStep = Tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]]]
