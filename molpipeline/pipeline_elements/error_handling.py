@@ -645,15 +645,13 @@ class ErrorReplacer(ABCPipelineElement):
         self, value_array: npt.NDArray[AnyNumpyElement]
     ) -> npt.NDArray[AnyNumpyElement]:
         fill_value = self.fill_value
-        if fill_value is None:
-            fill_value = np.nan
         output_shape = list(value_array.shape)
         output_shape[0] += len(self.error_filter.error_indices)
         has_value_indices = np.ones(output_shape[0], dtype=bool)
         has_value_indices[self.error_filter.error_indices] = False
 
         output_matrix: npt.NDArray[Any]
-        output_matrix = np.full(output_shape, fill_value, dtype=value_array.dtype)
+        output_matrix = np.full(output_shape, fill_value)
         output_matrix[has_value_indices, ...] = value_array
         return output_matrix
 
