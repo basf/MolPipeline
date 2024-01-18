@@ -19,11 +19,11 @@ class MolToBinaryPipelineElement(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        name: str
+        name: str, optional (default="Mol2Binary")
             name of PipelineElement
-        n_jobs: int
+        n_jobs: int, optional (default=1)
             number of jobs to use for parallelization
-        uuid: Optional[str], optional
+        uuid: Optional[str], optional (default=None)
             uuid of PipelineElement, by default None
 
         Returns

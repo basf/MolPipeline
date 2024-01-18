@@ -8,11 +8,9 @@ from molpipeline.abstract_pipeline_elements.core import (
     AnyToMolPipelineElement,
     InvalidInstance,
 )
-from molpipeline.pipeline_elements.any2mol import (
-    SDFToMolPipelineElement,
-    SmilesToMolPipelineElement,
-)
 from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol.sdf2mol import SDFToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
@@ -21,6 +19,8 @@ class AutoToMolPipelineElement(AnyToMolPipelineElement):
 
     A cascade of if clauses is tried to transformer the given input to a molecule.
     """
+
+    elements: tuple[AnyToMolPipelineElement, ...]
 
     def __init__(
         self,
@@ -37,8 +37,15 @@ class AutoToMolPipelineElement(AnyToMolPipelineElement):
 
         Parameters
         ----------
-        name: str
+        name: str, optional (default="auto2mol")
             Name of PipelineElement
+        n_jobs: int, optional (default=1")
+            Number of parallel jobs to use.
+        uuid: str, optional (default=None)
+            Unique identifier of PipelineElement.
+        elements: tuple[AnyToMolPipelineElement, ...], optional (default=(SmilesToMolPipelineElement(),
+            BinaryToMolPipelineElement(), SDFToMolPipelineElement()))
+            Elements to try to transform the input to a molecule.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         # pipeline elements for transforming the input to a molecule
@@ -49,7 +56,7 @@ class AutoToMolPipelineElement(AnyToMolPipelineElement):
 
         Parameters
         ----------
-        value: str
+        value: Any
             Input value.
 
         Returns

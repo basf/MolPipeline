@@ -6,10 +6,12 @@ from rdkit import Chem, rdBase
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol import SDFToMolPipelineElement
-from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMolPipelineElement
-from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMolPipelineElement
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol import (
+    AutoToMolPipelineElement,
+    BinaryToMolPipelineElement,
+    SDFToMolPipelineElement,
+    SmilesToMolPipelineElement,
+)
 from tests import TEST_DATA_DIR
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
