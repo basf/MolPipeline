@@ -29,11 +29,14 @@ def sparse_from_index_value_dicts(
     data: list[int] = []
     row_positions: list[int] = []
     col_positions: list[int] = []
-    row_idx = 0
+    row_idx = -1
     for row_idx, row_dict in enumerate(row_index_lists):
         data.extend(row_dict.values())
         col_positions.extend(row_dict.keys())
         row_positions.extend([row_idx] * len(row_dict))
+    if row_idx == -1:
+        return sparse.csr_matrix((0, n_columns))
+
     return sparse.csr_matrix(
         (data, (row_positions, col_positions)), shape=(row_idx + 1, n_columns)
     )
