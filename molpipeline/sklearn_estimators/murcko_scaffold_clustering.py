@@ -10,11 +10,12 @@ from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 
 from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMolPipelineElement
 from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 from molpipeline.pipeline_elements.mol2any import MolToSmilesPipelineElement
 from molpipeline.pipeline_elements.mol2mol import (
     EmptyMoleculeFilterPipelineElement,
+    MakeScaffoldGenericPipelineElement,
     MurckoScaffoldPipelineElement,
 )
 from molpipeline.utils.molpipeline_types import AnyStep, OptionalMol
@@ -44,7 +45,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     def __init__(
         self,
         *,
-        use_smiles: bool = False,
+        make_generic: bool = False,
         n_jobs: int = 1,
         linear_molecules_strategy: Literal["ignore", "own_cluster"] = "ignore",
     ):
@@ -52,19 +53,19 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
 
         Parameters
         ----------
+        make_generic : bool (default=False)
+            Makes a Murcko scaffold generic (i.e. all atom types->C and all bonds->single).
         n_jobs : int, optional (default=1)
             Number of jobs to use for parallelization.
         linear_molecules_strategy : Literal["ignore", "own_cluster"], optional (default="ignore")
             Strategy for handling linear molecules. Can be "ignore" or "own_cluster". "ignore" will
-            ignore linear molecules and they will be replaced with NaN in the resulting clustering.
+            ignore linear molecules, and they will be replaced with NaN in the resulting clustering.
             "own_cluster" will instead cluster linear molecules in their own cluster and give them
             a valid cluster label.
-        use_smiles : bool, optional (default=False)
-            Whether to use SMILES strings as input instead of RDKit molecules.
         """
         self.n_jobs = n_jobs
         self.linear_molecules_strategy = linear_molecules_strategy
-        self.use_smiles = use_smiles
+        self.make_generic = make_generic
 
     def _generate_pipeline(self) -> Pipeline:
         """Generate the pipeline for the Murcko scaffold clustering estimator.
@@ -74,22 +75,25 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         Pipeline
             Pipeline for the Murcko scaffold clustering estimator.
         """
-        smi2mol = SmilesToMolPipelineElement()
+        auto2mol = AutoToMolPipelineElement()
         empty_mol_filter1 = EmptyMoleculeFilterPipelineElement()
         murcko_scaffold = MurckoScaffoldPipelineElement()
         empty_mol_filter2 = EmptyMoleculeFilterPipelineElement()
         mol2smi = MolToSmilesPipelineElement()
 
-        pipeline_step_list: list[AnyStep] = []
-        if self.use_smiles:
-            pipeline_step_list.append(("smi2mol", smi2mol))
-        else:
-            pipeline_step_list = []
+        pipeline_step_list: list[AnyStep] = [
+            ("auto2mol", auto2mol),
+            ("empty_mol_filter1", empty_mol_filter1),
+            ("murcko_scaffold", murcko_scaffold),
+        ]
+
+        scaffold_generic_elem: MakeScaffoldGenericPipelineElement | None = None
+        if self.make_generic:
+            scaffold_generic_elem = MakeScaffoldGenericPipelineElement()
+            pipeline_step_list.append(("make_scaffold_generic", scaffold_generic_elem))
 
         pipeline_step_list.extend(
             [
-                ("empty_mol_filter1", empty_mol_filter1),
-                ("murcko_scaffold", murcko_scaffold),
                 ("empty_mol_filter2", empty_mol_filter2),
                 ("mol2smi", mol2smi),
             ]
@@ -102,10 +106,10 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         elif self.linear_molecules_strategy == "own_cluster":
             # Create error filter for all errors except empty_mol_filter2
             # This is needed to give linear molecules (empty scaffold) a valid cluster label
-            if self.use_smiles:
-                filter_ele_list = [smi2mol, empty_mol_filter1, murcko_scaffold, mol2smi]
-            else:
-                filter_ele_list = [empty_mol_filter1, murcko_scaffold, mol2smi]
+            filter_ele_list = [auto2mol, empty_mol_filter1, murcko_scaffold]
+            if scaffold_generic_elem is not None:
+                filter_ele_list.append(scaffold_generic_elem)
+            filter_ele_list.append(mol2smi)
             error_filter = ErrorFilter.from_element_list(filter_ele_list)
             pipeline_step_list.append(("error_filter", error_filter))
 
