@@ -457,6 +457,8 @@ class Pipeline(_Pipeline):
         """
         iter_input = X
         for _, _, transform in self._iter(with_final=False):
+            if transform == "passthrough":
+                continue
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(iter_input)
             else:
@@ -560,6 +562,8 @@ class Pipeline(_Pipeline):
         """
         iter_input = X
         for _, _, transform in self._iter(with_final=False):
+            if transform == "passthrough":
+                continue
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(iter_input)
             else:
@@ -611,6 +615,8 @@ class Pipeline(_Pipeline):
         """
         iter_input = X
         for _, _, transform in self._iter():
+            if transform == "passthrough":
+                continue
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(iter_input, **params)
             else:
@@ -630,6 +636,8 @@ class Pipeline(_Pipeline):
             if not isinstance(step[1], PostPredictionTransformation)
         ]
         last_step = check_last[-1][1]
+        if last_step == "passthrough":
+            raise ValueError("Last step is passthrough.")
         if hasattr(last_step, "classes_"):
             return last_step.classes_
         raise ValueError("Last step has no classes_ attribute.")
