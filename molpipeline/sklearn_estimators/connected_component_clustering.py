@@ -129,6 +129,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
         y: Ignored
             Not used, present for API consistency by convention.
         kwargs: Any
+            Additional keyword arguments.
 
         Returns
         -------
