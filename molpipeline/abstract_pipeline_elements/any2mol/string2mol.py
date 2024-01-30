@@ -13,8 +13,8 @@ from molpipeline.utils.molpipeline_types import OptionalMol
 class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
     """Abstract class for PipelineElements which transform molecules to integer vectors."""
 
-    _input_type = str
-    _output_type = Chem.Mol
+    _input_type = "str"
+    _output_type = "RDKitMol"
 
     def transform(self, values: list[str]) -> list[OptionalMol]:
         """Transform the list of molecules to sparse matrix.

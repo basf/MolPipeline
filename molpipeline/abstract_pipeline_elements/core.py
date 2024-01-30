@@ -718,7 +718,7 @@ class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
     _input_type = "RDKitMol"
-    _output_type: Literal["binary", "str", "float", "mixed"]
+    _output_type: str
 
     def __init__(
         self,
