@@ -12,7 +12,7 @@ except ImportError:
 import joblib
 import numpy.typing as npt
 from sklearn.base import _fit_context  # pylint: disable=protected-access
-from sklearn.base import ClassifierMixin, clone
+from sklearn.base import clone
 from sklearn.pipeline import Pipeline as _Pipeline
 from sklearn.pipeline import _final_estimator_has, _fit_transform_one
 from sklearn.utils import _print_elapsed_time
@@ -353,7 +353,7 @@ class Pipeline(_Pipeline):
         self : object
             Pipeline with fitted steps.
         """
-        fit_params_steps = self._check_fit_params(**fit_params)
+        fit_params_steps = self._check_method_params(method="fit", props=fit_params)
         Xt, yt = self._fit(X, y, **fit_params_steps)  # pylint: disable=invalid-name
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
@@ -374,7 +374,7 @@ class Pipeline(_Pipeline):
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False
     )
-    def fit_transform(self, X: Any, y: Any = None, **fit_params: Any) -> Any:
+    def fit_transform(self, X: Any, y: Any = None, **params: Any) -> Any:
         """Fit the model and transform with the final estimator.
 
         Fits all the transformers one after the other and transform the
@@ -391,7 +391,7 @@ class Pipeline(_Pipeline):
             Training targets. Must fulfill label requirements for all steps of
             the pipeline.
 
-        **fit_params : dict of string -> object
+        **params : Any
             Parameters passed to the ``fit`` method of each step, where
             each parameter name is prefixed such that parameter ``p`` for step
             ``s`` has key ``s__p``.
@@ -401,7 +401,7 @@ class Pipeline(_Pipeline):
         Xt : ndarray of shape (n_samples, n_transformed_features)
             Transformed samples.
         """
-        fit_params_steps = self._check_fit_params(**fit_params)
+        fit_params_steps = self._check_method_params(method="fit_transform", props=params)
         iter_input, iter_label = self._fit(X, y, **fit_params_steps)
         last_step = self._final_estimator
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
@@ -480,7 +480,7 @@ class Pipeline(_Pipeline):
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False
     )
-    def fit_predict(self, X: Any, y: Any = None, **fit_params: Any) -> Any:
+    def fit_predict(self, X: Any, y: Any = None, **params: Any) -> Any:
         """Transform the data, and apply `fit_predict` with the final estimator.
 
         Call `fit_transform` of each transformer in the pipeline. The
@@ -498,7 +498,7 @@ class Pipeline(_Pipeline):
             Training targets. Must fulfill label requirements for all steps
             of the pipeline.
 
-        **fit_params : dict of string -> object
+        **params : dict of string -> object
             Parameters passed to the ``fit`` method of each step, where
             each parameter name is prefixed such that parameter ``p`` for step
             ``s`` has key ``s__p``.
@@ -508,7 +508,7 @@ class Pipeline(_Pipeline):
         y_pred : ndarray
             Result of calling `fit_predict` on the final estimator.
         """
-        fit_params_steps = self._check_fit_params(**fit_params)
+        fit_params_steps = self._check_method_params(method="fit_predict", props=params)
         iter_input, iter_label = self._fit(
             X, y, **fit_params_steps
         )  # pylint: disable=invalid-name
@@ -586,7 +586,7 @@ class Pipeline(_Pipeline):
         )
 
     @available_if(_can_transform)
-    def transform(self, X: Any) -> Any:
+    def transform(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `transform` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -602,6 +602,7 @@ class Pipeline(_Pipeline):
         X : iterable
             Data to transform. Must fulfill input requirements of first step
             of the pipeline.
+        **params : Any
 
         Returns
         -------
@@ -611,13 +612,13 @@ class Pipeline(_Pipeline):
         iter_input = X
         for _, _, transform in self._iter():
             if hasattr(transform, "transform"):
-                iter_input = transform.transform(iter_input)
+                iter_input = transform.transform(iter_input, **params)
             else:
                 raise AssertionError(
                     "Non transformer ocurred in transformation step. This should have been caught in the validation step."
                 )
         for _, post_element in self._post_processing_steps():
-            iter_input = post_element.transform(iter_input)
+            iter_input = post_element.transform(iter_input, **params)
         return iter_input
 
     @property
