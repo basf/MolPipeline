@@ -12,7 +12,7 @@ from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
     """Abstract class for PipelineElements which transform molecules to integer vectors."""
 
-    _output_type = str
+    _output_type = "str"
 
     def transform(self, values: list[Chem.Mol]) -> list[str]:
         """Transform the list of molecules to sparse matrix.

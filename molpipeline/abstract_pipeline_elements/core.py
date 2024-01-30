@@ -317,8 +317,8 @@ class ABCPipelineElement(abc.ABC):
 class TransformingPipelineElement(ABCPipelineElement):
     """Ancestor of all PipelineElements."""
 
-    _input_type: type
-    _output_type: type
+    _input_type: str
+    _output_type: str
     name: str
 
     def __init__(
@@ -340,7 +340,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         self._is_fitted = False
 
     @property
-    def input_type(self) -> type:
+    def input_type(self) -> str:
         """Return the input type."""
         return self._input_type
 
@@ -350,7 +350,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         return self._is_fitted
 
     @property
-    def output_type(self) -> type:
+    def output_type(self) -> str:
         """Return the output type."""
         return self._output_type
 
@@ -596,8 +596,8 @@ class TransformingPipelineElement(ABCPipelineElement):
 class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
     """Abstract PipelineElement where input and outputs are molecules."""
 
-    _input_type = RDKitMol
-    _output_type = RDKitMol
+    _input_type = "RDKitMol"
+    _output_type = "RDKitMol"
 
     def __init__(
         self,
@@ -671,7 +671,7 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
 class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
-    _output_type = RDKitMol
+    _output_type = "RDKitMol"
 
     def __init__(
         self,
@@ -717,7 +717,8 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
 class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
-    _input_type = RDKitMol
+    _input_type = "RDKitMol"
+    _output_type: str
 
     def __init__(
         self,
