@@ -6,9 +6,7 @@ from typing import Any, Sequence
 import numpy as np
 from loguru import logger
 from sklearn import metrics
-from sklearn.metrics._scorer import (  # pylint: disable=protected-access
-    _BaseScorer,
-)
+from sklearn.metrics._scorer import _BaseScorer  # pylint: disable=protected-access
 
 
 def ignored_value_scorer(
@@ -79,6 +77,4 @@ def ignored_value_scorer(
             _kwargs["sample_weight"] = _kwargs["sample_weight"][all_retained]
         return score_func(y_true_, y_pred_, **_kwargs)
 
-    return metrics.make_scorer(
-        newscore, response_method=response_method
-    )
+    return metrics.make_scorer(newscore, response_method=response_method)
