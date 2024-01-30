@@ -5,7 +5,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 import abc
 import copy
 import inspect
-from typing import Any, Iterable, Literal, NamedTuple, Optional, Union
+from typing import Any, Iterable, NamedTuple, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
