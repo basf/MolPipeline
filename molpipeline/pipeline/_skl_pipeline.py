@@ -264,14 +264,18 @@ class Pipeline(_Pipeline):
     # * New implemented methods *
     def _non_post_processing_steps(
         self,
-    ) -> list[tuple[str, AnyStep]]:
+    ) -> list[AnyStep]:
         """Return all steps before the first PostPredictionTransformation."""
-        non_post_processing_steps = []
+        non_post_processing_steps: list[AnyStep] = []
         start_adding = False
         for step_name, step_estimator in self.steps[::-1]:
             if not isinstance(step_estimator, PostPredictionTransformation):
                 start_adding = True
             if start_adding:
+                if isinstance(step_estimator, PostPredictionTransformation):
+                    raise AssertionError(
+                        "PipelineElement of type PostPredictionTransformation occured before the last step."
+                    )
                 non_post_processing_steps.append((step_name, step_estimator))
         return list(non_post_processing_steps[::-1])
 
