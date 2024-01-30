@@ -629,6 +629,6 @@ class Pipeline(_Pipeline):
             if not isinstance(step[1], PostPredictionTransformation)
         ]
         last_step = check_last[-1][1]
-        if isinstance(last_step, ClassifierMixin):
+        if hasattr(last_step, "classes_"):
             return last_step.classes_
-        raise ValueError("Last step is not a classifier")
+        raise ValueError("Last step has no classes_ attribute.")
