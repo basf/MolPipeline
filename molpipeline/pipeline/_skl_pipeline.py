@@ -201,7 +201,7 @@ class Pipeline(_Pipeline):
         self,
         X: Any,  # pylint: disable=invalid-name
         y: Any = None,  # pylint: disable=invalid-name
-        **fit_params_steps: Any,
+        routed_params=None
     ) -> tuple[Any, Any]:
         # shallow copy of steps - this should really be steps_
         self.steps = list(self.steps)
@@ -225,12 +225,12 @@ class Pipeline(_Pipeline):
                 cloned_transformer = clone(transformer)
             if isinstance(cloned_transformer, _MolPipeline):
                 fit_parameter = {
-                    "element_parameters": [fit_params_steps[n] for n in name]
+                    "element_parameters": [routed_params[n] for n in name]
                 }
             elif isinstance(name, list):
                 raise AssertionError()
             else:
-                fit_parameter = fit_params_steps[name]
+                fit_parameter = routed_params[name]
 
             # Fit or load from cache the current transformer
             X, fitted_transformer = fit_transform_one_cached(
