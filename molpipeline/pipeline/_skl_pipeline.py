@@ -201,7 +201,7 @@ class Pipeline(_Pipeline):
         self,
         X: Any,  # pylint: disable=invalid-name
         y: Any = None,  # pylint: disable=invalid-name
-        routed_params=None
+        routed_params: dict[str, str] | None = None,
     ) -> tuple[Any, Any]:
         # shallow copy of steps - this should really be steps_
         self.steps = list(self.steps)
