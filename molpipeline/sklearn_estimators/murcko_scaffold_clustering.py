@@ -194,11 +194,11 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         self.n_clusters_ = len(np.unique(self.labels_[~np.isnan(self.labels_)]))
         return self
 
-    # pylint: disable=C0103,W0613
     def fit_predict(
         self,
-        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],
+        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],  # pylint: disable=C0103
         y: npt.NDArray[np.float64] | None = None,
+        **kwargs: Any,
     ) -> npt.NDArray[np.float64]:
         """Fit and predict Murcko scaffold clustering estimator.
 
@@ -208,6 +208,8 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             Smiles or molecule list or array.
         y : Ignored
             Not used, present for API consistency by convention.
+        **kwargs : Any
+            Additional keyword arguments.
 
         Returns
         -------
@@ -215,4 +217,4 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
         """
         # pylint: disable=W0246
-        return super().fit_predict(X, y)
+        return super().fit_predict(X, y, **kwargs)
