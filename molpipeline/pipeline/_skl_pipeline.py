@@ -250,7 +250,7 @@ class Pipeline(_Pipeline):
                 None,
                 message_clsname="Pipeline",
                 message=self._log_message(step_idx),
-                **fit_parameter,
+                params=fit_parameter,
             )
             # Replace the transformer of the step with the fitted
             # transformer. This is necessary when loading the transformer
@@ -368,11 +368,11 @@ class Pipeline(_Pipeline):
             Pipeline with fitted steps.
         """
         fit_params_steps = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, **fit_params_steps)  # pylint: disable=invalid-name
+        Xt, yt = self._fit(X, y, fit_params_steps)  # pylint: disable=invalid-name
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 fit_params_last_step = fit_params_steps[self.steps[-1][0]]
-                self._final_estimator.fit(Xt, yt, **fit_params_last_step)
+                self._final_estimator.fit(Xt, yt, **fit_params_last_step["fit"])
 
         return self
 
@@ -418,7 +418,7 @@ class Pipeline(_Pipeline):
         fit_params_steps = self._check_method_params(
             method="fit_transform", props=params
         )
-        iter_input, iter_label = self._fit(X, y, **fit_params_steps)
+        iter_input, iter_label = self._fit(X, y, fit_params_steps)
         last_step = self._final_estimator
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if last_step == "passthrough":
@@ -427,7 +427,7 @@ class Pipeline(_Pipeline):
                 fit_params_last_step = fit_params_steps[self.steps[-1][0]]
                 if hasattr(last_step, "fit_transform"):
                     iter_input = last_step.fit_transform(
-                        iter_input, iter_label, **fit_params_last_step
+                        iter_input, iter_label, **fit_params_last_step["fit"]
                     )
                 elif hasattr(last_step, "transform") and hasattr(last_step, "fit"):
                     last_step.fit(iter_input, iter_label, **fit_params_last_step)
