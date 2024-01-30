@@ -35,7 +35,7 @@ _T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
 
 
-_IndexedStep = Tuple[int, str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
+_IndexedStep = Tuple[int, str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]]]
 _AggStep = Tuple[List[int], List[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
 
