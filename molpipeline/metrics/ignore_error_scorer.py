@@ -8,8 +8,6 @@ from loguru import logger
 from sklearn import metrics
 from sklearn.metrics._scorer import (  # pylint: disable=protected-access
     _BaseScorer,
-    _ProbaScorer,
-    _ThresholdScorer,
 )
 
 
@@ -37,9 +35,8 @@ def ignored_value_scorer(
     if isinstance(scorer, str):
         scorer = metrics.get_scorer(scorer)
 
-    needs_proba = isinstance(scorer, _ProbaScorer)
-    needs_threshold = isinstance(scorer, _ThresholdScorer)
     score_func = scorer._score_func  # pylint: disable=protected-access
+    response_method = scorer.__response_method  # pylint: disable=protected-access
 
     def newscore(
         y_true: Sequence[float | int],
@@ -83,5 +80,5 @@ def ignored_value_scorer(
         return score_func(y_true_, y_pred_, **_kwargs)
 
     return metrics.make_scorer(
-        newscore, needs_proba=needs_proba, needs_threshold=needs_threshold
+        newscore, response_method=response_method
     )
