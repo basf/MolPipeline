@@ -1,4 +1,5 @@
 """Abstract classes for transforming rdkit molecules to float vectors."""
+
 # pylint: disable=too-many-arguments
 
 from __future__ import annotations

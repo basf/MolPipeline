@@ -1,4 +1,5 @@
 """Scorer that ignores a given value in the prediction array."""
+
 from __future__ import annotations
 
 from typing import Any, Sequence

@@ -1,4 +1,5 @@
 """Init."""
+
 from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMolPipelineElement
 from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMolPipelineElement
 from molpipeline.pipeline_elements.any2mol.sdf2mol import SDFToMolPipelineElement

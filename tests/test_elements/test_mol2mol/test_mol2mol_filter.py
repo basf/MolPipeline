@@ -1,4 +1,5 @@
 """Test MolFilter, which invalidate molecules based on criteria defined in the respective filter."""
+
 import unittest
 
 from molpipeline.pipeline import Pipeline

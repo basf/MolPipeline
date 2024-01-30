@@ -1,4 +1,5 @@
 """Classes for encoding molecules as phys-chem vector."""
+
 # pylint: disable=too-many-arguments
 
 from __future__ import annotations

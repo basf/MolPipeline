@@ -1,10 +1,12 @@
 """Unittests for testing conversion of molecules to binary string."""
+
 import unittest
+
+from rdkit import Chem, rdBase
 
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2bin import MolToBinaryPipelineElement
-from rdkit import Chem, rdBase
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"

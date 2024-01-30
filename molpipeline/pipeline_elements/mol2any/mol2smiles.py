@@ -1,4 +1,5 @@
 """Classes for transforming rdkit molecules to any type of output."""
+
 from __future__ import annotations
 
 from typing import Optional

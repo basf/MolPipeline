@@ -1,13 +1,15 @@
 """Test connected component clustering estimator."""
+
 from __future__ import annotations
 
 import unittest
 
 import numpy as np
+from scipy.sparse import csr_matrix
+
 from molpipeline.sklearn_estimators.connected_component_clustering import (
     ConnectedComponentClustering,
 )
-from scipy.sparse import csr_matrix
 
 
 class TestConnectedComponentClusteringEstimator(unittest.TestCase):

@@ -1,4 +1,5 @@
 """Converter element for molecules to binary string representation."""
+
 from typing import Optional
 
 from rdkit import Chem
