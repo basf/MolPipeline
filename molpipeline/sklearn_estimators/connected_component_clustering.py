@@ -116,7 +116,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
 
     def fit_predict(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,   # pylint: disable=C0103
+        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=C0103
         y: npt.NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> npt.NDArray[np.int32]:
