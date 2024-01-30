@@ -623,6 +623,7 @@ class Pipeline(_Pipeline):
             Data to transform. Must fulfill input requirements of first step
             of the pipeline.
         **params : Any
+            Parameters to the ``transform`` method of each estimator.
 
         Returns
         -------
