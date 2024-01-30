@@ -1,4 +1,5 @@
 """Test connected component clustering algorithm."""
+
 import unittest
 
 import numpy as np

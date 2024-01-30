@@ -1,4 +1,5 @@
 """Code for backward compatibility with old naming for ErrorHandling."""
+
 import warnings
 from typing import Any
 

@@ -1,4 +1,5 @@
 """Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
+
 from __future__ import annotations
 
 from typing import Any, Iterable, Optional, Union

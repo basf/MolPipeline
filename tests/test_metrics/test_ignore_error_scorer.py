@@ -1,4 +1,5 @@
 """Test the ignore error scorer wrapper."""
+
 import unittest
 
 import numpy as np

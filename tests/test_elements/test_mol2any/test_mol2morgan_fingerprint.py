@@ -1,4 +1,5 @@
 """Tests for the MolToFoldedMorganFingerprint pipeline element."""
+
 import unittest
 
 import numpy as np

@@ -1,4 +1,5 @@
 """Test union find algorithm."""
+
 import unittest
 
 import numpy as np
