@@ -264,7 +264,7 @@ class Pipeline(_Pipeline):
     # * New implemented methods *
     def _non_post_processing_steps(
         self,
-    ) -> list[tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]]:
+    ) -> list[tuple[str, AnyStep]]:
         """Return all steps before the first PostPredictionTransformation."""
         non_post_processing_steps = []
         start_adding = False
