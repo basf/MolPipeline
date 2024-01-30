@@ -1,9 +1,6 @@
 """Tests conversion of sklearn models to json and back."""
 import unittest
 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
-
 from molpipeline.pipeline import Pipeline
 from molpipeline.utils.json_operations import (
     recursive_from_json,
@@ -12,6 +9,8 @@ from molpipeline.utils.json_operations import (
     transform_string2function,
 )
 from molpipeline.utils.multi_proc import check_available_cores
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 
 
 class JsonConversionTest(unittest.TestCase):

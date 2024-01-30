@@ -2,9 +2,6 @@
 import unittest
 
 import numpy as np
-from rdkit import Chem
-from sklearn.preprocessing import StandardScaler
-
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2concatinated_vector import (
@@ -14,6 +11,8 @@ from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
+from rdkit import Chem
+from sklearn.preprocessing import StandardScaler
 
 
 class TestConcatenatedFingerprint(unittest.TestCase):
