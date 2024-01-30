@@ -1,4 +1,5 @@
 """Unittests for testing conversion of binary string to RDKit molecules."""
+
 import unittest
 
 from rdkit import Chem, rdBase

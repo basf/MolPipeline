@@ -1,4 +1,5 @@
 """Connected component clustering estimator."""
+
 from __future__ import annotations
 
 from numbers import Real

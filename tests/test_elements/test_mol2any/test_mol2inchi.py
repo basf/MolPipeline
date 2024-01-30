@@ -1,4 +1,5 @@
 """Unittests for testing conversion of molecules to InChI and InChIKey."""
+
 import unittest
 
 from molpipeline.pipeline import Pipeline

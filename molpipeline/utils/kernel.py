@@ -1,4 +1,5 @@
 """Contains functions for molecular similarity."""
+
 from typing import Union
 
 import numpy as np

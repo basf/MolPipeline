@@ -1,4 +1,5 @@
 """Definition of types used in molpipeline."""
+
 from __future__ import annotations
 
 from numbers import Number

@@ -1,4 +1,5 @@
 """Test Murcko scaffold clustering estimator."""
+
 from __future__ import annotations
 
 import unittest

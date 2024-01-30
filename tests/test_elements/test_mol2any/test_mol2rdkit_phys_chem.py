@@ -1,4 +1,5 @@
 """Test generation of RDKitPhysChem Descriptors."""
+
 import unittest
 from pathlib import Path
 

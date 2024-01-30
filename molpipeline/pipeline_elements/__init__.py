@@ -1,4 +1,5 @@
 """Initialize pipeline_elements package, which includes all rdkit wrappings to sklearn."""
+
 # pylint: disable=no-name-in-module
 from rdkit.Chem import PropertyPickleOptions, SetDefaultPickleProperties
 

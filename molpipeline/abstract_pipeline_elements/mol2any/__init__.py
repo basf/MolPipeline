@@ -1,4 +1,5 @@
 """Init."""
+
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
 )

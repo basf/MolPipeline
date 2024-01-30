@@ -24,7 +24,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     """Abstract class for PipelineElements which transform molecules to integer vectors."""
 
     _n_bits: int
-    _output_type = sparse.csr_matrix
+    _output_type = "binary"
     _sparse_output: bool
 
     def __init__(
