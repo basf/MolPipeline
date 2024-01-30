@@ -174,4 +174,6 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         """
 
 
-AnyStep = Tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]]]
+AnyStep = Tuple[
+    str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]]
+]

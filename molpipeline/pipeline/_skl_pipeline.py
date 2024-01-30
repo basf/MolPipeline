@@ -35,7 +35,11 @@ _T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
 
 
-_IndexedStep = Tuple[int, str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]]]
+_IndexedStep = Tuple[
+    int,
+    str,
+    Union[AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]],
+]
 _AggStep = Tuple[List[int], List[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
 
@@ -411,7 +415,9 @@ class Pipeline(_Pipeline):
         Xt : ndarray of shape (n_samples, n_transformed_features)
             Transformed samples.
         """
-        fit_params_steps = self._check_method_params(method="fit_transform", props=params)
+        fit_params_steps = self._check_method_params(
+            method="fit_transform", props=params
+        )
         iter_input, iter_label = self._fit(X, y, **fit_params_steps)
         last_step = self._final_estimator
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
