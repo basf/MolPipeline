@@ -49,8 +49,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """
         self._element_list = element_list
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        output_types = set()
         for _, element in self._element_list:
             element.n_jobs = self.n_jobs
+            output_types.add(element.output_type)
+        if len(output_types) == 1:
+            self._output_type = output_types.pop()
+        else:
+            self._output_type = "mixed"
         self._requires_fitting = any(
             element[1]._requires_fitting for element in element_list
         )
