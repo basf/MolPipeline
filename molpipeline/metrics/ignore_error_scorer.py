@@ -36,7 +36,7 @@ def ignored_value_scorer(
         scorer = metrics.get_scorer(scorer)
 
     score_func = scorer._score_func  # pylint: disable=protected-access
-    response_method = scorer.__response_method  # pylint: disable=protected-access
+    response_method = scorer._response_method  # pylint: disable=protected-access
 
     def newscore(
         y_true: Sequence[float | int],
