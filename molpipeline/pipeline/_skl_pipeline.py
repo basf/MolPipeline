@@ -415,9 +415,7 @@ class Pipeline(_Pipeline):
         Xt : ndarray of shape (n_samples, n_transformed_features)
             Transformed samples.
         """
-        routed_params = self._check_method_params(
-            method="fit_transform", props=params
-        )
+        routed_params = self._check_method_params(method="fit_transform", props=params)
         iter_input, iter_label = self._fit(X, y, routed_params)
         last_step = self._final_estimator
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
@@ -431,7 +429,9 @@ class Pipeline(_Pipeline):
                     )
                 elif hasattr(last_step, "transform") and hasattr(last_step, "fit"):
                     last_step.fit(iter_input, iter_label, **last_step_params["fit"])
-                    iter_input = last_step.transform(iter_input, **last_step_params["transform"])
+                    iter_input = last_step.transform(
+                        iter_input, **last_step_params["transform"]
+                    )
                 else:
                     raise TypeError(
                         f"fit_transform of the final estimator"
