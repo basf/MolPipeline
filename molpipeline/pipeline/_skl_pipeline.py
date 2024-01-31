@@ -430,7 +430,7 @@ class Pipeline(_Pipeline):
                         iter_input, iter_label, **fit_params_last_step["fit"]
                     )
                 elif hasattr(last_step, "transform") and hasattr(last_step, "fit"):
-                    last_step.fit(iter_input, iter_label, **fit_params_last_step)
+                    last_step.fit(iter_input, iter_label, **fit_params_last_step["fit"])
                     iter_input = last_step.transform(iter_input)
                 else:
                     raise TypeError(
@@ -528,7 +528,7 @@ class Pipeline(_Pipeline):
         """
         fit_params_steps = self._check_method_params(method="fit_predict", props=params)
         iter_input, iter_label = self._fit(
-            X, y, **fit_params_steps
+            X, y, **fit_params_steps["fit"]
         )  # pylint: disable=invalid-name
 
         fit_params_last_step = fit_params_steps[self.steps[-1][0]]
@@ -537,7 +537,7 @@ class Pipeline(_Pipeline):
                 y_pred = iter_input
             elif hasattr(self._final_estimator, "fit_predict"):
                 y_pred = self._final_estimator.fit_predict(
-                    iter_input, iter_label, **fit_params_last_step
+                    iter_input, iter_label, **fit_params_last_step["fit"]
                 )
             else:
                 raise AssertionError(
