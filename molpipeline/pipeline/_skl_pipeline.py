@@ -415,27 +415,27 @@ class Pipeline(_Pipeline):
         Xt : ndarray of shape (n_samples, n_transformed_features)
             Transformed samples.
         """
-        fit_params_steps = self._check_method_params(
+        routed_params = self._check_method_params(
             method="fit_transform", props=params
         )
-        iter_input, iter_label = self._fit(X, y, fit_params_steps)
+        iter_input, iter_label = self._fit(X, y, routed_params)
         last_step = self._final_estimator
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if last_step == "passthrough":
                 pass
             else:
-                fit_params_last_step = fit_params_steps[self.steps[-1][0]]
+                last_step_params = routed_params[self.steps[-1][0]]
                 if hasattr(last_step, "fit_transform"):
                     iter_input = last_step.fit_transform(
-                        iter_input, iter_label, **fit_params_last_step["fit"]
+                        iter_input, iter_label, **last_step_params["fit_transform"]
                     )
                 elif hasattr(last_step, "transform") and hasattr(last_step, "fit"):
-                    last_step.fit(iter_input, iter_label, **fit_params_last_step["fit"])
-                    iter_input = last_step.transform(iter_input)
+                    last_step.fit(iter_input, iter_label, **last_step_params["fit"])
+                    iter_input = last_step.transform(iter_input, **last_step_params["transform"])
                 else:
                     raise TypeError(
                         f"fit_transform of the final estimator"
-                        f" {last_step.__class__.__name__} {fit_params_last_step} does not "
+                        f" {last_step.__class__.__name__} {last_step_params} does not "
                         f"match fit_transform of Pipeline {self.__class__.__name__}"
                     )
             for _, post_element in self._post_processing_steps():
@@ -526,18 +526,18 @@ class Pipeline(_Pipeline):
         y_pred : ndarray
             Result of calling `fit_predict` on the final estimator.
         """
-        fit_params_steps = self._check_method_params(method="fit_predict", props=params)
+        routed_params = self._check_method_params(method="fit_predict", props=params)
         iter_input, iter_label = self._fit(
-            X, y, **fit_params_steps["fit"]
+            X, y, routed_params
         )  # pylint: disable=invalid-name
 
-        fit_params_last_step = fit_params_steps[self.steps[-1][0]]
+        params_last_step = routed_params[self.steps[-1][0]]
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator == "passthrough":
                 y_pred = iter_input
             elif hasattr(self._final_estimator, "fit_predict"):
                 y_pred = self._final_estimator.fit_predict(
-                    iter_input, iter_label, **fit_params_last_step["fit"]
+                    iter_input, iter_label, **params_last_step.get("fit_predict", {})
                 )
             else:
                 raise AssertionError(
