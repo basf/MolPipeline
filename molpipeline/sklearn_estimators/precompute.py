@@ -17,7 +17,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 
-class PrecomputedTanimotoSimilarity(BaseEstimator, TransformerMixin):
+class TanimotoSimilarityToTraining(BaseEstimator, TransformerMixin):
     """Transformer for precomputing tanimoto similarity matrices.
 
     Attributes
