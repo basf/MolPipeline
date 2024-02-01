@@ -13,7 +13,9 @@ from molpipeline.pipeline_elements.any2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 from molpipeline.pipeline_elements.mol2any import MolToFoldedMorganFingerprint
 from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
-from molpipeline.sklearn_estimators.similarity_transformation import TanimotoSimilarityToTraining
+from molpipeline.sklearn_estimators.similarity_transformation import (
+    TanimotoSimilarityToTraining,
+)
 from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 COMPOUND_LIST = [
@@ -93,7 +95,7 @@ class TestSimilarityTransformation(unittest.TestCase):
             ]
         )
         full_pipeline.fit(COMPOUND_LIST)
-        pipeline_sim = full_pipeline.fit_transform(COMPOUND_LIST)
+        pipeline_sim = full_pipeline.transform(COMPOUND_LIST)
         self.assertTrue((pipeline_sim == self_similarity).all())
 
     def test_fit_transform_rdkit(self) -> None:
