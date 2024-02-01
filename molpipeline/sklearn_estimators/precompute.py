@@ -29,7 +29,7 @@ class TanimotoSimilarityToTraining(BaseEstimator, TransformerMixin):
     training_matrix: npt.NDArray[np.float_] | csr_matrix | None
 
     def __init__(self) -> None:
-        """Initialize PrecomputedTanimotoSimilarity.
+        """Initialize TanimotoSimilarityToTraining.
 
         Returns
         -------

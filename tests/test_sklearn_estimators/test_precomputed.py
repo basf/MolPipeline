@@ -10,7 +10,7 @@ from molpipeline.pipeline_elements.any2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
 from molpipeline.pipeline_elements.mol2any import MolToFoldedMorganFingerprint
 from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
-from molpipeline.sklearn_estimators.precompute import PrecomputedTanimotoSimilarity
+from molpipeline.sklearn_estimators.precompute import TanimotoSimilarityToTraining
 from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 COMPOUND_LIST = [
@@ -54,7 +54,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining()),
             ]
         )
 
@@ -86,7 +86,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining()),
             ]
         )
         full_pipeline.fit(COMPOUND_LIST)
@@ -100,7 +100,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining()),
                 ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1)),
             ]
         )
@@ -115,7 +115,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining()),
                 ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1)),
             ]
         )
@@ -133,7 +133,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("error_filter", error_filter),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", PrecomputedTanimotoSimilarity()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining()),
                 ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1)),
                 ("error_replacer", PostPredictionWrapper(error_replacer)),
             ]
