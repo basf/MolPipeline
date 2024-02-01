@@ -34,7 +34,7 @@ IS_AROMATIC = [
 ]
 
 
-class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
+class TestSimilarityTransformation(unittest.TestCase):
     """Test for the PrecomputedTanimotoSimilarity."""
 
     def test_fit_transform(self) -> None:
@@ -93,7 +93,7 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
         pipeline_sim = full_pipeline.fit_transform(COMPOUND_LIST)
         self.assertTrue((pipeline_sim == self_similarity).all())
 
-    def test_nearest_neigbor_pipeline(self) -> None:
+    def test_nearest_neighbor_pipeline(self) -> None:
         """Test if the nearest neighbor pipeline works."""
         # Setup the full pipeline
         full_pipeline = Pipeline(
