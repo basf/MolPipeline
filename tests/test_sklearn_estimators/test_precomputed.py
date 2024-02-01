@@ -1,4 +1,5 @@
 """This module tests the precomputed kernel estimators."""
+
 import unittest
 
 import numpy as np

@@ -22,8 +22,8 @@ except ImportError:
 import joblib
 import numpy as np
 import numpy.typing as npt
-from scipy.sparse import csr_matrix
 from loguru import logger
+from scipy.sparse import csr_matrix
 from sklearn.base import _fit_context  # pylint: disable=protected-access
 from sklearn.base import clone
 from sklearn.pipeline import Pipeline as _Pipeline
