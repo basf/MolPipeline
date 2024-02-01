@@ -1,4 +1,4 @@
-"""Sklearn estimators for precomputing similarity and distance matrices."""
+"""Sklearn estimators for computing similarity and distance matrices."""
 
 from __future__ import annotations
 
