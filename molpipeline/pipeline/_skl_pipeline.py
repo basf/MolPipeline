@@ -10,6 +10,7 @@ except ImportError:
     from typing_extensions import Self
 
 import joblib
+from loguru import logger
 import numpy.typing as npt
 from sklearn.base import _fit_context  # pylint: disable=protected-access
 from sklearn.base import clone
@@ -17,6 +18,10 @@ from sklearn.pipeline import Pipeline as _Pipeline
 from sklearn.pipeline import _final_estimator_has, _fit_transform_one
 from sklearn.utils import _print_elapsed_time
 from sklearn.utils.metaestimators import available_if
+from sklearn.utils.metadata_routing import (
+    _routing_enabled,  # pylint: disable=protected-access
+    process_routing,
+)
 from sklearn.utils.validation import check_memory
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
@@ -443,7 +448,7 @@ class Pipeline(_Pipeline):
         return iter_input
 
     @available_if(_final_estimator_has("predict"))
-    def predict(self, X: Any, **predict_params: Any) -> Any:
+    def predict(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `predict` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -456,7 +461,7 @@ class Pipeline(_Pipeline):
             Data to predict on. Must fulfill input requirements of first step
             of the pipeline.
 
-        **predict_params : dict of string -> object
+        **params : dict of string -> object
             Parameters to the ``predict`` called at the end of all
             transformations in the pipeline. Note that while this may be
             used to return uncertainties from some models with return_std
@@ -472,19 +477,32 @@ class Pipeline(_Pipeline):
             Result of calling `predict` on the final estimator.
         """
         iter_input = X
-        for _, _, transform in self._iter(with_final=False):
+        do_routing = _routing_enabled()
+        if do_routing:
+            logger.warning("Routing is enabled and NOT fully tested!")
+
+        routed_params = process_routing(self, "predict", **params)
+
+        for _, name, transform in self._iter(with_final=False):
             if transform == "passthrough":
-                continue
+                raise AssertionError("Passthrough should have been filtered out.")
             if hasattr(transform, "transform"):
-                iter_input = transform.transform(iter_input)
+                if do_routing:
+                    iter_input = transform.transform(  # type: ignore[call-arg]
+                        iter_input,
+                        routed_params[name].transform
+                    )
+                else:
+                    iter_input = transform.transform(iter_input)
             else:
                 raise AssertionError(
                     f"Non transformer ocurred in transformation step: {transform}."
                 )
+
         if self._final_estimator == "passthrough":
             pass
         elif hasattr(self._final_estimator, "predict"):
-            iter_input = self._final_estimator.predict(iter_input, **predict_params)
+            iter_input = self._final_estimator.predict(iter_input, **params)
         else:
             raise AssertionError(
                 "Final estimator does not implement predict, hence this function should not be available."
@@ -548,7 +566,7 @@ class Pipeline(_Pipeline):
         return y_pred
 
     @available_if(_final_estimator_has("predict_proba"))
-    def predict_proba(self, X: Any, **predict_params: Any) -> Any:
+    def predict_proba(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `predict_proba` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -561,7 +579,7 @@ class Pipeline(_Pipeline):
             Data to predict on. Must fulfill input requirements of first step
             of the pipeline.
 
-        **predict_params : dict of string -> object
+        **params : dict of string -> object
             Parameters to the ``predict`` called at the end of all
             transformations in the pipeline. Note that while this may be
             used to return uncertainties from some models with return_std
@@ -577,11 +595,23 @@ class Pipeline(_Pipeline):
             Result of calling `predict_proba` on the final estimator.
         """
         iter_input = X
-        for _, _, transform in self._iter(with_final=False):
+        do_routing = _routing_enabled()
+        routed_params = process_routing(self, "predict_proba", **params)
+
+        if do_routing:
+            logger.warning("Routing is enabled and NOT fully tested!")
+
+        for _, name, transform in self._iter(with_final=False):
             if transform == "passthrough":
                 continue
             if hasattr(transform, "transform"):
-                iter_input = transform.transform(iter_input)
+                if do_routing:
+                    iter_input = transform.transform(  # type: ignore[call-arg]
+                        iter_input,
+                        routed_params[name].transform
+                    )
+                else:
+                    iter_input = transform.transform(iter_input)
             else:
                 raise AssertionError(
                     f"Non transformer ocurred in transformation step: {transform}."
@@ -589,9 +619,14 @@ class Pipeline(_Pipeline):
         if self._final_estimator == "passthrough":
             pass
         elif hasattr(self._final_estimator, "predict_proba"):
-            iter_input = self._final_estimator.predict_proba(
-                iter_input, **predict_params
-            )
+            if do_routing:
+                iter_input = self._final_estimator.predict_proba(
+                    iter_input, **routed_params[self.steps[-1][0]].predict_proba
+                )
+            else:
+                iter_input = self._final_estimator.predict_proba(
+                    iter_input, **params
+                )
         else:
             raise AssertionError(
                 "Final estimator does not implement predict_proba, hence this function should not be available."
@@ -630,12 +665,13 @@ class Pipeline(_Pipeline):
         Xt : ndarray of shape (n_samples, n_transformed_features)
             Transformed data.
         """
+        routed_params = process_routing(self, "transform", **params)
         iter_input = X
-        for _, _, transform in self._iter():
+        for _, name, transform in self._iter():
             if transform == "passthrough":
                 continue
             if hasattr(transform, "transform"):
-                iter_input = transform.transform(iter_input, **params)
+                iter_input = transform.transform(iter_input, **routed_params[name].transform)
             else:
                 raise AssertionError(
                     "Non transformer ocurred in transformation step. This should have been caught in the validation step."
