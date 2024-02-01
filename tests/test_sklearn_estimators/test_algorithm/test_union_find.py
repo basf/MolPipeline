@@ -3,7 +3,6 @@
 import unittest
 
 import numpy as np
-
 from molpipeline.sklearn_estimators.algorithm.union_find import UnionFindNode
 
 
