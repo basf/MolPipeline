@@ -144,7 +144,6 @@ class TestPrecomputedTanimotoSimilarity(unittest.TestCase):
         self.assertTrue(np.isnan(prediction[-1]))
 
         single_prediction = full_pipeline.predict(["C#C#C"])
-        print(single_prediction)
         self.assertTrue(np.isnan(single_prediction))
 
         none_prediction = full_pipeline.predict([])
