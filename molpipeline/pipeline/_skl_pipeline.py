@@ -460,8 +460,11 @@ class Pipeline(_Pipeline):
         Xt, yt = self._fit(X, y, routed_params)  # pylint: disable=invalid-name
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
-                fit_params_last_step = routed_params[self.steps[-1][0]]
-                self._final_estimator.fit(Xt, yt, **fit_params_last_step["fit"])
+                if _is_empty(Xt):
+                    logger.warning("All input rows were filtered out! Model is not fitted!")
+                else:
+                    fit_params_last_step = routed_params[self.steps[-1][0]]
+                    self._final_estimator.fit(Xt, yt, **fit_params_last_step["fit"])
 
         return self
 
@@ -511,7 +514,7 @@ class Pipeline(_Pipeline):
             if last_step == "passthrough":
                 pass
             elif _is_empty(iter_input):
-                pass
+                logger.warning("All input rows were filtered out! Model is not fitted!")
             else:
                 last_step_params = routed_params[self.steps[-1][0]]
                 if hasattr(last_step, "fit_transform"):
@@ -622,6 +625,7 @@ class Pipeline(_Pipeline):
             if self._final_estimator == "passthrough":
                 y_pred = iter_input
             elif _is_empty(iter_input):
+                logger.warning("All input rows were filtered out! Model is not fitted!")
                 iter_input = []
                 y_pred = []
             elif hasattr(self._final_estimator, "fit_predict"):
