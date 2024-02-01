@@ -10,18 +10,18 @@ except ImportError:
     from typing_extensions import Self
 
 import joblib
-from loguru import logger
 import numpy.typing as npt
+from loguru import logger
 from sklearn.base import _fit_context  # pylint: disable=protected-access
 from sklearn.base import clone
 from sklearn.pipeline import Pipeline as _Pipeline
 from sklearn.pipeline import _final_estimator_has, _fit_transform_one
 from sklearn.utils import _print_elapsed_time
-from sklearn.utils.metaestimators import available_if
 from sklearn.utils.metadata_routing import (
     _routing_enabled,  # pylint: disable=protected-access
-    process_routing,
 )
+from sklearn.utils.metadata_routing import process_routing
+from sklearn.utils.metaestimators import available_if
 from sklearn.utils.validation import check_memory
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
@@ -489,8 +489,7 @@ class Pipeline(_Pipeline):
             if hasattr(transform, "transform"):
                 if do_routing:
                     iter_input = transform.transform(  # type: ignore[call-arg]
-                        iter_input,
-                        routed_params[name].transform
+                        iter_input, routed_params[name].transform
                     )
                 else:
                     iter_input = transform.transform(iter_input)
@@ -607,8 +606,7 @@ class Pipeline(_Pipeline):
             if hasattr(transform, "transform"):
                 if do_routing:
                     iter_input = transform.transform(  # type: ignore[call-arg]
-                        iter_input,
-                        routed_params[name].transform
+                        iter_input, routed_params[name].transform
                     )
                 else:
                     iter_input = transform.transform(iter_input)
@@ -624,9 +622,7 @@ class Pipeline(_Pipeline):
                     iter_input, **routed_params[self.steps[-1][0]].predict_proba
                 )
             else:
-                iter_input = self._final_estimator.predict_proba(
-                    iter_input, **params
-                )
+                iter_input = self._final_estimator.predict_proba(iter_input, **params)
         else:
             raise AssertionError(
                 "Final estimator does not implement predict_proba, hence this function should not be available."
@@ -671,7 +667,9 @@ class Pipeline(_Pipeline):
             if transform == "passthrough":
                 continue
             if hasattr(transform, "transform"):
-                iter_input = transform.transform(iter_input, **routed_params[name].transform)
+                iter_input = transform.transform(
+                    iter_input, **routed_params[name].transform
+                )
             else:
                 raise AssertionError(
                     "Non transformer ocurred in transformation step. This should have been caught in the validation step."
