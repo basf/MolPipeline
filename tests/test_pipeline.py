@@ -173,6 +173,8 @@ class PipelineTest(unittest.TestCase):
         for loaded_element, original_element in zip(
             loaded_pipeline.steps, pipeline_element_list
         ):
+            if loaded_element[1] == "passthrough":
+                continue
             loaded_params = loaded_element[1].get_params()
             original_params = original_element.get_params()
             for key, value in loaded_params.items():

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Any, List, Optional, Protocol, Tuple, TypeVar, Union
+from typing import Any, List, Literal, Optional, Protocol, Tuple, TypeVar, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -159,6 +159,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
     def transform(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        **params: Any,
     ) -> npt.NDArray[Any]:
         """Transform and return X according to object protocol.
 
@@ -166,6 +167,8 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
+        params: Any
+            Additional parameters for transforming.
 
         Returns
         -------
@@ -174,4 +177,6 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         """
 
 
-AnyStep = Tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]
+AnyStep = Tuple[
+    str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]]
+]

@@ -114,20 +114,22 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
             )
         return self
 
-    # pylint: disable=C0103,W0613
     def fit_predict(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,
+        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=C0103
         y: npt.NDArray[np.float64] | None = None,
+        **kwargs: Any,
     ) -> npt.NDArray[np.int32]:
         """Fit and predict connected component clustering estimator.
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            Feature matrix.
-        y : Ignored
+        X: npt.NDArray[np.float64] | csr_matrix
+            Feature matrix of shape  (n_samples, n_features).
+        y: Ignored
             Not used, present for API consistency by convention.
+        kwargs: Any
+            Additional keyword arguments.
 
         Returns
         -------
@@ -135,4 +137,4 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
         """
         # pylint: disable=W0246
-        return super().fit_predict(X, y)
+        return super().fit_predict(X, y, **kwargs)
