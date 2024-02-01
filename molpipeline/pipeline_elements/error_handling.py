@@ -1,4 +1,5 @@
 """Classes and functions for detecting and handling None values."""
+
 from __future__ import annotations
 
 from typing import Any, Iterable, Optional
@@ -524,9 +525,13 @@ class ErrorReplacer(ABCPipelineElement):
             raise ValueError(f"ErrorFilter with id {self.error_filter_id} not found")
         return self
 
+    # pylint: disable=unused-argument
     def fit(
-        self, values: AnyIterable, labels: Any = None
-    ) -> Self:  # pylint: disable=unused-argument
+        self,
+        values: AnyIterable,
+        labels: Any = None,
+        **params: Any,
+    ) -> Self:
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
@@ -537,6 +542,8 @@ class ErrorReplacer(ABCPipelineElement):
             Values used for fitting.
         labels: Any
             Label used for fitting. (Not used, but required for compatibility with sklearn)
+        **params: Any
+            Additional keyword arguments. (Not used)
 
         Returns
         -------
@@ -545,10 +552,12 @@ class ErrorReplacer(ABCPipelineElement):
         """
         return self
 
+    # pylint: disable=unused-argument
     def fit_transform(
         self,
         values: AnyIterable,
-        labels: Any = None,  # pylint: disable=unused-argument
+        labels: Any = None,
+        **params: Any,
     ) -> AnyIterable:
         """Transform values and return a list without the Invalid values.
 
@@ -560,6 +569,8 @@ class ErrorReplacer(ABCPipelineElement):
             Iterable to which element is fitted and which is subsequently transformed.
         labels: Any
             Label used for fitting. (Not used, but required for compatibility with sklearn)
+        **params: Any
+            Additional keyword arguments. (Not used)
 
         Returns
         -------
@@ -604,7 +615,9 @@ class ErrorReplacer(ABCPipelineElement):
             return self.fill_value
         return value
 
-    def transform(self, values: AnyIterable) -> AnyIterable:
+    def transform(
+        self, values: AnyIterable, **params: Any  # pylint: disable=unused-argument
+    ) -> AnyIterable:
         """Transform iterable of values by removing invalid instances.
 
         IMPORTANT: Changes number of elements in the iterable.
@@ -613,6 +626,8 @@ class ErrorReplacer(ABCPipelineElement):
         ----------
         values: AnyIterable
             Iterable of which according invalid instances are removed.
+        **params: Any
+            Additional keyword arguments.
 
         Returns
         -------

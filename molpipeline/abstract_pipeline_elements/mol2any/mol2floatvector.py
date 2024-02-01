@@ -1,4 +1,5 @@
 """Abstract classes for transforming rdkit molecules to float vectors."""
+
 # pylint: disable=too-many-arguments
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
 
     _standardizer: Optional[AnyTransformer]
+    _output_type = "float"
 
     def __init__(
         self,

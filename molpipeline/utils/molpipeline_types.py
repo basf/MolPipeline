@@ -1,4 +1,5 @@
 """Definition of types used in molpipeline."""
+
 from __future__ import annotations
 
 from numbers import Number
@@ -160,6 +161,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
     def transform(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        **params: Any,
     ) -> npt.NDArray[Any]:
         """Transform and return X according to object protocol.
 
@@ -167,6 +169,8 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
+        params: Any
+            Additional parameters for transforming.
 
         Returns
         -------

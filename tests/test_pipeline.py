@@ -1,4 +1,5 @@
 """Test functionality of the pipeline class."""
+
 import unittest
 
 from sklearn.base import BaseEstimator

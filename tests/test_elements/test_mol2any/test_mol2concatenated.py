@@ -1,4 +1,5 @@
 """Test construction of concatenated fingerprints."""
+
 import unittest
 
 import numpy as np

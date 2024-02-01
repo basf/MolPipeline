@@ -1,4 +1,5 @@
 """Tests conversion of sklearn models to json and back."""
+
 import unittest
 
 from sklearn.ensemble import RandomForestClassifier

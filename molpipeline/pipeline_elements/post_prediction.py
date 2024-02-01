@@ -26,13 +26,15 @@ class PostPredictionTransformation(BaseEstimator, TransformerMixin, abc.ABC):
     """
 
     @abc.abstractmethod
-    def transform(self, X: Any) -> Any:  # pylint: disable=invalid-name
+    def transform(self, X: Any, **params: Any) -> Any:  # pylint: disable=invalid-name
         """Transform data.
 
         Parameters
         ----------
         X: npt.NDArray[Any]
             Input data.
+        **params: Any
+            Additional parameters for transformation.
 
         Returns
         -------
@@ -75,15 +77,18 @@ class PostPredictionWrapper(PostPredictionTransformation):
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
         y: Optional[npt.NDArray[Any]] = None,  # pylint: disable=invalid-name
+        **params: Any,
     ) -> Self:
         """Fit PostPredictionWrapper.
 
         Parameters
         ----------
-        X: npt.NDArray[Any]
-            Input data.
-        y: Optional[npt.NDArray[Any]]
+        X : npt.NDArray[Any]
+           Input data.
+        y : Optional[npt.NDArray[Any]]
             Target data.
+        **params : Any
+            Additional parameters for fitting.
 
         Returns
         -------
@@ -91,20 +96,24 @@ class PostPredictionWrapper(PostPredictionTransformation):
             Fitted PostPredictionWrapper.
         """
         if isinstance(self.wrapped_estimator, ErrorReplacer):
-            self.wrapped_estimator.fit(X)
+            self.wrapped_estimator.fit(X, **params)
         else:
-            self.wrapped_estimator.fit(X, y)
+            self.wrapped_estimator.fit(X, y, **params)
         return self
 
     def transform(
-        self, X: npt.NDArray[Any]  # pylint: disable=invalid-name
+        self,
+        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        **params: Any,
     ) -> npt.NDArray[Any]:
         """Transform data.
 
         Parameters
         ----------
-        X: npt.NDArray[Any]
+        X : npt.NDArray[Any]
             Input data.
+        **params : Any
+            Additional parameters for transformation.
 
         Returns
         -------
@@ -112,9 +121,9 @@ class PostPredictionWrapper(PostPredictionTransformation):
             Transformed data.
         """
         if hasattr(self.wrapped_estimator, "predict"):
-            return self.wrapped_estimator.predict(X)
+            return self.wrapped_estimator.predict(X, **params)
         if hasattr(self.wrapped_estimator, "transform"):
-            return self.wrapped_estimator.transform(X)
+            return self.wrapped_estimator.transform(X, **params)
         raise AttributeError(
             f"Estimator {self.wrapped_estimator} has neither predict nor transform method."
         )
@@ -123,7 +132,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
         self,
         X: npt.NDArray[Any],
         y: Optional[npt.NDArray[Any]] = None,
-        **fit_params: Any,
+        **params: Any,
     ) -> npt.NDArray[Any]:
         """Fit and transform data.
 
@@ -133,7 +142,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
             Input data.
         y: npt.NDArray[Any]
             Target data.
-        **fit_params: Any
+        **params: Any
             Additional parameters for fitting.
 
         Returns
@@ -142,11 +151,11 @@ class PostPredictionWrapper(PostPredictionTransformation):
             Transformed data.
         """
         if hasattr(self.wrapped_estimator, "fit_predict"):
-            return self.wrapped_estimator.fit_predict(X, y, **fit_params)
+            return self.wrapped_estimator.fit_predict(X, y, **params)
         if hasattr(self.wrapped_estimator, "fit_transform"):
             if isinstance(self.wrapped_estimator, ErrorReplacer):
                 return self.wrapped_estimator.fit_transform(X)
-            return self.wrapped_estimator.fit_transform(X, y, **fit_params)
+            return self.wrapped_estimator.fit_transform(X, y, **params)
         raise AttributeError(
             f"Estimator {self.wrapped_estimator} has neither fit_predict nor fit_transform method."
         )

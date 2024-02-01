@@ -1,4 +1,5 @@
 """Classes for transforming rdkit molecules to inchi."""
+
 from __future__ import annotations
 
 from typing import Optional

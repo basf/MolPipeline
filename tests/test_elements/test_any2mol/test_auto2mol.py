@@ -1,4 +1,5 @@
 """Unittests for testing conversion of various inputs to RDKit molecules."""
+
 import gzip
 import unittest
 
