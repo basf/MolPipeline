@@ -461,7 +461,9 @@ class Pipeline(_Pipeline):
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 if _is_empty(Xt):
-                    logger.warning("All input rows were filtered out! Model is not fitted!")
+                    logger.warning(
+                        "All input rows were filtered out! Model is not fitted!"
+                    )
                 else:
                     fit_params_last_step = routed_params[self.steps[-1][0]]
                     self._final_estimator.fit(Xt, yt, **fit_params_last_step["fit"])
