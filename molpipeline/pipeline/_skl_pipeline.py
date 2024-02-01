@@ -367,11 +367,11 @@ class Pipeline(_Pipeline):
         self : object
             Pipeline with fitted steps.
         """
-        fit_params_steps = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, fit_params_steps)  # pylint: disable=invalid-name
+        routed_params = self._check_method_params(method="fit", props=fit_params)
+        Xt, yt = self._fit(X, y, routed_params)  # pylint: disable=invalid-name
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
-                fit_params_last_step = fit_params_steps[self.steps[-1][0]]
+                fit_params_last_step = routed_params[self.steps[-1][0]]
                 self._final_estimator.fit(Xt, yt, **fit_params_last_step["fit"])
 
         return self
