@@ -3,6 +3,9 @@
 import unittest
 
 import numpy as np
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from rdkit.DataStructs import BulkTanimotoSimilarity
 from sklearn.neighbors import KNeighborsClassifier
 
 from molpipeline.pipeline import Pipeline
@@ -80,6 +83,30 @@ class TestSimilarityTransformation(unittest.TestCase):
         )
         fingerprint = morgan_pipeline.fit_transform(COMPOUND_LIST)
         self_similarity = tanimoto_similarity_sparse(fingerprint, fingerprint)
+
+        # Setup the full pipeline
+        full_pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMolPipelineElement()),
+                ("mol2fp", MolToFoldedMorganFingerprint()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining()),
+            ]
+        )
+        full_pipeline.fit(COMPOUND_LIST)
+        pipeline_sim = full_pipeline.fit_transform(COMPOUND_LIST)
+        self.assertTrue((pipeline_sim == self_similarity).all())
+
+    def test_fit_and_transform_rdkit(self) -> None:
+        """Test if the similarity calculation works for fit and transform separately."""
+        # Reference: Only the fingerprint calculation
+        fp_list = []
+        for smi in COMPOUND_LIST:
+            mol = Chem.MolFromSmiles(smi)
+            fp_list.append(AllChem.GetMorganFingerprintAsBitVect(mol, 2))
+        sim = []
+        for fp1 in fp_list:
+            sim.append(BulkTanimotoSimilarity(fp1, fp_list))
+        self_similarity = np.array(sim)
 
         # Setup the full pipeline
         full_pipeline = Pipeline(
