@@ -2,6 +2,9 @@
 
 import unittest
 
+from sklearn.base import BaseEstimator
+from sklearn.tree import DecisionTreeClassifier
+
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.error_handling import ErrorFilter
@@ -18,9 +21,6 @@ from molpipeline.pipeline_elements.mol2mol import (
 )
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.matrices import are_equal
-from sklearn.base import BaseEstimator
-from sklearn.tree import DecisionTreeClassifier
-
 from tests.utils.fingerprints import make_sparse_fp
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]

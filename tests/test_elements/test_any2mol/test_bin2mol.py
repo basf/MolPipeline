@@ -2,8 +2,9 @@
 
 import unittest
 
-from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMolPipelineElement
 from rdkit import Chem, rdBase
+
+from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMolPipelineElement
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"

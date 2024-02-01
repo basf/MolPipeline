@@ -3,6 +3,11 @@
 import unittest
 
 import numpy as np
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from rdkit.DataStructs import BulkTanimotoSimilarity
+from sklearn.neighbors import KNeighborsClassifier
+
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
@@ -13,10 +18,6 @@ from molpipeline.sklearn_estimators.similarity_transformation import (
     TanimotoSimilarityToTraining,
 )
 from molpipeline.utils.kernel import tanimoto_similarity_sparse
-from rdkit import Chem
-from rdkit.Chem import AllChem
-from rdkit.DataStructs import BulkTanimotoSimilarity
-from sklearn.neighbors import KNeighborsClassifier
 
 COMPOUND_LIST = [
     "CCC",

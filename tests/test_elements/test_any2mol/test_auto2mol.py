@@ -3,6 +3,8 @@
 import gzip
 import unittest
 
+from rdkit import Chem, rdBase
+
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol import (
@@ -11,8 +13,6 @@ from molpipeline.pipeline_elements.any2mol import (
     SDFToMolPipelineElement,
     SmilesToMolPipelineElement,
 )
-from rdkit import Chem, rdBase
-
 from tests import TEST_DATA_DIR
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
