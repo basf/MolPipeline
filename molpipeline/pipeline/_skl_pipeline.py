@@ -28,7 +28,7 @@ from sklearn.base import _fit_context  # pylint: disable=protected-access
 from sklearn.base import clone
 from sklearn.pipeline import Pipeline as _Pipeline
 from sklearn.pipeline import _final_estimator_has, _fit_transform_one
-from sklearn.utils import _print_elapsed_time
+from sklearn.utils import Bunch, _print_elapsed_time
 from sklearn.utils.metadata_routing import (
     _routing_enabled,  # pylint: disable=protected-access
 )
@@ -313,6 +313,53 @@ class Pipeline(_Pipeline):
                 return np.array([]), np.array([])
         return X, y
 
+    def _transform(
+        self, X: Any, routed_params: Bunch  # pylint: disable=invalid-name
+    ) -> Any:
+        """Transform the data, and skip final estimator.
+
+        Call `transform` of each transformer in the pipeline except the last one,
+
+        Parameters
+        ----------
+        X : iterable
+            Data to predict on. Must fulfill input requirements of first step
+            of the pipeline.
+
+        routed_params: Bunch
+            parameters for each step as returned by process_routing
+
+        Returns
+        -------
+        Any
+            Result of calling `transform` on the second last estimator.
+        """
+        iter_input = X
+        do_routing = _routing_enabled()
+        if do_routing:
+            logger.warning("Routing is enabled and NOT fully tested!")
+
+        for _, name, transform in self._iter(with_final=False):
+            if _is_empty(iter_input):
+                if isinstance(transform, _MolPipeline):
+                    _ = transform.transform(iter_input)
+                iter_input = []
+                break
+            if transform == "passthrough":
+                raise AssertionError("Passthrough should have been filtered out.")
+            if hasattr(transform, "transform"):
+                if do_routing:
+                    iter_input = transform.transform(  # type: ignore[call-arg]
+                        iter_input, routed_params[name].transform
+                    )
+                else:
+                    iter_input = transform.transform(iter_input)
+            else:
+                raise AssertionError(
+                    f"Non transformer ocurred in transformation step: {transform}."
+                )
+        return iter_input
+
     # * New implemented methods *
     def _non_post_processing_steps(
         self,
@@ -515,32 +562,8 @@ class Pipeline(_Pipeline):
         y_pred : ndarray
             Result of calling `predict` on the final estimator.
         """
-        iter_input = X
-        do_routing = _routing_enabled()
-        if do_routing:
-            logger.warning("Routing is enabled and NOT fully tested!")
-
         routed_params = process_routing(self, "predict", **params)
-
-        for _, name, transform in self._iter(with_final=False):
-            if _is_empty(iter_input):
-                if isinstance(transform, _MolPipeline):
-                    _ = transform.transform(iter_input)
-                iter_input = []
-                break
-            if transform == "passthrough":
-                raise AssertionError("Passthrough should have been filtered out.")
-            if hasattr(transform, "transform"):
-                if do_routing:
-                    iter_input = transform.transform(  # type: ignore[call-arg]
-                        iter_input, routed_params[name].transform
-                    )
-                else:
-                    iter_input = transform.transform(iter_input)
-            else:
-                raise AssertionError(
-                    f"Non transformer ocurred in transformation step: {transform}."
-                )
+        iter_input = self._transform(X, routed_params)
 
         if self._final_estimator == "passthrough":
             pass
@@ -642,37 +665,15 @@ class Pipeline(_Pipeline):
         y_pred : ndarray
             Result of calling `predict_proba` on the final estimator.
         """
-        iter_input = X
-        do_routing = _routing_enabled()
         routed_params = process_routing(self, "predict_proba", **params)
+        iter_input = self._transform(X, routed_params)
 
-        if do_routing:
-            logger.warning("Routing is enabled and NOT fully tested!")
-
-        for _, name, transform in self._iter(with_final=False):
-            if transform == "passthrough":
-                continue
-            if _is_empty(iter_input):
-                break
-            if transform == "passthrough":
-                continue
-            if hasattr(transform, "transform"):
-                if do_routing:
-                    iter_input = transform.transform(  # type: ignore[call-arg]
-                        iter_input, routed_params[name].transform
-                    )
-                else:
-                    iter_input = transform.transform(iter_input)
-            else:
-                raise AssertionError(
-                    f"Non transformer ocurred in transformation step: {transform}."
-                )
         if self._final_estimator == "passthrough":
             pass
         elif _is_empty(iter_input):
             iter_input = []
         elif hasattr(self._final_estimator, "predict_proba"):
-            if do_routing:
+            if _routing_enabled():
                 iter_input = self._final_estimator.predict_proba(
                     iter_input, **routed_params[self.steps[-1][0]].predict_proba
                 )
@@ -727,8 +728,6 @@ class Pipeline(_Pipeline):
                     _ = transform.transform(iter_input)
                 iter_input = []
                 break
-            if transform == "passthrough":
-                continue
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(
                     iter_input, **routed_params[name].transform
