@@ -18,7 +18,7 @@ from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 
 class TanimotoSimilarityToTraining(BaseEstimator, TransformerMixin):
-    """Transformer for precomputing tanimoto similarity matrices.
+    """Transformer for computing tanimoto similarity matrices to data seen during training.
 
     Attributes
     ----------
@@ -115,8 +115,8 @@ class TanimotoSimilarityToTraining(BaseEstimator, TransformerMixin):
         return self.transform(X)
 
 
-class PrecomputedTanimotoDistance(BaseEstimator, TransformerMixin):
-    """Transformer for precomputing tanimoto distance matrices.
+class TanimotoDistanceToTraining(BaseEstimator, TransformerMixin):
+    """Transformer for computing tanimoto distance matrices to data seen during training.
 
     Attributes
     ----------
@@ -127,7 +127,7 @@ class PrecomputedTanimotoDistance(BaseEstimator, TransformerMixin):
     training_matrix: npt.NDArray[np.float_] | csr_matrix | None
 
     def __init__(self) -> None:
-        """Initialize PrecomputedTanimotoDistance.
+        """Initialize TanimotoDistanceToTraining.
 
         Returns
         -------
