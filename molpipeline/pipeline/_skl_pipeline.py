@@ -38,6 +38,7 @@ from molpipeline.utils.molpipeline_types import (
     AnyStep,
     AnyTransformer,
 )
+from molpipeline.utils.value_checks import is_empty
 
 __all__ = ["Pipeline"]
 
@@ -49,28 +50,6 @@ _T = TypeVar("_T")
 _IndexedStep = Tuple[int, str, AnyElement]
 _AggStep = Tuple[List[int], List[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
-
-
-def _is_empty(value: Any) -> bool:
-    """Check if value is empty.
-
-    Parameters
-    ----------
-    value: Any
-        Value to be checked.
-
-    Returns
-    -------
-    bool
-        True if value is empty, False otherwise.
-    """
-    if hasattr(value, "__len__"):
-        if len(value) == 0:
-            return True
-    if hasattr(value, "shape"):
-        if value.shape[0] == 0:
-            return True
-    return False
 
 
 class Pipeline(_Pipeline):
@@ -298,7 +277,7 @@ class Pipeline(_Pipeline):
                 raise AssertionError()
             else:
                 self.steps[step_idx] = (name, fitted_transformer)
-            if _is_empty(X):
+            if is_empty(X):
                 return np.array([]), np.array([])
         return X, y
 
@@ -329,7 +308,7 @@ class Pipeline(_Pipeline):
             logger.warning("Routing is enabled and NOT fully tested!")
 
         for _, name, transform in self._iter(with_final=False):
-            if _is_empty(iter_input):
+            if is_empty(iter_input):
                 if isinstance(transform, _MolPipeline):
                     _ = transform.transform(iter_input)
                 iter_input = []
@@ -449,7 +428,7 @@ class Pipeline(_Pipeline):
         Xt, yt = self._fit(X, y, routed_params)  # pylint: disable=invalid-name
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
-                if _is_empty(Xt):
+                if is_empty(Xt):
                     logger.warning(
                         "All input rows were filtered out! Model is not fitted!"
                     )
@@ -504,7 +483,7 @@ class Pipeline(_Pipeline):
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if last_step == "passthrough":
                 pass
-            elif _is_empty(iter_input):
+            elif is_empty(iter_input):
                 logger.warning("All input rows were filtered out! Model is not fitted!")
             else:
                 last_step_params = routed_params[self.steps[-1][0]]
@@ -561,7 +540,7 @@ class Pipeline(_Pipeline):
 
         if self._final_estimator == "passthrough":
             pass
-        elif _is_empty(iter_input):
+        elif is_empty(iter_input):
             iter_input = []
         elif hasattr(self._final_estimator, "predict"):
             iter_input = self._final_estimator.predict(iter_input, **params)
@@ -615,7 +594,7 @@ class Pipeline(_Pipeline):
         with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator == "passthrough":
                 y_pred = iter_input
-            elif _is_empty(iter_input):
+            elif is_empty(iter_input):
                 logger.warning("All input rows were filtered out! Model is not fitted!")
                 iter_input = []
                 y_pred = []
@@ -665,7 +644,7 @@ class Pipeline(_Pipeline):
 
         if self._final_estimator == "passthrough":
             pass
-        elif _is_empty(iter_input):
+        elif is_empty(iter_input):
             iter_input = []
         elif hasattr(self._final_estimator, "predict_proba"):
             if _routing_enabled():
@@ -717,7 +696,7 @@ class Pipeline(_Pipeline):
         for _, name, transform in self._iter():
             if transform == "passthrough":
                 continue
-            if _is_empty(iter_input):
+            if is_empty(iter_input):
                 # This is done to prime the error filters
                 if isinstance(transform, _MolPipeline):
                     _ = transform.transform(iter_input)
