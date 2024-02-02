@@ -14,7 +14,6 @@ from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorRepla
 from molpipeline.pipeline_elements.mol2any import MolToFoldedMorganFingerprint
 from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
 from molpipeline.sklearn_estimators.similarity_transformation import (
-    TanimotoDistanceToTraining,
     TanimotoSimilarityToTraining,
 )
 from molpipeline.utils.kernel import tanimoto_similarity_sparse
@@ -202,11 +201,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         none_prediction = full_pipeline.predict([])
         self.assertTrue(none_prediction == [])
 
-
-class TestTanimotoDistanceToTraining(unittest.TestCase):
-    """Test for the TanimotoDistanceToTraining."""
-
-    def test_fit_transform(self) -> None:
+    def test_fit_transform_distance(self) -> None:
         """Test if distance calculation works for fit_transform."""
         # Reference: Only the fingerprint calculation
         morgan_pipeline = Pipeline(
@@ -223,7 +218,7 @@ class TestTanimotoDistanceToTraining(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", TanimotoDistanceToTraining()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining(distance=True)),
             ]
         )
 
@@ -238,7 +233,7 @@ class TestTanimotoDistanceToTraining(unittest.TestCase):
         )
         self.assertTrue((reversed_pipeline_distance == reversed_self_distance).all())
 
-    def test_fit_and_transform(self) -> None:
+    def test_fit_and_transform_distance(self) -> None:
         """Test if the distance calculation works for fit and transform separately."""
         # Reference: Only the fingerprint calculation
         morgan_pipeline = Pipeline(
@@ -255,14 +250,14 @@ class TestTanimotoDistanceToTraining(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", TanimotoDistanceToTraining()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining(distance=True)),
             ]
         )
         full_pipeline.fit(COMPOUND_LIST)
         pipeline_distance = full_pipeline.transform(COMPOUND_LIST)
         self.assertTrue((pipeline_distance == self_distance).all())
 
-    def test_fit_transform_rdkit(self) -> None:
+    def test_fit_transform_rdkit_distance(self) -> None:
         """Test if the distance calculation matches the RDKit implementation for fit_transform."""
         # Reference: RDKit implementation
         fp_list = []
@@ -279,13 +274,13 @@ class TestTanimotoDistanceToTraining(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", TanimotoDistanceToTraining()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining(distance=True)),
             ]
         )
         pipeline_distance = full_pipeline.fit_transform(COMPOUND_LIST)
         self.assertTrue((pipeline_distance == self_distance).all())
 
-    def test_fit_and_transform_rdkit(self) -> None:
+    def test_fit_and_transform_rdkit_distance(self) -> None:
         """Test if the distance calculation matches the RDKit implementation for fit and transform separately."""
         # Reference: RDKit implementation
         fp_list = []
@@ -302,7 +297,7 @@ class TestTanimotoDistanceToTraining(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMolPipelineElement()),
                 ("mol2fp", MolToFoldedMorganFingerprint()),
-                ("precompute_tanimoto", TanimotoDistanceToTraining()),
+                ("precompute_tanimoto", TanimotoSimilarityToTraining(distance=True)),
             ]
         )
         full_pipeline.fit(COMPOUND_LIST)
