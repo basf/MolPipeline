@@ -3,9 +3,11 @@
 import unittest
 
 import numpy as np
+import numpy.typing as npt
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.DataStructs import BulkTanimotoSimilarity
+from scipy import sparse
 from sklearn.neighbors import KNeighborsClassifier
 
 from molpipeline.pipeline import Pipeline
@@ -39,19 +41,61 @@ IS_AROMATIC = [
 ]
 
 
+def _generate_morgan_fingerprints(compound_list: list[str]) -> sparse.csr_matrix:
+    """Generate the Morgan fingerprints.
+
+    Parameters
+    ----------
+    compound_list: list[str]
+        List of SMILES strings.
+
+    Returns
+    -------
+    sparse.csr_matrix
+        Morgan fingerprints.
+    """
+    morgan_pipeline = Pipeline(
+        [
+            ("smi2mol", SmilesToMolPipelineElement()),
+            ("mol2fp", MolToFoldedMorganFingerprint()),
+        ]
+    )
+    fingerprint = morgan_pipeline.fit_transform(compound_list)
+    return fingerprint
+
+
+def _calculate_rdkit_self_similarity(
+    compound_list: list[str],
+) -> npt.NDArray[np.float_]:
+    """Calculate the self similarity using RDKit.
+
+    Parameters
+    ----------
+    compound_list: list[str]
+        List of SMILES strings.
+
+    Returns
+    -------
+    npt.NDArray[np.float_]
+        Self similarity.
+    """
+    fp_list = []
+    for smi in compound_list:
+        mol = Chem.MolFromSmiles(smi)
+        fp_list.append(AllChem.GetMorganFingerprintAsBitVect(mol, 2))
+    sim = []
+    for fp1 in fp_list:
+        sim.append(BulkTanimotoSimilarity(fp1, fp_list))
+    return np.array(sim)
+
+
 class TestTanimotoSimilarityToTraining(unittest.TestCase):
     """Test for the TanimotoSimilarityToTraining."""
 
     def test_fit_transform(self) -> None:
         """Test if similarity calculation works for fit_transform."""
         # Reference: Only the fingerprint calculation
-        morgan_pipeline = Pipeline(
-            [
-                ("smi2mol", SmilesToMolPipelineElement()),
-                ("mol2fp", MolToFoldedMorganFingerprint()),
-            ]
-        )
-        fingerprint = morgan_pipeline.fit_transform(COMPOUND_LIST)
+        fingerprint = _generate_morgan_fingerprints(COMPOUND_LIST)
         self_similarity = tanimoto_similarity_sparse(fingerprint, fingerprint)
 
         # Setup the full pipeline
@@ -77,13 +121,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
     def test_fit_and_transform(self) -> None:
         """Test if the similarity calculation works for fit and transform separately."""
         # Reference: Only the fingerprint calculation
-        morgan_pipeline = Pipeline(
-            [
-                ("smi2mol", SmilesToMolPipelineElement()),
-                ("mol2fp", MolToFoldedMorganFingerprint()),
-            ]
-        )
-        fingerprint = morgan_pipeline.fit_transform(COMPOUND_LIST)
+        fingerprint = _generate_morgan_fingerprints(COMPOUND_LIST)
         self_similarity = tanimoto_similarity_sparse(fingerprint, fingerprint)
 
         # Setup the full pipeline
@@ -101,14 +139,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
     def test_fit_transform_rdkit(self) -> None:
         """Test if the similarity calculation matches the RDKit implementation for fit_transform."""
         # Reference: RDKit implementation
-        fp_list = []
-        for smi in COMPOUND_LIST:
-            mol = Chem.MolFromSmiles(smi)
-            fp_list.append(AllChem.GetMorganFingerprintAsBitVect(mol, 2))
-        sim = []
-        for fp1 in fp_list:
-            sim.append(BulkTanimotoSimilarity(fp1, fp_list))
-        self_similarity = np.array(sim)
+        self_similarity = _calculate_rdkit_self_similarity(COMPOUND_LIST)
 
         # Setup the full pipeline
         full_pipeline = Pipeline(
@@ -123,15 +154,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
 
     def test_fit_and_transform_rdkit(self) -> None:
         """Test if the similarity calculation matches the RDKit implementation for fit and transform separately."""
-        # Reference: RDKit implementation
-        fp_list = []
-        for smi in COMPOUND_LIST:
-            mol = Chem.MolFromSmiles(smi)
-            fp_list.append(AllChem.GetMorganFingerprintAsBitVect(mol, 2))
-        sim = []
-        for fp1 in fp_list:
-            sim.append(BulkTanimotoSimilarity(fp1, fp_list))
-        self_similarity = np.array(sim)
+        self_similarity = _calculate_rdkit_self_similarity(COMPOUND_LIST)
 
         # Setup the full pipeline
         full_pipeline = Pipeline(
@@ -204,13 +227,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
     def test_fit_transform_distance(self) -> None:
         """Test if distance calculation works for fit_transform."""
         # Reference: Only the fingerprint calculation
-        morgan_pipeline = Pipeline(
-            [
-                ("smi2mol", SmilesToMolPipelineElement()),
-                ("mol2fp", MolToFoldedMorganFingerprint()),
-            ]
-        )
-        fingerprint = morgan_pipeline.fit_transform(COMPOUND_LIST)
+        fingerprint = _generate_morgan_fingerprints(COMPOUND_LIST)
         self_distance = 1 - tanimoto_similarity_sparse(fingerprint, fingerprint)
 
         # Setup the full pipeline
@@ -236,13 +253,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
     def test_fit_and_transform_distance(self) -> None:
         """Test if the distance calculation works for fit and transform separately."""
         # Reference: Only the fingerprint calculation
-        morgan_pipeline = Pipeline(
-            [
-                ("smi2mol", SmilesToMolPipelineElement()),
-                ("mol2fp", MolToFoldedMorganFingerprint()),
-            ]
-        )
-        fingerprint = morgan_pipeline.fit_transform(COMPOUND_LIST)
+        fingerprint = _generate_morgan_fingerprints(COMPOUND_LIST)
         self_distance = 1 - tanimoto_similarity_sparse(fingerprint, fingerprint)
 
         # Setup the full pipeline
@@ -260,14 +271,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
     def test_fit_transform_rdkit_distance(self) -> None:
         """Test if the distance calculation matches the RDKit implementation for fit_transform."""
         # Reference: RDKit implementation
-        fp_list = []
-        for smi in COMPOUND_LIST:
-            mol = Chem.MolFromSmiles(smi)
-            fp_list.append(AllChem.GetMorganFingerprintAsBitVect(mol, 2))
-        sim = []
-        for fp1 in fp_list:
-            sim.append(BulkTanimotoSimilarity(fp1, fp_list))
-        self_distance = 1 - np.array(sim)
+        self_distance = 1.0 - _calculate_rdkit_self_similarity(COMPOUND_LIST)
 
         # Setup the full pipeline
         full_pipeline = Pipeline(
@@ -283,14 +287,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
     def test_fit_and_transform_rdkit_distance(self) -> None:
         """Test if the distance calculation matches the RDKit implementation for fit and transform separately."""
         # Reference: RDKit implementation
-        fp_list = []
-        for smi in COMPOUND_LIST:
-            mol = Chem.MolFromSmiles(smi)
-            fp_list.append(AllChem.GetMorganFingerprintAsBitVect(mol, 2))
-        sim = []
-        for fp1 in fp_list:
-            sim.append(BulkTanimotoSimilarity(fp1, fp_list))
-        self_distance = 1 - np.array(sim)
+        self_distance = 1.0 - _calculate_rdkit_self_similarity(COMPOUND_LIST)
 
         # Setup the full pipeline
         full_pipeline = Pipeline(
