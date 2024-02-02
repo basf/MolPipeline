@@ -174,6 +174,7 @@ class PipelineTest(unittest.TestCase):
             loaded_pipeline.steps, pipeline_element_list
         ):
             if loaded_element[1] == "passthrough":
+                self.assertEqual(loaded_element[1], original_element)
                 continue
             loaded_params = loaded_element[1].get_params()
             original_params = original_element.get_params()
