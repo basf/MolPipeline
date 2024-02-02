@@ -20,10 +20,12 @@ def is_empty(value: Any) -> bool:
     bool
         True if value is empty, False otherwise.
     """
-    if hasattr(value, "__len__"):
-        if len(value) == 0:
-            return True
     if hasattr(value, "shape"):
         if value.shape[0] == 0:
             return True
+        return False
+    if hasattr(value, "__len__"):
+        if len(value) == 0:
+            return True
+        return False
     return False
