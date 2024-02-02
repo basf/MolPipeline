@@ -65,14 +65,14 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
 
         # Test fit_transform
         pipeline_sim = full_pipeline.fit_transform(COMPOUND_LIST)
-        self.assertTrue((pipeline_sim == self_similarity).all())
+        self.assertTrue(np.allclose(pipeline_sim, self_similarity))
 
         # Test transform
         reversed_pipeline_sim = full_pipeline.transform(COMPOUND_LIST[::-1])
         reversed_self_similarity = tanimoto_similarity_sparse(
             fingerprint[::-1], fingerprint
         )
-        self.assertTrue((reversed_pipeline_sim == reversed_self_similarity).all())
+        self.assertTrue(np.allclose(reversed_pipeline_sim, reversed_self_similarity))
 
     def test_fit_and_transform(self) -> None:
         """Test if the similarity calculation works for fit and transform separately."""
@@ -96,7 +96,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         )
         full_pipeline.fit(COMPOUND_LIST)
         pipeline_sim = full_pipeline.transform(COMPOUND_LIST)
-        self.assertTrue((pipeline_sim == self_similarity).all())
+        self.assertTrue(np.allclose(pipeline_sim, self_similarity))
 
     def test_fit_transform_rdkit(self) -> None:
         """Test if the similarity calculation matches the RDKit implementation for fit_transform."""
@@ -119,7 +119,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
             ]
         )
         pipeline_sim = full_pipeline.fit_transform(COMPOUND_LIST)
-        self.assertTrue((pipeline_sim == self_similarity).all())
+        self.assertTrue(np.allclose(pipeline_sim, self_similarity))
 
     def test_fit_and_transform_rdkit(self) -> None:
         """Test if the similarity calculation matches the RDKit implementation for fit and transform separately."""
@@ -143,7 +143,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         )
         full_pipeline.fit(COMPOUND_LIST)
         pipeline_sim = full_pipeline.transform(COMPOUND_LIST)
-        self.assertTrue((pipeline_sim == self_similarity).all())
+        self.assertTrue(np.allclose(pipeline_sim, self_similarity))
 
     def test_nearest_neighbor_pipeline(self) -> None:
         """Test if the nearest neighbor pipeline works."""
@@ -158,7 +158,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         )
         full_pipeline.fit(COMPOUND_LIST, IS_AROMATIC)
         prediction = full_pipeline.predict(COMPOUND_LIST)
-        self.assertTrue((prediction == IS_AROMATIC).all())
+        self.assertTrue(np.allclose(prediction, IS_AROMATIC))
 
     def test_error_handling(self) -> None:
         """Test if the error handling works."""
@@ -173,7 +173,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         )
         full_pipeline.fit(COMPOUND_LIST, IS_AROMATIC)
         prediction = full_pipeline.predict(COMPOUND_LIST)
-        self.assertTrue((prediction == IS_AROMATIC).all())
+        self.assertTrue(np.allclose(prediction, IS_AROMATIC))
 
         error_filter = ErrorFilter(filter_everything=True)
         error_replacer = ErrorReplacer.from_error_filter(
@@ -192,7 +192,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         )
         full_pipeline.fit(COMPOUND_LIST + ["C#C#C"], IS_AROMATIC + [False])
         prediction = full_pipeline.predict(COMPOUND_LIST + ["C#C#C"])
-        self.assertTrue((prediction[:-1] == IS_AROMATIC).all())
+        self.assertTrue(np.allclose(prediction[:-1], IS_AROMATIC))
         self.assertTrue(np.isnan(prediction[-1]))
 
         single_prediction = full_pipeline.predict(["C#C#C"])
@@ -224,14 +224,14 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
 
         # Test fit_transform
         pipeline_distance = full_pipeline.fit_transform(COMPOUND_LIST)
-        self.assertTrue((pipeline_distance == self_distance).all())
+        self.assertTrue(np.allclose(pipeline_distance, self_distance))
 
         # Test transform
         reversed_pipeline_distance = full_pipeline.transform(COMPOUND_LIST[::-1])
         reversed_self_distance = 1 - tanimoto_similarity_sparse(
             fingerprint[::-1], fingerprint
         )
-        self.assertTrue((reversed_pipeline_distance == reversed_self_distance).all())
+        self.assertTrue(np.allclose(reversed_pipeline_distance, reversed_self_distance))
 
     def test_fit_and_transform_distance(self) -> None:
         """Test if the distance calculation works for fit and transform separately."""
@@ -255,7 +255,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         )
         full_pipeline.fit(COMPOUND_LIST)
         pipeline_distance = full_pipeline.transform(COMPOUND_LIST)
-        self.assertTrue((pipeline_distance == self_distance).all())
+        self.assertTrue(np.allclose(pipeline_distance, self_distance))
 
     def test_fit_transform_rdkit_distance(self) -> None:
         """Test if the distance calculation matches the RDKit implementation for fit_transform."""
@@ -278,7 +278,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
             ]
         )
         pipeline_distance = full_pipeline.fit_transform(COMPOUND_LIST)
-        self.assertTrue((pipeline_distance == self_distance).all())
+        self.assertTrue(np.allclose(pipeline_distance, self_distance))
 
     def test_fit_and_transform_rdkit_distance(self) -> None:
         """Test if the distance calculation matches the RDKit implementation for fit and transform separately."""
@@ -302,4 +302,4 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         )
         full_pipeline.fit(COMPOUND_LIST)
         pipeline_distance = full_pipeline.transform(COMPOUND_LIST)
-        self.assertTrue((pipeline_distance == self_distance).all())
+        self.assertTrue(np.allclose(pipeline_distance, self_distance))
