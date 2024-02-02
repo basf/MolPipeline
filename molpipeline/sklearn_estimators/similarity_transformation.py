@@ -105,7 +105,7 @@ class TanimotoSimilarityToTraining(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X: npt.NDArray[np.float_] | csr_matrix
-            Feature matrix to fit the model. Is returended as similarity matrix to itself.
+            Feature matrix to fit the model. Is returned as similarity matrix to itself.
         y: npt.NDArray[np.float_] | None, optional
             Labels, by default None and never used
         **fit_params: Any
