@@ -2,17 +2,7 @@
 
 from __future__ import annotations
 
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Literal,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Any, Iterable, List, Literal, Optional, Tuple, TypeVar, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -23,7 +13,6 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from scipy.sparse import csr_matrix
 from sklearn.base import _fit_context  # pylint: disable=protected-access
 from sklearn.base import clone
 from sklearn.pipeline import Pipeline as _Pipeline
@@ -75,10 +64,10 @@ def _is_empty(value: Any) -> bool:
     bool
         True if value is empty, False otherwise.
     """
-    if isinstance(value, Sequence):
+    if hasattr(value, "__len__"):
         if len(value) == 0:
             return True
-    if isinstance(value, (np.ndarray, csr_matrix)):
+    if hasattr(value, "shape"):
         if value.shape[0] == 0:
             return True
     return False
