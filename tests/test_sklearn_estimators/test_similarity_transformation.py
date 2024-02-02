@@ -199,7 +199,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         self.assertTrue(np.isnan(single_prediction))
 
         none_prediction = full_pipeline.predict([])
-        self.assertTrue(none_prediction == [])
+        self.assertListEqual(none_prediction, [])
 
     def test_fit_transform_distance(self) -> None:
         """Test if distance calculation works for fit_transform."""
