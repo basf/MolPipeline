@@ -18,7 +18,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     RemovedInstance,
     TransformingPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import AnyIterable, AnyNumpyElement, Number
+from molpipeline.utils.molpipeline_types import AnyIterable, Number
 
 __all__ = ["ErrorReplacer", "ErrorFilter", "_MultipleErrorFilter"]
 
@@ -656,17 +656,20 @@ class ErrorReplacer(ABCPipelineElement):
             raise AssertionError()
         return filled_list
 
-    def _fill_numpy_arr(
-        self, value_array: npt.NDArray[AnyNumpyElement]
-    ) -> npt.NDArray[AnyNumpyElement]:
+    def _fill_numpy_arr(self, value_array: npt.NDArray[Any]) -> npt.NDArray[Any]:
         fill_value = self.fill_value
         output_shape = list(value_array.shape)
         output_shape[0] += len(self.error_filter.error_indices)
         has_value_indices = np.ones(output_shape[0], dtype=bool)
         has_value_indices[self.error_filter.error_indices] = False
 
+        try:
+            dtype = np.common_type(value_array, np.array([self.fill_value]))
+        except TypeError:
+            dtype = np.object_
+
         output_matrix: npt.NDArray[Any]
-        output_matrix = np.full(output_shape, fill_value)
+        output_matrix = np.full(output_shape, fill_value, dtype=dtype)
         output_matrix[has_value_indices, ...] = value_array
         return output_matrix
 

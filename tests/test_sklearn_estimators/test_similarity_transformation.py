@@ -212,8 +212,8 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
             ]
         )
         full_pipeline.fit(COMPOUND_LIST + ["C#C#C"], IS_AROMATIC + [False])
-        prediction = full_pipeline.predict(COMPOUND_LIST + ["C#C#C"])
-        self.assertTrue(np.allclose(prediction[:-1], IS_AROMATIC))
+        prediction = full_pipeline.predict(COMPOUND_LIST + ["C#C#C"]).tolist()
+        self.assertListEqual(prediction[:-1], IS_AROMATIC)
         self.assertTrue(np.isnan(prediction[-1]))
 
         single_prediction = full_pipeline.predict(["C#C#C"])
