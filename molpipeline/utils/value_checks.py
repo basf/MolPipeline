@@ -29,3 +29,23 @@ def is_empty(value: Any) -> bool:
             return True
         return False
     return False
+
+
+def get_length(values: Any) -> int:
+    """Get the length of the values as given by the shape or len attribute.
+
+    Parameters
+    ----------
+    values: Any
+        Values to be checked.
+
+    Returns
+    -------
+    int
+        Length of the values.
+    """
+    if hasattr(values, "shape"):
+        return values.shape[0]
+    if hasattr(values, "__len__"):
+        return len(values)
+    raise TypeError("Values must have a shape or len attribute.")
