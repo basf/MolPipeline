@@ -9,6 +9,15 @@ from typing import Any
 
 from molpipeline.pipeline import Pipeline
 
+__all__ = [
+    "builtin_to_json",
+    "decode_dict",
+    "recursive_from_json",
+    "recursive_to_json",
+    "transform_functions2string",
+    "transform_string2function",
+]
+
 
 def transform_functions2string(value: Any) -> Any:
     """Transform functions to string representation.
