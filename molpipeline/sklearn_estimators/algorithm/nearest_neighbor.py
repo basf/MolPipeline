@@ -129,7 +129,8 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         self,
         X: npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any],
         return_distance: bool = False,
-    ) -> tuple[npt.NDArray[Any], npt.NDArray[np.float_]] | npt.NDArray[Any]:
+        n_neighbors: int | None = None,
+    ) -> npt.NDArray[Any]:
         """Find the k-neighbors of a point.
 
         Parameters
@@ -139,6 +140,8 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         return_distance : bool, optional (default = False)
             If True, return the distances to the neighbors of each point.
             Default: False
+        n_neighbors : int, optional (default = None)
+            Number of neighbors to get. If None, the value set at initialization is used.
 
         Returns
         -------
@@ -147,16 +150,19 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         """
         if self.learned_names_ is None:
             raise ValueError("The model has not been fitted yet.")
+        if n_neighbors is None:
+            n_neighbors = self.n_neighbors
 
         if return_distance:
-            indices, distances = super().kneighbors(
-                X, n_neighbors=self.n_neighbors, return_distance=True
+            distances, indices = super().kneighbors(
+                X, n_neighbors=n_neighbors, return_distance=True
             )
-            return self.learned_names_[indices], distances
+            # stack in such a way that the shape is (n_input, n_neighbors, 2)
+            # shape 2 as the neighbor idx and distance are returned
+            r_arr = np.stack([self.learned_names_[indices], distances], axis=2)
+            return r_arr
 
-        indices = super().kneighbors(
-            X, n_neighbors=self.n_neighbors, return_distance=False
-        )
+        indices = super().kneighbors(X, n_neighbors=n_neighbors, return_distance=False)
         return self.learned_names_[indices]
 
     def fit_predict(
@@ -164,6 +170,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         X: npt.NDArray[Any] | sparse.csr_matrix,  # pylint: disable=invalid-name
         y: Sequence[Any],
         return_distance: bool = False,
+        n_neighbors: int | None = None,
     ) -> tuple[npt.NDArray[Any], npt.NDArray[np.float_]] | npt.NDArray[Any]:
         """Find the k-neighbors of a point.
 
@@ -177,6 +184,8 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         return_distance : bool, optional (default = False)
             If True, return the distances to the neighbors of each point.
             Default: False
+        n_neighbors : int, optional (default = None)
+            Number of neighbors to get. If None, the value set at initialization is used.
 
         Returns
         -------
@@ -184,4 +193,4 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
             The indices of the nearest points in the population matrix and the distances to the points.
         """
         self.fit(X, y)
-        return self.predict(X, return_distance=return_distance)
+        return self.predict(X, return_distance=return_distance, n_neighbors=n_neighbors)

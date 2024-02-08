@@ -2,6 +2,7 @@
 
 from unittest import TestCase
 
+import numpy as np
 from sklearn.base import clone
 
 from molpipeline.pipeline import Pipeline
@@ -29,6 +30,15 @@ TWO_NN = [
     ["CCCCCCO", "CCCCCCN"],
 ]
 
+TWO_NN_SIMILARITIES = np.array(
+    [
+        [1.0, 3 / 14],
+        [1.0, 3 / 14],
+        [1.0, 4 / 9],
+        [1.0, 4 / 9],
+    ]
+)
+
 
 class TestNamedNearestNeighbors(TestCase):
     """Test the NamedNearestNeighbors class if correct names are returned."""
@@ -55,6 +65,49 @@ class TestNamedNearestNeighbors(TestCase):
             ]
         )
         result = model.fit_predict(TEST_SMILES, TEST_SMILES).tolist()
+        self.assertListEqual(result, TWO_NN)
+
+    def test_fit_and_predict_with_distance(self) -> None:
+        """Test the fit_predict method with distance."""
+        model = Pipeline(
+            [
+                ("mol", SmilesToMolPipelineElement()),
+                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
+            ]
+        )
+        model.fit(TEST_SMILES, TEST_SMILES)
+        result = model.predict(TEST_SMILES, **{"return_distance": True})
+        neighbors = result[:, :, 0]
+        distances = result[:, :, 1].astype(np.float_)
+        self.assertListEqual(neighbors.tolist(), TWO_NN)
+        self.assertTrue(np.allclose(1 - distances, TWO_NN_SIMILARITIES))
+
+    def test_fit_predict_with_n_neigbours(self) -> None:
+        """Test the fit_predict method with parameter n_neighbors."""
+        model = Pipeline(
+            [
+                ("mol", SmilesToMolPipelineElement()),
+                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
+            ]
+        )
+        result = model.fit_predict(
+            TEST_SMILES, TEST_SMILES, lookup__n_neighbors=2
+        ).tolist()
+        self.assertListEqual(result, TWO_NN)
+
+    def test_fit_and_predict_with_n_neigbours(self) -> None:
+        """Test the fit_predict method with parameter n_neighbors."""
+        model = Pipeline(
+            [
+                ("mol", SmilesToMolPipelineElement()),
+                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
+            ]
+        )
+        model.fit(TEST_SMILES, TEST_SMILES)
+        result = model.predict(TEST_SMILES, **{"n_neighbors": 2}).tolist()
         self.assertListEqual(result, TWO_NN)
 
     def test_fit_and_predict_with_fit_predict(self) -> None:
@@ -131,3 +184,33 @@ class TestNamedNearestNeighbors(TestCase):
 
         result_only_valid = model.predict(TEST_SMILES).tolist()
         self.assertListEqual(result_only_valid, TWO_NN)
+
+    def test_fit_and_predict_invalid_with_distance(self) -> None:
+        """Test the fit_predict method with invalid smiles and distance."""
+        with_invald_smiles = ["CC1CC"] + TEST_SMILES
+
+        error_filter = ErrorFilter(filter_everything=True)
+        model = Pipeline(
+            [
+                ("mol", SmilesToMolPipelineElement()),
+                ("error_filter", error_filter),
+                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
+                (
+                    "error_replacer",
+                    PostPredictionWrapper(
+                        ErrorReplacer.from_error_filter(
+                            error_filter, fill_value="invalid"
+                        )
+                    ),
+                ),
+            ]
+        )
+        model.fit(with_invald_smiles, with_invald_smiles)
+        result = model.predict(with_invald_smiles, **{"return_distance": True})
+        neighbors = result[:, :, 0]
+        distances = result[:, :, 1]
+        self.assertListEqual(neighbors.tolist(), [["invalid", "invalid"]] + TWO_NN)
+        self.assertTrue(
+            1 - np.allclose(distances[1:, :].astype(np.float_), TWO_NN_SIMILARITIES)
+        )

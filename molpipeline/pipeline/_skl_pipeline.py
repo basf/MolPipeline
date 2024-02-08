@@ -535,7 +535,11 @@ class Pipeline(_Pipeline):
         y_pred : ndarray
             Result of calling `predict` on the final estimator.
         """
-        routed_params = process_routing(self, "predict", **params)
+        if _routing_enabled():
+            routed_params = process_routing(self, "predict", **params)
+        else:
+            routed_params = process_routing(self, "predict", **{})
+
         iter_input = self._transform(X, routed_params)
 
         if self._final_estimator == "passthrough":
@@ -543,7 +547,12 @@ class Pipeline(_Pipeline):
         elif is_empty(iter_input):
             iter_input = []
         elif hasattr(self._final_estimator, "predict"):
-            iter_input = self._final_estimator.predict(iter_input, **params)
+            if _routing_enabled():
+                iter_input = self._final_estimator.predict(
+                    iter_input, **routed_params[self._final_estimator].predict
+                )
+            else:
+                iter_input = self._final_estimator.predict(iter_input, **params)
         else:
             raise AssertionError(
                 "Final estimator does not implement predict, hence this function should not be available."
