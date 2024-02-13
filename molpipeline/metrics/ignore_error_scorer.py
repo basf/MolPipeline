@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Sequence
 
 import numpy as np
+import pandas as pd
 from loguru import logger
 from sklearn import metrics
 from sklearn.metrics._scorer import _BaseScorer  # pylint: disable=protected-access
@@ -62,8 +63,8 @@ def ignored_value_scorer(
             retained_y_true = ~np.equal(y_true, ignore_value)
             retained_y_pred = ~np.equal(y_pred, ignore_value)
         else:
-            retained_y_true = ~np.isnan(y_true)
-            retained_y_pred = ~np.isnan(y_pred)
+            retained_y_true = pd.notna(y_true)
+            retained_y_pred = pd.notna(y_pred)
 
         all_retained = retained_y_pred & retained_y_true
 
@@ -72,7 +73,7 @@ def ignored_value_scorer(
                 f"Warning, prediction array contains NaN values, removing {sum(~all_retained)} elements"
             )
         y_true_ = np.copy(np.array(y_true)[all_retained])
-        y_pred_ = np.copy(np.array(y_pred)[all_retained]).astype(np.float64)
+        y_pred_ = np.copy(np.array(y_pred)[all_retained])
         _kwargs = dict(kwargs)
         if "sample_weight" in _kwargs and _kwargs["sample_weight"] is not None:
             _kwargs["sample_weight"] = _kwargs["sample_weight"][all_retained]
