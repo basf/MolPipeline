@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from loguru import logger
 from sklearn import metrics
@@ -39,17 +40,17 @@ def ignored_value_scorer(
     response_method = scorer._response_method  # pylint: disable=protected-access
 
     def newscore(
-        y_true: Sequence[float | int],
-        y_pred: Sequence[float | int],
+        y_true: npt.NDArray[np.float_ | np.int_],
+        y_pred: npt.NDArray[np.float_ | np.int_],
         **kwargs: Any,
     ) -> float:
         """Compute the score for the given prediction arrays.
 
         Parameters
         ----------
-        y_true : Iterable[float | int]
+        y_true : npt.NDArray[np.float_ | np.int_]
             The true values.
-        y_pred : Iterable[float | int]
+        y_pred : npt.NDArray[np.float_ | np.int_]
             The predicted values.
         **kwargs
             Additional keyword arguments.
@@ -59,6 +60,8 @@ def ignored_value_scorer(
         float
             The score for the given prediction arrays.
         """
+        retained_y_true: npt.NDArray[np.bool_]
+        retained_y_pred: npt.NDArray[np.bool_]
         if ignore_value is None or not np.isnan(ignore_value):
             retained_y_true = ~np.equal(y_true, ignore_value)
             retained_y_pred = ~np.equal(y_pred, ignore_value)
