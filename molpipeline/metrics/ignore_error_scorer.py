@@ -62,7 +62,7 @@ def ignored_value_scorer(
         """
         retained_y_true: npt.NDArray[np.bool_]
         retained_y_pred: npt.NDArray[np.bool_]
-        if ignore_value is None or not np.isnan(ignore_value):
+        if pd.notna(ignore_value):
             retained_y_true = ~np.equal(y_true, ignore_value)
             retained_y_pred = ~np.equal(y_pred, ignore_value)
         else:
