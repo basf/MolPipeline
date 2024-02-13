@@ -11,7 +11,7 @@ authors = [
     {name = "Jochen Sieg"}
 ]
 description = "Integration of rdkit functionality into sklearn pipelines."
-version = "0.7.1"
+version = "0.7.2"
 readme = "README.md"
 
 [tool.setuptools.dynamic]
