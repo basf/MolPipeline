@@ -76,7 +76,7 @@ def ignored_value_scorer(
                 f"Warning, prediction array contains NaN values, removing {sum(~all_retained)} elements"
             )
         y_true_ = np.copy(np.array(y_true)[all_retained])
-        y_pred_ = np.copy(np.array(y_pred)[all_retained])
+        y_pred_ = np.array(y_pred[all_retained].tolist())
         _kwargs = dict(kwargs)
         if "sample_weight" in _kwargs and _kwargs["sample_weight"] is not None:
             _kwargs["sample_weight"] = _kwargs["sample_weight"][all_retained]
