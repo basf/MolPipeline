@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 from loguru import logger
 from sklearn import metrics
 from sklearn.metrics._scorer import _BaseScorer  # pylint: disable=protected-access
@@ -65,8 +66,8 @@ def ignored_value_scorer(
             retained_y_true = ~np.equal(y_true, ignore_value)
             retained_y_pred = ~np.equal(y_pred, ignore_value)
         else:
-            retained_y_true = ~np.isnan(y_true)
-            retained_y_pred = ~np.isnan(y_pred)
+            retained_y_true = pd.notna(y_true)
+            retained_y_pred = pd.notna(y_pred)
 
         all_retained = retained_y_pred & retained_y_true
 
