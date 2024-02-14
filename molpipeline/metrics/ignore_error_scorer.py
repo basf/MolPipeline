@@ -6,6 +6,7 @@ from typing import Any, Sequence
 
 import numpy as np
 from loguru import logger
+import pandas as pd
 from sklearn import metrics
 from sklearn.metrics._scorer import (  # pylint: disable=protected-access
     _BaseScorer,
@@ -63,12 +64,12 @@ def ignored_value_scorer(
         float
             The score for the given prediction arrays.
         """
-        if ignore_value is None or not np.isnan(ignore_value):
+        if ignore_value is None or not pd.isnull(ignore_value):
             retained_y_true = ~np.equal(y_true, ignore_value)
             retained_y_pred = ~np.equal(y_pred, ignore_value)
         else:
-            retained_y_true = ~np.isnan(y_true)
-            retained_y_pred = ~np.isnan(y_pred)
+            retained_y_true = ~pd.isnull(y_true)
+            retained_y_pred = ~pd.isnull(y_pred)
 
         all_retained = retained_y_pred & retained_y_true
 
