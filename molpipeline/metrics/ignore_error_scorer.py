@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
 from loguru import logger
 import pandas as pd
 from sklearn import metrics
-from sklearn.metrics._scorer import (  # pylint: disable=protected-access
-    _BaseScorer,
-    _ProbaScorer,
-    _ThresholdScorer,
-)
+from sklearn.metrics._scorer import _BaseScorer  # pylint: disable=protected-access
 
 
 def ignored_value_scorer(
@@ -39,22 +37,21 @@ def ignored_value_scorer(
     if isinstance(scorer, str):
         scorer = metrics.get_scorer(scorer)
 
-    needs_proba = isinstance(scorer, _ProbaScorer)
-    needs_threshold = isinstance(scorer, _ThresholdScorer)
     score_func = scorer._score_func  # pylint: disable=protected-access
+    response_method = scorer._response_method  # pylint: disable=protected-access
 
     def newscore(
-        y_true: Sequence[float | int],
-        y_pred: Sequence[float | int],
+        y_true: npt.NDArray[np.float_ | np.int_],
+        y_pred: npt.NDArray[np.float_ | np.int_],
         **kwargs: Any,
     ) -> float:
         """Compute the score for the given prediction arrays.
 
         Parameters
         ----------
-        y_true : Iterable[float | int]
+        y_true : npt.NDArray[np.float_ | np.int_]
             The true values.
-        y_pred : Iterable[float | int]
+        y_pred : npt.NDArray[np.float_ | np.int_]
             The predicted values.
         **kwargs
             Additional keyword arguments.
@@ -64,12 +61,14 @@ def ignored_value_scorer(
         float
             The score for the given prediction arrays.
         """
-        if ignore_value is None or not pd.isnull(ignore_value):
+        retained_y_true: npt.NDArray[np.bool_]
+        retained_y_pred: npt.NDArray[np.bool_]
+        if pd.notna(ignore_value):
             retained_y_true = ~np.equal(y_true, ignore_value)
             retained_y_pred = ~np.equal(y_pred, ignore_value)
         else:
-            retained_y_true = ~pd.isnull(y_true)
-            retained_y_pred = ~pd.isnull(y_pred)
+            retained_y_true = pd.notna(y_true)
+            retained_y_pred = pd.notna(y_pred)
 
         all_retained = retained_y_pred & retained_y_true
 
@@ -78,12 +77,10 @@ def ignored_value_scorer(
                 f"Warning, prediction array contains NaN values, removing {sum(~all_retained)} elements"
             )
         y_true_ = np.copy(np.array(y_true)[all_retained])
-        y_pred_ = np.copy(np.array(y_pred)[all_retained]).astype(np.float64)
+        y_pred_ = np.array(np.array(y_pred)[all_retained].tolist())
         _kwargs = dict(kwargs)
         if "sample_weight" in _kwargs and _kwargs["sample_weight"] is not None:
             _kwargs["sample_weight"] = _kwargs["sample_weight"][all_retained]
         return score_func(y_true_, y_pred_, **_kwargs)
 
-    return metrics.make_scorer(
-        newscore, needs_proba=needs_proba, needs_threshold=needs_threshold
-    )
+    return metrics.make_scorer(newscore, response_method=response_method)

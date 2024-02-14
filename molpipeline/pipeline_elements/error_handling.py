@@ -18,7 +18,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     RemovedInstance,
     TransformingPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import AnyIterable, AnyNumpyElement, Number
+from molpipeline.utils.molpipeline_types import AnyIterable, Number
 
 __all__ = ["ErrorReplacer", "ErrorFilter", "_MultipleErrorFilter"]
 
@@ -525,9 +525,13 @@ class ErrorReplacer(ABCPipelineElement):
             raise ValueError(f"ErrorFilter with id {self.error_filter_id} not found")
         return self
 
+    # pylint: disable=unused-argument
     def fit(
-        self, values: AnyIterable, labels: Any = None
-    ) -> Self:  # pylint: disable=unused-argument
+        self,
+        values: AnyIterable,
+        labels: Any = None,
+        **params: Any,
+    ) -> Self:
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
@@ -538,6 +542,8 @@ class ErrorReplacer(ABCPipelineElement):
             Values used for fitting.
         labels: Any
             Label used for fitting. (Not used, but required for compatibility with sklearn)
+        **params: Any
+            Additional keyword arguments. (Not used)
 
         Returns
         -------
@@ -546,10 +552,12 @@ class ErrorReplacer(ABCPipelineElement):
         """
         return self
 
+    # pylint: disable=unused-argument
     def fit_transform(
         self,
         values: AnyIterable,
-        labels: Any = None,  # pylint: disable=unused-argument
+        labels: Any = None,
+        **params: Any,
     ) -> AnyIterable:
         """Transform values and return a list without the Invalid values.
 
@@ -561,6 +569,8 @@ class ErrorReplacer(ABCPipelineElement):
             Iterable to which element is fitted and which is subsequently transformed.
         labels: Any
             Label used for fitting. (Not used, but required for compatibility with sklearn)
+        **params: Any
+            Additional keyword arguments. (Not used)
 
         Returns
         -------
@@ -605,7 +615,9 @@ class ErrorReplacer(ABCPipelineElement):
             return self.fill_value
         return value
 
-    def transform(self, values: AnyIterable) -> AnyIterable:
+    def transform(
+        self, values: AnyIterable, **params: Any  # pylint: disable=unused-argument
+    ) -> AnyIterable:
         """Transform iterable of values by removing invalid instances.
 
         IMPORTANT: Changes number of elements in the iterable.
@@ -614,6 +626,8 @@ class ErrorReplacer(ABCPipelineElement):
         ----------
         values: AnyIterable
             Iterable of which according invalid instances are removed.
+        **params: Any
+            Additional keyword arguments.
 
         Returns
         -------
@@ -642,17 +656,20 @@ class ErrorReplacer(ABCPipelineElement):
             raise AssertionError()
         return filled_list
 
-    def _fill_numpy_arr(
-        self, value_array: npt.NDArray[AnyNumpyElement]
-    ) -> npt.NDArray[AnyNumpyElement]:
+    def _fill_numpy_arr(self, value_array: npt.NDArray[Any]) -> npt.NDArray[Any]:
         fill_value = self.fill_value
         output_shape = list(value_array.shape)
         output_shape[0] += len(self.error_filter.error_indices)
         has_value_indices = np.ones(output_shape[0], dtype=bool)
         has_value_indices[self.error_filter.error_indices] = False
 
+        try:
+            dtype = np.common_type(value_array, np.array([self.fill_value]))
+        except TypeError:
+            dtype = np.object_
+
         output_matrix: npt.NDArray[Any]
-        output_matrix = np.full(output_shape, fill_value)
+        output_matrix = np.full(output_shape, fill_value, dtype=dtype)
         output_matrix[has_value_indices, ...] = value_array
         return output_matrix
 
