@@ -28,7 +28,13 @@ def tanimoto_similarity_sparse(
     norm_1 = np.array(matrix_a.multiply(matrix_a).sum(axis=1))
     norm_2 = np.array(matrix_b.multiply(matrix_b).sum(axis=1))
     union = norm_1 + norm_2.T - intersection
-    return intersection / union
+    # avoid division by zero https://stackoverflow.com/a/37977222
+    return np.divide(
+        intersection,
+        union,
+        out=np.zeros(intersection.shape, dtype=float),
+        where=union != 0,
+    )
 
 
 def tanimoto_distance_sparse(
