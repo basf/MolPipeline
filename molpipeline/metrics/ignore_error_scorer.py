@@ -8,7 +8,6 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from loguru import logger
-import pandas as pd
 from sklearn import metrics
 from sklearn.metrics._scorer import _BaseScorer  # pylint: disable=protected-access
 

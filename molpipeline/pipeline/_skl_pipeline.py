@@ -445,6 +445,9 @@ class Pipeline(_Pipeline):
             or hasattr(self._final_estimator, "fit_transform")
         )
 
+    def _can_decision_function(self) -> bool:
+        return hasattr(self._final_estimator, "decision_function")
+
     @available_if(_can_fit_transform)
     @_fit_context(
         # estimators in Pipeline.steps are not validated yet
@@ -721,6 +724,50 @@ class Pipeline(_Pipeline):
                 )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input, **params)
+        return iter_input
+
+    @available_if(_can_decision_function)
+    def decision_function(self, X: Any, **params: Any) -> Any:
+        """Transform the data, and apply `decision_function` with the final estimator.
+
+        Parameters
+        ----------
+        X : iterable
+            Data to transform. Must fulfill input requirements of first step
+            of the pipeline.
+        **params : Any
+            Parameters to the ``decision_function`` method of the final estimator.
+
+        Returns
+        -------
+        Any
+            Result of calling `decision_function` on the final estimator.
+        """
+        if _routing_enabled():
+            routed_params = process_routing(self, "decision_function", **params)
+        else:
+            routed_params = process_routing(self, "decision_function", **{})
+
+        iter_input = self._transform(X, routed_params)
+        if self._final_estimator == "passthrough":
+            pass
+        elif is_empty(iter_input):
+            iter_input = []
+        elif hasattr(self._final_estimator, "decision_function"):
+            if _routing_enabled():
+                iter_input = self._final_estimator.decision_function(
+                    iter_input, **routed_params[self._final_estimator].predict
+                )
+            else:
+                iter_input = self._final_estimator.decision_function(
+                    iter_input, **params
+                )
+        else:
+            raise AssertionError(
+                "Final estimator does not implement `decision_function`, hence this function should not be available."
+            )
+        for _, post_element in self._post_processing_steps():
+            iter_input = post_element.transform(iter_input)
         return iter_input
 
     @property
