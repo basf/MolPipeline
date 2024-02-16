@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Literal, Optional
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -12,7 +12,9 @@ except ImportError:
 import copy
 
 import numpy as np
-from rdkit.Chem import AllChem
+import numpy.typing as npt
+from rdkit.Chem import AllChem, rdFingerprintGenerator
+from rdkit.DataStructs import ExplicitBitVect
 from scipy import sparse
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
@@ -34,7 +36,8 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         radius: int = 2,
         use_features: bool = False,
         n_bits: int = 2048,
-        sparse_output: bool = True,
+        sparse_output: bool | None = None,
+        output_type: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "Mol2FoldedMorganFingerprint",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -47,8 +50,14 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             radius of the circular fingerprint [1]. Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
         use_features: bool
             Instead of atoms, features are encoded in the fingerprint. [2]
-        sparse_output: bool
+        sparse_output: bool | None
+            DEPRECATED: Will be removed. Use output_type instead.
             True: return sparse matrix, False: return matrix as dense numpy array.
+        output_type: Literal["sparse", "dense", "explicit_bit_vect"]
+            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
+            holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
+            With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
+            rdkit.DataStructs.cDataStructs.ExplicitBitVect.
         n_bits: int
             Size of fingerprint.
         name: str
@@ -65,6 +74,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             radius=radius,
             use_features=use_features,
             sparse_output=sparse_output,
+            output_type=output_type,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
@@ -117,7 +127,9 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
 
         return self
 
-    def pretransform_single(self, value: RDKitMol) -> dict[int, int]:
+    def pretransform_single(
+        self, value: RDKitMol
+    ) -> ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]:
         """Transform a single compound to a dictionary.
 
         Keys denote the feature position, values the count. Here always 1.
@@ -132,10 +144,20 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         dict[int, int]
             Dictionary with feature-position as key and count as value.
         """
-        fingerprint_vector = AllChem.GetMorganFingerprintAsBitVect(
-            value, self.radius, useFeatures=self._use_features, nBits=self._n_bits
+        fingerprint_generator = rdFingerprintGenerator.GetMorganGenerator(
+            radius=self.radius,
+            fpSize=self._n_bits,
         )
-        return {bit: 1 for bit in fingerprint_vector.GetOnBits()}
+
+        if self.output_type == "explicit_bit_vect":
+            return fingerprint_generator.GetFingerprint(value)
+        if self.output_type == "dense":
+            return fingerprint_generator.GetFingerprintAsNumPy(value)
+        # sparse return type
+        return {
+            bit_idx: 1
+            for bit_idx in fingerprint_generator.GetFingerprint(value).GetOnBits()
+        }
 
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule."""
