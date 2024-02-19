@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import unittest
-from typing import Any, Callable, get_args, Literal
+from typing import Any, Callable, Literal, get_args
 
 import numpy as np
 import numpy.typing as npt

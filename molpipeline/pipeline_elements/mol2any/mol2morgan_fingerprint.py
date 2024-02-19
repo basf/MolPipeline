@@ -70,6 +70,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
         """
+        # pylint: disable=R0801
         super().__init__(
             radius=radius,
             use_features=use_features,
