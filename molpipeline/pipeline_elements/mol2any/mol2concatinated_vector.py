@@ -236,7 +236,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         final_vector_list = []
         for (_, element), sub_value in zip(self._element_list, value):
             final_value = element.finalize_single(sub_value)
-            if isinstance(element, MolToFingerprintPipelineElement):
+            if isinstance(element, MolToFingerprintPipelineElement) and isinstance(final_value, dict):
                 vector = np.zeros(element.n_bits)
                 vector[list(final_value.keys())] = np.array(list(final_value.values()))
                 final_value = vector

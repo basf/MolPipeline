@@ -37,7 +37,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         use_features: bool = False,
         n_bits: int = 2048,
         sparse_output: bool | None = None,
-        output_type: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
+        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "Mol2FoldedMorganFingerprint",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -53,7 +53,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         sparse_output: bool | None
             DEPRECATED: Will be removed. Use output_type instead.
             True: return sparse matrix, False: return matrix as dense numpy array.
-        output_type: Literal["sparse", "dense", "explicit_bit_vect"]
+        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"]
             Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
             With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
@@ -74,7 +74,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             radius=radius,
             use_features=use_features,
             sparse_output=sparse_output,
-            output_type=output_type,
+            output_datatype=output_datatype,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
@@ -149,9 +149,9 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             fpSize=self._n_bits,
         )
 
-        if self.output_type == "explicit_bit_vect":
+        if self._output_datatype == "explicit_bit_vect":
             return fingerprint_generator.GetFingerprint(value)
-        if self.output_type == "dense":
+        if self._output_datatype == "dense":
             return fingerprint_generator.GetFingerprintAsNumPy(value)
         # sparse return type
         return {

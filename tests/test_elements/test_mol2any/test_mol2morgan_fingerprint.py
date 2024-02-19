@@ -5,54 +5,19 @@ from __future__ import annotations
 import unittest
 
 import numpy as np
-import numpy.typing as npt
-from rdkit import DataStructs
-from rdkit.DataStructs import ExplicitBitVect
 
 from molpipeline.pipeline import Pipeline
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
+from tests.utils.fingerprints import explicit_bit_vect_list_to_numpy
 
 test_smiles = [
     "c1ccccc1",
     "c1ccccc1C",
     "NCCOCCCC(=O)O",
 ]
-
-
-def _explicit_bit_vect_list_to_numpy(
-    explicit_bit_vect_list: list[ExplicitBitVect],
-) -> npt.NDArray[np.int_]:
-    """Convert explicitBitVect manually to numpy
-
-    It is assumed all fingerprints in the list have the same length.
-
-    Parameters
-    ----------
-    explicit_bit_vect_list: list[ExplicitBitVect]
-        List of fingerprints
-
-    Returns
-    -------
-    npt.NDArray
-        Numpy fingerprint matrix.
-    """
-    if len(explicit_bit_vect_list) == 0:
-        return np.empty(
-            (
-                0,
-                0,
-            ),
-            dtype=int,
-        )
-    mat = np.empty(
-        (len(explicit_bit_vect_list), len(explicit_bit_vect_list[0])), dtype=int
-    )
-    for i, fingerprint in enumerate(explicit_bit_vect_list):
-        DataStructs.ConvertToNumpyArray(fingerprint, mat[i, :])
-    return mat
 
 
 class TestMol2MorganFingerprint(unittest.TestCase):
@@ -113,13 +78,13 @@ class TestMol2MorganFingerprint(unittest.TestCase):
 
         smi2mol = SmilesToMolPipelineElement()
         sparse_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_type="sparse"
+            radius=2, n_bits=1024, output_datatype="sparse"
         )
         dense_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_type="dense"
+            radius=2, n_bits=1024, output_datatype="dense"
         )
         explicit_bit_vect_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_type="explicit_bit_vect"
+            radius=2, n_bits=1024, output_datatype="explicit_bit_vect"
         )
         sparse_pipeline = Pipeline(
             [
@@ -151,7 +116,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertTrue(
             np.equal(
                 dense_output,
-                _explicit_bit_vect_list_to_numpy(explicit_bit_vect_morgan_output),
+                explicit_bit_vect_list_to_numpy(explicit_bit_vect_morgan_output),
             ).all()
         )
 

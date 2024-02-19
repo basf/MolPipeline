@@ -100,7 +100,7 @@ class TestLeaderPickerEstimator(unittest.TestCase):
                     (
                         "morgan2",
                         MolToFoldedMorganFingerprint(
-                            output_type="explicit_bit_vect", n_bits=1024, radius=2
+                            output_datatype="explicit_bit_vect", n_bits=1024, radius=2
                         ),
                     ),
                     ("leader_picker", leader_picker),

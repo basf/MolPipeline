@@ -28,12 +28,12 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     _n_bits: int
     _output_type = "binary"
-    output_type: Literal["sparse", "dense", "explicit_bit_vect"]
+    _output_datatype: Literal["sparse", "dense", "explicit_bit_vect"]
 
     def __init__(
         self,
         sparse_output: bool | None = None,
-        output_type: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
+        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "MolToFingerprintPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -45,7 +45,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         sparse_output: bool | None
             DEPRECATED: Will be removed. Use output_type instead.
             True: return sparse matrix, False: return matrix as dense numpy array.
-        output_type: Literal["sparse", "dense", "explicit_bit_vect"]
+        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"]
             Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
             With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
@@ -65,10 +65,10 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
                 "sparse_output is deprecated and will be removed in the future. Use output_type instead."
             )
             if sparse_output:
-                output_type = "sparse"
+                output_datatype = "sparse"
             else:
-                output_type = "dense"
-        self._output_type = output_type
+                output_datatype = "dense"
+        self._output_datatype = output_datatype
 
     @property
     def n_bits(self) -> int:
@@ -107,10 +107,10 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         sparse.csr_matrix | npt.NDArray[np.int_] | list[ExplicitBitVect]
             Matrix of Morgan-fingerprint features.
         """
-        if self._output_type == "explicit_bit_vect":
+        if self._output_datatype == "explicit_bit_vect":
             # return as list of RDkit's ExplicitBitVect or list of numpy arrays
             return list(value_list)  # type: ignore
-        if self._output_type == "dense":
+        if self._output_datatype == "dense":
             # return dense numpy matrix
             return np.vstack(list(value_list))  # type: ignore
 
@@ -132,9 +132,9 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         """
         parameters = super().get_params(deep)
         if deep:
-            parameters["output_type"] = copy.copy(self._output_type)
+            parameters["output_datatype"] = copy.copy(self._output_datatype)
         else:
-            parameters["output_type"] = self._output_type
+            parameters["output_datatype"] = self._output_datatype
 
         return parameters
 
@@ -153,14 +153,14 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         """
         parameter_dict_copy = dict(parameters)
         sparse_output = parameter_dict_copy.pop("sparse_output", None)
-        output_type = parameter_dict_copy.pop("output_type", None)
+        output_datatype = parameter_dict_copy.pop("output_datatype", None)
         if sparse_output is not None:
             if sparse_output:
-                self._output_type = "sparse"
+                self._output_datatype = "sparse"
             else:
-                self._output_type = "dense"
-        elif output_type is not None:
-            self._output_type = output_type
+                self._output_datatype = "dense"
+        elif output_datatype is not None:
+            self._output_datatype = output_datatype
         super().set_params(parameter_dict_copy)
         return self
 
@@ -204,7 +204,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         radius: int = 2,
         use_features: bool = False,
         sparse_output: bool | None = None,
-        output_type: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
+        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -227,7 +227,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         # pylint: disable=R0801
         super().__init__(
             sparse_output=sparse_output,
-            output_type=output_type,
+            output_datatype=output_datatype,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
