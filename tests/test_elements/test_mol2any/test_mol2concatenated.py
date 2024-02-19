@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import unittest
-from typing import Any, Callable
+from typing import Any, Callable, get_args, Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -32,16 +32,18 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         -------
         None
         """
-        fingerprint_morgan_output_types: list[str] = [
-            "sparse",
-            "dense",
-            "explicit_bit_vect",
-        ]
+        fingerprint_morgan_output_types: tuple[Any, ...] = get_args(
+            Literal[
+                "sparse",
+                "dense",
+                "explicit_bit_vect",
+            ]
+        )
 
         to_numpy_func_dict: dict[str, Callable[[Any], npt.NDArray[np.int_]]] = {
             "sparse": lambda x: x.toarray(),
             "dense": lambda x: x,
-            "explicit_bit_vect": lambda x: explicit_bit_vect_list_to_numpy(x),
+            "explicit_bit_vect": explicit_bit_vect_list_to_numpy,
         }
 
         for fp_output_type in fingerprint_morgan_output_types:

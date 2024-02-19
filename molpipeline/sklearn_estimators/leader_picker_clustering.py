@@ -111,7 +111,6 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         Self
             Fitted estimator.
         """
-
         lp = rdSimDivPickers.LeaderPicker()
 
         # Select centroids. This part is in C++ and fast
