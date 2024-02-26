@@ -69,7 +69,12 @@ class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
             Canonicalized molecule if possible, else InvalidInstance.
         """
         enumerator = rdMolStandardize.TautomerEnumerator()
-        return enumerator.Canonicalize(value)
+        try:
+            return enumerator.Canonicalize(value)
+        except RuntimeError as error:
+            return InvalidInstance(
+                self.uuid, f"Tautomer enumeration failed.: {error}", self.name
+            )
 
 
 class ChargeParentPipelineElement(_MolToMolPipelineElement):
