@@ -4,7 +4,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import Any, Iterable, Literal, Optional, overload
+from typing import Any, Iterable, Literal, Optional, get_args, overload
 
 try:
     from typing import Self, TypeAlias  # type: ignore[attr-defined]
@@ -169,6 +169,10 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             else:
                 self._output_datatype = "dense"
         elif output_datatype is not None:
+            if output_datatype not in get_args(OutputDatatype):
+                raise ValueError(
+                    f"output_datatype has to be one of {get_args(OutputDatatype)}! (Received: {output_datatype})"
+                )
             self._output_datatype = output_datatype
         super().set_params(**parameter_dict_copy)
         return self
