@@ -173,7 +173,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
                 raise ValueError(
                     f"output_datatype has to be one of {get_args(OutputDatatype)}! (Received: {output_datatype})"
                 )
-            self._output_datatype = output_datatype
+            self._output_datatype = output_datatype  # type: ignore
         super().set_params(**parameter_dict_copy)
         return self
 
