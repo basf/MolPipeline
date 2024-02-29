@@ -1,6 +1,7 @@
 """Test functionality of the pipeline class."""
 
 from __future__ import annotations
+
 import unittest
 from typing import Any
 

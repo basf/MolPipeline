@@ -169,7 +169,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             else:
                 self._output_datatype = "dense"
         elif output_datatype is not None:
-            self._output_datatype = OutputDatatype(output_datatype)
+            self._output_datatype = output_datatype
         super().set_params(**parameter_dict_copy)
         return self
 
