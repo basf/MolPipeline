@@ -71,7 +71,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
             params["return_as_numpy_array"] = self.return_as_numpy_array
         return params
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters of the object.
 
         Parameters
@@ -84,11 +84,11 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         Self
             MockTransformingPipelineElement with updated parameters.
         """
-        super().set_params(parameters)
+        super().set_params(**parameters)
         if "invalid_values" in parameters:
-            self.invalid_values = parameters["invalid_values"]
+            self.invalid_values = set(parameters["invalid_values"])
         if "return_as_numpy_array" in parameters:
-            self.invalid_values = parameters["return_as_numpy_array"]
+            self.return_as_numpy_array = bool(parameters["return_as_numpy_array"])
         return self
 
     def pretransform_single(self, value: Any) -> Any:

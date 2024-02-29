@@ -69,7 +69,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
         self.wrapped_estimator = wrapped_estimator
         if kwargs:
             if isinstance(self.wrapped_estimator, ABCPipelineElement):
-                self.wrapped_estimator.set_params(kwargs)
+                self.wrapped_estimator.set_params(**kwargs)
             else:
                 self.wrapped_estimator.set_params(**kwargs)
 
@@ -224,7 +224,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
             self.wrapped_estimator = wrapped_estimator
         if param_copy:
             if isinstance(self.wrapped_estimator, ABCPipelineElement):
-                self.wrapped_estimator.set_params(param_copy)
+                self.wrapped_estimator.set_params(**param_copy)
             else:
                 self.wrapped_estimator.set_params(**param_copy)
         return self

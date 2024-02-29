@@ -107,7 +107,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             params["standardizer"] = self._standardizer
         return params
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters.
 
         Parameters
@@ -123,8 +123,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         parameter_copy = dict(parameters)
         standardizer = parameter_copy.pop("standardizer", None)
         if standardizer is not None:
-            self._standardizer = standardizer
-        super().set_params(parameter_copy)
+            self._standardizer = standardizer  # type: ignore
+        super().set_params(**parameter_copy)
         return self
 
     def fit_to_result(self, values: list[npt.NDArray[np.float_]]) -> Self:

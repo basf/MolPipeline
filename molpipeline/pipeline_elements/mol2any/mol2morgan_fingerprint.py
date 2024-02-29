@@ -107,7 +107,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             parameters["n_bits"] = self._n_bits
         return parameters
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters.
 
         Parameters
@@ -123,8 +123,8 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         parameter_copy = dict(parameters)
         n_bits = parameter_copy.pop("n_bits", None)
         if n_bits is not None:
-            self._n_bits = n_bits
-        super().set_params(parameter_copy)
+            self._n_bits = n_bits  # type: ignore
+        super().set_params(**parameter_copy)
 
         return self
 
@@ -338,7 +338,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
             parameters["ignore_unknown"] = self.ignore_unknown
         return parameters
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set all parameters defining the object.
 
         Parameters
@@ -351,7 +351,7 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         Self
             MolToUnfoldedMorganFingerprint pipeline element with updated parameters.
         """
-        super().set_params(parameters)
+        super().set_params(**parameters)
         if "counted" in parameters:
             self._counted = parameters["counted"]
         if "ignore_unknown" in parameters:

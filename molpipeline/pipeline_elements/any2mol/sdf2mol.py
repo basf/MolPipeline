@@ -71,7 +71,7 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
             params["identifier"] = self.identifier
         return params
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters of the object.
 
         Parameters
@@ -84,9 +84,9 @@ class SDFToMolPipelineElement(_StringToMolPipelineElement):
         Self
             SDFToMolPipelineElement with updated parameters.
         """
-        super().set_params(parameters)
+        super().set_params(**parameters)
         if "identifier" in parameters:
-            self.identifier = parameters["identifier"]
+            self.identifier = parameters["identifier"]  # type: ignore
         return self
 
     def finish(self) -> None:

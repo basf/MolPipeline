@@ -7,9 +7,9 @@ import copy
 from typing import Any, Iterable, Literal, Optional, overload
 
 try:
-    from typing import Self  # type: ignore[attr-defined]
+    from typing import Self, TypeAlias  # type: ignore[attr-defined]
 except ImportError:
-    from typing_extensions import Self
+    from typing_extensions import Self, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
@@ -22,18 +22,21 @@ from molpipeline.utils.matrices import sparse_from_index_value_dicts
 from molpipeline.utils.molpipeline_types import RDKitMol
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
+# possible output types for a fingerprint
+OutputDatatype: TypeAlias = Literal["sparse", "dense", "explicit_bit_vect"]
+
 
 class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     """Abstract class for PipelineElements which transform molecules to integer vectors."""
 
     _n_bits: int
     _output_type = "binary"
-    _output_datatype: Literal["sparse", "dense", "explicit_bit_vect"]
+    _output_datatype: OutputDatatype
 
     def __init__(
         self,
         sparse_output: bool | None = None,
-        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
+        output_datatype: OutputDatatype = "sparse",
         name: str = "MolToFingerprintPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -144,7 +147,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
         return parameters
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set object parameters relevant for copying the class.
 
         Parameters
@@ -166,8 +169,8 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             else:
                 self._output_datatype = "dense"
         elif output_datatype is not None:
-            self._output_datatype = output_datatype
-        super().set_params(parameter_dict_copy)
+            self._output_datatype = OutputDatatype(output_datatype)
+        super().set_params(**parameter_dict_copy)
         return self
 
     def transform(self, values: list[RDKitMol]) -> sparse.csr_matrix:
@@ -273,7 +276,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         parameters.pop("fill_value", None)
         return parameters
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters.
 
         Parameters
@@ -292,11 +295,11 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
 
         # explicitly check for None, since 0 is a valid value
         if radius is not None:
-            self._radius = parameters["radius"]
+            self._radius = radius  # type: ignore
         # explicitly check for None, since False is a valid value
         if use_features is not None:
-            self._use_features = parameters["use_features"]
-        super().set_params(parameter_copy)
+            self._use_features = bool(use_features)
+        super().set_params(**parameter_copy)
         return self
 
     @property
