@@ -76,6 +76,11 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return self._n_bits
 
     @overload
+    def assemble_output(  # type: ignore
+        self, value_list: Iterable[npt.NDArray[np.int_]]
+    ) -> npt.NDArray[np.int_]: ...
+
+    @overload
     def assemble_output(
         self, value_list: Iterable[dict[int, int]]
     ) -> sparse.csr_matrix: ...
@@ -100,7 +105,8 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         value_list:  Iterable[dict[int, int]] | Iterable[npt.NDArray[np.int_]] | Iterable[ExplicitBitVect]
             Either Iterable of dicts which encode the rows of the feature matrix.
             Keys: column index, values: column value. Each dict represents one molecule.
-            Or an Iterable of RDKit's ExplicitBitVect or an Iterable of numpy arrays.
+            Or an Iterable of RDKit's ExplicitBitVect or an Iterable of numpy arrays representing the
+            fingerprint list.
 
         Returns
         -------
@@ -108,7 +114,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             Matrix of Morgan-fingerprint features.
         """
         if self._output_datatype == "explicit_bit_vect":
-            # return as list of RDkit's ExplicitBitVect or list of numpy arrays
+            # return as list of RDkit's ExplicitBitVect
             return list(value_list)  # type: ignore
         if self._output_datatype == "dense":
             # return dense numpy matrix
@@ -180,7 +186,9 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return super().transform(values)
 
     @abc.abstractmethod
-    def pretransform_single(self, value: RDKitMol) -> dict[int, int] | ExplicitBitVect:
+    def pretransform_single(
+        self, value: RDKitMol
+    ) -> dict[int, int] | npt.NDArray[np.int_] | ExplicitBitVect:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters

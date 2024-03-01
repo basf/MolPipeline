@@ -41,34 +41,26 @@ def make_sparse_fp(
     return sparse.vstack(vector_list)
 
 
-def explicit_bit_vect_list_to_numpy(
-    explicit_bit_vect_list: list[ExplicitBitVect],
+def fingerprints_to_numpy(
+    fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.int_]:
-    """Convert explicitBitVect manually to numpy.
-
-    It is assumed all fingerprints in the list have the same length.
+    """Convert fingerprints in various types to numpy.
 
     Parameters
     ----------
-    explicit_bit_vect_list: list[ExplicitBitVect]
-        List of fingerprints
+    fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_]
+        Fingerprint matrix.
 
     Returns
     -------
     npt.NDArray
         Numpy fingerprint matrix.
     """
-    if len(explicit_bit_vect_list) == 0:
-        return np.empty(
-            (
-                0,
-                0,
-            ),
-            dtype=int,
-        )
-    mat = np.empty(
-        (len(explicit_bit_vect_list), len(explicit_bit_vect_list[0])), dtype=int
-    )
-    for i, fingerprint in enumerate(explicit_bit_vect_list):
-        DataStructs.ConvertToNumpyArray(fingerprint, mat[i, :])
-    return mat
+
+    if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):
+        return np.array(fingerprints)
+    if isinstance(fingerprints, sparse.csr_matrix):
+        return fingerprints.toarray()
+    if isinstance(fingerprints, np.ndarray):
+        return fingerprints
+    raise ValueError("Unknown fingerprint type. Can not convert to numpy")

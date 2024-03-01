@@ -19,7 +19,7 @@ from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
-from tests.utils.fingerprints import explicit_bit_vect_list_to_numpy
+from tests.utils.fingerprints import fingerprints_to_numpy
 
 
 class TestConcatenatedFingerprint(unittest.TestCase):
@@ -40,11 +40,18 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             ]
         )
 
-        to_numpy_func_dict: dict[str, Callable[[Any], npt.NDArray[np.int_]]] = {
-            "sparse": lambda x: x.toarray(),
-            "dense": lambda x: x,
-            "explicit_bit_vect": explicit_bit_vect_list_to_numpy,
-        }
+        smiles = [
+            "CC",
+            "CCC",
+            "CCCO",
+            "CCNCO",
+            "C(C)CCO",
+            "CCO",
+            "CCCN",
+            "CCCC",
+            "CCOC",
+            "COO",
+        ]
 
         for fp_output_type in fingerprint_morgan_output_types:
 
@@ -60,26 +67,13 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                     ),
                 ]
             )
-            smi2mol = SmilesToMolPipelineElement()
             pipeline = Pipeline(
                 [
-                    ("smi2mol", smi2mol),
+                    ("smi2mol", SmilesToMolPipelineElement()),
                     ("concat_vector_element", concat_vector_element),
                 ]
             )
 
-            smiles = [
-                "CC",
-                "CCC",
-                "CCCO",
-                "CCNCO",
-                "C(C)CCO",
-                "CCO",
-                "CCCN",
-                "CCCC",
-                "CCOC",
-                "COO",
-            ]
             output = pipeline.fit_transform(smiles)
             output2 = pipeline.transform(smiles)
 
@@ -87,7 +81,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             output3 = np.hstack(
                 [
                     concat_vector_element.element_list[0][1].transform(mol_list),
-                    to_numpy_func_dict[fp_output_type](
+                    fingerprints_to_numpy(
                         concat_vector_element.element_list[1][1].transform(mol_list)
                     ),
                 ]

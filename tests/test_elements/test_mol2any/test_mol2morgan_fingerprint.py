@@ -11,7 +11,6 @@ from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipeline
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorganFingerprint,
 )
-from tests.utils.fingerprints import explicit_bit_vect_list_to_numpy
 
 test_smiles = [
     "c1ccccc1",
@@ -116,7 +115,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertTrue(
             np.equal(
                 dense_output,
-                explicit_bit_vect_list_to_numpy(explicit_bit_vect_morgan_output),
+                np.array(explicit_bit_vect_morgan_output),
             ).all()
         )
 

@@ -22,8 +22,9 @@ except ImportError:
 class LeaderPickerClustering(ClusterMixin, BaseEstimator):
     """LeaderPicker clustering estimator (a sphere exclusion clustering algorithm)."""
 
+    # we use sklearn's input validation to check constraints
     _parameter_constraints: dict[str, Any] = {
-        "distance_threshold": [Interval(Real, 0, None, closed="left")],
+        "distance_threshold": [Interval(Real, 0, 1.0, closed="left")],
     }
 
     def __init__(
