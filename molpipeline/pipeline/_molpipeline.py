@@ -129,7 +129,7 @@ class _MolPipeline:
         -------
         None
         """
-        self.set_params(parameter_dict)
+        self.set_params(**parameter_dict)
 
     @property
     def requires_fitting(self) -> bool:
@@ -163,7 +163,7 @@ class _MolPipeline:
             "raise_nones": self.raise_nones,
         }
 
-    def set_params(self, parameter_dict: dict[str, Any]) -> Self:
+    def set_params(self, **parameter_dict: dict[str, Any]) -> Self:
         """Set parameters of the pipeline and pipeline elements.
 
         Parameters
@@ -177,13 +177,13 @@ class _MolPipeline:
             MolPipeline object with updated parameters.
         """
         if "element_list" in parameter_dict:
-            self._element_list = parameter_dict["element_list"]
+            self._element_list = parameter_dict["element_list"]  # type: ignore
         if "n_jobs" in parameter_dict:
-            self.n_jobs = parameter_dict["n_jobs"]
+            self.n_jobs = int(parameter_dict["n_jobs"])  # type: ignore
         if "name" in parameter_dict:
-            self.name = parameter_dict["name"]
+            self.name = str(parameter_dict["name"])
         if "raise_nones" in parameter_dict:
-            self.raise_nones = parameter_dict["raise_nones"]
+            self.raise_nones = bool(parameter_dict["raise_nones"])
         return self
 
     @property
