@@ -5,7 +5,7 @@ from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.mol2any.mol2concatinated_vector import MolToConcatenatedVector
 from molpipeline.mol2any.mol2inchi import MolToInchi, MolToInchiKey
 from molpipeline.mol2any.mol2morgan_fingerprint import MolToMorganFP
-from molpipeline.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
+from molpipeline.mol2any.mol2rdkit_phys_chem import MolToNetCharge, MolToRDKitPhysChem
 from molpipeline.mol2any.mol2smiles import MolToSmiles
 
 __all__ = (
@@ -14,6 +14,7 @@ __all__ = (
     "MolToConcatenatedVector",
     "MolToSmiles",
     "MolToMorganFP",
+    "MolToNetCharge",
     "MolToInchi",
     "MolToInchiKey",
     "MolToRDKitPhysChem",
