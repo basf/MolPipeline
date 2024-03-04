@@ -127,7 +127,7 @@ class ErrorFilter(ABCPipelineElement):
             params["element_ids"] = self.element_ids
         return params
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters for this element.
 
         Parameters
@@ -147,7 +147,7 @@ class ErrorFilter(ABCPipelineElement):
                 raise TypeError(f"Unexpected Type: {type(element_ids)}")
             self.element_ids = element_ids
         if "filter_everything" in param_copy:
-            self.filter_everything = param_copy.pop("filter_everything")
+            self.filter_everything = bool(param_copy.pop("filter_everything"))
         super().set_params(**param_copy)
         return self
 
@@ -465,7 +465,7 @@ class ErrorReplacer(ABCPipelineElement):
             params["fill_value"] = self.fill_value
         return params
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters for this element.
 
         Parameters
@@ -480,10 +480,10 @@ class ErrorReplacer(ABCPipelineElement):
         """
         parameter_copy = dict(parameters)
         if "error_filter_id" in parameter_copy:
-            self.error_filter_id = parameter_copy.pop("error_filter_id")
+            self.error_filter_id = str(parameter_copy.pop("error_filter_id"))
         if "fill_value" in parameter_copy:
             self.fill_value = parameter_copy.pop("fill_value")
-        super().set_params(parameter_copy)
+        super().set_params(**parameter_copy)
         return self
 
     @property

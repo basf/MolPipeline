@@ -61,7 +61,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         self._requires_fitting = any(
             element[1]._requires_fitting for element in element_list
         )
-        self.set_params(kwargs)
+        self.set_params(**kwargs)
 
     @property
     def element_list(self) -> list[tuple[str, MolToAnyPipelineElement]]:
@@ -94,7 +94,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         return parameters
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters.
 
         Parameters
@@ -110,7 +110,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         parameter_copy = dict(parameters)
         element_list = parameter_copy.pop("element_list", None)
         if element_list is not None:
-            self._element_list = element_list
+            self._element_list = element_list  # type: ignore
         step_params: dict[str, dict[str, Any]] = {}
         step_dict = dict(self._element_list)
         to_delete_list = []
@@ -130,8 +130,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         for to_delete in to_delete_list:
             _ = parameter_copy.pop(to_delete, None)
         for step, params in step_params.items():
-            step_dict[step].set_params(params)
-        super().set_params(parameter_copy)
+            step_dict[step].set_params(**params)
+        super().set_params(**parameter_copy)
         return self
 
     def assemble_output(

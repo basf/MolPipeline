@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from typing import Any
 
 import numpy as np
 
@@ -118,6 +119,30 @@ class TestMol2MorganFingerprint(unittest.TestCase):
                 np.array(explicit_bit_vect_morgan_output),
             ).all()
         )
+
+    def test_setter_getter(self) -> None:
+        """Test if the setters and getters work as expected."""
+        mol_fp = MolToFoldedMorganFingerprint()
+        params: dict[str, Any] = {
+            "radius": 2,
+            "n_bits": 1024,
+            "output_datatype": "dense",
+        }
+        mol_fp.set_params(**params)
+        self.assertEqual(mol_fp.get_params()["radius"], 2)
+        self.assertEqual(mol_fp.get_params()["n_bits"], 1024)
+        self.assertEqual(mol_fp.get_params()["output_datatype"], "dense")
+
+    def test_setter_getter_error_handling(self) -> None:
+        """Test if the setters and getters work as expected when errors are encountered."""
+
+        mol_fp = MolToFoldedMorganFingerprint()
+        params: dict[str, Any] = {
+            "radius": 2,
+            "n_bits": 1024,
+            "output_datatype": "invalid-option__11!",
+        }
+        self.assertRaises(ValueError, mol_fp.set_params, **params)
 
 
 if __name__ == "__main__":

@@ -1,11 +1,17 @@
 """Test functionality of the pipeline class."""
 
+from __future__ import annotations
+
 import unittest
+from typing import Any
 
 from sklearn.base import BaseEstimator
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline.pipeline import Pipeline
+from molpipeline.pipeline_elements.any2mol import AutoToMolPipelineElement
 from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
 from molpipeline.pipeline_elements.error_handling import ErrorFilter
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
@@ -29,6 +35,8 @@ CONTAINS_OX = [0, 1, 1, 0, 1, 0]
 FP_RADIUS = 2
 FP_SIZE = 2048
 EXPECTED_OUTPUT = make_sparse_fp(TEST_SMILES, FP_RADIUS, FP_SIZE)
+
+_RANDOM_STATE = 67056
 
 
 class PipelineTest(unittest.TestCase):
@@ -212,6 +220,66 @@ class PipelineTest(unittest.TestCase):
         matrix = pipeline.fit_transform(TEST_SMILES + FAULTY_TEST_SMILES)
         # Compare with expected output (Which is the same as the output without the faulty smiles)
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
+
+    def test_gridsearchcv(self) -> None:
+        """Test if the MolPipeline can be used in sklearn's GridSearchCV."""
+
+        descriptor_elements_to_test: list[dict[str, Any]] = [
+            {
+                "name": "morgan",
+                "element": MolToFoldedMorganFingerprint(),
+                "param_grid": {"morgan__n_bits": [64, 128], "morgan__radius": [1, 2]},
+            },
+            {
+                "name": "physchem",
+                "element": MolToRDKitPhysChem(),
+                "param_grid": {
+                    "physchem__descriptor_list": [
+                        ["HeavyAtomMolWt"],
+                        ["HeavyAtomMolWt", "HeavyAtomCount"],
+                    ]
+                },
+            },
+        ]
+
+        for test_data_dict in descriptor_elements_to_test:
+
+            name = test_data_dict["name"]
+            element = test_data_dict["element"]
+            param_grid = test_data_dict["param_grid"]
+
+            # set up a pipeline that trains a random forest classifier on morgan fingerprints
+            pipeline = Pipeline(
+                [
+                    ("auto2mol", AutoToMolPipelineElement()),
+                    (name, element),
+                    ("estimator", RandomForestClassifier()),
+                ],
+                n_jobs=1,
+            )
+
+            # define the hyperparameter space to try out
+            grid_space = {
+                "estimator__n_estimators": [1, 5],
+                "estimator__random_state": [_RANDOM_STATE],
+            }
+            grid_space.update(param_grid)
+
+            grid_search_cv = GridSearchCV(
+                estimator=pipeline,
+                param_grid=grid_space,
+                cv=2,
+                scoring="roc_auc",
+                n_jobs=1,
+            )
+
+            grid_search_cv.fit(
+                X=TEST_SMILES,
+                y=CONTAINS_OX,
+            )
+
+            for k, value in param_grid.items():
+                self.assertIn(grid_search_cv.best_params_[k], value)
 
 
 if __name__ == "__main__":

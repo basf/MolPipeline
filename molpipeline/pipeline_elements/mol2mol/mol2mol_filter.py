@@ -86,7 +86,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
             params["allowed_element_numbers"] = self.allowed_element_numbers
         return params
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters of ElementFilterPipelineElement.
 
         Parameters
@@ -101,8 +101,8 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         """
         parameter_copy = dict(parameters)
         if "allowed_element_numbers" in parameter_copy:
-            self.allowed_element_numbers = parameter_copy.pop("allowed_element_numbers")
-        super().set_params(parameter_copy)
+            self.allowed_element_numbers = parameter_copy.pop("allowed_element_numbers")  # type: ignore
+        super().set_params(**parameter_copy)
         return self
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:

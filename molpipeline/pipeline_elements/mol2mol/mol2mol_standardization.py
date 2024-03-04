@@ -504,7 +504,7 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
             params["solvent_smiles_list"] = self.solvent_smiles_list
         return params
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters of pipeline element.
 
         Parameters
@@ -520,8 +520,8 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
         param_copy = dict(parameters)
         solvent_smiles_list = param_copy.pop("solvent_smiles_list", None)
         if solvent_smiles_list is not None:
-            self.solvent_smiles_list = solvent_smiles_list
-        super().set_params(param_copy)
+            self.solvent_smiles_list = solvent_smiles_list  # type: ignore
+        super().set_params(**param_copy)
         return self
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:

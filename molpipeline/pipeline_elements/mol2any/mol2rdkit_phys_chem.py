@@ -117,7 +117,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             parent_dict["descriptor_list"] = self._descriptor_list
         return parent_dict
 
-    def set_params(self, parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
         """Set parameters.
 
         Parameters
@@ -133,6 +133,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         parameters_shallow_copy = dict(parameters)
         descriptor_list = parameters_shallow_copy.pop("descriptor_list", None)
         if descriptor_list is not None:
-            self._descriptor_list = descriptor_list
-        super().set_params(parameters_shallow_copy)
+            self._descriptor_list = descriptor_list  # type: ignore
+        super().set_params(**parameters_shallow_copy)
         return self
