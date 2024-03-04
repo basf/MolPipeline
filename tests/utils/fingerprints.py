@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import numpy as np
+import numpy.typing as npt
 from rdkit import Chem
 
 # pylint: disable=no-name-in-module
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
+from rdkit.DataStructs import ExplicitBitVect
 from scipy import sparse
 
 
@@ -36,3 +39,27 @@ def make_sparse_fp(
         vector = GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=n_bits)
         vector_list.append(sparse.csr_matrix(vector))
     return sparse.vstack(vector_list)
+
+
+def fingerprints_to_numpy(
+    fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_],
+) -> npt.NDArray[np.int_]:
+    """Convert fingerprints in various types to numpy.
+
+    Parameters
+    ----------
+    fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_]
+        Fingerprint matrix.
+
+    Returns
+    -------
+    npt.NDArray
+        Numpy fingerprint matrix.
+    """
+    if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):
+        return np.array(fingerprints)
+    if isinstance(fingerprints, sparse.csr_matrix):
+        return fingerprints.toarray()
+    if isinstance(fingerprints, np.ndarray):
+        return fingerprints
+    raise ValueError("Unknown fingerprint type. Can not convert to numpy")

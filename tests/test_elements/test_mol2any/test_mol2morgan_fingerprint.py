@@ -1,5 +1,7 @@
 """Tests for the MolToFoldedMorganFingerprint pipeline element."""
 
+from __future__ import annotations
+
 import unittest
 
 import numpy as np
@@ -69,6 +71,53 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         dense_output = dense_pipeline.fit_transform(test_smiles)
 
         self.assertTrue(np.all(sparse_output.toarray() == dense_output))
+
+    def test_output_types(self) -> None:
+        """Test equality of different output_types."""
+
+        smi2mol = SmilesToMolPipelineElement()
+        sparse_morgan = MolToFoldedMorganFingerprint(
+            radius=2, n_bits=1024, output_datatype="sparse"
+        )
+        dense_morgan = MolToFoldedMorganFingerprint(
+            radius=2, n_bits=1024, output_datatype="dense"
+        )
+        explicit_bit_vect_morgan = MolToFoldedMorganFingerprint(
+            radius=2, n_bits=1024, output_datatype="explicit_bit_vect"
+        )
+        sparse_pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("sparse_morgan", sparse_morgan),
+            ],
+        )
+        dense_pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("dense_morgan", dense_morgan),
+            ],
+        )
+        explicit_bit_vect_pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("explicit_bit_vect_morgan", explicit_bit_vect_morgan),
+            ],
+        )
+
+        sparse_output = sparse_pipeline.fit_transform(test_smiles)
+        dense_output = dense_pipeline.fit_transform(test_smiles)
+        explicit_bit_vect_morgan_output = explicit_bit_vect_pipeline.fit_transform(
+            test_smiles
+        )
+
+        self.assertTrue(np.all(sparse_output.toarray() == dense_output))
+
+        self.assertTrue(
+            np.equal(
+                dense_output,
+                np.array(explicit_bit_vect_morgan_output),
+            ).all()
+        )
 
 
 if __name__ == "__main__":
