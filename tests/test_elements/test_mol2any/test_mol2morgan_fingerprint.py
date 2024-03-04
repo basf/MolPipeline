@@ -140,7 +140,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         params: dict[str, Any] = {
             "radius": 2,
             "n_bits": 1024,
-            "output_datatype": "gjheherjhergjhegjhergjhrjhrhjgr",
+            "output_datatype": "invalid-option__11!",
         }
         self.assertRaises(ValueError, mol_fp.set_params, **params)
 
