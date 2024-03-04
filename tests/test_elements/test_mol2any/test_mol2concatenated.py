@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import unittest
-from typing import Any, Callable, Literal, get_args
+from typing import Any, Literal, get_args
 
 import numpy as np
-import numpy.typing as npt
 from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
 

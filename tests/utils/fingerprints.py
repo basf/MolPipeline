@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import numpy.typing as npt
-from rdkit import Chem, DataStructs
+from rdkit import Chem
 
 # pylint: disable=no-name-in-module
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
@@ -56,7 +56,6 @@ def fingerprints_to_numpy(
     npt.NDArray
         Numpy fingerprint matrix.
     """
-
     if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):
         return np.array(fingerprints)
     if isinstance(fingerprints, sparse.csr_matrix):
