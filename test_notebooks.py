@@ -117,16 +117,25 @@ def run_notebooks(
     for notebooks_path in notebooks_paths:
 
         # Execute the notebook and capture the error code
-        cmd = ["jupyter", "nbconvert", "--execute", notebooks_path, "--to", "notebook"]
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        std_out, std_err = proc.communicate()
-        error_code = proc.returncode
+        cmd = [
+            "jupyter",
+            "nbconvert",
+            "--execute",
+            str(notebooks_path),
+            "--to",
+            "notebook",
+        ]
+        with subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        ) as process:
+            std_out, std_err = process.communicate()
+            error_code = process.returncode
 
         # Check if the error code is not 0
         if error_code != 0:
             nof_errors += 1
-            log_error_msg = "Error executing {}. Error code: {}".format(
-                notebooks_path, error_code
+            log_error_msg = (
+                f"Error executing {notebooks_path}. Error code: {error_code}"
             )
             print(log_error_msg)
             print(std_out.decode("utf-8"))
@@ -139,11 +148,11 @@ def run_notebooks(
     if nof_errors == 0:
         print("All Jupyter notebooks executed successfully with error code 0.")
     else:
-        print("Jupyter notebooks executed with {} errors.".format(nof_errors))
+        print(f"Jupyter notebooks executed with {nof_errors} errors.")
         sys.exit(1)
 
 
-def main():
+def main() -> None:
     """Main function to run the Jupyter notebooks."""
     parser = argparse.ArgumentParser(
         description="Test if all Jupyter notebooks in a directory run through with error code 0"
