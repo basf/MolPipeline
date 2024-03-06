@@ -401,6 +401,18 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes defined fragments from a molecule."""
 
     _solvent_mol_list: list[RDKitMol]
+    standard_solvent_smiles_list: list[str] = [
+        "[OH2]",
+        "ClCCl",
+        "ClC(Cl)Cl",
+        "CCOC(=O)C",
+        "CO",
+        "CC(C)O",
+        "CC(=O)C",
+        "CS(=O)C",
+        "CCO",
+        "CN(C)C",
+    ]
 
     def __init__(
         self,
@@ -436,18 +448,7 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if solvent_smiles_list is None:
-            solvent_smiles_list = [
-                "[OH2]",
-                "ClCCl",
-                "ClC(Cl)Cl",
-                "CCOC(=O)C",
-                "CO",
-                "CC(C)O",
-                "CC(=O)C",
-                "CS(=O)C",
-                "CCO",
-                "CN(C)C",
-            ]
+            solvent_smiles_list = self.standard_solvent_smiles_list
         self.solvent_smiles_list = solvent_smiles_list
 
     @property
