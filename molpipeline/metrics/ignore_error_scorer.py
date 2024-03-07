@@ -38,6 +38,7 @@ def ignored_value_scorer(
 
     score_func = scorer._score_func  # pylint: disable=protected-access
     response_method = scorer._response_method  # pylint: disable=protected-access
+    scorer_kwargs = scorer._kwargs  # pylint: disable=protected-access
 
     def newscore(
         y_true: npt.NDArray[np.float_ | np.int_],
@@ -82,4 +83,6 @@ def ignored_value_scorer(
             _kwargs["sample_weight"] = _kwargs["sample_weight"][all_retained]
         return score_func(y_true_, y_pred_, **_kwargs)
 
-    return metrics.make_scorer(newscore, response_method=response_method)
+    return metrics.make_scorer(
+        newscore, response_method=response_method, **scorer_kwargs
+    )
