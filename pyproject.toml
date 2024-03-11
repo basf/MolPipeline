@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-dynamic = ["dependencies"]
+dynamic = ["dependencies", "optional-dependencies"]
 name = "molpipeline"
 authors = [
     {name = "Christian W. Feldmann"},
@@ -18,8 +18,9 @@ readme = "README.md"
 dependencies = {file = "requirements.txt"}
 
 [tool.setuptools.dynamic.optional-dependencies]
-all = {file = ["requirements_chemprop.txt"]}
+all = {file = ["requirements_chemprop.txt", "requirements_notebooks.txt"]}
 chemprop = {file = ["requirements_chemprop.txt"]}
+notebooks = {file = ["requirements_notebooks.txt"]}
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "docs"]
