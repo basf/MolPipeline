@@ -1,6 +1,14 @@
 """Nearest neighbor algorithm."""
 
-from typing import Any, Callable, Literal, Self, Sequence, Union
+from __future__ import annotations
+
+from typing import Any, Callable, Literal, Sequence, Union
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
 
 import numpy as np
 import numpy.typing as npt
