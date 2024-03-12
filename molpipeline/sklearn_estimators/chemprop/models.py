@@ -5,24 +5,21 @@ from typing import Any, Iterable, Self
 
 import numpy as np
 import numpy.typing as npt
-from lightning import pytorch as pl
-from chemprop.data import MoleculeDataset, MolGraphDataLoader
+from chemprop.data import BatchMolGraph, MoleculeDataset, MolGraphDataLoader
 from chemprop.models.model import MPNN
 from chemprop.nn import metrics
 from chemprop.nn.agg import Aggregation, SumAggregation
-from chemprop.data import BatchMolGraph
-from chemprop.nn.message_passing import BondMessagePassing
-from chemprop.nn.message_passing.proto import MessagePassing
 from chemprop.nn.predictors import (
-    BinaryClassificationFFN,
     BinaryClassificationFFNBase,
     MulticlassClassificationFFN,
 )
+from lightning import pytorch as pl
+from sklearn.base import BaseEstimator
 from sklearn.utils.metaestimators import available_if
 from torch import Tensor
 
 
-class ABCChemprop(abc.ABC):
+class ABCChemprop(BaseEstimator, abc.ABC):
     """Wrap Chemprop in a sklearn like object."""
 
     model: MPNN
@@ -54,17 +51,6 @@ class ABCChemprop(abc.ABC):
         )
         self.lightning_trainer.fit(self.model, training_data)
         return self
-
-    def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get the parameters."""
-        if not deep:
-            return {
-                "chemprop_model": self.model,
-                "lightning_trainer": self.lightning_trainer,
-                "batch_size": self.batch_size,
-                "n_jobs": self.n_jobs,
-            }
-        raise NotImplementedError("Deep copy not implemented.")
 
 
 class Chemprop(ABCChemprop):
