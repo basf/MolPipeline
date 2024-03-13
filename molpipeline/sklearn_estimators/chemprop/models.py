@@ -1,7 +1,7 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
 import abc
-from typing import Any, Iterable, Self
+from typing import Iterable, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -42,10 +42,11 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         y: Iterable[int | float] | npt.NDArray[np.int_ | np.float_],
     ) -> Self:
         """Fit the model."""
-        if isinstance(y, np.ndarray):
-            if y.ndim == 1:
-                y = y.reshape(-1, 1)
-        X.Y = Tensor(y)
+        if not isinstance(y, np.ndarray):
+            y = np.array(y)
+        if y.ndim == 1:
+            y = y.reshape(-1, 1)
+        X.Y = y
         training_data = MolGraphDataLoader(
             X, batch_size=self.batch_size, num_workers=self.n_jobs
         )
@@ -76,7 +77,7 @@ class Chemprop(ABCChemprop):
         self.model.eval()
         test_data = MolGraphDataLoader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
-        return np.array([pred.numpy() for pred in predictions])
+        return np.array([pred.numpy() for pred in predictions])  # type: ignore
 
     def predict(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
@@ -150,7 +151,8 @@ class ChempropNeuralFP(ABCChemprop):
     ) -> npt.NDArray[np.float_]:
         """Transform the input."""
         self.model.eval()
-        return self.model.fingerprint(BatchMolGraph([mol.mg for mol in X])).numpy()
+        mol_data = [X[i].mg for i in range(len(X))]
+        return self.model.fingerprint(BatchMolGraph(mol_data)).numpy()
 
     def fit_transform(
         self,
