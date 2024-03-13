@@ -85,7 +85,10 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
             self.d_v, self.d_e, self.d_h, self.d_vd, self.bias
         )
         self.dropout = nn.Dropout(self.dropout_rate)
-        self.activation = get_activation_function(self.activation)
+        if isinstance(self.activation, str):
+            self.tau = get_activation_function(self.activation)
+        else:
+            self.tau = self.activation
         return self
 
     def set_params(self, **params: Any) -> Self:
@@ -100,7 +103,7 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
     """A wrapper for the BinaryClassificationFFN class."""
 
     n_targets: int = 1
-    _default_criterion: LossFunction = BCELoss()
+    _default_criterion = BCELoss()
 
     def __init__(
         self,
@@ -221,7 +224,6 @@ class MPNN(_MPNN, BaseEstimator):
         self.metric_list = metric_list
         self.batch_norm = batch_norm
         self.task_weight = task_weight
-        self.metrics = metric_list
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters."""
