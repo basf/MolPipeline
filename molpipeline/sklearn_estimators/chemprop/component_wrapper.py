@@ -80,7 +80,13 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         self.dropout_rate = dropout_rate
 
     def reinitialize_network(self) -> Self:
-        """Reinitialize the network with the current parameters."""
+        """Reinitialize the network with the current parameters.
+
+        Returns
+        -------
+        Self
+            The reinitialized network.
+        """
         self.W_i, self.W_h, self.W_o, self.W_d = self.setup(
             self.d_v, self.d_e, self.d_h, self.d_vd, self.bias
         )
@@ -171,7 +177,13 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
         self._n_tasks = value
 
     def reinitialize_fnn(self) -> Self:
-        """Reinitialize the feedforward network."""
+        """Reinitialize the feedforward network.
+
+        Returns
+        -------
+        Self
+            The reinitialized feedforward network.
+        """
         self.ffn = MLP(
             self.input_dim,
             self.n_tasks * self.n_targets,
@@ -251,7 +263,13 @@ class MPNN(_MPNN, BaseEstimator):
         self.task_weight = task_weight
 
     def reinitialize_network(self) -> Self:
-        """Reinitialize the network with the current parameters."""
+        """Reinitialize the network with the current parameters.
+
+        Returns
+        -------
+        Self
+            The reinitialized network.
+        """
         self.bn = (
             nn.BatchNorm1d(self.message_passing.output_dim)
             if self.batch_norm

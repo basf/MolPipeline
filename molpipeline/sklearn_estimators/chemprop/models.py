@@ -1,70 +1,28 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
-import abc
-from typing import Iterable, Self
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt
-from chemprop.data import BatchMolGraph, MoleculeDataset, MolGraphDataLoader
+from chemprop.data import MoleculeDataset, MolGraphDataLoader
 from chemprop.models.model import MPNN
-from chemprop.nn import metrics
-from chemprop.nn.agg import Aggregation, SumAggregation
 from chemprop.nn.predictors import (
     BinaryClassificationFFNBase,
     MulticlassClassificationFFN,
 )
 from lightning import pytorch as pl
-from sklearn.base import BaseEstimator
 from sklearn.utils.metaestimators import available_if
-from torch import Tensor
 
-
-class ABCChemprop(BaseEstimator, abc.ABC):
-    """Wrap Chemprop in a sklearn like object."""
-
-    model: MPNN
-
-    def __init__(
-        self,
-        chemprop_model: MPNN,
-        lightning_trainer: pl.Trainer | None = None,
-        batch_size: int = 64,
-        n_jobs: int = 1,
-    ) -> None:
-        """Initialize the chemprop abstract model.
-
-        Parameters
-        ----------
-        chemprop_model : MPNN
-            The chemprop model to wrap.
-        lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
-        batch_size : int, optional (default=64)
-            The batch size to use.
-        n_jobs : int, optional (default=1)
-            The number of jobs to use.
-        """
-        self.model = chemprop_model
-        self.lightning_trainer = lightning_trainer or pl.Trainer(max_epochs=10)
-        self.batch_size = batch_size
-        self.n_jobs = n_jobs
-
-    def fit(
-        self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
-        y: Iterable[int | float] | npt.NDArray[np.int_ | np.float_],
-    ) -> Self:
-        """Fit the model."""
-        if not isinstance(y, np.ndarray):
-            y = np.array(y)
-        if y.ndim == 1:
-            y = y.reshape(-1, 1)
-        X.Y = y
-        training_data = MolGraphDataLoader(
-            X, batch_size=self.batch_size, num_workers=self.n_jobs
-        )
-        self.lightning_trainer.fit(self.model, training_data)
-        return self
+from molpipeline.sklearn_estimators.chemprop.abstract import ABCChemprop
+from molpipeline.sklearn_estimators.chemprop.component_wrapper import (
+    BinaryClassificationFFN,
+    BondMessagePassing,
+    SumAggregation,
+)
+from molpipeline.sklearn_estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 
 
 class Chemprop(ABCChemprop):
@@ -95,7 +53,18 @@ class Chemprop(ABCChemprop):
     def predict(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float_]:
-        """Predict the output."""
+        """Predict the output.
+
+        Parameters
+        ----------
+        X : MoleculeDataset
+            The input data.
+
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            The predictions for the input data.
+        """
         predictions = self._predict(X)
         if predictions.shape[0] != len(X):
             raise AssertionError(
@@ -118,7 +87,18 @@ class Chemprop(ABCChemprop):
     def predict_proba(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float_]:
-        """Predict the probabilities."""
+        """Predict the probabilities.
+
+        Parameters
+        ----------
+        X : MoleculeDataset
+            The input data.
+
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            The probabilities of the input data.
+        """
         if self._is_binary_classifier():
             predictions = self._predict(X)
             if predictions.shape[1] != 1 or predictions.shape[2] != 1:
@@ -129,64 +109,76 @@ class Chemprop(ABCChemprop):
             return np.vstack([1 - proba_cls1, proba_cls1]).T
         return self._predict(X)
 
+    def to_encoder(self) -> ChempropNeuralFP:
+        """Return the encoder for the model.
 
-class ChempropNeuralFP(ABCChemprop):
-    """Wrap Chemprop in a sklearn like transformer returning the neural fingerprint as a numpy array."""
+        Returns
+        -------
+        ChempropNeuralFP
+            The encoder for the model.
+        """
+        return ChempropNeuralFP(
+            chemprop_model=self.model,
+            lightning_trainer=self.lightning_trainer,
+            batch_size=self.batch_size,
+            n_jobs=self.n_jobs,
+            disable_fitting=True,
+        )
+
+
+class ChempropClassifier(Chemprop):
+    """Wrap Chemprop in a sklearn like classifier."""
 
     def __init__(
         self,
-        chemprop_model: MPNN,
+        chemprop_model: MPNN | None = None,
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
-        disable_fitting: bool = False,
     ) -> None:
-        """Initialize the chemprop neural fingerprint model.
+        """Initialize the chemprop classifier model.
 
         Parameters
         ----------
-        chemprop_model : MPNN
-            The chemprop model to wrap.
+        chemprop_model : MPNN | None, optional
+            The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
             The lightning trainer to use, by default None
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
-        disable_fitting : bool, optional (default=False)
-            Whether to allow fitting or set to fixed encoding.
         """
+        if chemprop_model is None:
+            bond_encoder = BondMessagePassing()
+            agg = SumAggregation()
+            predictor = BinaryClassificationFFN()
+            chemprop_model = MPNN(
+                message_passing=bond_encoder, agg=agg, predictor=predictor
+            )
         super().__init__(
             chemprop_model=chemprop_model,
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
         )
-        self.disable_fitting = disable_fitting
+        if not self._is_binary_classifier():
+            raise ValueError("ChempropClassifier should be a binary classifier.")
 
-    def fit(
-        self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
-        y: Iterable[int | float] | npt.NDArray[np.int_ | np.float_],
-    ) -> Self:
-        """Fit the model."""
-        if self.disable_fitting:
-            return self
-        return super().fit(X, y)
+    def set_params(self, **params) -> Self:
+        """Set the parameters of the model and check if it is a binary classifier.
 
-    def transform(
-        self, X: MoleculeDataset  # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.float_]:
-        """Transform the input."""
-        self.model.eval()
-        mol_data = [X[i].mg for i in range(len(X))]
-        return self.model.fingerprint(BatchMolGraph(mol_data)).numpy()
+        Parameters
+        ----------
+        **params
+            The parameters to set.
 
-    def fit_transform(
-        self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
-        y: Iterable[int | float] | npt.NDArray[np.int_ | np.float_],
-    ) -> npt.NDArray[np.float_]:
-        """Fit the model and transform the input."""
-        self.fit(X, y)
-        return self.transform(X)
+        Returns
+        -------
+        Self
+            The model with the new parameters.
+        """
+        super().set_params(**params)
+        if not self._is_binary_classifier():
+            raise ValueError("ChempropClassifier should be a binary classifier.")
+        return self
