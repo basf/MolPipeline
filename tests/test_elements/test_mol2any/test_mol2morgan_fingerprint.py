@@ -50,10 +50,10 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         """
         smi2mol = SmilesToMolPipelineElement()
         sparse_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, sparse_output=True
+            radius=2, n_bits=1024, output_datatype="sparse"
         )
         dense_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, sparse_output=False
+            radius=2, n_bits=1024, output_datatype="dense"
         )
         sparse_pipeline = Pipeline(
             [
