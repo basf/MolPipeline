@@ -48,7 +48,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
             ]
         )
@@ -60,7 +60,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
             ]
         )
@@ -72,7 +72,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
             ]
         )
@@ -88,7 +88,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
             ]
         )
@@ -102,7 +102,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
             ]
         )
@@ -115,7 +115,7 @@ class TestNamedNearestNeighbors(TestCase):
         model1 = Pipeline(
             [
                 ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
             ]
         )
@@ -132,7 +132,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=True)),
+                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="sparse")),
                 (
                     "lookup",
                     NamedNearestNeighbors(
@@ -167,7 +167,7 @@ class TestNamedNearestNeighbors(TestCase):
             [
                 ("mol", SmilesToMolPipelineElement()),
                 ("error_filter", error_filter),
-                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
                 (
                     "error_replacer",
@@ -194,7 +194,7 @@ class TestNamedNearestNeighbors(TestCase):
             [
                 ("mol", SmilesToMolPipelineElement()),
                 ("error_filter", error_filter),
-                ("fingerprint", MolToFoldedMorganFingerprint(sparse_output=False)),
+                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
                 (
                     "error_replacer",
