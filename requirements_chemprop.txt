@@ -1,1 +1,1 @@
-chemprop @ https://github.com/c-w-feldmann/chemprop.git
+chemprop @ git+https://github.com/c-w-feldmann/chemprop.git
