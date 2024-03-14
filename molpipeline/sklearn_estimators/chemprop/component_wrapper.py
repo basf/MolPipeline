@@ -15,7 +15,6 @@ from chemprop.nn.message_passing import MessagePassing
 from chemprop.nn.metrics import BCELoss, Metric
 from chemprop.nn.predictors import BinaryClassificationFFN as _BinaryClassificationFFN
 from chemprop.nn.predictors import Predictor
-from chemprop.nn.predictors import RegressionFFN as _RegressionFFN
 from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
