@@ -1,5 +1,7 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
+from typing import Any
+
 try:
     from typing import Self
 except ImportError:
@@ -165,7 +167,7 @@ class ChempropClassifier(Chemprop):
         if not self._is_binary_classifier():
             raise ValueError("ChempropClassifier should be a binary classifier.")
 
-    def set_params(self, **params) -> Self:
+    def set_params(self, **params: Any) -> Self:
         """Set the parameters of the model and check if it is a binary classifier.
 
         Parameters
