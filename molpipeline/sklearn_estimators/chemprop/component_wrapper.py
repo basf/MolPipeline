@@ -209,6 +209,31 @@ class MPNN(_MPNN, BaseEstimator):
         max_lr: float = 1e-3,
         final_lr: float = 1e-4,
     ):
+        """Initialize the MPNN class.
+
+        Parameters
+        ----------
+        message_passing : MessagePassing
+            The message passing network.
+        agg : Aggregation
+            The aggregation function.
+        predictor : Predictor
+            The predictor function.
+        batch_norm : bool, optional (default=True)
+            Whether to use batch normalization.
+        metric_list : Iterable[Metric] | None, optional (default=None)
+            The metrics to use for evaluation.
+        task_weight : Tensor | None, optional (default=None)
+            The weights to use for each task during training. If None, use uniform weights.
+        warmup_epochs : int, optional (default=2)
+            The number of epochs to use for the learning rate warmup.
+        init_lr : float, optional (default=1e-4)
+            The initial learning rate.
+        max_lr : float, optional (default=1e-3)
+            The maximum learning rate.
+        final_lr : float, optional (default=1e-4)
+            The final learning rate.
+        """
         super().__init__(
             message_passing,
             agg,
