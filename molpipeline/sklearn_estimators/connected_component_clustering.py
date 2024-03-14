@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from numbers import Real
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -12,7 +13,7 @@ from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.utils._param_validation import Interval
 
 try:
-    from typing import Any, Self
+    from typing import Self
 except ImportError:
     from typing_extensions import Self
 
