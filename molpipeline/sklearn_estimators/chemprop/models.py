@@ -31,6 +31,19 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         batch_size: int = 64,
         n_jobs: int = 1,
     ) -> None:
+        """Initialize the chemprop abstract model.
+
+        Parameters
+        ----------
+        chemprop_model : MPNN
+            The chemprop model to wrap.
+        lightning_trainer : pl.Trainer, optional
+            The lightning trainer to use, by default None
+        batch_size : int, optional (default=64)
+            The batch size to use.
+        n_jobs : int, optional (default=1)
+            The number of jobs to use.
+        """
         self.model = chemprop_model
         self.lightning_trainer = lightning_trainer or pl.Trainer(max_epochs=10)
         self.batch_size = batch_size
@@ -128,6 +141,21 @@ class ChempropNeuralFP(ABCChemprop):
         n_jobs: int = 1,
         disable_fitting: bool = False,
     ) -> None:
+        """Initialize the chemprop neural fingerprint model.
+
+        Parameters
+        ----------
+        chemprop_model : MPNN
+            The chemprop model to wrap.
+        lightning_trainer : pl.Trainer, optional
+            The lightning trainer to use, by default None
+        batch_size : int, optional (default=64)
+            The batch size to use.
+        n_jobs : int, optional (default=1)
+            The number of jobs to use.
+        disable_fitting : bool, optional (default=False)
+            Whether to allow fitting or set to fixed encoding.
+        """
         super().__init__(
             chemprop_model=chemprop_model,
             lightning_trainer=lightning_trainer,
