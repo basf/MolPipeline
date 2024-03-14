@@ -1,1 +1,1 @@
-chemprop @ https://github.com/cheminformaticsbasf/chemprop/archive/refs/heads/v2/dev.zip
+chemprop @ https://github.com/c-w-feldmann/chemprop.git
