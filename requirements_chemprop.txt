@@ -1,3 +1,4 @@
-torch
+torch >= 2.1
+torch_scatter
 chemprop @ https://github.com//c-w-feldmann/chemprop/archive/refs/heads/v2/dev-change-get-params-return-type.zip
 lightning < 1000
