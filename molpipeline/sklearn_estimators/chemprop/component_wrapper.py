@@ -98,7 +98,18 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         return self
 
     def set_params(self, **params: Any) -> Self:
-        """Set the parameters of the class and update the network."""
+        """Set the parameters of the class and update the network.
+
+        Parameters
+        ----------
+        **params: Any
+            The parameters to set.
+
+        Returns
+        -------
+        Self
+            The model with the new parameters.
+        """
         super().set_params(**params)
         self.reinitialize_network()
         return self
@@ -163,7 +174,13 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
 
     @input_dim.setter
     def input_dim(self, value: int) -> None:
-        """Set the dimension of input."""
+        """Set the dimension of input.
+
+        Parameters
+        ----------
+        value : int
+            The dimension of input.
+        """
         self._input_dim = value
 
     @property
@@ -173,7 +190,13 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
 
     @n_tasks.setter
     def n_tasks(self, value: int) -> None:
-        """Set the number of tasks."""
+        """Set the number of tasks.
+
+        Parameters
+        ----------
+        value : int
+            The number of tasks.
+        """
         self._n_tasks = value
 
     def reinitialize_fnn(self) -> Self:
@@ -195,7 +218,18 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
         return self
 
     def set_params(self, **params: Any) -> Self:
-        """Set the parameters of the class and reinitialize the feedforward network."""
+        """Set the parameters of the class and reinitialize the feedforward network.
+
+        Parameters
+        ----------
+        **params: Any
+            The parameters to set.
+
+        Returns
+        -------
+        Self
+            The model with the new parameters.
+        """
         super().set_params(**params)
         self.reinitialize_fnn()
         return self
@@ -288,7 +322,18 @@ class MPNN(_MPNN, BaseEstimator):
         return self
 
     def set_params(self, **params: Any) -> Self:
-        """Set the parameters of the class and update the network."""
+        """Set the parameters of the class and update the network.
+
+        Parameters
+        ----------
+        **params: Any
+            The parameters to set.
+
+        Returns
+        -------
+        Self
+            The model with the new parameters.
+        """
         super().set_params(**params)
         self.reinitialize_network()
         return self

@@ -51,7 +51,20 @@ class ChempropNeuralFP(ABCChemprop):
         X: MoleculeDataset,  # pylint: disable=invalid-name
         y: Iterable[int | float] | npt.NDArray[np.int_ | np.float_],
     ) -> Self:
-        """Fit the model."""
+        """Fit the model.
+
+        Parameters
+        ----------
+        X : MoleculeDataset
+            The input data.
+        y : Iterable[int | float] | npt.NDArray[np.int_ | np.float_]
+            The target data.
+
+        Returns
+        -------
+        Self
+            The fitted model.
+        """
         if self.disable_fitting:
             return self
         return super().fit(X, y)
