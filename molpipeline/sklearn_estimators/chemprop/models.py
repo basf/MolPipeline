@@ -137,6 +137,7 @@ class ChempropClassifier(Chemprop):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        **kwargs: Any,
     ) -> None:
         """Initialize the chemprop classifier model.
 
@@ -150,6 +151,9 @@ class ChempropClassifier(Chemprop):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        kwargs : Any
+            Parameters set using `set_params`.
+            Can be used to modify components of the model.
         """
         if chemprop_model is None:
             bond_encoder = BondMessagePassing()

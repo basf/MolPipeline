@@ -1,7 +1,7 @@
 """Parent class of wrapper for Chemprop to make it compatible with scikit-learn."""
 
 import abc
-from typing import Iterable, Self
+from typing import Any, Iterable, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -22,6 +22,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        **kwargs: Any,
     ) -> None:
         """Initialize the chemprop abstract model.
 
@@ -35,11 +36,15 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        kwargs : Any
+            Parameters set using `set_params`.
+            Can be used to modify components of the model.
         """
         self._model = chemprop_model
         self.lightning_trainer = lightning_trainer or pl.Trainer(max_epochs=10)
         self.batch_size = batch_size
         self.n_jobs = n_jobs
+        self.set_params(**kwargs)
 
     def fit(
         self,
