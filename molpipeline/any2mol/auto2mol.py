@@ -8,9 +8,9 @@ from molpipeline.abstract_pipeline_elements.core import (
     AnyToMolPipelineElement,
     InvalidInstance,
 )
-from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMol
-from molpipeline.pipeline_elements.any2mol.sdf2mol import SDFToMol
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
+from molpipeline.any2mol.bin2mol import BinaryToMol
+from molpipeline.any2mol.sdf2mol import SDFToMol
+from molpipeline.any2mol.smiles2mol import SmilesToMol
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 

@@ -7,12 +7,10 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
-from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import (
-    DEFAULT_DESCRIPTORS,
-    MolToRDKitPhysChem,
-)
+from molpipeline import Pipeline
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.mol2any import MolToRDKitPhysChem
+from molpipeline.mol2any.mol2rdkit_phys_chem import DEFAULT_DESCRIPTORS
 
 data_path = Path(__file__).parents[2] / "test_data" / "mol_descriptors.tsv"
 

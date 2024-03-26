@@ -1,16 +1,9 @@
-"""Init."""
+"""Init the module for mol2mol pipeline elements."""
 
-from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
-    ElementFilter,
-    EmptyMoleculeFilter,
-    MixtureFilter,
-)
-from molpipeline.pipeline_elements.mol2mol.mol2mol_reaction import MolToMolReaction
-from molpipeline.pipeline_elements.mol2mol.mol2mol_scaffolds import (
-    MakeScaffoldGeneric,
-    MurckoScaffold,
-)
-from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
+from .mol2mol_filter import ElementFilter, EmptyMoleculeFilter, MixtureFilter
+from .mol2mol_reaction import MolToMolReaction
+from .mol2mol_scaffolds import MakeScaffoldGeneric, MurckoScaffold
+from .mol2mol_standardization import (
     ChargeParentExtractor,
     ExplicitHydrogenRemover,
     FragmentDeduplicator,

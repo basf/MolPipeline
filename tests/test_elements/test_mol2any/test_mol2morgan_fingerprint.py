@@ -7,11 +7,9 @@ from typing import Any
 
 import numpy as np
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
-from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
-    MolToFoldedMorgan,
-)
+from molpipeline import Pipeline
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.mol2any import MolToFoldedMorgan
 
 test_smiles = [
     "c1ccccc1",

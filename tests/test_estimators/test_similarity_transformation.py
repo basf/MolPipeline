@@ -12,12 +12,10 @@ from rdkit.DataStructs import BulkTanimotoSimilarity
 from scipy import sparse
 from sklearn.neighbors import KNeighborsClassifier
 
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
+from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators import TanimotoToTraining
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol import SmilesToMol
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
-from molpipeline.pipeline_elements.mol2any import MolToFoldedMorgan
-from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
+from molpipeline.mol2any import MolToFoldedMorgan
 from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 COMPOUND_LIST = [

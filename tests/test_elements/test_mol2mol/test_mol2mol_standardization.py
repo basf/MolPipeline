@@ -2,10 +2,10 @@
 
 import unittest
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmiles
-from molpipeline.pipeline_elements.mol2mol.mol2mol_standardization import (
+from molpipeline import Pipeline
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.mol2any import MolToSmiles
+from molpipeline.mol2mol import (
     ExplicitHydrogenRemover,
     FragmentDeduplicator,
     IsotopeRemover,

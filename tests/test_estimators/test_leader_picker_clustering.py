@@ -8,10 +8,10 @@ from typing import Any
 import numpy as np
 from rdkit import DataStructs
 
+from molpipeline import Pipeline
+from molpipeline.any2mol import AutoToMol
 from molpipeline.estimators import LeaderPickerClustering
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMol
-from molpipeline.pipeline_elements.mol2any import MolToFoldedMorgan
+from molpipeline.mol2any import MolToFoldedMorgan
 
 
 class TestLeaderPickerEstimator(unittest.TestCase):

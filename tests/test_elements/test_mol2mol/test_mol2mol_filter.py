@@ -2,14 +2,10 @@
 
 import unittest
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmiles
-from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
-    ElementFilter,
-    MixtureFilter,
-)
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.mol2any import MolToSmiles
+from molpipeline.mol2mol import ElementFilter, MixtureFilter
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"

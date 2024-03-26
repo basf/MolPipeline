@@ -20,7 +20,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     RemovedInstance,
     TransformingPipelineElement,
 )
-from molpipeline.pipeline_elements.error_handling import (
+from molpipeline.error_handling import (
     ErrorFilter,
     FilterReinserter,
     _MultipleErrorFilter,

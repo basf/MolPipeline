@@ -10,16 +10,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol import AutoToMol
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
-from molpipeline.pipeline_elements.error_handling import ErrorFilter
-from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
-    MolToFoldedMorgan,
-)
-from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmiles
-from molpipeline.pipeline_elements.mol2mol import (
+from molpipeline import ErrorFilter, Pipeline
+from molpipeline.any2mol import AutoToMol, SmilesToMol
+from molpipeline.mol2any import MolToFoldedMorgan, MolToRDKitPhysChem, MolToSmiles
+from molpipeline.mol2mol import (
     ChargeParentExtractor,
     EmptyMoleculeFilter,
     MetalDisconnector,

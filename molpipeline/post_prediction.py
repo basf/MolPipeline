@@ -14,7 +14,7 @@ from numpy import typing as npt
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
-from molpipeline.pipeline_elements.error_handling import FilterReinserter
+from molpipeline.error_handling import FilterReinserter
 from molpipeline.utils.molpipeline_types import AnyPredictor, AnyTransformer
 
 

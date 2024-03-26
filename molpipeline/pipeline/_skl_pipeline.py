@@ -26,9 +26,9 @@ from sklearn.utils.metaestimators import available_if
 from sklearn.utils.validation import check_memory
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
+from molpipeline.error_handling import ErrorFilter, FilterReinserter
 from molpipeline.pipeline._molpipeline import _MolPipeline
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
-from molpipeline.pipeline_elements.post_prediction import (
+from molpipeline.post_prediction import (
     PostPredictionTransformation,
     PostPredictionWrapper,
 )

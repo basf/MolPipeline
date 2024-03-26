@@ -10,15 +10,10 @@ import numpy.typing as npt
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMol
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
-from molpipeline.pipeline_elements.mol2any import MolToSmiles
-from molpipeline.pipeline_elements.mol2mol import (
-    EmptyMoleculeFilter,
-    MakeScaffoldGeneric,
-    MurckoScaffold,
-)
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline
+from molpipeline.any2mol import AutoToMol
+from molpipeline.mol2any import MolToSmiles
+from molpipeline.mol2mol import EmptyMoleculeFilter, MakeScaffoldGeneric, MurckoScaffold
 from molpipeline.utils.molpipeline_types import AnyStep, OptionalMol
 
 try:

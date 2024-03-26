@@ -54,16 +54,16 @@ class MolToInchi(_MolToStringPipelineElement):
         return str(Chem.MolToInchi(value))
 
 
-class MolToInchiKeyPipelineElement(_MolToStringPipelineElement):
+class MolToInchiKey(_MolToStringPipelineElement):
     """PipelineElement to transform a molecule to an INCHI-Key string."""
 
     def __init__(
         self,
-        name: str = "Mol2InchiKey",
+        name: str = "MolToInchiKey",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ):
-        """Initialize MolToInchiKeyPipelineElement.
+        """Initialize MolToInchiKey.
 
         Parameters
         ----------

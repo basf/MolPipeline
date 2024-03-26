@@ -9,15 +9,13 @@ import numpy as np
 from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
-from molpipeline.pipeline_elements.mol2any.mol2concatinated_vector import (
+from molpipeline import Pipeline
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.mol2any import (
     MolToConcatenatedVector,
-)
-from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
     MolToFoldedMorgan,
+    MolToRDKitPhysChem,
 )
-from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 from tests.utils.fingerprints import fingerprints_to_numpy
 
 

@@ -5,13 +5,10 @@ from unittest import TestCase
 import numpy as np
 from sklearn.base import clone
 
-from molpipeline.estimators.algorithm.nearest_neighbor import NamedNearestNeighbors
-from molpipeline.estimators.similarity_transformation import TanimotoToTraining
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol import SmilesToMol
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
-from molpipeline.pipeline_elements.mol2any import MolToFoldedMorgan
-from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.estimators import NamedNearestNeighbors, TanimotoToTraining
+from molpipeline.mol2any import MolToFoldedMorgan
 from molpipeline.utils.kernel import tanimoto_distance_sparse
 
 TEST_SMILES = [
