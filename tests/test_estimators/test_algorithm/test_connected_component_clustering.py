@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from molpipeline.sklearn_estimators.algorithm.connected_component_clustering import (
+from molpipeline.estimators.algorithm.connected_component_clustering import (
     calc_chunk_size_from_memory_requirement,
     connected_components_iterative_algorithm,
 )

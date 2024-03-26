@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.sparse import csr_matrix
 
-from molpipeline.sklearn_estimators.algorithm.union_find import UnionFindNode
+from molpipeline.estimators.algorithm.union_find import UnionFindNode
 from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 

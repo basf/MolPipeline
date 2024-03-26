@@ -23,7 +23,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
 from molpipeline.utils.molpipeline_types import RDKitMol
 
 
-class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
+class MolToFoldedMorgan(ABCMorganFingerprintPipelineElement):
     """Folded Morgan Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
@@ -38,11 +38,11 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         n_bits: int = 2048,
         sparse_output: bool | None = None,
         output_datatype: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
-        name: str = "Mol2FoldedMorganFingerprint",
+        name: str = "Mol2FoldedMorgan",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize Mol2FoldedMorganFingerprint.
+        """Initialize Mol2FoldedMorgan.
 
         Parameters
         ----------
@@ -173,7 +173,7 @@ class MolToFoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         return bit_info
 
 
-class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
+class MolToUnfoldedMorgan(ABCMorganFingerprintPipelineElement):
     """Transforms smiles-strings or molecular objects into unfolded bit-vectors based on Morgan-fingerprints [1].
 
     Features are mapped to bits based on the amount of molecules they occur in.
@@ -202,10 +202,10 @@ class MolToUnfoldedMorganFingerprint(ABCMorganFingerprintPipelineElement):
         counted: bool = False,
         sparse_output: bool = True,
         ignore_unknown: bool = False,
-        name: str = "Mol2UnfoldedMorganFingerprint",
+        name: str = "Mol2UnfoldedMorgan",
         n_jobs: int = 1,
     ) -> None:
-        """Initialize Mol2UnfoldedMorganFingerprint.
+        """Initialize Mol2UnfoldedMorgan.
 
         Parameters
         ----------

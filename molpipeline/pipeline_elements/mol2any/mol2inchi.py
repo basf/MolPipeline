@@ -12,7 +12,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
 from molpipeline.utils.molpipeline_types import RDKitMol
 
 
-class MolToInchiPipelineElement(_MolToStringPipelineElement):
+class MolToInchi(_MolToStringPipelineElement):
     """PipelineElement to transform a molecule to an INCHI string."""
 
     def __init__(

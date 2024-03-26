@@ -18,17 +18,17 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
-class ElementFilterPipelineElement(_MolToMolPipelineElement):
-    """ElementFilterPipelineElement which removes molecules containing chemical elements other than specified."""
+class ElementFilter(_MolToMolPipelineElement):
+    """ElementFilter which removes molecules containing chemical elements other than specified."""
 
     def __init__(
         self,
         allowed_element_numbers: Optional[list[int]] = None,
-        name: str = "ElementFilterPipelineElement",
+        name: str = "ElementFilter",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize ElementFilterPipelineElement.
+        """Initialize ElementFilter.
 
         Parameters
         ----------
@@ -65,7 +65,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
             self.allowed_element_numbers = allowed_element_numbers
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get parameters of ElementFilterPipelineElement.
+        """Get parameters of ElementFilter.
 
         Parameters
         ----------
@@ -75,7 +75,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         Returns
         -------
         dict[str, Any]
-            Parameters of ElementFilterPipelineElement.
+            Parameters of ElementFilter.
         """
         params = super().get_params(deep=deep)
         if deep:
@@ -87,7 +87,7 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         return params
 
     def set_params(self, **parameters: dict[str, Any]) -> Self:
-        """Set parameters of ElementFilterPipelineElement.
+        """Set parameters of ElementFilter.
 
         Parameters
         ----------
@@ -129,16 +129,16 @@ class ElementFilterPipelineElement(_MolToMolPipelineElement):
         return value
 
 
-class MixtureFilterPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes molecules composed of multiple fragments."""
+class MixtureFilter(_MolToMolPipelineElement):
+    """MolToMol which removes molecules composed of multiple fragments."""
 
     def __int__(
         self,
-        name: str = "MixtureFilterPipelineElement",
+        name: str = "MixtureFilter",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize MixtureFilterPipelineElement.
+        """Initialize MixtureFilter.
 
         Parameters
         ----------
@@ -175,16 +175,16 @@ class MixtureFilterPipelineElement(_MolToMolPipelineElement):
         return value
 
 
-class EmptyMoleculeFilterPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes empty molecules."""
+class EmptyMoleculeFilter(_MolToMolPipelineElement):
+    """EmptyMoleculeFilter which removes empty molecules."""
 
     def __init__(
         self,
-        name: str = "EmptyMoleculeFilterPipelineElement",
+        name: str = "EmptyMoleculeFilter",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize EmptyMoleculeFilterPipelineElement.
+        """Initialize EmptyMoleculeFilter.
 
         Parameters
         ----------

@@ -23,7 +23,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
-class MolToMolReactionPipelineElement(MolToMolPipelineElement):
+class MolToMolReaction(MolToMolPipelineElement):
     """PipelineElement which transforms the input according to the specified reaction."""
 
     additive_list: list[RDKitMol]
@@ -35,11 +35,11 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         reaction: AllChem.ChemicalReaction,
         additive_list: list[RDKitMol],
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
-        name: str = "MolToMolReactionPipelineElement",
+        name: str = "MolToMolReaction",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize MolToMolReactionPipelineElement.
+        """Initialize MolToMolReaction.
 
         Parameters
         ----------
@@ -98,7 +98,7 @@ class MolToMolReactionPipelineElement(MolToMolPipelineElement):
         Returns
         -------
         Self
-            MolToMolReactionPipelineElement with updated parameters.
+            MolToMolReaction with updated parameters.
         """
         super().set_params(**parameters)
         if "reaction" in parameters:

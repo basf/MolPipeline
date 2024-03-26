@@ -6,9 +6,7 @@ import unittest
 
 import numpy as np
 
-from molpipeline.sklearn_estimators.murcko_scaffold_clustering import (
-    MurckoScaffoldClustering,
-)
+from molpipeline.estimators import MurckoScaffoldClustering
 
 SCAFFOLD_SMILES: list[str] = [
     "Cc1ccccc1",

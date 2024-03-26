@@ -13,7 +13,7 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
-class SmilesToMolPipelineElement(_StringToMolPipelineElement):
+class SmilesToMol(_StringToMolPipelineElement):
     """Transforms Smiles to RDKit Mol objects."""
 
     def __init__(

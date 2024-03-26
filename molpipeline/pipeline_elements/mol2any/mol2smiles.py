@@ -11,7 +11,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
 )
 
 
-class MolToSmilesPipelineElement(_MolToStringPipelineElement):
+class MolToSmiles(_MolToStringPipelineElement):
     """PipelineElement to transform a molecule to a SMILES string."""
 
     def __init__(

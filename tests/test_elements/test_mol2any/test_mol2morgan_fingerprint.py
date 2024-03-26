@@ -8,9 +8,9 @@ from typing import Any
 import numpy as np
 
 from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
-    MolToFoldedMorganFingerprint,
+    MolToFoldedMorgan,
 )
 
 test_smiles = [
@@ -30,12 +30,12 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         -------
         None
         """
-        mol_fp = MolToFoldedMorganFingerprint()
+        mol_fp = MolToFoldedMorgan()
         mol_fp_copy = mol_fp.copy()
         self.assertTrue(mol_fp_copy is not mol_fp)
         for key, value in mol_fp.get_params().items():
             self.assertEqual(value, mol_fp_copy.get_params()[key])
-        mol_fp_recreated = MolToFoldedMorganFingerprint(**mol_fp.get_params())
+        mol_fp_recreated = MolToFoldedMorgan(**mol_fp.get_params())
         for key, value in mol_fp.get_params().items():
             self.assertEqual(value, mol_fp_recreated.get_params()[key])
 
@@ -48,13 +48,11 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         -------
         None
         """
-        smi2mol = SmilesToMolPipelineElement()
-        sparse_morgan = MolToFoldedMorganFingerprint(
+        smi2mol = SmilesToMol()
+        sparse_morgan = MolToFoldedMorgan(
             radius=2, n_bits=1024, output_datatype="sparse"
         )
-        dense_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_datatype="dense"
-        )
+        dense_morgan = MolToFoldedMorgan(radius=2, n_bits=1024, output_datatype="dense")
         sparse_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -76,14 +74,12 @@ class TestMol2MorganFingerprint(unittest.TestCase):
     def test_output_types(self) -> None:
         """Test equality of different output_types."""
 
-        smi2mol = SmilesToMolPipelineElement()
-        sparse_morgan = MolToFoldedMorganFingerprint(
+        smi2mol = SmilesToMol()
+        sparse_morgan = MolToFoldedMorgan(
             radius=2, n_bits=1024, output_datatype="sparse"
         )
-        dense_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_datatype="dense"
-        )
-        explicit_bit_vect_morgan = MolToFoldedMorganFingerprint(
+        dense_morgan = MolToFoldedMorgan(radius=2, n_bits=1024, output_datatype="dense")
+        explicit_bit_vect_morgan = MolToFoldedMorgan(
             radius=2, n_bits=1024, output_datatype="explicit_bit_vect"
         )
         sparse_pipeline = Pipeline(
@@ -122,7 +118,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
 
     def test_setter_getter(self) -> None:
         """Test if the setters and getters work as expected."""
-        mol_fp = MolToFoldedMorganFingerprint()
+        mol_fp = MolToFoldedMorgan()
         params: dict[str, Any] = {
             "radius": 2,
             "n_bits": 1024,
@@ -136,7 +132,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
     def test_setter_getter_error_handling(self) -> None:
         """Test if the setters and getters work as expected when errors are encountered."""
 
-        mol_fp = MolToFoldedMorganFingerprint()
+        mol_fp = MolToFoldedMorgan()
         params: dict[str, Any] = {
             "radius": 2,
             "n_bits": 1024,

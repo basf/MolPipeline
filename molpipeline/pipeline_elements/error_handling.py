@@ -20,7 +20,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 )
 from molpipeline.utils.molpipeline_types import AnyIterable, Number
 
-__all__ = ["ErrorReplacer", "ErrorFilter", "_MultipleErrorFilter"]
+__all__ = ["FilterReinserter", "ErrorFilter", "_MultipleErrorFilter"]
 
 
 # pylint: disable=R0903
@@ -379,7 +379,7 @@ class _MultipleErrorFilter:
             total -= len(error_filter.error_indices)
 
 
-class ErrorReplacer(ABCPipelineElement):
+class FilterReinserter(ABCPipelineElement):
     """Fill None values with a Dummy value."""
 
     fill_value: Any
@@ -391,11 +391,25 @@ class ErrorReplacer(ABCPipelineElement):
         self,
         error_filter_id: str,
         fill_value: Any,
-        name: str = "ErrorReplacer",
+        name: str = "FilterReinserter",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize ErrorReplacer."""
+        """Initialize FilterReinserter.
+
+        Parameters
+        ----------
+        error_filter_id: str
+            Id of the ErrorFilter to use for filling removed values.
+        fill_value: Any
+            Value which is used to fill removed values.
+        name: str, optional (default: "FilterReinserter")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            UUID of the pipeline element.
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.error_filter_id = error_filter_id
         self._error_filter = None
@@ -406,11 +420,11 @@ class ErrorReplacer(ABCPipelineElement):
         cls,
         error_filter: ErrorFilter,
         fill_value: Any,
-        name: str = "ErrorReplacer",
+        name: str = "FilterReinserter",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> Self:
-        """Initialize ErrorReplacer from a ErrorFilter object.
+        """Initialize FilterReinserter from a ErrorFilter object.
 
         Parameters
         ----------
@@ -418,7 +432,7 @@ class ErrorReplacer(ABCPipelineElement):
             ErrorFilter to use for filling removed values.
         fill_value: Any
             Value which is used to fill removed values.
-        name: str, optional (default: "ErrorReplacer")
+        name: str, optional (default: "FilterReinserter")
             Name of the pipeline element.
         n_jobs: int, optional (default: 1)
             Number of parallel jobs to use.
@@ -427,8 +441,8 @@ class ErrorReplacer(ABCPipelineElement):
 
         Returns
         -------
-        ErrorReplacer
-            Constructed ErrorReplacer object.
+        FilterReinserter
+            Constructed FilterReinserter object.
         """
         filler = cls(
             error_filter_id=error_filter.uuid,
@@ -515,7 +529,7 @@ class ErrorReplacer(ABCPipelineElement):
         Returns
         -------
         Self
-            ErrorReplacer with updated ErrorFilter.
+            FilterReinserter with updated ErrorFilter.
         """
         for error_filter in error_filter_list:
             if error_filter.uuid == self.error_filter_id:
@@ -548,7 +562,7 @@ class ErrorReplacer(ABCPipelineElement):
         Returns
         -------
         Self
-            Fitted ErrorReplacer.
+            Fitted FilterReinserter.
         """
         return self
 

@@ -43,16 +43,16 @@ MolHashing = Union[
 ]
 
 
-class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
+class TautomerCanonicalizer(_MolToMolPipelineElement):
     """MolToMolPipelineElement which canonicalizes tautomers of a molecule."""
 
     def __init__(
         self,
-        name: str = "CanonicalizeTautomerPipelineElement",
+        name: str = "TautomerCanonicalizer",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize CanonicalizeTautomerPipelineElement."""
+        """Initialize TautomerCanonicalizer."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -77,7 +77,7 @@ class CanonicalizeTautomerPipelineElement(_MolToMolPipelineElement):
             )
 
 
-class ChargeParentPipelineElement(_MolToMolPipelineElement):
+class ChargeParentExtractor(_MolToMolPipelineElement):
     """MolToMolPipelineElement which returns charge-parent of a molecule, if possible.
 
     The charge-parent is the largest fragment after neutralization.
@@ -85,11 +85,11 @@ class ChargeParentPipelineElement(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        name: str = "ChargeParentPipelineElement",
+        name: str = "ChargeParentExtractor",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize ChargeParentPipelineElement.
+        """Initialize ChargeParentExtractor.
 
         Parameters
         ----------
@@ -118,7 +118,7 @@ class ChargeParentPipelineElement(_MolToMolPipelineElement):
         return rdMolStandardize.ChargeParent(value)
 
 
-class DeduplicateFragmentsByMolHashPipelineElement(_MolToMolPipelineElement):
+class FragmentDeduplicator(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes duplicate fragments from a molecule.
 
     Duplicates are detected by comparing the MolHashes of the fragments.
@@ -128,16 +128,16 @@ class DeduplicateFragmentsByMolHashPipelineElement(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        name: str = "DeduplicateFragmentsByMolHashPipelineElement",
+        name: str = "FragmentDeduplicator",
         hashing_method: MolHashing = rdMolHash.HashFunction.HetAtomTautomer,
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize DeduplicateFragmentsByMolHashPipelineElement.
+        """Initialize FragmentDeduplicator.
 
         Parameters
         ----------
-        name: str, optional (default: "DeduplicateFragmentsByInchiPipelineElement")
+        name: str, optional (default: "FragmentDeduplicator")
             Name of the pipeline element.
         hashing_method: MolHashing, optional (default: rdMolHash.HashFunction.HetAtomTautomer)
             MolHashing method to use for comparing fragments.
@@ -187,16 +187,16 @@ class DeduplicateFragmentsByMolHashPipelineElement(_MolToMolPipelineElement):
         return recombined_fragment
 
 
-class LargestFragmentChooserPipelineElement(_MolToMolPipelineElement):
+class LargestFragmentChooser(_MolToMolPipelineElement):
     """MolToMolPipelineElement which returns the largest fragment of a molecule."""
 
     def __init__(
         self,
-        name: str = "LargestFragmentChooserPipelineElement",
+        name: str = "LargestFragmentChooser",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize LargestFragmentChooserPipelineElement."""
+        """Initialize LargestFragmentChooser."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -215,16 +215,16 @@ class LargestFragmentChooserPipelineElement(_MolToMolPipelineElement):
         return rdMolStandardize.LargestFragmentChooser().choose(value)
 
 
-class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
+class MetalDisconnector(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
 
     def __init__(
         self,
-        name: str = "MetalDisconnectorPipe",
+        name: str = "MetalDisconnector",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize MetalDisconnectorPipelineElement.
+        """Initialize MetalDisconnector.
 
         Parameters
         ----------
@@ -257,23 +257,23 @@ class MetalDisconnectorPipelineElement(_MolToMolPipelineElement):
         return mol
 
 
-class RemoveIsotopeInformationPipelineElement(_MolToMolPipelineElement):
+class IsotopeRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes isotope information of atoms in a molecule."""
 
     def __init__(
         self,
-        name: str = "RemoveIsotopeInformationPipelineElement",
+        name: str = "IsotopeRemover",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize RemoveIsotopeInformationPipelineElement."""
+        """Initialize IsotopeRemover."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove isotope information of each atom.
 
         Attention: Explicit hydrogen atoms are not made implicit.
-        You may need to use the RemoveExplicitHydrogensPipelineElement afterward.
+        You may need to use the ExplicitHydrogenRemover afterward.
 
         Parameters
         ----------
@@ -290,16 +290,16 @@ class RemoveIsotopeInformationPipelineElement(_MolToMolPipelineElement):
         return value
 
 
-class RemoveExplicitHydrogensPipelineElement(_MolToMolPipelineElement):
+class ExplicitHydrogenRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes explicit hydrogen atoms from a molecule."""
 
     def __init__(
         self,
-        name: str = "RemoveExplicitHydrogensPipelineElement",
+        name: str = "ExplicitHydrogenRemover",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize RemoveExplicitHydrogensPipelineElement."""
+        """Initialize ExplicitHydrogenRemover."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -318,16 +318,16 @@ class RemoveExplicitHydrogensPipelineElement(_MolToMolPipelineElement):
         return Chem.RemoveHs(value)
 
 
-class RemoveStereoInformationPipelineElement(_MolToMolPipelineElement):
+class StereoRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes stereo-information from the molecule."""
 
     def __init__(
         self,
-        name: str = "RemoveStereoInformationPipelineElement",
+        name: str = "StereoRemover",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize RemoveStereoInformationPipelineElement.
+        """Initialize StereoRemover.
 
         Parameters
         ----------
@@ -358,16 +358,16 @@ class RemoveStereoInformationPipelineElement(_MolToMolPipelineElement):
         return copy_mol
 
 
-class SaltRemoverPipelineElement(_MolToMolPipelineElement):
+class SaltRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes metal ions from molecule."""
 
     def __init__(
         self,
-        name: str = "SaltRemoverPipelineElement",
+        name: str = "SaltRemover",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize SaltRemoverPipe.
+        """Initialize SaltRemover.
 
         Parameters
         ----------
@@ -397,7 +397,7 @@ class SaltRemoverPipelineElement(_MolToMolPipelineElement):
         return salt_less_mol
 
 
-class SolventRemoverPipelineElement(_MolToMolPipelineElement):
+class SolventRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes defined fragments from a molecule."""
 
     _solvent_mol_list: list[RDKitMol]
@@ -417,11 +417,11 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
     def __init__(
         self,
         solvent_smiles_list: Optional[list[str]] = None,
-        name: str = "SolventRemoverPipelineElement",
+        name: str = "SolventRemover",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize SolventRemoverPipelineElement.
+        """Initialize SolventRemover.
 
         Taken from ChEMBL structure pipeline:
         https://github.com/chembl/ChEMBL_Structure_Pipeline/blob/master/chembl_structure_pipeline/data/solvents.smi
@@ -440,7 +440,7 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
              - DMSO	CS(=O)C
              - ETHANOL	CCO
              - Trimethylamine	CN(C)C  # Not in ChEMBL list
-        name: str, optional (default: "SolventRemoverPipelineElement")
+        name: str, optional (default: "SolventRemover")
             Name of the pipeline element.
         n_jobs: int, optional (default: 1)
             Number of parallel jobs to use.
@@ -561,16 +561,16 @@ class SolventRemoverPipelineElement(_MolToMolPipelineElement):
         return combined_fragments
 
 
-class UnchargePipelineElement(_MolToMolPipelineElement):
+class Uncharger(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes charges in a molecule, if possible."""
 
     def __init__(
         self,
-        name: str = "UnchargePipelineElement",
+        name: str = "Uncharger",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize UnchargePipelineElement."""
+        """Initialize Uncharger."""
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:

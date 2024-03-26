@@ -27,7 +27,7 @@ from sklearn.utils.validation import check_memory
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.pipeline._molpipeline import _MolPipeline
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
 from molpipeline.pipeline_elements.post_prediction import (
     PostPredictionTransformation,
     PostPredictionWrapper,
@@ -91,14 +91,14 @@ class Pipeline(_Pipeline):
         error_replacer_list = [
             e_filler
             for _, e_filler in self.steps
-            if isinstance(e_filler, ErrorReplacer)
+            if isinstance(e_filler, FilterReinserter)
         ]
         error_filter_list = [
             n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
         ]
         for step in self.steps:
             if isinstance(step[1], PostPredictionWrapper):
-                if isinstance(step[1].wrapped_estimator, ErrorReplacer):
+                if isinstance(step[1].wrapped_estimator, FilterReinserter):
                     error_replacer_list.append(step[1].wrapped_estimator)
         for error_replacer in error_replacer_list:
             error_replacer.select_error_filter(error_filter_list)

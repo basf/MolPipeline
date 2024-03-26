@@ -11,13 +11,13 @@ from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 
 from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMolPipelineElement
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
-from molpipeline.pipeline_elements.mol2any import MolToSmilesPipelineElement
+from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMol
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
+from molpipeline.pipeline_elements.mol2any import MolToSmiles
 from molpipeline.pipeline_elements.mol2mol import (
-    EmptyMoleculeFilterPipelineElement,
-    MakeScaffoldGenericPipelineElement,
-    MurckoScaffoldPipelineElement,
+    EmptyMoleculeFilter,
+    MakeScaffoldGeneric,
+    MurckoScaffold,
 )
 from molpipeline.utils.molpipeline_types import AnyStep, OptionalMol
 
@@ -76,11 +76,11 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         Pipeline
             Pipeline for the Murcko scaffold clustering estimator.
         """
-        auto2mol = AutoToMolPipelineElement()
-        empty_mol_filter1 = EmptyMoleculeFilterPipelineElement()
-        murcko_scaffold = MurckoScaffoldPipelineElement()
-        empty_mol_filter2 = EmptyMoleculeFilterPipelineElement()
-        mol2smi = MolToSmilesPipelineElement()
+        auto2mol = AutoToMol()
+        empty_mol_filter1 = EmptyMoleculeFilter()
+        murcko_scaffold = MurckoScaffold()
+        empty_mol_filter2 = EmptyMoleculeFilter()
+        mol2smi = MolToSmiles()
 
         pipeline_step_list: list[AnyStep] = [
             ("auto2mol", auto2mol),
@@ -88,9 +88,9 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             ("murcko_scaffold", murcko_scaffold),
         ]
 
-        scaffold_generic_elem: MakeScaffoldGenericPipelineElement | None = None
+        scaffold_generic_elem: MakeScaffoldGeneric | None = None
         if self.make_generic:
-            scaffold_generic_elem = MakeScaffoldGenericPipelineElement()
+            scaffold_generic_elem = MakeScaffoldGeneric()
             pipeline_step_list.append(("make_scaffold_generic", scaffold_generic_elem))
 
         pipeline_step_list.extend(
@@ -116,7 +116,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
 
             # Create and add separate error replacer for murcko_scaffold
             no_scaffold_filter = ErrorFilter.from_element_list([empty_mol_filter2])
-            no_scaffold_replacer = ErrorReplacer.from_error_filter(
+            no_scaffold_replacer = FilterReinserter.from_error_filter(
                 no_scaffold_filter, "linear"
             )
 
@@ -128,7 +128,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
                 f"Invalid value for linear_molecules_strategy: {self.linear_molecules_strategy}"
             )
 
-        error_replacer = ErrorReplacer.from_error_filter(error_filter, np.nan)
+        error_replacer = FilterReinserter.from_error_filter(error_filter, np.nan)
 
         pipeline_step_list.extend(
             [

@@ -3,10 +3,10 @@
 import unittest
 
 from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
 from molpipeline.pipeline_elements.mol2any.mol2inchi import (
+    MolToInchi,
     MolToInchiKeyPipelineElement,
-    MolToInchiPipelineElement,
 )
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
@@ -34,8 +34,8 @@ class TestMol2Inchi(unittest.TestCase):
         ]
         pipeline = Pipeline(
             [
-                ("Smiles2Mol", SmilesToMolPipelineElement()),
-                ("Mol2Inchi", MolToInchiPipelineElement()),
+                ("Smiles2Mol", SmilesToMol()),
+                ("Mol2Inchi", MolToInchi()),
             ]
         )
         actual_inchis = pipeline.fit_transform(input_smiles)
@@ -54,7 +54,7 @@ class TestMol2Inchi(unittest.TestCase):
 
         pipeline = Pipeline(
             [
-                ("Smiles2Mol", SmilesToMolPipelineElement()),
+                ("Smiles2Mol", SmilesToMol()),
                 ("Mol2Inchi", MolToInchiKeyPipelineElement()),
             ],
         )

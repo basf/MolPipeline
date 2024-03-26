@@ -3,11 +3,11 @@
 import warnings
 from typing import Any
 
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
 
 
 # pylint: disable=too-few-public-methods
-class NoneFiller(ErrorReplacer):
+class NoneFiller(FilterReinserter):
     """Backward compatibility with old naming for ErrorFiller."""
 
     def __init__(self, *args: Any, **kwargs: Any):
@@ -28,7 +28,7 @@ class NoneFiller(ErrorReplacer):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def from_none_filter(cls, *args: Any, **kwargs: Any) -> ErrorReplacer:
+    def from_none_filter(cls, *args: Any, **kwargs: Any) -> FilterReinserter:
         """Backward compatibility with old naming for ErrorReplacer.from_error_filter.
 
         Parameters
@@ -40,7 +40,7 @@ class NoneFiller(ErrorReplacer):
 
         Returns
         -------
-        ErrorReplacer
+        FilterReinserter
             ErrorReplacer instance.
         """
         return super().from_error_filter(*args, **kwargs)

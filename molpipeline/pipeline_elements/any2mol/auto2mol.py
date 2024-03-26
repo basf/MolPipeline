@@ -8,13 +8,13 @@ from molpipeline.abstract_pipeline_elements.core import (
     AnyToMolPipelineElement,
     InvalidInstance,
 )
-from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMolPipelineElement
-from molpipeline.pipeline_elements.any2mol.sdf2mol import SDFToMolPipelineElement
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMol
+from molpipeline.pipeline_elements.any2mol.sdf2mol import SDFToMol
+from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
-class AutoToMolPipelineElement(AnyToMolPipelineElement):
+class AutoToMol(AnyToMolPipelineElement):
     """Transforms various inputs to RDKit Mol objects.
 
     A cascade of if clauses is tried to transformer the given input to a molecule.
@@ -28,9 +28,9 @@ class AutoToMolPipelineElement(AnyToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
         elements: tuple[AnyToMolPipelineElement, ...] = (
-            SmilesToMolPipelineElement(),
-            BinaryToMolPipelineElement(),
-            SDFToMolPipelineElement(),
+            SmilesToMol(),
+            BinaryToMol(),
+            SDFToMol(),
         ),
     ) -> None:
         """Initialize AutoToMolPipelineElement.

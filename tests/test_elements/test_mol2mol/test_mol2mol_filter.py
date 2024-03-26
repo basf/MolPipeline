@@ -3,12 +3,12 @@
 import unittest
 
 from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
+from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
+from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmiles
 from molpipeline.pipeline_elements.mol2mol.mol2mol_filter import (
-    ElementFilterPipelineElement,
-    MixtureFilterPipelineElement,
+    ElementFilter,
+    MixtureFilter,
 )
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
@@ -29,7 +29,7 @@ class MolFilterTest(unittest.TestCase):
         -------
         None
         """
-        smiles2mol = SmilesToMolPipelineElement()
+        smiles2mol = SmilesToMol()
         default_atoms = {
             1,
             5,
@@ -46,9 +46,9 @@ class MolFilterTest(unittest.TestCase):
             53,
         }
 
-        element_filter = ElementFilterPipelineElement()
+        element_filter = ElementFilter()
         self.assertEqual(element_filter.allowed_element_numbers, default_atoms)
-        mol2smiles = MolToSmilesPipelineElement()
+        mol2smiles = MolToSmiles()
         error_filter = ErrorFilter.from_element_list(
             [smiles2mol, element_filter, mol2smiles]
         )
@@ -83,11 +83,11 @@ class MolFilterTest(unittest.TestCase):
         mol_list = ["CCC.CC.C", "c1ccccc1.[Na+].[Cl-]", "c1ccccc1"]
         expected_invalidated_mol_list = [None, None, "c1ccccc1"]
 
-        smi2mol = SmilesToMolPipelineElement()
-        mixture_filter = MixtureFilterPipelineElement()
-        mol2smi = MolToSmilesPipelineElement()
+        smi2mol = SmilesToMol()
+        mixture_filter = MixtureFilter()
+        mol2smi = MolToSmiles()
         error_filter = ErrorFilter.from_element_list([smi2mol, mixture_filter, mol2smi])
-        error_replacer = ErrorReplacer.from_error_filter(error_filter, None)
+        error_replacer = FilterReinserter.from_error_filter(error_filter, None)
 
         pipeline = Pipeline(
             [

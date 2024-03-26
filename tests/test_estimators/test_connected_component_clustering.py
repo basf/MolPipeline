@@ -7,9 +7,7 @@ import unittest
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from molpipeline.sklearn_estimators.connected_component_clustering import (
-    ConnectedComponentClustering,
-)
+from molpipeline.estimators import ConnectedComponentClustering
 
 
 class TestConnectedComponentClusteringEstimator(unittest.TestCase):

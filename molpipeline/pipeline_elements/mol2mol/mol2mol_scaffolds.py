@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from rdkit.Chem.Scaffolds import MurckoScaffold
+from rdkit.Chem.Scaffolds import MurckoScaffold as RDKIT_MurckoScaffold
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
@@ -12,19 +12,19 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
-class MurckoScaffoldPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which yields the Murcko-scaffold of a Molecule.
+class MurckoScaffold(_MolToMolPipelineElement):
+    """MolToMol-PipelineElement which yields the Murcko-scaffold of a Molecule.
 
     The Murcko-scaffold is composed of all rings and the linker atoms between them.
     """
 
     def __init__(
         self,
-        name: str = "MurckoScaffoldPipelineElement",
+        name: str = "MurckoScaffold",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize MurckoScaffoldPipelineElement.
+        """Initialize MurckoScaffold.
 
         Parameters
         ----------
@@ -54,22 +54,22 @@ class MurckoScaffoldPipelineElement(_MolToMolPipelineElement):
         OptionalMol
             Murco-scaffold of molecule if possible, else InvalidInstance.
         """
-        return MurckoScaffold.GetScaffoldForMol(value)
+        return RDKIT_MurckoScaffold.GetScaffoldForMol(value)
 
 
-class MakeScaffoldGenericPipelineElement(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which sets all atoms to carbon and all bonds to single bond.
+class MakeScaffoldGeneric(_MolToMolPipelineElement):
+    """MolToMol-PipelineElement which sets all atoms to carbon and all bonds to single bond.
 
     Done to make scaffolds less speciffic.
     """
 
     def __init__(
         self,
-        name: str = "MakeScaffoldGenericPipelineElement",
+        name: str = "MakeScaffoldGeneric",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize MakeScaffoldGenericPipelineElement.
+        """Initialize MakeScaffoldGeneric.
 
         Parameters
         ----------
@@ -100,4 +100,4 @@ class MakeScaffoldGenericPipelineElement(_MolToMolPipelineElement):
             Molecule where all atoms are carbon and all bonds are single bonds.
             If transformation failed, it returns InvalidInstance.
         """
-        return MurckoScaffold.MakeScaffoldGeneric(value)
+        return RDKIT_MurckoScaffold.MakeScaffoldGeneric(value)

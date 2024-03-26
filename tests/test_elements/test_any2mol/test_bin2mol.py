@@ -4,7 +4,7 @@ import unittest
 
 from rdkit import Chem, rdBase
 
-from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMol
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
@@ -34,7 +34,7 @@ class TestBin2Mol(unittest.TestCase):
             MOL_METAL_AU,
         ]
         for mol in test_mols:
-            bin2mol = BinaryToMolPipelineElement()
+            bin2mol = BinaryToMol()
             mol = bin2mol.pretransform_single(mol.ToBinary())
             log_block = rdBase.BlockLogs()
             self.assertEqual(Chem.MolToInchi(mol), Chem.MolToInchi(mol))

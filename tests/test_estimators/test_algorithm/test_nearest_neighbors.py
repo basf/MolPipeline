@@ -5,15 +5,13 @@ from unittest import TestCase
 import numpy as np
 from sklearn.base import clone
 
+from molpipeline.estimators.algorithm.nearest_neighbor import NamedNearestNeighbors
+from molpipeline.estimators.similarity_transformation import TanimotoToTraining
 from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
-from molpipeline.pipeline_elements.mol2any import MolToFoldedMorganFingerprint
+from molpipeline.pipeline_elements.any2mol import SmilesToMol
+from molpipeline.pipeline_elements.error_handling import ErrorFilter, FilterReinserter
+from molpipeline.pipeline_elements.mol2any import MolToFoldedMorgan
 from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
-from molpipeline.sklearn_estimators.algorithm.nearest_neighbor import (
-    NamedNearestNeighbors,
-)
-from molpipeline.sklearn_estimators.similarity_transformation import TanimotoToTraining
 from molpipeline.utils.kernel import tanimoto_distance_sparse
 
 TEST_SMILES = [
@@ -47,8 +45,8 @@ class TestNamedNearestNeighbors(TestCase):
         """Test the fit_predict method with one prediced NN."""
         model = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToFoldedMorgan(sparse_output=False)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
             ]
         )
@@ -59,8 +57,8 @@ class TestNamedNearestNeighbors(TestCase):
         """Test the fit_predict method with two prediced NN."""
         model = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToFoldedMorgan(sparse_output=False)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
             ]
         )
@@ -71,8 +69,8 @@ class TestNamedNearestNeighbors(TestCase):
         """Test the fit_predict method with distance."""
         model = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToFoldedMorgan(sparse_output=False)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
             ]
         )
@@ -87,8 +85,8 @@ class TestNamedNearestNeighbors(TestCase):
         """Test the fit_predict method with parameter n_neighbors."""
         model = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToFoldedMorgan(sparse_output=False)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
             ]
         )
@@ -101,8 +99,8 @@ class TestNamedNearestNeighbors(TestCase):
         """Test the fit_predict method with parameter n_neighbors."""
         model = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToFoldedMorgan(sparse_output=False)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
             ]
         )
@@ -114,8 +112,8 @@ class TestNamedNearestNeighbors(TestCase):
         """Test if the fit_predict method gives same results as callaing fit and predict separately."""
         model1 = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToFoldedMorgan(sparse_output=False)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
             ]
         )
@@ -131,8 +129,8 @@ class TestNamedNearestNeighbors(TestCase):
         """Test if the custom metric can be used."""
         model = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="sparse")),
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToFoldedMorgan(sparse_output=True)),
                 (
                     "lookup",
                     NamedNearestNeighbors(
@@ -148,8 +146,8 @@ class TestNamedNearestNeighbors(TestCase):
         """Test the fit_predict method with precomputed similarities."""
         model = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
-                ("fingerprint", MolToFoldedMorganFingerprint()),
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToFoldedMorgan()),
                 ("tanimoto", TanimotoToTraining(distance=True)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="precomputed")),
             ]
@@ -165,14 +163,14 @@ class TestNamedNearestNeighbors(TestCase):
         error_filter = ErrorFilter(filter_everything=True)
         model = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
+                ("mol", SmilesToMol()),
                 ("error_filter", error_filter),
-                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
+                ("fingerprint", MolToFoldedMorgan(sparse_output=False)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
                 (
                     "error_replacer",
                     PostPredictionWrapper(
-                        ErrorReplacer.from_error_filter(
+                        FilterReinserter.from_error_filter(
                             error_filter, fill_value="invalid"
                         )
                     ),
@@ -192,14 +190,14 @@ class TestNamedNearestNeighbors(TestCase):
         error_filter = ErrorFilter(filter_everything=True)
         model = Pipeline(
             [
-                ("mol", SmilesToMolPipelineElement()),
+                ("mol", SmilesToMol()),
                 ("error_filter", error_filter),
-                ("fingerprint", MolToFoldedMorganFingerprint(output_datatype="dense")),
+                ("fingerprint", MolToFoldedMorgan(sparse_output=False)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
                 (
                     "error_replacer",
                     PostPredictionWrapper(
-                        ErrorReplacer.from_error_filter(
+                        FilterReinserter.from_error_filter(
                             error_filter, fill_value="invalid"
                         )
                     ),

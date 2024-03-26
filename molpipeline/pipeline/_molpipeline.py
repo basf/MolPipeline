@@ -22,7 +22,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 )
 from molpipeline.pipeline_elements.error_handling import (
     ErrorFilter,
-    ErrorReplacer,
+    FilterReinserter,
     _MultipleErrorFilter,
 )
 from molpipeline.utils.molpipeline_types import NumberIterable
@@ -310,7 +310,7 @@ class _MolPipeline:
             error_filter.n_total = len(iter_idx_array)
             iter_idx_array = error_filter.co_transform(iter_idx_array)
         error_replacer_list = [
-            ele for ele in self._element_list if isinstance(ele, ErrorReplacer)
+            ele for ele in self._element_list if isinstance(ele, FilterReinserter)
         ]
         for error_replacer in error_replacer_list:
             error_replacer.select_error_filter(self._filter_elements)
@@ -336,7 +336,7 @@ class _MolPipeline:
             try:
                 if not isinstance(iter_value, RemovedInstance):
                     iter_value = p_element.transform_single(iter_value)
-                elif isinstance(p_element, ErrorReplacer):
+                elif isinstance(p_element, FilterReinserter):
                     iter_value = p_element.transform_single(iter_value)
             except MolSanitizeException as err:
                 return InvalidInstance(

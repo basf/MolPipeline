@@ -7,7 +7,7 @@ from rdkit import Chem
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 
 
-class MolToBinaryPipelineElement(MolToAnyPipelineElement):
+class MolToBinary(MolToAnyPipelineElement):
     """PipelineElement to transform a molecule to a binary."""
 
     def __init__(

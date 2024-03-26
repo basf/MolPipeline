@@ -20,7 +20,7 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.utils.molpipeline_types import OptionalMol
 
 
-class SDFToMolPipelineElement(_StringToMolPipelineElement):
+class SDFToMol(_StringToMolPipelineElement):
     """PipelineElement transforming a list of SDF strings to mol_objects."""
 
     identifier: str

@@ -1,13 +1,13 @@
 """Init."""
 
-from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMolPipelineElement
-from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMolPipelineElement
-from molpipeline.pipeline_elements.any2mol.sdf2mol import SDFToMolPipelineElement
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMol
+from molpipeline.pipeline_elements.any2mol.bin2mol import BinaryToMol
+from molpipeline.pipeline_elements.any2mol.sdf2mol import SDFToMol
+from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
 
 __all__ = [
-    "AutoToMolPipelineElement",
-    "BinaryToMolPipelineElement",
-    "SmilesToMolPipelineElement",
-    "SDFToMolPipelineElement",
+    "AutoToMol",
+    "BinaryToMol",
+    "SmilesToMol",
+    "SDFToMol",
 ]

@@ -8,12 +8,10 @@ from typing import Any
 import numpy as np
 from rdkit import DataStructs
 
+from molpipeline.estimators import LeaderPickerClustering
 from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMolPipelineElement
-from molpipeline.pipeline_elements.mol2any import MolToFoldedMorganFingerprint
-from molpipeline.sklearn_estimators.leader_picker_clustering import (
-    LeaderPickerClustering,
-)
+from molpipeline.pipeline_elements.any2mol.auto2mol import AutoToMol
+from molpipeline.pipeline_elements.mol2any import MolToFoldedMorgan
 
 
 class TestLeaderPickerEstimator(unittest.TestCase):
@@ -95,10 +93,10 @@ class TestLeaderPickerEstimator(unittest.TestCase):
             leader_picker = LeaderPickerClustering(distance_threshold=dist)
             pipeline = Pipeline(
                 [
-                    ("auto2mol", AutoToMolPipelineElement()),
+                    ("auto2mol", AutoToMol()),
                     (
                         "morgan2",
-                        MolToFoldedMorganFingerprint(
+                        MolToFoldedMorgan(
                             output_datatype="explicit_bit_vect", n_bits=1024, radius=2
                         ),
                     ),

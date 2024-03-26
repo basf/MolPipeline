@@ -10,12 +10,12 @@ from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
 
 from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
+from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMol
 from molpipeline.pipeline_elements.mol2any.mol2concatinated_vector import (
     MolToConcatenatedVector,
 )
 from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
-    MolToFoldedMorganFingerprint,
+    MolToFoldedMorgan,
 )
 from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 from tests.utils.fingerprints import fingerprints_to_numpy
@@ -62,13 +62,13 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                     ),
                     (
                         "MorganFP",
-                        MolToFoldedMorganFingerprint(output_datatype=fp_output_type),
+                        MolToFoldedMorgan(output_datatype=fp_output_type),
                     ),
                 ]
             )
             pipeline = Pipeline(
                 [
-                    ("smi2mol", SmilesToMolPipelineElement()),
+                    ("smi2mol", SmilesToMol()),
                     ("concat_vector_element", concat_vector_element),
                 ]
             )
@@ -87,7 +87,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             )
             pyschem_component: MolToRDKitPhysChem
             pyschem_component = concat_vector_element.element_list[0][1]  # type: ignore
-            morgan_component: MolToFoldedMorganFingerprint
+            morgan_component: MolToFoldedMorgan
             morgan_component = concat_vector_element.element_list[1][1]  # type: ignore
             expected_shape = (
                 len(smiles),

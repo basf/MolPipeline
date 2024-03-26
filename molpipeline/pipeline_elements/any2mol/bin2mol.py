@@ -13,7 +13,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.utils.molpipeline_types import OptionalMol
 
 
-class BinaryToMolPipelineElement(AnyToMolPipelineElement):
+class BinaryToMol(AnyToMolPipelineElement):
     """Transforms binary string representation to RDKit Mol objects."""
 
     def __init__(
