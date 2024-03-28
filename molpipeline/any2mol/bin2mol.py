@@ -22,7 +22,7 @@ class BinaryToMol(AnyToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize BinaryToMolPipelineElement.
+        """Initialize BinaryToMol.
 
         Parameters
         ----------

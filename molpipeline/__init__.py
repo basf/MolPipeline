@@ -3,9 +3,9 @@
 # pylint: disable=no-name-in-module
 from rdkit.Chem import PropertyPickleOptions, SetDefaultPickleProperties
 
-from .error_handling import ErrorFilter, FilterReinserter
-from .pipeline import Pipeline
-from .post_prediction import PostPredictionWrapper
+from molpipeline.error_handling import ErrorFilter, FilterReinserter
+from molpipeline.pipeline import Pipeline
+from molpipeline.post_prediction import PostPredictionWrapper
 
 # Keep all properties when pickling. Otherwise, we will lose properties set on RDKitMol when passed to
 # multiprocessing subprocesses.

@@ -22,7 +22,7 @@ class SmilesToMol(_StringToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize SmilesToMolPipelineElement.
+        """Initialize SmilesToMol.
 
         Parameters
         ----------

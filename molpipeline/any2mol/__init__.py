@@ -1,9 +1,9 @@
 """Init."""
 
-from .auto2mol import AutoToMol
-from .bin2mol import BinaryToMol
-from .sdf2mol import SDFToMol
-from .smiles2mol import SmilesToMol
+from molpipeline.any2mol.auto2mol import AutoToMol
+from molpipeline.any2mol.bin2mol import BinaryToMol
+from molpipeline.any2mol.sdf2mol import SDFToMol
+from molpipeline.any2mol.smiles2mol import SmilesToMol
 
 __all__ = [
     "AutoToMol",

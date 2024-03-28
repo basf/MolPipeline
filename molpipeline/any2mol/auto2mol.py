@@ -33,7 +33,7 @@ class AutoToMol(AnyToMolPipelineElement):
             SDFToMol(),
         ),
     ) -> None:
-        """Initialize AutoToMolPipelineElement.
+        """Initialize AutoToMol.
 
         Parameters
         ----------
@@ -43,8 +43,8 @@ class AutoToMol(AnyToMolPipelineElement):
             Number of parallel jobs to use.
         uuid: str, optional (default=None)
             Unique identifier of PipelineElement.
-        elements: tuple[AnyToMolPipelineElement, ...], optional (default=(SmilesToMolPipelineElement(),
-            BinaryToMolPipelineElement(), SDFToMolPipelineElement()))
+        elements: tuple[AnyToMol, ...], optional (default=(SmilesToMol(),
+            BinaryToMol(), SDFToMol()))
             Elements to try to transform the input to a molecule.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)

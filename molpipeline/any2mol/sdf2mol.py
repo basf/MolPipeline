@@ -34,7 +34,7 @@ class SDFToMol(_StringToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize SDFToMolPipelineElement.
+        """Initialize SDFToMol.
 
         Parameters
         ----------
@@ -82,7 +82,7 @@ class SDFToMol(_StringToMolPipelineElement):
         Returns
         -------
         Self
-            SDFToMolPipelineElement with updated parameters.
+            SDFToMol with updated parameters.
         """
         super().set_params(**parameters)
         if "identifier" in parameters:
