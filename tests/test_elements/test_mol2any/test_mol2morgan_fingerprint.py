@@ -7,11 +7,9 @@ from typing import Any
 
 import numpy as np
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
-    MolToFoldedMorganFingerprint,
-)
+from molpipeline import Pipeline
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.mol2any import MolToMorganFP
 
 test_smiles = [
     "c1ccccc1",
@@ -30,12 +28,12 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         -------
         None
         """
-        mol_fp = MolToFoldedMorganFingerprint()
+        mol_fp = MolToMorganFP()
         mol_fp_copy = mol_fp.copy()
         self.assertTrue(mol_fp_copy is not mol_fp)
         for key, value in mol_fp.get_params().items():
             self.assertEqual(value, mol_fp_copy.get_params()[key])
-        mol_fp_recreated = MolToFoldedMorganFingerprint(**mol_fp.get_params())
+        mol_fp_recreated = MolToMorganFP(**mol_fp.get_params())
         for key, value in mol_fp.get_params().items():
             self.assertEqual(value, mol_fp_recreated.get_params()[key])
 
@@ -48,13 +46,9 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         -------
         None
         """
-        smi2mol = SmilesToMolPipelineElement()
-        sparse_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_datatype="sparse"
-        )
-        dense_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_datatype="dense"
-        )
+        smi2mol = SmilesToMol()
+        sparse_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="sparse")
+        dense_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
         sparse_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -76,15 +70,11 @@ class TestMol2MorganFingerprint(unittest.TestCase):
     def test_output_types(self) -> None:
         """Test equality of different output_types."""
 
-        smi2mol = SmilesToMolPipelineElement()
-        sparse_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_datatype="sparse"
-        )
-        dense_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_datatype="dense"
-        )
-        explicit_bit_vect_morgan = MolToFoldedMorganFingerprint(
-            radius=2, n_bits=1024, output_datatype="explicit_bit_vect"
+        smi2mol = SmilesToMol()
+        sparse_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="sparse")
+        dense_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
+        explicit_bit_vect_morgan = MolToMorganFP(
+            radius=2, n_bits=1024, return_as="explicit_bit_vect"
         )
         sparse_pipeline = Pipeline(
             [
@@ -122,25 +112,25 @@ class TestMol2MorganFingerprint(unittest.TestCase):
 
     def test_setter_getter(self) -> None:
         """Test if the setters and getters work as expected."""
-        mol_fp = MolToFoldedMorganFingerprint()
+        mol_fp = MolToMorganFP()
         params: dict[str, Any] = {
             "radius": 2,
             "n_bits": 1024,
-            "output_datatype": "dense",
+            "return_as": "dense",
         }
         mol_fp.set_params(**params)
         self.assertEqual(mol_fp.get_params()["radius"], 2)
         self.assertEqual(mol_fp.get_params()["n_bits"], 1024)
-        self.assertEqual(mol_fp.get_params()["output_datatype"], "dense")
+        self.assertEqual(mol_fp.get_params()["return_as"], "dense")
 
     def test_setter_getter_error_handling(self) -> None:
         """Test if the setters and getters work as expected when errors are encountered."""
 
-        mol_fp = MolToFoldedMorganFingerprint()
+        mol_fp = MolToMorganFP()
         params: dict[str, Any] = {
             "radius": 2,
             "n_bits": 1024,
-            "output_datatype": "invalid-option__11!",
+            "return_as": "invalid-option__11!",
         }
         self.assertRaises(ValueError, mol_fp.set_params, **params)
 

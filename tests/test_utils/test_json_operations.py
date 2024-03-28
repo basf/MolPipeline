@@ -5,7 +5,7 @@ import unittest
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
-from molpipeline.pipeline import Pipeline
+from molpipeline import Pipeline
 from molpipeline.utils.json_operations import (
     recursive_from_json,
     recursive_to_json,

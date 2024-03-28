@@ -7,15 +7,9 @@ import numpy as np
 from rdkit import RDLogger
 from sklearn.base import clone
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.error_handling import ErrorFilter, ErrorReplacer
-from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
-    MolToFoldedMorganFingerprint,
-)
-from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
-from molpipeline.pipeline_elements.post_prediction import PostPredictionWrapper
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from tests.utils.mock_element import MockTransformingPipelineElement
 
 rdlog = RDLogger.logger()
@@ -31,11 +25,11 @@ class NoneTest(unittest.TestCase):
     def test_error_dummy_fill_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
 
-        smi2mol = SmilesToMolPipelineElement()
-        mol2smi = MolToSmilesPipelineElement()
+        smi2mol = SmilesToMol()
+        mol2smi = MolToSmiles()
         remove_error = ErrorFilter.from_element_list([smi2mol, mol2smi])
         replace_error = PostPredictionWrapper(
-            ErrorReplacer.from_error_filter(remove_error, fill_value=None)
+            FilterReinserter.from_error_filter(remove_error, fill_value=None)
         )
 
         pipeline = Pipeline(
@@ -52,8 +46,8 @@ class NoneTest(unittest.TestCase):
 
     def test_error_dummy_remove_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-        smi2mol = SmilesToMolPipelineElement()
-        mol2smi = MolToSmilesPipelineElement()
+        smi2mol = SmilesToMol()
+        mol2smi = MolToSmiles()
         error_filter = ErrorFilter.from_element_list([smi2mol, mol2smi])
         pipeline = Pipeline(
             [
@@ -68,8 +62,8 @@ class NoneTest(unittest.TestCase):
 
     def test_dummy_remove_morgan_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-        smi2mol = SmilesToMolPipelineElement()
-        mol2morgan = MolToFoldedMorganFingerprint()
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP()
         error_filter = ErrorFilter.from_element_list([smi2mol, mol2morgan])
         pipeline = Pipeline(
             [
@@ -83,7 +77,7 @@ class NoneTest(unittest.TestCase):
 
     def test_dummy_remove_physchem_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-        smi2mol = SmilesToMolPipelineElement()
+        smi2mol = SmilesToMol()
         mol2physchem = MolToRDKitPhysChem()
         remove_none = ErrorFilter.from_element_list([smi2mol, mol2physchem])
         pipeline = Pipeline(
@@ -102,7 +96,7 @@ class NoneTest(unittest.TestCase):
 
     def test_dummy_remove_physchem_record_autodetect_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-        smi2mol = SmilesToMolPipelineElement()
+        smi2mol = SmilesToMol()
         mol2physchem = MolToRDKitPhysChem()
         remove_none = ErrorFilter(filter_everything=True)
         pipeline = Pipeline(
@@ -123,11 +117,11 @@ class NoneTest(unittest.TestCase):
     def test_dummy_fill_physchem_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
 
-        smi2mol = SmilesToMolPipelineElement()
+        smi2mol = SmilesToMol()
         mol2physchem = MolToRDKitPhysChem()
         remove_none = ErrorFilter.from_element_list([smi2mol, mol2physchem])
         fill_none = PostPredictionWrapper(
-            ErrorReplacer.from_error_filter(remove_none, fill_value=10)
+            FilterReinserter.from_error_filter(remove_none, fill_value=10)
         )
 
         pipeline = Pipeline(
@@ -181,7 +175,7 @@ class NoneTest(unittest.TestCase):
                 return_as_numpy_array=as_numpy_array,
             )
             error_filter = ErrorFilter.from_element_list([mock2mock])
-            error_replacer = ErrorReplacer.from_error_filter(
+            error_replacer = FilterReinserter.from_error_filter(
                 error_filter=error_filter, fill_value=fill_value
             )
             pipeline = Pipeline(
@@ -237,7 +231,7 @@ class NoneTest(unittest.TestCase):
             return_as_numpy_array=True,
         )
         error_filter = ErrorFilter.from_element_list([mock2mock])
-        error_replacer = ErrorReplacer.from_error_filter(
+        error_replacer = FilterReinserter.from_error_filter(
             error_filter=error_filter, fill_value=[]
         )
         pipeline = Pipeline(

@@ -7,12 +7,10 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import (
-    DEFAULT_DESCRIPTORS,
-    MolToRDKitPhysChem,
-)
+from molpipeline import Pipeline
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.mol2any import MolToRDKitPhysChem
+from molpipeline.mol2any.mol2rdkit_phys_chem import DEFAULT_DESCRIPTORS
 
 data_path = Path(__file__).parents[2] / "test_data" / "mol_descriptors.tsv"
 
@@ -250,7 +248,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         """
         expected_df = pd.read_csv(data_path, sep="\t")
         descriptor_names = expected_df.drop(columns=["smiles"]).columns.tolist()
-        smi2mol = SmilesToMolPipelineElement()
+        smi2mol = SmilesToMol()
         property_element = MolToRDKitPhysChem(
             standardizer=None, descriptor_list=descriptor_names
         )
@@ -275,7 +273,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         -------
         None
         """
-        smi2mol = SmilesToMolPipelineElement()
+        smi2mol = SmilesToMol()
         property_element = MolToRDKitPhysChem(standardizer=StandardScaler())
         pipeline = Pipeline(
             [
