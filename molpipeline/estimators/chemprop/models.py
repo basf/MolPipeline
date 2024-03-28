@@ -159,9 +159,7 @@ class ChempropClassifier(Chemprop):
             bond_encoder = BondMessagePassing()
             agg = SumAggregation()
             predictor = BinaryClassificationFFN()
-            model = MPNN(
-                message_passing=bond_encoder, agg=agg, predictor=predictor
-            )
+            model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
         super().__init__(
             model=model,
             lightning_trainer=lightning_trainer,
