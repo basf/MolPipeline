@@ -13,7 +13,6 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
-from loguru import logger
 from rdkit.DataStructs import ExplicitBitVect
 from scipy import sparse
 
