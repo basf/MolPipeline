@@ -10,20 +10,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol import AutoToMolPipelineElement
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.error_handling import ErrorFilter
-from molpipeline.pipeline_elements.mol2any.mol2morgan_fingerprint import (
-    MolToFoldedMorganFingerprint,
-)
-from molpipeline.pipeline_elements.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
-from molpipeline.pipeline_elements.mol2any.mol2smiles import MolToSmilesPipelineElement
-from molpipeline.pipeline_elements.mol2mol import (
-    ChargeParentPipelineElement,
-    EmptyMoleculeFilterPipelineElement,
-    MetalDisconnectorPipelineElement,
-    SaltRemoverPipelineElement,
+from molpipeline import ErrorFilter, Pipeline
+from molpipeline.any2mol import AutoToMol, SmilesToMol
+from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
+from molpipeline.mol2mol import (
+    ChargeParentExtractor,
+    EmptyMoleculeFilter,
+    MetalDisconnector,
+    SaltRemover,
 )
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.matrices import are_equal
@@ -50,8 +44,8 @@ class PipelineTest(unittest.TestCase):
         None
         """
         # Create pipeline
-        smi2mol = SmilesToMolPipelineElement()
-        mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -72,8 +66,8 @@ class PipelineTest(unittest.TestCase):
         -------
         None
         """
-        smi2mol = SmilesToMolPipelineElement()
-        mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
         s_pipeline = Pipeline(
             [
@@ -94,8 +88,8 @@ class PipelineTest(unittest.TestCase):
         -------
         None
         """
-        smi2mol = SmilesToMolPipelineElement()
-        mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
         s_pipeline = Pipeline(
             [
@@ -121,12 +115,12 @@ class PipelineTest(unittest.TestCase):
         smiles_with_salt_list = ["CCO-[Na]", "CCC(=O)[O-].[Li+]", "CCC(=O)-O-[K]"]
         smiles_without_salt_list = ["CCO", "CCC(=O)O", "CCC(=O)O"]
 
-        smi2mol = SmilesToMolPipelineElement()
-        disconnect_metal = MetalDisconnectorPipelineElement()
-        salt_remover = SaltRemoverPipelineElement()
-        empty_mol_filter = EmptyMoleculeFilterPipelineElement()
-        remove_charge = ChargeParentPipelineElement()
-        mol2smi = MolToSmilesPipelineElement()
+        smi2mol = SmilesToMol()
+        disconnect_metal = MetalDisconnector()
+        salt_remover = SaltRemover()
+        empty_mol_filter = EmptyMoleculeFilter()
+        remove_charge = ChargeParentExtractor()
+        mol2smi = MolToSmiles()
 
         salt_remover_pipeline = Pipeline(
             [
@@ -153,9 +147,9 @@ class PipelineTest(unittest.TestCase):
         """
 
         # Create pipeline
-        smi2mol = SmilesToMolPipelineElement()
-        metal_disconnector = MetalDisconnectorPipelineElement()
-        salt_remover = SaltRemoverPipelineElement()
+        smi2mol = SmilesToMol()
+        metal_disconnector = MetalDisconnector()
+        salt_remover = SaltRemover()
         physchem = MolToRDKitPhysChem()
         pipeline_element_list = [
             smi2mol,
@@ -198,10 +192,10 @@ class PipelineTest(unittest.TestCase):
         -------
         None
         """
-        smi2mol = SmilesToMolPipelineElement()
-        salt_remover = SaltRemoverPipelineElement()
-        mol2morgan = MolToFoldedMorganFingerprint(radius=FP_RADIUS, n_bits=FP_SIZE)
-        empty_mol_filter = EmptyMoleculeFilterPipelineElement()
+        smi2mol = SmilesToMol()
+        salt_remover = SaltRemover()
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
+        empty_mol_filter = EmptyMoleculeFilter()
         remove_none = ErrorFilter.from_element_list(
             [smi2mol, salt_remover, mol2morgan, empty_mol_filter]
         )
@@ -227,7 +221,7 @@ class PipelineTest(unittest.TestCase):
         descriptor_elements_to_test: list[dict[str, Any]] = [
             {
                 "name": "morgan",
-                "element": MolToFoldedMorganFingerprint(),
+                "element": MolToMorganFP(),
                 "param_grid": {"morgan__n_bits": [64, 128], "morgan__radius": [1, 2]},
             },
             {
@@ -251,7 +245,7 @@ class PipelineTest(unittest.TestCase):
             # set up a pipeline that trains a random forest classifier on morgan fingerprints
             pipeline = Pipeline(
                 [
-                    ("auto2mol", AutoToMolPipelineElement()),
+                    ("auto2mol", AutoToMol()),
                     (name, element),
                     ("estimator", RandomForestClassifier()),
                 ],

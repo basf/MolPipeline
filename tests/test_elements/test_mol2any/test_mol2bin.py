@@ -4,9 +4,9 @@ import unittest
 
 from rdkit import Chem, rdBase
 
-from molpipeline.pipeline import Pipeline
-from molpipeline.pipeline_elements.any2mol.smiles2mol import SmilesToMolPipelineElement
-from molpipeline.pipeline_elements.mol2any.mol2bin import MolToBinaryPipelineElement
+from molpipeline import Pipeline
+from molpipeline.any2mol import SmilesToMol
+from molpipeline.mol2any import MolToBinary
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
@@ -45,8 +45,8 @@ class TestMol2Binary(unittest.TestCase):
 
         pipeline = Pipeline(
             [
-                ("Smiles2Mol", SmilesToMolPipelineElement()),
-                ("Mol2Binary", MolToBinaryPipelineElement()),
+                ("Smiles2Mol", SmilesToMol()),
+                ("Mol2Binary", MolToBinary()),
             ]
         )
         log_block = rdBase.BlockLogs()
@@ -66,7 +66,7 @@ class TestMol2Binary(unittest.TestCase):
 
         pipeline = Pipeline(
             [
-                ("Mol2Binary", MolToBinaryPipelineElement()),
+                ("Mol2Binary", MolToBinary()),
             ]
         )
 
