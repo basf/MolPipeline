@@ -8,7 +8,7 @@ from sklearn.base import clone
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators import NamedNearestNeighbors, TanimotoToTraining
-from molpipeline.mol2any import MolToFoldedMorganFP
+from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.kernel import tanimoto_distance_sparse
 
 TEST_SMILES = [
@@ -43,7 +43,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMol()),
-                ("fingerprint", MolToFoldedMorganFP(return_as="dense")),
+                ("fingerprint", MolToMorganFP(return_as="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
             ]
         )
@@ -55,7 +55,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMol()),
-                ("fingerprint", MolToFoldedMorganFP(return_as="dense")),
+                ("fingerprint", MolToMorganFP(return_as="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
             ]
         )
@@ -67,7 +67,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMol()),
-                ("fingerprint", MolToFoldedMorganFP(return_as="dense")),
+                ("fingerprint", MolToMorganFP(return_as="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
             ]
         )
@@ -83,7 +83,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMol()),
-                ("fingerprint", MolToFoldedMorganFP(return_as="dense")),
+                ("fingerprint", MolToMorganFP(return_as="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
             ]
         )
@@ -97,7 +97,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMol()),
-                ("fingerprint", MolToFoldedMorganFP(return_as="dense")),
+                ("fingerprint", MolToMorganFP(return_as="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=1, metric="jaccard")),
             ]
         )
@@ -110,7 +110,7 @@ class TestNamedNearestNeighbors(TestCase):
         model1 = Pipeline(
             [
                 ("mol", SmilesToMol()),
-                ("fingerprint", MolToFoldedMorganFP(return_as="dense")),
+                ("fingerprint", MolToMorganFP(return_as="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
             ]
         )
@@ -127,7 +127,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMol()),
-                ("fingerprint", MolToFoldedMorganFP(return_as="sparse")),
+                ("fingerprint", MolToMorganFP(return_as="sparse")),
                 (
                     "lookup",
                     NamedNearestNeighbors(
@@ -144,7 +144,7 @@ class TestNamedNearestNeighbors(TestCase):
         model = Pipeline(
             [
                 ("mol", SmilesToMol()),
-                ("fingerprint", MolToFoldedMorganFP()),
+                ("fingerprint", MolToMorganFP()),
                 ("tanimoto", TanimotoToTraining(distance=True)),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="precomputed")),
             ]
@@ -162,7 +162,7 @@ class TestNamedNearestNeighbors(TestCase):
             [
                 ("mol", SmilesToMol()),
                 ("error_filter", error_filter),
-                ("fingerprint", MolToFoldedMorganFP(return_as="dense")),
+                ("fingerprint", MolToMorganFP(return_as="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
                 (
                     "error_replacer",
@@ -189,7 +189,7 @@ class TestNamedNearestNeighbors(TestCase):
             [
                 ("mol", SmilesToMol()),
                 ("error_filter", error_filter),
-                ("fingerprint", MolToFoldedMorganFP(return_as="dense")),
+                ("fingerprint", MolToMorganFP(return_as="dense")),
                 ("lookup", NamedNearestNeighbors(n_neighbors=2, metric="jaccard")),
                 (
                     "error_replacer",

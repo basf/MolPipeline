@@ -9,7 +9,7 @@ from sklearn.base import clone
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.mol2any import MolToFoldedMorganFP, MolToRDKitPhysChem, MolToSmiles
+from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from tests.utils.mock_element import MockTransformingPipelineElement
 
 rdlog = RDLogger.logger()
@@ -63,7 +63,7 @@ class NoneTest(unittest.TestCase):
     def test_dummy_remove_morgan_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
         smi2mol = SmilesToMol()
-        mol2morgan = MolToFoldedMorganFP()
+        mol2morgan = MolToMorganFP()
         error_filter = ErrorFilter.from_element_list([smi2mol, mol2morgan])
         pipeline = Pipeline(
             [

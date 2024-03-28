@@ -12,7 +12,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline import ErrorFilter, Pipeline
 from molpipeline.any2mol import AutoToMol, SmilesToMol
-from molpipeline.mol2any import MolToFoldedMorganFP, MolToRDKitPhysChem, MolToSmiles
+from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from molpipeline.mol2mol import (
     ChargeParentExtractor,
     EmptyMoleculeFilter,
@@ -45,7 +45,7 @@ class PipelineTest(unittest.TestCase):
         """
         # Create pipeline
         smi2mol = SmilesToMol()
-        mol2morgan = MolToFoldedMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -67,7 +67,7 @@ class PipelineTest(unittest.TestCase):
         None
         """
         smi2mol = SmilesToMol()
-        mol2morgan = MolToFoldedMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
         s_pipeline = Pipeline(
             [
@@ -89,7 +89,7 @@ class PipelineTest(unittest.TestCase):
         None
         """
         smi2mol = SmilesToMol()
-        mol2morgan = MolToFoldedMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
         s_pipeline = Pipeline(
             [
@@ -194,7 +194,7 @@ class PipelineTest(unittest.TestCase):
         """
         smi2mol = SmilesToMol()
         salt_remover = SaltRemover()
-        mol2morgan = MolToFoldedMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         empty_mol_filter = EmptyMoleculeFilter()
         remove_none = ErrorFilter.from_element_list(
             [smi2mol, salt_remover, mol2morgan, empty_mol_filter]
@@ -221,7 +221,7 @@ class PipelineTest(unittest.TestCase):
         descriptor_elements_to_test: list[dict[str, Any]] = [
             {
                 "name": "morgan",
-                "element": MolToFoldedMorganFP(),
+                "element": MolToMorganFP(),
                 "param_grid": {"morgan__n_bits": [64, 128], "morgan__radius": [1, 2]},
             },
             {

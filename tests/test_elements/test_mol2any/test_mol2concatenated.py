@@ -13,7 +13,7 @@ from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import (
     MolToConcatenatedVector,
-    MolToFoldedMorganFP,
+    MolToMorganFP,
     MolToRDKitPhysChem,
 )
 from tests.utils.fingerprints import fingerprints_to_numpy
@@ -60,7 +60,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                     ),
                     (
                         "MorganFP",
-                        MolToFoldedMorganFP(return_as=fp_output_type),
+                        MolToMorganFP(return_as=fp_output_type),
                     ),
                 ]
             )
@@ -85,7 +85,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             )
             pyschem_component: MolToRDKitPhysChem
             pyschem_component = concat_vector_element.element_list[0][1]  # type: ignore
-            morgan_component: MolToFoldedMorganFP
+            morgan_component: MolToMorganFP
             morgan_component = concat_vector_element.element_list[1][1]  # type: ignore
             expected_shape = (
                 len(smiles),
