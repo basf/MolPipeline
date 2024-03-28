@@ -21,7 +21,7 @@ from molpipeline.mol2mol import (
 )
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.matrices import are_equal
-from tests.molpipeline.utils.fingerprints import make_sparse_fp
+from tests.utils.fingerprints import make_sparse_fp
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
 FAULTY_TEST_SMILES = ["CCCXAS", "", "O=C(O)C(F)(F)F"]

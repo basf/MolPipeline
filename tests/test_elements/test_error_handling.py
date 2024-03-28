@@ -10,7 +10,7 @@ from sklearn.base import clone
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
-from tests.molpipeline.utils.mock_element import MockTransformingPipelineElement
+from tests.utils.mock_element import MockTransformingPipelineElement
 
 rdlog = RDLogger.logger()
 rdlog.setLevel(RDLogger.CRITICAL)
