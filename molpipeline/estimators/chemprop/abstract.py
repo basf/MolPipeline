@@ -18,7 +18,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
 
     def __init__(
         self,
-        chemprop_model: MPNN,
+        model: MPNN,
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
@@ -28,7 +28,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
 
         Parameters
         ----------
-        chemprop_model : MPNN
+        model : MPNN
             The chemprop model to wrap.
         lightning_trainer : pl.Trainer, optional
             The lightning trainer to use, by default None
@@ -40,8 +40,15 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             Parameters set using `set_params`.
             Can be used to modify components of the model.
         """
-        self._model = chemprop_model
-        self.lightning_trainer = lightning_trainer or pl.Trainer(max_epochs=10)
+        self.model = model
+        default_trainer = pl.Trainer(
+            logger=False,
+            enable_checkpointing=False,
+            max_epochs=500,
+            enable_model_summary=False,
+            callbacks=False,
+        )
+        self.lightning_trainer = lightning_trainer or default_trainer
         self.batch_size = batch_size
         self.n_jobs = n_jobs
         self.set_params(**kwargs)

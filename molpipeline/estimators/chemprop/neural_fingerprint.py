@@ -8,7 +8,7 @@ from chemprop.data import BatchMolGraph, MoleculeDataset
 from chemprop.models.model import MPNN
 from lightning import pytorch as pl
 
-from molpipeline.sklearn_estimators.chemprop.abstract import ABCChemprop
+from molpipeline.estimators.chemprop.abstract import ABCChemprop
 
 
 class ChempropNeuralFP(ABCChemprop):
@@ -16,7 +16,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     def __init__(
         self,
-        chemprop_model: MPNN,
+        model: MPNN,
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
@@ -26,7 +26,7 @@ class ChempropNeuralFP(ABCChemprop):
 
         Parameters
         ----------
-        chemprop_model : MPNN
+        model : MPNN
             The chemprop model to wrap.
         lightning_trainer : pl.Trainer, optional
             The lightning trainer to use, by default None
@@ -39,7 +39,7 @@ class ChempropNeuralFP(ABCChemprop):
         """
         # pylint: disable=duplicate-code
         super().__init__(
-            chemprop_model=chemprop_model,
+            model=model,
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
@@ -86,7 +86,7 @@ class ChempropNeuralFP(ABCChemprop):
         """
         self.model.eval()
         mol_data = [X[i].mg for i in range(len(X))]
-        return self.model.fingerprint(BatchMolGraph(mol_data)).numpy()
+        return self.model.fingerprint(BatchMolGraph(mol_data)).detach().numpy()
 
     def fit_transform(
         self,

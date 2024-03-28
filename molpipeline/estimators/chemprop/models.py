@@ -18,13 +18,13 @@ from chemprop.nn.predictors import (
 from lightning import pytorch as pl
 from sklearn.utils.metaestimators import available_if
 
-from molpipeline.sklearn_estimators.chemprop.abstract import ABCChemprop
-from molpipeline.sklearn_estimators.chemprop.component_wrapper import (
+from molpipeline.estimators.chemprop.abstract import ABCChemprop
+from molpipeline.estimators.chemprop.component_wrapper import (
     BinaryClassificationFFN,
     BondMessagePassing,
     SumAggregation,
 )
-from molpipeline.sklearn_estimators.chemprop.neural_fingerprint import ChempropNeuralFP
+from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 
 
 class Chemprop(ABCChemprop):
@@ -120,7 +120,7 @@ class Chemprop(ABCChemprop):
             The encoder for the model.
         """
         return ChempropNeuralFP(
-            chemprop_model=self.model,
+            model=self.model,
             lightning_trainer=self.lightning_trainer,
             batch_size=self.batch_size,
             n_jobs=self.n_jobs,
@@ -133,17 +133,17 @@ class ChempropClassifier(Chemprop):
 
     def __init__(
         self,
-        chemprop_model: MPNN | None = None,
+        model: MPNN | None = None,
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
-        **kwargs: Any,
+        **kwargs: Any,  # pylint: disable=unused-argument
     ) -> None:
         """Initialize the chemprop classifier model.
 
         Parameters
         ----------
-        chemprop_model : MPNN | None, optional
+        model : MPNN | None, optional
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
             The lightning trainer to use, by default None
@@ -155,15 +155,15 @@ class ChempropClassifier(Chemprop):
             Parameters set using `set_params`.
             Can be used to modify components of the model.
         """
-        if chemprop_model is None:
+        if model is None:
             bond_encoder = BondMessagePassing()
             agg = SumAggregation()
             predictor = BinaryClassificationFFN()
-            chemprop_model = MPNN(
+            model = MPNN(
                 message_passing=bond_encoder, agg=agg, predictor=predictor
             )
         super().__init__(
-            chemprop_model=chemprop_model,
+            model=model,
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,

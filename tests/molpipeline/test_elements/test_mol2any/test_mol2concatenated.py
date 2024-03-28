@@ -16,7 +16,7 @@ from molpipeline.mol2any import (
     MolToMorganFP,
     MolToRDKitPhysChem,
 )
-from tests.utils.fingerprints import fingerprints_to_numpy
+from tests.molpipeline.utils.fingerprints import fingerprints_to_numpy
 
 
 class TestConcatenatedFingerprint(unittest.TestCase):

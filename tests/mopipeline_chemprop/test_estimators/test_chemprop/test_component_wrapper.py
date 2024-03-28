@@ -4,7 +4,7 @@ import unittest
 
 from sklearn.base import clone
 
-from molpipeline.sklearn_estimators.chemprop.component_wrapper import (
+from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
     BinaryClassificationFFN,
     BondMessagePassing,
