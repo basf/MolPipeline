@@ -11,7 +11,7 @@ from rdkit import DataStructs
 from molpipeline import Pipeline
 from molpipeline.any2mol import AutoToMol
 from molpipeline.estimators import LeaderPickerClustering
-from molpipeline.mol2any import MolToFoldedMorgan
+from molpipeline.mol2any import MolToFoldedMorganFP
 
 
 class TestLeaderPickerEstimator(unittest.TestCase):
@@ -96,8 +96,8 @@ class TestLeaderPickerEstimator(unittest.TestCase):
                     ("auto2mol", AutoToMol()),
                     (
                         "morgan2",
-                        MolToFoldedMorgan(
-                            output_datatype="explicit_bit_vect", n_bits=1024, radius=2
+                        MolToFoldedMorganFP(
+                            return_as="explicit_bit_vect", n_bits=1024, radius=2
                         ),
                     ),
                     ("leader_picker", leader_picker),

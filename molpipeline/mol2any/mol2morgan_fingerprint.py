@@ -23,7 +23,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
 from molpipeline.utils.molpipeline_types import RDKitMol
 
 
-class MolToFoldedMorgan(ABCMorganFingerprintPipelineElement):
+class MolToFoldedMorganFP(ABCMorganFingerprintPipelineElement):
     """Folded Morgan Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
@@ -36,13 +36,12 @@ class MolToFoldedMorgan(ABCMorganFingerprintPipelineElement):
         radius: int = 2,
         use_features: bool = False,
         n_bits: int = 2048,
-        sparse_output: bool | None = None,
-        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
-        name: str = "Mol2FoldedMorgan",
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
+        name: str = "MolToFoldedMorganFP",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize Mol2FoldedMorgan.
+        """Initialize MolToFoldedMorganFP.
 
         Parameters
         ----------
@@ -50,10 +49,7 @@ class MolToFoldedMorgan(ABCMorganFingerprintPipelineElement):
             radius of the circular fingerprint [1]. Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
         use_features: bool
             Instead of atoms, features are encoded in the fingerprint. [2]
-        sparse_output: bool | None
-            DEPRECATED: Will be removed. Use output_type instead.
-            True: return sparse matrix, False: return matrix as dense numpy array.
-        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"]
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
             Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
             With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
@@ -74,8 +70,7 @@ class MolToFoldedMorgan(ABCMorganFingerprintPipelineElement):
         super().__init__(
             radius=radius,
             use_features=use_features,
-            sparse_output=sparse_output,
-            output_datatype=output_datatype,
+            return_as=return_as,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
@@ -118,7 +113,7 @@ class MolToFoldedMorgan(ABCMorganFingerprintPipelineElement):
         Returns
         -------
         Self
-            MolToFoldedMorganFingerprint pipeline element with updated parameters.
+            MolToFoldedMorganFP pipeline element with updated parameters.
         """
         parameter_copy = dict(parameters)
         n_bits = parameter_copy.pop("n_bits", None)
@@ -150,9 +145,9 @@ class MolToFoldedMorgan(ABCMorganFingerprintPipelineElement):
             fpSize=self._n_bits,
         )
 
-        if self._output_datatype == "explicit_bit_vect":
+        if self._return_as == "explicit_bit_vect":
             return fingerprint_generator.GetFingerprint(value)
-        if self._output_datatype == "dense":
+        if self._return_as == "dense":
             return fingerprint_generator.GetFingerprintAsNumPy(value)
         # sparse return type
         return {
@@ -173,7 +168,7 @@ class MolToFoldedMorgan(ABCMorganFingerprintPipelineElement):
         return bit_info
 
 
-class MolToUnfoldedMorgan(ABCMorganFingerprintPipelineElement):
+class MolToUnfoldedMorganFP(ABCMorganFingerprintPipelineElement):
     """Transforms smiles-strings or molecular objects into unfolded bit-vectors based on Morgan-fingerprints [1].
 
     Features are mapped to bits based on the amount of molecules they occur in.
@@ -200,12 +195,11 @@ class MolToUnfoldedMorgan(ABCMorganFingerprintPipelineElement):
         radius: int = 2,
         use_features: bool = False,
         counted: bool = False,
-        sparse_output: bool = True,
         ignore_unknown: bool = False,
-        name: str = "Mol2UnfoldedMorgan",
+        name: str = "MolToUnfoldedMorganFP",
         n_jobs: int = 1,
     ) -> None:
-        """Initialize Mol2UnfoldedMorgan.
+        """Initialize MolToUnfoldedMorganFP.
 
         Parameters
         ----------
@@ -216,8 +210,6 @@ class MolToUnfoldedMorgan(ABCMorganFingerprintPipelineElement):
         counted: bool
             False: bits are binary: on if present in molecule, off if not present
             True: bits are positive integers and give the occurrence of their respective features in the molecule
-        sparse_output: bool
-            True: return sparse matrix, False: return matrix as dense numpy array.
         ignore_unknown: bool
             If True, features not seen in the fit method are ignored. If False, they cause an error.
         name: str
@@ -237,7 +229,6 @@ class MolToUnfoldedMorgan(ABCMorganFingerprintPipelineElement):
         super().__init__(
             radius=radius,
             use_features=use_features,
-            sparse_output=sparse_output,
             name=name,
             n_jobs=n_jobs,
         )
@@ -349,7 +340,7 @@ class MolToUnfoldedMorgan(ABCMorganFingerprintPipelineElement):
         Returns
         -------
         Self
-            MolToUnfoldedMorganFingerprint pipeline element with updated parameters.
+            MolToUnfoldedMorganFP pipeline element with updated parameters.
         """
         super().set_params(**parameters)
         if "counted" in parameters:
@@ -389,7 +380,7 @@ class MolToUnfoldedMorgan(ABCMorganFingerprintPipelineElement):
         Returns
         -------
         Self
-            The fitted MolToUnfoldedMorganFingerprint pipeline element.
+            The fitted MolToUnfoldedMorganFP pipeline element.
         """
         _ = self._fit(values)
         return self
@@ -474,7 +465,7 @@ class MolToUnfoldedMorgan(ABCMorganFingerprintPipelineElement):
         Returns
         -------
         Self
-            The fitted MolToUnfoldedMorganFingerprint pipeline element.
+            The fitted MolToUnfoldedMorganFP pipeline element.
         """
         self._create_mapping(values)
         return self

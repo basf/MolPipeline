@@ -22,7 +22,10 @@ from molpipeline.utils.matrices import sparse_from_index_value_dicts
 from molpipeline.utils.molpipeline_types import RDKitMol
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
-# possible output types for a fingerprint
+# possible output types for a fingerprint:
+# - "sparse" is a sparse csr_matrix
+# - "dense" is a numpy array
+# - "explicit_bit_vect" is a list of RDKit's ExplicitBitVect
 OutputDatatype: TypeAlias = Literal["sparse", "dense", "explicit_bit_vect"]
 
 
@@ -31,12 +34,11 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     _n_bits: int
     _output_type = "binary"
-    _output_datatype: OutputDatatype
+    _return_as: OutputDatatype
 
     def __init__(
         self,
-        sparse_output: bool | None = None,
-        output_datatype: OutputDatatype = "sparse",
+        return_as: OutputDatatype = "sparse",
         name: str = "MolToFingerprintPipelineElement",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -45,10 +47,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
         Parameters
         ----------
-        sparse_output: bool | None
-            DEPRECATED: Will be removed. Use output_type instead.
-            True: return sparse matrix, False: return matrix as dense numpy array.
-        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"]
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
             Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
             With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
@@ -57,21 +56,15 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             Name of PipelineElement.
         n_jobs:
             Number of jobs.
+        uuid: Optional[str]
+            Unique identifier.
         """
         super().__init__(
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
         )
-        if sparse_output is not None:
-            logger.warning(
-                "sparse_output is deprecated and will be removed in the future. Use output_type instead."
-            )
-            if sparse_output:
-                output_datatype = "sparse"
-            else:
-                output_datatype = "dense"
-        self._output_datatype = output_datatype
+        self._return_as = return_as
 
     @property
     def n_bits(self) -> int:
@@ -116,10 +109,10 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         sparse.csr_matrix | npt.NDArray[np.int_] | list[ExplicitBitVect]
             Matrix of Morgan-fingerprint features.
         """
-        if self._output_datatype == "explicit_bit_vect":
+        if self._return_as == "explicit_bit_vect":
             # return as list of RDkit's ExplicitBitVect
             return list(value_list)  # type: ignore
-        if self._output_datatype == "dense":
+        if self._return_as == "dense":
             # return dense numpy matrix
             return np.vstack(list(value_list))  # type: ignore
 
@@ -141,9 +134,9 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         """
         parameters = super().get_params(deep)
         if deep:
-            parameters["output_datatype"] = copy.copy(self._output_datatype)
+            parameters["return_as"] = copy.copy(self._return_as)
         else:
-            parameters["output_datatype"] = self._output_datatype
+            parameters["return_as"] = self._return_as
 
         return parameters
 
@@ -161,19 +154,13 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             Copied object with updated parameters.
         """
         parameter_dict_copy = dict(parameters)
-        sparse_output = parameter_dict_copy.pop("sparse_output", None)
-        output_datatype = parameter_dict_copy.pop("output_datatype", None)
-        if sparse_output is not None:
-            if sparse_output:
-                self._output_datatype = "sparse"
-            else:
-                self._output_datatype = "dense"
-        elif output_datatype is not None:
-            if output_datatype not in get_args(OutputDatatype):
+        return_as = parameter_dict_copy.pop("return_as", None)
+        if return_as is not None:
+            if return_as not in get_args(OutputDatatype):
                 raise ValueError(
-                    f"output_datatype has to be one of {get_args(OutputDatatype)}! (Received: {output_datatype})"
+                    f"return_as has to be one of {get_args(OutputDatatype)}! (Received: {return_as})"
                 )
-            self._output_datatype = output_datatype  # type: ignore
+            self._return_as = return_as  # type: ignore
         super().set_params(**parameter_dict_copy)
         return self
 
@@ -218,8 +205,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         self,
         radius: int = 2,
         use_features: bool = False,
-        sparse_output: bool | None = None,
-        output_datatype: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -232,17 +218,21 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
             Radius of fingerprint.
         use_features: bool
             Whether to represent atoms by element or category (donor, acceptor. etc.)
-        sparse_output: bool, optional
-            True: return sparse matrix, False: return matrix as dense numpy array.
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
+            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
+            holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
+            With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
+            rdkit.DataStructs.cDataStructs.ExplicitBitVect.
         name: str
             Name of PipelineElement.
         n_jobs:
             Number of jobs.
+        uuid: Optional[str]
+            Unique identifier.
         """
         # pylint: disable=R0801
         super().__init__(
-            sparse_output=sparse_output,
-            output_datatype=output_datatype,
+            return_as=return_as,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,

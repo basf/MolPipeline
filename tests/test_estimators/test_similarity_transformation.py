@@ -15,7 +15,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators import TanimotoToTraining
-from molpipeline.mol2any import MolToFoldedMorgan
+from molpipeline.mol2any import MolToFoldedMorganFP
 from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 COMPOUND_LIST = [
@@ -55,7 +55,7 @@ def _generate_morgan_fingerprints(compound_list: list[str]) -> sparse.csr_matrix
     morgan_pipeline = Pipeline(
         [
             ("smi2mol", SmilesToMol()),
-            ("mol2fp", MolToFoldedMorgan()),
+            ("mol2fp", MolToFoldedMorganFP()),
         ]
     )
     fingerprint = morgan_pipeline.fit_transform(compound_list)
@@ -100,7 +100,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining()),
             ]
         )
@@ -126,7 +126,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining()),
             ]
         )
@@ -143,7 +143,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining()),
             ]
         )
@@ -158,7 +158,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining()),
             ]
         )
@@ -172,7 +172,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining()),
                 ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1)),
             ]
@@ -187,7 +187,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining()),
                 ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1)),
             ]
@@ -205,7 +205,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMol()),
                 ("error_filter", error_filter),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining()),
                 ("nearest_neighbor", KNeighborsClassifier(n_neighbors=1)),
                 ("error_replacer", PostPredictionWrapper(error_replacer)),
@@ -232,7 +232,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining(distance=True)),
             ]
         )
@@ -258,7 +258,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining(distance=True)),
             ]
         )
@@ -275,7 +275,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining(distance=True)),
             ]
         )
@@ -291,7 +291,7 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
         full_pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("mol2fp", MolToFoldedMorgan()),
+                ("mol2fp", MolToFoldedMorganFP()),
                 ("precompute_tanimoto", TanimotoToTraining(distance=True)),
             ]
         )
