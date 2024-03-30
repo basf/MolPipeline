@@ -45,6 +45,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             uuid=uuid,
         )
 
+    # pylint: disable=duplicate-code
     @property
     def n_features(self) -> int:
         """Return the number of features."""
