@@ -51,6 +51,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         """Return the number of features."""
         return len(self._descriptor_list)
 
+    # pylint: disable=duplicate-code
     @property
     def descriptor_list(self) -> list[str]:
         """Return a copy of the descriptor list."""
