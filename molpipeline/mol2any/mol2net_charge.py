@@ -1,22 +1,15 @@
-"""Classes for encoding molecules as phys-chem vector."""
-
-# pylint: disable=too-many-arguments
+"""MolToNetCharge pipeline element."""
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional, Union
-
 try:
-    from typing import Self  # type: ignore[attr-defined]
+    from typing import Any, Self  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import Self
-
-import copy
 
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
-from rdkit.Chem import Descriptors
 from sklearn.preprocessing import StandardScaler
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
@@ -25,39 +18,26 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
 )
 from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 
-RDKIT_DESCRIPTOR_DICT: dict[str, Callable[[Chem.Mol], float]]
-RDKIT_DESCRIPTOR_DICT = dict(Descriptors.descList)
 
-# MolWt is removed as ExactMolWt is already included.
-# Ipc is removed because it causes trouble with numpy.
-DEFAULT_DESCRIPTORS = [
-    name for name in RDKIT_DESCRIPTOR_DICT if name not in ["MolWt", "Ipc"]
-]
-
-
-class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
-    """PipelineElement for creating a Descriptor vector based on RDKit phys-chem properties."""
-
-    _descriptor_list: list[str]
+class MolToNetCharge(MolToDescriptorPipelineElement):
+    """PipelineElement for calculating molecules' net charge."""
 
     def __init__(
         self,
-        descriptor_list: Optional[list[str]] = None,
-        standardizer: Optional[AnyTransformer] = StandardScaler(),
-        name: str = "Mol2RDKitPhysChem",
+        standardizer: AnyTransformer | None = StandardScaler(),
+        name: str = "MolToNetCharge",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
-        """Initialize MolToRDKitPhysChem.
+        """Initialize MolToNetCharge.
 
         Parameters
         ----------
-        descriptor_list: Optional[list[str]]
         standardizer: bool
         name: str
         n_jobs: int
         """
-        self._descriptor_list = descriptor_list or DEFAULT_DESCRIPTORS
+        self._descriptor_list = ["NetCharge"]
         super().__init__(
             standardizer=standardizer,
             name=name,
@@ -77,8 +57,10 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[npt.NDArray[np.float_], InvalidInstance]:
-        """Transform a single molecule to a descriptor vector.
+    ) -> npt.NDArray[np.float_] | InvalidInstance:
+        """Transform a single molecule to it's net charge.
+
+        Based on https://github.com/rdkit/rdkit/discussions/4331
 
         Parameters
         ----------
@@ -88,14 +70,19 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Returns
         -------
         Optional[npt.NDArray[np.float_]]
-            Descriptor vector for given molecule. None if calculation failed.
+            Net charge of the given molecule.
         """
-        vec = np.array(
-            [RDKIT_DESCRIPTOR_DICT[name](value) for name in self._descriptor_list]
+        # copy molecule since ComputeGasteigerCharges modifies the molecule inplace
+        value_copy = Chem.Mol(value)
+        Chem.rdPartialCharges.ComputeGasteigerCharges(value_copy)
+        atoms_contributions = np.array(
+            [atom.GetDoubleProp("_GasteigerCharge") for atom in value_copy.GetAtoms()]
         )
-        if np.any(np.isnan(vec)):
-            return InvalidInstance(self.uuid, "NaN in descriptor vector", self.name)
-        return vec
+        if np.any(np.isnan(atoms_contributions)):
+            return InvalidInstance(self.uuid, "NaN in Garsteiger charges", self.name)
+        # sum up the charges and round to the nearest integer.
+        net_charge = np.round(np.sum(atoms_contributions))
+        return net_charge
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get the parameters of the pipeline element.
@@ -111,10 +98,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             Parameter of the pipeline element.
         """
         parent_dict = dict(super().get_params(deep=deep))
-        if deep:
-            parent_dict["descriptor_list"] = copy.deepcopy(self._descriptor_list)
-        else:
-            parent_dict["descriptor_list"] = self._descriptor_list
         return parent_dict
 
     def set_params(self, **parameters: dict[str, Any]) -> Self:
@@ -130,9 +113,5 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Self
             Self
         """
-        parameters_shallow_copy = dict(parameters)
-        descriptor_list = parameters_shallow_copy.pop("descriptor_list", None)
-        if descriptor_list is not None:
-            self._descriptor_list = descriptor_list  # type: ignore
-        super().set_params(**parameters_shallow_copy)
+        super().set_params(**parameters)
         return self
