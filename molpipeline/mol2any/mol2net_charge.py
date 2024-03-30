@@ -38,6 +38,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         n_jobs: int
         """
         self._descriptor_list = ["NetCharge"]
+        # pylint: disable=R0801
         super().__init__(
             standardizer=standardizer,
             name=name,
@@ -45,13 +46,11 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             uuid=uuid,
         )
 
-    # pylint: disable=duplicate-code
     @property
     def n_features(self) -> int:
         """Return the number of features."""
         return len(self._descriptor_list)
 
-    # pylint: disable=duplicate-code
     @property
     def descriptor_list(self) -> list[str]:
         """Return a copy of the descriptor list."""
