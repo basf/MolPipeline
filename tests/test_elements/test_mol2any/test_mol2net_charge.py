@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from molpipeline import Pipeline, ErrorFilter, FilterReinserter
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToNetCharge
 
