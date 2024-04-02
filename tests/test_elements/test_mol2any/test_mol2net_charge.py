@@ -33,7 +33,7 @@ class TestNetChargeCalculator(unittest.TestCase):
             }
         )
 
-        # we need teh error filter and reinserter to handle the case where the charge calculation fails
+        # we need the error filter and reinserter to handle the case where the charge calculation fails
         error_filter = ErrorFilter(filter_everything=True)
         pipeline = Pipeline(
             [
