@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from molpipeline import Pipeline
+from molpipeline import Pipeline, ErrorFilter, FilterReinserter
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToNetCharge
 
@@ -33,17 +33,26 @@ class TestNetChargeCalculator(unittest.TestCase):
             }
         )
 
+        # we need teh error filter and reinserter to handle the case where the charge calculation fails
+        error_filter = ErrorFilter(filter_everything=True)
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
                 ("net_charge_element", MolToNetCharge(standardizer=None)),
+                ("error_filter", error_filter),
+                (
+                    "filter_reinserter",
+                    FilterReinserter.from_error_filter(error_filter, fill_value=np.nan),
+                ),
             ],
         )
 
         actual_net_charges = pipeline.fit_transform(df["smiles"])
         self.assertTrue(
             np.allclose(
-                df["expected_net_charges"].to_numpy().reshape(-1, 1), actual_net_charges
+                df["expected_net_charges"].to_numpy().reshape(-1, 1),
+                actual_net_charges,
+                equal_nan=True,
             )
         )
 
