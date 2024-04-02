@@ -1,14 +1,26 @@
 """Parent class of wrapper for Chemprop to make it compatible with scikit-learn."""
 
 import abc
-from typing import Any, Iterable, Self
+from typing import Any, Iterable
+
+# pylint: disable=duplicate-code
+try:
+    from typing import Self  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt
-from chemprop.data import MoleculeDataset, MolGraphDataLoader
-from chemprop.models.model import MPNN
-from lightning import pytorch as pl
+
+try:
+    from chemprop.data import MoleculeDataset, MolGraphDataLoader
+    from chemprop.models.model import MPNN
+    from lightning import pytorch as pl
+except ImportError:
+    pass
 from sklearn.base import BaseEstimator
+
+# pylint: enable=duplicate-code
 
 
 class ABCChemprop(BaseEstimator, abc.ABC):

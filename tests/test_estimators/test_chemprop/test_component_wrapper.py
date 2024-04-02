@@ -4,18 +4,24 @@ import unittest
 
 from sklearn.base import clone
 
-from molpipeline.estimators.chemprop.component_wrapper import (
-    MPNN,
-    BinaryClassificationFFN,
-    BondMessagePassing,
-    MeanAggregation,
-    SumAggregation,
-)
+try:
+    from molpipeline.estimators.chemprop.component_wrapper import (
+        MPNN,
+        BinaryClassificationFFN,
+        BondMessagePassing,
+        MeanAggregation,
+        SumAggregation,
+    )
+
+    CHEMPROP_AVAILABLE = True
+except ImportError:
+    CHEMPROP_AVAILABLE = False
 
 
 class BinaryClassificationFFNTest(unittest.TestCase):
     """Test the BinaryClassificationFFN class."""
 
+    @unittest.skipIf(not CHEMPROP_AVAILABLE, "Chemprop not available.")
     def test_get_set_params(self) -> None:
         """Test the get_params and set_params methods."""
         binary_clf_ffn = BinaryClassificationFFN()
@@ -42,6 +48,7 @@ class BinaryClassificationFFNTest(unittest.TestCase):
 class MPNNTest(unittest.TestCase):
     """Test the MPNN class."""
 
+    @unittest.skipIf(not CHEMPROP_AVAILABLE, "Chemprop not available.")
     def test_get_set_params(self) -> None:
         """Test the get_params and set_params methods."""
         mpnn1 = MPNN(
@@ -64,6 +71,7 @@ class MPNNTest(unittest.TestCase):
             else:
                 self.assertEqual(param, param2)
 
+    @unittest.skipIf(not CHEMPROP_AVAILABLE, "Chemprop not available.")
     def test_clone(self) -> None:
         """Test the clone method."""
         mpnn = MPNN(

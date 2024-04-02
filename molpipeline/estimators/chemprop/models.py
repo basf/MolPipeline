@@ -9,13 +9,19 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
-from chemprop.data import MoleculeDataset, MolGraphDataLoader
-from chemprop.models.model import MPNN
-from chemprop.nn.predictors import (
-    BinaryClassificationFFNBase,
-    MulticlassClassificationFFN,
-)
-from lightning import pytorch as pl
+
+try:
+    from chemprop.data import MoleculeDataset, MolGraphDataLoader
+    from chemprop.models.model import MPNN
+    from chemprop.nn.predictors import (
+        BinaryClassificationFFNBase,
+        MulticlassClassificationFFN,
+    )
+    from lightning import pytorch as pl
+except ImportError:
+    pass
+
+
 from sklearn.utils.metaestimators import available_if
 
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
