@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-try:
-    from typing import Any, Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
 import numpy as np
+import numpy.typing as npt
 from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
 
@@ -60,7 +56,9 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         """Return a copy of the descriptor list."""
         return self._descriptor_list[:]
 
-    def pretransform_single(self, value: RDKitMol) -> np.float_ | InvalidInstance:
+    def pretransform_single(
+        self, value: RDKitMol
+    ) -> npt.NDArray[np.float_] | InvalidInstance:
         """Transform a single molecule to it's net charge.
 
         Based on https://github.com/rdkit/rdkit/discussions/4331
@@ -84,5 +82,5 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         if np.any(np.isnan(atoms_contributions)):
             return InvalidInstance(self.uuid, "NaN in Garsteiger charges", self.name)
         # sum up the charges and round to the nearest integer.
-        net_charge = np.round(np.sum(atoms_contributions))
+        net_charge = np.round(np.sum(atoms_contributions, keepdims=True))
         return net_charge
