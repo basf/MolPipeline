@@ -1,5 +1,11 @@
 """Initialize Chemprop module."""
 
-from molpipeline.estimators.chemprop.models import Chemprop
+import pkgutil
 
-__all__ = ["Chemprop"]
+installed_packages = {pkg.name for pkg in pkgutil.iter_modules()}
+if "chemprop" in installed_packages:
+    from molpipeline.estimators.chemprop.models import Chemprop  # noqa
+
+    __all__ = ["Chemprop"]
+else:
+    __all__ = []
