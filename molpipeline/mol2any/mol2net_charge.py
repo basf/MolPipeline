@@ -8,7 +8,6 @@ except ImportError:
     from typing_extensions import Self
 
 import numpy as np
-import numpy.typing as npt
 from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
 
@@ -33,9 +32,14 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
         Parameters
         ----------
-        standardizer: bool
-        name: str
-        n_jobs: int
+        standardizer: AnyTransformer, optional
+            Standardizer to use, by default StandardScaler()
+        name: str, optional
+            Name of the pipeline element, by default "MolToNetCharge"
+        n_jobs: int, optional
+            Number of jobs to run in parallel, by default 1
+        uuid: str, optional
+            UUID of the pipeline element, by default None
         """
         self._descriptor_list = ["NetCharge"]
         # pylint: disable=R0801
@@ -56,9 +60,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         """Return a copy of the descriptor list."""
         return self._descriptor_list[:]
 
-    def pretransform_single(
-        self, value: RDKitMol
-    ) -> npt.NDArray[np.float_] | InvalidInstance:
+    def pretransform_single(self, value: RDKitMol) -> np.float_ | InvalidInstance:
         """Transform a single molecule to it's net charge.
 
         Based on https://github.com/rdkit/rdkit/discussions/4331
@@ -84,35 +86,3 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         # sum up the charges and round to the nearest integer.
         net_charge = np.round(np.sum(atoms_contributions))
         return net_charge
-
-    def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get the parameters of the pipeline element.
-
-        Parameters
-        ----------
-        deep: bool
-            If true create a deep copy of the parameters
-
-        Returns
-        -------
-        dict[str, Any]
-            Parameter of the pipeline element.
-        """
-        parent_dict = dict(super().get_params(deep=deep))
-        return parent_dict
-
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
-        """Set parameters.
-
-        Parameters
-        ----------
-        parameters: dict[str, Any]
-            Parameters to set
-
-        Returns
-        -------
-        Self
-            Self
-        """
-        super().set_params(**parameters)
-        return self
