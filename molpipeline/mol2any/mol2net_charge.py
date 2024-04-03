@@ -78,7 +78,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         """Return a copy of the descriptor list."""
         return self._descriptor_list[:]
 
-    def _get_net_charge_garsteiger(
+    def _get_net_charge_gasteiger(
         self, value: RDKitMol
     ) -> npt.NDArray[np.float_] | InvalidInstance:
         """Transform a single molecule to it's net charge using Gasteiger charges.
@@ -125,7 +125,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         if self._charge_method == "formal_charge":
             return np.array([GetFormalCharge(value)])
         if self._charge_method == "gasteiger":
-            return self._get_net_charge_garsteiger(value)
+            return self._get_net_charge_gasteiger(value)
         raise ValueError(f"Unknown charge policy: {self._charge_method}")
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
