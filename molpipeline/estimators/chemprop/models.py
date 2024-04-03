@@ -33,7 +33,7 @@ from molpipeline.estimators.chemprop.component_wrapper import (
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 
 
-class Chemprop(ABCChemprop):
+class ChempropModel(ABCChemprop):
     """Wrap Chemprop in a sklearn like Estimator."""
 
     def _is_binary_classifier(self) -> bool:
@@ -134,7 +134,7 @@ class Chemprop(ABCChemprop):
         )
 
 
-class ChempropClassifier(Chemprop):
+class ChempropClassifier(ChempropModel):
     """Wrap Chemprop in a sklearn like classifier."""
 
     def __init__(
