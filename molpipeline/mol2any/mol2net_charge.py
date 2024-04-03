@@ -5,8 +5,6 @@ from __future__ import annotations
 import copy
 from typing import Any, Literal, TypeAlias
 
-from rdkit.Chem import GetFormalCharge
-
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
@@ -123,7 +121,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             Net charge of the given molecule.
         """
         if self._charge_method == "formal_charge":
-            return np.array([GetFormalCharge(value)])
+            return np.array([Chem.GetFormalCharge(value)])
         if self._charge_method == "gasteiger":
             return self._get_net_charge_gasteiger(value)
         raise ValueError(f"Unknown charge policy: {self._charge_method}")
