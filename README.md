@@ -73,7 +73,7 @@ linear_smiles = ["CC", "CCC", "CCCN"]
 
 # run the scaffold clustering
 scaffold_clustering = MurckoScaffoldClustering(
-    n_jobs=4, linear_molecules_strategy="own_cluster"
+    make_generic=False, linear_molecules_strategy="own_cluster", n_jobs=16
 )
 scaffold_clustering.fit_predict(scaffold_smiles + linear_smiles)
 # output: array([1., 0., 1., 2., 2., 2.])
