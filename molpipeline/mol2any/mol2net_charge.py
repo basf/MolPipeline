@@ -42,10 +42,10 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
         Parameters
         ----------
-        charge_method: MolToNetChargePolicy, optional
-            Policy how to compute the net charge of a molecule, by default "formal_charge". Can be "formal_charge"
-            which uses sum of the formal charges assigned to each atom. "gasteiger" computes the Gasteiger
-            partial charges and returns the rounded sum over the atoms.
+        charge_method: MolToNetChargeMethod, optional (default="formal_charge")
+            Policy how to compute the net charge of a molecule. Can be "formal_charge" which uses sum
+            of the formal charges assigned to each atom. "gasteiger" computes the Gasteiger partial
+            charges and returns the rounded sum over the atoms.
         standardizer: AnyTransformer, optional
             Standardizer to use, by default StandardScaler()
         name: str, optional
@@ -56,7 +56,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             UUID of the pipeline element, by default None
         """
         self._descriptor_list = ["NetCharge"]
-
+        self._charge_method = charge_method
         # pylint: disable=R0801
         super().__init__(
             standardizer=standardizer,
@@ -64,7 +64,6 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             n_jobs=n_jobs,
             uuid=uuid,
         )
-        self._charge_method = charge_method
 
     @property
     def n_features(self) -> int:
@@ -121,7 +120,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             Net charge of the given molecule.
         """
         if self._charge_method == "formal_charge":
-            return np.array([Chem.GetFormalCharge(value)])
+            return np.array([Chem.GetFormalCharge(value)], dtype=np.float_)
         if self._charge_method == "gasteiger":
             return self._get_net_charge_gasteiger(value)
         raise ValueError(f"Unknown charge policy: {self._charge_method}")
