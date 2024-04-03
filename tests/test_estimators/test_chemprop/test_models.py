@@ -25,8 +25,10 @@ except ImportError:
     CHEMPROP_AVAILABLE = False
 
 
-def get_model() -> ChempropModel:
+def get_model() -> "ChempropModel":
     """Get the Chemprop model.
+
+    Return type is a string to avoid errors when Chemprop is not available.
 
     Returns
     -------
