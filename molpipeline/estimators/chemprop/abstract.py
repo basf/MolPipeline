@@ -58,7 +58,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             enable_checkpointing=False,
             max_epochs=500,
             enable_model_summary=False,
-            callbacks=False,
+            callbacks=[],
         )
         self.lightning_trainer = lightning_trainer or default_trainer
         self.batch_size = batch_size
