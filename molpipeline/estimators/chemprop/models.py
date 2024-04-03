@@ -9,6 +9,8 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
+from sklearn.base import clone
+from sklearn.utils.metaestimators import available_if
 
 try:
     from chemprop.data import MoleculeDataset, MolGraphDataLoader
@@ -21,8 +23,6 @@ try:
 except ImportError:
     pass
 
-
-from sklearn.utils.metaestimators import available_if
 
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import (
@@ -126,7 +126,7 @@ class ChempropModel(ABCChemprop):
             The encoder for the model.
         """
         return ChempropNeuralFP(
-            model=self.model,
+            model=clone(self.model),  # type: ignore
             lightning_trainer=self.lightning_trainer,
             batch_size=self.batch_size,
             n_jobs=self.n_jobs,
