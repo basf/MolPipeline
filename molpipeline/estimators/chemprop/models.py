@@ -14,7 +14,6 @@ from sklearn.utils.metaestimators import available_if
 
 try:
     from chemprop.data import MoleculeDataset, MolGraphDataLoader
-    from chemprop.models.model import MPNN
     from chemprop.nn.predictors import (
         BinaryClassificationFFNBase,
         MulticlassClassificationFFN,
@@ -26,6 +25,7 @@ except ImportError:
 
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import (
+    MPNN,
     BinaryClassificationFFN,
     BondMessagePassing,
     SumAggregation,
