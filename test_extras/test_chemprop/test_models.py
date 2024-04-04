@@ -50,7 +50,6 @@ def get_model() -> "ChempropModel":
 class TestChempropModel(unittest.TestCase):
     """Test the Chemprop model."""
 
-    @unittest.skipIf(not CHEMPROP_AVAILABLE, "Chemprop not available.")
     def test_get_params(self) -> None:
         """Test the get_params and set_params methods."""
         chemprop_model = get_model()
@@ -90,7 +89,6 @@ class TestChempropModel(unittest.TestCase):
                 continue
             self.assertEqual(oring_params[param_name], param)
 
-    @unittest.skipIf(not CHEMPROP_AVAILABLE, "Chemprop not available.")
     def test_set_params(self) -> None:
         """Test the set_params method."""
         chemprop_model = get_model()
@@ -110,7 +108,6 @@ class TestChempropModel(unittest.TestCase):
                 continue
             self.assertEqual(param, model_params[param_name])
 
-    @unittest.skipIf(not CHEMPROP_AVAILABLE, "Chemprop not available.")
     def test_clone(self) -> None:
         """Test the clone method."""
         chemprop_model = get_model()
@@ -128,7 +125,6 @@ class TestChempropModel(unittest.TestCase):
             else:
                 self.assertEqual(param, cloned_param)
 
-    @unittest.skipIf(not CHEMPROP_AVAILABLE, "Chemprop not available.")
     def test_classifier_methods(self) -> None:
         """Test the classifier methods."""
         chemprop_model = get_model()
@@ -138,7 +134,6 @@ class TestChempropModel(unittest.TestCase):
         # pylint: enable=protected-access
         self.assertTrue(hasattr(chemprop_model, "predict_proba"))
 
-    @unittest.skipIf(not CHEMPROP_AVAILABLE, "Chemprop not available.")
     def test_neural_fp(self) -> None:
         """Test the to_encoder method."""
         chemprop_model = get_model()
