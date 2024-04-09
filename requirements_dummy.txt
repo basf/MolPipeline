@@ -1,2 +1,4 @@
+# install torch-scatter with cpu
+# required for checking code with pylint in cicd pipeline
 --find-links https://data.pyg.org/whl/torch-2.1.2+cpu.html
 torch_scatter
