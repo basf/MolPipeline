@@ -52,7 +52,18 @@ class ChempropModel(ABCChemprop):
     def _predict(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float_]:
-        """Predict the labels."""
+        """Predict the labels.
+
+        Parameters
+        ----------
+        X : MoleculeDataset
+            The input data.
+
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            The predictions for the input data.
+        """
         self.model.eval()
         test_data = MolGraphDataLoader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
