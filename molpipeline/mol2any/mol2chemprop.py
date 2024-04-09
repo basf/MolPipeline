@@ -21,7 +21,15 @@ from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToChemprop(MolToAnyPipelineElement):
-    """PipelineElement for creating a graph representation based on chemprop molecule classes."""
+    """PipelineElement for creating a graph representation used as input for Chemprop models.
+
+    Each molecule is transformed to a MoleculeDatapoint object, which are then assembled into a MoleculeDataset.
+    The MoleculeDataset can be used as input for Chemprop models.[1]
+
+    References
+    ----------
+    [1] https://github.com/chemprop/chemprop/
+    """
 
     featurizer_list: list[MoleculeFeaturizer] | None
 
