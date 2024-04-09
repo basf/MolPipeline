@@ -36,10 +36,14 @@ class MolToChemprop(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        name: str
+        featurizer_list: list[MoleculeFeaturizer] | None, optional (default=None)
+            List of featurizers to use.
+        name: str, optional (default="Mol2Chemprop")
             Name of the pipeline element. Defaults to "Mol2Chemprop".
         n_jobs: int
             Number of parallel jobs to use. Defaults to 1.
+        uuid: str | None, optional (default=None)
+            UUID of the pipeline element.
         """
         self.featurizer_list = featurizer_list
         super().__init__(
