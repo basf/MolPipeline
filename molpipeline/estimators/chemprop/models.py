@@ -67,7 +67,22 @@ class ChempropModel(ABCChemprop):
         self.model.eval()
         test_data = MolGraphDataLoader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
-        return np.array([pred.numpy() for pred in predictions])  # type: ignore
+        prediction_array = np.array([pred.numpy() for pred in predictions])  # type: ignore
+
+        # Check if the predictions have the same length as the input dataset
+        if prediction_array.shape[0] != len(X):
+            raise AssertionError(
+                "Predictions should have the same length as the input dataset."
+            )
+
+        # If the model is a binary classifier, return the probability of the positive class
+        if self._is_binary_classifier():
+            if prediction_array.shape[1] != 1 or prediction_array.shape[2] != 1:
+                raise ValueError(
+                    "Binary classification model should output a single probability."
+                )
+            prediction_array = prediction_array[:, 0, 0]
+        return prediction_array
 
     def predict(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
@@ -85,21 +100,14 @@ class ChempropModel(ABCChemprop):
             The predictions for the input data.
         """
         predictions = self._predict(X)
-        if predictions.shape[0] != len(X):
-            raise AssertionError(
-                "Predictions should have the same length as the input dataset."
-            )
         if self._is_binary_classifier():
-            if predictions.shape[1] != 1 or predictions.shape[2] != 1:
-                raise ValueError(
-                    "Binary classification model should output a single probability."
-                )
-            predictions = predictions[:, 0, 0]
             pred = np.zeros(len(predictions))
             pred[predictions > 0.5] = 1
             return pred
+
         if self._is_multiclass_classifier():
             return np.argmax(predictions, axis=1)
+
         return predictions
 
     @available_if(_is_classifier)
@@ -119,13 +127,8 @@ class ChempropModel(ABCChemprop):
             The probabilities of the input data.
         """
         if self._is_binary_classifier():
-            predictions = self._predict(X)
-            if predictions.shape[1] != 1 or predictions.shape[2] != 1:
-                raise ValueError(
-                    "Binary classification model should output a single probability."
-                )
-            proba_cls1 = predictions[:, 0, 0]
-            return np.vstack([1 - proba_cls1, proba_cls1]).T
+            proba_class_1 = self._predict(X)
+            return np.vstack([1 - proba_class_1, proba_class_1]).T
         return self._predict(X)
 
     def to_encoder(self) -> ChempropNeuralFP:
