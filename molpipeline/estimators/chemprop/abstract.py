@@ -53,14 +53,15 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             Can be used to modify components of the model.
         """
         self.model = model
-        default_trainer = pl.Trainer(
-            logger=False,
-            enable_checkpointing=False,
-            max_epochs=500,
-            enable_model_summary=False,
-            callbacks=[],
-        )
-        self.lightning_trainer = lightning_trainer or default_trainer
+        if lightning_trainer is None:
+            lightning_trainer = pl.Trainer(
+                logger=False,
+                enable_checkpointing=False,
+                max_epochs=500,
+                enable_model_summary=False,
+                callbacks=[],
+            )
+        self.lightning_trainer = lightning_trainer
         self.batch_size = batch_size
         self.n_jobs = n_jobs
         self.set_params(**kwargs)
