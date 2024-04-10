@@ -35,13 +35,15 @@ class BinaryClassificationFFNTest(unittest.TestCase):
         }
         # Check setting new parameters
         binary_clf_ffn.set_params(**new_params)
+        model_params = binary_clf_ffn.get_params(deep=True)
         for param_name, param in new_params.items():
-            self.assertEqual(param, binary_clf_ffn.get_params(deep=True)[param_name])
+            self.assertEqual(param, model_params[param_name])
 
         # Check setting original parameters
         binary_clf_ffn.set_params(**oring_params)
+        model_params = binary_clf_ffn.get_params(deep=True)
         for param_name, param in oring_params.items():
-            self.assertEqual(param, binary_clf_ffn.get_params(deep=True)[param_name])
+            self.assertEqual(param, model_params[param_name])
 
 
 class MPNNTest(unittest.TestCase):
