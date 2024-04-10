@@ -19,6 +19,7 @@ from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
 
 
+# pylint: disable=duplicate-code
 def get_model() -> ChempropModel:
     """Get the Chemprop model.
 
