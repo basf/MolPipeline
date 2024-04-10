@@ -4,18 +4,13 @@ import unittest
 
 from sklearn.base import clone
 
-try:
-    from molpipeline.estimators.chemprop.component_wrapper import (
-        MPNN,
-        BinaryClassificationFFN,
-        BondMessagePassing,
-        MeanAggregation,
-        SumAggregation,
-    )
-
-    CHEMPROP_AVAILABLE = True
-except ImportError:
-    CHEMPROP_AVAILABLE = False
+from molpipeline.estimators.chemprop.component_wrapper import (
+    MPNN,
+    BinaryClassificationFFN,
+    BondMessagePassing,
+    MeanAggregation,
+    SumAggregation,
+)
 
 
 class BinaryClassificationFFNTest(unittest.TestCase):

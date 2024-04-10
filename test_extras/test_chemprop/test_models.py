@@ -5,30 +5,23 @@ import unittest
 
 from sklearn.base import clone
 
-try:
-    from lightning import pytorch as pl
+from lightning import pytorch as pl
 
-    from molpipeline.estimators.chemprop.component_wrapper import (
-        MPNN,
-        BinaryClassificationFFN,
-        BondMessagePassing,
-        MeanAggregation,
-        SumAggregation,
-    )
-    from molpipeline.estimators.chemprop.models import ChempropModel
-    from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
+from molpipeline.estimators.chemprop.component_wrapper import (
+    MPNN,
+    BinaryClassificationFFN,
+    BondMessagePassing,
+    MeanAggregation,
+    SumAggregation,
+)
+from molpipeline.estimators.chemprop.models import ChempropModel
+from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 
-    logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
-
-    CHEMPROP_AVAILABLE = True
-except ImportError:
-    CHEMPROP_AVAILABLE = False
+logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
 
 
-def get_model() -> "ChempropModel":
+def get_model() -> ChempropModel:
     """Get the Chemprop model.
-
-    Return type is a string to avoid errors when Chemprop is not available.
 
     Returns
     -------
