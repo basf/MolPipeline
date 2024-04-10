@@ -41,6 +41,37 @@ class BinaryClassificationFFNTest(unittest.TestCase):
             self.assertEqual(param, model_params[param_name])
 
 
+class BondMessagePassingTest(unittest.TestCase):
+    """Test the BondMessagePassing class."""
+
+    def test_get_set_params(self) -> None:
+        """Test the get_params and set_params methods."""
+        bond_message_passing = BondMessagePassing()
+        orig_params = bond_message_passing.get_params(deep=True)
+        new_params = {
+            "activation": "relu",
+            "bias": True,
+            "d_e": 14,
+            "d_h": 300,
+            "d_v": 133,
+            "d_vd": None,
+            "depth": 4,
+            "dropout_rate": 0.5,
+            "undirected": False,
+        }
+        # Check setting new parameters
+        bond_message_passing.set_params(**new_params)
+        model_params = bond_message_passing.get_params(deep=True)
+        for param_name, param in new_params.items():
+            self.assertEqual(param, model_params[param_name])
+
+        # Check setting original parameters
+        bond_message_passing.set_params(**orig_params)
+        model_params = bond_message_passing.get_params(deep=True)
+        for param_name, param in orig_params.items():
+            self.assertEqual(param, model_params[param_name])
+
+
 class MPNNTest(unittest.TestCase):
     """Test the MPNN class."""
 
