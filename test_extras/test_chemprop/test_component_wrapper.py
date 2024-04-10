@@ -66,6 +66,10 @@ class MPNNTest(unittest.TestCase):
         mpnn2.set_params(**params1)
         for param_name, param in mpnn1.get_params(deep=True).items():
             param2 = mpnn2.get_params(deep=True)[param_name]
+            # Classes are cloned, so they are not equal, but they should be the same class
+            # Since (here) objects are identical if their parameters are identical, and since all
+            # their parameters are listed flat in the params dicts, all objects are identical if
+            # param dicts are identical.
             if hasattr(param, "get_params"):
                 self.assertEqual(param.__class__, param2.__class__)
             else:
