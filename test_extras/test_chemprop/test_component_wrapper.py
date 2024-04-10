@@ -52,9 +52,9 @@ class MPNNTest(unittest.TestCase):
     def test_get_set_params(self) -> None:
         """Test the get_params and set_params methods."""
         mpnn1 = MPNN(
-            message_passing=BondMessagePassing(),
+            message_passing=BondMessagePassing(depth=2),
             agg=SumAggregation(),
-            predictor=BinaryClassificationFFN(),
+            predictor=BinaryClassificationFFN(n_layers=1),
         )
         params1 = mpnn1.get_params(deep=True)
 
