@@ -45,7 +45,7 @@ class TestChempropModel(unittest.TestCase):
     def test_get_params(self) -> None:
         """Test the get_params and set_params methods."""
         chemprop_model = get_model()
-        oring_params = chemprop_model.get_params(deep=True)
+        orig_params = chemprop_model.get_params(deep=True)
 
         expected_params = {
             "batch_size": 64,
@@ -77,13 +77,9 @@ class TestChempropModel(unittest.TestCase):
             ]:
                 if not isinstance(param, type):
                     raise ValueError(f"{param_name} should be a type.")
-                self.assertIsInstance(oring_params[param_name], param)
-                continue
-            self.assertEqual(oring_params[param_name], param)
-
-    def test_set_params(self) -> None:
-        """Test the set_params method."""
-        chemprop_model = get_model()
+                self.assertIsInstance(orig_params[param_name], param)
+            else:
+                self.assertEqual(orig_params[param_name], param)
 
         new_params = {
             "batch_size": 32,
