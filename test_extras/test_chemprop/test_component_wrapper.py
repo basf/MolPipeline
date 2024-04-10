@@ -19,7 +19,7 @@ class BinaryClassificationFFNTest(unittest.TestCase):
     def test_get_set_params(self) -> None:
         """Test the get_params and set_params methods."""
         binary_clf_ffn = BinaryClassificationFFN()
-        oring_params = binary_clf_ffn.get_params(deep=True)
+        orig_params = binary_clf_ffn.get_params(deep=True)
         new_params = {
             "activation": "relu",
             "dropout": 0.5,
@@ -35,9 +35,9 @@ class BinaryClassificationFFNTest(unittest.TestCase):
             self.assertEqual(param, model_params[param_name])
 
         # Check setting original parameters
-        binary_clf_ffn.set_params(**oring_params)
+        binary_clf_ffn.set_params(**orig_params)
         model_params = binary_clf_ffn.get_params(deep=True)
-        for param_name, param in oring_params.items():
+        for param_name, param in orig_params.items():
             self.assertEqual(param, model_params[param_name])
 
 

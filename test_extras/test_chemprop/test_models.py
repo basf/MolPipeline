@@ -3,9 +3,8 @@
 import logging
 import unittest
 
-from sklearn.base import clone
-
 from lightning import pytorch as pl
+from sklearn.base import clone
 
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
