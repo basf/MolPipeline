@@ -1,1 +1,2 @@
-chemprop @ https://github.com/cheminformaticsbasf/chemprop/archive/refs/heads/v2/dev.zip
+chemprop @ https://github.com//c-w-feldmann/chemprop/archive/v2/molpipeline_requirement.zip
+lightning < 1000
