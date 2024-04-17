@@ -83,4 +83,3 @@ scaffold_clustering.fit_predict(scaffold_smiles + linear_smiles)
 ## License
 
 This software is licensed under the MIT license. See the [LICENSE](LICENSE) file for details.
-```
