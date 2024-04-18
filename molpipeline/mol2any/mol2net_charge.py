@@ -67,12 +67,24 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
     @property
     def n_features(self) -> int:
-        """Return the number of features."""
+        """Return the number of features.
+
+        Returns
+        -------
+        int
+            Number of features.
+        """
         return len(self._descriptor_list)
 
     @property
     def descriptor_list(self) -> list[str]:
-        """Return a copy of the descriptor list."""
+        """Return a copy of the descriptor list.
+
+        Returns
+        -------
+        list[str]
+            List of descriptor names.
+        """
         return self._descriptor_list[:]
 
     def _get_net_charge_gasteiger(

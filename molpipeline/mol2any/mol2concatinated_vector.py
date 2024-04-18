@@ -43,10 +43,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         element_list: list[MolToAnyPipelineElement]
             List of Pipeline Elements of which the output is concatenated.
-        name: str
+        name: str, optional (default="MolToConcatenatedVector")
             name of pipeline.
-        n_jobs: int:
+        n_jobs: int, optional (default=1)
             Number of cores used.
+        uuid: str | None, optional (default=None)
+            UUID of the pipeline element. If None, a random UUID is generated.
+        kwargs: Any
+            Additional keyword arguments. Can be used to set parameters of the pipeline elements.
         """
         self._element_list = element_list
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
@@ -65,7 +69,13 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     @property
     def element_list(self) -> list[tuple[str, MolToAnyPipelineElement]]:
-        """Get pipeline elements."""
+        """Get pipeline elements.
+
+        Returns
+        -------
+        list[tuple[str, MolToAnyPipelineElement]]
+            List of pipeline elements.
+        """
         return self._element_list
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:

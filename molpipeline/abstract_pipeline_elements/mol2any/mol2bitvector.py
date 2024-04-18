@@ -67,7 +67,13 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     @property
     def n_bits(self) -> int:
-        """Get number of bits in (or size of) fingerprint."""
+        """Get number of bits in (or size of) fingerprint.
+
+        Returns
+        -------
+        int
+            Number of bits in fingerprint.
+        """
         return self._n_bits
 
     @overload
@@ -297,17 +303,40 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
 
     @property
     def radius(self) -> int:
-        """Get radius of Morgan fingerprint."""
+        """Get radius of Morgan fingerprint.
+
+        Returns
+        -------
+        int
+            Radius of Morgan fingerprint.
+        """
         return self._radius
 
     @property
     def use_features(self) -> bool:
-        """Get whether to encode atoms by features or not."""
+        """Get whether to encode atoms by features or not.
+
+        Returns
+        -------
+        bool
+            Whether to encode atoms by features or not.
+        """
         return self._use_features
 
     @abc.abstractmethod
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
-        """Get central atom and radius of all features in molecule."""
+        """Get central atom and radius of all features in molecule.
+
+        Parameters
+        ----------
+        mol_obj: RDKitMol
+            RDKit molecule to be encoded.
+
+        Returns
+        -------
+        dict[int, list[tuple[int, int]]]
+            Dictionary with mapping from bit to atom index and radius.
+        """
         raise NotImplementedError
 
     def bit2atom_mapping(

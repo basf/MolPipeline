@@ -26,8 +26,12 @@ class BinaryToMol(AnyToMolPipelineElement):
 
         Parameters
         ----------
-        name: str
-            Name of PipelineElement
+        name: str, optional (default="bin2mol")
+            Name of PipelineElement.
+        n_jobs: int, optional (default=1)
+            Number of cores used.
+        uuid: str | None, optional (default=None)
+            UUID of the pipeline element. If None, a random UUID is generated.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 

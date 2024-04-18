@@ -52,7 +52,17 @@ class TautomerCanonicalizer(_MolToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize TautomerCanonicalizer."""
+        """Initialize TautomerCanonicalizer.
+
+        Parameters
+        ----------
+        name: str, optional (default="TautomerCanonicalizer")
+            Name of PipelineElement
+        n_jobs: int, optional (default=1)
+            Number of jobs to use for parallelization
+        uuid: Optional[str], optional (default=None)
+            UUID of PipelineElement. If None, a random UUID is generated.
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -196,7 +206,17 @@ class LargestFragmentChooser(_MolToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize LargestFragmentChooser."""
+        """Initialize LargestFragmentChooser.
+
+        Parameters
+        ----------
+        name: str, optional (default="LargestFragmentChooser")
+            Name of PipelineElement.
+        n_jobs: int, optional (default=1)
+            Number of jobs to use for parallelization.
+        uuid: Optional[str], optional (default=None)
+            UUID of PipelineElement. If None, a random UUID is generated.
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -266,7 +286,17 @@ class IsotopeRemover(_MolToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize IsotopeRemover."""
+        """Initialize IsotopeRemover.
+
+        Parameters
+        ----------
+        name: str, optional (default="IsotopeRemover")
+            Name of PipelineElement.
+        n_jobs: int, optional (default=1)
+            Number of jobs to use for parallelization.
+        uuid: Optional[str], optional (default=None)
+            UUID of PipelineElement. If None, a random UUID is generated.
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -299,7 +329,17 @@ class ExplicitHydrogenRemover(_MolToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize ExplicitHydrogenRemover."""
+        """Initialize ExplicitHydrogenRemover.
+
+        Parameters
+        ----------
+        name: str, optional (default="ExplicitHydrogenRemover")
+            Name of PipelineElement
+        n_jobs: int, optional (default=1)
+            Number of jobs to use for parallelization
+        uuid: Optional[str], optional (default=None)
+            UUID of PipelineElement. If None, a random UUID is generated.
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -428,23 +468,24 @@ class SolventRemover(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        solvent_smiles_list: list[str], optional
+        solvent_smiles_list: list[str], optional (default=None)
             List of SMILES of fragments to remove, by default None which uses the default solvent list:
-             - WATER	[OH2]
-             - DICHLOROMETHANE	ClCCl
-             - TRICHLOROMETHANE	ClC(Cl)Cl
-             - ETHYL ACETATE	CCOC(=O)C
-             - METHANOL	CO
-             - PROPAN-2-OL	CC(C)O
-             - ACETONE	CC(=O)C
-             - DMSO	CS(=O)C
-             - ETHANOL	CCO
-             - Trimethylamine	CN(C)C  # Not in ChEMBL list
-        name: str, optional (default: "SolventRemover")
+            - WATER	[OH2]
+            - DICHLOROMETHANE	ClCCl
+            - TRICHLOROMETHANE	ClC(Cl)Cl
+            - ETHYL ACETATE	CCOC(=O)C
+            - METHANOL	CO
+            - PROPAN-2-OL	CC(C)O
+            - ACETONE	CC(=O)C
+            - DMSO	CS(=O)C
+            - ETHANOL	CCO
+            - Trimethylamine	CN(C)C  # Not in ChEMBL list
+        name: str, optional (default="SolventRemover")
             Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, optional (default=1)
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str, optional (default=None)
+            Unique identifier of the pipeline element. If None, a random UUID is generated.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if solvent_smiles_list is None:
@@ -453,12 +494,24 @@ class SolventRemover(_MolToMolPipelineElement):
 
     @property
     def solvent_mol_list(self) -> list[RDKitMol]:
-        """Return molecule representation of smiles list."""
+        """Return molecule representation of smiles list.
+
+        Returns
+        -------
+        list[RDKitMol]
+            List of molecule objects to remove.
+        """
         return self._solvent_mol_list
 
     @property
     def solvent_smiles_list(self) -> list[str]:
-        """Return the smiles list."""
+        """Return the smiles list.
+
+        Returns
+        -------
+        list[str]
+            List of SMILES of fragments to remove.
+        """
         return self._solvent_smiles_list
 
     @solvent_smiles_list.setter
@@ -570,7 +623,17 @@ class Uncharger(_MolToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize Uncharger."""
+        """Initialize Uncharger.
+
+        Parameters
+        ----------
+        name: str, optional (default="Uncharger")
+            Name of PipelineElement.
+        n_jobs: int, optional (default=1)
+            Number of jobs to use for parallelization.
+        uuid: str | None, optional (default=None)
+            UUID of the pipeline element. If None, a random UUID is generated.
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:

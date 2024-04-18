@@ -64,7 +64,13 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     @property
     @abc.abstractmethod
     def n_features(self) -> int:
-        """Return the number of features."""
+        """Return the number of features.
+
+        Returns
+        -------
+        int
+            Number of features.
+        """
 
     def assemble_output(
         self,
@@ -148,6 +154,18 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     def _normalize_matrix(
         self, value_matrix: npt.NDArray[np.float_]
     ) -> npt.NDArray[np.float_]:
+        """Normalize matrix with descriptor values.
+
+        Parameters
+        ----------
+        value_matrix: npt.NDArray[np.float_]
+            Matrix with descriptor values of molecules.
+
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            Normalized matrix with descriptor values of molecules.
+        """
         if self._standardizer is not None:
             return self._standardizer.transform(value_matrix)
         return value_matrix

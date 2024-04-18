@@ -308,10 +308,6 @@ class _MultipleErrorFilter:
         ----------
         error_filter_list: list[ErrorFilter]
             List of ErrorFilter objects.
-
-        Returns
-        -------
-        None
         """
         self.error_filter_list = error_filter_list
         prior_remover_dict = {}
@@ -320,19 +316,52 @@ class _MultipleErrorFilter:
         self.prior_remover_dict = prior_remover_dict
 
     def transform(self, values: AnyIterable) -> AnyIterable:
-        """Transform values and return a list without the None values."""
+        """Transform values and return a list without the invalid values.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Iterable to which element is fitted and which is subsequently transformed.
+
+        Returns
+        -------
+        AnyIterable
+            Iterable where invalid instances were removed.
+        """
         for error_filter in self.error_filter_list:
             values = error_filter.transform(values)
         return values
 
     def co_transform(self, values: AnyIterable) -> AnyIterable:
-        """Transform values and return a list without the None values."""
+        """Remove rows at positions which contained discarded values during transformation.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Iterable to which element is fitted and which is subsequently transformed.
+
+        Returns
+        -------
+        AnyIterable
+            Iterable where rows are removed which were removed during the transformation.
+        """
         for error_filter in self.error_filter_list:
             values = error_filter.co_transform(values)
         return values
 
     def fit_transform(self, values: AnyIterable) -> AnyIterable:
-        """Transform values and return a list without the None values."""
+        """Transform values and return a list without the None values.
+
+        Parameters
+        ----------
+        values: AnyIterable
+            Iterable to which element is fitted and which is subsequently transformed.
+
+        Returns
+        -------
+        AnyIterable
+            Iterable where invalid instances were removed.
+        """
         for error_filter in self.error_filter_list:
             values = error_filter.fit_transform(values)
         return values
@@ -502,7 +531,13 @@ class FilterReinserter(ABCPipelineElement):
 
     @property
     def error_filter(self) -> ErrorFilter:
-        """Return the ErrorFilter."""
+        """Get the ErrorFilter connected to this FilterReinserter.
+
+        Returns
+        -------
+        ErrorFilter
+            ErrorFilter used for filling removed values.
+        """
         if self._error_filter is None:
             raise ValueError("ErrorFilter not set")
         return self._error_filter
@@ -658,6 +693,18 @@ class FilterReinserter(ABCPipelineElement):
         return self.fill_with_dummy(values)
 
     def _fill_list(self, list_to_fill: list[Number]) -> list[Number]:
+        """Fill a list with dummy values.
+
+        Parameters
+        ----------
+        list_to_fill: list[Number]
+            List to fill with dummy values.
+
+        Returns
+        -------
+        list[Number]
+            List where dummy values were inserted to replace instances which could not be processed.
+        """
         filled_list = []
         next_value_pos = 0
         for index in range(len(list_to_fill) + len(self.error_filter.error_indices)):
@@ -671,6 +718,18 @@ class FilterReinserter(ABCPipelineElement):
         return filled_list
 
     def _fill_numpy_arr(self, value_array: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        """Fill a numpy array with dummy values.
+
+        Parameters
+        ----------
+        value_array: npt.NDArray[Any]
+            Numpy array to fill with dummy values.
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Numpy array where dummy values were inserted to replace instances which could not be processed.
+        """
         fill_value = self.fill_value
         output_shape = list(value_array.shape)
         output_shape[0] += len(self.error_filter.error_indices)

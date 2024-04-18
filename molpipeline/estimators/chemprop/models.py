@@ -37,16 +37,37 @@ class ChempropModel(ABCChemprop):
     """Wrap Chemprop in a sklearn like Estimator."""
 
     def _is_binary_classifier(self) -> bool:
+        """Check if the model is a binary classifier.
+
+        Returns
+        -------
+        bool
+            True if the model is a binary classifier, False otherwise.
+        """
         if isinstance(self.model.predictor, BinaryClassificationFFNBase):
             return True
         return False
 
     def _is_multiclass_classifier(self) -> bool:
+        """Check if the model is a multiclass classifier.
+
+        Returns
+        -------
+        bool
+            True if the model is a multiclass classifier, False otherwise.
+        """
         if isinstance(self.model.predictor, MulticlassClassificationFFN):
             return True
         return False
 
     def _is_classifier(self) -> bool:
+        """Check if the model is a classifier.
+
+        Returns
+        -------
+        bool
+            True if the model is a classifier, False otherwise.
+        """
         return self._is_binary_classifier() or self._is_multiclass_classifier()
 
     def _predict(

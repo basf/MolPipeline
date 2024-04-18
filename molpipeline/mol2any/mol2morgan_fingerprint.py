@@ -44,21 +44,23 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
 
         Parameters
         ----------
-        radius: int
+        radius: int, optional (default=2)
             radius of the circular fingerprint [1]. Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
-        use_features: bool
+        use_features: bool, optional (default=False)
             Instead of atoms, features are encoded in the fingerprint. [2]
+        n_bits: int, optional (default=2048)
+            Size of fingerprint.
         return_as: Literal["sparse", "dense", "explicit_bit_vect"]
             Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
             With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
             rdkit.DataStructs.cDataStructs.ExplicitBitVect.
-        n_bits: int
-            Size of fingerprint.
-        name: str
+        name: str, optional (default="MolToMorganFP")
             Name of PipelineElement
-        n_jobs: int
+        n_jobs: int, optional (default=1)
             Number of cores to use.
+        uuid: str | None, optional (default=None)
+            UUID of the PipelineElement.
 
         References
         ----------
@@ -155,7 +157,18 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         }
 
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
-        """Get central atom and radius of all features in molecule."""
+        """Get central atom and radius of all features in molecule.
+
+        Parameters
+        ----------
+        mol_obj: RDKitMol
+            RDKit molecule object
+
+        Returns
+        -------
+        dict[int, list[tuple[int, int]]]
+            Dictionary with bit position as key and list of tuples with atom index and radius as value.
+        """
         bit_info: dict[int, list[tuple[int, int]]] = {}
         _ = AllChem.GetMorganFingerprintAsBitVect(
             mol_obj,

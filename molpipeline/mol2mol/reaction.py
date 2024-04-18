@@ -49,8 +49,12 @@ class MolToMolReaction(MolToMolPipelineElement):
             Molecules which are added as educts to the reaction, but are not part of input.
         handle_multi: Literal["pass", "warn", "raise"]
             How to handle reaction where multiple products are possible.
-        name: str
-            Name of PipelineElement
+        name: str, optional (default="MolToMolReaction")
+            Name of PipelineElement.
+        n_jobs: int, optional (default=1)
+            Number of cores used.
+        uuid: str | None, optional (default=None)
+            UUID of the pipeline element. If None, a random UUID is generated.
         """
         super().__init__(
             name=name,
@@ -111,7 +115,13 @@ class MolToMolReaction(MolToMolPipelineElement):
 
     @property
     def reaction(self) -> AllChem.ChemicalReaction:
-        """Get the reaction which is applied to the input molecule."""
+        """Get the reaction which is applied to the input molecule.
+
+        Returns
+        -------
+        AllChem.ChemicalReaction
+            Reaction which is applied to molecules.
+        """
         return self._reaction
 
     @reaction.setter

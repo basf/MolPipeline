@@ -52,10 +52,16 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
         Parameters
         ----------
-        descriptor_list: Optional[list[str]]
-        standardizer: bool
-        name: str
-        n_jobs: int
+        descriptor_list: Optional[list[str]], optional (default=None)
+            List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
+        standardizer: Optional[AnyTransformer], optional (default=StandardScaler())
+            Standardizer to use.
+        name: str, optional (default="Mol2RDKitPhysChem")
+            Name of the PipelineElement.
+        n_jobs: int, optional (default=1)
+            Number of jobs to use for parallelization.
+        uuid: Optional[str], optional (default=None)
+            UUID of the PipelineElement. If None, a new UUID is generated.
         """
         self._descriptor_list = descriptor_list or DEFAULT_DESCRIPTORS
         super().__init__(
@@ -67,12 +73,24 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     @property
     def n_features(self) -> int:
-        """Return the number of features."""
+        """Return the number of features.
+
+        Returns
+        -------
+        int
+            Number of features.
+        """
         return len(self._descriptor_list)
 
     @property
     def descriptor_list(self) -> list[str]:
-        """Return a copy of the descriptor list."""
+        """Return a copy of the descriptor list.
+
+        Returns
+        -------
+        list[str]
+            List of descriptor names.
+        """
         return self._descriptor_list[:]
 
     def pretransform_single(

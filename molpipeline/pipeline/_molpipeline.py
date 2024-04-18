@@ -70,6 +70,13 @@ class _MolPipeline:
 
     @property
     def _filter_elements(self) -> list[ErrorFilter]:
+        """Get the elements which filter the input.
+
+        Returns
+        -------
+        list[ErrorFilter]
+            List of elements which filter the input.
+        """
         return [
             element
             for element in self._element_list
@@ -78,12 +85,26 @@ class _MolPipeline:
 
     @property
     def _filter_elements_agg(self) -> _MultipleErrorFilter:
+        """Get the aggregated filter element.
+
+        Returns
+        -------
+        _MultipleErrorFilter
+            Aggregated filter element.
+        """
         return _MultipleErrorFilter(self._filter_elements)
 
     @property
     def _transforming_elements(
         self,
     ) -> list[Union[TransformingPipelineElement, _MolPipeline]]:
+        """Get the elements which transform the input.
+
+        Returns
+        -------
+        list[Union[TransformingPipelineElement, _MolPipeline]]
+            List of elements which transform the input.
+        """
         return [
             element
             for element in self._element_list
@@ -92,7 +113,13 @@ class _MolPipeline:
 
     @property
     def n_jobs(self) -> int:
-        """Return the number of cores to use in transformation step."""
+        """Return the number of cores to use in transformation step.
+
+        Returns
+        -------
+        int
+            Number of cores used in transformation steps.
+        """
         return self._n_jobs
 
     @n_jobs.setter
@@ -113,7 +140,13 @@ class _MolPipeline:
 
     @property
     def parameters(self) -> dict[str, Any]:
-        """Get all parameters defining the object."""
+        """Get all parameters defining the object.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing the parameter names and corresponding values.
+        """
         return self.get_params()
 
     @parameters.setter
@@ -133,7 +166,13 @@ class _MolPipeline:
 
     @property
     def requires_fitting(self) -> bool:
-        """Return whether the pipeline requires fitting."""
+        """Return whether the pipeline requires fitting.
+
+        Returns
+        -------
+        bool
+            True if the pipeline requires fitting, False otherwise.
+        """
         return self._requires_fitting
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
@@ -188,13 +227,25 @@ class _MolPipeline:
 
     @property
     def element_list(self) -> list[ABCPipelineElement]:
-        """Get a shallow copy from the list of pipeline elements."""
+        """Get a shallow copy from the list of pipeline elements.
+
+        Returns
+        -------
+        list[ABCPipelineElement]
+            List of pipeline elements.
+        """
         return self._element_list[:]  # [:] to create shallow copy.
 
     def _get_meta_element_list(
         self,
     ) -> list[Union[ABCPipelineElement, _MolPipeline]]:
-        """Merge elements which do not require fitting to a meta element which improves parallelization."""
+        """Merge elements which do not require fitting to a meta element which improves parallelization.
+
+        Returns
+        -------
+        list[Union[ABCPipelineElement, _MolPipeline]]
+            List of pipeline elements and meta elements.
+        """
         meta_element_list: list[Union[ABCPipelineElement, _MolPipeline]] = []
         no_fit_element_list: list[ABCPipelineElement] = []
         for element in self._element_list:
@@ -239,7 +290,8 @@ class _MolPipeline:
 
         Returns
         -------
-        None
+        Self
+            Fitted MolPipeline.
         """
         _ = y  # Making pylint happy
         _ = fit_params  # Making pylint happy
@@ -383,7 +435,7 @@ class _MolPipeline:
 
         Parameters
         ----------
-        output_generator: Iterable[Any]
+        value_list: Iterable[Any]
             Generator which yields the output of the pipeline.
 
         Returns
