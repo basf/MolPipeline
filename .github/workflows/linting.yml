@@ -1,0 +1,150 @@
+name: Code-Analysis
+
+on: [push]
+
+jobs:
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install $(find . -name "requirement*" -type f -printf ' -r %p')
+        pip install pylint
+    - name: Analysing the code with pylint
+      run: |
+        pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install $(find . -name "requirement*" -type f -printf ' -r %p')
+        pip install mypy
+        mypy . || exit_code=$?
+        mypy --install-types --non-interactive
+    - name: Analysing the code with mypy
+      run: |
+        mypy --ignore-missing-imports --disallow-any-generics --disallow-untyped-defs --no-implicit-optional --disallow-incomplete-defs . 
+  pydocstyle:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pydocstyle
+    - name: Analysing the code with pydocstyle
+      run: |
+        pydocstyle .
+
+  docsig:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install docsig
+    - name: Analysing the code with docsig
+      run: |
+        docsig --check-class-constructor --check-dunders --check-protected-class-methods --check-nested --check-overridden --check-protected --check-property-returns .
+
+  black:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black[jupyter]
+    - name: Analysing the code with black
+      run: |
+        black --check .
+
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+      - name: Analysing the code with flake8
+        run: |
+          flake8 --extend-ignore=D203,E203,E501,W503 .
+
+  interrogate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install interrogate
+      - name: Analysing the code with interrogate
+        run: |
+         interrogate --ignore-overloaded-functions -vv .
+
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+      - name: Analysing the code with bandit
+        run: |
+         bandit -r --skip=B404,B603,B602 .
+
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install isort
+      - name: Analysing the code with isort
+        run: |
+          isort --profile black .
