@@ -47,6 +47,20 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         matrix_a: npt.NDArray[np.float_] | csr_matrix,
         matrix_b: npt.NDArray[np.float_] | csr_matrix,
     ) -> npt.NDArray[np.float_]:
+        """Compute the similarity matrix.
+
+        Parameters
+        ----------
+        matrix_a : npt.NDArray[np.float_] | csr_matrix
+            First matrix.
+        matrix_b : npt.NDArray[np.float_] | csr_matrix
+            Second matrix.
+
+        Returns
+        -------
+        npt.NDArray[np.float_]
+            Similarity matrix. If distance is True, the distance matrix is computed instead.
+        """
         if not isinstance(matrix_a, csr_matrix):
             matrix_a = csr_matrix(matrix_a)
         if not isinstance(matrix_b, csr_matrix):

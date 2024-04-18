@@ -42,6 +42,8 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
             Name of PipelineElement
         uuid: str, optional (default=None)
             Unique identifier of PipelineElement.
+        n_jobs: int, optional (default=1)
+            Number of jobs to run in parallel.
         """
         super().__init__(name=name, uuid=uuid, n_jobs=n_jobs)
         if invalid_values is None:

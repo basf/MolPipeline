@@ -42,7 +42,13 @@ class InvalidInstance(NamedTuple):
     element_name: Optional[str] = None
 
     def __repr__(self) -> str:
-        """Return string representation of InvalidInstance."""
+        """Return string representation of InvalidInstance.
+
+        Returns
+        -------
+        str
+            String representation of InvalidInstance.
+        """
         return (
             f"InvalidInstance({self.element_name or self.element_id}, {self.message})"
         )
@@ -72,7 +78,13 @@ class RemovedInstance:  # pylint: disable=too-few-public-methods
         self.message = message
 
     def __repr__(self) -> str:
-        """Return string representation of RemovedInstance."""
+        """Return string representation of RemovedInstance.
+
+        Returns
+        -------
+        str
+            String representation of RemovedInstance.
+        """
         return f"RemovedInstance({self.filter_element_id}, {self.message})"
 
 
@@ -97,6 +109,8 @@ class ABCPipelineElement(abc.ABC):
             Name of PipelineElement
         n_jobs: int
             Number of cores used for processing.
+        uuid: Optional[str]
+            Unique identifier of the PipelineElement.
         """
         self.name = name
         self.n_jobs = n_jobs
@@ -106,7 +120,13 @@ class ABCPipelineElement(abc.ABC):
             self.uuid = uuid
 
     def __repr__(self) -> str:
-        """Return string representation of object."""
+        """Return string representation of object.
+
+        Returns
+        -------
+        str
+            String representation of object.
+        """
         parm_list = []
         for key, value in self._get_non_default_parameters().items():
             parm_list.append(f"{key}={value}")
@@ -190,12 +210,19 @@ class ABCPipelineElement(abc.ABC):
         Returns
         -------
         dict[str, Any]
+            Additional attributes.
         """
         return {}
 
     @property
     def n_jobs(self) -> int:
-        """Get the number of cores."""
+        """Get the number of cores.
+
+        Returns
+        -------
+        int
+            Number of cores used for processing.
+        """
         return self._n_jobs
 
     @n_jobs.setter
@@ -215,7 +242,13 @@ class ABCPipelineElement(abc.ABC):
 
     @property
     def requires_fitting(self) -> bool:
-        """Return whether the object requires fitting or not."""
+        """Return whether the object requires fitting or not.
+
+        Returns
+        -------
+        bool
+            True if object requires fitting, else False.
+        """
         return self._requires_fitting
 
     def finish(self) -> None:
@@ -335,28 +368,54 @@ class TransformingPipelineElement(ABCPipelineElement):
             Name of PipelineElement
         n_jobs: int
             Number of cores used for processing.
+        uuid: Optional[str]
+            Unique identifier of the PipelineElement.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self._is_fitted = False
 
     @property
     def input_type(self) -> str:
-        """Return the input type."""
+        """Return the input type.
+
+        Returns
+        -------
+        str
+            Input type of the object.
+        """
         return self._input_type
 
     @property
     def is_fitted(self) -> bool:
-        """Return whether the object is fitted or not."""
+        """Return whether the object is fitted or not.
+
+        Returns
+        -------
+        bool
+            True if object is fitted, else False.
+        """
         return self._is_fitted
 
     @property
     def output_type(self) -> str:
-        """Return the output type."""
+        """Return the output type.
+
+        Returns
+        -------
+        str
+            Output type of the object.
+        """
         return self._output_type
 
     @property
     def parameters(self) -> dict[str, Any]:
-        """Return the parameters of the object."""
+        """Return the parameters of the object.
+
+        Returns
+        -------
+        dict[str, Any]
+            Object parameters as a dictionary.
+        """
         return self.get_params()
 
     @parameters.setter
@@ -605,7 +664,17 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize MolToMolPipelineElement."""
+        """Initialize MolToMolPipelineElement.
+
+        Parameters
+        ----------
+        name: str
+            Name of the PipelineElement.
+        n_jobs: int
+            Number of cores used for processing.
+        uuid: Optional[str]
+            Unique identifier of the PipelineElement.
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def transform(self, values: list[OptionalMol]) -> list[OptionalMol]:
@@ -679,7 +748,17 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize AnyToMolPipelineElement."""
+        """Initialize AnyToMolPipelineElement.
+
+        Parameters
+        ----------
+        name: str
+            Name of the PipelineElement.
+        n_jobs: int
+            Number of cores used for processing.
+        uuid: Optional[str]
+            Unique identifier of the PipelineElement.
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def transform(self, values: Any) -> list[OptionalMol]:
@@ -725,7 +804,17 @@ class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-        """Initialize MolToAnyPipelineElement."""
+        """Initialize MolToAnyPipelineElement.
+
+        Parameters
+        ----------
+        name: str
+            Name of the PipelineElement.
+        n_jobs: int
+            Number of cores used for processing.
+        uuid: Optional[str]
+            Unique identifier of the PipelineElement.
+        """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     @abc.abstractmethod

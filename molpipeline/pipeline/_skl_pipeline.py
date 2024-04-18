@@ -65,7 +65,6 @@ class Pipeline(_Pipeline):
         memory: Optional[Union[str, joblib.Memory]] = None,
         verbose: bool = False,
         n_jobs: int = 1,
-        raise_nones: bool = False,
     ):
         """Initialize Pipeline.
 
@@ -79,14 +78,9 @@ class Pipeline(_Pipeline):
             If True, print additional information.
         n_jobs: int, optional
             Number of cores used for aggregated steps.
-
-        Returns
-        -------
-        None
         """
         super().__init__(steps, memory=memory, verbose=verbose)
         self.n_jobs = n_jobs
-        self.raise_nones = raise_nones
 
         error_replacer_list = [
             e_filler
@@ -104,6 +98,7 @@ class Pipeline(_Pipeline):
             error_replacer.select_error_filter(error_filter_list)
 
     def _validate_steps(self) -> None:
+        """Validate the steps."""
         names = [name for name, _ in self.steps]
 
         # validate names
@@ -157,9 +152,10 @@ class Pipeline(_Pipeline):
         filter_passthrough: bool, optional
             If True, passthrough steps are filtered out.
 
-        Yields
+        Returns
         ------
-        _AggregatedPipelineStep
+        Iterable[_AggregatedPipelineStep]
+            The _AggregatedPipelineStep is composed of the index, the name and the transformer.
         """
         last_element: Optional[_AggregatedPipelineStep] = None
 
@@ -185,7 +181,13 @@ class Pipeline(_Pipeline):
 
     @property
     def _estimator_type(self) -> Any:
-        """Return the estimator type."""
+        """Return the estimator type.
+
+        Returns
+        -------
+        Any
+            The estimator type.
+        """
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
@@ -203,7 +205,13 @@ class Pipeline(_Pipeline):
         _MolPipeline,
         ABCPipelineElement,
     ]:
-        """Return the lst estimator which is not a PostprocessingTransformer."""
+        """Return the lst estimator which is not a PostprocessingTransformer.
+
+        Returns
+        -------
+        Union[Literal["passthrough"], AnyTransformer, AnyPredictor, _MolPipeline, ABCPipelineElement]
+            The last estimator which is not a PostprocessingTransformer.
+        """
         element_list = list(self._agg_non_postpred_steps())
         last_element = element_list[-1]
         return last_element[2]
@@ -215,6 +223,24 @@ class Pipeline(_Pipeline):
         y: Any = None,  # pylint: disable=invalid-name
         routed_params: dict[str, Any] | None = None,
     ) -> tuple[Any, Any]:
+        """Fit the model by fitting all transformers except the final estimator.
+
+        Data can be subsetted by the transformers.
+
+        Parameters
+        ----------
+        X : Any
+            Training data.
+        y : Any, optional (default=None)
+            Training objectives.
+        routed_params : dict[str, Any], optional
+            Parameters for each step as returned by process_routing.
+
+        Returns
+        -------
+        tuple[Any, Any]
+            The transformed data and the transformed objectives.
+        """
         # shallow copy of steps - this should really be steps_
         self.steps = list(self.steps)
         self._validate_steps()
@@ -332,7 +358,13 @@ class Pipeline(_Pipeline):
     def _non_post_processing_steps(
         self,
     ) -> list[AnyStep]:
-        """Return all steps before the first PostPredictionTransformation."""
+        """Return all steps before the first PostPredictionTransformation.
+
+        Returns
+        -------
+        list[AnyStep]
+            List of steps before the first PostPredictionTransformation.
+        """
         non_post_processing_steps: list[AnyStep] = []
         start_adding = False
         for step_name, step_estimator in self.steps[::-1]:
@@ -347,7 +379,13 @@ class Pipeline(_Pipeline):
         return list(non_post_processing_steps[::-1])
 
     def _post_processing_steps(self) -> list[tuple[str, PostPredictionTransformation]]:
-        """Return last steps which are PostPredictionTransformation."""
+        """Return last steps which are PostPredictionTransformation.
+
+        Returns
+        -------
+        list[tuple[str, PostPredictionTransformation]]
+            List of tuples containing the name and the PostPredictionTransformation.
+        """
         post_processing_steps = []
         for step_name, step_estimator in self.steps[::-1]:
             if isinstance(step_estimator, PostPredictionTransformation):
@@ -363,6 +401,11 @@ class Pipeline(_Pipeline):
 
         When filter_passthrough is True, 'passthrough' and None transformers
         are filtered out.
+
+        Returns
+        ------
+        Iterable[_AggregatedPipelineStep]
+            The _AggregatedPipelineStep is composed of the index, the name and the transformer.
         """
         aggregated_transformer_list = []
         for i, (name_i, step_i) in enumerate(self._non_post_processing_steps()):
@@ -439,6 +482,13 @@ class Pipeline(_Pipeline):
         return self
 
     def _can_fit_transform(self) -> bool:
+        """Check if the final estimator can fit_transform or is passthrough.
+
+        Returns
+        -------
+        bool
+            True if the final estimator can fit_transform or is passthrough.
+        """
         return (
             self._final_estimator == "passthrough"
             or hasattr(self._final_estimator, "transform")
@@ -446,6 +496,13 @@ class Pipeline(_Pipeline):
         )
 
     def _can_decision_function(self) -> bool:
+        """Check if the final estimator implements decision_function.
+
+        Returns
+        -------
+        bool
+            True if the final estimator implements decision_function.
+        """
         return hasattr(self._final_estimator, "decision_function")
 
     @available_if(_can_fit_transform)
@@ -674,6 +731,13 @@ class Pipeline(_Pipeline):
         return iter_input
 
     def _can_transform(self) -> bool:
+        """Check if the final estimator can transform or is passthrough.
+
+        Returns
+        -------
+        bool
+            True if the final estimator can transform or is passthrough.
+        """
         return self._final_estimator == "passthrough" or hasattr(
             self._final_estimator, "transform"
         )
@@ -772,7 +836,13 @@ class Pipeline(_Pipeline):
 
     @property
     def classes_(self) -> list[Any] | npt.NDArray[Any]:
-        """Return the classes of the last element, which is not a PostPredictionTransformation."""
+        """Return the classes of the last element, which is not a PostPredictionTransformation.
+
+        Returns
+        -------
+        list[Any] | npt.NDArray[Any]
+            The classes of the last element.
+        """
         check_last = [
             step
             for step in self.steps
