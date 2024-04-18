@@ -1,4 +1,4 @@
-name: Code-Analysis
+name: Unit-Tests
 
 on: [push]
 
