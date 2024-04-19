@@ -18,7 +18,7 @@ or some descriptors might not be calculable for certain molecules.
 
 ## Publications
 
-TODO
+The publication is freely available [here](https://chemrxiv.org/engage/chemrxiv/article-details/661fec7f418a5379b00ae036).
 
 ## Installation
 ```commandline
