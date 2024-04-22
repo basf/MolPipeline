@@ -1,2 +1,2 @@
-chemprop @ https://github.com//c-w-feldmann/chemprop/archive/v2/molpipeline_requirement.zip
+chemprop
 lightning < 1000
