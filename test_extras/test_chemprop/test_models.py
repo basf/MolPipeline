@@ -3,8 +3,10 @@
 import logging
 import unittest
 
+from chemprop.nn.loss import LossFunction
 from lightning import pytorch as pl
 from sklearn.base import clone
+from torch import nn
 
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
@@ -46,7 +48,6 @@ class TestChempropModel(unittest.TestCase):
         """Test the get_params and set_params methods."""
         chemprop_model = get_model()
         orig_params = chemprop_model.get_params(deep=True)
-
         expected_params = {
             "batch_size": 64,
             "lightning_trainer": pl.Trainer,
@@ -60,7 +61,7 @@ class TestChempropModel(unittest.TestCase):
             "model__message_passing__bias": False,
             "model__message_passing__d_e": 14,
             "model__message_passing__d_h": 300,
-            "model__message_passing__d_v": 133,
+            "model__message_passing__d_v": 72,
             "model__message_passing__d_vd": None,
             "model__message_passing__depth": 3,
             "model__message_passing__dropout_rate": 0.0,
@@ -79,7 +80,9 @@ class TestChempropModel(unittest.TestCase):
                     raise ValueError(f"{param_name} should be a type.")
                 self.assertIsInstance(orig_params[param_name], param)
             else:
-                self.assertEqual(orig_params[param_name], param)
+                self.assertEqual(
+                    orig_params[param_name], param, f"Test failed for {param_name}"
+                )
 
         new_params = {
             "batch_size": 32,
@@ -102,7 +105,6 @@ class TestChempropModel(unittest.TestCase):
         cloned_model = clone(chemprop_model)
         self.assertIsInstance(cloned_model, ChempropModel)
         cloned_model_params = cloned_model.get_params(deep=True)
-
         for param_name, param in chemprop_model.get_params(deep=True).items():
             cloned_param = cloned_model_params[param_name]
             if hasattr(param, "get_params"):
@@ -110,8 +112,16 @@ class TestChempropModel(unittest.TestCase):
                 self.assertNotEqual(id(param), id(cloned_param))
             elif isinstance(param, pl.Trainer):
                 self.assertIsInstance(cloned_param, pl.Trainer)
+            elif isinstance(param, LossFunction):
+                self.assertEqual(
+                    param.state_dict()["task_weights"],
+                    cloned_param.state_dict()["task_weights"],
+                )
+                self.assertEqual(type(param), type(cloned_param))
+            elif isinstance(param, nn.Identity):
+                self.assertEqual(type(param), type(cloned_param))
             else:
-                self.assertEqual(param, cloned_param)
+                self.assertEqual(param, cloned_param, f"Test failed for {param_name}")
 
     def test_classifier_methods(self) -> None:
         """Test the classifier methods."""

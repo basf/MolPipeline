@@ -3,7 +3,9 @@
 import unittest
 
 import numpy as np
+from chemprop.nn.loss import LossFunction
 from sklearn.base import clone
+from torch import nn
 
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
@@ -106,6 +108,14 @@ class TestChempropPipeline(unittest.TestCase):
                     self.assertEqual(
                         param.__class__, cloned_params[param_name].__class__
                     )
+                elif isinstance(param, LossFunction):
+                    self.assertEqual(
+                        param.state_dict()["task_weights"],
+                        cloned_params[param_name].state_dict()["task_weights"],
+                    )
+                    self.assertEqual(type(param), type(cloned_params[param_name]))
+                elif isinstance(param, nn.Identity):
+                    self.assertEqual(type(param), type(cloned_params[param_name]))
                 else:
                     self.assertEqual(
                         param, cloned_params[param_name], f"Failed for {param_name}"

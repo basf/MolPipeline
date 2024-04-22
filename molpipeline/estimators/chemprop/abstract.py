@@ -13,10 +13,10 @@ import numpy as np
 import numpy.typing as npt
 
 try:
-    from chemprop.data import MoleculeDataset, MolGraphDataLoader
+    from chemprop.data import MoleculeDataset, build_dataloader
     from chemprop.models.model import MPNN
     from lightning import pytorch as pl
-except ImportError:
+except ImportError as error:
     pass
 from sklearn.base import BaseEstimator
 
@@ -90,7 +90,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         if y.ndim == 1:
             y = y.reshape(-1, 1)
         X.Y = y
-        training_data = MolGraphDataLoader(
+        training_data = build_dataloader(
             X, batch_size=self.batch_size, num_workers=self.n_jobs
         )
         self.lightning_trainer.fit(self.model, training_data)

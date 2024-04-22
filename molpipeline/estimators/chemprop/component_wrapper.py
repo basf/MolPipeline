@@ -1,5 +1,6 @@
 """Wrapper classes for the chemprop components to make them compatible with scikit-learn."""
 
+import abc
 from typing import Any, Iterable, Self
 
 import torch
@@ -9,13 +10,18 @@ from chemprop.nn.agg import Aggregation
 from chemprop.nn.agg import MeanAggregation as _MeanAggregation
 from chemprop.nn.agg import SumAggregation as _SumAggregation
 from chemprop.nn.ffn import MLP
-from chemprop.nn.loss import LossFunction
+from chemprop.nn.loss import BCELoss, LossFunction, MSELoss
 from chemprop.nn.message_passing import BondMessagePassing as _BondMessagePassing
 from chemprop.nn.message_passing import MessagePassing
-from chemprop.nn.metrics import BCELoss, Metric
+from chemprop.nn.metrics import BinaryAUROCMetric, Metric, MSEMetric
 from chemprop.nn.predictors import BinaryClassificationFFN as _BinaryClassificationFFN
-from chemprop.nn.predictors import Predictor
+from chemprop.nn.predictors import RegressionFFN as _RegressionFFN
+from chemprop.nn.predictors import (
+    _FFNPredictorBase as _Predictor,  # pylint: disable=protected-access
+)
+from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
+from chemprop.utils.registry import Factory
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
 
@@ -115,11 +121,11 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
-class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
-    """A wrapper for the BinaryClassificationFFN class."""
+class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
+    """Abstract wrapper for the Predictor class."""
 
-    n_targets: int = 1
-    _default_criterion = BCELoss()
+    _T_default_criterion: LossFunction
+    _T_default_metric: Metric
 
     def __init__(
         self,
@@ -130,6 +136,9 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
         dropout: float = 0,
         activation: str = "relu",
         criterion: LossFunction | None = None,
+        task_weights: Tensor | None = None,
+        threshold: float | None = None,
+        output_transform: UnscaleTransform | None = None,
     ):
         """Initialize the BinaryClassificationFFN class.
 
@@ -150,6 +159,13 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
         criterion : LossFunction or None, optional (default=None)
             Loss function. None defaults to BCELoss.
         """
+        if criterion is None:
+            task_weights = torch.ones(n_tasks) if task_weights is None else task_weights
+            criterion = Factory.build(
+                self._T_default_criterion,
+                task_weights=task_weights,
+                threshold=threshold,
+            )
         super().__init__(
             n_tasks=n_tasks,
             input_dim=input_dim,
@@ -158,6 +174,7 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
             dropout=dropout,
             activation=activation,
             criterion=criterion,
+            output_transform=output_transform,
         )
         self.n_tasks = n_tasks
         self._input_dim = input_dim
@@ -165,6 +182,8 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
         self.n_layers = n_layers
         self.dropout = dropout
         self.activation = activation
+        self.task_weights = task_weights
+        self.threshold = threshold
 
     @property
     def input_dim(self) -> int:
@@ -218,13 +237,13 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
         Self
             The reinitialized feedforward network.
         """
-        self.ffn = MLP(
-            self.input_dim,
-            self.n_tasks * self.n_targets,
-            self.hidden_dim,
-            self.n_layers,
-            self.dropout,
-            self.activation,
+        self.ffn = MLP.build(
+            input_dim=self.input_dim,
+            output_dim=self.n_tasks * self.n_targets,
+            hidden_dim=self.hidden_dim,
+            n_layers=self.n_layers,
+            dropout=self.dropout,
+            activation=self.activation,
         )
         return self
 
@@ -246,6 +265,22 @@ class BinaryClassificationFFN(_BinaryClassificationFFN, BaseEstimator):
         return self
 
 
+class BinaryClassificationFFN(PredictorWrapper, _BinaryClassificationFFN):  # type: ignore
+    """A wrapper for the BinaryClassificationFFN class."""
+
+    n_targets: int = 1
+    _T_default_criterion = BCELoss
+    _T_default_metric = BinaryAUROCMetric
+
+
+class RegressionFFN(PredictorWrapper, _RegressionFFN):  # type: ignore
+    """A wrapper for the RegressionFFN class."""
+
+    n_targets: int = 1
+    _T_default_criterion = MSELoss
+    _T_default_metric = MSEMetric
+
+
 class MPNN(_MPNN, BaseEstimator):
     """A wrapper for the MPNN class.
 
@@ -253,14 +288,15 @@ class MPNN(_MPNN, BaseEstimator):
     and a feedforward network for prediction.
     """
 
+    bn: nn.BatchNorm1d | nn.Identity
+
     def __init__(
         self,
         message_passing: MessagePassing,
         agg: Aggregation,
-        predictor: Predictor,
+        predictor: PredictorWrapper,
         batch_norm: bool = True,
         metric_list: Iterable[Metric] | None = None,
-        task_weight: Tensor | None = None,
         warmup_epochs: int = 2,
         init_lr: float = 1e-4,
         max_lr: float = 1e-3,
@@ -280,8 +316,6 @@ class MPNN(_MPNN, BaseEstimator):
             Whether to use batch normalization.
         metric_list : Iterable[Metric] | None, optional (default=None)
             The metrics to use for evaluation.
-        task_weight : Tensor | None, optional (default=None)
-            The weights to use for each task during training. If None, use uniform weights.
         warmup_epochs : int, optional (default=2)
             The number of epochs to use for the learning rate warmup.
         init_lr : float, optional (default=1e-4)
@@ -292,20 +326,18 @@ class MPNN(_MPNN, BaseEstimator):
             The final learning rate.
         """
         super().__init__(
-            message_passing,
-            agg,
-            predictor,
-            batch_norm,
-            metric_list,
-            task_weight,
-            warmup_epochs,
-            init_lr,
-            max_lr,
-            final_lr,
+            message_passing=message_passing,
+            agg=agg,
+            predictor=predictor,
+            batch_norm=batch_norm,
+            metrics=metric_list,
+            warmup_epochs=warmup_epochs,
+            init_lr=init_lr,
+            max_lr=max_lr,
+            final_lr=final_lr,
         )
         self.metric_list = metric_list
         self.batch_norm = batch_norm
-        self.task_weight = task_weight
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
@@ -315,21 +347,17 @@ class MPNN(_MPNN, BaseEstimator):
         Self
             The reinitialized network.
         """
-        self.bn = (
-            nn.BatchNorm1d(self.message_passing.output_dim)
-            if self.batch_norm
-            else nn.Identity()
-        )
+        if self.batch_norm:
+            self.bn = nn.BatchNorm1d(self.message_passing.output_dim)
+        else:
+            self.bn = nn.Identity()
+
         if self.metric_list is None:
             # pylint: disable=protected-access
-            self.metrics = [self.predictor._default_metric, self.criterion]
+            self.metrics = [self.predictor._T_default_metric, self.criterion]
         else:
             self.metrics = list(self.metric_list) + [self.criterion]
-        if self.task_weight is None:
-            w_t = torch.ones(self.n_tasks)
-        else:
-            w_t = torch.tensor(self.task_weight)
-        self.w_t = nn.Parameter(w_t.unsqueeze(0), False)
+
         return self
 
     def set_params(self, **params: Any) -> Self:

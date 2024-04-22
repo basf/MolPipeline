@@ -2,7 +2,9 @@
 
 import unittest
 
+from chemprop.nn.loss import LossFunction
 from sklearn.base import clone
+from torch import nn
 
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
@@ -113,6 +115,14 @@ class MPNNTest(unittest.TestCase):
             clone_param = mpnn_clone.get_params(deep=True)[param_name]
             if hasattr(param, "get_params"):
                 self.assertEqual(param.__class__, clone_param.__class__)
+            elif isinstance(param, LossFunction):
+                self.assertEqual(
+                    param.state_dict()["task_weights"],
+                    clone_param.state_dict()["task_weights"],
+                )
+                self.assertEqual(type(param), type(clone_param))
+            elif isinstance(param, nn.Identity):
+                self.assertEqual(type(param), type(clone_param))
             else:
                 self.assertEqual(param, clone_param)
 
