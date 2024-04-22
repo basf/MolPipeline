@@ -158,6 +158,12 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             Activation function.
         criterion : LossFunction or None, optional (default=None)
             Loss function. None defaults to BCELoss.
+        task_weights : Tensor or None, optional (default=None)
+            Task weights.
+        threshold : float or None, optional (default=None)
+            Threshold for binary classification.
+        output_transform : UnscaleTransform or None, optional (default=None)
+            Transformations to apply to the output. None defaults to UnscaleTransform.
         """
         if criterion is None:
             task_weights = torch.ones(n_tasks) if task_weights is None else task_weights
