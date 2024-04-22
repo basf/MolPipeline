@@ -16,7 +16,7 @@ try:
     from chemprop.data import MoleculeDataset, build_dataloader
     from chemprop.models.model import MPNN
     from lightning import pytorch as pl
-except ImportError as error:
+except ImportError:
     pass
 from sklearn.base import BaseEstimator
 
