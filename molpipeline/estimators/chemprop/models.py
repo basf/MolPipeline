@@ -7,6 +7,7 @@ try:
 except ImportError:
     from typing_extensions import Self
 
+from loguru import logger
 import numpy as np
 import numpy.typing as npt
 from sklearn.base import clone
@@ -19,8 +20,11 @@ try:
         MulticlassClassificationFFN,
     )
     from lightning import pytorch as pl
-except ImportError:
-    pass
+except ImportError as error:
+    logger.error(
+        "Chemprop is not installed. Please install it using `pip install chemprop`."
+    )
+    logger.info(error)
 
 
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
