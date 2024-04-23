@@ -4,8 +4,18 @@ import pkgutil
 
 installed_packages = {pkg.name for pkg in pkgutil.iter_modules()}
 if "chemprop" in installed_packages:
-    from molpipeline.estimators.chemprop.models import ChempropModel  # noqa
+    from molpipeline.estimators.chemprop.models import (
+        ChempropClassifier,
+        ChempropModel,
+        ChempropNeuralFP,
+        ChempropRegressor,
+    )
 
-    __all__ = ["ChempropModel"]
+    __all__ = [
+        "ChempropClassifier",
+        "ChempropModel",
+        "ChempropNeuralFP",
+        "ChempropRegressor",
+    ]
 else:
     __all__ = []
