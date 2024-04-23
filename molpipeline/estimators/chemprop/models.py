@@ -93,7 +93,8 @@ class ChempropModel(ABCChemprop):
         self.model.eval()
         test_data = build_dataloader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
-        prediction_array = np.array([pred.numpy() for pred in predictions[0]])  # type: ignore
+        prediction_array = np.vstack(predictions)  # type: ignore
+        prediction_array = prediction_array.squeeze()
 
         # Check if the predictions have the same length as the input dataset
         if prediction_array.shape[0] != len(X):
@@ -103,11 +104,10 @@ class ChempropModel(ABCChemprop):
 
         # If the model is a binary classifier, return the probability of the positive class
         if self._is_binary_classifier():
-            if prediction_array.shape[1] != 1:
+            if prediction_array.ndim != 1:
                 raise ValueError(
                     "Binary classification model should output a single probability."
                 )
-            prediction_array = prediction_array[:, 0]
         return prediction_array
 
     def predict(
