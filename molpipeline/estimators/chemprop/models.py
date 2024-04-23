@@ -28,6 +28,7 @@ from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
     BinaryClassificationFFN,
     BondMessagePassing,
+    RegressionFFN,
     SumAggregation,
 )
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
@@ -227,3 +228,43 @@ class ChempropClassifier(ChempropModel):
         if not self._is_binary_classifier():
             raise ValueError("ChempropClassifier should be a binary classifier.")
         return self
+
+
+class ChempropRegressor(ChempropModel):
+    """Chemprop model with default parameters for regression tasks."""
+
+    def __init__(
+        self,
+        model: MPNN | None = None,
+        lightning_trainer: pl.Trainer | None = None,
+        batch_size: int = 64,
+        n_jobs: int = 1,
+        **kwargs: Any,  # pylint: disable=unused-argument
+    ) -> None:
+        """Initialize the chemprop regressor model.
+
+        Parameters
+        ----------
+        model : MPNN | None, optional
+            The chemprop model to wrap. If None, a default model will be used.
+        lightning_trainer : pl.Trainer, optional
+            The lightning trainer to use, by default None
+        batch_size : int, optional (default=64)
+            The batch size to use.
+        n_jobs : int, optional (default=1)
+            The number of jobs to use.
+        kwargs : Any
+            Parameters set using `set_params`.
+            Can be used to modify components of the model.
+        """
+        if model is None:
+            bond_encoder = BondMessagePassing()
+            agg = SumAggregation()
+            predictor = RegressionFFN()
+            model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
+        super().__init__(
+            model=model,
+            lightning_trainer=lightning_trainer,
+            batch_size=batch_size,
+            n_jobs=n_jobs,
+        )
