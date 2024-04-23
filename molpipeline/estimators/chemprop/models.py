@@ -183,7 +183,7 @@ class ChempropClassifier(ChempropModel):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
-        **kwargs: Any,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> None:
         """Initialize the chemprop classifier model.
 
@@ -211,6 +211,7 @@ class ChempropClassifier(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            **kwargs,
         )
         if not self._is_binary_classifier():
             raise ValueError("ChempropClassifier should be a binary classifier.")
@@ -243,7 +244,7 @@ class ChempropRegressor(ChempropModel):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
-        **kwargs: Any,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> None:
         """Initialize the chemprop regressor model.
 
@@ -271,4 +272,5 @@ class ChempropRegressor(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            **kwargs,
         )
