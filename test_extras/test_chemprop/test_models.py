@@ -3,19 +3,25 @@
 import logging
 import unittest
 
-from chemprop.nn.loss import LossFunction
+from chemprop.nn.loss import LossFunction, BCELoss, MSELoss
 from lightning import pytorch as pl
 from sklearn.base import clone
 from torch import nn
+from torch import Tensor
 
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
     BinaryClassificationFFN,
+    RegressionFFN,
     BondMessagePassing,
     MeanAggregation,
     SumAggregation,
 )
-from molpipeline.estimators.chemprop.models import ChempropModel
+from molpipeline.estimators.chemprop.models import (
+    ChempropClassifier,
+    ChempropModel,
+    ChempropRegressor,
+)
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
@@ -41,16 +47,10 @@ def get_model() -> ChempropModel:
     return chemprop_model
 
 
-class TestChempropModel(unittest.TestCase):
-    """Test the Chemprop model."""
-
-    def test_get_params(self) -> None:
-        """Test the get_params and set_params methods."""
-        chemprop_model = get_model()
-        orig_params = chemprop_model.get_params(deep=True)
-        expected_params = {
+DEFAULT_PARAMS = {
             "batch_size": 64,
             "lightning_trainer": pl.Trainer,
+            "model": MPNN,
             "model__agg__dim": 0,
             "model__agg": SumAggregation,
             "model__batch_norm": True,
@@ -67,15 +67,45 @@ class TestChempropModel(unittest.TestCase):
             "model__message_passing__dropout_rate": 0.0,
             "model__message_passing__undirected": False,
             "model__message_passing": BondMessagePassing,
+            "model__metric_list": None,
+            "model__predictor__activation": "relu",
+            "model__warmup_epochs": 2,
+            "model__predictor": BinaryClassificationFFN,
+            "model__predictor__criterion": BCELoss,
+            "model__predictor__dropout": 0,
+            "model__predictor__hidden_dim": 300,
+            "model__predictor__input_dim": 300,
+            "model__predictor__n_layers": 1,
+            "model__predictor__n_tasks": 1,
+            "model__predictor__output_transform": nn.Identity,
+            "model__predictor__task_weights": Tensor([1.0]),
+            "model__predictor__threshold": None,
+            "n_jobs": 1,
         }
 
+NO_IDENTITY_CHECK = [
+    "model__agg",
+    "model__message_passing",
+    "lightning_trainer",
+    "model",
+    "model__predictor",
+    "model__predictor__criterion",
+    "model__predictor__output_transform",
+]
+
+class TestChempropModel(unittest.TestCase):
+    """Test the Chemprop model."""
+
+    def test_get_params(self) -> None:
+        """Test the get_params and set_params methods."""
+        chemprop_model = get_model()
+        orig_params = chemprop_model.get_params(deep=True)
+        expected_params = dict(DEFAULT_PARAMS)  # Shallow copy
+
+        self.assertSetEqual(set(orig_params), set(expected_params))
         # Check if the parameters are as expected
         for param_name, param in expected_params.items():
-            if param_name in [
-                "model__agg",
-                "model__message_passing",
-                "lightning_trainer",
-            ]:
+            if param_name in NO_IDENTITY_CHECK:
                 if not isinstance(param, type):
                     raise ValueError(f"{param_name} should be a type.")
                 self.assertIsInstance(orig_params[param_name], param)
@@ -141,3 +171,45 @@ class TestChempropModel(unittest.TestCase):
         # the model should be cloned
         self.assertNotEqual(id(chemprop_model.model), id(neural_fp.model))
         self.assertEqual(neural_fp.disable_fitting, True)
+
+
+class TestChempropClassifier(unittest.TestCase):
+    """Test the Chemprop classifier model."""
+
+    def test_get_params(self) -> None:
+        """Test the get_params and set_params methods."""
+        chemprop_model = ChempropClassifier()
+        param_dict = chemprop_model.get_params(deep=True)
+        expected_params = dict(DEFAULT_PARAMS)  # Shallow copy
+        self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
+        for param_name, param in expected_params.items():
+            if param_name in NO_IDENTITY_CHECK:
+                if not isinstance(param, type):
+                    raise ValueError(f"{param_name} should be a type.")
+                self.assertIsInstance(param_dict[param_name], param)
+            else:
+                self.assertEqual(
+                    param_dict[param_name], param, f"Test failed for {param_name}"
+                )
+
+
+class TestChempropRegressor(unittest.TestCase):
+    """Test the Chemprop regressor model."""
+
+    def test_get_params(self) -> None:
+        """Test the get_params and set_params methods."""
+        chemprop_model = ChempropRegressor()
+        param_dict = chemprop_model.get_params(deep=True)
+        expected_params = dict(DEFAULT_PARAMS)
+        expected_params["model__predictor"] = RegressionFFN
+        expected_params["model__predictor__criterion"] = MSELoss
+        self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
+        for param_name, param in expected_params.items():
+            if param_name in NO_IDENTITY_CHECK:
+                if not isinstance(param, type):
+                    raise ValueError(f"{param_name} should be a type.")
+                self.assertIsInstance(param_dict[param_name], param)
+            else:
+                self.assertEqual(
+                    param_dict[param_name], param, f"Test failed for {param_name}"
+                )
