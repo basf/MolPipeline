@@ -171,7 +171,7 @@ class ChempropModel(ABCChemprop):
 
 
 class ChempropClassifier(ChempropModel):
-    """Wrap Chemprop in a sklearn like classifier."""
+    """Chemprop model with default parameters for binary classification tasks."""
 
     def __init__(
         self,
