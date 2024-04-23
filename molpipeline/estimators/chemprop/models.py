@@ -7,9 +7,9 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-from loguru import logger
 import numpy as np
 import numpy.typing as npt
+from loguru import logger
 from sklearn.base import clone
 from sklearn.utils.metaestimators import available_if
 
