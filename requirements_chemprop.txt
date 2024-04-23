@@ -1,2 +1,2 @@
 chemprop
-lightning < 1000
+lightning
