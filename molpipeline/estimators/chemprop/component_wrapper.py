@@ -21,7 +21,6 @@ from chemprop.nn.predictors import (
 )
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
-from chemprop.utils.registry import Factory
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
 
@@ -165,13 +164,8 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         output_transform : UnscaleTransform or None, optional (default=None)
             Transformations to apply to the output. None defaults to UnscaleTransform.
         """
-        if criterion is None:
-            task_weights = torch.ones(n_tasks) if task_weights is None else task_weights
-            criterion = Factory.build(
-                self._T_default_criterion,
-                task_weights=task_weights,
-                threshold=threshold,
-            )
+        if task_weights is None:
+            task_weights = torch.ones(n_tasks)
         super().__init__(
             n_tasks=n_tasks,
             input_dim=input_dim,
