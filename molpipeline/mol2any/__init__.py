@@ -1,7 +1,5 @@
 """Init the module for mol2any pipeline elements."""
 
-import pkgutil
-
 from molpipeline.mol2any.mol2bin import MolToBinary
 from molpipeline.mol2any.mol2concatinated_vector import MolToConcatenatedVector
 from molpipeline.mol2any.mol2inchi import MolToInchi, MolToInchiKey
@@ -21,8 +19,9 @@ __all__ = [
     "MolToRDKitPhysChem",
 ]
 
-installed_packages = {pkg.name for pkg in pkgutil.iter_modules()}
-if "chemprop" in installed_packages:
+try:
     from molpipeline.mol2any.mol2chemprop import MolToChemprop  # noqa
 
     __all__.append("MolToChemprop")
+except ImportError:
+    pass
