@@ -1,9 +1,6 @@
 """Initialize Chemprop module."""
 
-import pkgutil
-
-installed_packages = {pkg.name for pkg in pkgutil.iter_modules()}
-if "chemprop" in installed_packages:
+try:
     from molpipeline.estimators.chemprop.models import (  # noqa: F401
         ChempropClassifier,
         ChempropModel,
@@ -17,5 +14,5 @@ if "chemprop" in installed_packages:
         "ChempropNeuralFP",
         "ChempropRegressor",
     ]
-else:
+except ImportError:
     __all__ = []
