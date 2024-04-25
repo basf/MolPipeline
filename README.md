@@ -21,9 +21,8 @@ or some descriptors might not be calculable for certain molecules.
 The publication is freely available [here](https://chemrxiv.org/engage/chemrxiv/article-details/661fec7f418a5379b00ae036).
 
 ## Installation
-Not yet available in pypi. For now, Please download and install via:
 ```commandline
-pip install git+https://github.com/basf/MolPipeline.git
+pip install molpipeline
 ```
 
 ## Usage
