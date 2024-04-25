@@ -9,18 +9,22 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
+from loguru import logger
 from sklearn.base import clone
 from sklearn.utils.metaestimators import available_if
 
 try:
-    from chemprop.data import MoleculeDataset, MolGraphDataLoader
+    from chemprop.data import MoleculeDataset, build_dataloader
     from chemprop.nn.predictors import (
         BinaryClassificationFFNBase,
         MulticlassClassificationFFN,
     )
     from lightning import pytorch as pl
-except ImportError:
-    pass
+except ImportError as error:
+    logger.error(
+        "Chemprop is not installed. Please install it using `pip install chemprop`."
+    )
+    logger.info(error)
 
 
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
@@ -28,6 +32,7 @@ from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
     BinaryClassificationFFN,
     BondMessagePassing,
+    RegressionFFN,
     SumAggregation,
 )
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
@@ -86,9 +91,10 @@ class ChempropModel(ABCChemprop):
             The predictions for the input data.
         """
         self.model.eval()
-        test_data = MolGraphDataLoader(X, num_workers=self.n_jobs, shuffle=False)
+        test_data = build_dataloader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
-        prediction_array = np.array([pred.numpy() for pred in predictions])  # type: ignore
+        prediction_array = np.vstack(predictions)  # type: ignore
+        prediction_array = prediction_array.squeeze()
 
         # Check if the predictions have the same length as the input dataset
         if prediction_array.shape[0] != len(X):
@@ -98,11 +104,10 @@ class ChempropModel(ABCChemprop):
 
         # If the model is a binary classifier, return the probability of the positive class
         if self._is_binary_classifier():
-            if prediction_array.shape[1] != 1 or prediction_array.shape[2] != 1:
+            if prediction_array.ndim != 1:
                 raise ValueError(
                     "Binary classification model should output a single probability."
                 )
-            prediction_array = prediction_array[:, 0, 0]
         return prediction_array
 
     def predict(
@@ -170,7 +175,7 @@ class ChempropModel(ABCChemprop):
 
 
 class ChempropClassifier(ChempropModel):
-    """Wrap Chemprop in a sklearn like classifier."""
+    """Chemprop model with default parameters for binary classification tasks."""
 
     def __init__(
         self,
@@ -178,7 +183,7 @@ class ChempropClassifier(ChempropModel):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
-        **kwargs: Any,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> None:
         """Initialize the chemprop classifier model.
 
@@ -206,6 +211,7 @@ class ChempropClassifier(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            **kwargs,
         )
         if not self._is_binary_classifier():
             raise ValueError("ChempropClassifier should be a binary classifier.")
@@ -227,3 +233,44 @@ class ChempropClassifier(ChempropModel):
         if not self._is_binary_classifier():
             raise ValueError("ChempropClassifier should be a binary classifier.")
         return self
+
+
+class ChempropRegressor(ChempropModel):
+    """Chemprop model with default parameters for regression tasks."""
+
+    def __init__(
+        self,
+        model: MPNN | None = None,
+        lightning_trainer: pl.Trainer | None = None,
+        batch_size: int = 64,
+        n_jobs: int = 1,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the chemprop regressor model.
+
+        Parameters
+        ----------
+        model : MPNN | None, optional
+            The chemprop model to wrap. If None, a default model will be used.
+        lightning_trainer : pl.Trainer, optional
+            The lightning trainer to use, by default None
+        batch_size : int, optional (default=64)
+            The batch size to use.
+        n_jobs : int, optional (default=1)
+            The number of jobs to use.
+        kwargs : Any
+            Parameters set using `set_params`.
+            Can be used to modify components of the model.
+        """
+        if model is None:
+            bond_encoder = BondMessagePassing()
+            agg = SumAggregation()
+            predictor = RegressionFFN()
+            model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
+        super().__init__(
+            model=model,
+            lightning_trainer=lightning_trainer,
+            batch_size=batch_size,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
