@@ -177,7 +177,7 @@ class ChempropModel(ABCChemprop):
         bmp_params = {}
         ffn_params = {}
         other_params = {}
-        for param,value in kwargs:
+        for param,value in kwargs.items():
             param_type, param_short = param.split("__", maxsplit=1)
             if param_type.startswith("bmp"):
                 bmp_params[param_short] = value
@@ -216,7 +216,7 @@ class ChempropClassifier(ChempropModel):
             Parameters set using `set_params`.
             Can be used to modify components of the model.
         """
-        bmp_args, ffn_args, kwargs = self._split_args(kwargs)
+        bmp_args, ffn_args, kwargs = self._split_args(**kwargs)
         if model is None:
             bond_encoder = BondMessagePassing(**bmp_args)
             agg = SumAggregation()
@@ -278,7 +278,7 @@ class ChempropRegressor(ChempropModel):
             Parameters set using `set_params`.
             Can be used to modify components of the model.
         """
-        bmp_args, ffn_args, kwargs = self._split_args(kwargs)
+        bmp_args, ffn_args, kwargs = self._split_args(**kwargs)
         if model is None:
             bond_encoder = BondMessagePassing(**bmp_args)
             agg = SumAggregation()
