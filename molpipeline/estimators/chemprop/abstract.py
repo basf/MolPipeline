@@ -53,18 +53,31 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             Can be used to modify components of the model.
         """
         self.model = model
-        if lightning_trainer is None:
+        self.batch_size = batch_size
+        self.n_jobs = n_jobs
+        self.trainer_params = {}        
+        self.model_ckpoint_params = {}
+        self.set_params(**kwargs)
+        checkpoint_callback = []
+        if self.model_ckpoint_params:
+            checkpoint_callback = [pl.callbacks.ModelCheckpoint(**self.model_ckpoint_params)]
+        if self.trainer_params and lightning_trainer is not None:
+            raise ValueError("You must provide either trainer_params or lightning_trainer.")
+        elif not self.trainer_params and lightning_trainer is None:
             lightning_trainer = pl.Trainer(
                 logger=False,
                 enable_checkpointing=False,
                 max_epochs=500,
                 enable_model_summary=False,
-                callbacks=[],
+                callbacks=checkpoint_callback,
             )
+        elif self.trainer_params and lightning_trainer is None:
+            lightning_trainer = pl.Trainer(
+                **self.trainer_params,
+                callbacks =checkpoint_callback
+            )
+
         self.lightning_trainer = lightning_trainer
-        self.batch_size = batch_size
-        self.n_jobs = n_jobs
-        self.set_params(**kwargs)
 
     def fit(
         self,
@@ -95,3 +108,32 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         )
         self.lightning_trainer.fit(self.model, training_data)
         return self
+    
+    def _update_trainer(args: Any) -> pl.Trainer:
+        return pl.Trainer(
+            **args
+        )
+
+    def set_params(self, **params) -> None:
+        params, self.trainer_params = self._filter_params_trainer(params)
+        params, self.model_ckpoint_params = self._filter_params_callback(params)
+        super().set_params(**params)
+
+    def get_params(self, deep: bool = False) -> None:
+        params = super().get_params(deep)
+        for name, value in self.trainer_params.items():
+            params[f"lightning_trainer__{name}"] = value
+        for name, value in self.model_ckpoint_params.items():
+            params[f"callback_modelckpt__{name}"] = value
+        params["lightning_trainer"] = None # set to none as we either have the trainer params or the non-parametrized trainer object (otherwise recursive from JSON fails as trainer + params are set)
+        return params
+
+    def _filter_params_trainer(self, params: dict) -> dict:
+        params_trainer = {k.split("__")[1]: v for k, v in params.items() if k.startswith("lightning_trainer")}
+        params = {k: v for k, v in params.items() if not k.startswith("lightning_trainer")}
+        return params, params_trainer
+    
+    def _filter_params_callback(self, params: dict) -> dict:
+        params_ckpt = {k.split("__")[1]: v for k, v in params.items() if k.startswith("callback_modelckpt")}
+        params = {k: v for k, v in params.items() if not k.startswith("callback_modelckpt")}
+        return params, params_ckpt
