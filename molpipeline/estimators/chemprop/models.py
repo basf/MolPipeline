@@ -173,6 +173,21 @@ class ChempropModel(ABCChemprop):
             disable_fitting=True,
         )
 
+    def _split_args(self, **kwargs):
+        bmp_params = {}
+        ffn_params = {}
+        other_params = {}
+        for param,value in kwargs:
+            param_type, param_short = param.split("__", maxsplit=1)
+            if param_type.startswith("bmp"):
+                bmp_params[param_short] = value
+            elif param_type.startswith("ffn"):
+                ffn_params[param_short] = value
+            else:
+                other_params[param] = value
+        return bmp_params, ffn_params, other_params
+
+
 
 class ChempropClassifier(ChempropModel):
     """Chemprop model with default parameters for binary classification tasks."""
@@ -201,10 +216,11 @@ class ChempropClassifier(ChempropModel):
             Parameters set using `set_params`.
             Can be used to modify components of the model.
         """
+        bmp_args, ffn_args, kwargs = self._split_args(kwargs)
         if model is None:
-            bond_encoder = BondMessagePassing()
+            bond_encoder = BondMessagePassing(**bmp_args)
             agg = SumAggregation()
-            predictor = BinaryClassificationFFN()
+            predictor = BinaryClassificationFFN(**ffn_args)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
         super().__init__(
             model=model,
@@ -262,10 +278,11 @@ class ChempropRegressor(ChempropModel):
             Parameters set using `set_params`.
             Can be used to modify components of the model.
         """
+        bmp_args, ffn_args, kwargs = self._split_args(kwargs)
         if model is None:
-            bond_encoder = BondMessagePassing()
+            bond_encoder = BondMessagePassing(**bmp_args)
             agg = SumAggregation()
-            predictor = RegressionFFN()
+            predictor = RegressionFFN(**ffn_args)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
         super().__init__(
             model=model,
