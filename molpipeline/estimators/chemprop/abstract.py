@@ -57,13 +57,19 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.n_jobs = n_jobs
         self.trainer_params = {}        
         self.model_ckpoint_params = {}
+        self.bmp_params = {}
+        self.ffn_params = {}
         self.set_params(**kwargs)
         checkpoint_callback = []
         if self.model_ckpoint_params:
             checkpoint_callback = [pl.callbacks.ModelCheckpoint(**self.model_ckpoint_params)]
+        self.lightning_trainer = self._set_trainer(self.trainer_params,lightning_trainer,checkpoint_callback)
+
+    
+    def _set_trainer(self,trainer_params,lightning_trainer,checkpoint_callback):
         if self.trainer_params and lightning_trainer is not None:
             raise ValueError("You must provide either trainer_params or lightning_trainer.")
-        elif not self.trainer_params and lightning_trainer is None:
+        elif not trainer_params and lightning_trainer is None:
             lightning_trainer = pl.Trainer(
                 logger=False,
                 enable_checkpointing=False,
@@ -71,13 +77,14 @@ class ABCChemprop(BaseEstimator, abc.ABC):
                 enable_model_summary=False,
                 callbacks=checkpoint_callback,
             )
-        elif self.trainer_params and lightning_trainer is None:
+        elif trainer_params and lightning_trainer is None:
             lightning_trainer = pl.Trainer(
-                **self.trainer_params,
+                **trainer_params,
                 callbacks =checkpoint_callback
             )
 
-        self.lightning_trainer = lightning_trainer
+        return lightning_trainer
+
 
     def fit(
         self,
@@ -117,6 +124,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     def set_params(self, **params) -> None:
         params, self.trainer_params = self._filter_params_trainer(params)
         params, self.model_ckpoint_params = self._filter_params_callback(params)
+        self.bmp_params, self.ffn_params, params = self._split_args(**params)
         super().set_params(**params)
 
     def get_params(self, deep: bool = False) -> None:
