@@ -91,6 +91,19 @@ class ChempropModel(ABCChemprop):
             raise ValueError("Classes are not set.")
         return self._classes_
 
+    @property
+    def _estimator_type(self) -> str:
+        """Return the estimator type.
+
+        Returns
+        -------
+        str
+            The estimator type.
+        """
+        if self._is_classifier():
+            return "classifier"
+        return "regressor"
+
     def _is_binary_classifier(self) -> bool:
         """Check if the model is a binary classifier.
 
