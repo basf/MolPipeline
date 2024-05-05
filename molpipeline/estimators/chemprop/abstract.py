@@ -57,8 +57,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.n_jobs = n_jobs
         self.trainer_params = {}        
         self.model_ckpoint_params = {}
-        self.bmp_params = {}
-        self.ffn_params = {}
         self.set_params(**kwargs)
         checkpoint_callback = []
         if self.model_ckpoint_params:
@@ -124,7 +122,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     def set_params(self, **params) -> None:
         params, self.trainer_params = self._filter_params_trainer(params)
         params, self.model_ckpoint_params = self._filter_params_callback(params)
-        self.bmp_params, self.ffn_params, params = self._split_args(**params)
         super().set_params(**params)
 
     def get_params(self, deep: bool = False) -> None:
