@@ -193,7 +193,7 @@ class ChempropModel(ABCChemprop):
             The fitted model.
         """
         if self._is_classifier():
-            self._classes_ = np.unique(y)
+            self._classes_ = np.unique(list(y))
         return super().fit(X, y)
 
     def predict(
