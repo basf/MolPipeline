@@ -173,7 +173,25 @@ class ChempropModel(ABCChemprop):
             disable_fitting=True,
         )
 
-    def _split_args(self, **kwargs):
+    def _split_args(
+        self, **kwargs: Any
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+        """Split the arguments into the different components of the model.
+
+        Parameters
+        ----------
+        **kwargs
+            The parameters to split.
+
+        Returns
+        -------
+        dict[str, Any]
+            The parameters for the bond message passing.
+        dict[str, Any]
+            The parameters for the feed forward network.
+        dict[str, Any]
+            The other parameters.
+        """
         bmp_params = {}
         ffn_params = {}
         other_params = {}
@@ -215,11 +233,10 @@ class ChempropClassifier(ChempropModel):
             Parameters set using `set_params`.
             Can be used to modify components of the model.
         """
-        bmp_args, ffn_args, kwargs = self._split_args(**kwargs)
         if model is None:
-            bond_encoder = BondMessagePassing(**bmp_args)
+            bond_encoder = BondMessagePassing()
             agg = SumAggregation()
-            predictor = BinaryClassificationFFN(**ffn_args)
+            predictor = BinaryClassificationFFN()
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
         super().__init__(
             model=model,
