@@ -80,17 +80,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     def _update_trainer(
         self,
     ) -> None:
-        """Set the trainer for the model.
-
-        Parameters
-        ----------
-        trainer_params : dict[str, Any]
-            The parameters for the trainer.
-        lightning_trainer : pl.Trainer | None
-            The lightning trainer.
-        checkpoint_callback : list[pl.callbacks.ModelCheckpoint]
-            The checkpoint callback to use.
-        """
+        """Update the trainer for the model."""
         trainer_params = dict(self.trainer_params)
         if self.model_ckpoint_params:
             trainer_params["callbacks"] = [
