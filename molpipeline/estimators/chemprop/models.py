@@ -177,7 +177,7 @@ class ChempropModel(ABCChemprop):
         bmp_params = {}
         ffn_params = {}
         other_params = {}
-        for param,value in kwargs.items():
+        for param, value in kwargs.items():
             param_type, param_short = param.split("__", maxsplit=1)
             if param_type.startswith("bmp"):
                 bmp_params[param_short] = value
@@ -186,7 +186,6 @@ class ChempropModel(ABCChemprop):
             else:
                 other_params[param] = value
         return bmp_params, ffn_params, other_params
-
 
 
 class ChempropClassifier(ChempropModel):
