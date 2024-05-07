@@ -224,7 +224,9 @@ class TestChempropPipeline(unittest.TestCase):
                 elif param_name == "lightning_trainer__callbacks":
                     self.assertIsInstance(cloned_params[param_name], list)
                     self.assertEqual(len(param), len(cloned_params[param_name]))
-                    for callback, cloned_callback in zip(param, cloned_params[param_name]):
+                    for callback, cloned_callback in zip(
+                        param, cloned_params[param_name]
+                    ):
                         self.assertEqual(type(callback), type(cloned_callback))
                 else:
                     self.assertEqual(
