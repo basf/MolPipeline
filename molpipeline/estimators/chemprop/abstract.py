@@ -74,7 +74,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
                 callbacks=[],
             )
         self.lightning_trainer = lightning_trainer
-        self.trainer_params = get_lightning_trainer_params(lightning_trainer)
+        self.trainer_params = get_lightning_trainer_params(self.lightning_trainer)
         self.set_params(**kwargs)
 
     def _update_trainer(
@@ -146,8 +146,10 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         Self
             The model with the new parameters.
         """
-        params, self.trainer_params = self._filter_params_trainer(params)
-        params, self.model_ckpoint_params = self._filter_params_callback(params)
+        params, trainer_params = self._filter_params_trainer(params)
+        params, model_ckpoint_params = self._filter_params_callback(params)
+        self.trainer_params.update(trainer_params)
+        self.model_ckpoint_params.update(model_ckpoint_params)
         super().set_params(**params)
         self._update_trainer()
         return self
@@ -171,6 +173,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         for name, value in self.model_ckpoint_params.items():
             params[f"callback_modelckpt__{name}"] = value
         # set to none as the trainer is created from the parameters
+        # Otherwise, the sklearn clone will fail as the trainer is updated by replacing the object
+        params["lightning_trainer"] = None
         return params
 
     @staticmethod
@@ -194,7 +198,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         trainer_params = {}
         other_params = {}
         for key, value in params.items():
-            if key.startswith("lightning_trainer"):
+            if key.startswith("lightning_trainer__"):
                 trainer_params[key.split("__")[1]] = value
             else:
                 other_params[key] = value
