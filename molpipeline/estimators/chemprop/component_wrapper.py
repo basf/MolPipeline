@@ -46,8 +46,7 @@ from chemprop.nn.predictors import (
 )
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
-from lightning.pytorch.callbacks.timer import Timer
-from lightning.pytorch.callbacks.progress import ProgressBar
+from lightning.pytorch.callbacks import ModelSummary, ProgressBar, Timer
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
 
@@ -66,7 +65,7 @@ def get_lightning_trainer_params(trainer: pl.Trainer) -> dict[str, Any]:
         The parameters of the lightning trainer.
     """
     if trainer.callbacks and isinstance(trainer.callbacks[-1], Timer):  # type: ignore[attr-defined]
-        max_time = trainer.callbacks[-1].duration
+        max_time = trainer.callbacks[-1].duration  # type: ignore[attr-defined]
     else:
         max_time = None
 
@@ -77,9 +76,15 @@ def get_lightning_trainer_params(trainer: pl.Trainer) -> dict[str, Any]:
     else:
         # If the l
         enable_progress_bar = False
+    for callback in trainer.callbacks:  # type: ignore[attr-defined]
+        if isinstance(callback, ModelSummary):
+            enable_progress_model_summary = True
+            break
+    else:
+        enable_progress_model_summary = False
     trainer_dict = {
         "accelerator": trainer.accelerator,
-        "strategy": trainer.strategy,
+        # "strategy": trainer.strategy, # collides with accelerator
         "devices": trainer._accelerator_connector._devices_flag,  # pylint: disable=protected-access
         "num_nodes": trainer.num_nodes,
         "precision": trainer.precision,
@@ -102,19 +107,19 @@ def get_lightning_trainer_params(trainer: pl.Trainer) -> dict[str, Any]:
         "log_every_n_steps": trainer.log_every_n_steps,  # type: ignore[attr-defined]
         "enable_checkpointing": bool(trainer.checkpoint_callbacks),
         "enable_progress_bar": enable_progress_bar,
-        "enable_model_summary": trainer.enable_model_summary,
+        "enable_model_summary": enable_progress_model_summary,
         "accumulate_grad_batches": trainer.accumulate_grad_batches,
         "gradient_clip_val": trainer.gradient_clip_val,
         "gradient_clip_algorithm": trainer.gradient_clip_algorithm,
-        "deterministic": trainer.deterministic,
-        "benchmark": trainer.benchmark,
-        "inference_mode": trainer.inference_mode,
-        "use_distributed_sampler": trainer.use_distributed_sampler,
-        "profiler": trainer.profiler,
-        "detect_anomaly": trainer.detect_anomaly,
+        "deterministic": torch.are_deterministic_algorithms_enabled(),
+        "benchmark": torch.backends.cudnn.benchmark,
+        "inference_mode": trainer.predict_loop.inference_mode,
+        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # pylint: disable=protected-access
+        "profiler": trainer.profiler,  # type: ignore[attr-defined]
+        "detect_anomaly": trainer._detect_anomaly,  # pylint: disable=protected-access
         "barebones": trainer.barebones,
-        "plugins": trainer.plugins,
-        "sync_batchnorm": trainer.sync_batchnorm,
+        # "plugins": trainer.plugins,  # can not be exctracted
+        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related
         "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,
         "default_root_dir": trainer.default_root_dir,
     }
