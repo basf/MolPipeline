@@ -46,6 +46,8 @@ from chemprop.nn.predictors import (
 )
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
+from lightning.pytorch.callbacks.timer import Timer
+from lightning.pytorch.callbacks.progress import ProgressBar
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
 
@@ -63,11 +65,22 @@ def get_lightning_trainer_params(trainer: pl.Trainer) -> dict[str, Any]:
     dict[str, Any]
         The parameters of the lightning trainer.
     """
+    if trainer.callbacks and isinstance(trainer.callbacks[-1], Timer):  # type: ignore[attr-defined]
+        max_time = trainer.callbacks[-1].duration
+    else:
+        max_time = None
 
+    for callback in trainer.callbacks:  # type: ignore[attr-defined]
+        if isinstance(callback, ProgressBar):
+            enable_progress_bar = True
+            break
+    else:
+        # If the l
+        enable_progress_bar = False
     trainer_dict = {
         "accelerator": trainer.accelerator,
         "strategy": trainer.strategy,
-        "devices": trainer.devices,
+        "devices": trainer._accelerator_connector._devices_flag,  # pylint: disable=protected-access
         "num_nodes": trainer.num_nodes,
         "precision": trainer.precision,
         "logger": trainer.logger,
@@ -77,7 +90,7 @@ def get_lightning_trainer_params(trainer: pl.Trainer) -> dict[str, Any]:
         "min_epochs": trainer.min_epochs,
         "max_steps": trainer.max_steps,
         "min_steps": trainer.min_steps,
-        "max_time": trainer.max_time,  # type: ignore[attr-defined]
+        "max_time": max_time,
         "limit_train_batches": trainer.limit_train_batches,
         "limit_val_batches": trainer.limit_val_batches,
         "limit_test_batches": trainer.limit_test_batches,
@@ -86,9 +99,9 @@ def get_lightning_trainer_params(trainer: pl.Trainer) -> dict[str, Any]:
         "val_check_interval": trainer.val_check_interval,
         "check_val_every_n_epoch": trainer.check_val_every_n_epoch,
         "num_sanity_val_steps": trainer.num_sanity_val_steps,
-        "log_every_n_steps": trainer.log_every_n_steps,
-        "enable_checkpointing": trainer.enable_checkpointing,
-        "enable_progress_bar": trainer.enable_progress_bar,
+        "log_every_n_steps": trainer.log_every_n_steps,  # type: ignore[attr-defined]
+        "enable_checkpointing": bool(trainer.checkpoint_callbacks),
+        "enable_progress_bar": enable_progress_bar,
         "enable_model_summary": trainer.enable_model_summary,
         "accumulate_grad_batches": trainer.accumulate_grad_batches,
         "gradient_clip_val": trainer.gradient_clip_val,
