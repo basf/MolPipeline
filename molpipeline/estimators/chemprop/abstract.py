@@ -20,6 +20,10 @@ except ImportError:
     pass
 from sklearn.base import BaseEstimator
 
+from molpipeline.estimators.chemprop.component_wrapper import (
+    get_lightning_trainer_params,
+)
+
 # pylint: enable=duplicate-code
 
 
@@ -60,21 +64,21 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.model = model
         self.batch_size = batch_size
         self.n_jobs = n_jobs
-        self.trainer_params = {}
         self.model_ckpoint_params = {}
+        if not lightning_trainer:
+            lightning_trainer = pl.Trainer(
+                logger=False,
+                enable_checkpointing=False,
+                max_epochs=500,
+                enable_model_summary=False,
+                callbacks=[],
+            )
+        self.lightning_trainer = lightning_trainer
+        self.trainer_params = get_lightning_trainer_params(lightning_trainer)
         self.set_params(**kwargs)
-        checkpoint_callback = []
-        if self.model_ckpoint_params:
-            checkpoint_callback = [
-                pl.callbacks.ModelCheckpoint(**self.model_ckpoint_params)
-            ]
-        self._set_trainer(self.trainer_params, lightning_trainer, checkpoint_callback)
 
-    def _set_trainer(
+    def _update_trainer(
         self,
-        trainer_params: dict[str, Any],
-        lightning_trainer: pl.Trainer | None,
-        checkpoint_callback: list[pl.callbacks.Callback],
     ) -> None:
         """Set the trainer for the model.
 
@@ -87,24 +91,11 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         checkpoint_callback : list[pl.callbacks.ModelCheckpoint]
             The checkpoint callback to use.
         """
-        if self.trainer_params and lightning_trainer:
-            raise ValueError(
-                "You must provide either trainer_params or lightning_trainer."
-            )
-        if lightning_trainer:
-            self.lightning_trainer = lightning_trainer
-            return
-
-        if not trainer_params:
-            trainer_params = {
-                "logger": False,
-                "enable_checkpointing": False,
-                "max_epochs": 500,
-                "enable_model_summary": False,
-                "callbacks": [],
-            }
-        if checkpoint_callback:
-            trainer_params["callbacks"] = checkpoint_callback
+        trainer_params = dict(self.trainer_params)
+        if self.model_ckpoint_params:
+            trainer_params["callbacks"] = [
+                pl.callbacks.ModelCheckpoint(**self.model_ckpoint_params)
+            ]
         self.lightning_trainer = pl.Trainer(**trainer_params)
 
     def fit(
@@ -140,6 +131,11 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     def set_params(self, **params: Any) -> Self:
         """Set the parameters of the model.
 
+        Note
+        ----
+        Parameters for the trainer and the checkpoint callback are filtered out and added as attributes of the model.
+        This is done due to incompatibility with the `get_params` method.
+
         Parameters
         ----------
         **params: Any
@@ -153,6 +149,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         params, self.trainer_params = self._filter_params_trainer(params)
         params, self.model_ckpoint_params = self._filter_params_callback(params)
         super().set_params(**params)
+        self._update_trainer()
         return self
 
     def get_params(self, deep: bool = False) -> dict[str, Any]:
@@ -174,7 +171,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         for name, value in self.model_ckpoint_params.items():
             params[f"callback_modelckpt__{name}"] = value
         # set to none as the trainer is created from the parameters
-        params["lightning_trainer"] = None
         return params
 
     @staticmethod
@@ -195,15 +191,14 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         dict[str, Any]
             The filtered parameters for the trainer.
         """
-        params_trainer = {
-            k.split("__")[1]: v
-            for k, v in params.items()
-            if k.startswith("lightning_trainer")
-        }
-        params = {
-            k: v for k, v in params.items() if not k.startswith("lightning_trainer")
-        }
-        return params, params_trainer
+        trainer_params = {}
+        other_params = {}
+        for key, value in params.items():
+            if key.startswith("lightning_trainer"):
+                trainer_params[key.split("__")[1]] = value
+            else:
+                other_params[key] = value
+        return other_params, trainer_params
 
     @staticmethod
     def _filter_params_callback(
@@ -223,12 +218,11 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         dict[str, Any]
             The filtered parameters for the checkpoint callback.
         """
-        params_ckpt = {
-            k.split("__")[1]: v
-            for k, v in params.items()
-            if k.startswith("callback_modelckpt")
-        }
-        params = {
-            k: v for k, v in params.items() if not k.startswith("callback_modelckpt")
-        }
-        return params, params_ckpt
+        checkpoint_params = {}
+        other_params = {}
+        for key, value in params.items():
+            if key.startswith("callback_modelckpt"):
+                checkpoint_params[key.split("__")[1]] = value
+            else:
+                other_params[key] = value
+        return params, checkpoint_params

@@ -3,6 +3,7 @@
 import abc
 from typing import Any, Iterable, Self
 
+import pytorch_lightning as pl
 import torch
 from chemprop.conf import DEFAULT_ATOM_FDIM, DEFAULT_BOND_FDIM, DEFAULT_HIDDEN_DIM
 from chemprop.models.model import MPNN as _MPNN
@@ -47,6 +48,64 @@ from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
+
+
+def get_lightning_trainer_params(trainer: pl.Trainer) -> dict[str, Any]:
+    """Get the parameters of the lightning trainer.
+
+    Parameters
+    ----------
+    trainer : pl.Trainer
+        The lightning trainer.
+
+    Returns
+    -------
+    dict[str, Any]
+        The parameters of the lightning trainer.
+    """
+
+    trainer_dict = {
+        "accelerator": trainer.accelerator,
+        "strategy": trainer.strategy,
+        "devices": trainer.devices,
+        "num_nodes": trainer.num_nodes,
+        "precision": trainer.precision,
+        "logger": trainer.logger,
+        "callbacks": trainer.callbacks,  # type: ignore[attr-defined]
+        "fast_dev_run": trainer.fast_dev_run,  # type: ignore[attr-defined]
+        "max_epochs": trainer.max_epochs,
+        "min_epochs": trainer.min_epochs,
+        "max_steps": trainer.max_steps,
+        "min_steps": trainer.min_steps,
+        "max_time": trainer.max_time,  # type: ignore[attr-defined]
+        "limit_train_batches": trainer.limit_train_batches,
+        "limit_val_batches": trainer.limit_val_batches,
+        "limit_test_batches": trainer.limit_test_batches,
+        "limit_predict_batches": trainer.limit_predict_batches,
+        "overfit_batches": trainer.overfit_batches,  # type: ignore[attr-defined]
+        "val_check_interval": trainer.val_check_interval,
+        "check_val_every_n_epoch": trainer.check_val_every_n_epoch,
+        "num_sanity_val_steps": trainer.num_sanity_val_steps,
+        "log_every_n_steps": trainer.log_every_n_steps,
+        "enable_checkpointing": trainer.enable_checkpointing,
+        "enable_progress_bar": trainer.enable_progress_bar,
+        "enable_model_summary": trainer.enable_model_summary,
+        "accumulate_grad_batches": trainer.accumulate_grad_batches,
+        "gradient_clip_val": trainer.gradient_clip_val,
+        "gradient_clip_algorithm": trainer.gradient_clip_algorithm,
+        "deterministic": trainer.deterministic,
+        "benchmark": trainer.benchmark,
+        "inference_mode": trainer.inference_mode,
+        "use_distributed_sampler": trainer.use_distributed_sampler,
+        "profiler": trainer.profiler,
+        "detect_anomaly": trainer.detect_anomaly,
+        "barebones": trainer.barebones,
+        "plugins": trainer.plugins,
+        "sync_batchnorm": trainer.sync_batchnorm,
+        "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,
+        "default_root_dir": trainer.default_root_dir,
+    }
+    return trainer_dict
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
