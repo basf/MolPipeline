@@ -26,13 +26,14 @@ class TestLightningWrapper(unittest.TestCase):
         trainer_params = get_params_trainer(pl.Trainer(deterministic=False))
         self.assertFalse(trainer_params["deterministic"])
 
+        trainer_params = get_non_default_params_trainer(pl.Trainer(deterministic=True))
+        self.assertIn("deterministic", trainer_params)
+        self.assertTrue(trainer_params["deterministic"])
+
         trainer_params = get_non_default_params_trainer(pl.Trainer(deterministic=False))
         # deterministic is by default False and hence will not be listed in the parameters
         self.assertNotIn("deterministic", trainer_params)
 
-        trainer_params = get_non_default_params_trainer(pl.Trainer(deterministic=True))
-        self.assertIn("deterministic", trainer_params)
-        self.assertTrue(trainer_params["deterministic"])
 
 
 if __name__ == "__main__":
