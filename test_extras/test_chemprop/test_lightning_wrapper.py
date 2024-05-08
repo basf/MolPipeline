@@ -35,6 +35,5 @@ class TestLightningWrapper(unittest.TestCase):
         self.assertNotIn("deterministic", trainer_params)
 
 
-
 if __name__ == "__main__":
     unittest.main()
