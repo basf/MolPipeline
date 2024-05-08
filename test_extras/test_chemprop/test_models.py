@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 from chemprop.nn.loss import BCELoss, LossFunction, MSELoss
-from lightning import pytorch as pl
 from lightning.pytorch.accelerators import Accelerator
 from lightning.pytorch.callbacks.progress.tqdm_progress import TQDMProgressBar
 from lightning.pytorch.profilers.base import PassThroughProfiler
@@ -47,49 +46,20 @@ def get_model() -> ChempropModel:
         agg=aggregate,
         predictor=binary_clf_ffn,
     )
-    chemprop_model = ChempropModel(model=mpnn)
+    chemprop_model = ChempropModel(model=mpnn, lightning_trainer__accelerator="cpu")
     return chemprop_model
 
 
 DEFAULT_PARAMS = {
     "batch_size": 64,
     "lightning_trainer": None,
-    "lightning_trainer__limit_predict_batches": 1.0,
-    "lightning_trainer__fast_dev_run": False,
-    "lightning_trainer__min_steps": None,
-    "lightning_trainer__accumulate_grad_batches": 1,
-    "lightning_trainer__use_distributed_sampler": True,
-    "lightning_trainer__devices": [0],
-    "lightning_trainer__check_val_every_n_epoch": 1,
-    "lightning_trainer__enable_progress_bar": True,
-    "lightning_trainer__max_epochs": 500,
-    "lightning_trainer__max_time": None,
-    "lightning_trainer__val_check_interval": 1.0,
-    "lightning_trainer__log_every_n_steps": 50,
-    "lightning_trainer__min_epochs": None,
-    "lightning_trainer__gradient_clip_algorithm": None,
-    "lightning_trainer__profiler": PassThroughProfiler,
-    "lightning_trainer__max_steps": -1,
-    "lightning_trainer__limit_val_batches": 1.0,
-    "lightning_trainer__gradient_clip_val": None,
-    "lightning_trainer__inference_mode": True,
-    "lightning_trainer__enable_model_summary": False,
-    "lightning_trainer__limit_test_batches": 1.0,
-    "lightning_trainer__reload_dataloaders_every_n_epochs": 0,
-    "lightning_trainer__callbacks": [TQDMProgressBar],
-    "lightning_trainer__accelerator": Accelerator,
-    "lightning_trainer__deterministic": False,
-    "lightning_trainer__logger": None,
-    "lightning_trainer__overfit_batches": 0.0,
-    "lightning_trainer__precision": "32-true",
-    "lightning_trainer__benchmark": False,
-    "lightning_trainer__num_sanity_val_steps": 2,
     "lightning_trainer__enable_checkpointing": False,
-    "lightning_trainer__limit_train_batches": 1.0,
-    "lightning_trainer__barebones": False,
+    "lightning_trainer__enable_model_summary": False,
+    "lightning_trainer__max_epochs": 500,
+    "lightning_trainer__profiler": PassThroughProfiler,
+    "lightning_trainer__callbacks": [TQDMProgressBar],
+    "lightning_trainer__accelerator": "cpu",
     "lightning_trainer__default_root_dir": str(Path(".").resolve()),
-    "lightning_trainer__detect_anomaly": False,
-    "lightning_trainer__num_nodes": 1,
     "model": MPNN,
     "model__agg__dim": 0,
     "model__agg": SumAggregation,
@@ -124,7 +94,6 @@ DEFAULT_PARAMS = {
 }
 
 NO_IDENTITY_CHECK = [
-    "lightning_trainer__accelerator",
     "lightning_trainer__callbacks",
     "lightning_trainer__profiler",
     "model__agg",
@@ -188,8 +157,6 @@ class TestChempropModel(unittest.TestCase):
             if hasattr(param, "get_params"):
                 self.assertEqual(param.__class__, cloned_param.__class__)
                 self.assertNotEqual(id(param), id(cloned_param))
-            elif isinstance(param, pl.Trainer):
-                self.assertIsInstance(cloned_param, pl.Trainer)
             elif isinstance(param, LossFunction):
                 self.assertEqual(
                     param.state_dict()["task_weights"],
@@ -230,7 +197,7 @@ class TestChempropClassifier(unittest.TestCase):
 
     def test_get_params(self) -> None:
         """Test the get_params and set_params methods."""
-        chemprop_model = ChempropClassifier()
+        chemprop_model = ChempropClassifier(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_PARAMS)  # Shallow copy
         self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
@@ -255,7 +222,7 @@ class TestChempropRegressor(unittest.TestCase):
 
     def test_get_params(self) -> None:
         """Test the get_params and set_params methods."""
-        chemprop_model = ChempropRegressor()
+        chemprop_model = ChempropRegressor(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_PARAMS)
         expected_params["model__predictor"] = RegressionFFN
