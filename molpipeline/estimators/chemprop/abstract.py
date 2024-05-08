@@ -21,7 +21,7 @@ except ImportError:
 from sklearn.base import BaseEstimator
 
 from molpipeline.estimators.chemprop.lightning_wrapper import (
-    get_lightning_trainer_params,
+    get_non_default_params_trainer,
 )
 
 # pylint: enable=duplicate-code
@@ -74,7 +74,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
                 callbacks=[],
             )
         self.lightning_trainer = lightning_trainer
-        self.trainer_params = get_lightning_trainer_params(self.lightning_trainer)
+        self.trainer_params = get_non_default_params_trainer(self.lightning_trainer)
         self.set_params(**kwargs)
 
     def _update_trainer(
