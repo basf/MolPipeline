@@ -3,7 +3,6 @@
 import abc
 from typing import Any, Iterable, Self
 
-import pytorch_lightning as pl
 import torch
 from chemprop.conf import DEFAULT_ATOM_FDIM, DEFAULT_BOND_FDIM, DEFAULT_HIDDEN_DIM
 from chemprop.models.model import MPNN as _MPNN
@@ -46,84 +45,8 @@ from chemprop.nn.predictors import (
 )
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
-from lightning.pytorch.callbacks import ModelSummary, ProgressBar, Timer
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
-
-
-def get_lightning_trainer_params(trainer: pl.Trainer) -> dict[str, Any]:
-    """Get the parameters of the lightning trainer.
-
-    Parameters
-    ----------
-    trainer : pl.Trainer
-        The lightning trainer.
-
-    Returns
-    -------
-    dict[str, Any]
-        The parameters of the lightning trainer.
-    """
-    if trainer.callbacks and isinstance(trainer.callbacks[-1], Timer):  # type: ignore[attr-defined]
-        max_time = trainer.callbacks[-1].duration  # type: ignore[attr-defined]
-    else:
-        max_time = None
-
-    for callback in trainer.callbacks:  # type: ignore[attr-defined]
-        if isinstance(callback, ProgressBar):
-            enable_progress_bar = True
-            break
-    else:
-        # If the l
-        enable_progress_bar = False
-    for callback in trainer.callbacks:  # type: ignore[attr-defined]
-        if isinstance(callback, ModelSummary):
-            enable_progress_model_summary = True
-            break
-    else:
-        enable_progress_model_summary = False
-    trainer_dict = {
-        "accelerator": trainer.accelerator,
-        # "strategy": trainer.strategy, # collides with accelerator
-        "devices": trainer._accelerator_connector._devices_flag,  # pylint: disable=protected-access
-        "num_nodes": trainer.num_nodes,
-        "precision": trainer.precision,
-        "logger": trainer.logger,
-        "callbacks": trainer.callbacks,  # type: ignore[attr-defined]
-        "fast_dev_run": trainer.fast_dev_run,  # type: ignore[attr-defined]
-        "max_epochs": trainer.max_epochs,
-        "min_epochs": trainer.min_epochs,
-        "max_steps": trainer.max_steps,
-        "min_steps": trainer.min_steps,
-        "max_time": max_time,
-        "limit_train_batches": trainer.limit_train_batches,
-        "limit_val_batches": trainer.limit_val_batches,
-        "limit_test_batches": trainer.limit_test_batches,
-        "limit_predict_batches": trainer.limit_predict_batches,
-        "overfit_batches": trainer.overfit_batches,  # type: ignore[attr-defined]
-        "val_check_interval": trainer.val_check_interval,
-        "check_val_every_n_epoch": trainer.check_val_every_n_epoch,
-        "num_sanity_val_steps": trainer.num_sanity_val_steps,
-        "log_every_n_steps": trainer.log_every_n_steps,  # type: ignore[attr-defined]
-        "enable_checkpointing": bool(trainer.checkpoint_callbacks),
-        "enable_progress_bar": enable_progress_bar,
-        "enable_model_summary": enable_progress_model_summary,
-        "accumulate_grad_batches": trainer.accumulate_grad_batches,
-        "gradient_clip_val": trainer.gradient_clip_val,
-        "gradient_clip_algorithm": trainer.gradient_clip_algorithm,
-        "deterministic": torch.are_deterministic_algorithms_enabled(),
-        "benchmark": torch.backends.cudnn.benchmark,
-        "inference_mode": trainer.predict_loop.inference_mode,
-        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # pylint: disable=protected-access
-        "profiler": trainer.profiler,  # type: ignore[attr-defined]
-        "detect_anomaly": trainer._detect_anomaly,  # pylint: disable=protected-access
-        "barebones": trainer.barebones,
-        # "plugins": trainer.plugins,  # can not be exctracted
-        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related
-        "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,
-        "default_root_dir": trainer.default_root_dir,
-    }
-    return trainer_dict
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes

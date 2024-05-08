@@ -20,7 +20,7 @@ except ImportError:
     pass
 from sklearn.base import BaseEstimator
 
-from molpipeline.estimators.chemprop.component_wrapper import (
+from molpipeline.estimators.chemprop.lightning_wrapper import (
     get_lightning_trainer_params,
 )
 
