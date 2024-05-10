@@ -219,4 +219,4 @@ class ABCChemprop(BaseEstimator, abc.ABC):
                 checkpoint_params[key.split("__")[1]] = value
             else:
                 other_params[key] = value
-        return params, checkpoint_params
+        return other_params, checkpoint_params
