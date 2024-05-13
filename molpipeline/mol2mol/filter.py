@@ -224,7 +224,7 @@ class InorganicsFilter(_MolToMolPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
-         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Invalidate molecules not containing a carbon atom.
@@ -242,5 +242,6 @@ class InorganicsFilter(_MolToMolPipelineElement):
         for a in value.GetAtoms():
             if a.GetAtomicNum() == 6:
                 return value
-        return InvalidInstance(self.uuid, "Molecule contains no organic atoms.", self.name)
-         
+        return InvalidInstance(
+            self.uuid, "Molecule contains no organic atoms.", self.name
+        )

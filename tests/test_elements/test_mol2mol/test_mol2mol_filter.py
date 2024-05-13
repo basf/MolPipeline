@@ -5,7 +5,7 @@ import unittest
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToSmiles
-from molpipeline.mol2mol import ElementFilter, MixtureFilter, InorganicsFilter
+from molpipeline.mol2mol import ElementFilter, InorganicsFilter, MixtureFilter
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
@@ -128,7 +128,8 @@ class MolFilterTest(unittest.TestCase):
             ]
         )
         self.assertEqual(
-            filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_METAL_AU, SMILES_CL_BR]
+            filtered_smiles,
+            [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_METAL_AU, SMILES_CL_BR],
         )
 
 
