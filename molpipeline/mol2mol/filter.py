@@ -252,9 +252,7 @@ class InorganicsFilter(_MolToMolPipelineElement):
         """
         atomic_numbers = [atom.GetAtomicNum() for atom in value.GetAtoms()]
         if 6 not in atomic_numbers:  # Check for Carbon
-            return InvalidInstance(
-                self.uuid, "Molecule is not organic.", self.name
-            )
+            return InvalidInstance(self.uuid, "Molecule is not organic.", self.name)
         if len(atomic_numbers) <= 3:
             smiles = Chem.MolToSmiles(value)
             if smiles in ["O=C=O", "[O+]#[C-]"]:  # CO2 and CO are not organic
