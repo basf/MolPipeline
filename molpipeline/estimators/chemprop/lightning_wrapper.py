@@ -175,7 +175,8 @@ def get_non_default_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
     trainer_dict = get_params_trainer(trainer)
     non_default_values = {}
     for key, value in trainer_dict.items():
-        if value == TRAINER_DEFAULT_PARAMS.get(key, None):
-            continue
-        non_default_values[key] = value
+        if key not in TRAINER_DEFAULT_PARAMS:
+            non_default_values[key] = value
+        elif value != TRAINER_DEFAULT_PARAMS[key]:
+            non_default_values[key] = value
     return non_default_values
