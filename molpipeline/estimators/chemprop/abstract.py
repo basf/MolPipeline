@@ -175,12 +175,20 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         deep : bool, optional (default=False)
             Whether to get the parameters of the model.
 
+        Notes
+        -----
+        The parameters of the trainer and the model checkpoint are added irrespective of the `deep` parameter.
+        This is done due to their incompatibility with the `get_params` and `set_params` methods.
+
         Returns
         -------
         dict[str, Any]
             The parameters of the model.
         """
         params = super().get_params(deep)
+        # Since the trainer and the model checkpoint are not compatible with the `get_params` and `set_params` methods
+        # they are not passed as objects but as parameters. Hence, the `deep` parameter is ignored and the parameters
+        # are always returned.
         for name, value in self.trainer_params.items():
             params[f"lightning_trainer__{name}"] = value
         for name, value in self.model_ckpoint_params.items():
