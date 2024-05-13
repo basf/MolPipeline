@@ -20,9 +20,7 @@ except ImportError:
     pass
 from sklearn.base import BaseEstimator
 
-from molpipeline.estimators.chemprop.lightning_wrapper import (
-    get_params_trainer,
-)
+from molpipeline.estimators.chemprop.lightning_wrapper import get_params_trainer
 
 # pylint: enable=duplicate-code
 
@@ -161,8 +159,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         Self
             The model with the new parameters.
         """
-        params, trainer_params = self._filter_params_trainer(params)
-        params, model_ckpoint_params = self._filter_params_callback(params)
+        params, trainer_params = self._filter_params(params, "lightning_trainer")
+        params, model_ckpoint_params = self._filter_params(params, "callback_modelckpt")
         self.trainer_params.update(trainer_params)
         self.model_ckpoint_params.update(model_ckpoint_params)
         super().set_params(**params)
@@ -193,15 +191,18 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         return params
 
     @staticmethod
-    def _filter_params_trainer(
-        params: dict[str, Any]
+    def _filter_params(
+        params: dict[str, Any],
+        prefix: str,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Filter the parameters for the trainer.
+        """Filter the parameters for the specified prefix.
 
         Parameters
         ----------
         params : dict[str, Any]
             The parameters to filter.
+        prefix : str
+            The prefix to filter the parameters for.
 
         Returns
         -------
@@ -213,35 +214,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         trainer_params = {}
         other_params = {}
         for key, value in params.items():
-            if key.startswith("lightning_trainer__"):
+            if key.startswith(f"{prefix}__"):
                 trainer_params[key.split("__")[1]] = value
             else:
                 other_params[key] = value
         return other_params, trainer_params
-
-    @staticmethod
-    def _filter_params_callback(
-        params: dict[str, Any]
-    ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Filter the parameters for the checkpoint callback.
-
-        Parameters
-        ----------
-        params : dict[str, Any]
-            The parameters to filter.
-
-        Returns
-        -------
-        dict[str, Any]
-            The filtered parameters for the model.
-        dict[str, Any]
-            The filtered parameters for the checkpoint callback.
-        """
-        checkpoint_params = {}
-        other_params = {}
-        for key, value in params.items():
-            if key.startswith("callback_modelckpt"):
-                checkpoint_params[key.split("__")[1]] = value
-            else:
-                other_params[key] = value
-        return other_params, checkpoint_params
