@@ -42,7 +42,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         standardizer: Optional[AnyTransformer], default=StandardScaler()
-           The output is post_processed accoding to the standardizer if not None.
+            The output is post_processed according to the standardizer if not None.
         name: str:
             Name of the PipelineElement.
         n_jobs: int:
