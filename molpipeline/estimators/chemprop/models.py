@@ -1,6 +1,6 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
-from typing import Any, Iterable
+from typing import Any, Sequence
 
 try:
     from typing import Self
@@ -176,7 +176,7 @@ class ChempropModel(ABCChemprop):
     def fit(
         self,
         X: MoleculeDataset,
-        y: Iterable[int | float] | npt.NDArray[np.int_ | np.float_],
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float_],
     ) -> Self:
         """Fit the model to the data.
 
@@ -184,7 +184,7 @@ class ChempropModel(ABCChemprop):
         ----------
         X : MoleculeDataset
             The input data.
-        y : Iterable[int | float] | npt.NDArray[np.int_ | np.float_]
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float_]
             The target data.
 
         Returns
@@ -193,7 +193,7 @@ class ChempropModel(ABCChemprop):
             The fitted model.
         """
         if self._is_classifier():
-            self._classes_ = np.unique(list(y))
+            self._classes_ = np.unique(y)
         return super().fit(X, y)
 
     def predict(

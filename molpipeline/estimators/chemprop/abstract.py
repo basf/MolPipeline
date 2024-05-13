@@ -1,7 +1,7 @@
 """Parent class of wrapper for Chemprop to make it compatible with scikit-learn."""
 
 import abc
-from typing import Any, Iterable
+from typing import Any, Sequence
 
 # pylint: disable=duplicate-code
 try:
@@ -114,7 +114,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     def fit(
         self,
         X: MoleculeDataset,  # pylint: disable=invalid-name
-        y: Iterable[int | float] | npt.NDArray[np.int_ | np.float_],
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float_],
     ) -> Self:
         """Fit the model to the data.
 
@@ -122,7 +122,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         ----------
         X : MoleculeDataset
             The input data.
-        y : Iterable[int | float] | npt.NDArray[np.int_ | np.float_]
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float_]
             The target data.
 
         Returns
