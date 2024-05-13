@@ -5,7 +5,7 @@ import unittest
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToSmiles
-from molpipeline.mol2mol import ElementFilter, MixtureFilter
+from molpipeline.mol2mol import ElementFilter, MixtureFilter, InorganicsFilter
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
@@ -96,6 +96,40 @@ class MolFilterTest(unittest.TestCase):
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_invalidated_mol_list, mols_processed)
+
+    def test_inorganic_filter(self) -> None:
+        """Test if molecules are filtered correctly by allowed chemical elements.
+
+        Returns
+        -------
+        None
+        """
+        smiles2mol = SmilesToMol()
+        inorganics_filter = InorganicsFilter()
+        mol2smiles = MolToSmiles()
+        error_filter = ErrorFilter.from_element_list(
+            [smiles2mol, inorganics_filter, mol2smiles]
+        )
+        pipeline = Pipeline(
+            [
+                ("Smiles2Mol", smiles2mol),
+                ("ElementFilter", inorganics_filter),
+                ("Mol2Smiles", mol2smiles),
+                ("ErrorFilter", error_filter),
+            ],
+        )
+        filtered_smiles = pipeline.fit_transform(
+            [
+                SMILES_ANTIMONY,
+                SMILES_BENZENE,
+                SMILES_CHLOROBENZENE,
+                SMILES_METAL_AU,
+                SMILES_CL_BR,
+            ]
+        )
+        self.assertEqual(
+            filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_METAL_AU, SMILES_CL_BR]
+        )
 
 
 if __name__ == "__main__":

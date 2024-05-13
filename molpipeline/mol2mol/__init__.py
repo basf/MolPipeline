@@ -1,6 +1,6 @@
 """Init the module for mol2mol pipeline elements."""
 
-from molpipeline.mol2mol.filter import ElementFilter, EmptyMoleculeFilter, MixtureFilter
+from molpipeline.mol2mol.filter import ElementFilter, EmptyMoleculeFilter, MixtureFilter, InorganicsFilter
 from molpipeline.mol2mol.reaction import MolToMolReaction
 from molpipeline.mol2mol.scaffolds import MakeScaffoldGeneric, MurckoScaffold
 from molpipeline.mol2mol.standardization import (
@@ -35,4 +35,5 @@ __all__ = (
     "SaltRemover",
     "SolventRemover",
     "Uncharger",
+    "InorganicsFilter"
 )
