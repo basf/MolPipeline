@@ -20,13 +20,47 @@ except ImportError:
     pass
 from sklearn.base import BaseEstimator
 
+from molpipeline.estimators.chemprop.lightning_wrapper import (
+    get_non_default_params_trainer,
+)
+
 # pylint: enable=duplicate-code
 
 
 class ABCChemprop(BaseEstimator, abc.ABC):
-    """Wrap Chemprop in a sklearn like object."""
+    """Wrap Chemprop in a sklearn compatible Estimator.
+
+    Notes
+    -----
+    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor, this class
+    provides the common functionality for both classes.
+    Although this class does not implement abstract methods, it is marked as abstract to prevent
+    instantiation. (without predict or transform methods this class is useless.)
+
+    Attributes
+    ----------
+    model : MPNN
+        The chemprop model to wrap.
+    batch_size : int
+        The batch size to use for training and prediction.
+    n_jobs : int
+        The number of jobs to use for processing the molecular graphs in the dataloader.
+    lightning_trainer : pl.Trainer
+        The lightning trainer to use for training the model.
+    trainer_params : dict[str, Any]
+        The parameters of the lightning trainer. This is used as the trainer is not compatible with the
+        `get_params` method.
+    model_ckpoint_params : dict[str, Any]
+        The parameters of the model checkpoint callback. This is used as the callback is not compatible with the
+        `get_params` method.
+    """
 
     model: MPNN
+    batch_size: int
+    n_jobs: int
+    lightning_trainer: pl.Trainer
+    trainer_params: dict[str, Any]
+    model_ckpoint_params: dict[str, Any]
 
     def __init__(
         self,
@@ -53,7 +87,10 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             Can be used to modify components of the model.
         """
         self.model = model
-        if lightning_trainer is None:
+        self.batch_size = batch_size
+        self.n_jobs = n_jobs
+        self.model_ckpoint_params = {}
+        if not lightning_trainer:
             lightning_trainer = pl.Trainer(
                 logger=False,
                 enable_checkpointing=False,
@@ -62,9 +99,19 @@ class ABCChemprop(BaseEstimator, abc.ABC):
                 callbacks=[],
             )
         self.lightning_trainer = lightning_trainer
-        self.batch_size = batch_size
-        self.n_jobs = n_jobs
+        self.trainer_params = get_non_default_params_trainer(self.lightning_trainer)
         self.set_params(**kwargs)
+
+    def _update_trainer(
+        self,
+    ) -> None:
+        """Update the trainer for the model."""
+        trainer_params = dict(self.trainer_params)
+        if self.model_ckpoint_params:
+            trainer_params["callbacks"] = [
+                pl.callbacks.ModelCheckpoint(**self.model_ckpoint_params)
+            ]
+        self.lightning_trainer = pl.Trainer(**trainer_params)
 
     def fit(
         self,
@@ -95,3 +142,106 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         )
         self.lightning_trainer.fit(self.model, training_data)
         return self
+
+    def set_params(self, **params: Any) -> Self:
+        """Set the parameters of the model.
+
+        Note
+        ----
+        Parameters for the trainer and the checkpoint callback are filtered out and added as attributes of the model.
+        This is done due to incompatibility with the `get_params` method.
+
+        Parameters
+        ----------
+        **params: Any
+            The parameters to set.
+
+        Returns
+        -------
+        Self
+            The model with the new parameters.
+        """
+        params, trainer_params = self._filter_params_trainer(params)
+        params, model_ckpoint_params = self._filter_params_callback(params)
+        self.trainer_params.update(trainer_params)
+        self.model_ckpoint_params.update(model_ckpoint_params)
+        super().set_params(**params)
+        self._update_trainer()
+        return self
+
+    def get_params(self, deep: bool = False) -> dict[str, Any]:
+        """Get the parameters of the model.
+
+        Parameters
+        ----------
+        deep : bool, optional (default=False)
+            Whether to get the parameters of the model.
+
+        Returns
+        -------
+        dict[str, Any]
+            The parameters of the model.
+        """
+        params = super().get_params(deep)
+        for name, value in self.trainer_params.items():
+            params[f"lightning_trainer__{name}"] = value
+        for name, value in self.model_ckpoint_params.items():
+            params[f"callback_modelckpt__{name}"] = value
+        # set to none as the trainer is created from the parameters
+        # Otherwise, the sklearn clone will fail as the trainer is updated by replacing the object
+        params["lightning_trainer"] = None
+        return params
+
+    @staticmethod
+    def _filter_params_trainer(
+        params: dict[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Filter the parameters for the trainer.
+
+        Parameters
+        ----------
+        params : dict[str, Any]
+            The parameters to filter.
+
+        Returns
+        -------
+        dict[str, Any]
+            The filtered parameters for the model.
+        dict[str, Any]
+            The filtered parameters for the trainer.
+        """
+        trainer_params = {}
+        other_params = {}
+        for key, value in params.items():
+            if key.startswith("lightning_trainer__"):
+                trainer_params[key.split("__")[1]] = value
+            else:
+                other_params[key] = value
+        return other_params, trainer_params
+
+    @staticmethod
+    def _filter_params_callback(
+        params: dict[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Filter the parameters for the checkpoint callback.
+
+        Parameters
+        ----------
+        params : dict[str, Any]
+            The parameters to filter.
+
+        Returns
+        -------
+        dict[str, Any]
+            The filtered parameters for the model.
+        dict[str, Any]
+            The filtered parameters for the checkpoint callback.
+        """
+        checkpoint_params = {}
+        other_params = {}
+        for key, value in params.items():
+            if key.startswith("callback_modelckpt"):
+                checkpoint_params[key.split("__")[1]] = value
+            else:
+                other_params[key] = value
+        return other_params, checkpoint_params

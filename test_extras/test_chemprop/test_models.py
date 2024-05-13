@@ -2,9 +2,13 @@
 
 import logging
 import unittest
+from pathlib import Path
+from typing import Iterable, Sequence
 
 from chemprop.nn.loss import BCELoss, LossFunction, MSELoss
-from lightning import pytorch as pl
+from lightning.pytorch.accelerators import Accelerator
+from lightning.pytorch.callbacks.progress.tqdm_progress import TQDMProgressBar
+from lightning.pytorch.profilers.base import PassThroughProfiler
 from sklearn.base import clone
 from torch import Tensor, nn
 
@@ -42,13 +46,20 @@ def get_model() -> ChempropModel:
         agg=aggregate,
         predictor=binary_clf_ffn,
     )
-    chemprop_model = ChempropModel(model=mpnn)
+    chemprop_model = ChempropModel(model=mpnn, lightning_trainer__accelerator="cpu")
     return chemprop_model
 
 
 DEFAULT_PARAMS = {
     "batch_size": 64,
-    "lightning_trainer": pl.Trainer,
+    "lightning_trainer": None,
+    "lightning_trainer__enable_checkpointing": False,
+    "lightning_trainer__enable_model_summary": False,
+    "lightning_trainer__max_epochs": 500,
+    "lightning_trainer__profiler": PassThroughProfiler,
+    "lightning_trainer__callbacks": [TQDMProgressBar],
+    "lightning_trainer__accelerator": "cpu",
+    "lightning_trainer__default_root_dir": str(Path(".").resolve()),
     "model": MPNN,
     "model__agg__dim": 0,
     "model__agg": SumAggregation,
@@ -83,9 +94,10 @@ DEFAULT_PARAMS = {
 }
 
 NO_IDENTITY_CHECK = [
+    "lightning_trainer__callbacks",
+    "lightning_trainer__profiler",
     "model__agg",
     "model__message_passing",
-    "lightning_trainer",
     "model",
     "model__predictor",
     "model__predictor__criterion",
@@ -106,9 +118,14 @@ class TestChempropModel(unittest.TestCase):
         # Check if the parameters are as expected
         for param_name, param in expected_params.items():
             if param_name in NO_IDENTITY_CHECK:
-                if not isinstance(param, type):
+                if isinstance(param, Iterable):
+                    self.assertIsInstance(orig_params[param_name], type(param))
+                    for i, p in enumerate(param):
+                        self.assertIsInstance(orig_params[param_name][i], p)
+                elif isinstance(param, type):
+                    self.assertIsInstance(orig_params[param_name], param)
+                else:
                     raise ValueError(f"{param_name} should be a type.")
-                self.assertIsInstance(orig_params[param_name], param)
             else:
                 self.assertEqual(
                     orig_params[param_name], param, f"Test failed for {param_name}"
@@ -140,16 +157,18 @@ class TestChempropModel(unittest.TestCase):
             if hasattr(param, "get_params"):
                 self.assertEqual(param.__class__, cloned_param.__class__)
                 self.assertNotEqual(id(param), id(cloned_param))
-            elif isinstance(param, pl.Trainer):
-                self.assertIsInstance(cloned_param, pl.Trainer)
             elif isinstance(param, LossFunction):
                 self.assertEqual(
                     param.state_dict()["task_weights"],
                     cloned_param.state_dict()["task_weights"],
                 )
                 self.assertEqual(type(param), type(cloned_param))
-            elif isinstance(param, nn.Identity):
+            elif isinstance(param, (nn.Identity, Accelerator, PassThroughProfiler)):
                 self.assertEqual(type(param), type(cloned_param))
+            elif param_name == "lightning_trainer__callbacks":
+                self.assertIsInstance(cloned_param, Sequence)
+                for i, callback in enumerate(param):
+                    self.assertIsInstance(callback, type(cloned_param[i]))
             else:
                 self.assertEqual(param, cloned_param, f"Test failed for {param_name}")
 
@@ -178,15 +197,20 @@ class TestChempropClassifier(unittest.TestCase):
 
     def test_get_params(self) -> None:
         """Test the get_params and set_params methods."""
-        chemprop_model = ChempropClassifier()
+        chemprop_model = ChempropClassifier(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_PARAMS)  # Shallow copy
         self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
         for param_name, param in expected_params.items():
             if param_name in NO_IDENTITY_CHECK:
-                if not isinstance(param, type):
+                if isinstance(param, Iterable):
+                    self.assertIsInstance(param_dict[param_name], type(param))
+                    for i, p in enumerate(param):
+                        self.assertIsInstance(param_dict[param_name][i], p)
+                elif isinstance(param, type):
+                    self.assertIsInstance(param_dict[param_name], param)
+                else:
                     raise ValueError(f"{param_name} should be a type.")
-                self.assertIsInstance(param_dict[param_name], param)
             else:
                 self.assertEqual(
                     param_dict[param_name], param, f"Test failed for {param_name}"
@@ -198,7 +222,7 @@ class TestChempropRegressor(unittest.TestCase):
 
     def test_get_params(self) -> None:
         """Test the get_params and set_params methods."""
-        chemprop_model = ChempropRegressor()
+        chemprop_model = ChempropRegressor(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_PARAMS)
         expected_params["model__predictor"] = RegressionFFN
@@ -206,9 +230,14 @@ class TestChempropRegressor(unittest.TestCase):
         self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
         for param_name, param in expected_params.items():
             if param_name in NO_IDENTITY_CHECK:
-                if not isinstance(param, type):
+                if isinstance(param, Iterable):
+                    self.assertIsInstance(param_dict[param_name], type(param))
+                    for i, p in enumerate(param):
+                        self.assertIsInstance(param_dict[param_name][i], p)
+                elif isinstance(param, type):
+                    self.assertIsInstance(param_dict[param_name], param)
+                else:
                     raise ValueError(f"{param_name} should be a type.")
-                self.assertIsInstance(param_dict[param_name], param)
             else:
                 self.assertEqual(
                     param_dict[param_name], param, f"Test failed for {param_name}"

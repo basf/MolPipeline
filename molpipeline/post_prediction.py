@@ -84,7 +84,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
         Parameters
         ----------
         X : npt.NDArray[Any]
-           Input data.
+            Input data.
         y : Optional[npt.NDArray[Any]]
             Target data.
         **params : Any
