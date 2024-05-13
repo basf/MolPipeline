@@ -28,7 +28,32 @@ from molpipeline.estimators.chemprop.lightning_wrapper import (
 
 
 class ABCChemprop(BaseEstimator, abc.ABC):
-    """Wrap Chemprop in a sklearn like object."""
+    """Wrap Chemprop in a sklearn compatible Estimator.
+
+    Notes
+    -----
+    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor, this class
+    provides the common functionality for both classes.
+    Although this class does not implement abstract methods, it is marked as abstract to prevent
+    instantiation. (without predict or transform methods this class is useless.)
+
+    Attributes
+    ----------
+    model : MPNN
+        The chemprop model to wrap.
+    batch_size : int
+        The batch size to use for training and prediction.
+    n_jobs : int
+        The number of jobs to use for processing the molecular graphs in the dataloader.
+    lightning_trainer : pl.Trainer
+        The lightning trainer to use for training the model.
+    trainer_params : dict[str, Any]
+        The parameters of the lightning trainer. This is used as the trainer is not compatible with the
+        `get_params` method.
+    model_ckpoint_params : dict[str, Any]
+        The parameters of the model checkpoint callback. This is used as the callback is not compatible with the
+        `get_params` method.
+    """
 
     model: MPNN
     batch_size: int
