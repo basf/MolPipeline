@@ -1,5 +1,6 @@
 """Module for accessing the parameters of a lightning trainer."""
 
+from pathlib import Path
 from typing import Any
 
 try:
@@ -90,6 +91,27 @@ TRAINER_DEFAULT_PARAMS = {
 }
 
 
+def get_trainer_path(trainer: pl.Trainer) -> str | None:
+    """Get the path of the lightning trainer.
+
+    Parameters
+    ----------
+    trainer : pl.Trainer
+        The lightning trainer.
+
+    Returns
+    -------
+    str | None
+        The path of the lightning trainer.
+        None if the path is the current path.
+    """
+    curr_path = str(Path(".").resolve())
+    trainer_path = trainer.default_root_dir
+    if trainer_path == curr_path:
+        trainer_path = None
+    return trainer_path
+
+
 def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
     """Get the parameters of the lightning trainer.
 
@@ -154,7 +176,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         # "plugins": trainer.plugins,  # can not be exctracted
         # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related
         "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,  # type: ignore[attr-defined]
-        "default_root_dir": trainer.default_root_dir,
+        "default_root_dir": get_trainer_path(trainer),
     }
     return trainer_dict
 

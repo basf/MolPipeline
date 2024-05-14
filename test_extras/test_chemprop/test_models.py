@@ -2,7 +2,6 @@
 
 import logging
 import unittest
-from pathlib import Path
 from typing import Iterable, Sequence
 
 from chemprop.nn.loss import BCELoss, LossFunction, MSELoss
@@ -56,7 +55,7 @@ DEFAULT_PARAMS = {
     "lightning_trainer__enable_model_summary": False,
     "lightning_trainer__max_epochs": 500,
     "lightning_trainer__accelerator": "cpu",
-    "lightning_trainer__default_root_dir": str(Path(".").resolve()),
+    "lightning_trainer__default_root_dir": None,
     "lightning_trainer__limit_predict_batches": 1.0,
     "lightning_trainer__detect_anomaly": False,
     "lightning_trainer__reload_dataloaders_every_n_epochs": 0,
