@@ -7,7 +7,6 @@ from typing import Iterable, Sequence
 
 from chemprop.nn.loss import BCELoss, LossFunction, MSELoss
 from lightning.pytorch.accelerators import Accelerator
-from lightning.pytorch.callbacks.progress.tqdm_progress import TQDMProgressBar
 from lightning.pytorch.profilers.base import PassThroughProfiler
 from sklearn.base import clone
 from torch import Tensor, nn
@@ -56,8 +55,6 @@ DEFAULT_PARAMS = {
     "lightning_trainer__enable_checkpointing": False,
     "lightning_trainer__enable_model_summary": False,
     "lightning_trainer__max_epochs": 500,
-    "lightning_trainer__profiler": PassThroughProfiler,
-    "lightning_trainer__callbacks": [TQDMProgressBar],
     "lightning_trainer__accelerator": "cpu",
     "lightning_trainer__default_root_dir": str(Path(".").resolve()),
     "lightning_trainer__limit_predict_batches": 1.0,
@@ -124,8 +121,6 @@ DEFAULT_PARAMS = {
 }
 
 NO_IDENTITY_CHECK = [
-    "lightning_trainer__callbacks",
-    "lightning_trainer__profiler",
     "model__agg",
     "model__message_passing",
     "model",

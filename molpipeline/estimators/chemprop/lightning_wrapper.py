@@ -122,7 +122,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "num_nodes": trainer.num_nodes,
         "precision": trainer.precision,
         "logger": trainer.logger,
-        "callbacks": trainer.callbacks,  # type: ignore[attr-defined]
+        # "callbacks": trainer.callbacks,  # type: ignore[attr-defined]
         "fast_dev_run": trainer.fast_dev_run,  # type: ignore[attr-defined]
         "max_epochs": trainer.max_epochs,
         "min_epochs": trainer.min_epochs,
@@ -148,7 +148,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "benchmark": torch.backends.cudnn.benchmark,
         "inference_mode": trainer.predict_loop.inference_mode,
         "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # pylint: disable=protected-access
-        "profiler": trainer.profiler,  # type: ignore[attr-defined]
+        # "profiler": trainer.profiler,  # type: ignore[attr-defined]
         "detect_anomaly": trainer._detect_anomaly,  # pylint: disable=protected-access
         "barebones": trainer.barebones,
         # "plugins": trainer.plugins,  # can not be exctracted
