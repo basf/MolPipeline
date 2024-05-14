@@ -4,6 +4,7 @@ import logging
 import unittest
 from typing import Iterable, Sequence
 
+import torch
 from chemprop.nn.loss import BCELoss, LossFunction, MSELoss
 from lightning.pytorch.accelerators import Accelerator
 from lightning.pytorch.profilers.base import PassThroughProfiler
@@ -24,6 +25,7 @@ from molpipeline.estimators.chemprop.models import (
     ChempropRegressor,
 )
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
 
@@ -214,6 +216,31 @@ class TestChempropModel(unittest.TestCase):
         # the model should be cloned
         self.assertNotEqual(id(chemprop_model.model), id(neural_fp.model))
         self.assertEqual(neural_fp.disable_fitting, True)
+
+    def test_json_serialization(self) -> None:
+        """Test the to_json and from_json methods."""
+        chemprop_model = get_model()
+        chemprop_json = recursive_to_json(chemprop_model)
+        chemprop_model_copy = recursive_from_json(chemprop_json)
+        param_dict = chemprop_model_copy.get_params(deep=True)
+
+        self.assertSetEqual(set(param_dict.keys()), set(DEFAULT_PARAMS.keys()))
+        for param_name, param in DEFAULT_PARAMS.items():
+            if param_name in NO_IDENTITY_CHECK:
+                if isinstance(param, Iterable):
+                    self.assertIsInstance(param_dict[param_name], type(param))
+                    for i, p in enumerate(param):
+                        self.assertIsInstance(param_dict[param_name][i], p)
+                elif isinstance(param, type):
+                    self.assertIsInstance(param_dict[param_name], param)
+                else:
+                    raise ValueError(f"{param_name} should be a type.")
+            elif param_name == "model__predictor__task_weights":
+                self.assertTrue(torch.allclose(param, param_dict[param_name]))
+            else:
+                self.assertEqual(
+                    param_dict[param_name], param, f"Test failed for {param_name}"
+                )
 
 
 class TestChempropClassifier(unittest.TestCase):
