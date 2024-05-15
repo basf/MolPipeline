@@ -20,21 +20,22 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 class ElementFilter(_MolToMolPipelineElement):
     """ElementFilter which removes molecules containing chemical elements other than specified."""
+
     ALLOWED_ELEMENT_NUMBERS = [
-                1,
-                5,
-                6,
-                7,
-                8,
-                9,
-                14,
-                15,
-                16,
-                17,
-                34,
-                35,
-                53,
-            ]
+        1,
+        5,
+        6,
+        7,
+        8,
+        9,
+        14,
+        15,
+        16,
+        17,
+        34,
+        35,
+        53,
+    ]
 
     def __init__(
         self,
@@ -219,7 +220,7 @@ class EmptyMoleculeFilter(_MolToMolPipelineElement):
 class InorganicsFilter(_MolToMolPipelineElement):
     """Filters Molecules which do not contain any organic (i.e. Carbon) atoms."""
 
-    CARBON_INORGANICS = ["O=C=O", "[C-]#[O+]"] # CO2 and CO are not organic
+    CARBON_INORGANICS = ["O=C=O", "[C-]#[O+]"]  # CO2 and CO are not organic
 
     def __init__(
         self,
@@ -253,10 +254,12 @@ class InorganicsFilter(_MolToMolPipelineElement):
         OptionalMol
             Molecule if it contains carbon, else InvalidInstance.
         """
-        if not any(atom.GetAtomicNum() == 6 for atom in value.GetAtoms()):             
-            return InvalidInstance(self.uuid, "Molecule contains no organic atoms.", self.name)
+        if not any(atom.GetAtomicNum() == 6 for atom in value.GetAtoms()):
+            return InvalidInstance(
+                self.uuid, "Molecule contains no organic atoms.", self.name
+            )
         smiles = Chem.MolToSmiles(value)
         print(smiles)
-        if smiles in self.CARBON_INORGANICS:  
+        if smiles in self.CARBON_INORGANICS:
             return InvalidInstance(self.uuid, "Molecule is not organic.", self.name)
         return value

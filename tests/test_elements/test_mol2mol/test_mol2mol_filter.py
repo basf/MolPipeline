@@ -132,17 +132,13 @@ class MolFilterTest(unittest.TestCase):
             [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_METAL_AU, SMILES_CL_BR],
         )
 
-        filtered_inroganics = pipeline.fit_transform(
-                ["O=C=O", "[O+]#[C-]"]
-        )
+        filtered_inroganics = pipeline.fit_transform(["O=C=O", "[O+]#[C-]"])
         self.assertEqual(
             filtered_inroganics,
             [],
         )
 
-        filtered_inroganics = pipeline.fit_transform(
-                InorganicsFilter.CARBON_INORGANICS
-        )
+        filtered_inroganics = pipeline.fit_transform(InorganicsFilter.CARBON_INORGANICS)
         self.assertEqual(
             filtered_inroganics,
             [],
