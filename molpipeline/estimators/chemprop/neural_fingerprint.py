@@ -1,6 +1,6 @@
 """Wrap Chemprop in a sklearn like transformer returning the neural fingerprint as a numpy array."""
 
-from typing import Iterable, Self
+from typing import Self, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -49,7 +49,7 @@ class ChempropNeuralFP(ABCChemprop):
     def fit(
         self,
         X: MoleculeDataset,  # pylint: disable=invalid-name
-        y: Iterable[int | float] | npt.NDArray[np.int_ | np.float_],
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float_],
     ) -> Self:
         """Fit the model.
 
@@ -57,7 +57,7 @@ class ChempropNeuralFP(ABCChemprop):
         ----------
         X : MoleculeDataset
             The input data.
-        y : Iterable[int | float] | npt.NDArray[np.int_ | np.float_]
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float_]
             The target data.
 
         Returns
@@ -91,7 +91,7 @@ class ChempropNeuralFP(ABCChemprop):
     def fit_transform(
         self,
         X: MoleculeDataset,  # pylint: disable=invalid-name
-        y: Iterable[int | float] | npt.NDArray[np.int_ | np.float_],
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float_],
     ) -> npt.NDArray[np.float_]:
         """Fit the model and transform the input.
 
@@ -99,7 +99,7 @@ class ChempropNeuralFP(ABCChemprop):
         ----------
         X : MoleculeDataset
             The input data.
-        y : Iterable[int | float] | npt.NDArray[np.int_ | np.float_]
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float_]
             The target data.
 
         Returns

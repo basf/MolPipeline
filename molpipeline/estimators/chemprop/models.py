@@ -1,6 +1,6 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
-from typing import Any
+from typing import Any, Sequence
 
 try:
     from typing import Self
@@ -40,6 +40,69 @@ from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 
 class ChempropModel(ABCChemprop):
     """Wrap Chemprop in a sklearn like Estimator."""
+
+    _classes_: npt.NDArray[np.int_] | None
+
+    def __init__(
+        self,
+        model: MPNN,
+        lightning_trainer: pl.Trainer | None = None,
+        batch_size: int = 64,
+        n_jobs: int = 1,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the chemprop abstract model.
+
+        Parameters
+        ----------
+        model : MPNN
+            The chemprop model to wrap.
+        lightning_trainer : pl.Trainer, optional
+            The lightning trainer to use, by default None
+        batch_size : int, optional (default=64)
+            The batch size to use.
+        n_jobs : int, optional (default=1)
+            The number of jobs to use.
+        kwargs : Any
+            Parameters set using `set_params`.
+            Can be used to modify components of the model.
+        """
+        super().__init__(
+            model=model,
+            lightning_trainer=lightning_trainer,
+            batch_size=batch_size,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+        self._classes_ = None
+
+    @property
+    def classes_(self) -> npt.NDArray[np.int_]:
+        """Return the classes.
+
+        Returns
+        -------
+        npt.NDArray[np.int_]
+            The classes.
+        """
+        if not self._is_classifier():
+            raise ValueError("Model is not a classifier.")
+        if self._classes_ is None:
+            raise ValueError("Classes are not set.")
+        return self._classes_
+
+    @property
+    def _estimator_type(self) -> str:
+        """Return the estimator type.
+
+        Returns
+        -------
+        str
+            The estimator type.
+        """
+        if self._is_classifier():
+            return "classifier"
+        return "regressor"
 
     def _is_binary_classifier(self) -> bool:
         """Check if the model is a binary classifier.
@@ -109,6 +172,29 @@ class ChempropModel(ABCChemprop):
                     "Binary classification model should output a single probability."
                 )
         return prediction_array
+
+    def fit(
+        self,
+        X: MoleculeDataset,
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float_],
+    ) -> Self:
+        """Fit the model to the data.
+
+        Parameters
+        ----------
+        X : MoleculeDataset
+            The input data.
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float_]
+            The target data.
+
+        Returns
+        -------
+        Self
+            The fitted model.
+        """
+        if self._is_classifier():
+            self._classes_ = np.unique(y)
+        return super().fit(X, y)
 
     def predict(
         self, X: MoleculeDataset  # pylint: disable=invalid-name

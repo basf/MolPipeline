@@ -9,6 +9,8 @@ import numpy as np
 import pandas as pd
 from chemprop.nn.loss import LossFunction
 from lightning import pytorch as pl
+from lightning.pytorch.accelerators import Accelerator
+from lightning.pytorch.profilers.base import PassThroughProfiler
 from sklearn.base import clone
 from torch import nn
 
@@ -217,8 +219,15 @@ class TestChempropPipeline(unittest.TestCase):
                         cloned_params[param_name].state_dict()["task_weights"],
                     )
                     self.assertEqual(type(param), type(cloned_params[param_name]))
-                elif isinstance(param, nn.Identity):
+                elif isinstance(param, (nn.Identity, Accelerator, PassThroughProfiler)):
                     self.assertEqual(type(param), type(cloned_params[param_name]))
+                elif param_name == "lightning_trainer__callbacks":
+                    self.assertIsInstance(cloned_params[param_name], list)
+                    self.assertEqual(len(param), len(cloned_params[param_name]))
+                    for callback, cloned_callback in zip(
+                        param, cloned_params[param_name]
+                    ):
+                        self.assertEqual(type(callback), type(cloned_callback))
                 else:
                     self.assertEqual(
                         param, cloned_params[param_name], f"Failed for {param_name}"
