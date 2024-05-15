@@ -21,6 +21,22 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 class ElementFilter(_MolToMolPipelineElement):
     """ElementFilter which removes molecules containing chemical elements other than specified."""
 
+    DEFAULT_ALLOWED_ELEMENT_NUMBERS = [
+        1,
+        5,
+        6,
+        7,
+        8,
+        9,
+        14,
+        15,
+        16,
+        17,
+        34,
+        35,
+        53,
+    ]
+
     def __init__(
         self,
         allowed_element_numbers: Optional[list[int]] = None,
@@ -44,21 +60,7 @@ class ElementFilter(_MolToMolPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if allowed_element_numbers is None:
-            allowed_element_numbers = [
-                1,
-                5,
-                6,
-                7,
-                8,
-                9,
-                14,
-                15,
-                16,
-                17,
-                34,
-                35,
-                53,
-            ]
+            allowed_element_numbers = self.DEFAULT_ALLOWED_ELEMENT_NUMBERS
         if not isinstance(allowed_element_numbers, set):
             self.allowed_element_numbers = set(allowed_element_numbers)
         else:
@@ -149,7 +151,7 @@ class MixtureFilter(_MolToMolPipelineElement):
         uuid: str, optional (default: None)
             Unique identifier of the pipeline element.
         """
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Invalidate molecule containing multiple fragments.
@@ -195,7 +197,7 @@ class EmptyMoleculeFilter(_MolToMolPipelineElement):
         uuid: str, optional (default: None)
             Unique identifier of the pipeline element.
         """
-        super().__init__(name=name, n_jobs=n_jobs)
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Invalidate empty molecule.
@@ -212,4 +214,52 @@ class EmptyMoleculeFilter(_MolToMolPipelineElement):
         """
         if value.GetNumAtoms() == 0:
             return InvalidInstance(self.uuid, "Molecule contains no atoms.", self.name)
+        return value
+
+
+class InorganicsFilter(_MolToMolPipelineElement):
+    """Filters Molecules which do not contain any organic (i.e. Carbon) atoms."""
+
+    CARBON_INORGANICS = ["O=C=O", "[C-]#[O+]"]  # CO2 and CO are not organic
+
+    def __init__(
+        self,
+        name: str = "InorganicsFilter",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize InorganicsFilter.
+
+        Parameters
+        ----------
+        name: str, optional (default: "InorganicsFilter")
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            Unique identifier of the pipeline element.
+        """
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Invalidate molecules not containing a carbon atom.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to check.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule if it contains carbon, else InvalidInstance.
+        """
+        if not any(atom.GetAtomicNum() == 6 for atom in value.GetAtoms()):
+            return InvalidInstance(
+                self.uuid, "Molecule contains no organic atoms.", self.name
+            )
+        smiles = Chem.MolToSmiles(value)
+        print(smiles)
+        if smiles in self.CARBON_INORGANICS:
+            return InvalidInstance(self.uuid, "Molecule is not organic.", self.name)
         return value
