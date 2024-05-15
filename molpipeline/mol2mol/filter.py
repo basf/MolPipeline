@@ -21,7 +21,7 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 class ElementFilter(_MolToMolPipelineElement):
     """ElementFilter which removes molecules containing chemical elements other than specified."""
 
-    ALLOWED_ELEMENT_NUMBERS = [
+    DEFAULT_ALLOWED_ELEMENT_NUMBERS = [
         1,
         5,
         6,
@@ -60,7 +60,7 @@ class ElementFilter(_MolToMolPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if allowed_element_numbers is None:
-            allowed_element_numbers = self.ALLOWED_ELEMENT_NUMBERS
+            allowed_element_numbers = self.DEFAULT_ALLOWED_ELEMENT_NUMBERS
         if not isinstance(allowed_element_numbers, set):
             self.allowed_element_numbers = set(allowed_element_numbers)
         else:
