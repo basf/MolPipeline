@@ -310,9 +310,9 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
             "F[P-](F)(F)(F)(F)F.CCCC[N+]1=CC=CC=C1C",
         ]
 
-        # test with fails_on_any_error=True
+        # test with return_with_errors=False
         property_element = MolToRDKitPhysChem(
-            standardizer=None, fails_on_any_error=True
+            standardizer=None, return_with_errors=False
         )
 
         error_filter = ErrorFilter.from_element_list([property_element])
@@ -342,9 +342,9 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
             np.equal(np.isnan(output).any(axis=1), [True, False, False]).all()
         )
 
-        # test with fails_on_any_error=False
+        # test with return_with_errors=True
         property_element2 = MolToRDKitPhysChem(
-            standardizer=None, fails_on_any_error=False
+            standardizer=None, return_with_errors=True
         )
 
         error_filter2 = ErrorFilter.from_element_list([property_element2])
@@ -370,6 +370,34 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         self.assertTrue(
             np.equal(np.isnan(output2).any(axis=1), [True, False, False]).all()
         )
+
+    def test_unknown_descriptor_name(self) -> None:
+        """Test the handling of unknown descriptor names."""
+
+        self.assertRaises(
+            ValueError,
+            MolToRDKitPhysChem,
+            **{"descriptor_list": ["__NotADescriptor11Name4374737834hggghgddd"]},
+        )
+
+    def test_exception_handling(self) -> None:
+        """Test exception handling during descriptor calculation."""
+
+        pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                (
+                    "property_element",
+                    MolToRDKitPhysChem(
+                        standardizer=None, return_with_errors=True, log_exceptions=False
+                    ),
+                ),
+            ]
+        )
+
+        # Without exception handling [HH] would raise a division-by-zero exception because it has 0 heavy atoms
+        output = pipeline.fit_transform(["[HH]"])
+        self.assertTrue(output.shape == (1, len(DEFAULT_DESCRIPTORS)))
 
 
 if __name__ == "__main__":

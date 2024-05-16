@@ -15,6 +15,7 @@ import copy
 
 import numpy as np
 import numpy.typing as npt
+from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 from sklearn.preprocessing import StandardScaler
@@ -43,8 +44,9 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
     def __init__(
         self,
         descriptor_list: Optional[list[str]] = None,
-        fails_on_any_error: bool = True,
+        return_with_errors: bool = False,
         standardizer: Optional[AnyTransformer] = StandardScaler(),
+        log_exceptions: bool = True,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -55,11 +57,13 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         ----------
         descriptor_list: Optional[list[str]], optional (default=None)
             List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
-        fails_on_any_error: bool, optional (default = True)
-            If True, the pipeline element will fail if any descriptor calculation fails.
-            If False, the pipeline element will return a vector with NaN values for failed calculations.
+        return_with_errors: bool, optional (default = False)
+            If False, the pipeline element will return an InvalidInstance if any error occurs during calculations.
+            If True, the pipeline element will return a vector with NaN values for failed descriptor calculations.
         standardizer: Optional[AnyTransformer], optional (default=StandardScaler())
             Standardizer to use.
+        log_exceptions: bool, optional (default=True)
+            If True, traceback of exceptions occurring during descriptor calculation are logged.
         name: str, optional (default="Mol2RDKitPhysChem")
             Name of the PipelineElement.
         n_jobs: int, optional (default=1)
@@ -67,8 +71,15 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         uuid: Optional[str], optional (default=None)
             UUID of the PipelineElement. If None, a new UUID is generated.
         """
-        self._descriptor_list = descriptor_list or DEFAULT_DESCRIPTORS
-        self._fails_on_any_error = fails_on_any_error
+        if descriptor_list is not None:
+            for name in descriptor_list:
+                if name not in RDKIT_DESCRIPTOR_DICT:
+                    raise ValueError(f"Unknown descriptor function with name: {name}")
+            self._descriptor_list = descriptor_list
+        else:
+            self._descriptor_list = DEFAULT_DESCRIPTORS
+        self._return_with_errors = return_with_errors
+        self._log_exceptions = log_exceptions
         super().__init__(
             standardizer=standardizer,
             name=name,
@@ -113,10 +124,15 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Optional[npt.NDArray[np.float_]]
             Descriptor vector for given molecule. None if calculation failed.
         """
-        vec = np.array(
-            [RDKIT_DESCRIPTOR_DICT[name](value) for name in self._descriptor_list]
-        )
-        if self._fails_on_any_error and np.any(np.isnan(vec)):
+        vec = np.full((len(self._descriptor_list),), np.nan)
+        for i, name in enumerate(self._descriptor_list):
+            descriptor_func = RDKIT_DESCRIPTOR_DICT[name]
+            try:
+                vec[i] = descriptor_func(value)
+            except Exception as e:
+                if self._log_exceptions:
+                    logger.exception(f"Failed calculating descriptor: {name}")
+        if not self._return_with_errors and np.any(np.isnan(vec)):
             return InvalidInstance(self.uuid, "NaN in descriptor vector", self.name)
         return vec
 
@@ -136,10 +152,12 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         parent_dict = dict(super().get_params(deep=deep))
         if deep:
             parent_dict["descriptor_list"] = copy.deepcopy(self._descriptor_list)
-            parent_dict["fails_on_any_error"] = copy.deepcopy(self._fails_on_any_error)
+            parent_dict["fails_on_any_error"] = copy.deepcopy(self._return_with_errors)
+            parent_dict["log_exceptions"] = copy.deepcopy(self._log_exceptions)
         else:
             parent_dict["descriptor_list"] = self._descriptor_list
-            parent_dict["fails_on_any_error"] = self._fails_on_any_error
+            parent_dict["fails_on_any_error"] = self._return_with_errors
+            parent_dict["log_exceptions"] = self._log_exceptions
         return parent_dict
 
     def set_params(self, **parameters: dict[str, Any]) -> Self:
@@ -156,7 +174,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             Self
         """
         parameters_shallow_copy = dict(parameters)
-        params_list = ["descriptor_list", "fails_on_any_error"]
+        params_list = ["descriptor_list", "fails_on_any_error", "log_exceptions"]
         for param_name in params_list:
             if param_name in parameters:
                 setattr(self, f"_{param_name}", parameters[param_name])
