@@ -108,9 +108,13 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Optional[npt.NDArray[np.float_]]
             Descriptor vector for given molecule. None if calculation failed.
         """
-        vec = np.array(
-            [RDKIT_DESCRIPTOR_DICT[name](value) for name in self._descriptor_list]
-        )
+        try:
+            vec = np.array(
+                [RDKIT_DESCRIPTOR_DICT[name](value) for name in self._descriptor_list]
+            )
+        except ZeroDivisionError as e:
+            return InvalidInstance(self.uuid, f"Descriptor calculation failed, {e}", self.name)
+
         if np.any(np.isnan(vec)):
             return InvalidInstance(self.uuid, "NaN in descriptor vector", self.name)
         return vec
