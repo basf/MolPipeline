@@ -43,6 +43,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
     def __init__(
         self,
         descriptor_list: Optional[list[str]] = None,
+        fails_on_any_error: bool = True,
         standardizer: Optional[AnyTransformer] = StandardScaler(),
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
@@ -54,6 +55,9 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         ----------
         descriptor_list: Optional[list[str]], optional (default=None)
             List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
+        fails_on_any_error: bool, optional (default = True)
+            If True, the pipeline element will fail if any descriptor calculation fails.
+            If False, the pipeline element will return a vector with NaN values for failed calculations.
         standardizer: Optional[AnyTransformer], optional (default=StandardScaler())
             Standardizer to use.
         name: str, optional (default="Mol2RDKitPhysChem")
@@ -64,6 +68,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             UUID of the PipelineElement. If None, a new UUID is generated.
         """
         self._descriptor_list = descriptor_list or DEFAULT_DESCRIPTORS
+        self._fails_on_any_error = fails_on_any_error
         super().__init__(
             standardizer=standardizer,
             name=name,
@@ -111,7 +116,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         vec = np.array(
             [RDKIT_DESCRIPTOR_DICT[name](value) for name in self._descriptor_list]
         )
-        if np.any(np.isnan(vec)):
+        if self._fails_on_any_error and np.any(np.isnan(vec)):
             return InvalidInstance(self.uuid, "NaN in descriptor vector", self.name)
         return vec
 
@@ -131,8 +136,10 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         parent_dict = dict(super().get_params(deep=deep))
         if deep:
             parent_dict["descriptor_list"] = copy.deepcopy(self._descriptor_list)
+            parent_dict["fails_on_any_error"] = copy.deepcopy(self._fails_on_any_error)
         else:
             parent_dict["descriptor_list"] = self._descriptor_list
+            parent_dict["fails_on_any_error"] = self._fails_on_any_error
         return parent_dict
 
     def set_params(self, **parameters: dict[str, Any]) -> Self:
@@ -149,8 +156,10 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             Self
         """
         parameters_shallow_copy = dict(parameters)
-        descriptor_list = parameters_shallow_copy.pop("descriptor_list", None)
-        if descriptor_list is not None:
-            self._descriptor_list = descriptor_list  # type: ignore
+        params_list = ["descriptor_list", "fails_on_any_error"]
+        for param_name in params_list:
+            if param_name in parameters:
+                setattr(self, f"_{param_name}", parameters[param_name])
+                parameters_shallow_copy.pop(param_name)
         super().set_params(**parameters_shallow_copy)
         return self

@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from molpipeline import Pipeline
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToRDKitPhysChem
 from molpipeline.mol2any.mol2rdkit_phys_chem import DEFAULT_DESCRIPTORS
@@ -262,9 +262,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         property_vector = expected_df[descriptor_names].values
 
         output = pipeline.fit_transform(smiles)
-        difference = output - property_vector
-
-        self.assertTrue(difference.max() < 0.0001)  # add assertion here
+        self.assertTrue(np.allclose(output, property_vector))  # add assertion here
 
     def test_descriptor_normalization(self) -> None:
         """Test if the normalization of RDKitPhysChem Descriptors works as expected.
@@ -297,10 +295,81 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         output = pipeline.fit_transform(smiles)
         non_zero_descriptors = output[:, (np.abs(output).sum(axis=0) != 0)]
         self.assertTrue(
-            non_zero_descriptors.mean(axis=0).max() < 0.0000001
+            np.allclose(non_zero_descriptors.mean(axis=0), 0.0)
         )  # add assertion here
-        self.assertTrue(non_zero_descriptors.std(axis=0).max() < 1.0000001)
-        self.assertTrue(non_zero_descriptors.std(axis=0).min() > 0.9999999)
+        self.assertTrue(np.allclose(non_zero_descriptors.std(axis=0), 1.0))
+
+    def test_optional_nan_value_handling(self) -> None:
+        """Test the handling of partly failed descriptor calculations."""
+
+        ok_smiles_list = [
+            "CC",
+            "C(C)CCO",
+        ]
+        bad_smiles_list = [
+            "F[P-](F)(F)(F)(F)F.CCCC[N+]1=CC=CC=C1C",
+        ]
+
+        # test with fails_on_any_error=True
+        property_element = MolToRDKitPhysChem(
+            standardizer=None, fails_on_any_error=True
+        )
+
+        error_filter = ErrorFilter.from_element_list([property_element])
+        error_replacer = FilterReinserter.from_error_filter(
+            error_filter, fill_value=np.nan
+        )
+
+        # note that we need the error filter and replacer here. Otherwise, the pipeline would fail on any error
+        # irrespective of the fails_on_any_error parameter
+        pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                ("property_element", property_element),
+                ("error_filter", error_filter),
+                ("error_replacer", error_replacer),
+            ]
+        )
+
+        output = pipeline.fit_transform(bad_smiles_list + ok_smiles_list)
+        self.assertEqual(len(output), len(bad_smiles_list + ok_smiles_list))
+        # check expect-to-fail rows are ALL nan values
+        self.assertTrue(
+            np.equal(np.isnan(output).all(axis=1), [True, False, False]).all()
+        )
+        # check expected-not-to-fail rows contain zero nan values
+        self.assertTrue(
+            np.equal(np.isnan(output).any(axis=1), [True, False, False]).all()
+        )
+
+        # test with fails_on_any_error=False
+        property_element2 = MolToRDKitPhysChem(
+            standardizer=None, fails_on_any_error=False
+        )
+
+        error_filter2 = ErrorFilter.from_element_list([property_element2])
+        filter_reinserter = FilterReinserter.from_error_filter(
+            error_filter2, fill_value=np.nan
+        )
+        pipeline2 = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                ("property_element", property_element2),
+                ("error_filter", error_filter2),
+                ("error_replacer", filter_reinserter),
+            ]
+        )
+
+        output2 = pipeline2.fit_transform(bad_smiles_list + ok_smiles_list)
+        self.assertEqual(len(output2), len(bad_smiles_list + ok_smiles_list))
+        # check expect-to-fail rows are ALL nan values
+        self.assertTrue(
+            np.equal(np.isnan(output2).all(axis=1), [False, False, False]).all()
+        )
+        # check expected-not-to-fail rows contain zero nan values
+        self.assertTrue(
+            np.equal(np.isnan(output2).any(axis=1), [True, False, False]).all()
+        )
 
 
 if __name__ == "__main__":
