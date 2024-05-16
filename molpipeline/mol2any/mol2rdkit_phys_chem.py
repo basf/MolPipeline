@@ -154,11 +154,11 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         parent_dict = dict(super().get_params(deep=deep))
         if deep:
             parent_dict["descriptor_list"] = copy.deepcopy(self._descriptor_list)
-            parent_dict["fails_on_any_error"] = copy.deepcopy(self._return_with_errors)
+            parent_dict["return_with_errors"] = copy.deepcopy(self._return_with_errors)
             parent_dict["log_exceptions"] = copy.deepcopy(self._log_exceptions)
         else:
             parent_dict["descriptor_list"] = self._descriptor_list
-            parent_dict["fails_on_any_error"] = self._return_with_errors
+            parent_dict["return_with_errors"] = self._return_with_errors
             parent_dict["log_exceptions"] = self._log_exceptions
         return parent_dict
 
@@ -176,7 +176,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             Self
         """
         parameters_shallow_copy = dict(parameters)
-        params_list = ["descriptor_list", "fails_on_any_error", "log_exceptions"]
+        params_list = ["descriptor_list", "return_with_errors", "log_exceptions"]
         for param_name in params_list:
             if param_name in parameters:
                 setattr(self, f"_{param_name}", parameters[param_name])

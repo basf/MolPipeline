@@ -321,7 +321,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         )
 
         # note that we need the error filter and replacer here. Otherwise, the pipeline would fail on any error
-        # irrespective of the fails_on_any_error parameter
+        # irrespective of the return_with_errors parameter
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
