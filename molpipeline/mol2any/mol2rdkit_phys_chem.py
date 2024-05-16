@@ -72,9 +72,11 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             UUID of the PipelineElement. If None, a new UUID is generated.
         """
         if descriptor_list is not None:
-            for name in descriptor_list:
-                if name not in RDKIT_DESCRIPTOR_DICT:
-                    raise ValueError(f"Unknown descriptor function with name: {name}")
+            for descriptor_name in descriptor_list:
+                if descriptor_name not in RDKIT_DESCRIPTOR_DICT:
+                    raise ValueError(
+                        f"Unknown descriptor function with name: {descriptor_name}"
+                    )
             self._descriptor_list = descriptor_list
         else:
             self._descriptor_list = DEFAULT_DESCRIPTORS
@@ -129,7 +131,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             descriptor_func = RDKIT_DESCRIPTOR_DICT[name]
             try:
                 vec[i] = descriptor_func(value)
-            except Exception as e:
+            except Exception:  # pylint: disable=broad-except
                 if self._log_exceptions:
                     logger.exception(f"Failed calculating descriptor: {name}")
         if not self._return_with_errors and np.any(np.isnan(vec)):
