@@ -78,13 +78,7 @@ class ChempropModel(ABCChemprop):
 
     @property
     def classes_(self) -> npt.NDArray[np.int_]:
-        """Return the classes.
-
-        Returns
-        -------
-        npt.NDArray[np.int_]
-            The classes.
-        """
+        """Return the classes."""
         if not self._is_classifier():
             raise ValueError("Model is not a classifier.")
         if self._classes_ is None:
@@ -93,13 +87,7 @@ class ChempropModel(ABCChemprop):
 
     @property
     def _estimator_type(self) -> str:
-        """Return the estimator type.
-
-        Returns
-        -------
-        str
-            The estimator type.
-        """
+        """Return the estimator type."""
         if self._is_classifier():
             return "classifier"
         return "regressor"
