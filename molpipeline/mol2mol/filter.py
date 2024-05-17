@@ -259,7 +259,6 @@ class InorganicsFilter(_MolToMolPipelineElement):
                 self.uuid, "Molecule contains no organic atoms.", self.name
             )
         smiles = Chem.MolToSmiles(value)
-        print(smiles)
         if smiles in self.CARBON_INORGANICS:
             return InvalidInstance(self.uuid, "Molecule is not organic.", self.name)
         return value
