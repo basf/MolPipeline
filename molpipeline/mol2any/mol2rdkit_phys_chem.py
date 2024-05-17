@@ -71,7 +71,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         uuid: Optional[str], optional (default=None)
             UUID of the PipelineElement. If None, a new UUID is generated.
         """
-        self.descriptor_list = descriptor_list
+        self.descriptor_list = descriptor_list  # type: ignore
         self._return_with_errors = return_with_errors
         self._log_exceptions = log_exceptions
         super().__init__(
@@ -105,6 +105,18 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     @descriptor_list.setter
     def descriptor_list(self, descriptor_list: list[str] | None) -> None:
+        """Set the descriptor list.
+
+        Parameters
+        ----------
+        descriptor_list: list[str] | None
+            List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
+
+        Raises
+        ------
+        ValueError
+            If an unknown descriptor name is used.
+        """
         if descriptor_list is None or descriptor_list is DEFAULT_DESCRIPTORS:
             # if None or DEFAULT_DESCRIPTORS are used, set the default descriptors
             self._descriptor_list = DEFAULT_DESCRIPTORS
