@@ -221,6 +221,7 @@ class InorganicsFilter(_MolToMolPipelineElement):
     """Filters Molecules which do not contain any organic (i.e. Carbon) atoms."""
 
     CARBON_INORGANICS = ["O=C=O", "[C-]#[O+]"]  # CO2 and CO are not organic
+    CARBON_INORGANICS_MAX_ATOMS = 3
 
     def __init__(
         self,
@@ -258,7 +259,10 @@ class InorganicsFilter(_MolToMolPipelineElement):
             return InvalidInstance(
                 self.uuid, "Molecule contains no organic atoms.", self.name
             )
-        smiles = Chem.MolToSmiles(value)
-        if smiles in self.CARBON_INORGANICS:
-            return InvalidInstance(self.uuid, "Molecule is not organic.", self.name)
+
+        # Only check for inorganic molecules if the molecule is small enough
+        if value.GetNumAtoms() <= self.CARBON_INORGANICS_MAX_ATOMS:
+            smiles = Chem.MolToSmiles(value)
+            if smiles in self.CARBON_INORGANICS:
+                return InvalidInstance(self.uuid, "Molecule is not organic.", self.name)
         return value
