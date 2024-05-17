@@ -71,15 +71,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         uuid: Optional[str], optional (default=None)
             UUID of the PipelineElement. If None, a new UUID is generated.
         """
-        if descriptor_list is not None:
-            for descriptor_name in descriptor_list:
-                if descriptor_name not in RDKIT_DESCRIPTOR_DICT:
-                    raise ValueError(
-                        f"Unknown descriptor function with name: {descriptor_name}"
-                    )
-            self._descriptor_list = descriptor_list
-        else:
-            self._descriptor_list = DEFAULT_DESCRIPTORS
+        self.descriptor_list = descriptor_list
         self._return_with_errors = return_with_errors
         self._log_exceptions = log_exceptions
         super().__init__(
@@ -110,6 +102,20 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             List of descriptor names.
         """
         return self._descriptor_list[:]
+
+    @descriptor_list.setter
+    def descriptor_list(self, descriptor_list: list[str] | None) -> None:
+        if descriptor_list is None or descriptor_list is DEFAULT_DESCRIPTORS:
+            # if None or DEFAULT_DESCRIPTORS are used, set the default descriptors
+            self._descriptor_list = DEFAULT_DESCRIPTORS
+        else:
+            # check all user defined descriptors are valid
+            for descriptor_name in descriptor_list:
+                if descriptor_name not in RDKIT_DESCRIPTOR_DICT:
+                    raise ValueError(
+                        f"Unknown descriptor function with name: {descriptor_name}"
+                    )
+            self._descriptor_list = descriptor_list
 
     def pretransform_single(
         self, value: RDKitMol

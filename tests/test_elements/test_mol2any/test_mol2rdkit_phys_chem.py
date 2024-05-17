@@ -377,7 +377,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         self.assertRaises(
             ValueError,
             MolToRDKitPhysChem,
-            **{"descriptor_list": ["__NotADescriptor11Name4374737834hggghgddd"]},
+            **{"descriptor_list": ["__NotADescriptor11Name:)"]},
         )
 
     def test_exception_handling(self) -> None:
