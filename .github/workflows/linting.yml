@@ -66,7 +66,7 @@ jobs:
         pip install docsig
     - name: Analysing the code with docsig
       run: |
-        docsig --check-class-constructor --check-dunders --check-protected-class-methods --check-nested --check-overridden --check-protected --check-property-returns .
+        docsig --check-class-constructor --check-dunders --check-protected-class-methods --check-nested --check-overridden --check-protected .
 
   black:
     runs-on: ubuntu-latest

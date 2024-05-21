@@ -531,13 +531,7 @@ class FilterReinserter(ABCPipelineElement):
 
     @property
     def error_filter(self) -> ErrorFilter:
-        """Get the ErrorFilter connected to this FilterReinserter.
-
-        Returns
-        -------
-        ErrorFilter
-            ErrorFilter used for filling removed values.
-        """
+        """Get the ErrorFilter connected to this FilterReinserter."""
         if self._error_filter is None:
             raise ValueError("ErrorFilter not set")
         return self._error_filter

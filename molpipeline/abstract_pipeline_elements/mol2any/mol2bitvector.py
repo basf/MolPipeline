@@ -67,13 +67,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     @property
     def n_bits(self) -> int:
-        """Get number of bits in (or size of) fingerprint.
-
-        Returns
-        -------
-        int
-            Number of bits in fingerprint.
-        """
+        """Get number of bits in (or size of) fingerprint."""
         return self._n_bits
 
     @overload
@@ -303,24 +297,12 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
 
     @property
     def radius(self) -> int:
-        """Get radius of Morgan fingerprint.
-
-        Returns
-        -------
-        int
-            Radius of Morgan fingerprint.
-        """
+        """Get radius of Morgan fingerprint."""
         return self._radius
 
     @property
     def use_features(self) -> bool:
-        """Get whether to encode atoms by features or not.
-
-        Returns
-        -------
-        bool
-            Whether to encode atoms by features or not.
-        """
+        """Get whether to encode atoms by features or not."""
         return self._use_features
 
     @abc.abstractmethod

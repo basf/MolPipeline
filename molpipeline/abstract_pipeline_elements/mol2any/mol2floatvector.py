@@ -64,13 +64,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     @property
     @abc.abstractmethod
     def n_features(self) -> int:
-        """Return the number of features.
-
-        Returns
-        -------
-        int
-            Number of features.
-        """
+        """Return the number of features."""
 
     def assemble_output(
         self,

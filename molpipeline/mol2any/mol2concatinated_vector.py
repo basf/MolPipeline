@@ -69,13 +69,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     @property
     def element_list(self) -> list[tuple[str, MolToAnyPipelineElement]]:
-        """Get pipeline elements.
-
-        Returns
-        -------
-        list[tuple[str, MolToAnyPipelineElement]]
-            List of pipeline elements.
-        """
+        """Get pipeline elements."""
         return self._element_list
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:

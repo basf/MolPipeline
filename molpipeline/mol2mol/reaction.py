@@ -115,13 +115,7 @@ class MolToMolReaction(MolToMolPipelineElement):
 
     @property
     def reaction(self) -> AllChem.ChemicalReaction:
-        """Get the reaction which is applied to the input molecule.
-
-        Returns
-        -------
-        AllChem.ChemicalReaction
-            Reaction which is applied to molecules.
-        """
+        """Get the reaction which is applied to the input molecule."""
         return self._reaction
 
     @reaction.setter

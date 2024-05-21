@@ -205,24 +205,12 @@ class ABCPipelineElement(abc.ABC):
 
     @property
     def additional_attributes(self) -> dict[str, Any]:
-        """Any attribute relevant for recreating and exact copy, which is not a parameter.
-
-        Returns
-        -------
-        dict[str, Any]
-            Additional attributes.
-        """
+        """Any attribute relevant for recreating and exact copy, which is not a parameter."""
         return {}
 
     @property
     def n_jobs(self) -> int:
-        """Get the number of cores.
-
-        Returns
-        -------
-        int
-            Number of cores used for processing.
-        """
+        """Get the number of cores."""
         return self._n_jobs
 
     @n_jobs.setter
@@ -242,13 +230,7 @@ class ABCPipelineElement(abc.ABC):
 
     @property
     def requires_fitting(self) -> bool:
-        """Return whether the object requires fitting or not.
-
-        Returns
-        -------
-        bool
-            True if object requires fitting, else False.
-        """
+        """Return whether the object requires fitting or not."""
         return self._requires_fitting
 
     def finish(self) -> None:
@@ -376,46 +358,22 @@ class TransformingPipelineElement(ABCPipelineElement):
 
     @property
     def input_type(self) -> str:
-        """Return the input type.
-
-        Returns
-        -------
-        str
-            Input type of the object.
-        """
+        """Return the input type."""
         return self._input_type
 
     @property
     def is_fitted(self) -> bool:
-        """Return whether the object is fitted or not.
-
-        Returns
-        -------
-        bool
-            True if object is fitted, else False.
-        """
+        """Return whether the object is fitted or not."""
         return self._is_fitted
 
     @property
     def output_type(self) -> str:
-        """Return the output type.
-
-        Returns
-        -------
-        str
-            Output type of the object.
-        """
+        """Return the output type."""
         return self._output_type
 
     @property
     def parameters(self) -> dict[str, Any]:
-        """Return the parameters of the object.
-
-        Returns
-        -------
-        dict[str, Any]
-            Object parameters as a dictionary.
-        """
+        """Return the parameters of the object."""
         return self.get_params()
 
     @parameters.setter
