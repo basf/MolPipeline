@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Iterable, List, Literal, Optional, Tuple, TypeVar, Union
 
-from molpipeline.utils.logging import _print_elapsed_time
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -34,6 +33,7 @@ from molpipeline.post_prediction import (
     PostPredictionTransformation,
     PostPredictionWrapper,
 )
+from molpipeline.utils.logging import print_elapsed_time
 from molpipeline.utils.molpipeline_types import (
     AnyElement,
     AnyPredictor,
@@ -242,7 +242,7 @@ class Pipeline(_Pipeline):
         for step in self._iter(with_final=False, filter_passthrough=False):
             step_idx, name, transformer = step
             if transformer is None or transformer == "passthrough":
-                with _print_elapsed_time("Pipeline", self._log_message(step_idx)):
+                with print_elapsed_time("Pipeline", self._log_message(step_idx)):
                     continue
 
             if hasattr(memory, "location") and memory.location is None:
@@ -459,7 +459,7 @@ class Pipeline(_Pipeline):
         """
         routed_params = self._check_method_params(method="fit", props=fit_params)
         Xt, yt = self._fit(X, y, routed_params)  # pylint: disable=invalid-name
-        with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
+        with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 if is_empty(Xt):
                     logger.warning(
@@ -530,7 +530,7 @@ class Pipeline(_Pipeline):
         routed_params = self._check_method_params(method="fit_transform", props=params)
         iter_input, iter_label = self._fit(X, y, routed_params)
         last_step = self._final_estimator
-        with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
+        with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if last_step == "passthrough":
                 pass
             elif is_empty(iter_input):
@@ -650,7 +650,7 @@ class Pipeline(_Pipeline):
         )  # pylint: disable=invalid-name
 
         params_last_step = routed_params[self.steps[-1][0]]
-        with _print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
+        with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator == "passthrough":
                 y_pred = iter_input
             elif is_empty(iter_input):

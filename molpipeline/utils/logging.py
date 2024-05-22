@@ -1,4 +1,5 @@
 """Logging helper functions."""
+
 from __future__ import annotations
 
 import timeit
@@ -7,7 +8,7 @@ from contextlib import contextmanager
 from loguru import logger
 
 
-def _message_with_time(source: str, message: str, time: float):
+def _message_with_time(source: str, message: str, time: float) -> str:
     """Create one line message for logging purposes.
 
     Adapted from sklearn's function to stay consistent with the logging style:
@@ -17,28 +18,29 @@ def _message_with_time(source: str, message: str, time: float):
     ----------
     source : str
         String indicating the source or the reference of the message.
-
     message : str
         Short message.
-
     time : float
         Time in seconds.
     """
-    start_message = "[%s] " % source
+    start_message = f"[{source}] "
 
     # adapted from joblib.logger.short_format_time without the Windows -.1s
     # adjustment
     if time > 60:
-        time_str = "%4.1fmin" % (time / 60)
+        time_str = f"{(time / 60):4.1f}min"
     else:
-        time_str = " %5.1fs" % time
-    end_message = " %s, total=%s" % (message, time_str)
+        time_str = f" {time:5.1f}s"
+
+    end_message = f" {message}, total={time_str}"
     dots_len = 70 - len(start_message) - len(end_message)
     return f"{start_message}{dots_len * '.'}{end_message}"
 
 
 @contextmanager
-def _print_elapsed_time(source: str, message: str | None = None, use_logger: bool = False):
+def print_elapsed_time(
+    source: str, message: str | None = None, use_logger: bool = False
+) -> None:
     """Log elapsed time to stdout when the context is exited.
 
     Adapted from sklearn's function to stay consistent with the logging style:
@@ -48,7 +50,6 @@ def _print_elapsed_time(source: str, message: str | None = None, use_logger: boo
     ----------
     source : str
         String indicating the source or the reference of the message.
-
     message : str, default=None
         Short message. If None, nothing will be printed.
     use_logger : bool, default=False
@@ -64,7 +65,10 @@ def _print_elapsed_time(source: str, message: str | None = None, use_logger: boo
     else:
         start = timeit.default_timer()
         yield
-        message_to_print = _message_with_time(source, message, timeit.default_timer() - start)
+        message_to_print = _message_with_time(
+            source, message, timeit.default_timer() - start
+        )
+
         if use_logger:
             logger.info(message_to_print)
         else:
