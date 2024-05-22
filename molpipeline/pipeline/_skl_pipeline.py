@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable, List, Literal, Optional, Tuple, TypeVar, Union
 
+from molpipeline.utils.logging import _print_elapsed_time
+
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
@@ -17,7 +19,7 @@ from sklearn.base import _fit_context  # pylint: disable=protected-access
 from sklearn.base import clone
 from sklearn.pipeline import Pipeline as _Pipeline
 from sklearn.pipeline import _final_estimator_has, _fit_transform_one
-from sklearn.utils import Bunch, _print_elapsed_time
+from sklearn.utils import Bunch
 from sklearn.utils.metadata_routing import (
     _routing_enabled,  # pylint: disable=protected-access
 )
