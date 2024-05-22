@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import timeit
 from contextlib import contextmanager
+from typing import Generator
 
 from loguru import logger
 
@@ -22,6 +23,11 @@ def _message_with_time(source: str, message: str, time: float) -> str:
         Short message.
     time : float
         Time in seconds.
+
+    Returns
+    -------
+    str
+        Message with elapsed time.
     """
     start_message = f"[{source}] "
 
@@ -40,7 +46,7 @@ def _message_with_time(source: str, message: str, time: float) -> str:
 @contextmanager
 def print_elapsed_time(
     source: str, message: str | None = None, use_logger: bool = False
-) -> None:
+) -> Generator[None, None, None]:
     """Log elapsed time to stdout when the context is exited.
 
     Adapted from sklearn's function to stay consistent with the logging style:
