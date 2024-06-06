@@ -24,7 +24,7 @@ def _mitigate_feature_incompatibility_with_shap(X: Any) -> Any:
 
     Parameters
     ----------
-    X_features : Any
+    X : Any
         The input features.
 
     Returns
@@ -38,7 +38,7 @@ def _mitigate_feature_incompatibility_with_shap(X: Any) -> Any:
 
 
 # This function might also be put at a more central position in the lib.
-def _get_predictions(pipeline: Pipeline, X: Any) -> npt.NDArray:
+def _get_predictions(pipeline: Pipeline, X: Any) -> npt.NDArray[np.float_]:
     """Get the predictions of a model.
 
     Raises if no adequate method is found.
@@ -52,7 +52,7 @@ def _get_predictions(pipeline: Pipeline, X: Any) -> npt.NDArray:
 
     Returns
     -------
-    npt.NDArray
+    npt.NDArray[np.float_]
         The predictions.
     """
     if hasattr(pipeline, "predict_proba"):
@@ -65,27 +65,27 @@ def _get_predictions(pipeline: Pipeline, X: Any) -> npt.NDArray:
 
 
 def _convert_shap_feature_weights_to_atom_weights(
-    feature_weights: npt.NDArray,
+    feature_weights: npt.NDArray[np.float_],
     molecule: OptionalMol,
     featurization_element: MolToMorganFP,
-    feature_vector: npt.NDArray,
-) -> npt.NDArray:
+    feature_vector: npt.NDArray[np.float_],
+) -> npt.NDArray[np.float_]:
     """Convert SHAP feature weights to atom weights.
 
     Parameters
     ----------
-    feature_weights : npt.NDArray
+    feature_weights : npt.NDArray[np.float_]
         The feature weights.
     molecule : OptionalMol
         The molecule.
     featurization_element : MolToMorganFP
         The featurization element.
-    feature_vector : npt.NDArray
+    feature_vector : npt.NDArray[np.float_]
         The feature vector.
 
     Returns
     -------
-    npt.NDArray
+    npt.NDArray[np.float_]
         The atom weights.
     """
     if feature_weights.ndim == 1:
@@ -149,7 +149,6 @@ class SHAPTreeExplainer(AbstractExplainer):
         kwargs : Any
             Additional keyword arguments for SHAP's TreeExplainer.
         """
-
         self.pipeline = pipeline
         pipeline_extractor = SubpipelineExtractor(self.pipeline)
 
@@ -229,8 +228,7 @@ class SHAPTreeExplainer(AbstractExplainer):
         list[Explanation]
             List of explanations corresponding to the input data.
         """
-
-        featurization_element = self.featurization_subpipeline.steps[-1][1]
+        featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore
 
         explanation_results = []
         for input_sample in X:
@@ -247,10 +245,10 @@ class SHAPTreeExplainer(AbstractExplainer):
                 prediction = prediction.squeeze()
 
             # get the molecule
-            molecule = self.molecule_reader_subpipeline.transform(input_sample)[0]
+            molecule = self.molecule_reader_subpipeline.transform(input_sample)[0]  # type: ignore
 
             # get feature vectors
-            feature_vector = self.featurization_subpipeline.transform(input_sample)
+            feature_vector = self.featurization_subpipeline.transform(input_sample)  # type: ignore
             feature_vector = _mitigate_feature_incompatibility_with_shap(feature_vector)
             feature_vector = np.asarray(feature_vector).squeeze()
 

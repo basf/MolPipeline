@@ -55,6 +55,23 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         test_smiles: str,
         is_morgan_fingerprint: bool,
     ) -> None:
+        """Helper method to test if the explanation is valid and has the correct shape and content.
+
+        Parameters
+        ----------
+        explanation : Explanation
+            The explanation to be tested.
+        estimator : BaseEstimator
+            The estimator used in the pipeline.
+        molecule_reader_subpipeline : Pipeline
+            The subpipeline that extracts the molecule from the input data.
+        nof_features : int
+            The number of features in the feature vector.
+        test_smiles : str
+            The SMILES string of the molecule.
+        is_morgan_fingerprint : bool
+            Whether the feature vector is a Morgan fingerprint or not.
+        """
         self.assertTrue(explanation.is_valid())
 
         self.assertEqual((nof_features,), explanation.feature_vector.shape)
@@ -127,6 +144,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
             mol_reader_subpipeline = SubpipelineExtractor(
                 pipeline
             ).get_molecule_reader_subpipeline()
+            self.assertIsNotNone(mol_reader_subpipeline)
 
             for i, explanation in enumerate(explanations):
                 self._test_valid_explanation(
@@ -192,6 +210,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
                 mol_reader_subpipeline = SubpipelineExtractor(
                     pipeline
                 ).get_molecule_reader_subpipeline()
+                self.assertIsNotNone(mol_reader_subpipeline)
 
                 for i, explanation in enumerate(explanations):
 
@@ -239,6 +258,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
             mol_reader_subpipeline = SubpipelineExtractor(
                 pipeline
             ).get_molecule_reader_subpipeline()
+            self.assertIsNotNone(mol_reader_subpipeline)
 
             for i, explanation in enumerate(explanations):
                 self._test_valid_explanation(
@@ -296,6 +316,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
             mol_reader_subpipeline = SubpipelineExtractor(
                 pipeline
             ).get_molecule_reader_subpipeline()
+            self.assertIsNotNone(mol_reader_subpipeline)
 
             for i, explanation in enumerate(explanations):
                 self._test_valid_explanation(

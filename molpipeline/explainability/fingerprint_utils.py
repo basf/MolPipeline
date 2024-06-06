@@ -16,8 +16,7 @@ from molpipeline.utils.substructure_handling import AtomEnvironment
 def assign_prediction_importance(
     bit_dict: dict[int, Sequence[AtomEnvironment]], weights: npt.NDArray[np.float_]
 ) -> dict[int, float]:
-    """
-
+    """Assign the prediction importance.
 
     Originally from Christian W. Feldmann
     https://github.com/c-feldmann/compchemkit/blob/64e5543e2b8f72e93711186b2e0b42366820fb52/compchemkit/molecular_heatmaps.py#L28

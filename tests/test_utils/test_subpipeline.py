@@ -88,6 +88,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_molecule_reader_subpipeline()
+        self.assertIsNotNone(subpipeline)
         self.assertEqual(len(subpipeline.steps), 1)
         self.assertIs(subpipeline.steps[0], pipeline.steps[0])
 
@@ -103,6 +104,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_molecule_reader_subpipeline()
+        self.assertIsNotNone(subpipeline)
         self.assertEqual(len(subpipeline.steps), 3)
         for i, subpipe_step in enumerate(subpipeline.steps):
             self.assertIs(subpipe_step, pipeline.steps[i])
@@ -120,6 +122,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_model_subpipeline()
+        self.assertIsNotNone(subpipeline)
         self.assertEqual(len(subpipeline.steps), 3)
         for i, subpipe_step in enumerate(subpipeline.steps):
             self.assertIs(subpipe_step, pipeline.steps[i])
@@ -143,6 +146,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_model_subpipeline()
+        self.assertIsNotNone(subpipeline)
         self.assertEqual(len(subpipeline.steps), 4)
         for i, subpipe_step in enumerate(subpipeline.steps):
             self.assertIs(subpipe_step, pipeline.steps[i])

@@ -25,22 +25,30 @@ def get_similaritymap_from_weights(
     contour_params: Draw.ContourParams | None = None,
 ) -> Draw.MolDraw2D:
     """Generates the similarity map for a molecule given the atomic weights.
-     Stolen... uhm... copied from Chem.Draw.SimilarityMaps
+
+    Strongly inspired from Chem.Draw.SimilarityMaps.
 
     Parameters
     ----------
-    mol: Chem.Mol
-        the molecule of interest.
+    mol: RDKitMol
+        The molecule of interest.
     weights: Union[npt.NDArray[np.float_], List[float], Tuple[float]]
+        The atomic weights.
     draw2d: Draw.MolDraw2DCairo
+        The drawer.
     sigma: Optional[float]
+        The sigma value.
     sigma_f: float
+        The sigma factor.
     contour_lines: int
+        The number of contour lines.
     contour_params: Optional[Draw.ContourParams]
+        The contour parameters.
 
     Returns
     -------
     Draw.MolDraw2D
+        The drawer.
     """
     if mol.GetNumAtoms() < 2:
         raise ValueError("too few atoms")
@@ -147,7 +155,7 @@ def rdkit_gaussplot(
     return drawer
 
 
-def show_png(data: bytes) -> Image:
+def show_png(data: bytes) -> Image.Image:
     """Show a PNG image from a byte stream.
 
     Parameters
@@ -160,7 +168,6 @@ def show_png(data: bytes) -> Image:
     Image
         The image.
     """
-
     bio = io.BytesIO(data)
     img = Image.open(bio)
     return img
