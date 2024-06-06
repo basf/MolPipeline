@@ -72,6 +72,21 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """Get pipeline elements."""
         return self._element_list
 
+    @property
+    def n_features(self) -> int:
+        """Calculates and returns the number of features."""
+        feature_count = 0
+        for _, element in self._element_list:
+            if hasattr(element, "n_features"):
+                feature_count += element.n_features
+            elif hasattr(element, "n_bits"):
+                feature_count += element.n_bits
+            else:
+                raise AssertionError(
+                    f"Element {element} does not have n_features or n_bits."
+                )
+        return feature_count
+
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
 
