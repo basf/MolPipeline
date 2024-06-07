@@ -33,7 +33,6 @@ def assign_prediction_importance(
     dict[int, float]
         The atom contribution.
     """
-
     atom_contribution: dict[int, float] = defaultdict(lambda: 0)
     for bit, atom_env_list in bit_dict.items():  # type: int, Sequence[AtomEnvironment]
         n_machtes = len(atom_env_list)

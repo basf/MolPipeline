@@ -7,8 +7,8 @@ from sklearn.ensemble import RandomForestClassifier
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.utils.subpipeline import SubpipelineExtractor
 from molpipeline.mol2any import MolToMorganFP, MolToSmiles
+from molpipeline.utils.subpipeline import SubpipelineExtractor
 
 
 class TestSubpipelineExtractor(unittest.TestCase):
@@ -88,7 +88,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_molecule_reader_subpipeline()
-        self.assertIsNotNone(subpipeline)
+        self.assertIsInstance(subpipeline, Pipeline)
         self.assertEqual(len(subpipeline.steps), 1)
         self.assertIs(subpipeline.steps[0], pipeline.steps[0])
 
@@ -104,7 +104,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_molecule_reader_subpipeline()
-        self.assertIsNotNone(subpipeline)
+        self.assertIsInstance(subpipeline, Pipeline)
         self.assertEqual(len(subpipeline.steps), 3)
         for i, subpipe_step in enumerate(subpipeline.steps):
             self.assertIs(subpipe_step, pipeline.steps[i])
@@ -122,7 +122,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_model_subpipeline()
-        self.assertIsNotNone(subpipeline)
+        self.assertIsInstance(subpipeline, Pipeline)
         self.assertEqual(len(subpipeline.steps), 3)
         for i, subpipe_step in enumerate(subpipeline.steps):
             self.assertIs(subpipe_step, pipeline.steps[i])
@@ -146,7 +146,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_model_subpipeline()
-        self.assertIsNotNone(subpipeline)
+        self.assertIsInstance(subpipeline, Pipeline)
         self.assertEqual(len(subpipeline.steps), 4)
         for i, subpipe_step in enumerate(subpipeline.steps):
             self.assertIs(subpipe_step, pipeline.steps[i])

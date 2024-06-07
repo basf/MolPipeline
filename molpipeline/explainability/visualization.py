@@ -24,7 +24,7 @@ def get_similaritymap_from_weights(
     contour_lines: int = 10,
     contour_params: Draw.ContourParams | None = None,
 ) -> Draw.MolDraw2D:
-    """Generates the similarity map for a molecule given the atomic weights.
+    """Generate the similarity map for a molecule given the atomic weights.
 
     Strongly inspired from Chem.Draw.SimilarityMaps.
 

@@ -2,6 +2,7 @@
 
 import unittest
 
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 
 from molpipeline import Pipeline
@@ -36,6 +37,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
 
         for explanation in explanations:
             self.assertTrue(explanation.is_valid())
+            self.assertIsInstance(explanation.atom_weights, np.ndarray)
             drawer = rdkit_gaussplot(
                 explanation.molecule, explanation.atom_weights.tolist()
             )

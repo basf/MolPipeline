@@ -17,13 +17,13 @@ from molpipeline.abstract_pipeline_elements.core import RDKitMol
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.explainability.explainer import SHAPTreeExplainer
 from molpipeline.explainability.explanation import Explanation
-from molpipeline.utils.subpipeline import SubpipelineExtractor
 from molpipeline.mol2any import (
     MolToConcatenatedVector,
     MolToMorganFP,
     MolToRDKitPhysChem,
 )
 from molpipeline.mol2mol import SaltRemover
+from molpipeline.utils.subpipeline import SubpipelineExtractor
 
 TEST_SMILES = ["CC", "CCO", "COC", "c1ccccc1(N)", "CCC(-O)O", "CCCN"]
 CONTAINS_OX = [0, 1, 1, 0, 1, 0]
@@ -74,6 +74,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         """
         self.assertTrue(explanation.is_valid())
 
+        self.assertIsInstance(explanation.feature_vector, np.ndarray)
         self.assertEqual((nof_features,), explanation.feature_vector.shape)
 
         # feature names are not implemented yet
@@ -86,6 +87,8 @@ class TestSHAPTreeExplainer(unittest.TestCase):
             Chem.MolToInchi(explanation.molecule),
         )
 
+        self.assertIsInstance(explanation.prediction, np.ndarray)
+        self.assertIsInstance(explanation.feature_weights, np.ndarray)
         if is_regressor(estimator):
             self.assertTrue((1,), explanation.prediction.shape)
             self.assertEqual((nof_features,), explanation.feature_weights.shape)
@@ -103,6 +106,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
             raise ValueError("Error in unittest. Unsupported estimator.")
 
         if is_morgan_fingerprint:
+            self.assertIsInstance(explanation.atom_weights, np.ndarray)
             self.assertEqual(
                 explanation.atom_weights.shape,
                 (explanation.molecule.GetNumAtoms(),),
@@ -144,7 +148,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
             mol_reader_subpipeline = SubpipelineExtractor(
                 pipeline
             ).get_molecule_reader_subpipeline()
-            self.assertIsNotNone(mol_reader_subpipeline)
+            self.assertIsInstance(mol_reader_subpipeline, Pipeline)
 
             for i, explanation in enumerate(explanations):
                 self._test_valid_explanation(

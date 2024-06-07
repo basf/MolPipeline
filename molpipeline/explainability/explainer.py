@@ -14,8 +14,8 @@ from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import OptionalMol
 from molpipeline.explainability.explanation import Explanation
 from molpipeline.explainability.fingerprint_utils import fingerprint_shap_to_atomweights
-from molpipeline.utils.subpipeline import SubpipelineExtractor
 from molpipeline.mol2any import MolToMorganFP
+from molpipeline.utils.subpipeline import SubpipelineExtractor
 
 
 # pylint: disable=C0103,W0613
