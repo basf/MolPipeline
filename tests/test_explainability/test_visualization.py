@@ -39,8 +39,9 @@ class TestExplainabilityVisualization(unittest.TestCase):
             self.assertTrue(explanation.is_valid())
             self.assertIsInstance(explanation.atom_weights, np.ndarray)
             drawer = rdkit_gaussplot(
-                explanation.molecule, explanation.atom_weights.tolist()
-            )
+                explanation.molecule,
+                explanation.atom_weights.tolist(),  # ignore: [union-attr]
+            )  # ignore: [union-attr]
 
             self.assertIsNotNone(drawer)
 
