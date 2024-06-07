@@ -76,8 +76,8 @@ class TestSHAPTreeExplainer(unittest.TestCase):
 
         self.assertIsInstance(explanation.feature_vector, np.ndarray)
         self.assertEqual(
-            (nof_features,), explanation.feature_vector.shape
-        )  # type: ignore[union-attr]
+            (nof_features,), explanation.feature_vector.shape  # type: ignore[union-attr]
+        )
 
         # feature names are not implemented yet
         self.assertIsNone(explanation.feature_names)
@@ -94,8 +94,8 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         if is_regressor(estimator):
             self.assertTrue((1,), explanation.prediction.shape)  # type: ignore[union-attr]
             self.assertEqual(
-                (nof_features,), explanation.feature_weights.shape
-            )  # type: ignore[union-attr]
+                (nof_features,), explanation.feature_weights.shape  # type: ignore[union-attr]
+            )
         elif is_classifier(estimator):
             self.assertTrue((2,), explanation.prediction.shape)  # type: ignore[union-attr]
             if isinstance(estimator, GradientBoostingClassifier):
@@ -103,13 +103,13 @@ class TestSHAPTreeExplainer(unittest.TestCase):
                 # https://github.com/shap/shap/issues/3177 returning only one feature weight
                 # which is also based on log odds. This check is a workaround until the bug is fixed.
                 self.assertEqual(
-                    (nof_features,), explanation.feature_weights.shape
-                )  # type: ignore[union-attr]
+                    (nof_features,), explanation.feature_weights.shape  # type: ignore[union-attr]
+                )
             else:
                 # normal binary classification case
                 self.assertEqual(
-                    (nof_features, 2), explanation.feature_weights.shape
-                )  # type: ignore[union-attr]
+                    (nof_features, 2), explanation.feature_weights.shape  # type: ignore[union-attr]
+                )
         else:
             raise ValueError("Error in unittest. Unsupported estimator.")
 
@@ -118,7 +118,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
             self.assertEqual(
                 explanation.atom_weights.shape,  # type: ignore[union-attr]
                 (explanation.molecule.GetNumAtoms(),),  # type: ignore[union-attr]
-            )  # type: ignore[union-attr]
+            )
         else:
             self.assertIsNone(explanation.atom_weights)
 
@@ -162,11 +162,11 @@ class TestSHAPTreeExplainer(unittest.TestCase):
                 self._test_valid_explanation(
                     explanation,
                     estimator,
-                    mol_reader_subpipeline,  # type: ignore[union-attr]
+                    mol_reader_subpipeline,  # type: ignore[arg-type]
                     n_bits,
                     TEST_SMILES[i],
                     is_morgan_fingerprint=True,
-                )  # type: ignore[union-attr]
+                )
 
     def test_explanations_pipeline_with_invalid_inputs(self) -> None:
         """Test SHAP's TreeExplainer wrapper with invalid inputs."""
@@ -234,11 +234,11 @@ class TestSHAPTreeExplainer(unittest.TestCase):
                     self._test_valid_explanation(
                         explanation,
                         estimator,
-                        mol_reader_subpipeline,  # type: ignore[union-attr]
+                        mol_reader_subpipeline,  # type: ignore[arg-type]
                         n_bits,
                         TEST_SMILES_WITH_BAD_SMILES[i],
                         is_morgan_fingerprint=True,
-                    )  # type: ignore[union-attr]
+                    )
 
     def test_explanations_pipeline_with_physchem(self) -> None:
         """Test SHAP's TreeExplainer wrapper on physchem feature vector."""
@@ -276,11 +276,11 @@ class TestSHAPTreeExplainer(unittest.TestCase):
                 self._test_valid_explanation(
                     explanation,
                     estimator,
-                    mol_reader_subpipeline,  # type: ignore[union-attr]
+                    mol_reader_subpipeline,  # type: ignore[arg-type]
                     pipeline.named_steps["physchem"].n_features,
                     TEST_SMILES[i],
                     is_morgan_fingerprint=False,
-                )  # type: ignore[union-attr]
+                )
 
     def test_explanations_pipeline_with_concatenated_features(self) -> None:
         """Test SHAP's TreeExplainer wrapper on concatenated feature vector."""
@@ -334,8 +334,8 @@ class TestSHAPTreeExplainer(unittest.TestCase):
                 self._test_valid_explanation(
                     explanation,
                     estimator,
-                    mol_reader_subpipeline,  # type: ignore[union-attr]
+                    mol_reader_subpipeline,  # type: ignore[arg-type]
                     pipeline.named_steps["features"].n_features,
                     TEST_SMILES[i],
                     is_morgan_fingerprint=False,
-                )  # type: ignore[union-attr]
+                )
