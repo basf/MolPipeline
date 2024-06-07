@@ -89,8 +89,8 @@ class TestSubpipelineExtractor(unittest.TestCase):
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_molecule_reader_subpipeline()
         self.assertIsInstance(subpipeline, Pipeline)
-        self.assertEqual(len(subpipeline.steps), 1)  # ignore: [union-attr]
-        self.assertIs(subpipeline.steps[0], pipeline.steps[0])  # ignore: [union-attr]
+        self.assertEqual(len(subpipeline.steps), 1)  # type: ignore[union-attr]
+        self.assertIs(subpipeline.steps[0], pipeline.steps[0])  # type: ignore[union-attr]
 
         # test with multiple molecule readers
         pipeline = Pipeline(
@@ -105,8 +105,8 @@ class TestSubpipelineExtractor(unittest.TestCase):
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_molecule_reader_subpipeline()
         self.assertIsInstance(subpipeline, Pipeline)
-        self.assertEqual(len(subpipeline.steps), 3)  # ignore: [union-attr]
-        for i, subpipe_step in enumerate(subpipeline.steps):  # ignore: [union-attr]
+        self.assertEqual(len(subpipeline.steps), 3)  # type: ignore[union-attr]
+        for i, subpipe_step in enumerate(subpipeline.steps):  # type: ignore[union-attr]
             self.assertIs(subpipe_step, pipeline.steps[i])
 
     def test_get_model_subpipeline(self) -> None:
@@ -123,8 +123,8 @@ class TestSubpipelineExtractor(unittest.TestCase):
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_model_subpipeline()
         self.assertIsInstance(subpipeline, Pipeline)
-        self.assertEqual(len(subpipeline.steps), 3)  # ignore: [union-attr]
-        for i, subpipe_step in enumerate(subpipeline.steps):  # ignore: [union-attr]
+        self.assertEqual(len(subpipeline.steps), 3)  # type: ignore[union-attr]
+        for i, subpipe_step in enumerate(subpipeline.steps):  # type: ignore[union-attr]
             self.assertIs(subpipe_step, pipeline.steps[i])
 
         # test with PostPredictionWrapper
@@ -147,8 +147,8 @@ class TestSubpipelineExtractor(unittest.TestCase):
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_model_subpipeline()
         self.assertIsInstance(subpipeline, Pipeline)
-        self.assertEqual(len(subpipeline.steps), 4)  # ignore: [union-attr]
-        for i, subpipe_step in enumerate(subpipeline.steps):  # ignore: [union-attr]
+        self.assertEqual(len(subpipeline.steps), 4)  # type: ignore[union-attr]
+        for i, subpipe_step in enumerate(subpipeline.steps):  # type: ignore[union-attr]
             self.assertIs(subpipe_step, pipeline.steps[i])
 
     def test_get_all_filter_reinserter_fill_values(self) -> None:
