@@ -4,9 +4,9 @@ import unittest
 
 import numpy as np
 from sklearn import linear_model
+from sklearn.metrics import get_scorer
 
 from molpipeline.metrics import ignored_value_scorer
-from sklearn.metrics import get_scorer
 
 
 class IgnoreErrorScorerTest(unittest.TestCase):

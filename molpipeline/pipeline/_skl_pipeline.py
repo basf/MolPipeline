@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Iterable, List, Literal, Optional, Tuple, TypeVar, Union
 
-
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
