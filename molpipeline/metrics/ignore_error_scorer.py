@@ -39,6 +39,8 @@ def ignored_value_scorer(
     score_func = scorer._score_func  # pylint: disable=protected-access
     response_method = scorer._response_method  # pylint: disable=protected-access
     scorer_kwargs = scorer._kwargs  # pylint: disable=protected-access
+    if scorer._sign < 0: # pylint: disable=protected-access
+        scorer_kwargs["greater_is_better"] = False
 
     def newscore(
         y_true: npt.NDArray[np.float_ | np.int_],
