@@ -91,6 +91,66 @@ class SubpipelineExtractor:
         """
         self.pipeline = pipeline
 
+    def _get_index_of_element_by_id(self, element: Any) -> int | None:
+        """Get the index of an element by id (the pointer or memory address).
+
+        Parameters
+        ----------
+        element_name : str
+            The name of the element to extract.
+
+        Returns
+        -------
+        int | None
+            The index of the element or None if the element was not found.
+        """
+        for i, (_, pipeline_element) in enumerate(self.pipeline.steps):
+            if id(pipeline_element) == id(element):
+                return i
+        return None
+
+    def _get_index_of_element_by_name(self, element_name: str) -> int | None:
+        """Get the index of an element by name.
+
+        Parameters
+        ----------
+        element_name : str
+            The name of the element to extract.
+
+        Returns
+        -------
+        int | None
+            The index of the element or None if the element was not found.
+        """
+        for i, (name, _) in enumerate(self.pipeline.steps):
+            if name == element_name:
+                return i
+        return None
+
+    def _extract_single_element_index(
+        self,
+        element_name: str | None,
+        get_index_function: Callable[[Pipeline], int | None],
+    ) -> int | None:
+        """Extract the index of a single element from the pipeline.
+
+        Parameters
+        ----------
+        element_name : str | None
+            The name of the element to extract.
+        get_index_function : Callable[[Pipeline], int | None]
+            A function that returns the index of the element to extract.
+
+        Returns
+        -------
+        Any | None
+            The index of the extracted element or None if the element was not found.
+        """
+        if element_name is not None:
+            return self._get_index_of_element_by_name(element_name)
+        else:
+            return get_index_function(self.pipeline)
+
     def _extract_single_element(
         self,
         element_name: str | None,
@@ -112,8 +172,8 @@ class SubpipelineExtractor:
         """
         if element_name is not None:
             # if a name is provided, access the element by name
-            return self.pipeline.named_steps[element_name][1]
-        element_index = get_index_function(self.pipeline)
+            return self.pipeline.named_steps[element_name]
+        element_index = self._extract_single_element_index(None, get_index_function)
         if element_index is None:
             return None
         return self.pipeline.steps[element_index][1]
@@ -141,7 +201,7 @@ class SubpipelineExtractor:
     def get_featurization_element(
         self, element_name: str | None = None
     ) -> BaseEstimator | None:
-        """Get the featurization element from the pipeline, e.g. a MolToMorganFP element.
+        """Get the featurization element from the pipeline, e.g., a MolToMorganFP element.
 
         Parameters
         ----------
@@ -154,7 +214,7 @@ class SubpipelineExtractor:
             The extracted featurization element or None if the element was not found.
         """
         return self._extract_single_element(
-            element_name, _get_model_element_position_from_pipeline
+            element_name, _get_featurization_element_position_from_pipeline
         )
 
     def get_model_element(
@@ -176,18 +236,18 @@ class SubpipelineExtractor:
             element_name, _get_model_element_position_from_pipeline
         )
 
-    def _get_subpipline(
+    def _get_subpipline_from_start(
         self,
         element_name: str | None,
-        get_index_function: Callable[[Pipeline], int | None],
+        start_get_index_function: Callable[[Pipeline], int | None],
     ) -> Pipeline | None:
-        """Get a subpipeline up to a specific element.
+        """Get a subpipeline up to a specific element starting from the first element of the original pipeline.
 
         Parameters
         ----------
         element_name : str | None
             The name of the element to extract.
-        get_index_function : Callable[[Pipeline], int | None]
+        start_get_index_function : Callable[[Pipeline], int | None]
             A function that returns the index of the subpipline's last element.
 
         Returns
@@ -195,16 +255,9 @@ class SubpipelineExtractor:
         Pipeline | None
             The extracted subpipeline or None if the corresponding last element was not found.
         """
-        if element_name is not None:
-            # get the element index in the pipeline by name
-            element_index = None
-            for i, (name, _) in enumerate(self.pipeline.steps):
-                if name == element_name:
-                    element_index = i
-                    break
-        else:
-            # use heuristic to get the index of the element in the pipeline
-            element_index = get_index_function(self.pipeline)
+        element_index = self._extract_single_element_index(
+            element_name, start_get_index_function
+        )
         if element_index is None:
             return None
         return Pipeline(steps=self.pipeline.steps[: element_index + 1])
@@ -213,6 +266,8 @@ class SubpipelineExtractor:
         self, element_name: str | None = None
     ) -> Pipeline | None:
         """Get a subpipeline up to the molecule reading element.
+
+        Note that standardization steps, like salt removal, are not guaranteed to be included.
 
         Parameters
         ----------
@@ -224,7 +279,7 @@ class SubpipelineExtractor:
         Pipeline | None
             The extracted subpipeline or None if the corresponding last element was not found.
         """
-        return self._get_subpipline(
+        return self._get_subpipline_from_start(
             element_name, _get_molecule_reading_position_from_pipeline
         )
 
@@ -243,7 +298,7 @@ class SubpipelineExtractor:
         Pipeline | None
             The extracted subpipeline or None if the corresponding last element was not found.
         """
-        return self._get_subpipline(
+        return self._get_subpipline_from_start(
             element_name, _get_featurization_element_position_from_pipeline
         )
 
@@ -260,8 +315,51 @@ class SubpipelineExtractor:
         Pipeline | None
             The extracted subpipeline or None if the corresponding last element was not found.
         """
-        return self._get_subpipline(
+        return self._get_subpipline_from_start(
             element_name, _get_model_element_position_from_pipeline
+        )
+
+    def get_subpipeline(
+        self, first_element: Any, second_element: Any, first_offset: int = 0, second_offset: int = 0
+    ) -> Pipeline | None:
+        """Get a subpipeline between two elements.
+
+        This function only checks the names of the elements.
+        If the elements are not found or the second element is before the first element, a ValueError is raised.
+
+        Parameters
+        ----------
+        first_element : Any
+            The first element of the subpipeline.
+        second_element : Any
+            The second element of the subpipeline.
+        first_offset : int
+            The offset to apply to the first element.
+        second_offset : int
+            The offset to apply to the second element.
+
+        Returns
+        -------
+        Pipeline | None
+            The extracted subpipeline or None if the elements were not found.
+        """
+        first_element_index = self._get_index_of_element_by_id(first_element)
+        if first_element_index is None:
+            raise ValueError(f"Element {first_element} not found in pipeline.")
+        second_element_index = self._get_index_of_element_by_id(second_element)
+        if second_element_index is None:
+            raise ValueError(f"Element {second_element} not found in pipeline.")
+
+        # apply user-defined offsets
+        first_element_index += first_offset
+        second_element_index += second_offset
+
+        if second_element_index < first_element_index:
+            raise ValueError(
+                f"Element {second_element} must be after element {first_element}."
+            )
+        return Pipeline(
+            steps=self.pipeline.steps[first_element_index : second_element_index + 1]
         )
 
     def get_all_filter_reinserter_fill_values(self) -> list[Any]:
