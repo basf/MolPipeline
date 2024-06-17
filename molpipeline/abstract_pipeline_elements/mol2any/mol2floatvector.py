@@ -180,7 +180,9 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         descriptor_matrix: npt.NDArray[np.float64] = super().transform(values)
         return descriptor_matrix
 
-    def finalize_single(self, value: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    def finalize_single(
+        self, value: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
         """Finalize single value. Here: standardize vector.
 
         Parameters
