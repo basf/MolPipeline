@@ -35,6 +35,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         radius: int = 2,
         use_features: bool = False,
         n_bits: int = 2048,
+        counted: bool = False,
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "MolToMorganFP",
         n_jobs: int = 1,
@@ -50,6 +51,9 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             Instead of atoms, features are encoded in the fingerprint. [2]
         n_bits: int, optional (default=2048)
             Size of fingerprint.
+        counted: bool, optional (default=False)
+            If True, the fingerprint will be counted.
+            If False, the fingerprint will be binary.
         return_as: Literal["sparse", "dense", "explicit_bit_vect"]
             Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
@@ -76,6 +80,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             n_jobs=n_jobs,
             uuid=uuid,
         )
+        self.counted = counted
         if isinstance(n_bits, int) and n_bits >= 0:
             self._n_bits = n_bits
         else:
@@ -145,16 +150,20 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             radius=self.radius,
             fpSize=self._n_bits,
         )
-
         if self._return_as == "explicit_bit_vect":
+            if self.counted:
+                return fingerprint_generator.GetCountFingerprint(value)
             return fingerprint_generator.GetFingerprint(value)
+
+        if self.counted:
+            fingerprint = fingerprint_generator.GetCountFingerprintAsNumPy(value)
+        else:
+            fingerprint = fingerprint_generator.GetFingerprintAsNumPy(value)
+
         if self._return_as == "dense":
-            return fingerprint_generator.GetFingerprintAsNumPy(value)
-        # sparse return type
-        return {
-            bit_idx: 1
-            for bit_idx in fingerprint_generator.GetFingerprint(value).GetOnBits()
-        }
+            return fingerprint
+
+        return {pos: count for pos, count in enumerate(fingerprint) if count > 0}
 
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule.
