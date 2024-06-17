@@ -128,7 +128,7 @@ class ChempropModel(ABCChemprop):
 
     def _predict(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.float_]:
+    ) -> npt.NDArray[np.float64]:
         """Predict the labels.
 
         Parameters
@@ -138,7 +138,7 @@ class ChempropModel(ABCChemprop):
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             The predictions for the input data.
         """
         self.model.eval()
@@ -164,7 +164,7 @@ class ChempropModel(ABCChemprop):
     def fit(
         self,
         X: MoleculeDataset,
-        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float_],
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
     ) -> Self:
         """Fit the model to the data.
 
@@ -172,7 +172,7 @@ class ChempropModel(ABCChemprop):
         ----------
         X : MoleculeDataset
             The input data.
-        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float_]
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
 
         Returns
@@ -186,7 +186,7 @@ class ChempropModel(ABCChemprop):
 
     def predict(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.float_]:
+    ) -> npt.NDArray[np.float64]:
         """Predict the output.
 
         Parameters
@@ -196,7 +196,7 @@ class ChempropModel(ABCChemprop):
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             The predictions for the input data.
         """
         predictions = self._predict(X)
@@ -213,7 +213,7 @@ class ChempropModel(ABCChemprop):
     @available_if(_is_classifier)
     def predict_proba(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.float_]:
+    ) -> npt.NDArray[np.float64]:
         """Predict the probabilities.
 
         Parameters
@@ -223,7 +223,7 @@ class ChempropModel(ABCChemprop):
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             The probabilities of the input data.
         """
         if self._is_binary_classifier():

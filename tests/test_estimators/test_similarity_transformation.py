@@ -64,7 +64,7 @@ def _generate_morgan_fingerprints(compound_list: list[str]) -> sparse.csr_matrix
 
 def _calculate_rdkit_self_similarity(
     compound_list: list[str],
-) -> npt.NDArray[np.float_]:
+) -> npt.NDArray[np.float64]:
     """Calculate the self similarity using RDKit.
 
     Parameters
@@ -74,7 +74,7 @@ def _calculate_rdkit_self_similarity(
 
     Returns
     -------
-    npt.NDArray[np.float_]
+    npt.NDArray[np.float64]
         Self similarity.
     """
     fp_list = []

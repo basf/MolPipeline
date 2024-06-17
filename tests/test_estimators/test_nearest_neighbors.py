@@ -74,7 +74,7 @@ class TestNamedNearestNeighbors(TestCase):
         model.fit(TEST_SMILES, TEST_SMILES)
         result = model.predict(TEST_SMILES, **{"return_distance": True})
         neighbors = result[:, :, 0]
-        distances = result[:, :, 1].astype(np.float_)
+        distances = result[:, :, 1].astype(np.float64)
         self.assertListEqual(neighbors.tolist(), TWO_NN)
         self.assertTrue(np.allclose(1 - distances, TWO_NN_SIMILARITIES))
 
@@ -207,5 +207,5 @@ class TestNamedNearestNeighbors(TestCase):
         distances = result[:, :, 1]
         self.assertListEqual(neighbors.tolist(), [["invalid", "invalid"]] + TWO_NN)
         self.assertTrue(
-            1 - np.allclose(distances[1:, :].astype(np.float_), TWO_NN_SIMILARITIES)
+            1 - np.allclose(distances[1:, :].astype(np.float64), TWO_NN_SIMILARITIES)
         )
