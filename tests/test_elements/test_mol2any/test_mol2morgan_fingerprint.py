@@ -56,6 +56,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         pipeline.set_params(mol_fp__counted=True)
         output_counted = pipeline.fit_transform(test_smiles)
         self.assertTrue(np.all(output_counted.toarray() >= output_binary.toarray()))
+        self.assertTrue(np.any(output_counted.toarray() > output_binary.toarray()))
 
     def test_output_types(self) -> None:
         """Test equality of different output_types."""
