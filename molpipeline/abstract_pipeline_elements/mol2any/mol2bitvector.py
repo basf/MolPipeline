@@ -233,7 +233,13 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
     @abc.abstractmethod
     def _get_fp_generator(self) -> rdFingerprintGenerator.FingerprintGenerator:
-        """Get fingerprint generator."""
+        """Get fingerprint generator.
+
+        Returns
+        -------
+        rdFingerprintGenerator.FingerprintGenerator
+            Fingerprint generator.
+        """
 
     def pretransform_single(
         self, value: RDKitMol

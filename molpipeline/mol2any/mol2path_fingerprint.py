@@ -79,7 +79,11 @@ class Mol2PathFP(
             With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
             rdkit.DataStructs.cDataStructs.ExplicitBitVect.
         name: str, optional (default="MolToMorganFP")
-
+            Name of PipelineElement
+        n_jobs: int, optional (default=1)
+            Number of cores to use.
+        uuid: str | None, optional (default=None)
+            UUID of the PipelineElement.
 
         References
         ----------
