@@ -55,6 +55,9 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         output_binary = pipeline.fit_transform(test_smiles)
         pipeline.set_params(mol_fp__counted=True)
         output_counted = pipeline.fit_transform(test_smiles)
+        self.assertTrue(
+            np.all(np.flatnonzero(output_counted) == np.flatnonzero(output_binary))
+        )
         self.assertTrue(np.all(output_counted >= output_binary))
         self.assertTrue(np.any(output_counted > output_binary))
 
