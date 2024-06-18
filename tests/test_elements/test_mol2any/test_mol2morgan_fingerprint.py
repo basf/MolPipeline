@@ -44,7 +44,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         -------
         None
         """
-        mol_fp = MolToMorganFP(radius=2, n_bits=1024)
+        mol_fp = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
         smi2mol = SmilesToMol()
         pipeline = Pipeline(
             [
@@ -55,8 +55,8 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         output_binary = pipeline.fit_transform(test_smiles)
         pipeline.set_params(mol_fp__counted=True)
         output_counted = pipeline.fit_transform(test_smiles)
-        self.assertTrue(np.all(output_counted.toarray() >= output_binary.toarray()))
-        self.assertTrue(np.any(output_counted.toarray() > output_binary.toarray()))
+        self.assertTrue(np.all(output_counted >= output_binary))
+        self.assertTrue(np.any(output_counted > output_binary))
 
     def test_output_types(self) -> None:
         """Test equality of different output_types."""

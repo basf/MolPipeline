@@ -89,7 +89,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
         -------
         None
         """
-        mol_fp = Mol2PathFP(n_bits=1024)
+        mol_fp = Mol2PathFP(n_bits=1024, return_as="dense")
         smi2mol = SmilesToMol()
         pipeline = Pipeline(
             [
@@ -100,8 +100,8 @@ class TestMol2PathFingerprint(unittest.TestCase):
         output_binary = pipeline.fit_transform(test_smiles)
         pipeline.set_params(mol_fp__counted=True)
         output_counted = pipeline.fit_transform(test_smiles)
-        self.assertTrue(np.all(output_counted.toarray() >= output_binary.toarray()))
-        self.assertTrue(np.any(output_counted.toarray() > output_binary.toarray()))
+        self.assertTrue(np.all(output_counted >= output_binary))
+        self.assertTrue(np.any(output_counted > output_binary))
 
     def test_setter_getter(self) -> None:
         """Test if the setters and getters work as expected."""
