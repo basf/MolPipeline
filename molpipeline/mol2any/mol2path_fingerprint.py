@@ -36,7 +36,7 @@ class Mol2PathFP(
         branched_paths: bool = True,
         use_bond_order: bool = True,
         count_simulation: bool = False,
-        count_bonds: bool = False,
+        count_bounds: Any = None,
         n_bits: int = 2048,
         num_bits_per_feature: int = 2,
         atom_invariants_generator: Any = None,
@@ -62,8 +62,8 @@ class Mol2PathFP(
             Include bond order in path.
         count_simulation: bool, optional (default=False)
             Count simulation.
-        count_bonds: bool, optional (default=False)
-            Count bonds.
+        count_bounds: Any, optional (default=None)
+            Set the bins for the bond count.
         n_bits: int, optional (default=2048)
             Size of fingerprint.
         num_bits_per_feature: int, optional (default=2)
@@ -109,7 +109,7 @@ class Mol2PathFP(
         self._branched_paths = branched_paths
         self._use_bond_order = use_bond_order
         self._count_simulation = count_simulation
-        self._count_bonds = count_bonds
+        self._count_bounds = count_bounds
         self._num_bits_per_feature = num_bits_per_feature
         self._atom_invariants_generator = atom_invariants_generator
 
@@ -134,7 +134,7 @@ class Mol2PathFP(
             parameters["branched_paths"] = bool(self._branched_paths)
             parameters["use_bond_order"] = bool(self._use_bond_order)
             parameters["count_simulation"] = bool(self._count_simulation)
-            parameters["count_bonds"] = bool(self._count_bonds)
+            parameters["count_bounds"] = copy.copy(self._count_bounds)
             parameters["num_bits_per_feature"] = int(self._num_bits_per_feature)
             parameters["atom_invariants_generator"] = copy.copy(
                 self._atom_invariants_generator
@@ -147,7 +147,7 @@ class Mol2PathFP(
             parameters["branched_paths"] = self._branched_paths
             parameters["use_bond_order"] = self._use_bond_order
             parameters["count_simulation"] = self._count_simulation
-            parameters["count_bonds"] = self._count_bonds
+            parameters["count_bounds"] = self._count_bounds
             parameters["num_bits_per_feature"] = self._num_bits_per_feature
             parameters["atom_invariants_generator"] = self._atom_invariants_generator
             parameters["n_bits"] = self._n_bits
@@ -185,9 +185,9 @@ class Mol2PathFP(
         count_simulation = parameter_copy.pop("count_simulation", None)
         if count_simulation is not None:
             self._count_simulation = count_simulation  # type: ignore
-        count_bonds = parameter_copy.pop("count_bonds", None)
-        if count_bonds is not None:
-            self._count_bonds = count_bonds  # type: ignore
+        count_bounds = parameter_copy.pop("count_bounds", None)
+        if count_bounds is not None:
+            self._count_bounds = count_bounds  # type: ignore
         num_bits_per_feature = parameter_copy.pop("num_bits_per_feature", None)
         if num_bits_per_feature is not None:
             self._num_bits_per_feature = num_bits_per_feature  # type: ignore
@@ -218,7 +218,7 @@ class Mol2PathFP(
             branchedPaths=self._branched_paths,
             useBondOrder=self._use_bond_order,
             countSimulation=self._count_simulation,
-            countBonds=self._count_bonds,
+            countBounds=self._count_bounds,
             numBitsPerFeature=self._num_bits_per_feature,
             atomInvariantsGenerator=self._atom_invariants_generator,
         )
