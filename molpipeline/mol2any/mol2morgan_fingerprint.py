@@ -78,11 +78,11 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             n_jobs=n_jobs,
             uuid=uuid,
         )
-        if isinstance(n_bits, int) and n_bits >= 0:
+        if isinstance(n_bits, int) and n_bits > 0:
             self._n_bits = n_bits
         else:
             raise ValueError(
-                f"Number of bits has to be a positive integer! (Received: {n_bits})"
+                f"Number of bits has to be a positve integer, which is > 0! (Received: {n_bits})"
             )
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
