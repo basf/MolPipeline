@@ -30,6 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install "numpy<2.0.0"
         pip install mypy
         mypy . || exit_code=$?
         mypy --install-types --non-interactive

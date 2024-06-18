@@ -13,6 +13,7 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
+from rdkit.Chem import rdFingerprintGenerator
 from rdkit.DataStructs import ExplicitBitVect
 from scipy import sparse
 
@@ -196,7 +197,131 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         """
 
 
-class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.ABC):
+class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
+    """Abstract class for PipelineElements using the FingeprintGenerator64."""
+
+    def __init__(
+        self,
+        counted: bool = False,
+        return_as: OutputDatatype = "sparse",
+        name: str = "MolToRDKitGenFin",
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ):
+        """Initialize abstract class.
+
+        Parameters
+        ----------
+        counted: bool
+            Whether to count the bits or not.
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
+            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
+        name: str
+            Name of PipelineElement.
+        n_jobs:
+            Number of jobs.
+        uuid: Optional[str]
+            Unique identifier.
+        """
+        super().__init__(
+            return_as=return_as,
+            name=name,
+            n_jobs=n_jobs,
+            uuid=uuid,
+        )
+        self.counted = counted
+
+    @abc.abstractmethod
+    def _get_fp_generator(self) -> rdFingerprintGenerator.FingeprintGenerator64:
+        """Get fingerprint generator.
+
+        Returns
+        -------
+        rdFingerprintGenerator.FingeprintGenerator64
+            Fingerprint generator.
+        """
+
+    def pretransform_single(
+        self, value: RDKitMol
+    ) -> ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]:
+        """Transform a single compound to a dictionary.
+
+        Keys denote the feature position, values the count. Here always 1.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule for which the fingerprint is generated.
+
+        Returns
+        -------
+        ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]
+            If return_as is "explicit_bit_vect" return ExplicitBitVect.
+            If return_as is "dense" return numpy array.
+            If return_as is "sparse" return dictionary with feature-position as key and count as value.
+        """
+        fingerprint_generator = self._get_fp_generator()
+        if self._return_as == "dense":
+            if self.counted:
+                return fingerprint_generator.GetCountFingerprintAsNumPy(value)
+            return fingerprint_generator.GetFingerprintAsNumPy(value)
+
+        if self.counted:
+            fingerprint = fingerprint_generator.GetCountFingerprint(value)
+        else:
+            fingerprint = fingerprint_generator.GetFingerprint(value)
+
+        if self._return_as == "explicit_bit_vect":
+            return fingerprint
+
+        if self.counted:
+            return fingerprint.GetNonzeroElements()
+
+        return {pos: 1 for pos in fingerprint.GetOnBits()}
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get object parameters relevant for copying the class.
+
+        Parameters
+        ----------
+        deep: bool
+            If True get a deep copy of the parameters.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary of parameter names and values.
+        """
+        parameters = super().get_params(deep)
+        if deep:
+            parameters["counted"] = bool(self.counted)
+        else:
+            parameters["counted"] = self.counted
+
+        return parameters
+
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
+        """Set object parameters relevant for copying the class.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Dictionary of parameter names and values.
+
+        Returns
+        -------
+        Self
+            Copied object with updated parameters.
+        """
+        parameter_dict_copy = dict(parameters)
+        counted = parameter_dict_copy.pop("counted", None)
+        if counted is not None:
+            self.counted = bool(counted)
+        super().set_params(**parameter_dict_copy)
+        return self
+
+
+class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
     """Abstract Class for Morgan fingerprints."""
 
     # pylint: disable=R0913
@@ -204,6 +329,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         self,
         radius: int = 2,
         use_features: bool = False,
+        counted: bool = False,
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
@@ -217,6 +343,8 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
             Radius of fingerprint.
         use_features: bool
             Whether to represent atoms by element or category (donor, acceptor. etc.)
+        counted: bool
+            Whether to count the bits or not.
         return_as: Literal["sparse", "dense", "explicit_bit_vect"]
             Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
@@ -232,6 +360,7 @@ class ABCMorganFingerprintPipelineElement(MolToFingerprintPipelineElement, abc.A
         # pylint: disable=R0801
         super().__init__(
             return_as=return_as,
+            counted=counted,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
