@@ -130,10 +130,10 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         """Test SHAP's TreeExplainer wrapper on MolPipeline's pipelines with fingerprints."""
 
         estimators = [
-            RandomForestClassifier(random_state=_RANDOM_STATE),
-            RandomForestRegressor(random_state=_RANDOM_STATE),
-            GradientBoostingClassifier(random_state=_RANDOM_STATE),
-            GradientBoostingRegressor(random_state=_RANDOM_STATE),
+            RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+            RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
+            GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+            GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
         ]
         n_bits = 64
 
@@ -172,10 +172,10 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         """Test SHAP's TreeExplainer wrapper with invalid inputs."""
 
         estimators = [
-            RandomForestClassifier(random_state=_RANDOM_STATE),
-            RandomForestRegressor(random_state=_RANDOM_STATE),
-            GradientBoostingClassifier(random_state=_RANDOM_STATE),
-            GradientBoostingRegressor(random_state=_RANDOM_STATE),
+            RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+            RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
+            GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+            GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
         ]
 
         n_bits = 64
@@ -244,10 +244,10 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         """Test SHAP's TreeExplainer wrapper on physchem feature vector."""
 
         estimators = [
-            RandomForestClassifier(random_state=_RANDOM_STATE),
-            RandomForestRegressor(random_state=_RANDOM_STATE),
-            GradientBoostingClassifier(random_state=_RANDOM_STATE),
-            GradientBoostingRegressor(random_state=_RANDOM_STATE),
+            RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+            RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
+            GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+            GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
         ]
 
         # test explanations with different estimators
@@ -286,10 +286,10 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         """Test SHAP's TreeExplainer wrapper on concatenated feature vector."""
 
         estimators = [
-            RandomForestClassifier(random_state=_RANDOM_STATE),
-            RandomForestRegressor(random_state=_RANDOM_STATE),
-            GradientBoostingClassifier(random_state=_RANDOM_STATE),
-            GradientBoostingRegressor(random_state=_RANDOM_STATE),
+            RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+            RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
+            GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+            GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
         ]
 
         n_bits = 64

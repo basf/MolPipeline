@@ -8,23 +8,26 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 import shap
-from scipy.sparse import issparse
+from scipy.sparse import issparse, spmatrix
 
 from molpipeline import Pipeline
-from molpipeline.abstract_pipeline_elements.core import OptionalMol
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance, OptionalMol
 from molpipeline.explainability.explanation import Explanation
 from molpipeline.explainability.fingerprint_utils import fingerprint_shap_to_atomweights
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import SubpipelineExtractor
+from molpipeline.utils.value_checks import get_length
 
 
 # pylint: disable=C0103,W0613
-def _mitigate_feature_incompatibility_with_shap(X: Any) -> Any:
+def _to_dense(
+    feature_matrix: npt.NDArray[Any] | spmatrix,
+) -> npt.NDArray[Any]:
     """Mitigate feature incompatibility with SHAP objects.
 
     Parameters
     ----------
-    X : Any
+    feature_matrix : npt.NDArray[Any] | spmatrix
         The input features.
 
     Returns
@@ -32,13 +35,15 @@ def _mitigate_feature_incompatibility_with_shap(X: Any) -> Any:
     Any
         The input features in a compatible format.
     """
-    if issparse(X):
-        return X.todense()
-    return X
+    if issparse(feature_matrix):
+        return feature_matrix.todense()
+    return feature_matrix
 
 
 # This function might also be put at a more central position in the lib.
-def _get_predictions(pipeline: Pipeline, X: Any) -> npt.NDArray[np.float_]:
+def _get_predictions(
+    pipeline: Pipeline, feature_matrix: npt.NDArray[Any] | spmatrix
+) -> npt.NDArray[np.float_]:
     """Get the predictions of a model.
 
     Raises if no adequate method is found.
@@ -47,7 +52,7 @@ def _get_predictions(pipeline: Pipeline, X: Any) -> npt.NDArray[np.float_]:
     ----------
     pipeline : Pipeline
         The pipeline containing the model.
-    X : Any
+    feature_matrix : Any
         The input data.
 
     Returns
@@ -56,11 +61,11 @@ def _get_predictions(pipeline: Pipeline, X: Any) -> npt.NDArray[np.float_]:
         The predictions.
     """
     if hasattr(pipeline, "predict_proba"):
-        return pipeline.predict_proba(X)
+        return pipeline.predict_proba(feature_matrix)
     if hasattr(pipeline, "decision_function"):
-        return pipeline.decision_function(X)
+        return pipeline.decision_function(feature_matrix)
     if hasattr(pipeline, "predict"):
-        return pipeline.predict(X)
+        return pipeline.predict(feature_matrix)
     raise ValueError("Could not determine the model output predictions")
 
 
@@ -163,51 +168,112 @@ class SHAPTreeExplainer(AbstractExplainer):
             **kwargs,
         )
 
-        # extract the molecule reader subpipeline
-        self.molecule_reader_subpipeline = (
-            pipeline_extractor.get_molecule_reader_subpipeline()
-        )
-        if self.molecule_reader_subpipeline is None:
-            raise ValueError("Could not determine the molecule reader subpipeline.")
+        # create subpipelines for extracting intermediate results for explanations
+        (
+            self.molecule_reader_subpipeline,
+            self.featurization_subpipeline,
+            self.model_subpipeline,
+        ) = self._extract_subpipelines(model, pipeline, pipeline_extractor)
 
-        # extract the featurization subpipeline
-        self.featurization_subpipeline = (
-            pipeline_extractor.get_featurization_subpipeline()
-        )
-        if self.featurization_subpipeline is None:
-            raise ValueError("Could not determine the featurization subpipeline.")
+        if len(self.featurization_subpipeline.steps) > 1:
+            raise AssertionError(
+                "The featurization subpipeline should only contain one element. Multiple elements are not supported."
+            )
 
-        # extract fill values for checking error handling
-        self.fill_values = pipeline_extractor.get_all_filter_reinserter_fill_values()
-        self.fill_values_contain_nan = np.isnan(self.fill_values).any()
+    def _extract_subpipelines(
+        self, model: Any, pipeline: Pipeline, pipeline_extractor: SubpipelineExtractor
+    ) -> tuple[Pipeline, Pipeline, Pipeline]:
 
-    def _prediction_is_valid(self, prediction: Any) -> bool:
-        """Check if the prediction is valid using some heuristics.
+        # first extract elements we need the output from
+        featurization_element = pipeline_extractor.get_featurization_element()
+        if featurization_element is None:
+            raise ValueError("Could not determine the featurization element.")
 
-        Can be used to catch inputs that failed the pipeline for some reason.
+        def get_index(element):
+            for idx, step in enumerate(pipeline.steps):
+                if id(step[1]) == id(element):
+                    return idx
+            return None
 
-        Parameters
-        ----------
-        prediction : Any
-            The prediction.
+        featurization_element_idx = get_index(featurization_element)
+        if featurization_element_idx is None:
+            raise ValueError(
+                "Could not determine the index of the featurization element."
+            )
+        model_element_idx = get_index(model)
+        if model_element_idx is None:
+            raise ValueError("Could not determine the index of the model element.")
 
-        Returns
-        -------
-        bool
-            Whether the prediction is valid.
-        """
-        # if no prediction could be obtained (length is 0); the prediction guaranteed failed.
-        if len(prediction) == 0:
-            return False
+        # reader subpipeline is from step 0 to one before the featurization element
+        reader_subpipeline = self.pipeline[:featurization_element_idx]
+        featurization_subpipeline = self.pipeline[
+            featurization_element_idx:model_element_idx
+        ]
+        model_subpipeline = self.pipeline[model_element_idx:]
+        return reader_subpipeline, featurization_subpipeline, model_subpipeline
 
-        # if a value in the prediction is a fill-value, we - assume - the explanation has failed.
-        if np.isin(prediction, self.fill_values).any():
-            return False
-        if self.fill_values_contain_nan and np.isnan(prediction).any():
-            # the extra nan check is necessary because np.isin does not work with nan
-            return False
-
-        return True
+    # def _extract_subpipelines(
+    #     self, model: Any, pipeline: Pipeline, pipeline_extractor: SubpipelineExtractor
+    # ) -> tuple[Pipeline, Pipeline, Pipeline]:
+    #     """Extract the subpipelines from the pipeline extractor.
+    #
+    #     We extract 3 subpipeline. Each subpipeline is an interval of the original pipeline.
+    #     1. The first subpipeline is for reading the input to a molecule. The resulting molecules are ready
+    #     for featurization, .e.g. it went through standardization steps.
+    #     2. The second subpipeline featurizes the molecules to a machine learning ready format.
+    #     3. The third subpipeline executes the machine learning inference step, including post-processing.
+    #
+    #
+    #     Parameters
+    #     ----------
+    #     model : Any
+    #         The model element.
+    #     pipeline : Pipeline
+    #         The pipeline.
+    #     pipeline_extractor : SubpipelineExtractor
+    #         The pipeline extractor.
+    #
+    #     Returns
+    #     -------
+    #     tuple[Pipeline, Pipeline, Pipeline]
+    #         The molecule reader, featurization, and prediction subpipelines.
+    #     """
+    #
+    #     # The pipeline in split into subsequent intervals covering the whole pipeline.
+    #     # The intervals are defined as:
+    #     # 1. Molecule reading subpipeline: from the beginning to the position before the featurization element.
+    #     # 2. Featurization subpipeline: from the featurization element to the position before the model element.
+    #     # 3. Model subpipeline: from the position after the featurization element to the end of the pipeline.
+    #     # This heuristic process needs only to find the featurization element and model element to infer
+    #     # the subpipelines.
+    #
+    #     # first extract elements we need the output from
+    #     featurization_element = pipeline_extractor.get_featurization_element()
+    #     if featurization_element is None:
+    #         raise ValueError("Could not determine the featurization element.")
+    #
+    #     # reader subpipeline is from step 0 to one before the featurization element
+    #     reader_subpipeline = pipeline_extractor.get_subpipeline(
+    #         pipeline.steps[0][1], featurization_element, second_offset=-1
+    #     )
+    #     if reader_subpipeline is None:
+    #         raise ValueError("Could not determine the molecule reader subpipeline.")
+    #
+    #     # the featurization subpipeline is from the featurization element one element before the model element.
+    #     featurization_subpipeline = pipeline_extractor.get_subpipeline(
+    #         featurization_element, model, second_offset=-1
+    #     )
+    #     if featurization_subpipeline is None:
+    #         raise ValueError("Could not determine the featurization subpipeline.")
+    #
+    #     # the model subpipeline is from the first element after the featurization element until the end of the pipeline
+    #     model_subpipeline = pipeline_extractor.get_subpipeline(
+    #         featurization_element, pipeline.steps[-1][1], first_offset=1
+    #     )
+    #     if model_subpipeline is None:
+    #         raise ValueError("Could not determine the model subpipeline.")
+    #
+    #     return reader_subpipeline, featurization_subpipeline, model_subpipeline
 
     # pylint: disable=C0103,W0613
     def explain(self, X: Any, **kwargs: Any) -> list[Explanation]:
@@ -221,35 +287,46 @@ class SHAPTreeExplainer(AbstractExplainer):
         X : Any
             The input data to explain.
         kwargs : Any
-            Additional keyword arguments for SHAP's TreeExplainer.shap_values .
+            Additional keyword arguments for SHAP's TreeExplainer.shap_values.
 
         Returns
         -------
         list[Explanation]
             List of explanations corresponding to the input data.
         """
-        featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore
+        featurization_element = self.featurization_subpipeline.steps[0][1]  # type: ignore
 
         explanation_results = []
         for input_sample in X:
 
             input_sample = [input_sample]
 
-            # get predictions
-            prediction = _get_predictions(self.pipeline, input_sample)
-            if not self._prediction_is_valid(prediction):
-                # we use the prediction to check if the input is valid. If not, we cannot explain it.
+            # get the molecule
+            molecule_list = self.molecule_reader_subpipeline.transform(input_sample)  # type: ignore
+            if len(molecule_list) == 0 or isinstance(molecule_list[0], InvalidInstance):
                 explanation_results.append(Explanation())
                 continue
+
+            feature_vector = self.featurization_subpipeline.transform(molecule_list)  # type: ignore
+            if get_length(feature_vector) == 0 or isinstance(
+                feature_vector[0], InvalidInstance
+            ):
+                explanation_results.append(Explanation())
+                continue
+
+            # get predictions
+            prediction = _get_predictions(self.model_subpipeline, feature_vector)
+            if len(prediction) == 0 or isinstance(prediction[0], InvalidInstance):
+                explanation_results.append(Explanation())
+                continue
+
+            # todo fill values?
+
             if prediction.ndim > 1:
                 prediction = prediction.squeeze()
 
-            # get the molecule
-            molecule = self.molecule_reader_subpipeline.transform(input_sample)[0]  # type: ignore
-
-            # get feature vectors
-            feature_vector = self.featurization_subpipeline.transform(input_sample)  # type: ignore
-            feature_vector = _mitigate_feature_incompatibility_with_shap(feature_vector)
+            # reshape feature vector for SHAP and output
+            feature_vector = _to_dense(feature_vector)
             feature_vector = np.asarray(feature_vector).squeeze()
 
             # Feature names should also be extracted from the Pipeline.
@@ -268,7 +345,7 @@ class SHAPTreeExplainer(AbstractExplainer):
                 # for Morgan fingerprint, we can map the shap values to atom weights
                 atom_weights = _convert_shap_feature_weights_to_atom_weights(
                     feature_weights,
-                    molecule,
+                    molecule_list[0],
                     featurization_element,
                     feature_vector,
                 )
@@ -277,7 +354,7 @@ class SHAPTreeExplainer(AbstractExplainer):
                 Explanation(
                     feature_vector=feature_vector,
                     feature_names=feature_names,
-                    molecule=molecule,
+                    molecule=molecule_list[0],
                     prediction=prediction,
                     feature_weights=feature_weights,
                     atom_weights=atom_weights,

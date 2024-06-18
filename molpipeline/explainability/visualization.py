@@ -142,15 +142,6 @@ def rdkit_gaussplot(
         contour_params=cps,
         sigma_f=0.4,
     )
-    # from rdkit.Chem.Draw import SimilarityMaps
-    # drawer = SimilarityMaps.GetSimilarityMapFromWeights(
-    #     mol,
-    #     weights,
-    #     contour_lines=n_contour_lines,
-    #     draw2d=drawer,
-    #     contour_params=cps,
-    #     sigma_f=0.4,
-    # )
     drawer.FinishDrawing()
     return drawer
 

@@ -27,7 +27,10 @@ class TestExplainabilityVisualization(unittest.TestCase):
             [
                 ("smi2mol", SmilesToMol()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=1024)),
-                ("model", RandomForestClassifier(random_state=_RANDOM_STATE)),
+                (
+                    "model",
+                    RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+                ),
             ]
         )
         pipeline.fit(TEST_SMILES, CONTAINS_OX)
