@@ -37,6 +37,27 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         for key, value in mol_fp.get_params().items():
             self.assertEqual(value, mol_fp_recreated.get_params()[key])
 
+    def test_counted_bits(self) -> None:
+        """Test if the option counted bits works as expected.
+
+        Returns
+        -------
+        None
+        """
+        mol_fp = MolToMorganFP(radius=2, n_bits=1024)
+        smi2mol = SmilesToMol()
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("mol_fp", mol_fp),
+            ],
+        )
+        output_binary = pipeline.fit_transform(test_smiles)
+        pipeline.set_params(mol_fp__counted=True)
+        output_counted = pipeline.fit_transform(test_smiles)
+        self.assertTrue(np.all(output_counted.toarray() >= output_binary.toarray()))
+
+
     def test_sparse_dense_accordance(self) -> None:
         """Test if the calculation of Morgan fingprints in dense and sparse are equal.
 

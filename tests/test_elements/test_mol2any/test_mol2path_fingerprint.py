@@ -11,6 +11,9 @@ from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import Mol2PathFP
 
+
+# pylint: disable=duplicate-code
+
 test_smiles = [
     "c1ccccc1",
     "c1ccccc1C",
@@ -103,12 +106,32 @@ class TestMol2PathFingerprint(unittest.TestCase):
 
         self.assertTrue(np.all(sparse_output.toarray() == dense_output))
 
-        self.assertTrue(  # pylint: disable=duplicate-code
+        self.assertTrue(
             np.equal(
                 dense_output,
                 np.array(explicit_bit_vect_path_fp_output),
             ).all()
         )
+
+    def test_counted_bits(self) -> None:
+        """Test if the option counted bits works as expected.
+
+        Returns
+        -------
+        None
+        """
+        mol_fp = Mol2PathFP(n_bits=1024)
+        smi2mol = SmilesToMol()
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("mol_fp", mol_fp),
+            ],
+        )
+        output_binary = pipeline.fit_transform(test_smiles)
+        pipeline.set_params(mol_fp__counted=True)
+        output_counted = pipeline.fit_transform(test_smiles)
+        self.assertTrue(np.all(output_counted.toarray() >= output_binary.toarray()))
 
     def test_setter_getter(self) -> None:
         """Test if the setters and getters work as expected."""
