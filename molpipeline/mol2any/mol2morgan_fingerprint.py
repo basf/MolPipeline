@@ -11,10 +11,7 @@ except ImportError:
 
 import copy
 
-import numpy as np
-import numpy.typing as npt
 from rdkit.Chem import AllChem, rdFingerprintGenerator
-from rdkit.DataStructs import ExplicitBitVect
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     ABCMorganFingerprintPipelineElement,
@@ -75,12 +72,12 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         super().__init__(
             radius=radius,
             use_features=use_features,
+            counted=counted,
             return_as=return_as,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
         )
-        self.counted = counted
         if isinstance(n_bits, int) and n_bits >= 0:
             self._n_bits = n_bits
         else:
@@ -129,41 +126,18 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
 
         return self
 
-    def pretransform_single(
-        self, value: RDKitMol
-    ) -> ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]:
-        """Transform a single compound to a dictionary.
-
-        Keys denote the feature position, values the count. Here always 1.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            Molecule for which the fingerprint is generated.
+    def _get_fp_generator(self) -> rdFingerprintGenerator.FingerprintGenerator:
+        """Get the fingerprint generator.
 
         Returns
         -------
-        dict[int, int]
-            Dictionary with feature-position as key and count as value.
+        rdFingerprintGenerator.FingerprintGenerator
+            RDKit fingerprint generator.
         """
-        fingerprint_generator = rdFingerprintGenerator.GetMorganGenerator(
+        return rdFingerprintGenerator.GetMorganGenerator(
             radius=self.radius,
             fpSize=self._n_bits,
         )
-        if self._return_as == "explicit_bit_vect":
-            if self.counted:
-                return fingerprint_generator.GetCountFingerprint(value)
-            return fingerprint_generator.GetFingerprint(value)
-
-        if self.counted:
-            fingerprint = fingerprint_generator.GetCountFingerprintAsNumPy(value)
-        else:
-            fingerprint = fingerprint_generator.GetFingerprintAsNumPy(value)
-
-        if self._return_as == "dense":
-            return fingerprint
-
-        return {pos: count for pos, count in enumerate(fingerprint) if count > 0}
 
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule.
