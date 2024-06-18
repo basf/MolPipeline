@@ -57,36 +57,6 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         output_counted = pipeline.fit_transform(test_smiles)
         self.assertTrue(np.all(output_counted.toarray() >= output_binary.toarray()))
 
-    def test_sparse_dense_accordance(self) -> None:
-        """Test if the calculation of Morgan fingprints in dense and sparse are equal.
-
-        Compared to precalculated values.
-
-        Returns
-        -------
-        None
-        """
-        smi2mol = SmilesToMol()
-        sparse_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="sparse")
-        dense_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
-        sparse_pipeline = Pipeline(
-            [
-                ("smi2mol", smi2mol),
-                ("sparse_morgan", sparse_morgan),
-            ],
-        )
-        dense_pipeline = Pipeline(
-            [
-                ("smi2mol", smi2mol),
-                ("dense_morgan", dense_morgan),
-            ],
-        )
-
-        sparse_output = sparse_pipeline.fit_transform(test_smiles)
-        dense_output = dense_pipeline.fit_transform(test_smiles)
-
-        self.assertTrue(np.all(sparse_output.toarray() == dense_output))
-
     def test_output_types(self) -> None:
         """Test equality of different output_types."""
 

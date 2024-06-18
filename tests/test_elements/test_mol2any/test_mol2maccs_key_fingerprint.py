@@ -40,36 +40,6 @@ class TestMolToMACCSFP(unittest.TestCase):
         for key, value in mol_fp.get_params().items():
             self.assertEqual(value, mol_fp_recreated.get_params()[key])
 
-    def test_sparse_dense_accordance(self) -> None:
-        """Test if the calculation of MACCS Keys for dense and sparse are equal.
-
-        Compared to precalculated values.
-
-        Returns
-        -------
-        None
-        """
-        smi2mol = SmilesToMol()
-        sparse_maccs = MolToMACCSFP(return_as="sparse")
-        dense_maccs = MolToMACCSFP(return_as="dense")
-        sparse_pipeline = Pipeline(
-            [
-                ("smi2mol", smi2mol),
-                ("sparse_maccs", sparse_maccs),
-            ],
-        )
-        dense_pipeline = Pipeline(
-            [
-                ("smi2mol", smi2mol),
-                ("dense_maccs", dense_maccs),
-            ],
-        )
-
-        sparse_output = sparse_pipeline.fit_transform(test_smiles)
-        dense_output = dense_pipeline.fit_transform(test_smiles)
-
-        self.assertTrue(np.all(sparse_output.toarray() == dense_output))
-
     def test_output_types(self) -> None:
         """Test equality of different output_types."""
 
