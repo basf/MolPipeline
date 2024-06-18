@@ -255,8 +255,10 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
         Returns
         -------
-        dict[int, int]
-            Dictionary with feature-position as key and count as value.
+        ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]
+            If return_as is "explicit_bit_vect" return ExplicitBitVect.
+            If return_as is "dense" return numpy array.
+            If return_as is "sparse" return dictionary with feature-position as key and count as value.
         """
         fingerprint_generator = self._get_fp_generator()
         if self._return_as == "dense":

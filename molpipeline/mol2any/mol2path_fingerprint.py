@@ -1,4 +1,4 @@
-"""Implementations for the Morgan fingerprint."""
+"""Implementations for the RDKit Path Fingerprint."""
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 

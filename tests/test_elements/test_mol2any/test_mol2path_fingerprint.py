@@ -24,7 +24,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
     """Unittest for Mol2PathFP, which calculates the RDKit Path Fingerprint."""
 
     def test_can_be_constructed(self) -> None:
-        """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed.
+        """Test if the Mol2PathFP pipeline element can be constructed.
 
         Returns
         -------
@@ -40,7 +40,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
             self.assertEqual(value, mol_fp_recreated.get_params()[key])
 
     def test_sparse_dense_accordance(self) -> None:
-        """Test if the calculation of Morgan fingprints in dense and sparse are equal.
+        """Test if the calculation of path-fingprints in dense and sparse are equal.
 
         Compared to precalculated values.
 
