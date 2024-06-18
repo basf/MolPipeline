@@ -259,20 +259,23 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
             Dictionary with feature-position as key and count as value.
         """
         fingerprint_generator = self._get_fp_generator()
-        if self._return_as == "explicit_bit_vect":
+        if self._return_as == "dense":
             if self.counted:
-                return fingerprint_generator.GetCountFingerprint(value)
-            return fingerprint_generator.GetFingerprint(value)
+                return fingerprint_generator.GetCountFingerprintAsNumPy(value)
+            return fingerprint_generator.GetFingerprintAsNumPy(value)
 
         if self.counted:
-            fingerprint = fingerprint_generator.GetCountFingerprintAsNumPy(value)
+            fingerprint = fingerprint_generator.GetCountFingerprint(value)
         else:
-            fingerprint = fingerprint_generator.GetFingerprintAsNumPy(value)
+            fingerprint = fingerprint_generator.GetFingerprint(value)
 
-        if self._return_as == "dense":
+        if self._return_as == "explicit_bit_vect":
             return fingerprint
 
-        return {pos: count for pos, count in enumerate(fingerprint) if count > 0}
+        if self.counted:
+            return fingerprint.GetNonzeroElements()
+
+        return {pos: 1 for pos in fingerprint.GetOnBits()}
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get object parameters relevant for copying the class.
