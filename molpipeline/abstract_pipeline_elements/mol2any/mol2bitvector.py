@@ -232,12 +232,12 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         self.counted = counted
 
     @abc.abstractmethod
-    def _get_fp_generator(self) -> rdFingerprintGenerator.FingerprintGenerator:
+    def _get_fp_generator(self) -> rdFingerprintGenerator.FingeprintGenerator64:
         """Get fingerprint generator.
 
         Returns
         -------
-        rdFingerprintGenerator.FingerprintGenerator
+        rdFingerprintGenerator.FingeprintGenerator64
             Fingerprint generator.
         """
 
