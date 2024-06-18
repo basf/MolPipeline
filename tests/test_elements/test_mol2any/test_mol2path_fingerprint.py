@@ -11,7 +11,6 @@ from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import Mol2PathFP
 
-
 # pylint: disable=duplicate-code
 
 test_smiles = [

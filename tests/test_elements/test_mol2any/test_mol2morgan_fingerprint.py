@@ -57,7 +57,6 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         output_counted = pipeline.fit_transform(test_smiles)
         self.assertTrue(np.all(output_counted.toarray() >= output_binary.toarray()))
 
-
     def test_sparse_dense_accordance(self) -> None:
         """Test if the calculation of Morgan fingprints in dense and sparse are equal.
 
