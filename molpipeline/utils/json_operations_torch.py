@@ -1,5 +1,7 @@
 """Functions for serializing and deserializing PyTorch models."""
 
+from typing import TypeVar
+
 try:
     import torch
 
@@ -8,11 +10,13 @@ except ImportError:
     TORCH_AVAILABLE = False
 from typing import Any, Literal
 
+_T = TypeVar("_T")
+
 if TORCH_AVAILABLE:
 
     def tensor_to_json(
-        obj: Any,
-    ) -> tuple[dict[str, Any], Literal[True]] | tuple[torch.Tensor, Literal[False]]:
+        obj: _T,
+    ) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
         """Recursively convert a PyTorch model to a JSON-serializable object.
 
         Parameters
@@ -39,8 +43,8 @@ if TORCH_AVAILABLE:
 else:
 
     def tensor_to_json(
-        obj: Any,
-    ) -> tuple[dict[str, Any], Literal[True]] | tuple[torch.Tensor, Literal[False]]:
+        obj: _T,
+    ) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
         """Recursively convert a PyTorch model to a JSON-serializable object.
 
         Parameters
