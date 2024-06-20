@@ -28,23 +28,11 @@ from molpipeline.utils.json_operations import recursive_from_json, recursive_to_
 # pylint: disable=relative-beyond-top-level
 from .chemprop_test_utils.compare_models import compare_params
 from .chemprop_test_utils.constant_vars import NO_IDENTITY_CHECK
-from .chemprop_test_utils.default_models import get_classification_mpnn
+from .chemprop_test_utils.default_models import (
+    get_chemprop_model_binary_classification_mpnn,
+)
 
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
-
-
-def get_model() -> ChempropModel:
-    """Get the Chemprop model.
-
-    Returns
-    -------
-    ChempropModel
-        The Chemprop model.
-    """
-    mpnn = get_classification_mpnn()
-    chemprop_model = ChempropModel(model=mpnn, lightning_trainer__accelerator="cpu")
-    return chemprop_model
-
 
 DEFAULT_PARAMS = {
     "batch_size": 64,
@@ -123,7 +111,7 @@ class TestChempropModel(unittest.TestCase):
 
     def test_get_params(self) -> None:
         """Test the get_params and set_params methods."""
-        chemprop_model = get_model()
+        chemprop_model = get_chemprop_model_binary_classification_mpnn()
         orig_params = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_PARAMS)  # Shallow copy
 
@@ -161,14 +149,14 @@ class TestChempropModel(unittest.TestCase):
 
     def test_clone(self) -> None:
         """Test the clone method."""
-        chemprop_model = get_model()
+        chemprop_model = get_chemprop_model_binary_classification_mpnn()
         cloned_model = clone(chemprop_model)
         self.assertIsInstance(cloned_model, ChempropModel)
         compare_params(self, chemprop_model, cloned_model)
 
     def test_classifier_methods(self) -> None:
         """Test the classifier methods."""
-        chemprop_model = get_model()
+        chemprop_model = get_chemprop_model_binary_classification_mpnn()
         # pylint: disable=protected-access
         self.assertTrue(chemprop_model._is_binary_classifier())
         self.assertFalse(chemprop_model._is_multiclass_classifier())
@@ -177,7 +165,7 @@ class TestChempropModel(unittest.TestCase):
 
     def test_neural_fp(self) -> None:
         """Test the to_encoder method."""
-        chemprop_model = get_model()
+        chemprop_model = get_chemprop_model_binary_classification_mpnn()
         neural_fp = chemprop_model.to_encoder()
         self.assertIsInstance(neural_fp, ChempropNeuralFP)
         self.assertIsInstance(neural_fp.model, MPNN)
@@ -187,7 +175,7 @@ class TestChempropModel(unittest.TestCase):
 
     def test_json_serialization(self) -> None:
         """Test the to_json and from_json methods."""
-        chemprop_model = get_model()
+        chemprop_model = get_chemprop_model_binary_classification_mpnn()
         chemprop_json = recursive_to_json(chemprop_model)
         chemprop_model_copy = recursive_from_json(chemprop_json)
         param_dict = chemprop_model_copy.get_params(deep=True)

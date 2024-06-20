@@ -13,22 +13,9 @@ from molpipeline.utils.json_operations import recursive_from_json, recursive_to_
 # pylint: disable=relative-beyond-top-level
 from .chemprop_test_utils.compare_models import compare_params
 from .chemprop_test_utils.constant_vars import NO_IDENTITY_CHECK
-from .chemprop_test_utils.default_models import get_classification_mpnn
+from .chemprop_test_utils.default_models import get_neural_fp_encoder
 
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
-
-
-def get_neural_fp_encoder() -> ChempropNeuralFP:
-    """Get the Chemprop model.
-
-    Returns
-    -------
-    ChempropNeuralFP
-        The Chemprop model.
-    """
-    mpnn = get_classification_mpnn()
-    chemprop_model = ChempropNeuralFP(model=mpnn, lightning_trainer__accelerator="cpu")
-    return chemprop_model
 
 
 class TestChempropNeuralFingerprint(unittest.TestCase):
