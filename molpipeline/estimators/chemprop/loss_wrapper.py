@@ -41,6 +41,10 @@ class LossFunctionParamMixin:
         deep : bool, optional
             Not used, only present to match the sklearn API.
 
+        Returns
+        -------
+        dict[str, Any]
+            The parameters of the loss function.
         """
         return {"task_weights": self._original_task_weights}
 
