@@ -7,6 +7,7 @@ from chemprop.nn.loss import LossFunction
 from lightning.pytorch.accelerators import Accelerator
 from lightning.pytorch.profilers.base import PassThroughProfiler
 from sklearn.base import BaseEstimator
+import torch
 from torch import nn
 
 
@@ -41,6 +42,8 @@ def compare_params(
             test_case.assertEqual(type(param_a), type(param_b))
         elif isinstance(param_a, (nn.Identity, Accelerator, PassThroughProfiler)):
             test_case.assertEqual(type(param_a), type(param_b))
+        elif isinstance(param_a, torch.Tensor):
+            test_case.assertTrue(torch.equal(param_a, param_b))
         elif param_name == "lightning_trainer__callbacks":
             test_case.assertIsInstance(param_b, Sequence)
             for i, callback in enumerate(param_a):
