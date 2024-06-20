@@ -1,6 +1,6 @@
 """Wrap Chemprop in a sklearn like transformer returning the neural fingerprint as a numpy array."""
 
-from typing import Self, Sequence
+from typing import Any, Self, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -21,6 +21,7 @@ class ChempropNeuralFP(ABCChemprop):
         batch_size: int = 64,
         n_jobs: int = 1,
         disable_fitting: bool = False,
+        **kwargs: Any,
     ) -> None:
         """Initialize the chemprop neural fingerprint model.
 
@@ -36,6 +37,8 @@ class ChempropNeuralFP(ABCChemprop):
             The number of jobs to use.
         disable_fitting : bool, optional (default=False)
             Whether to allow fitting or set to fixed encoding.
+         **kwargs: Any
+            Parameters for components of the model.
         """
         # pylint: disable=duplicate-code
         super().__init__(
@@ -43,6 +46,7 @@ class ChempropNeuralFP(ABCChemprop):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            **kwargs,
         )
         self.disable_fitting = disable_fitting
 
