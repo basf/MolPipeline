@@ -27,8 +27,8 @@ from molpipeline.utils.json_operations import recursive_from_json, recursive_to_
 
 # pylint: disable=relative-beyond-top-level
 from .chemprop_test_utils.compare_models import compare_params
+from .chemprop_test_utils.constant_vars import NO_IDENTITY_CHECK
 from .chemprop_test_utils.default_models import get_classification_mpnn
-
 
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
 
@@ -116,15 +116,6 @@ DEFAULT_PARAMS = {
     "model__predictor__threshold": None,
     "n_jobs": 1,
 }
-
-NO_IDENTITY_CHECK = [
-    "model__agg",
-    "model__message_passing",
-    "model",
-    "model__predictor",
-    "model__predictor__criterion",
-    "model__predictor__output_transform",
-]
 
 
 class TestChempropModel(unittest.TestCase):
