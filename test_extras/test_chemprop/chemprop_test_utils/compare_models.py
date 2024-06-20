@@ -43,7 +43,9 @@ def compare_params(
         elif isinstance(param_a, (nn.Identity, Accelerator, PassThroughProfiler)):
             test_case.assertEqual(type(param_a), type(param_b))
         elif isinstance(param_a, torch.Tensor):
-            test_case.assertTrue(torch.equal(param_a, param_b))
+            test_case.assertTrue(
+                torch.equal(param_a, param_b), f"Test failed for {param_name}"
+            )
         elif param_name == "lightning_trainer__callbacks":
             test_case.assertIsInstance(param_b, Sequence)
             for i, callback in enumerate(param_a):
