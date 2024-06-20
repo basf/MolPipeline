@@ -8,8 +8,8 @@ from molpipeline.estimators.chemprop.component_wrapper import (
 )
 
 
-def get_classification_mpnn() -> MPNN:
-    """Get a Chemprop model for classification.
+def get_binary_classification_mpnn() -> MPNN:
+    """Get a Chemprop model for binary classification.
 
     Returns
     -------
