@@ -1,6 +1,5 @@
 """Functions for creating default chemprop models."""
 
-
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
     BinaryClassificationFFN,
