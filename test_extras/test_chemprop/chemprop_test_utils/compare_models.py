@@ -3,11 +3,11 @@
 from typing import Sequence
 from unittest import TestCase
 
+import torch
 from chemprop.nn.loss import LossFunction
 from lightning.pytorch.accelerators import Accelerator
 from lightning.pytorch.profilers.base import PassThroughProfiler
 from sklearn.base import BaseEstimator
-import torch
 from torch import nn
 
 
