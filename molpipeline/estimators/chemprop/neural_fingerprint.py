@@ -37,7 +37,7 @@ class ChempropNeuralFP(ABCChemprop):
             The number of jobs to use.
         disable_fitting : bool, optional (default=False)
             Whether to allow fitting or set to fixed encoding.
-         **kwargs: Any
+        **kwargs: Any
             Parameters for components of the model.
         """
         # pylint: disable=duplicate-code
