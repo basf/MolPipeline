@@ -2,12 +2,10 @@
 
 import logging
 import unittest
-from typing import Iterable, Sequence
+from typing import Iterable
 
 import torch
-from chemprop.nn.loss import BCELoss, LossFunction, MSELoss
-from lightning.pytorch.accelerators import Accelerator
-from lightning.pytorch.profilers.base import PassThroughProfiler
+from chemprop.nn.loss import BCELoss, MSELoss
 from sklearn.base import clone
 from torch import Tensor, nn
 
@@ -27,6 +25,11 @@ from molpipeline.estimators.chemprop.models import (
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 
+# pylint: disable=relative-beyond-top-level
+from .chemprop_test_utils.compare_models import compare_params
+from .chemprop_test_utils.default_models import get_classification_mpnn
+
+
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
 
 
@@ -38,14 +41,7 @@ def get_model() -> ChempropModel:
     ChempropModel
         The Chemprop model.
     """
-    binary_clf_ffn = BinaryClassificationFFN()
-    aggregate = SumAggregation()
-    bond_message_passing = BondMessagePassing()
-    mpnn = MPNN(
-        message_passing=bond_message_passing,
-        agg=aggregate,
-        predictor=binary_clf_ffn,
-    )
+    mpnn = get_classification_mpnn()
     chemprop_model = ChempropModel(model=mpnn, lightning_trainer__accelerator="cpu")
     return chemprop_model
 
@@ -177,26 +173,7 @@ class TestChempropModel(unittest.TestCase):
         chemprop_model = get_model()
         cloned_model = clone(chemprop_model)
         self.assertIsInstance(cloned_model, ChempropModel)
-        cloned_model_params = cloned_model.get_params(deep=True)
-        for param_name, param in chemprop_model.get_params(deep=True).items():
-            cloned_param = cloned_model_params[param_name]
-            if hasattr(param, "get_params"):
-                self.assertEqual(param.__class__, cloned_param.__class__)
-                self.assertNotEqual(id(param), id(cloned_param))
-            elif isinstance(param, LossFunction):
-                self.assertEqual(
-                    param.state_dict()["task_weights"],
-                    cloned_param.state_dict()["task_weights"],
-                )
-                self.assertEqual(type(param), type(cloned_param))
-            elif isinstance(param, (nn.Identity, Accelerator, PassThroughProfiler)):
-                self.assertEqual(type(param), type(cloned_param))
-            elif param_name == "lightning_trainer__callbacks":
-                self.assertIsInstance(cloned_param, Sequence)
-                for i, callback in enumerate(param):
-                    self.assertIsInstance(callback, type(cloned_param[i]))
-            else:
-                self.assertEqual(param, cloned_param, f"Test failed for {param_name}")
+        compare_params(self, chemprop_model, cloned_model)
 
     def test_classifier_methods(self) -> None:
         """Test the classifier methods."""
