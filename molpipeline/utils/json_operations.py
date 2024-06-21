@@ -8,6 +8,7 @@ import warnings
 from typing import Any
 
 from molpipeline.pipeline import Pipeline
+from molpipeline.utils.json_operations_torch import tensor_to_json
 
 __all__ = [
     "builtin_to_json",
@@ -258,6 +259,10 @@ def recursive_to_json(obj: Any) -> Any:
             for key, value in model_params.items():
                 object_dict[key] = recursive_to_json(value)
     else:
+        obj_dict, success = tensor_to_json(obj)
+        # Either not a tensor or torch is not available
+        if success:
+            return obj_dict
         # If the object is not a sklearn model, a warning is raised
         # as it might not be possible to recreate the object.
         warnings.warn(
