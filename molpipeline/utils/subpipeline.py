@@ -320,7 +320,11 @@ class SubpipelineExtractor:
         )
 
     def get_subpipeline(
-        self, first_element: Any, second_element: Any, first_offset: int = 0, second_offset: int = 0
+        self,
+        first_element: Any,
+        second_element: Any,
+        first_offset: int = 0,
+        second_offset: int = 0,
     ) -> Pipeline | None:
         """Get a subpipeline between two elements.
 
