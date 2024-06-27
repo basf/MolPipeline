@@ -35,8 +35,8 @@ def _to_dense(
         The input features in a compatible format.
     """
     if issparse(feature_matrix):
-        return feature_matrix.todense()
-    return feature_matrix  # type: ignore[union-attr]
+        return feature_matrix.todense()  # type: ignore[union-attr]
+    return feature_matrix
 
 
 # This function might also be put at a more central position in the lib.
@@ -187,6 +187,7 @@ class SHAPTreeExplainer(AbstractExplainer):
 
     def _prediction_is_valid(self, prediction: Any) -> bool:
         """Check if the prediction is valid using some heuristics.
+
         Can be used to catch inputs that failed the pipeline for some reason.
 
         Parameters
