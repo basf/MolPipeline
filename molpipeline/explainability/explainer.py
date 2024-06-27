@@ -11,12 +11,11 @@ import shap
 from scipy.sparse import issparse, spmatrix
 
 from molpipeline import Pipeline
-from molpipeline.abstract_pipeline_elements.core import InvalidInstance, OptionalMol
+from molpipeline.abstract_pipeline_elements.core import OptionalMol
 from molpipeline.explainability.explanation import Explanation
 from molpipeline.explainability.fingerprint_utils import fingerprint_shap_to_atomweights
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import SubpipelineExtractor
-from molpipeline.utils.value_checks import get_length
 
 
 # pylint: disable=C0103,W0613
@@ -37,7 +36,7 @@ def _to_dense(
     """
     if issparse(feature_matrix):
         return feature_matrix.todense()
-    return feature_matrix
+    return feature_matrix  # type: ignore[union-attr]
 
 
 # This function might also be put at a more central position in the lib.
@@ -146,6 +145,7 @@ class SHAPTreeExplainer(AbstractExplainer):
 
     def __init__(self, pipeline: Pipeline, **kwargs: Any) -> None:
         """Initialize the SHAPTreeExplainer.
+
         Parameters
         ----------
         pipeline : Pipeline
@@ -153,7 +153,6 @@ class SHAPTreeExplainer(AbstractExplainer):
         kwargs : Any
             Additional keyword arguments for SHAP's TreeExplainer.
         """
-
         self.pipeline = pipeline
         pipeline_extractor = SubpipelineExtractor(self.pipeline)
 
@@ -189,6 +188,7 @@ class SHAPTreeExplainer(AbstractExplainer):
     def _prediction_is_valid(self, prediction: Any) -> bool:
         """Check if the prediction is valid using some heuristics.
         Can be used to catch inputs that failed the pipeline for some reason.
+
         Parameters
         ----------
         prediction : Any
@@ -230,7 +230,7 @@ class SHAPTreeExplainer(AbstractExplainer):
         list[Explanation]
             List of explanations corresponding to the input data.
         """
-        featurization_element = self.featurization_subpipeline.steps[-1][1]
+        featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
 
         explanation_results = []
         for input_sample in X:
@@ -248,10 +248,10 @@ class SHAPTreeExplainer(AbstractExplainer):
                 prediction = prediction.squeeze()
 
             # get the molecule
-            molecule = self.molecule_reader_subpipeline.transform(input_sample)[0]
+            molecule = self.molecule_reader_subpipeline.transform(input_sample)[0]  # type: ignore[union-attr]
 
             # get feature vectors
-            feature_vector = self.featurization_subpipeline.transform(input_sample)
+            feature_vector = self.featurization_subpipeline.transform(input_sample)  # type: ignore[union-attr]
             feature_vector = _to_dense(feature_vector)
             feature_vector = np.asarray(feature_vector).squeeze()
 

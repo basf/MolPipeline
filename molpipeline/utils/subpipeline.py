@@ -96,8 +96,8 @@ class SubpipelineExtractor:
 
         Parameters
         ----------
-        element_name : str
-            The name of the element to extract.
+        element : Any
+            The element to extract.
 
         Returns
         -------
@@ -148,8 +148,7 @@ class SubpipelineExtractor:
         """
         if element_name is not None:
             return self._get_index_of_element_by_name(element_name)
-        else:
-            return get_index_function(self.pipeline)
+        return get_index_function(self.pipeline)
 
     def _extract_single_element(
         self,
