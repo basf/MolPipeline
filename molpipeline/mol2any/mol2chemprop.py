@@ -169,9 +169,9 @@ class MolToChemprop(MolToAnyPipelineElement):
             elif component_name == "mol_featurizer":
                 mol_featurizer_params[param_name] = param_copy.pop(key)
         if hasattr(self.graph_featurizer, "set_params"):
-            self.graph_featurizer.set_params(**graph_featurizer_params)
+            self.graph_featurizer.set_params(**graph_featurizer_params)  # type: ignore
         if hasattr(self.mol_featurizer, "set_params"):
-            self.mol_featurizer.set_params(**mol_featurizer_params)
+            self.mol_featurizer.set_params(**mol_featurizer_params)  # type: ignore
 
         super().set_params(**param_copy)
         return self
