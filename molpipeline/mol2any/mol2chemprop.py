@@ -5,10 +5,14 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, Optional
+from typing import Any, Iterable, Optional
+
+import numpy as np
+import numpy.typing as npt
 
 try:
     from chemprop.data import MoleculeDatapoint, MoleculeDataset
+    from chemprop.featurizers.base import GraphFeaturizer
     from chemprop.featurizers.molecule import MoleculeFeaturizer
 except ImportError:
     warnings.warn(
@@ -31,11 +35,13 @@ class MolToChemprop(MolToAnyPipelineElement):
     [1] https://github.com/chemprop/chemprop/
     """
 
-    featurizer_list: list[MoleculeFeaturizer] | None
+    graph_featurizer: GraphFeaturizer[RDKitMol] | None
+    mol_featurizer: MoleculeFeaturizer | None
 
     def __init__(
         self,
-        featurizer_list: list[MoleculeFeaturizer] | None = None,
+        graph_featurizer: GraphFeaturizer[RDKitMol] | None = None,
+        mol_featurizer: MoleculeFeaturizer | None = None,
         name: str = "Mol2Chemprop",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -44,8 +50,11 @@ class MolToChemprop(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        featurizer_list: list[MoleculeFeaturizer] | None, optional (default=None)
-            List of featurizers to use.
+        graph_featurizer: GraphFeaturizer[RDKitMol] | None, optional (default=None)
+            Defines how the graph is featureized. Defaults to None.
+        mol_featurizer: MoleculeFeaturizer | None, optional (default=None)
+            In contrast to graph_featurizer, features from the mol_featurizer are not used during the message passing.
+            These features are concatenated to the neural fingerprints before the feedforward layers.
         name: str, optional (default="Mol2Chemprop")
             Name of the pipeline element. Defaults to "Mol2Chemprop".
         n_jobs: int
@@ -53,7 +62,9 @@ class MolToChemprop(MolToAnyPipelineElement):
         uuid: str | None, optional (default=None)
             UUID of the pipeline element.
         """
-        self.featurizer_list = featurizer_list
+        self.graph_featurizer = graph_featurizer
+        self.mol_featurizer = mol_featurizer
+
         super().__init__(
             name=name,
             n_jobs=n_jobs,
@@ -73,7 +84,10 @@ class MolToChemprop(MolToAnyPipelineElement):
         MoleculeDatapoint
             Molecular representation used as input for ChemProp. None if transformation failed.
         """
-        return MoleculeDatapoint(mol=value, mfs=self.featurizer_list)
+        mol_features: npt.NDArray[np.float32] | None = None
+        if self.mol_featurizer is not None:
+            mol_features = np.array(self.mol_featurizer(value))
+        return MoleculeDatapoint(mol=value, x_d=mol_features)
 
     def assemble_output(
         self, value_list: Iterable[MoleculeDatapoint]
