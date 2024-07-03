@@ -10,17 +10,7 @@ from chemprop.nn.agg import Aggregation
 from chemprop.nn.agg import MeanAggregation as _MeanAggregation
 from chemprop.nn.agg import SumAggregation as _SumAggregation
 from chemprop.nn.ffn import MLP
-from chemprop.nn.loss import (
-    BCELoss,
-    BinaryDirichletLoss,
-    CrossEntropyLoss,
-    EvidentialLoss,
-    LossFunction,
-    MSELoss,
-    MulticlassDirichletLoss,
-    MVELoss,
-    SIDLoss,
-)
+from chemprop.nn.loss import LossFunction
 from chemprop.nn.message_passing import BondMessagePassing as _BondMessagePassing
 from chemprop.nn.message_passing import MessagePassing
 from chemprop.nn.metrics import (
@@ -47,6 +37,17 @@ from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
+
+from molpipeline.estimators.chemprop.loss_wrapper import (
+    BCELoss,
+    BinaryDirichletLoss,
+    CrossEntropyLoss,
+    EvidentialLoss,
+    MSELoss,
+    MulticlassDirichletLoss,
+    MVELoss,
+    SIDLoss,
+)
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
