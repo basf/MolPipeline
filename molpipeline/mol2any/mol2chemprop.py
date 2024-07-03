@@ -88,9 +88,9 @@ class MolToChemprop(MolToAnyPipelineElement):
         MoleculeDatapoint
             Molecular representation used as input for ChemProp. None if transformation failed.
         """
-        mol_features: npt.NDArray[np.float32] | None = None
+        mol_features: npt.NDArray[np.float64] | None = None
         if self.mol_featurizer is not None:
-            mol_features = np.array(self.mol_featurizer(value))
+            mol_features = np.array(self.mol_featurizer(value), dtype=np.float64)
         return MoleculeDatapoint(mol=value, x_d=mol_features)
 
     def assemble_output(
