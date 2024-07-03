@@ -34,10 +34,7 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         dict[str, int]
             Parameters of the featurizer.
         """
-        return {
-            "extra_atom_fdim": self.extra_atom_fdim,
-            "extra_bond_fdim": self.extra_bond_fdim,
-        }
+        return {}
 
     def set_params(self, **parameters: Any) -> Self:
         """Set the parameters of the featurizer.
@@ -52,12 +49,4 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         Self
             This featurizer with the parameters set.
         """
-        if "extra_atom_fdim" in parameters:
-            self.atom_fdim -= self.extra_atom_fdim
-            self.extra_atom_fdim = parameters["extra_atom_fdim"]
-            self.atom_fdim += self.extra_atom_fdim
-        if "extra_bond_fdim" in parameters:
-            self.bond_fdim -= self.extra_bond_fdim
-            self.extra_bond_fdim = parameters["extra_bond_fdim"]
-            self.bond_fdim += self.extra_bond_fdim
         return self
