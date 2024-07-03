@@ -15,6 +15,7 @@ try:
     from chemprop.data import MoleculeDatapoint, MoleculeDataset
     from chemprop.featurizers.base import GraphFeaturizer
     from chemprop.featurizers.molecule import MoleculeFeaturizer
+    from chemprop.featurizers.base import GraphFeaturizer, VectorFeaturizer
 except ImportError:
     warnings.warn(
         "chemprop not installed. MolToChemprop will not work.",
@@ -38,12 +39,12 @@ class MolToChemprop(MolToAnyPipelineElement):
     """
 
     graph_featurizer: GraphFeaturizer[RDKitMol] | None
-    mol_featurizer: MoleculeFeaturizer | None
+    mol_featurizer: VectorFeaturizer[RDKitMol] | None
 
     def __init__(
         self,
         graph_featurizer: GraphFeaturizer[RDKitMol] | None = None,
-        mol_featurizer: MoleculeFeaturizer | None = None,
+        mol_featurizer: VectorFeaturizer[RDKitMol] | None = None,
         name: str = "Mol2Chemprop",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
