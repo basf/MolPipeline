@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import copy
 import warnings
 from typing import Any, Iterable, Optional
 
@@ -13,9 +12,11 @@ import numpy.typing as npt
 
 try:
     from chemprop.data import MoleculeDatapoint, MoleculeDataset
-    from chemprop.featurizers.base import GraphFeaturizer
-    from chemprop.featurizers.molecule import MoleculeFeaturizer
     from chemprop.featurizers.base import GraphFeaturizer, VectorFeaturizer
+
+    from molpipeline.estimators.chemprop.featurizer_wrapper.graph_wrapper import (
+        SimpleMoleculeMolGraphFeaturizer,
+    )
 except ImportError:
     warnings.warn(
         "chemprop not installed. MolToChemprop will not work.",
@@ -65,7 +66,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         uuid: str | None, optional (default=None)
             UUID of the pipeline element.
         """
-        self.graph_featurizer = graph_featurizer
+        self.graph_featurizer = graph_featurizer or SimpleMoleculeMolGraphFeaturizer()
         self.mol_featurizer = mol_featurizer
 
         super().__init__(
@@ -123,13 +124,18 @@ class MolToChemprop(MolToAnyPipelineElement):
             Parameters of this pipeline element.
         """
         params = super().get_params(deep=deep)
+        params["graph_featurizer"] = self.graph_featurizer
+        params["mol_featurizer"] = self.mol_featurizer
 
-        if not deep:
-            params["graph_featurizer"] = self.graph_featurizer
-            params["mol_featurizer"] = self.mol_featurizer
-        else:
-            params["graph_featurizer"] = copy.deepcopy(self.graph_featurizer)
-            params["mol_featurizer"] = copy.deepcopy(self.mol_featurizer)
+        if deep:
+            if hasattr(self.graph_featurizer, "get_params"):
+                graph_featurizer_params = self.graph_featurizer.get_params(deep=deep)
+                for key, value in graph_featurizer_params.items():
+                    params[f"graph_featurizer_{key}"] = value
+            if hasattr(self.mol_featurizer, "get_params"):
+                mol_featurizer_params = self.mol_featurizer.get_params(deep=deep)
+                for key, value in mol_featurizer_params.items():
+                    params[f"mol_featurizer_{key}"] = value
         return params
 
     def set_params(self, **parameters: Any) -> MolToChemprop:
