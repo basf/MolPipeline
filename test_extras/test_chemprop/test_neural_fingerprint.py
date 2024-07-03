@@ -10,7 +10,9 @@ from molpipeline.utils.json_operations import recursive_from_json, recursive_to_
 
 # pylint: disable=relative-beyond-top-level
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
-from test_extras.test_chemprop.chemprop_test_utils.default_models import get_neural_fp_encoder
+from test_extras.test_chemprop.chemprop_test_utils.default_models import (
+    get_neural_fp_encoder,
+)
 
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
 
