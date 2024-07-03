@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import copy
 import warnings
 from typing import Any, Iterable, Optional
 
@@ -19,6 +20,7 @@ except ImportError:
         "chemprop not installed. MolToChemprop will not work.",
         ImportWarning,
     )
+
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.utils.molpipeline_types import RDKitMol
@@ -104,4 +106,33 @@ class MolToChemprop(MolToAnyPipelineElement):
         Any
             Assembled output.
         """
-        return MoleculeDataset(data=list(value_list))
+        return MoleculeDataset(data=list(value_list), featurizer=self.graph_featurizer)
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters for this pipeline element.
+
+        Parameters
+        ----------
+        deep: bool, optional (default=True)
+            If True, will return the parameters for this pipeline element and its subobjects.
+
+        Returns
+        -------
+        dict
+            Parameters of this pipeline element.
+        """
+        if not deep:
+            return {
+                "graph_featurizer": self.graph_featurizer,
+                "mol_featurizer": self.mol_featurizer,
+                "name": self.name,
+                "n_jobs": self.n_jobs,
+                "uuid": self.uuid,
+            }
+        return {
+            "graph_featurizer": copy.copy(self.graph_featurizer),
+            "mol_featurizer": copy.copy(self.mol_featurizer),
+            "name": str(self.name),
+            "n_jobs": int(self.n_jobs),
+            "uuid": int(self.uuid),
+        }
