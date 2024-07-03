@@ -36,13 +36,13 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         """
         return {}
 
-    def set_params(self, **parameters: Any) -> Self:
+    def set_params(self, **parameters: Any) -> Self:  # pylint: disable=unused-argument
         """Set the parameters of the featurizer.
 
         Parameters
         ----------
         parameters: Any
-            Parameters to set.
+            Parameters to set. Only used for compatibility with scikit-learn.
 
         Returns
         -------
