@@ -121,18 +121,34 @@ class MolToChemprop(MolToAnyPipelineElement):
         dict
             Parameters of this pipeline element.
         """
+        params = super().get_params(deep=deep)
+
         if not deep:
-            return {
-                "graph_featurizer": self.graph_featurizer,
-                "mol_featurizer": self.mol_featurizer,
-                "name": self.name,
-                "n_jobs": self.n_jobs,
-                "uuid": self.uuid,
-            }
-        return {
-            "graph_featurizer": copy.copy(self.graph_featurizer),
-            "mol_featurizer": copy.copy(self.mol_featurizer),
-            "name": str(self.name),
-            "n_jobs": int(self.n_jobs),
-            "uuid": int(self.uuid),
-        }
+            params["graph_featurizer"] = self.graph_featurizer
+            params["mol_featurizer"] = self.mol_featurizer
+        else:
+            params["graph_featurizer"] = copy.deepcopy(self.graph_featurizer)
+            params["mol_featurizer"] = copy.deepcopy(self.mol_featurizer)
+        return params
+
+    def set_params(self, **parameters: Any) -> MolToChemprop:
+        """Set the parameters of this pipeline element.
+
+        Parameters
+        ----------
+        **parameters: Any
+            Parameters to set.
+
+        Returns
+        -------
+        MolToChemprop
+            This pipeline element with the parameters set.
+        """
+        param_copy = dict(parameters)
+        graph_featurizer = param_copy.pop("graph_featurizer", None)
+        mol_featurizer = param_copy.pop("mol_featurizer", None)
+        if graph_featurizer is not None:
+            self.graph_featurizer = graph_featurizer
+        if mol_featurizer is not None:
+            self.mol_featurizer = mol_featurizer
+        super().set_params(**param_copy)
