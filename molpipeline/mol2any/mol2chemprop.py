@@ -55,7 +55,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         Parameters
         ----------
         graph_featurizer: GraphFeaturizer[RDKitMol] | None, optional (default=None)
-            Defines how the graph is featureized. Defaults to None.
+            Defines how the graph is featurized. Defaults to None.
         mol_featurizer: MoleculeFeaturizer | None, optional (default=None)
             In contrast to graph_featurizer, features from the mol_featurizer are not used during the message passing.
             These features are concatenated to the neural fingerprints before the feedforward layers.
