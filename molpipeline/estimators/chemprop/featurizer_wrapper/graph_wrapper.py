@@ -16,6 +16,9 @@ from chemprop.featurizers.molgraph import (
 class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
     """Wrapper for Chemprop SimpleMoleculeMolGraphFeaturizer."""
 
+    extra_atom_fdim: InitVar[int]
+    extra_bond_fdim: InitVar[int]
+
     def get_params(
         self, deep: bool = True  # pylint: disable=unused-argument
     ) -> dict[str, InitVar[int]]:
