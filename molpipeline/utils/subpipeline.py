@@ -39,6 +39,9 @@ def _get_molecule_reading_position_from_pipeline(pipeline: Pipeline) -> int | No
 def _get_model_element_position_from_pipeline(pipeline: Pipeline) -> int | None:
     """Heuristic to select the position of the machine learning estimator model in a pipeline.
 
+    The returned element should be the element returning the pipeline's predictions. So, the
+    pipeline up to this element can be executed to obtain the predictions.
+
     Parameters
     ----------
     pipeline: Pipeline
@@ -52,7 +55,7 @@ def _get_model_element_position_from_pipeline(pipeline: Pipeline) -> int | None:
     for i, step in enumerate(reversed(pipeline.steps)):
         if isinstance(step[1], BaseEstimator):
             if isinstance(step[1], PostPredictionWrapper):
-                # skip PostPredictionWrappers. TODO is this reasonable?
+                # skip PostPredictionWrappers.
                 continue
             return len(pipeline.steps) - i - 1
     return None
@@ -105,7 +108,7 @@ class SubpipelineExtractor:
             The index of the element or None if the element was not found.
         """
         for i, (_, pipeline_element) in enumerate(self.pipeline.steps):
-            if id(pipeline_element) == id(element):
+            if pipeline_element is element:
                 return i
         return None
 
