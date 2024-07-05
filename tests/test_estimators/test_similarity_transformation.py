@@ -7,7 +7,7 @@ import unittest
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
-from rdkit.Chem import AllChem
+from rdkit.Chem import rdFingerprintGenerator
 from rdkit.DataStructs import BulkTanimotoSimilarity
 from scipy import sparse
 from sklearn.neighbors import KNeighborsClassifier
@@ -78,9 +78,10 @@ def _calculate_rdkit_self_similarity(
         Self similarity.
     """
     fp_list = []
+    morgan_generator = rdFingerprintGenerator.GetMorganGenerator(radius=2)
     for smi in compound_list:
         mol = Chem.MolFromSmiles(smi)
-        fp_list.append(AllChem.GetMorganFingerprintAsBitVect(mol, 2))
+        fp_list.append(morgan_generator.GetFingerprint(mol))
     sim = []
     for fp1 in fp_list:
         sim.append(BulkTanimotoSimilarity(fp1, fp_list))
