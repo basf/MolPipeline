@@ -16,6 +16,7 @@ import copy
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
+from rdkit import rdBase
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 from sklearn.preprocessing import StandardScaler
@@ -133,6 +134,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             Descriptor vector for given molecule. None if calculation failed.
         """
         vec = np.full((len(self._descriptor_list),), np.nan)
+        log_block = rdBase.BlockLogs()  # pylint: disable=unused-variable
         for i, name in enumerate(self._descriptor_list):
             descriptor_func = RDKIT_DESCRIPTOR_DICT[name]
             try:
@@ -140,6 +142,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             except Exception:  # pylint: disable=broad-except
                 if self._log_exceptions:
                     logger.exception(f"Failed calculating descriptor: {name}")
+        del log_block
         if not self._return_with_errors and np.any(np.isnan(vec)):
             return InvalidInstance(self.uuid, "NaN in descriptor vector", self.name)
         return vec
