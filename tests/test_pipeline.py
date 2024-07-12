@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import time
 import unittest
 from typing import Any
 
+from loguru import logger
+import pandas as pd
+from joblib import Memory
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
@@ -18,6 +22,7 @@ from molpipeline.mol2mol import (
     EmptyMoleculeFilter,
     MetalDisconnector,
     SaltRemover,
+    TautomerCanonicalizer,
 )
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.matrices import are_equal
@@ -274,6 +279,39 @@ class PipelineTest(unittest.TestCase):
 
             for k, value in param_grid.items():
                 self.assertIn(grid_search_cv.best_params_[k], value)
+
+    def test_caching(self) -> None:
+        """Test if the caching gives the same results and is faster on the second run."""
+
+        molecule_net_logd_df = pd.read_csv(
+            "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/Lipophilicity.csv"
+        ).head(1000)
+        smi2mol = SmilesToMol()
+        tautomerizer = TautomerCanonicalizer()
+        mol2smi = MolToSmiles()
+
+        mem = Memory(location="./cache")
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("tautomerizer", tautomerizer),
+                ("mol2smi", mol2smi),
+            ],
+            memory=mem,
+            n_jobs=-1,
+        )
+
+        # Run pipeline
+
+        start_time = time.time()
+        smiles1 = pipeline.fit_transform(molecule_net_logd_df["smiles"].tolist())
+        time1 = time.time() - start_time
+        start_time = time.time()
+        smiles2 = pipeline.fit_transform(molecule_net_logd_df["smiles"].tolist())
+        time2 = time.time() - start_time
+        self.assertListEqual(smiles1, smiles2)
+        self.assertLess(time2, time1)
+        logger.info(f"Original run took {time1} seconds, cached run took {time2} seconds")
 
 
 if __name__ == "__main__":
