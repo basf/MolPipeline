@@ -354,6 +354,7 @@ class PipelineTest(unittest.TestCase):
         logger.info(
             f"Original run took {time1} seconds, cached run took {time2} seconds"
         )
+        mem.clear(warn=False)
 
     def test_gridseach_cache(self) -> None:
         """Run a short GridSearchCV and check if the caching works."""
@@ -380,7 +381,8 @@ class PipelineTest(unittest.TestCase):
         time1 = time.time() - start_time
 
         # Now with caching
-        pipeline.memory = Memory(location="./cache", verbose=0)
+        mem = Memory(location="./cache", verbose=0)
+        pipeline.memory = mem
         grid_search_cv = GridSearchCV(
             estimator=pipeline,
             param_grid=h_params,
@@ -396,6 +398,7 @@ class PipelineTest(unittest.TestCase):
         logger.info(
             f"Original run took {time1} seconds, cached run took {time2} seconds"
         )
+        mem.clear(warn=False)
 
 
 if __name__ == "__main__":
