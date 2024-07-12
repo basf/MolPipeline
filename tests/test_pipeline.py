@@ -48,6 +48,11 @@ def _get_rf_regressor() -> Pipeline:
     """Get a morgan + physchem + random forest pipeline.
 
     To make the run extra slow, a TauTomerCanonicalizer is added.
+
+    Returns
+    -------
+    Pipeline
+        A pipeline with a morgan fingerprint, physchem descriptors, and a random forest
     """
     smi2mol = SmilesToMol()
     tautomerizer = TautomerCanonicalizer()
