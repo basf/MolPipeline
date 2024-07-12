@@ -6,9 +6,9 @@ import time
 import unittest
 from typing import Any
 
-from loguru import logger
 import pandas as pd
 from joblib import Memory
+from loguru import logger
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
@@ -311,7 +311,9 @@ class PipelineTest(unittest.TestCase):
         time2 = time.time() - start_time
         self.assertListEqual(smiles1, smiles2)
         self.assertLess(time2, time1)
-        logger.info(f"Original run took {time1} seconds, cached run took {time2} seconds")
+        logger.info(
+            f"Original run took {time1} seconds, cached run took {time2} seconds"
+        )
 
 
 if __name__ == "__main__":
