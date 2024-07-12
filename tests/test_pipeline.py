@@ -48,6 +48,11 @@ def _get_rf_regressor() -> Pipeline:
     """Get a morgan + physchem + random forest pipeline.
 
     To make the run extra slow, a TauTomerCanonicalizer is added.
+
+    Returns
+    -------
+    Pipeline
+        A pipeline with a morgan fingerprint, physchem descriptors, and a random forest
     """
     smi2mol = SmilesToMol()
     tautomerizer = TautomerCanonicalizer()
@@ -318,7 +323,7 @@ class PipelineTest(unittest.TestCase):
             "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/Lipophilicity.csv"
         ).head(1000)
         pipeline = _get_rf_regressor()
-        mem = Memory(location="./cache")
+        mem = Memory(location="./cache", verbose=0)
         pipeline.memory = mem
         # Run fitting 1
         start_time = time.time()
