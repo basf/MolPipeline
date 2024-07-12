@@ -285,7 +285,7 @@ class PipelineTest(unittest.TestCase):
 
         molecule_net_logd_df = pd.read_csv(
             "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/Lipophilicity.csv"
-        ).head(1000)
+        ).head(10000)
         smi2mol = SmilesToMol()
         tautomerizer = TautomerCanonicalizer()
         mol2smi = MolToSmiles()
