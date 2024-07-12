@@ -6,17 +6,23 @@ import time
 import unittest
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from joblib import Memory
 from loguru import logger
 from sklearn.base import BaseEstimator
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline import ErrorFilter, Pipeline
 from molpipeline.any2mol import AutoToMol, SmilesToMol
-from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
+from molpipeline.mol2any import (
+    MolToConcatenatedVector,
+    MolToMorganFP,
+    MolToRDKitPhysChem,
+    MolToSmiles,
+)
 from molpipeline.mol2mol import (
     ChargeParentExtractor,
     EmptyMoleculeFilter,
@@ -36,6 +42,31 @@ FP_SIZE = 2048
 EXPECTED_OUTPUT = make_sparse_fp(TEST_SMILES, FP_RADIUS, FP_SIZE)
 
 _RANDOM_STATE = 67056
+
+
+def _get_rf_regressor() -> Pipeline:
+    """Get a morgan + physchem + random forest pipeline.
+
+    To make the run extra slow, a TauTomerCanonicalizer is added.
+    """
+    smi2mol = SmilesToMol()
+    tautomerizer = TautomerCanonicalizer()
+    mol2concat = MolToConcatenatedVector(
+        [
+            ("mol2morgan", MolToMorganFP(radius=2, n_bits=2048)),
+            ("mol2physchem", MolToRDKitPhysChem()),
+        ]
+    )
+    rf = RandomForestRegressor(random_state=42, n_jobs=-1)
+    return Pipeline(
+        [
+            ("smi2mol", smi2mol),
+            ("tautomerizer", tautomerizer),
+            ("mol2concat", mol2concat),
+            ("rf", rf),
+        ],
+        n_jobs=1,
+    )
 
 
 class PipelineTest(unittest.TestCase):
@@ -285,31 +316,77 @@ class PipelineTest(unittest.TestCase):
 
         molecule_net_logd_df = pd.read_csv(
             "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/Lipophilicity.csv"
-        ).head(10000)
-        smi2mol = SmilesToMol()
-        tautomerizer = TautomerCanonicalizer()
-        mol2smi = MolToSmiles()
-
+        ).head(1000)
+        pipeline = _get_rf_regressor()
         mem = Memory(location="./cache")
-        pipeline = Pipeline(
-            [
-                ("smi2mol", smi2mol),
-                ("tautomerizer", tautomerizer),
-                ("mol2smi", mol2smi),
-            ],
-            memory=mem,
-            n_jobs=-1,
+        pipeline.memory = mem
+        # Run fitting 1
+        start_time = time.time()
+        pipeline.fit(
+            molecule_net_logd_df["smiles"].tolist(),
+            molecule_net_logd_df["exp"].tolist(),
+        )
+        time1 = time.time() - start_time
+        # Get predictions
+        pred1 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+
+        # Reset the last step with an untrained model
+        pipeline.steps[-1] = ("rf", RandomForestRegressor(random_state=42, n_jobs=-1))
+
+        # Run fitting 2
+        start_time = time.time()
+        pipeline.fit(
+            molecule_net_logd_df["smiles"].tolist(),
+            molecule_net_logd_df["exp"].tolist(),
+        )
+        time2 = time.time() - start_time
+        # Get predictions
+        pred2 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+
+        # Compare results
+        self.assertTrue(np.allclose(pred1, pred2))
+        self.assertLess(time2, time1)
+        logger.info(
+            f"Original run took {time1} seconds, cached run took {time2} seconds"
         )
 
-        # Run pipeline
-
+    def test_gridseach_cache(self) -> None:
+        """Run a short GridSearchCV and check if the caching works."""
+        h_params = {
+            "rf__n_estimators": [1, 5, 10, 20],
+            "rf__random_state": [_RANDOM_STATE],
+            "rf__max_depth": [1, 5, 10, 20, None],
+            "rf__min_samples_split": [2, 5, 10],
+        }
+        # First without caching
+        data_df = pd.read_csv(
+            "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/Lipophilicity.csv"
+        ).head(150)
+        pipeline = _get_rf_regressor()
+        grid_search_cv = GridSearchCV(
+            estimator=pipeline,
+            param_grid=h_params,
+            cv=2,
+            scoring="neg_mean_squared_error",
+            n_jobs=-1,
+        )
         start_time = time.time()
-        smiles1 = pipeline.fit_transform(molecule_net_logd_df["smiles"].tolist())
+        grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
         time1 = time.time() - start_time
+
+        # Now with caching
+        pipeline.memory = Memory(location="./cache", verbose=0)
+        grid_search_cv = GridSearchCV(
+            estimator=pipeline,
+            param_grid=h_params,
+            cv=2,
+            scoring="neg_mean_squared_error",
+            n_jobs=-1,
+        )
         start_time = time.time()
-        smiles2 = pipeline.fit_transform(molecule_net_logd_df["smiles"].tolist())
+        grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
         time2 = time.time() - start_time
-        self.assertListEqual(smiles1, smiles2)
+
         self.assertLess(time2, time1)
         logger.info(
             f"Original run took {time1} seconds, cached run took {time2} seconds"
