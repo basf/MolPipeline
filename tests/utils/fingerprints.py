@@ -7,7 +7,7 @@ import numpy.typing as npt
 from rdkit import Chem
 
 # pylint: disable=no-name-in-module
-from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
+from rdkit.Chem import rdFingerprintGenerator as rdkit_fp
 from rdkit.DataStructs import ExplicitBitVect
 from scipy import sparse
 
@@ -34,9 +34,10 @@ def make_sparse_fp(
         Feature matrix.
     """
     vector_list = []
+    morgan_fp = rdkit_fp.GetMorganGenerator(radius=radius, fpSize=n_bits)
     for smiles in smiles_list:
         mol = Chem.MolFromSmiles(smiles)  # pylint: disable=no-member
-        vector = GetMorganFingerprintAsBitVect(mol, radius=radius, nBits=n_bits)
+        vector = morgan_fp.GetFingerprintAsNumPy(mol)
         vector_list.append(sparse.csr_matrix(vector))
     return sparse.vstack(vector_list)
 
