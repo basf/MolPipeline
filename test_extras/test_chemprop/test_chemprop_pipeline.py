@@ -2,6 +2,7 @@
 
 import unittest
 from io import BytesIO
+from pathlib import Path
 from typing import TypeVar
 
 import joblib
@@ -28,6 +29,8 @@ from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
+
+TEST_DATA_PATH = Path(__file__).parents[2] / "tests" / "test_data"
 
 
 # pylint: disable=duplicate-code
@@ -256,7 +259,7 @@ class TestRegressionPipeline(unittest.TestCase):
         """Test the prediction of the regression model."""
 
         molecule_net_logd_df = pd.read_csv(
-            "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/Lipophilicity.csv"
+            TEST_DATA_PATH / "molecule_net_logd.tsv.gz", sep="\t"
         ).head(1000)
         regression_model = get_regression_pipeline()
         regression_model.fit(
@@ -279,8 +282,9 @@ class TestClassificationPipeline(unittest.TestCase):
         """Test the prediction of the classification model."""
 
         molecule_net_bbbp_df = pd.read_csv(
-            "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/BBBP.csv"
+            TEST_DATA_PATH / "molecule_net_bbbp.tsv.gz", sep="\t"
         ).head(1000)
+        molecule_net_bbbp_df.to_csv("molecule_net_bbbp.tsv.gz", sep="\t", index=False)
         classification_model = get_classification_pipeline()
         classification_model.fit(
             molecule_net_bbbp_df["smiles"].tolist(),
