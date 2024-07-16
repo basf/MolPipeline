@@ -89,7 +89,8 @@ class CountingTransformerWrapper(BaseEstimator):
         Any
             The fitted data.
         """
-        return self.element.fit(X, y)
+        self.element.fit(X, y)
+        return self
 
     def transform(self, X: Any) -> Any:  # pylint: disable=invalid-name
         """Transform the data.
