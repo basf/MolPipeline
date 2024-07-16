@@ -128,8 +128,19 @@ class CountingTransformerWrapper(BaseEstimator):
         N_TRANSFORMATIONS += 1
         return self.element.fit_transform(X, y)
 
-    def get_params(self, deep=True):
-        """Get the parameters of the transformer."""
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get the parameters of the transformer.
+
+        Parameters
+        ----------
+        deep : bool
+            If True, the parameters of the transformer are also returned.
+
+        Returns
+        -------
+        dict[str, Any]
+            The parameters of the transformer.
+        """
         params = {
             "element": self.element,
         }
@@ -138,7 +149,18 @@ class CountingTransformerWrapper(BaseEstimator):
         return params
 
     def set_params(self, **params) -> Self:
-        """Set the parameters of the transformer."""
+        """Set the parameters of the transformer.
+
+        Parameters
+        ----------
+        **params
+            The parameters to set.
+
+        Returns
+        -------
+        Self
+            The transformer with the set parameters
+        """
         element = params.pop("element", None)
         if element is not None:
             self.element = element
