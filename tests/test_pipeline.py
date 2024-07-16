@@ -149,7 +149,7 @@ class CountingTransformerWrapper(BaseEstimator):
             params.update(self.element.get_params(deep))
         return params
 
-    def set_params(self, **params) -> Self:
+    def set_params(self, **params: Any) -> Self:
         """Set the parameters of the transformer.
 
         Parameters
