@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tempfile
 import time
 import unittest
 from pathlib import Path
@@ -325,38 +326,43 @@ class PipelineTest(unittest.TestCase):
             TEST_DATA_PATH / "molecule_net_logd.tsv.gz", sep="\t"
         ).head(1000)
         pipeline = _get_rf_regressor()
-        mem = Memory(location="./cache", verbose=0)
-        pipeline.memory = mem
-        # Run fitting 1
-        start_time = time.time()
-        pipeline.fit(
-            molecule_net_logd_df["smiles"].tolist(),
-            molecule_net_logd_df["exp"].tolist(),
-        )
-        time1 = time.time() - start_time
-        # Get predictions
-        pred1 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+        with tempfile.TemporaryDirectory() as temp_dir:
+            cache_dir = Path(temp_dir) / ".cache"
+            mem = Memory(location=cache_dir, verbose=0)
+            pipeline.memory = mem
+            # Run fitting 1
+            start_time = time.time()
+            pipeline.fit(
+                molecule_net_logd_df["smiles"].tolist(),
+                molecule_net_logd_df["exp"].tolist(),
+            )
+            time1 = time.time() - start_time
+            # Get predictions
+            pred1 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
 
-        # Reset the last step with an untrained model
-        pipeline.steps[-1] = ("rf", RandomForestRegressor(random_state=42, n_jobs=-1))
+            # Reset the last step with an untrained model
+            pipeline.steps[-1] = (
+                "rf",
+                RandomForestRegressor(random_state=42, n_jobs=-1),
+            )
 
-        # Run fitting 2
-        start_time = time.time()
-        pipeline.fit(
-            molecule_net_logd_df["smiles"].tolist(),
-            molecule_net_logd_df["exp"].tolist(),
-        )
-        time2 = time.time() - start_time
-        # Get predictions
-        pred2 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+            # Run fitting 2
+            start_time = time.time()
+            pipeline.fit(
+                molecule_net_logd_df["smiles"].tolist(),
+                molecule_net_logd_df["exp"].tolist(),
+            )
+            time2 = time.time() - start_time
+            # Get predictions
+            pred2 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
 
-        # Compare results
-        self.assertTrue(np.allclose(pred1, pred2))
-        self.assertLess(time2, time1)
-        logger.info(
-            f"Original run took {time1} seconds, cached run took {time2} seconds"
-        )
-        mem.clear(warn=False)
+            # Compare results
+            self.assertTrue(np.allclose(pred1, pred2))
+            self.assertLess(time2, time1)
+            logger.info(
+                f"Original run took {time1} seconds, cached run took {time2} seconds"
+            )
+            mem.clear(warn=False)
 
     def test_gridseach_cache(self) -> None:
         """Run a short GridSearchCV and check if the caching works."""
@@ -383,24 +389,26 @@ class PipelineTest(unittest.TestCase):
         time1 = time.time() - start_time
 
         # Now with caching
-        mem = Memory(location="./cache", verbose=0)
-        pipeline.memory = mem
-        grid_search_cv = GridSearchCV(
-            estimator=pipeline,
-            param_grid=h_params,
-            cv=2,
-            scoring="neg_mean_squared_error",
-            n_jobs=-1,
-        )
-        start_time = time.time()
-        grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
-        time2 = time.time() - start_time
+        with tempfile.TemporaryDirectory() as temp_dir:
+            cache_dir = Path(temp_dir) / ".cache"
+            mem = Memory(location=cache_dir, verbose=0)
+            pipeline.memory = mem
+            grid_search_cv = GridSearchCV(
+                estimator=pipeline,
+                param_grid=h_params,
+                cv=2,
+                scoring="neg_mean_squared_error",
+                n_jobs=-1,
+            )
+            start_time = time.time()
+            grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
+            time2 = time.time() - start_time
 
-        self.assertLess(time2, time1)
-        logger.info(
-            f"Original run took {time1} seconds, cached run took {time2} seconds"
-        )
-        mem.clear(warn=False)
+            self.assertLess(time2, time1)
+            logger.info(
+                f"Original run took {time1} seconds, cached run took {time2} seconds"
+            )
+            mem.clear(warn=False)
 
 
 if __name__ == "__main__":
