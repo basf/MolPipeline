@@ -3,21 +3,25 @@
 from __future__ import annotations
 
 import tempfile
-import time
 import unittest
 from pathlib import Path
 from typing import Any
 
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
 import numpy as np
 import pandas as pd
 from joblib import Memory
-from loguru import logger
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline import ErrorFilter, Pipeline
+from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.any2mol import AutoToMol, SmilesToMol
 from molpipeline.mol2any import (
     MolToConcatenatedVector,
@@ -30,7 +34,6 @@ from molpipeline.mol2mol import (
     EmptyMoleculeFilter,
     MetalDisconnector,
     SaltRemover,
-    TautomerCanonicalizer,
 )
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.matrices import are_equal
@@ -46,6 +49,102 @@ EXPECTED_OUTPUT = make_sparse_fp(TEST_SMILES, FP_RADIUS, FP_SIZE)
 
 _RANDOM_STATE = 67056
 
+# This is a global variable that is used to count the number of fit_transformations
+# This variable cannot be in the class as it would change the hash, resulting in not retrieving the cached data
+N_TRANSFORMATIONS: int = 0
+
+
+class MaxTransformationsExceededError(Exception):
+    """Error that is raised if a transformer is used too often.
+
+    This error is used to check if caching is working correctly.
+    """
+
+
+class CountingTransformerWrapper(BaseEstimator):
+    """A transformer that counts the number of transformations."""
+
+    def __init__(self, element: ABCPipelineElement):
+        """Initialize the wrapper.
+
+        Parameters
+        ----------
+        element : ABCPipelineElement
+            The element to wrap.
+        """
+        self.element = element
+
+    def fit(self, X: Any, y: Any) -> Self:  # pylint: disable=invalid-name
+        """Fit the data.
+
+        Parameters
+        ----------
+        X : Any
+            The input data.
+        y : Any
+            The target data.
+
+        Returns
+        -------
+        Any
+            The fitted data.
+        """
+        return self.element.fit(X, y)
+
+    def transform(self, X: Any) -> Any:  # pylint: disable=invalid-name
+        """Transform the data.
+
+        Transform is called during prediction, which is not cached.
+        Since the transformer is not cached, the counter is not increased.
+
+        Parameters
+        ----------
+        X : Any
+            The input data.
+
+        Returns
+        -------
+        Any
+            The transformed data.
+        """
+        return self.element.transform(X)
+
+    def fit_transform(self, X: Any, y: Any) -> Any:  # pylint: disable=invalid-name
+        """Fit and transform the data.
+
+        Parameters
+        ----------
+        X : Any
+            The input data.
+        y : Any
+            The target data.
+
+        Returns
+        -------
+        Any
+            The transformed data.
+        """
+        global N_TRANSFORMATIONS  # pylint: disable=global-statement
+        N_TRANSFORMATIONS += 1
+        return self.element.fit_transform(X, y)
+
+    def get_params(self, deep=True):
+        """Get the parameters of the transformer."""
+        params = {
+            "element": self.element,
+        }
+        if deep:
+            params.update(self.element.get_params(deep))
+        return params
+
+    def set_params(self, **params) -> Self:
+        """Set the parameters of the transformer."""
+        element = params.pop("element", None)
+        if element is not None:
+            self.element = element
+        self.element.set_params(**params)
+        return self
+
 
 def _get_rf_regressor() -> Pipeline:
     """Get a morgan + physchem + random forest pipeline.
@@ -58,18 +157,22 @@ def _get_rf_regressor() -> Pipeline:
         A pipeline with a morgan fingerprint, physchem descriptors, and a random forest
     """
     smi2mol = SmilesToMol()
-    tautomerizer = TautomerCanonicalizer()
-    mol2concat = MolToConcatenatedVector(
-        [
-            ("mol2morgan", MolToMorganFP(radius=2, n_bits=2048)),
-            ("mol2physchem", MolToRDKitPhysChem()),
-        ]
+
+    global N_TRANSFORMATIONS  # pylint: disable=global-statement
+    N_TRANSFORMATIONS = 0
+
+    mol2concat = CountingTransformerWrapper(
+        MolToConcatenatedVector(
+            [
+                ("mol2morgan", MolToMorganFP(radius=2, n_bits=2048)),
+                ("mol2physchem", MolToRDKitPhysChem()),
+            ]
+        ),
     )
-    rf = RandomForestRegressor(random_state=42, n_jobs=-1)
+    rf = RandomForestRegressor(random_state=_RANDOM_STATE, n_jobs=1)
     return Pipeline(
         [
             ("smi2mol", smi2mol),
-            ("tautomerizer", tautomerizer),
             ("mol2concat", mol2concat),
             ("rf", rf),
         ],
@@ -324,91 +427,88 @@ class PipelineTest(unittest.TestCase):
 
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_PATH / "molecule_net_logd.tsv.gz", sep="\t"
-        ).head(1000)
-        pipeline = _get_rf_regressor()
-        with tempfile.TemporaryDirectory() as temp_dir:
-            cache_dir = Path(temp_dir) / ".cache"
-            mem = Memory(location=cache_dir, verbose=0)
-            pipeline.memory = mem
-            # Run fitting 1
-            start_time = time.time()
-            pipeline.fit(
-                molecule_net_logd_df["smiles"].tolist(),
-                molecule_net_logd_df["exp"].tolist(),
-            )
-            time1 = time.time() - start_time
-            # Get predictions
-            pred1 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+        ).head(100)
+        for cache_activated in [False, True]:
+            pipeline = _get_rf_regressor()
+            with tempfile.TemporaryDirectory() as temp_dir:
 
-            # Reset the last step with an untrained model
-            pipeline.steps[-1] = (
-                "rf",
-                RandomForestRegressor(random_state=42, n_jobs=-1),
-            )
+                if cache_activated:
+                    cache_dir = Path(temp_dir) / ".cache"
+                    mem = Memory(location=cache_dir, verbose=0)
+                else:
+                    mem = Memory(location=None, verbose=0)
+                pipeline.memory = mem
+                # Run fitting 1
+                pipeline.fit(
+                    molecule_net_logd_df["smiles"].tolist(),
+                    molecule_net_logd_df["exp"].tolist(),
+                )
+                # Get predictions
+                pred1 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
 
-            # Run fitting 2
-            start_time = time.time()
-            pipeline.fit(
-                molecule_net_logd_df["smiles"].tolist(),
-                molecule_net_logd_df["exp"].tolist(),
-            )
-            time2 = time.time() - start_time
-            # Get predictions
-            pred2 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+                # Reset the last step with an untrained model
+                pipeline.steps[-1] = (
+                    "rf",
+                    RandomForestRegressor(random_state=_RANDOM_STATE, n_jobs=1),
+                )
 
-            # Compare results
-            self.assertTrue(np.allclose(pred1, pred2))
-            self.assertLess(time2, time1)
-            logger.info(
-                f"Original run took {time1} seconds, cached run took {time2} seconds"
-            )
-            mem.clear(warn=False)
+                # Run fitting 2
+                pipeline.fit(
+                    molecule_net_logd_df["smiles"].tolist(),
+                    molecule_net_logd_df["exp"].tolist(),
+                )
+                # Get predictions
+                pred2 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+
+                # Compare results
+                self.assertTrue(np.allclose(pred1, pred2))
+
+                if cache_activated:
+                    # Fit is called twice, but the transform is only called once, since the second run is cached
+                    self.assertEqual(N_TRANSFORMATIONS, 1)
+                else:
+                    self.assertEqual(N_TRANSFORMATIONS, 2)
+
+                mem.clear(warn=False)
 
     def test_gridseach_cache(self) -> None:
         """Run a short GridSearchCV and check if the caching works."""
         h_params = {
-            "rf__n_estimators": [1, 5, 10, 20],
-            "rf__random_state": [_RANDOM_STATE],
-            "rf__max_depth": [1, 5, 10, 20, None],
-            "rf__min_samples_split": [2, 5, 10],
+            "rf__n_estimators": [1, 2, 3, 4, 5],
         }
         # First without caching
         data_df = pd.read_csv(
             TEST_DATA_PATH / "molecule_net_logd.tsv.gz", sep="\t"
         ).head(150)
-        pipeline = _get_rf_regressor()
-        grid_search_cv = GridSearchCV(
-            estimator=pipeline,
-            param_grid=h_params,
-            cv=2,
-            scoring="neg_mean_squared_error",
-            n_jobs=-1,
-        )
-        start_time = time.time()
-        grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
-        time1 = time.time() - start_time
 
-        # Now with caching
-        with tempfile.TemporaryDirectory() as temp_dir:
-            cache_dir = Path(temp_dir) / ".cache"
-            mem = Memory(location=cache_dir, verbose=0)
-            pipeline.memory = mem
-            grid_search_cv = GridSearchCV(
-                estimator=pipeline,
-                param_grid=h_params,
-                cv=2,
-                scoring="neg_mean_squared_error",
-                n_jobs=-1,
-            )
-            start_time = time.time()
-            grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
-            time2 = time.time() - start_time
-
-            self.assertLess(time2, time1)
-            logger.info(
-                f"Original run took {time1} seconds, cached run took {time2} seconds"
-            )
-            mem.clear(warn=False)
+        for cache_activated in [True, False]:
+            pipeline = _get_rf_regressor()
+            with tempfile.TemporaryDirectory() as temp_dir:
+                cache_dir = Path(temp_dir) / ".cache"
+                if cache_activated:
+                    mem = Memory(location=cache_dir, verbose=0)
+                else:
+                    mem = Memory(location=None, verbose=0)
+                pipeline.memory = mem
+                grid_search_cv = GridSearchCV(
+                    estimator=pipeline,
+                    param_grid=h_params,
+                    cv=2,
+                    scoring="neg_mean_squared_error",
+                    n_jobs=1,
+                    error_score="raise",
+                    refit=False,
+                    pre_dispatch=1,
+                )
+                grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
+                if cache_activated:
+                    # Two transformations are done, one for each CV fold
+                    self.assertEqual(N_TRANSFORMATIONS, 2)
+                else:
+                    expected_transformations = 2
+                    for param in h_params.values():
+                        expected_transformations *= len(param)
+                    self.assertEqual(N_TRANSFORMATIONS, expected_transformations)
 
 
 if __name__ == "__main__":
