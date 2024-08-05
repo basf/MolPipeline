@@ -1,2 +1,2 @@
-chemprop==2.0.3
+chemprop >=2.0.3, <=2.0.4
 lightning
