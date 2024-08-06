@@ -472,15 +472,12 @@ class PipelineTest(unittest.TestCase):
                 # Compare results
                 self.assertTrue(np.allclose(pred1, pred2))
 
+                n_transformations = pipeline.named_steps["mol2concat"].n_transformations
                 if cache_activated:
                     # Fit is called twice, but the transform is only called once, since the second run is cached
-                    self.assertEqual(
-                        pipeline.named_steps["mol2concat"].n_transformations, 1
-                    )
+                    self.assertEqual(n_transformations, 1)
                 else:
-                    self.assertEqual(
-                        pipeline.named_steps["mol2concat"].n_transformations, 2
-                    )
+                    self.assertEqual(n_transformations, 2)
 
                 mem.clear(warn=False)
 
