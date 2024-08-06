@@ -484,7 +484,7 @@ class PipelineTest(unittest.TestCase):
 
                 mem.clear(warn=False)
 
-    def test_gridseach_cache(self) -> None:
+    def test_gridsearch_cache(self) -> None:
         """Run a short GridSearchCV and check if the caching and not caching gives the same results."""
         h_params = {
             "rf__n_estimators": [1, 2],
