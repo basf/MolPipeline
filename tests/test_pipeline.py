@@ -49,17 +49,6 @@ EXPECTED_OUTPUT = make_sparse_fp(TEST_SMILES, FP_RADIUS, FP_SIZE)
 
 _RANDOM_STATE = 67056
 
-# This is a global variable that is used to count the number of fit_transformations
-# This variable cannot be in the class as it would change the hash, resulting in not retrieving the cached data
-N_TRANSFORMATIONS: int = 0
-
-
-class MaxTransformationsExceededError(Exception):
-    """Error that is raised if a transformer is used too often.
-
-    This error is used to check if caching is working correctly.
-    """
-
 
 class CountingTransformerWrapper(BaseEstimator):
     """A transformer that counts the number of transformations."""
@@ -73,6 +62,7 @@ class CountingTransformerWrapper(BaseEstimator):
             The element to wrap.
         """
         self.element = element
+        self.n_transformations = 0
 
     def fit(self, X: Any, y: Any) -> Self:  # pylint: disable=invalid-name
         """Fit the data.
@@ -125,8 +115,7 @@ class CountingTransformerWrapper(BaseEstimator):
         Any
             The transformed data.
         """
-        global N_TRANSFORMATIONS  # pylint: disable=global-statement
-        N_TRANSFORMATIONS += 1
+        self.n_transformations += 1
         return self.element.fit_transform(X, y)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
@@ -180,9 +169,6 @@ def _get_rf_regressor() -> Pipeline:
         A pipeline with a morgan fingerprint, physchem descriptors, and a random forest
     """
     smi2mol = SmilesToMol()
-
-    global N_TRANSFORMATIONS  # pylint: disable=global-statement
-    N_TRANSFORMATIONS = 0
 
     mol2concat = CountingTransformerWrapper(
         MolToConcatenatedVector(
@@ -488,14 +474,18 @@ class PipelineTest(unittest.TestCase):
 
                 if cache_activated:
                     # Fit is called twice, but the transform is only called once, since the second run is cached
-                    self.assertEqual(N_TRANSFORMATIONS, 1)
+                    self.assertEqual(
+                        pipeline.named_steps["mol2concat"].n_transformations, 1
+                    )
                 else:
-                    self.assertEqual(N_TRANSFORMATIONS, 2)
+                    self.assertEqual(
+                        pipeline.named_steps["mol2concat"].n_transformations, 2
+                    )
 
                 mem.clear(warn=False)
 
     def test_gridseach_cache(self) -> None:
-        """Run a short GridSearchCV and check if the caching works."""
+        """Run a short GridSearchCV and check if the caching and not caching gives the same results."""
         h_params = {
             "rf__n_estimators": [1, 2, 3, 4, 5],
         }
@@ -503,7 +493,8 @@ class PipelineTest(unittest.TestCase):
         data_df = pd.read_csv(
             TEST_DATA_PATH / "molecule_net_logd.tsv.gz", sep="\t"
         ).head(150)
-
+        best_param_dict = {}
+        prediction_dict = {}
         for cache_activated in [True, False]:
             pipeline = _get_rf_regressor()
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -524,14 +515,13 @@ class PipelineTest(unittest.TestCase):
                     pre_dispatch=1,
                 )
                 grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
-                if cache_activated:
-                    # Two transformations are done, one for each CV fold
-                    self.assertEqual(N_TRANSFORMATIONS, 2)
-                else:
-                    expected_transformations = 2
-                    for param in h_params.values():
-                        expected_transformations *= len(param)
-                    self.assertEqual(N_TRANSFORMATIONS, expected_transformations)
+                best_param_dict[cache_activated] = grid_search_cv.best_params_
+                prediction_dict[cache_activated] = grid_search_cv.predict(
+                    data_df["smiles"].tolist()
+                )
+                mem.clear(warn=False)
+        self.assertEqual(best_param_dict[True], best_param_dict[False])
+        self.assertTrue(np.allclose(prediction_dict[True], prediction_dict[False]))
 
 
 if __name__ == "__main__":
