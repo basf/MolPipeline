@@ -37,9 +37,9 @@ from molpipeline.mol2mol import (
 )
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.matrices import are_equal
+from tests import TEST_DATA_DIR
 from tests.utils.fingerprints import make_sparse_fp
 
-TEST_DATA_PATH = Path(__file__).parents[0] / "test_data"
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
 FAULTY_TEST_SMILES = ["CCCXAS", "", "O=C(O)C(F)(F)F"]
 CONTAINS_OX = [0, 1, 1, 0, 1, 0]
@@ -435,7 +435,7 @@ class PipelineTest(unittest.TestCase):
         """Test if the caching gives the same results and is faster on the second run."""
 
         molecule_net_logd_df = pd.read_csv(
-            TEST_DATA_PATH / "molecule_net_logd.tsv.gz", sep="\t"
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t"
         ).head(100)
         for cache_activated in [False, True]:
             pipeline = _get_rf_regressor()
@@ -491,7 +491,7 @@ class PipelineTest(unittest.TestCase):
         }
         # First without caching
         data_df = pd.read_csv(
-            TEST_DATA_PATH / "molecule_net_logd.tsv.gz", sep="\t"
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t"
         ).head(150)
         best_param_dict = {}
         prediction_dict = {}
