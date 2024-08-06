@@ -511,7 +511,7 @@ class PipelineTest(unittest.TestCase):
                     scoring="neg_mean_squared_error",
                     n_jobs=1,
                     error_score="raise",
-                    refit=False,
+                    refit=True,
                     pre_dispatch=1,
                 )
                 grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
