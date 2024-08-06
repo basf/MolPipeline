@@ -1,6 +1,6 @@
 joblib >= 1.3.0
 loguru
-numpy < 2.0.0
+numpy
 pandas
 rdkit >= 2023.9.1
 scipy
