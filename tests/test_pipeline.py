@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from itertools import combinations
 from pathlib import Path
 from typing import Any
 
@@ -23,12 +24,7 @@ from sklearn.tree import DecisionTreeClassifier
 from molpipeline import ErrorFilter, Pipeline
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.any2mol import AutoToMol, SmilesToMol
-from molpipeline.mol2any import (
-    MolToConcatenatedVector,
-    MolToMorganFP,
-    MolToRDKitPhysChem,
-    MolToSmiles,
-)
+from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from molpipeline.mol2mol import (
     ChargeParentExtractor,
     EmptyMoleculeFilter,
@@ -171,12 +167,7 @@ def _get_rf_regressor() -> Pipeline:
     smi2mol = SmilesToMol()
 
     mol2concat = CountingTransformerWrapper(
-        MolToConcatenatedVector(
-            [
-                ("mol2morgan", MolToMorganFP(radius=2, n_bits=2048)),
-                ("mol2physchem", MolToRDKitPhysChem()),
-            ]
-        ),
+        MolToMorganFP(radius=2, n_bits=2048),
     )
     rf = RandomForestRegressor(random_state=_RANDOM_STATE, n_jobs=1)
     return Pipeline(
@@ -435,8 +426,9 @@ class PipelineTest(unittest.TestCase):
         """Test if the caching gives the same results and is faster on the second run."""
 
         molecule_net_logd_df = pd.read_csv(
-            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20
         )
+        prediction_list = []
         for cache_activated in [False, True]:
             pipeline = _get_rf_regressor()
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -453,7 +445,8 @@ class PipelineTest(unittest.TestCase):
                     molecule_net_logd_df["exp"].tolist(),
                 )
                 # Get predictions
-                pred1 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+                prediction = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+                prediction_list.append(prediction)
 
                 # Reset the last step with an untrained model
                 pipeline.steps[-1] = (
@@ -467,10 +460,8 @@ class PipelineTest(unittest.TestCase):
                     molecule_net_logd_df["exp"].tolist(),
                 )
                 # Get predictions
-                pred2 = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
-
-                # Compare results
-                self.assertTrue(np.allclose(pred1, pred2))
+                prediction = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+                prediction_list.append(prediction)
 
                 n_transformations = pipeline.named_steps["mol2concat"].n_transformations
                 if cache_activated:
@@ -480,6 +471,8 @@ class PipelineTest(unittest.TestCase):
                     self.assertEqual(n_transformations, 2)
 
                 mem.clear(warn=False)
+            for pred1, pred2 in combinations(prediction_list, 2):
+                self.assertTrue(np.allclose(pred1, pred2))
 
     def test_gridsearch_cache(self) -> None:
         """Run a short GridSearchCV and check if the caching and not caching gives the same results."""
