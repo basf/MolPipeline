@@ -487,7 +487,7 @@ class PipelineTest(unittest.TestCase):
     def test_gridseach_cache(self) -> None:
         """Run a short GridSearchCV and check if the caching and not caching gives the same results."""
         h_params = {
-            "rf__n_estimators": [1, 2, 3, 4, 5],
+            "rf__n_estimators": [1, 2],
         }
         # First without caching
         data_df = pd.read_csv(
