@@ -435,8 +435,8 @@ class PipelineTest(unittest.TestCase):
         """Test if the caching gives the same results and is faster on the second run."""
 
         molecule_net_logd_df = pd.read_csv(
-            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t"
-        ).head(100)
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
+        )
         for cache_activated in [False, True]:
             pipeline = _get_rf_regressor()
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -488,8 +488,8 @@ class PipelineTest(unittest.TestCase):
         }
         # First without caching
         data_df = pd.read_csv(
-            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t"
-        ).head(150)
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20
+        )
         best_param_dict = {}
         prediction_dict = {}
         for cache_activated in [True, False]:
