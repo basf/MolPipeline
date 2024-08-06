@@ -16,8 +16,7 @@ import copy
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from rdkit import rdBase
-from rdkit import Chem
+from rdkit import Chem, rdBase
 from rdkit.Chem import Descriptors
 from sklearn.preprocessing import StandardScaler
 
