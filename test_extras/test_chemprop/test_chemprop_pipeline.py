@@ -257,8 +257,8 @@ class TestRegressionPipeline(unittest.TestCase):
         """Test the prediction of the regression model."""
 
         molecule_net_logd_df = pd.read_csv(
-            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t"
-        ).head(1000)
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
+        )
         regression_model = get_regression_pipeline()
         regression_model.fit(
             molecule_net_logd_df["smiles"].tolist(),
@@ -280,8 +280,8 @@ class TestClassificationPipeline(unittest.TestCase):
         """Test the prediction of the classification model."""
 
         molecule_net_bbbp_df = pd.read_csv(
-            TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz", sep="\t"
-        ).head(1000)
+            TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz", sep="\t", nrows=100
+        )
         molecule_net_bbbp_df.to_csv("molecule_net_bbbp.tsv.gz", sep="\t", index=False)
         classification_model = get_classification_pipeline()
         classification_model.fit(
