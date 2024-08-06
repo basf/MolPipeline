@@ -7,15 +7,12 @@ from typing import TypeVar
 import joblib
 import numpy as np
 import pandas as pd
-from chemprop.nn.loss import LossFunction
 from lightning import pytorch as pl
-from lightning.pytorch.accelerators import Accelerator
-from lightning.pytorch.profilers.base import PassThroughProfiler
 from sklearn.base import clone
-from torch import nn
 
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
+from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
     BinaryClassificationFFN,
@@ -30,6 +27,8 @@ from molpipeline.estimators.chemprop.models import (
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
+from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
+from tests import TEST_DATA_DIR
 
 
 # pylint: disable=duplicate-code
@@ -199,6 +198,9 @@ class TestChempropPipeline(unittest.TestCase):
             self.assertEqual(step.__class__, cloned_step.__class__)
             params = step.get_params(deep=True)  # type: ignore
             cloned_params = cloned_step.get_params(deep=True)
+            if isinstance(step, ABCChemprop):
+                compare_params(self, step, cloned_step)
+                continue
             for param_name, param in params.items():
                 # If parm implements get_params, it was cloned as well and we need
                 # to compare the parameters. Since all parameters are listed flat in
@@ -207,27 +209,6 @@ class TestChempropPipeline(unittest.TestCase):
                     self.assertEqual(
                         param.__class__, cloned_params[param_name].__class__
                     )
-                elif param_name == "lightning_trainer":
-                    # Lightning trainer does not implement get_params so things are a bit tricky
-                    # at the moment. We can only check if the classes are the same.
-                    self.assertEqual(
-                        param.__class__, cloned_params[param_name].__class__
-                    )
-                elif isinstance(param, LossFunction):
-                    self.assertEqual(
-                        param.state_dict()["task_weights"],
-                        cloned_params[param_name].state_dict()["task_weights"],
-                    )
-                    self.assertEqual(type(param), type(cloned_params[param_name]))
-                elif isinstance(param, (nn.Identity, Accelerator, PassThroughProfiler)):
-                    self.assertEqual(type(param), type(cloned_params[param_name]))
-                elif param_name == "lightning_trainer__callbacks":
-                    self.assertIsInstance(cloned_params[param_name], list)
-                    self.assertEqual(len(param), len(cloned_params[param_name]))
-                    for callback, cloned_callback in zip(
-                        param, cloned_params[param_name]
-                    ):
-                        self.assertEqual(type(callback), type(cloned_callback))
                 else:
                     self.assertEqual(
                         param, cloned_params[param_name], f"Failed for {param_name}"
@@ -276,8 +257,8 @@ class TestRegressionPipeline(unittest.TestCase):
         """Test the prediction of the regression model."""
 
         molecule_net_logd_df = pd.read_csv(
-            "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/Lipophilicity.csv"
-        ).head(1000)
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
+        )
         regression_model = get_regression_pipeline()
         regression_model.fit(
             molecule_net_logd_df["smiles"].tolist(),
@@ -299,8 +280,9 @@ class TestClassificationPipeline(unittest.TestCase):
         """Test the prediction of the classification model."""
 
         molecule_net_bbbp_df = pd.read_csv(
-            "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/BBBP.csv"
-        ).head(1000)
+            TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz", sep="\t", nrows=100
+        )
+        molecule_net_bbbp_df.to_csv("molecule_net_bbbp.tsv.gz", sep="\t", index=False)
         classification_model = get_classification_pipeline()
         classification_model.fit(
             molecule_net_bbbp_df["smiles"].tolist(),

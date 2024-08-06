@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import tempfile
 import unittest
+from itertools import combinations
+from pathlib import Path
 from typing import Any
 
+import numpy as np
+import pandas as pd
+from joblib import Memory
 from sklearn.base import BaseEstimator
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
@@ -21,6 +27,8 @@ from molpipeline.mol2mol import (
 )
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.matrices import are_equal
+from tests import TEST_DATA_DIR
+from tests.utils.execution_count import get_exec_counted_rf_regressor
 from tests.utils.fingerprints import make_sparse_fp
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
@@ -274,6 +282,97 @@ class PipelineTest(unittest.TestCase):
 
             for k, value in param_grid.items():
                 self.assertIn(grid_search_cv.best_params_[k], value)
+
+    def test_caching(self) -> None:
+        """Test if the caching gives the same results and is faster on the second run."""
+
+        molecule_net_logd_df = pd.read_csv(
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20
+        )
+        prediction_list = []
+        for cache_activated in [False, True]:
+            pipeline = get_exec_counted_rf_regressor(_RANDOM_STATE)
+            with tempfile.TemporaryDirectory() as temp_dir:
+
+                if cache_activated:
+                    cache_dir = Path(temp_dir) / ".cache"
+                    mem = Memory(location=cache_dir, verbose=0)
+                else:
+                    mem = Memory(location=None, verbose=0)
+                pipeline.memory = mem
+                # Run fitting 1
+                pipeline.fit(
+                    molecule_net_logd_df["smiles"].tolist(),
+                    molecule_net_logd_df["exp"].tolist(),
+                )
+                # Get predictions
+                prediction = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+                prediction_list.append(prediction)
+
+                # Reset the last step with an untrained model
+                pipeline.steps[-1] = (
+                    "rf",
+                    RandomForestRegressor(random_state=_RANDOM_STATE, n_jobs=1),
+                )
+
+                # Run fitting 2
+                pipeline.fit(
+                    molecule_net_logd_df["smiles"].tolist(),
+                    molecule_net_logd_df["exp"].tolist(),
+                )
+                # Get predictions
+                prediction = pipeline.predict(molecule_net_logd_df["smiles"].tolist())
+                prediction_list.append(prediction)
+
+                n_transformations = pipeline.named_steps["mol2concat"].n_transformations
+                if cache_activated:
+                    # Fit is called twice, but the transform is only called once, since the second run is cached
+                    self.assertEqual(n_transformations, 1)
+                else:
+                    self.assertEqual(n_transformations, 2)
+
+                mem.clear(warn=False)
+            for pred1, pred2 in combinations(prediction_list, 2):
+                self.assertTrue(np.allclose(pred1, pred2))
+
+    def test_gridsearch_cache(self) -> None:
+        """Run a short GridSearchCV and check if the caching and not caching gives the same results."""
+        h_params = {
+            "rf__n_estimators": [1, 2],
+        }
+        # First without caching
+        data_df = pd.read_csv(
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20
+        )
+        best_param_dict = {}
+        prediction_dict = {}
+        for cache_activated in [True, False]:
+            pipeline = get_exec_counted_rf_regressor(_RANDOM_STATE)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                cache_dir = Path(temp_dir) / ".cache"
+                if cache_activated:
+                    mem = Memory(location=cache_dir, verbose=0)
+                else:
+                    mem = Memory(location=None, verbose=0)
+                pipeline.memory = mem
+                grid_search_cv = GridSearchCV(
+                    estimator=pipeline,
+                    param_grid=h_params,
+                    cv=2,
+                    scoring="neg_mean_squared_error",
+                    n_jobs=1,
+                    error_score="raise",
+                    refit=True,
+                    pre_dispatch=1,
+                )
+                grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
+                best_param_dict[cache_activated] = grid_search_cv.best_params_
+                prediction_dict[cache_activated] = grid_search_cv.predict(
+                    data_df["smiles"].tolist()
+                )
+                mem.clear(warn=False)
+        self.assertEqual(best_param_dict[True], best_param_dict[False])
+        self.assertTrue(np.allclose(prediction_dict[True], prediction_dict[False]))
 
 
 if __name__ == "__main__":

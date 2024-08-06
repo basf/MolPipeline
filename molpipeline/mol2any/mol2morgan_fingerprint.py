@@ -11,10 +11,7 @@ except ImportError:
 
 import copy
 
-import numpy as np
-import numpy.typing as npt
 from rdkit.Chem import AllChem, rdFingerprintGenerator
-from rdkit.DataStructs import ExplicitBitVect
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     ABCMorganFingerprintPipelineElement,
@@ -35,6 +32,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         radius: int = 2,
         use_features: bool = False,
         n_bits: int = 2048,
+        counted: bool = False,
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "MolToMorganFP",
         n_jobs: int = 1,
@@ -50,6 +48,9 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             Instead of atoms, features are encoded in the fingerprint. [2]
         n_bits: int, optional (default=2048)
             Size of fingerprint.
+        counted: bool, optional (default=False)
+            If True, the fingerprint will be counted.
+            If False, the fingerprint will be binary.
         return_as: Literal["sparse", "dense", "explicit_bit_vect"]
             Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
@@ -71,17 +72,17 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         super().__init__(
             radius=radius,
             use_features=use_features,
+            counted=counted,
             return_as=return_as,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
         )
-        if isinstance(n_bits, int) and n_bits >= 0:
-            self._n_bits = n_bits
-        else:
+        if not isinstance(n_bits, int) or n_bits < 1:
             raise ValueError(
-                f"Number of bits has to be a positive integer! (Received: {n_bits})"
+                f"Number of bits has to be a positve integer, which is > 0! (Received: {n_bits})"
             )
+        self._n_bits = n_bits
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -124,37 +125,18 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
 
         return self
 
-    def pretransform_single(
-        self, value: RDKitMol
-    ) -> ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]:
-        """Transform a single compound to a dictionary.
-
-        Keys denote the feature position, values the count. Here always 1.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            Molecule for which the fingerprint is generated.
+    def _get_fp_generator(self) -> rdFingerprintGenerator.FingerprintGenerator:
+        """Get the fingerprint generator.
 
         Returns
         -------
-        dict[int, int]
-            Dictionary with feature-position as key and count as value.
+        rdFingerprintGenerator.FingerprintGenerator
+            RDKit fingerprint generator.
         """
-        fingerprint_generator = rdFingerprintGenerator.GetMorganGenerator(
+        return rdFingerprintGenerator.GetMorganGenerator(
             radius=self.radius,
             fpSize=self._n_bits,
         )
-
-        if self._return_as == "explicit_bit_vect":
-            return fingerprint_generator.GetFingerprint(value)
-        if self._return_as == "dense":
-            return fingerprint_generator.GetFingerprintAsNumPy(value)
-        # sparse return type
-        return {
-            bit_idx: 1
-            for bit_idx in fingerprint_generator.GetFingerprint(value).GetOnBits()
-        }
 
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule.

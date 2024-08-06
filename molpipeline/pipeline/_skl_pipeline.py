@@ -82,7 +82,10 @@ class Pipeline(_Pipeline):
         """
         super().__init__(steps, memory=memory, verbose=verbose)
         self.n_jobs = n_jobs
+        self._set_error_resinserter()
 
+    def _set_error_resinserter(self) -> None:
+        """Connect the error resinserters with the error filters."""
         error_replacer_list = [
             e_filler
             for _, e_filler in self.steps
@@ -288,6 +291,9 @@ class Pipeline(_Pipeline):
                     self.steps[idx_i] = (name_i, ele_i)
                 if y is not None:
                     y = fitted_transformer.co_transform(y)
+                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list):
+                    self.steps[idx_i] = (name_i, ele_i)
+                self._set_error_resinserter()
             elif isinstance(name, list) or isinstance(step_idx, list):
                 raise AssertionError()
             else:
