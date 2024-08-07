@@ -6,4 +6,5 @@ rdkit >= 2023.9.1
 scipy
 setuptools
 scikit-learn >= 1.4.0
+shap
 typing_extensions
