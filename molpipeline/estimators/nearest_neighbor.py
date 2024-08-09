@@ -37,7 +37,7 @@ SklearnNativeMetrics = Literal[
 
 AllMetrics = Union[
     SklearnNativeMetrics,
-    Callable[[Any, Any], float | npt.NDArray[np.float_] | Sequence[float]],
+    Callable[[Any, Any], float | npt.NDArray[np.float64] | Sequence[float]],
 ]
 
 
@@ -153,7 +153,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
 
         Returns
         -------
-        tuple[npt.NDArray[Any], npt.NDArray[np.float_]] | npt.NDArray[Any]
+        tuple[npt.NDArray[Any], npt.NDArray[np.float64]] | npt.NDArray[Any]
             The indices of the nearest points in the population matrix and the distances to the points.
         """
         if self.learned_names_ is None:
@@ -179,7 +179,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         y: Sequence[Any],
         return_distance: bool = False,
         n_neighbors: int | None = None,
-    ) -> tuple[npt.NDArray[Any], npt.NDArray[np.float_]] | npt.NDArray[Any]:
+    ) -> tuple[npt.NDArray[Any], npt.NDArray[np.float64]] | npt.NDArray[Any]:
         """Find the k-neighbors of a point.
 
         Parameters

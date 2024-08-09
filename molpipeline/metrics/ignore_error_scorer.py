@@ -43,17 +43,17 @@ def ignored_value_scorer(
         scorer_kwargs["greater_is_better"] = False
 
     def newscore(
-        y_true: npt.NDArray[np.float_ | np.int_],
-        y_pred: npt.NDArray[np.float_ | np.int_],
+        y_true: npt.NDArray[np.float64 | np.int_],
+        y_pred: npt.NDArray[np.float64 | np.int_],
         **kwargs: Any,
     ) -> float:
         """Compute the score for the given prediction arrays.
 
         Parameters
         ----------
-        y_true : npt.NDArray[np.float_ | np.int_]
+        y_true : npt.NDArray[np.float64 | np.int_]
             The true values.
-        y_pred : npt.NDArray[np.float_ | np.int_]
+        y_pred : npt.NDArray[np.float64 | np.int_]
             The predicted values.
         **kwargs
             Additional keyword arguments.

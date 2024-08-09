@@ -53,7 +53,7 @@ class ChempropNeuralFP(ABCChemprop):
     def fit(
         self,
         X: MoleculeDataset,  # pylint: disable=invalid-name
-        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float_],
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
     ) -> Self:
         """Fit the model.
 
@@ -61,7 +61,7 @@ class ChempropNeuralFP(ABCChemprop):
         ----------
         X : MoleculeDataset
             The input data.
-        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float_]
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
 
         Returns
@@ -75,7 +75,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     def transform(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.float_]:
+    ) -> npt.NDArray[np.float64]:
         """Transform the input.
 
         Parameters
@@ -85,7 +85,7 @@ class ChempropNeuralFP(ABCChemprop):
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             The neural fingerprint of the input data.
         """
         self.model.eval()
@@ -95,20 +95,20 @@ class ChempropNeuralFP(ABCChemprop):
     def fit_transform(
         self,
         X: MoleculeDataset,  # pylint: disable=invalid-name
-        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float_],
-    ) -> npt.NDArray[np.float_]:
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
+    ) -> npt.NDArray[np.float64]:
         """Fit the model and transform the input.
 
         Parameters
         ----------
         X : MoleculeDataset
             The input data.
-        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float_]
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             The neural fingerprint of the input data.
         """
         self.fit(X, y)

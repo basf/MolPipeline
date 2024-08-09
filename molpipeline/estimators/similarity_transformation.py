@@ -24,11 +24,11 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
-    training_matrix: npt.NDArray[np.float_] | csr_matrix | None
+    training_matrix: npt.NDArray[np.float64] | csr_matrix | None
         Features seen during fit.
     """
 
-    training_matrix: npt.NDArray[np.float_] | csr_matrix | None
+    training_matrix: npt.NDArray[np.float64] | csr_matrix | None
 
     def __init__(self, distance: bool = False) -> None:
         """Initialize TanimotoSimilarityToTraining.
@@ -44,21 +44,21 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
 
     def _sim(
         self,
-        matrix_a: npt.NDArray[np.float_] | csr_matrix,
-        matrix_b: npt.NDArray[np.float_] | csr_matrix,
-    ) -> npt.NDArray[np.float_]:
+        matrix_a: npt.NDArray[np.float64] | csr_matrix,
+        matrix_b: npt.NDArray[np.float64] | csr_matrix,
+    ) -> npt.NDArray[np.float64]:
         """Compute the similarity matrix.
 
         Parameters
         ----------
-        matrix_a : npt.NDArray[np.float_] | csr_matrix
+        matrix_a : npt.NDArray[np.float64] | csr_matrix
             First matrix.
-        matrix_b : npt.NDArray[np.float_] | csr_matrix
+        matrix_b : npt.NDArray[np.float64] | csr_matrix
             Second matrix.
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             Similarity matrix. If distance is True, the distance matrix is computed instead.
         """
         if not isinstance(matrix_a, csr_matrix):
@@ -71,16 +71,16 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
 
     def fit(
         self,
-        X: npt.NDArray[np.float_] | csr_matrix,  # pylint: disable=invalid-name
-        y: npt.NDArray[np.float_] | None = None,  # pylint: disable=unused-argument
+        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
+        y: npt.NDArray[np.float64] | None = None,  # pylint: disable=unused-argument
     ) -> Self:
         """Fit the model.
 
         Parameters
         ----------
-        X : npt.NDArray[np.float_] | csr_matrix
+        X : npt.NDArray[np.float64] | csr_matrix
             Feature matrix to which the similarity matrix is computed.
-        y : npt.NDArray[np.float_] | None, optional
+        y : npt.NDArray[np.float64] | None, optional
             Labels, by default None and never used
 
         Returns
@@ -92,18 +92,18 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         return self
 
     def transform(
-        self, X: npt.NDArray[np.float_] | csr_matrix  # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.float_]:
+        self, X: npt.NDArray[np.float64] | csr_matrix  # pylint: disable=invalid-name
+    ) -> npt.NDArray[np.float64]:
         """Transform the data.
 
         Parameters
         ----------
-        X : npt.NDArray[np.float_] | csr_matrix
+        X : npt.NDArray[np.float64] | csr_matrix
             Feature matrix to which the similarity matrix is computed.
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             Similarity matrix of X to the training matrix.
         """
         if self.training_matrix is None:
@@ -112,24 +112,24 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
 
     def fit_transform(
         self,
-        X: npt.NDArray[np.float_] | csr_matrix,  # pylint: disable=invalid-name
-        y: npt.NDArray[np.float_] | None = None,
+        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
+        y: npt.NDArray[np.float64] | None = None,
         **fit_params: Any,
-    ) -> npt.NDArray[np.float_]:
+    ) -> npt.NDArray[np.float64]:
         """Fit the model and transform the data.
 
         Parameters
         ----------
-        X: npt.NDArray[np.float_] | csr_matrix
+        X: npt.NDArray[np.float64] | csr_matrix
             Feature matrix to fit the model. Is returned as similarity matrix to itself.
-        y: npt.NDArray[np.float_] | None, optional
+        y: npt.NDArray[np.float64] | None, optional
             Labels, by default None and never used
         **fit_params: Any
             Additional fit parameters. Ignored.
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             Similarity matrix of X to itself.
         """
         self.fit(X, y)

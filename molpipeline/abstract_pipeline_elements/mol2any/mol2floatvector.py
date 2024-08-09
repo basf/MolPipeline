@@ -68,18 +68,18 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
     def assemble_output(
         self,
-        value_list: Iterable[npt.NDArray[np.float_]],
-    ) -> npt.NDArray[np.float_]:
+        value_list: Iterable[npt.NDArray[np.float64]],
+    ) -> npt.NDArray[np.float64]:
         """Transform output of all transform_single operations to matrix.
 
         Parameters
         ----------
-        value_list: Iterable[npt.NDArray[np.float_]]
+        value_list: Iterable[npt.NDArray[np.float64]]
             List of numpy arrays with calculated descriptor values of each molecule.
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             Matrix with descriptor values of each molecule.
         """
         return np.vstack(list(value_list))
@@ -127,7 +127,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         super().set_params(**parameter_copy)
         return self
 
-    def fit_to_result(self, values: list[npt.NDArray[np.float_]]) -> Self:
+    def fit_to_result(self, values: list[npt.NDArray[np.float64]]) -> Self:
         """Fit object to data.
 
         Parameters
@@ -146,25 +146,25 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         return self
 
     def _normalize_matrix(
-        self, value_matrix: npt.NDArray[np.float_]
-    ) -> npt.NDArray[np.float_]:
+        self, value_matrix: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
         """Normalize matrix with descriptor values.
 
         Parameters
         ----------
-        value_matrix: npt.NDArray[np.float_]
+        value_matrix: npt.NDArray[np.float64]
             Matrix with descriptor values of molecules.
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             Normalized matrix with descriptor values of molecules.
         """
         if self._standardizer is not None:
             return self._standardizer.transform(value_matrix)
         return value_matrix
 
-    def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float_]:
+    def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.
 
         Parameters
@@ -174,13 +174,15 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             Matrix with descriptor values of molecules.
         """
-        descriptor_matrix: npt.NDArray[np.float_] = super().transform(values)
+        descriptor_matrix: npt.NDArray[np.float64] = super().transform(values)
         return descriptor_matrix
 
-    def finalize_single(self, value: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+    def finalize_single(
+        self, value: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
         """Finalize single value. Here: standardize vector.
 
         Parameters
@@ -201,7 +203,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     @abc.abstractmethod
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[npt.NDArray[np.float_], InvalidInstance]:
+    ) -> Union[npt.NDArray[np.float64], InvalidInstance]:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters
@@ -211,6 +213,6 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             Vector with descriptor values of molecule.
         """
