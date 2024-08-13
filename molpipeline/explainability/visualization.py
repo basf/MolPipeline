@@ -17,7 +17,7 @@ RNGATuple = tuple[float, float, float, float]
 
 def get_similaritymap_from_weights(
     mol: RDKitMol,
-    weights: npt.NDArray[np.float_] | list[float] | tuple[float],
+    weights: npt.NDArray[np.float64] | list[float] | tuple[float],
     draw2d: Draw.MolDraw2DCairo,
     sigma: float | None = None,
     sigma_f: float = 0.3,
@@ -32,7 +32,7 @@ def get_similaritymap_from_weights(
     ----------
     mol: RDKitMol
         The molecule of interest.
-    weights: Union[npt.NDArray[np.float_], List[float], Tuple[float]]
+    weights: Union[npt.NDArray[np.float64], List[float], Tuple[float]]
         The atomic weights.
     draw2d: Draw.MolDraw2DCairo
         The drawer.
@@ -98,7 +98,7 @@ def get_similaritymap_from_weights(
 
 def rdkit_gaussplot(
     mol: RDKitMol,
-    weights: npt.NDArray[np.float_],
+    weights: npt.NDArray[np.float64],
     n_contour_lines: int = 5,
     color_tuple: tuple[RNGATuple, RNGATuple, RNGATuple] | None = None,
 ) -> Draw.MolDraw2D:
@@ -108,7 +108,7 @@ def rdkit_gaussplot(
     ----------
     mol: RDKitMol
         The molecule.
-    weights: npt.NDArray[np.float_]
+    weights: npt.NDArray[np.float64]
         The weights.
     n_contour_lines: int
         The number of contour lines.
