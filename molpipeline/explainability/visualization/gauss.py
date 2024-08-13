@@ -49,15 +49,15 @@ class GaussFunction2D:
             self.rotation
         ) ** 2 / (2 * self.std2**2)
 
-    def __call__(self, pos: npt.NDArray) -> npt.NDArray:
+    def __call__(self, pos: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
         """Evaluate the Gaussian function at the given positions.
 
-        pos : npt.NDArray
+        pos : npt.NDArray[np.float64]
             Array of positions to evaluate the Gaussian function at.
 
         Returns
         -------
-        npt.NDArray
+        npt.NDArray[np.float64]
             Array of function values at the given positions.
         """
         exponent = self._a * (pos[:, 0] - self.center[0]) ** 2

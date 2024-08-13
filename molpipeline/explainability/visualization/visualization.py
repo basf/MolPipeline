@@ -27,7 +27,7 @@ RGBAtuple = tuple[float, float, float, float]
 
 
 def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float]]:
-    """Returns the extent of the molecule.
+    """Return the extent of the molecule.
 
     x- and y-coordinates of all atoms in the molecule are accessed, returning min- and max-values for both axes.
 
@@ -41,12 +41,12 @@ def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float
     tuple[tuple[float, float], tuple[float, float]]
         Limits of the molecule.
     """
-    coords = []
+    coords_list = []
     conf = mol.GetConformer(0)
     for i, _ in enumerate(mol.GetAtoms()):
         pos = conf.GetAtomPosition(i)
-        coords.append((pos.x, pos.y))
-    coords = np.array(coords)
+        coords_list.append((pos.x, pos.y))
+    coords: npt.NDArray[np.float64] = np.array(coords_list)
     min_p = np.min(coords, axis=0)
     max_p = np.max(coords, axis=0)
     x_lim = min_p[0], max_p[0]
@@ -54,12 +54,14 @@ def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float
     return x_lim, y_lim
 
 
-def pad(lim: Sequence[float] | npt.NDArray, ratio: float) -> tuple[float, float]:
-    """Takes a 2-dimensional vector and adds len(vector) * ratio / 2 to each side and returns obtained vector.
+def pad(
+    lim: Sequence[float] | npt.NDArray[np.float64], ratio: float
+) -> tuple[float, float]:
+    """Take a 2-dimensional vector and adds len(vector) * ratio / 2 to each side and returns obtained vector.
 
     Parameters
     ----------
-    lim: Sequence[float] | npt.NDArray
+    lim: Sequence[float] | npt.NDArray[np.float64]
         Limits which are extended.
     ratio: float
         factor by which the limits are extended.
@@ -77,11 +79,11 @@ def pad(lim: Sequence[float] | npt.NDArray, ratio: float) -> tuple[float, float]
 def color_tuple_to_colormap(
     color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple]
 ) -> Colormap:
-    """Converts a color tuple to a colormap.
+    """Convert a color tuple to a colormap.
 
     Parameters
     ----------
-    color_tuple: ColorTuple
+    color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple]
         The color tuple.
 
     Returns
@@ -112,13 +114,13 @@ def color_tuple_to_colormap(
 
 def mapvalues2mol(
     mol: Chem.Mol,
-    atom_weights: Sequence[float] | npt.NDArray | None = None,
-    bond_weights: Sequence[float] | npt.NDArray | None = None,
+    atom_weights: Sequence[float] | npt.NDArray[np.float64] | None = None,
+    bond_weights: Sequence[float] | npt.NDArray[np.float64] | None = None,
     atom_width: float = 0.3,
     bond_width: float = 0.25,
     bond_length: float = 0.5,
     canvas: rdMolDraw2D.MolDraw2D | None = None,
-    grid_resolution=None,
+    grid_resolution: Sequence[int] | None = None,
     value_lims: Sequence[float] | None = None,
     color: str | Colormap = "bwr",
     padding: Sequence[float] | None = None,
@@ -136,9 +138,9 @@ def mapvalues2mol(
     ----------
     mol: Chem.Mol
         RDKit molecule object which is displayed.
-    atom_weights: Optional[Union[Sequence[float], np.ndarray]]
+    atom_weights: Sequence[float] | npt.NDArray[np.float64] | None
         Array of weights for atoms.
-    bond_weights: Optional[Union[Sequence[float], np.ndarray]]
+    bond_weights: Sequence[float] | npt.NDArray[np.float64] | None
         Array of weights for bonds.
     atom_width: float
         Value for the width of displayed atom weights.
@@ -146,15 +148,15 @@ def mapvalues2mol(
         Value for the width of displayed bond weights (perpendicular to bond-axis).
     bond_length: float
         Value for the length of displayed bond weights (along the bond-axis).
-    canvas: Optional[rdMolDraw2D.MolDraw2D]
+    canvas: rdMolDraw2D.MolDraw2D | None
         RDKit canvas the molecule and heatmap are drawn onto.
-    grid_resolution: Optional[Sequence[int]]
+    grid_resolution: Sequence[int] | None
         Number of pixels of x- and y-axis.
-    value_lims: Optional[Sequence[float]]
+    value_lims: Sequence[float] | None
         Lower and upper limit of displayed values. Values exceeding limit are displayed as maximum (or minimum) value.
-    color: Union[str, Colormap]
+    color: str | Colormap
         Matplotlib colormap or string referring to a matplotlib colormap
-    padding: Optional[Sequence[float]]
+    padding: Sequence[float] | None
         Increase of heatmap size, relative to size of molecule. Usually the heatmap is increased by 100% in each axis
         by padding 50% in each side.
 
@@ -194,8 +196,7 @@ def mapvalues2mol(
         raise ValueError("len(bond_weights) is not equal to number of bonds in mol")
 
     # Setting up the grid
-    xl, yl = get_mol_lims(mol)  # Limit of molecule
-    xl, yl = list(xl), list(yl)
+    xl, yl = [list(lim) for lim in get_mol_lims(mol)]  # Limit of molecule
 
     # Extent of the canvas is approximated by size of molecule scaled by ratio of canvas height and width.
     # Would be nice if this was directly accessible...
