@@ -8,7 +8,10 @@ from sklearn.ensemble import RandomForestClassifier
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.explainability import SHAPTreeExplainer
-from molpipeline.explainability.visualization import rdkit_gaussplot, show_png
+from molpipeline.explainability.visualization.visualization import (
+    structure_heatmap,
+    show_png,
+)
 from molpipeline.mol2any import MolToMorganFP
 
 TEST_SMILES = ["CC", "CCO", "COC", "c1ccccc1(N)", "CCC(-O)O", "CCCN"]
@@ -41,7 +44,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
         for explanation in explanations:
             self.assertTrue(explanation.is_valid())
             self.assertIsInstance(explanation.atom_weights, np.ndarray)
-            drawer = rdkit_gaussplot(
+            drawer = structure_heatmap(
                 explanation.molecule,
                 explanation.atom_weights.tolist(),  # type: ignore[union-attr]
             )  # type: ignore[union-attr]
