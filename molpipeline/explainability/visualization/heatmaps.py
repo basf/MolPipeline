@@ -1,3 +1,10 @@
+"""Module for generating heatmaps from 2D-grids.
+
+Much of the visualization code in this file originates from projects of Christian W. Feldmann:
+    https://github.com/c-feldmann/rdkit_heatmaps
+    https://github.com/c-feldmann/compchemkit
+"""
+
 from typing import *
 import numpy as np
 from rdkit.Chem import Draw
@@ -19,7 +26,7 @@ class Grid2D(abc.ABC):
         y_lim: Tuple[float, float],
         x_res: int,
         y_res: int,
-    ):
+    ) -> None:
         """
 
         Parameters
@@ -49,7 +56,7 @@ class Grid2D(abc.ABC):
         """Length of cell in y-direction."""
         return (max(self.y_lim) - min(self.y_lim)) / self.y_res
 
-    def grid_field_center(self, x_idx: int, y_idx: int) -> Tuple[float, float]:
+    def grid_field_center(self, x_idx: int, y_idx: int) -> tuple[float, float]:
         """Center of cell specified by index along x and y.
 
         Parameters
@@ -62,7 +69,7 @@ class Grid2D(abc.ABC):
         Returns
         -------
         Tuple[float, float]
-            Coordinates of center of cell
+            Coordinates of center of cell.
         """
         x_coord = min(self.x_lim) + self.dx * (x_idx + 0.5)
         y_coord = min(self.y_lim) + self.dy * (y_idx + 0.5)
@@ -70,8 +77,19 @@ class Grid2D(abc.ABC):
 
     def grid_field_lim(
         self, x_idx: int, y_idx: int
-    ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
-        """Returns x and y coordinates for the upper left and lower right position of specified pixel."""
+    ) -> tuple[tuple[float, float], tuple[float, float]]:
+        """Returns x and y coordinates for the upper left and lower right position of specified pixel.
+
+        x_idx: int
+            cell-index along x-axis.
+        y_idx: int
+            cell-index along y-axis.
+
+        Returns
+        -------
+        tuple[tuple[float, float], tuple[float, float]]
+            Coordinates of upper left and lower right corner of cell.
+        """
         upper_left = (
             min(self.x_lim) + self.dx * x_idx,
             min(self.y_lim) + self.dy * y_idx,
@@ -93,6 +111,17 @@ class ColorGrid(Grid2D):
         x_res: int,
         y_res: int,
     ):
+        """Initializes the ColorGrid with limits and resolution of the axes.
+
+        x_lim: tuple[float, float]
+            Extend of the grid along the x-axis (xmin, xmax).
+        y_lim: tuple[float, float]
+            Extend of the grid along the y-axis (ymin, ymax).
+        x_res: int
+            Resolution (number of cells) along x-axis.
+        y_res: int
+            Resolution (number of cells) along y-axis.
+        """
         super().__init__(x_lim, y_lim, x_res, y_res)
         self.color_grid = np.ones((self.x_res, self.y_res, 4))
 
@@ -128,16 +157,21 @@ class ValueGrid(Grid2D):
         self.function_list = []
         self.values = np.zeros((self.x_res, self.y_res))
 
-    def add_function(self, function):
-        """Adds a function to the grid which is evaluated for each cell, when self.evaluate is called."""
+    def add_function(self, function: Callable[[np.ndarray], np.ndarray]) -> None:
+        """Adds a function to the grid which is evaluated for each cell, when `self.evaluate` is called.
+
+        Parameters
+        ----------
+        function: Callable[[np.ndarray], np.ndarray]
+            Function to be evaluated for each cell. The function should take an array of positions and return an array
+            of values, e.g. a Gaussian function.
+        """
         self.function_list.append(function)
 
     def evaluate(self) -> None:
         """Evaluates each function for each cell. Values of cells are calculated as the sum of all function-values.
-        Results are saved to self.values
-        Returns
-        -------
-        None
+
+        The results are saved to `self.values`.
         """
         self.values = np.zeros((self.x_res, self.y_res))
         x_y0_list = np.array(
@@ -158,20 +192,22 @@ class ValueGrid(Grid2D):
 
     def map2color(
         self,
-        c_map: Union[colors.Colormap, str],
-        v_lim: Optional[Sequence[float]] = None,
+        c_map: colors.Colormap | str,
+        v_lim: Sequence[float] | None = None,
     ) -> ColorGrid:
         """Generates a ColorGrid from self.values according to given colormap
 
         Parameters
         ----------
         c_map: Union[colors.Colormap, str]
+            Colormap to be used for mapping values to colors.
         v_lim: Optional[Tuple[float, float]]
+            Limits for the colormap. If not given, the maximum absolute value of `self.values` is used as limit.
 
         Returns
         -------
         ColorGrid
-            ColorGrid with colors corresponding to ValueGrid
+            ColorGrid with colors corresponding to ValueGrid.
         """
         color_grid = ColorGrid(self.x_lim, self.y_lim, self.x_res, self.y_res)
         if not v_lim:
@@ -185,9 +221,17 @@ class ValueGrid(Grid2D):
         return color_grid
 
 
-def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid):
+def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
     """Draws a ColorGrid object to a RDKit Draw.MolDraw2D canvas.
+
     Each pixel is drawn as rectangle, so if you use Draw.MolDrawSVG brace yourself and your RAM!
+
+    Parameters
+    ----------
+    canvas: Draw.MolDraw2D
+        RDKit Draw.MolDraw2D canvas.
+    color_grid: ColorGrid
+        ColorGrid object to be drawn on the canvas.
     """
     for x in range(color_grid.x_res):
         for y in range(color_grid.y_res):

@@ -14,7 +14,7 @@ import numpy as np
 import numpy.typing as npt
 from PIL import Image
 from matplotlib.colors import Colormap
-from rdkit import Geometry, Chem
+from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdMolDraw2D
 from matplotlib.colors import ListedColormap
@@ -23,88 +23,7 @@ from molpipeline.abstract_pipeline_elements.core import RDKitMol
 from molpipeline.explainability.visualization.gauss import GaussFunction2D
 from molpipeline.explainability.visualization.heatmaps import color_canvas, ValueGrid
 
-RNGATuple = tuple[float, float, float, float]
-#
-#
-# def get_similaritymap_from_weights(
-#     mol: RDKitMol,
-#     weights: npt.NDArray[np.float64] | list[float] | tuple[float],
-#     draw2d: Draw.MolDraw2DCairo,
-#     sigma: float | None = None,
-#     sigma_f: float = 0.3,
-#     contour_lines: int = 10,
-#     contour_params: Draw.ContourParams | None = None,
-# ) -> Draw.MolDraw2D:
-#     """Generate the similarity map for a molecule given the atomic weights.
-#
-#     Strongly inspired from Chem.Draw.SimilarityMaps.
-#
-#     Parameters
-#     ----------
-#     mol: RDKitMol
-#         The molecule of interest.
-#     weights: Union[npt.NDArray[np.float64], List[float], Tuple[float]]
-#         The atomic weights.
-#     draw2d: Draw.MolDraw2DCairo
-#         The drawer.
-#     sigma: Optional[float]
-#         The sigma value.
-#     sigma_f: float
-#         The sigma factor.
-#     contour_lines: int
-#         The number of contour lines.
-#     contour_params: Optional[Draw.ContourParams]
-#         The contour parameters.
-#
-#     Returns
-#     -------
-#     Draw.MolDraw2D
-#         The drawer.
-#     """
-#     if mol.GetNumAtoms() < 2:
-#         raise ValueError("too few atoms")
-#     mol = Draw.rdMolDraw2D.PrepareMolForDrawing(mol, addChiralHs=False)
-#     if not mol.GetNumConformers():
-#         Draw.rdDepictor.Compute2DCoords(mol)
-#     if sigma is None:
-#         if mol.GetNumBonds() > 0:
-#             bond = mol.GetBondWithIdx(0)
-#             idx1 = bond.GetBeginAtomIdx()
-#             idx2 = bond.GetEndAtomIdx()
-#             sigma = (
-#                 sigma_f
-#                 * (
-#                     mol.GetConformer().GetAtomPosition(idx1)
-#                     - mol.GetConformer().GetAtomPosition(idx2)
-#                 ).Length()
-#             )
-#         else:
-#             sigma = (
-#                 sigma_f
-#                 * (
-#                     mol.GetConformer().GetAtomPosition(0)
-#                     - mol.GetConformer().GetAtomPosition(1)
-#                 ).Length()
-#             )
-#         sigma = round(sigma, 2)
-#     sigmas = [sigma] * mol.GetNumAtoms()
-#     locs = []
-#     for i in range(mol.GetNumAtoms()):
-#         atom_pos = mol.GetConformer().GetAtomPosition(i)
-#         locs.append(Geometry.Point2D(atom_pos.x, atom_pos.y))
-#     draw2d.DrawMolecule(mol)
-#     draw2d.ClearDrawing()
-#     if not contour_params:
-#         contour_params = Draw.ContourParams()
-#         contour_params.fillGrid = True
-#         contour_params.gridResolution = 0.1
-#         contour_params.extraGridPadding = 0.5
-#     Draw.ContourAndDrawGaussians(
-#         draw2d, locs, weights, sigmas, nContours=contour_lines, params=contour_params
-#     )
-#     draw2d.drawOptions().clearBackground = False
-#     draw2d.DrawMolecule(mol)
-#     return draw2d
+RGBAtuple = tuple[float, float, float, float]
 
 
 def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float]]:
@@ -119,7 +38,7 @@ def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float
 
     Returns
     -------
-    Tuple[Tuple[float, float], Tuple[float, float]]
+    tuple[tuple[float, float], tuple[float, float]]
         Limits of the molecule.
     """
     coords = []
@@ -136,12 +55,12 @@ def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float
 
 
 def pad(lim: Sequence[float] | npt.NDArray, ratio: float) -> tuple[float, float]:
-    """Takes a 2 dimensional vector and adds len(vector) * ratio / 2 to each side and returns obtained vector.
+    """Takes a 2-dimensional vector and adds len(vector) * ratio / 2 to each side and returns obtained vector.
 
     Parameters
     ----------
-    lim: Sequence[float]
-
+    lim: Sequence[float] | npt.NDArray
+        Limits which are extended.
     ratio: float
         factor by which the limits are extended.
 
@@ -155,18 +74,27 @@ def pad(lim: Sequence[float] | npt.NDArray, ratio: float) -> tuple[float, float]
     return lim[0] - diff, lim[1] + diff
 
 
-def color_tuple_to_colormap(color_tuple) -> Colormap:
+def color_tuple_to_colormap(
+    color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple]
+) -> Colormap:
+    """Converts a color tuple to a colormap.
 
-    # coolwarm = ((0.017, 0.50, 0.850, 0.5), (1.0, 1.0, 1.0, 0.5), (1.0, 0.25, 0.0, 0.5))
+    Parameters
+    ----------
+    color_tuple: ColorTuple
+        The color tuple.
+
+    Returns
+    -------
+    Colormap
+        The colormap (a matplotlib data structure).
+    """
 
     if len(color_tuple) != 3:
         raise ValueError("Color tuple must have 3 elements")
 
     # Definition of color
     col1, col2, col3 = map(np.array, color_tuple)
-    # yellow = np.array([1, 1, 0, 1])
-    # white = np.array([1, 1, 1, 1])
-    # purple = np.array([1, 0, 1, 1])
 
     # Creating linear gradient for color mixing
     linspace = np.linspace(0, 1, int(128))
@@ -298,14 +226,14 @@ def mapvalues2mol(
             continue
         pos = conf.GetAtomPosition(i)
         coords = pos.x, pos.y
-        f = GaussFunction2D(
+        func = GaussFunction2D(
             center=coords,
             std1=atom_width,
             std2=atom_width,
             scale=atom_weights[i],
             rotation=0,
         )
-        v_map.add_function(f)
+        v_map.add_function(func)
 
     # Adding Gauss-functions centered at bonds (position between the two bonded-atoms)
     for i, b in enumerate(mol.GetBonds()):  # type: Chem.Bond
@@ -324,14 +252,14 @@ def mapvalues2mol(
 
         bond_center = (a1_coords + a2_coords) / 2
 
-        f = GaussFunction2D(
+        func = GaussFunction2D(
             center=bond_center,
             std1=bond_width,
             std2=bond_length,
             scale=bond_weights[i],
             rotation=angle,
         )
-        v_map.add_function(f)
+        v_map.add_function(func)
 
     # Evaluating all functions at pixel positions to obtain pixel values
     v_map.evaluate()
@@ -351,8 +279,7 @@ def mapvalues2mol(
 def structure_heatmap(
     mol: RDKitMol,
     weights: npt.NDArray[np.float64],
-    n_contour_lines: int = 5,
-    color_tuple: tuple[RNGATuple, RNGATuple, RNGATuple] | None = None,
+    color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
 ) -> Draw.MolDraw2D:
     """Create a Gaussian plot on the molecular structure, highlight atoms with weighted Gaussians.
 
@@ -362,9 +289,7 @@ def structure_heatmap(
         The molecule.
     weights: npt.NDArray[np.float64]
         The weights.
-    n_contour_lines: int
-        The number of contour lines.
-    color_tuple: Tuple[RNGATuple, RNGATuple, RNGATuple]
+    color_tuple: Tuple[RGBAtuple, RGBAtuple, RGBAtuple]
         The color tuple.
 
     Returns
@@ -375,26 +300,18 @@ def structure_heatmap(
     drawer = Draw.MolDraw2DCairo(600, 600)
     # Coloring atoms of element 0 to 100 black
     drawer.drawOptions().updateAtomPalette({i: (0, 0, 0, 1) for i in range(100)})
-    cps = Draw.ContourParams()
-    cps.fillGrid = True
-    cps.gridResolution = 0.02
-    cps.extraGridPadding = 1.2
-    coolwarm = ((0.017, 0.50, 0.850, 0.5), (1.0, 1.0, 1.0, 0.5), (1.0, 0.25, 0.0, 0.5))
+    draw_opt = drawer.drawOptions()
+    draw_opt.padding = 0.2
 
     if color_tuple is None:
+        coolwarm = (
+            (0.017, 0.50, 0.850, 0.5),
+            (1.0, 1.0, 1.0, 0.5),
+            (1.0, 0.25, 0.0, 0.5),
+        )
         color_tuple = coolwarm
 
     color_map = color_tuple_to_colormap(color_tuple)
-
-    # cps.setColourMap(color_tuple)
-    # drawer = get_similaritymap_from_weights(
-    #     mol,
-    #     weights,
-    #     contour_lines=n_contour_lines,
-    #     draw2d=drawer,
-    #     contour_params=cps,
-    #     sigma_f=0.4,
-    # )
 
     mol_copy = Chem.Mol(mol)
     mol_copy = Draw.PrepareMolForDrawing(mol_copy)
