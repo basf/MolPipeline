@@ -14,7 +14,7 @@ from molpipeline.utils.substructure_handling import AtomEnvironment
 
 
 def assign_prediction_importance(
-    bit_dict: dict[int, Sequence[AtomEnvironment]], weights: npt.NDArray[np.float_]
+    bit_dict: dict[int, Sequence[AtomEnvironment]], weights: npt.NDArray[np.float64]
 ) -> dict[int, float]:
     """Assign the prediction importance.
 
@@ -25,7 +25,7 @@ def assign_prediction_importance(
     ----------
     bit_dict : dict[int, Sequence[AtomEnvironment]]
         The bit dictionary.
-    weights : npt.NDArray[np.float_]
+    weights : npt.NDArray[np.float64]
         The weights.
 
     Returns
@@ -50,7 +50,7 @@ def assign_prediction_importance(
 
 
 def fingerprint_shap_to_atomweights(
-    mol: RDKitMol, fingerprint_element: MolToMorganFP, shap_mat: npt.NDArray[np.float_]
+    mol: RDKitMol, fingerprint_element: MolToMorganFP, shap_mat: npt.NDArray[np.float64]
 ) -> list[float]:
     """Convert SHAP values to atom weights.
 
@@ -63,7 +63,7 @@ def fingerprint_shap_to_atomweights(
         The molecule.
     fingerprint_element : MolToMorganFP
         The fingerprint element.
-    shap_mat : npt.NDArray[np.float_]
+    shap_mat : npt.NDArray[np.float64]
         The SHAP values.
 
     Returns

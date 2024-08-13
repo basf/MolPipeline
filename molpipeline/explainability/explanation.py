@@ -15,17 +15,17 @@ class Explanation:
     """Class representing explanations of a prediction."""
 
     # input data
-    feature_vector: npt.NDArray[np.float_] | None = None
+    feature_vector: npt.NDArray[np.float64] | None = None
     feature_names: list[str] | None = None
     molecule: RDKitMol | None = None
-    prediction: float | npt.NDArray[np.float_] | None = None
+    prediction: float | npt.NDArray[np.float64] | None = None
 
     # explanation results mappable to the feature vector
-    feature_weights: npt.NDArray[np.float_] | None = None
+    feature_weights: npt.NDArray[np.float64] | None = None
 
     # explanation results mappable to the molecule.
-    atom_weights: npt.NDArray[np.float_] | None = None
-    bond_weights: npt.NDArray[np.float_] | None = None
+    atom_weights: npt.NDArray[np.float64] | None = None
+    bond_weights: npt.NDArray[np.float64] | None = None
 
     def is_valid(self) -> bool:
         """Check if the explanation is valid.

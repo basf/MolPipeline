@@ -42,7 +42,7 @@ def _to_dense(
 # This function might also be put at a more central position in the lib.
 def _get_predictions(
     pipeline: Pipeline, feature_matrix: npt.NDArray[Any] | spmatrix
-) -> npt.NDArray[np.float_]:
+) -> npt.NDArray[np.float64]:
     """Get the predictions of a model.
 
     Raises if no adequate method is found.
@@ -56,7 +56,7 @@ def _get_predictions(
 
     Returns
     -------
-    npt.NDArray[np.float_]
+    npt.NDArray[np.float64]
         The predictions.
     """
     if hasattr(pipeline, "predict_proba"):
@@ -69,27 +69,27 @@ def _get_predictions(
 
 
 def _convert_shap_feature_weights_to_atom_weights(
-    feature_weights: npt.NDArray[np.float_],
+    feature_weights: npt.NDArray[np.float64],
     molecule: OptionalMol,
     featurization_element: MolToMorganFP,
-    feature_vector: npt.NDArray[np.float_],
-) -> npt.NDArray[np.float_]:
+    feature_vector: npt.NDArray[np.float64],
+) -> npt.NDArray[np.float64]:
     """Convert SHAP feature weights to atom weights.
 
     Parameters
     ----------
-    feature_weights : npt.NDArray[np.float_]
+    feature_weights : npt.NDArray[np.float64]
         The feature weights.
     molecule : OptionalMol
         The molecule.
     featurization_element : MolToMorganFP
         The featurization element.
-    feature_vector : npt.NDArray[np.float_]
+    feature_vector : npt.NDArray[np.float64]
         The feature vector.
 
     Returns
     -------
-    npt.NDArray[np.float_]
+    npt.NDArray[np.float64]
         The atom weights.
     """
     if feature_weights.ndim == 1:
