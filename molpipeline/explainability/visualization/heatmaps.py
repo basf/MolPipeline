@@ -5,13 +5,14 @@ Much of the visualization code in this file originates from projects of Christia
     https://github.com/c-feldmann/compchemkit
 """
 
-from typing import *
+import abc
+from typing import Sequence, Callable
+
 import numpy as np
+import numpy.typing as npt
+from matplotlib import cm, colors
 from rdkit.Chem import Draw
 from rdkit.Geometry.rdGeometry import Point2D
-import abc
-import matplotlib.colors as colors
-from matplotlib import cm
 
 
 class Grid2D(abc.ABC):
@@ -22,12 +23,12 @@ class Grid2D(abc.ABC):
 
     def __init__(
         self,
-        x_lim: Tuple[float, float],
-        y_lim: Tuple[float, float],
+        x_lim: tuple[float, float],
+        y_lim: tuple[float, float],
         x_res: int,
         y_res: int,
     ) -> None:
-        """
+        """Initializes the Grid2D with limits and resolution of the axes.
 
         Parameters
         ----------
@@ -78,7 +79,7 @@ class Grid2D(abc.ABC):
     def grid_field_lim(
         self, x_idx: int, y_idx: int
     ) -> tuple[tuple[float, float], tuple[float, float]]:
-        """Returns x and y coordinates for the upper left and lower right position of specified pixel.
+        """Get x and y coordinates for the upper left and lower right position of specified pixel.
 
         x_idx: int
             cell-index along x-axis.
@@ -106,12 +107,12 @@ class ColorGrid(Grid2D):
 
     def __init__(
         self,
-        x_lim: Tuple[float, float],
-        y_lim: Tuple[float, float],
+        x_lim: tuple[float, float],
+        y_lim: tuple[float, float],
         x_res: int,
         y_res: int,
     ):
-        """Initializes the ColorGrid with limits and resolution of the axes.
+        """Initialize the ColorGrid with limits and resolution of the axes.
 
         x_lim: tuple[float, float]
             Extend of the grid along the x-axis (xmin, xmax).
@@ -127,7 +128,7 @@ class ColorGrid(Grid2D):
 
 
 class ValueGrid(Grid2D):
-    """Calculates and stores values of cells
+    """Calculate and store values of cells.
 
     Evaluates all added functions for the position of each cell and calculates the value of each cell as sum of these
     functions.
@@ -135,12 +136,12 @@ class ValueGrid(Grid2D):
 
     def __init__(
         self,
-        x_lim: Tuple[float, float],
-        y_lim: Tuple[float, float],
+        x_lim: tuple[float, float],
+        y_lim: tuple[float, float],
         x_res: int,
         y_res: int,
     ):
-        """Initializes the ValueGrid with limits and resolution of the axes.
+        """Initialize the ValueGrid with limits and resolution of the axes.
 
         Parameters
         ----------
@@ -154,22 +155,26 @@ class ValueGrid(Grid2D):
             Resolution (number of cells) along y-axis.
         """
         super().__init__(x_lim, y_lim, x_res, y_res)
-        self.function_list = []
+        self.function_list: list[
+            Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
+        ] = []
         self.values = np.zeros((self.x_res, self.y_res))
 
-    def add_function(self, function: Callable[[np.ndarray], np.ndarray]) -> None:
-        """Adds a function to the grid which is evaluated for each cell, when `self.evaluate` is called.
+    def add_function(
+        self, function: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
+    ) -> None:
+        """Add a function to the grid which is evaluated for each cell, when `self.evaluate` is called.
 
         Parameters
         ----------
-        function: Callable[[np.ndarray], np.ndarray]
+        function: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
             Function to be evaluated for each cell. The function should take an array of positions and return an array
             of values, e.g. a Gaussian function.
         """
         self.function_list.append(function)
 
     def evaluate(self) -> None:
-        """Evaluates each function for each cell. Values of cells are calculated as the sum of all function-values.
+        """Evaluate each function for each cell. Values of cells are calculated as the sum of all function-values.
 
         The results are saved to `self.values`.
         """
@@ -195,7 +200,7 @@ class ValueGrid(Grid2D):
         c_map: colors.Colormap | str,
         v_lim: Sequence[float] | None = None,
     ) -> ColorGrid:
-        """Generates a ColorGrid from self.values according to given colormap
+        """Generate a ColorGrid from `self.values` according to given colormap
 
         Parameters
         ----------
@@ -222,7 +227,7 @@ class ValueGrid(Grid2D):
 
 
 def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
-    """Draws a ColorGrid object to a RDKit Draw.MolDraw2D canvas.
+    """Draw a ColorGrid object to a RDKit Draw.MolDraw2D canvas.
 
     Each pixel is drawn as rectangle, so if you use Draw.MolDrawSVG brace yourself and your RAM!
 
