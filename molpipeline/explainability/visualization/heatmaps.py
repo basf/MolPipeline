@@ -23,8 +23,8 @@ class Grid2D(abc.ABC):
 
     def __init__(
         self,
-        x_lim: tuple[float, float],
-        y_lim: tuple[float, float],
+        x_lim: Sequence[float],
+        y_lim: Sequence[float],
         x_res: int,
         y_res: int,
     ) -> None:
@@ -32,15 +32,20 @@ class Grid2D(abc.ABC):
 
         Parameters
         ----------
-        x_lim: Tuple[float, float]
+        x_lim: Sequence[float]
             Extend of the grid along the x-axis (xmin, xmax).
-        y_lim: Tuple[float, float]
+        y_lim: Sequence[float]
             Extend of the grid along the y-axis (ymin, ymax).
         x_res: int
             Resolution (number of cells) along x-axis.
         y_res: int
             Resolution (number of cells) along y-axis.
         """
+        if len(x_lim) != 2:
+            raise ValueError("x_lim must be of length 2.")
+        if len(y_lim) != 2:
+            raise ValueError("y_lim must be of length 2.")
+
         self.x_lim = x_lim
         self.y_lim = y_lim
         self.x_res = x_res
@@ -140,8 +145,8 @@ class ValueGrid(Grid2D):
 
     def __init__(
         self,
-        x_lim: tuple[float, float],
-        y_lim: tuple[float, float],
+        x_lim: Sequence[float],
+        y_lim: Sequence[float],
         x_res: int,
         y_res: int,
     ):
@@ -149,9 +154,9 @@ class ValueGrid(Grid2D):
 
         Parameters
         ----------
-        x_lim: Tuple[float, float]
+        x_lim: Sequence[float]
             Extend of the grid along the x-axis (xmin, xmax).
-        y_lim: Tuple[float, float]
+        y_lim: Sequence[float]
             Extend of the grid along the y-axis (ymin, ymax).
         x_res: int
             Resolution (number of cells) along x-axis.
