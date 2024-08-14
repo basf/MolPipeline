@@ -319,18 +319,16 @@ def mapvalues2mol(
     rdMolDraw2D.MolDraw2D
         Drawing of molecule and corresponding heatmap.
     """
-    if not isinstance(atom_weights, np.ndarray):
-        atom_weights = np.array(atom_weights)
-
-    if not isinstance(bond_weights, np.ndarray):
-        atom_weights = np.array(atom_weights)
-
-    # assign default values
+    # assign default values and convert to numpy array
     if atom_weights is None:
         atom_weights = np.zeros(len(mol.GetAtoms()))
+    elif not isinstance(atom_weights, np.ndarray):
+        atom_weights = np.array(atom_weights)
 
     if bond_weights is None:
         bond_weights = np.zeros(len(mol.GetBonds()))
+    elif not isinstance(bond_weights, np.ndarray):
+        bond_weights = np.array(bond_weights)
 
     if not canvas:
         canvas = rdMolDraw2D.MolDraw2DCairo(800, 450)

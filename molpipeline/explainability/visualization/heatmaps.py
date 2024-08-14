@@ -114,8 +114,8 @@ class ColorGrid(Grid2D):
 
     def __init__(
         self,
-        x_lim: tuple[float, float],
-        y_lim: tuple[float, float],
+        x_lim: Sequence[float],
+        y_lim: Sequence[float],
         x_res: int,
         y_res: int,
     ):
@@ -123,9 +123,9 @@ class ColorGrid(Grid2D):
 
         Parameters
         ----------
-        x_lim: tuple[float, float]
+        x_lim: Sequence[float]
             Extend of the grid along the x-axis (xmin, xmax).
-        y_lim: tuple[float, float]
+        y_lim: Sequence[float]
             Extend of the grid along the y-axis (ymin, ymax).
         x_res: int
             Resolution (number of cells) along x-axis.
