@@ -250,9 +250,12 @@ def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
     color_grid: ColorGrid
         ColorGrid object to be drawn on the canvas.
     """
-    for x in range(color_grid.x_res):
-        for y in range(color_grid.y_res):
-            upper_left, lower_right = color_grid.grid_field_lim(x, y)
-            upper_left, lower_right = Point2D(*upper_left), Point2D(*lower_right)
-            canvas.SetColour(tuple(color_grid.color_grid[x, y]))
-            canvas.DrawRect(upper_left, lower_right)
+    # draw only grid points whose color is not white.
+    # we check for the exact values of white (1,1,1). np.isclose returns almost the same pixels but is slightly slower.
+    mask = np.where(~np.all(color_grid.color_grid[:, :, :3] == [1, 1, 1], axis=2))
+
+    for x, y in zip(*mask):
+        upper_left, lower_right = color_grid.grid_field_lim(x, y)
+        upper_left, lower_right = Point2D(*upper_left), Point2D(*lower_right)
+        canvas.SetColour(tuple(color_grid.color_grid[x, y]))
+        canvas.DrawRect(upper_left, lower_right)

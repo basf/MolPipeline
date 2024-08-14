@@ -381,6 +381,8 @@ def structure_heatmap(
     mol: RDKitMol,
     weights: npt.NDArray[np.float64],
     color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
+    width: int = 600,
+    height: int = 600,
 ) -> Draw.MolDraw2D:
     """Create a Gaussian plot on the molecular structure, highlight atoms with weighted Gaussians.
 
@@ -392,13 +394,17 @@ def structure_heatmap(
         The weights.
     color_tuple: Tuple[RGBAtuple, RGBAtuple, RGBAtuple]
         The color tuple.
+    width: int
+        The width of the image in number of pixels.
+    height: int
+        The height of the image in number of pixels.
 
     Returns
     -------
     Draw.MolDraw2D
         The configured drawer.
     """
-    drawer = Draw.MolDraw2DCairo(600, 600)
+    drawer = Draw.MolDraw2DCairo(width, height)
     # Coloring atoms of element 0 to 100 black
     drawer.drawOptions().updateAtomPalette({i: (0, 0, 0, 1) for i in range(100)})
     draw_opt = drawer.drawOptions()
