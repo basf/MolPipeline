@@ -45,8 +45,11 @@ class TestExplainabilityVisualization(unittest.TestCase):
             self.assertTrue(explanation.is_valid())
             self.assertIsInstance(explanation.atom_weights, np.ndarray)
             drawer = structure_heatmap(
-                explanation.molecule, explanation.atom_weights, width=128, height=128
-            )
+                explanation.molecule,
+                explanation.atom_weights,
+                width=128,
+                height=128,
+            )  # type: ignore[union-attr]
 
             self.assertIsNotNone(drawer)
 
