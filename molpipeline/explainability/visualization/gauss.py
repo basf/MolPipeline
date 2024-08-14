@@ -9,50 +9,54 @@ import numpy as np
 import numpy.typing as npt
 
 
-class GaussFunction2D:
-    """2D Gaussian function."""
+# pylint: disable=too-few-public-methods
+class GaussFunctor2D:
+    """2D Gaussian functor."""
 
     def __init__(
         self,
-        center: tuple[float, float],
+        center: npt.NDArray[np.float64],
         std1: float = 1,
         std2: float = 1,
         scale: float = 1,
         rotation: float = 0,
     ) -> None:
-        """Initialize 2D Gaussian function.
+        """Initialize 2D Gaussian functor.
 
-        center : tuple[float, float]
+        Parameters
+        ----------
+        center: npt.NDArray[np.float64]
             Center of the Gaussian function.
-        std1 : float
+        std1: float
             Standard deviation along the first axis.
-        std2 : float
+        std2: float
             Standard deviation along the second axis.
-        scale : float
+        scale: float
             Scaling factor.
-        rotation : float
+        rotation: float
             Rotation angle in radians.
         """
-        self.center = np.array(center)
-        self.std1 = std1
-        self.std2 = std2
+        self.center = center
+        self.std = np.array([std1, std2]) ** 2  # scale stds to variance
         self.scale = scale
         self.rotation = rotation
 
-        self._a = np.cos(self.rotation) ** 2 / (2 * self.std1**2) + np.sin(
+        self._a = np.cos(self.rotation) ** 2 / (2 * self.std[0]) + np.sin(
             self.rotation
-        ) ** 2 / (2 * self.std2**2)
-        self._b = -np.sin(2 * self.rotation) / (4 * self.std1**2) + np.sin(
+        ) ** 2 / (2 * self.std[1])
+        self._b = -np.sin(2 * self.rotation) / (4 * self.std[0]) + np.sin(
             2 * self.rotation
-        ) / (4 * self.std2**2)
-        self._c = np.sin(self.rotation) ** 2 / (2 * self.std1**2) + np.cos(
+        ) / (4 * self.std[1])
+        self._c = np.sin(self.rotation) ** 2 / (2 * self.std[0]) + np.cos(
             self.rotation
-        ) ** 2 / (2 * self.std2**2)
+        ) ** 2 / (2 * self.std[1])
 
     def __call__(self, pos: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
         """Evaluate the Gaussian function at the given positions.
 
-        pos : npt.NDArray[np.float64]
+        Parameters
+        ----------
+        pos: npt.NDArray[np.float64]
             Array of positions to evaluate the Gaussian function at.
 
         Returns

@@ -28,7 +28,7 @@ class Grid2D(abc.ABC):
         x_res: int,
         y_res: int,
     ) -> None:
-        """Initializes the Grid2D with limits and resolution of the axes.
+        """Initialize the Grid2D with limits and resolution of the axes.
 
         Parameters
         ----------
@@ -63,13 +63,13 @@ class Grid2D(abc.ABC):
         Parameters
         ----------
         x_idx: int
-             cell-index along x-axis.
-        y_idx:int
-             cell-index along y-axis.
+            cell-index along x-axis.
+        y_idx: int
+            cell-index along y-axis.
 
         Returns
         -------
-        Tuple[float, float]
+        tuple[float, float]
             Coordinates of center of cell.
         """
         x_coord = min(self.x_lim) + self.dx * (x_idx + 0.5)
@@ -114,6 +114,8 @@ class ColorGrid(Grid2D):
     ):
         """Initialize the ColorGrid with limits and resolution of the axes.
 
+        Parameters
+        ----------
         x_lim: tuple[float, float]
             Extend of the grid along the x-axis (xmin, xmax).
         y_lim: tuple[float, float]
@@ -192,7 +194,10 @@ class ValueGrid(Grid2D):
         for f in self.function_list:
             values = f(coordinate_pairs)
             values = values.reshape(self.y_res, self.x_res).T
-            assert values.shape == self.values.shape, (values.shape, self.values.shape)
+            if values.shape != self.values.shape:
+                raise AssertionError(
+                    f"Function does not return correct shape. Shape was {(values.shape, self.values.shape)}"
+                )
             self.values += values
 
     def map2color(
@@ -200,7 +205,7 @@ class ValueGrid(Grid2D):
         c_map: colors.Colormap | str,
         v_lim: Sequence[float] | None = None,
     ) -> ColorGrid:
-        """Generate a ColorGrid from `self.values` according to given colormap
+        """Generate a ColorGrid from `self.values` according to given colormap.
 
         Parameters
         ----------
