@@ -46,7 +46,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
             self.assertIsInstance(explanation.atom_weights, np.ndarray)
             drawer = structure_heatmap(
                 explanation.molecule,
-                explanation.atom_weights,  # type: ignore[union-attr]
+                explanation.atom_weights,  # type: ignore[arg-type]
                 width=128,
                 height=128,
             )  # type: ignore[union-attr]

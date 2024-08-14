@@ -379,7 +379,7 @@ def mapvalues2mol(
 
 def structure_heatmap(
     mol: RDKitMol,
-    weights: npt.NDArray[np.float64],
+    atom_weights: npt.NDArray[np.float64],
     color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
     height: int = 600,
@@ -390,8 +390,8 @@ def structure_heatmap(
     ----------
     mol: RDKitMol
         The molecule.
-    weights: npt.NDArray[np.float64]
-        The weights.
+    atom_weights: npt.NDArray[np.float64]
+        The atom weights.
     color_tuple: Tuple[RGBAtuple, RGBAtuple, RGBAtuple]
         The color tuple.
     width: int
@@ -424,7 +424,7 @@ def structure_heatmap(
     mol_copy = Draw.PrepareMolForDrawing(mol_copy)
     mapvalues2mol(
         mol_copy,
-        atom_weights=weights,
+        atom_weights=atom_weights,
         bond_weights=None,
         atom_width=0.5,  # 0.4
         bond_width=0.25,
