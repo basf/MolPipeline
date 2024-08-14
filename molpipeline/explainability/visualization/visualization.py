@@ -137,7 +137,8 @@ def _make_grid(
     ValueGrid
         ValueGrid object.
     """
-
+    xl: list[float]
+    yl: list[float]
     xl, yl = [list(lim) for lim in get_mol_lims(mol)]  # Limit of molecule
 
     # Extent of the canvas is approximated by size of molecule scaled by ratio of canvas height and width.
@@ -157,8 +158,8 @@ def _make_grid(
         xl[0] -= (mol_width_new - mol_width) / 2
         xl[1] += (mol_width_new - mol_width) / 2
 
-    xl = pad(xl, padding[0])  # Increasing size of x-axis
-    yl = pad(yl, padding[1])  # Increasing size of y-axis
+    xl = list(pad(xl, padding[0]))  # Increasing size of x-axis
+    yl = list(pad(yl, padding[1]))  # Increasing size of y-axis
     v_map = ValueGrid(xl, yl, grid_resolution[0], grid_resolution[1])
     return v_map
 
@@ -237,9 +238,8 @@ def _add_gaussians_for_bonds(
     ValueGrid
         ValueGrid object with added functions.
     """
-
     # Adding Gauss-functions centered at bonds (position between the two bonded-atoms)
-    for i, b in enumerate(mol.GetBonds()):  # type: Chem.Bond
+    for i, b in enumerate(mol.GetBonds()):
         if bond_weights[i] == 0:
             continue
         a1 = b.GetBeginAtom().GetIdx()
@@ -319,7 +319,6 @@ def mapvalues2mol(
     rdMolDraw2D.MolDraw2D
         Drawing of molecule and corresponding heatmap.
     """
-
     if not isinstance(atom_weights, np.ndarray):
         atom_weights = np.array(atom_weights)
 
