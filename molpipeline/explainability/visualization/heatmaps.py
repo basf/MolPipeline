@@ -81,6 +81,8 @@ class Grid2D(abc.ABC):
     ) -> tuple[tuple[float, float], tuple[float, float]]:
         """Get x and y coordinates for the upper left and lower right position of specified pixel.
 
+        Parameters
+        ----------
         x_idx: int
             cell-index along x-axis.
         y_idx: int

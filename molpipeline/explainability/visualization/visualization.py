@@ -119,7 +119,25 @@ def _make_grid(
     grid_resolution: Sequence[int],
     padding: Sequence[float],
 ) -> ValueGrid:
-    # Setting up the grid
+    """Create a grid for the molecule.
+
+    Parameters
+    ----------
+    mol: Chem.Mol
+        RDKit molecule object.
+    canvas: rdMolDraw2D.MolDraw2D
+        RDKit canvas.
+    grid_resolution: Sequence[int]
+        Resolution of the grid.
+    padding: Sequence[float]
+        Padding of the grid.
+
+    Returns
+    -------
+    ValueGrid
+        ValueGrid object.
+    """
+
     xl, yl = [list(lim) for lim in get_mol_lims(mol)]  # Limit of molecule
 
     # Extent of the canvas is approximated by size of molecule scaled by ratio of canvas height and width.
@@ -152,7 +170,26 @@ def _add_gaussians_for_atoms(
     atom_weights: npt.NDArray[np.float64],
     atom_width: float,
 ) -> ValueGrid:
-    # Adding Gauss-functions centered at atoms
+    """Add Gauss-functions centered at atoms to the grid.
+
+    Parameters
+    ----------
+    mol: Chem.Mol
+        RDKit molecule object.
+    conf: Chem.Conformer
+        Conformation of the molecule.
+    v_map: ValueGrid
+        ValueGrid object to which the functions are added.
+    atom_weights: npt.NDArray[np.float64]
+        Array of weights for atoms.
+    atom_width: float
+        Width of the displayed atom weights.
+
+    Returns
+    -------
+    ValueGrid
+        ValueGrid object with added functions.
+    """
     for i, _ in enumerate(mol.GetAtoms()):
         if atom_weights[i] == 0:
             continue
@@ -169,6 +206,7 @@ def _add_gaussians_for_atoms(
     return v_map
 
 
+# pylint: disable=too-many-locals
 def _add_gaussians_for_bonds(
     mol: Chem.Mol,
     conf: Chem.Conformer,
@@ -177,6 +215,29 @@ def _add_gaussians_for_bonds(
     bond_width: float,
     bond_length: float,
 ) -> ValueGrid:
+    """Add Gauss-functions centered at bonds to the grid.
+
+    Parameters
+    ----------
+    mol: Chem.Mol
+        RDKit molecule object.
+    conf: Chem.Conformer
+        Conformation of the molecule.
+    v_map: ValueGrid
+        ValueGrid object to which the functions are added.
+    bond_weights: npt.NDArray[np.float64]
+        Array of weights for bonds.
+    bond_width: float
+        Width of the displayed bond weights (perpendicular to bond-axis).
+    bond_length: float
+        Length of the displayed bond weights (along the bond-axis).
+
+    Returns
+    -------
+    ValueGrid
+        ValueGrid object with added functions.
+    """
+
     # Adding Gauss-functions centered at bonds (position between the two bonded-atoms)
     for i, b in enumerate(mol.GetBonds()):  # type: Chem.Bond
         if bond_weights[i] == 0:
@@ -258,6 +319,13 @@ def mapvalues2mol(
     rdMolDraw2D.MolDraw2D
         Drawing of molecule and corresponding heatmap.
     """
+
+    if not isinstance(atom_weights, np.ndarray):
+        atom_weights = np.array(atom_weights)
+
+    if not isinstance(bond_weights, np.ndarray):
+        atom_weights = np.array(atom_weights)
+
     # assign default values
     if atom_weights is None:
         atom_weights = np.zeros(len(mol.GetAtoms()))
