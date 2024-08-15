@@ -10,8 +10,9 @@ from molpipeline.mol2any import MolToBool
 
 
 class TestCustomFilter(unittest.TestCase):
+    """Test the custom filter element."""
 
-    def test_transform(self):
+    def test_transform(self) -> None:
         """Test the custom filter."""
         mol_list = [
             Chem.MolFromSmiles("CC"),
