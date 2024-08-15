@@ -50,3 +50,23 @@ class MolToBool(MolToAnyPipelineElement):
         if isinstance(value, InvalidInstance):
             return False
         return True
+
+    def transform_single(self, value: Any) -> Any:
+        """Transform a single molecule to the new representation.
+
+        RemovedMolecule objects are passed without change, as no transformations are applicable.
+
+        Parameters
+        ----------
+        value: Any
+            Current representation of the molecule. (Eg. SMILES, RDKit Mol, ...)
+
+        Returns
+        -------
+        Any
+            New representation of the molecule. (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
+        """
+        pre_value = self.pretransform_single(value)
+        if isinstance(pre_value, InvalidInstance):
+            return pre_value
+        return self.finalize_single(pre_value)

@@ -4,7 +4,9 @@ import unittest
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
-from molpipeline.mol2any.mol2bool import MolToBool
+from molpipeline.any2mol import AutoToMol
+from molpipeline.mol2any import MolToBool
+from molpipeline.mol2mol import InorganicsFilter
 
 
 class TestMolToBool(unittest.TestCase):
@@ -12,7 +14,6 @@ class TestMolToBool(unittest.TestCase):
 
     def test_bool_conversion(self) -> None:
         """Test if the invalid instances are converted to bool."""
-
         mol2bool = MolToBool()
         result = mol2bool.transform(
             [
@@ -26,14 +27,12 @@ class TestMolToBool(unittest.TestCase):
 
     def test_bool_conversion_pipeline(self) -> None:
         """Test if the invalid instances are converted to bool in pipeline."""
-
-        pipeline = Pipeline([("mol2bool", MolToBool())])
-        result = pipeline.transform(
+        pipeline = Pipeline(
             [
-                1,
-                2,
-                InvalidInstance(element_id="test", message="test", element_name="Test"),
-                4,
+                ("auto_to_mol", AutoToMol()),
+                ("inorganic_filter", InorganicsFilter()),
+                ("mol2bool", MolToBool()),
             ]
         )
-        self.assertEqual(result, [True, True, False, True])
+        result = pipeline.transform(["CC", "CCC", "O=C=O"])
+        self.assertEqual(result, [True, True, False])
