@@ -1,6 +1,7 @@
 """Init the module for mol2any pipeline elements."""
 
 from molpipeline.mol2any.mol2bin import MolToBinary
+from molpipeline.mol2any.mol2bool import MolToBool
 from molpipeline.mol2any.mol2concatinated_vector import MolToConcatenatedVector
 from molpipeline.mol2any.mol2inchi import MolToInchi, MolToInchiKey
 from molpipeline.mol2any.mol2maccs_key_fingerprint import MolToMACCSFP
@@ -21,6 +22,7 @@ __all__ = [
     "MolToInchi",
     "MolToInchiKey",
     "MolToRDKitPhysChem",
+    "MolToBool",
 ]
 
 try:

@@ -3,8 +3,8 @@
 from typing import Any
 
 from molpipeline.abstract_pipeline_elements.core import (
-    MolToAnyPipelineElement,
     InvalidInstance,
+    MolToAnyPipelineElement,
 )
 
 
