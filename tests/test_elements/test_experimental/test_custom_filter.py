@@ -2,8 +2,6 @@
 
 import unittest
 
-from rdkit import Chem
-
 from molpipeline import Pipeline
 from molpipeline.any2mol import AutoToMol
 from molpipeline.experimental import CustomFilter
