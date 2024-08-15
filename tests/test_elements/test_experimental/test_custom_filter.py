@@ -20,7 +20,6 @@ class TestCustomFilter(unittest.TestCase):
 
     def test_transform(self) -> None:
         """Test the custom filter."""
-
         mol_list = AutoToMol().transform(self.smiles_list)
         res_filter = CustomFilter(lambda x: x.GetNumAtoms() == 2).transform(mol_list)
         res_bool = MolToBool().transform(res_filter)
