@@ -6,7 +6,6 @@ from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.any2mol import AutoToMol
 from molpipeline.mol2any import MolToBool
-from molpipeline.mol2mol import InorganicsFilter
 
 
 class TestMolToBool(unittest.TestCase):
@@ -30,9 +29,8 @@ class TestMolToBool(unittest.TestCase):
         pipeline = Pipeline(
             [
                 ("auto_to_mol", AutoToMol()),
-                ("inorganic_filter", InorganicsFilter()),
                 ("mol2bool", MolToBool()),
             ]
         )
-        result = pipeline.transform(["CC", "CCC", "O=C=O"])
+        result = pipeline.transform(["CC", "CCC", "no%valid~smiles"])
         self.assertEqual(result, [True, True, False])
