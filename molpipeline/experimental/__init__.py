@@ -1,4 +1,4 @@
-"""Initialize the experimental module."""
+"""Initialize module for experimental classes and functions."""
 
 from molpipeline.experimental.custom_filter import CustomFilter
 
