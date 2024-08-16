@@ -181,7 +181,7 @@ jobs:
       - name: Run unit-tests
         run: |
           # Run only the core test suite in the tests directory.
-          coverage run -m unittest discover tests
+          coverage run --source=molpipeline,tests -m unittest discover tests
           # Create a coverage report. Fail if the coverage is below 85%. Exclude extra packages from the report.
           coverage report --fail-under=85 --omit="*chemprop*","*/*chemprop*/*"
 
@@ -204,7 +204,7 @@ jobs:
       - name: Run unit-tests for chemprop
         run: |
           # Run only the chemprop test suite.
-          coverage run -m unittest discover test_extras/test_chemprop
+          coverage run --source=molpipeline,tests -m unittest discover test_extras/test_chemprop
           # Create a coverage report. Fail if the coverage is below 85%. Include only chemprop files in the report.
           coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*"
 
