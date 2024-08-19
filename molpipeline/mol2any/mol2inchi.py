@@ -15,29 +15,6 @@ from molpipeline.utils.molpipeline_types import RDKitMol
 class MolToInchi(_MolToStringPipelineElement):
     """PipelineElement to transform a molecule to an INCHI string."""
 
-    def __init__(
-        self,
-        name: str = "Mol2Inchi",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize MolToInchiPipelineElement.
-
-        Parameters
-        ----------
-        name: str
-            name of PipelineElement
-        n_jobs: int
-            number of jobs to use for parallelization
-        uuid: Optional[str], optional
-            uuid of PipelineElement, by default None
-
-        Returns
-        -------
-        None
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
     def pretransform_single(self, value: RDKitMol) -> str:
         """Transform a molecule to a INCHI-key string.
 

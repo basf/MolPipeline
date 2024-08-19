@@ -46,25 +46,6 @@ MolHashing = Union[
 class TautomerCanonicalizer(_MolToMolPipelineElement):
     """MolToMolPipelineElement which canonicalizes tautomers of a molecule."""
 
-    def __init__(
-        self,
-        name: str = "TautomerCanonicalizer",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize TautomerCanonicalizer.
-
-        Parameters
-        ----------
-        name: str, optional (default="TautomerCanonicalizer")
-            Name of PipelineElement
-        n_jobs: int, optional (default=1)
-            Number of jobs to use for parallelization
-        uuid: Optional[str], optional (default=None)
-            UUID of PipelineElement. If None, a random UUID is generated.
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Canonicalize tautomers of molecule.
 
@@ -92,25 +73,6 @@ class ChargeParentExtractor(_MolToMolPipelineElement):
 
     The charge-parent is the largest fragment after neutralization.
     """
-
-    def __init__(
-        self,
-        name: str = "ChargeParentExtractor",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize ChargeParentExtractor.
-
-        Parameters
-        ----------
-        name: str
-            Name of PipelineElement
-        n_jobs: int
-            Number of jobs to use for parallelization
-        uuid: Optional[str], optional
-            uuid of PipelineElement, by default None
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Return charge-parent of molecule, which is the largest fragment after neutralization.
@@ -200,24 +162,6 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
 class LargestFragmentChooser(_MolToMolPipelineElement):
     """MolToMolPipelineElement which returns the largest fragment of a molecule."""
 
-    def __init__(
-        self,
-        name: str = "LargestFragmentChooser",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize LargestFragmentChooser.
-
-        Parameters
-        ----------
-        name: str, optional (default="LargestFragmentChooser")
-            Name of PipelineElement.
-        n_jobs: int, optional (default=1)
-            Number of jobs to use for parallelization.
-        uuid: Optional[str], optional (default=None)
-            UUID of PipelineElement. If None, a random UUID is generated.
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Return largest fragment of molecule.
@@ -238,24 +182,6 @@ class LargestFragmentChooser(_MolToMolPipelineElement):
 class MetalDisconnector(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
 
-    def __init__(
-        self,
-        name: str = "MetalDisconnector",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize MetalDisconnector.
-
-        Parameters
-        ----------
-        name: str
-            Name of PipelineElement
-        n_jobs: int
-            Number of jobs to use for parallelization
-        uuid: Optional[str], optional
-            uuid of PipelineElement, by default None
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Cleave bonds with metals.
@@ -280,24 +206,6 @@ class MetalDisconnector(_MolToMolPipelineElement):
 class IsotopeRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes isotope information of atoms in a molecule."""
 
-    def __init__(
-        self,
-        name: str = "IsotopeRemover",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize IsotopeRemover.
-
-        Parameters
-        ----------
-        name: str, optional (default="IsotopeRemover")
-            Name of PipelineElement.
-        n_jobs: int, optional (default=1)
-            Number of jobs to use for parallelization.
-        uuid: Optional[str], optional (default=None)
-            UUID of PipelineElement. If None, a random UUID is generated.
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove isotope information of each atom.
@@ -323,24 +231,6 @@ class IsotopeRemover(_MolToMolPipelineElement):
 class ExplicitHydrogenRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes explicit hydrogen atoms from a molecule."""
 
-    def __init__(
-        self,
-        name: str = "ExplicitHydrogenRemover",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize ExplicitHydrogenRemover.
-
-        Parameters
-        ----------
-        name: str, optional (default="ExplicitHydrogenRemover")
-            Name of PipelineElement
-        n_jobs: int, optional (default=1)
-            Number of jobs to use for parallelization
-        uuid: Optional[str], optional (default=None)
-            UUID of PipelineElement. If None, a random UUID is generated.
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove explicit hydrogen atoms.
@@ -361,24 +251,6 @@ class ExplicitHydrogenRemover(_MolToMolPipelineElement):
 class StereoRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes stereo-information from the molecule."""
 
-    def __init__(
-        self,
-        name: str = "StereoRemover",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize StereoRemover.
-
-        Parameters
-        ----------
-        name: str
-            Name of PipelineElement
-        n_jobs: int
-            Number of jobs to use for parallelization
-        uuid: Optional[str], optional
-            uuid of PipelineElement, by default None
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove stereo-information in molecule.
@@ -401,24 +273,6 @@ class StereoRemover(_MolToMolPipelineElement):
 class SaltRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes metal ions from molecule."""
 
-    def __init__(
-        self,
-        name: str = "SaltRemover",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize SaltRemover.
-
-        Parameters
-        ----------
-        name: str
-            Name of PipelineElement
-        n_jobs: int
-            Number of jobs to use for parallelization
-        uuid: Optional[str], optional
-            uuid of PipelineElement, by default None
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove metal ions.
@@ -605,24 +459,6 @@ class SolventRemover(_MolToMolPipelineElement):
 class Uncharger(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes charges in a molecule, if possible."""
 
-    def __init__(
-        self,
-        name: str = "Uncharger",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize Uncharger.
-
-        Parameters
-        ----------
-        name: str, optional (default="Uncharger")
-            Name of PipelineElement.
-        n_jobs: int, optional (default=1)
-            Number of jobs to use for parallelization.
-        uuid: str | None, optional (default=None)
-            UUID of the pipeline element. If None, a random UUID is generated.
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove charges of molecule.
