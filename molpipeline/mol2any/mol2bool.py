@@ -9,7 +9,11 @@ from molpipeline.abstract_pipeline_elements.core import (
 
 
 class MolToBool(MolToAnyPipelineElement):
-    """Element to generate a bool array from input."""
+    """
+    Element to generate a bool array from input.
+
+    Valid molecules are passed as True, InvalidInstances are passed as False.
+    """
 
     def __init__(
         self,
@@ -52,8 +56,9 @@ class MolToBool(MolToAnyPipelineElement):
         return True
 
     def transform_single(self, value: Any) -> Any:
-        """Transform a single molecule to the new representation.
+        """Transform a single molecule to a bool representation.
 
+        Valid molecules are passed as True, InvalidInstances are passed as False.
         RemovedMolecule objects are passed without change, as no transformations are applicable.
 
         Parameters
@@ -64,9 +69,7 @@ class MolToBool(MolToAnyPipelineElement):
         Returns
         -------
         Any
-            New representation of the molecule. (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
+            Bool representation of the molecule.
         """
         pre_value = self.pretransform_single(value)
-        if isinstance(pre_value, InvalidInstance):
-            return pre_value
         return self.finalize_single(pre_value)
