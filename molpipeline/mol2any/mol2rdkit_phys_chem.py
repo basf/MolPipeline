@@ -170,12 +170,12 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             parent_dict["log_exceptions"] = self._log_exceptions
         return parent_dict
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameters to set
 
         Returns

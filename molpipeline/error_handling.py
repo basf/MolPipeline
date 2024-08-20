@@ -127,12 +127,12 @@ class ErrorFilter(ABCPipelineElement):
             params["element_ids"] = self.element_ids
         return params
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters for this element.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dict of arameters to set.
 
         Returns
@@ -508,12 +508,12 @@ class FilterReinserter(ABCPipelineElement):
             params["fill_value"] = self.fill_value
         return params
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters for this element.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameter dict.
 
         Returns

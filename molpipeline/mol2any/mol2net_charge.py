@@ -145,12 +145,12 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             parent_dict["charge_policy"] = self._charge_method
         return parent_dict
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameters to set
 
         Returns
@@ -161,6 +161,6 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         parameters_shallow_copy = dict(parameters)
         charge_policy = parameters_shallow_copy.pop("charge_policy", None)
         if charge_policy is not None:
-            self._charge_method = charge_policy  # type: ignore
+            self._charge_method = charge_policy
         super().set_params(**parameters_shallow_copy)
         return self

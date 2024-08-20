@@ -25,6 +25,18 @@ _T = TypeVar("_T")
 
 
 def _list_to_dict_with_counts(elements_list: list[_T]) -> dict[_T, int]:
+    """Convert list to dictionary with counts of elements.
+
+    Parameters
+    ----------
+    elements_list: list[_T]
+        List of elements.
+
+    Returns
+    -------
+    dict[_T, int]
+        Dictionary with elements as keys and counts as values.
+    """
     counts_dict: dict[_T, int] = {}
     for element in elements_list:
         if element in counts_dict:
@@ -143,12 +155,12 @@ class ElementFilter(_MolToMolPipelineElement):
             params["allowed_element_numbers"] = self.allowed_element_numbers
         return params
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters of ElementFilter.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameters to set.
 
         Returns
@@ -158,7 +170,7 @@ class ElementFilter(_MolToMolPipelineElement):
         """
         parameter_copy = dict(parameters)
         if "allowed_element_numbers" in parameter_copy:
-            self.allowed_element_numbers = parameter_copy.pop("allowed_element_numbers")  # type: ignore
+            self.allowed_element_numbers = parameter_copy.pop("allowed_element_numbers")
         super().set_params(**parameter_copy)
         return self
 

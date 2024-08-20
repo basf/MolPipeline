@@ -184,12 +184,12 @@ class ABCPipelineElement(abc.ABC):
             "uuid": self.uuid,
         }
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """As the setter function cannot be assessed with super(), this method is implemented for inheritance.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameters to be set.
 
         Returns
@@ -379,12 +379,12 @@ class TransformingPipelineElement(ABCPipelineElement):
         return self.get_params()
 
     @parameters.setter
-    def parameters(self, **parameters: dict[str, Any]) -> None:
+    def parameters(self, **parameters: Any) -> None:
         """Set the parameters of the object.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Object parameters as a dictionary.
 
         Returns

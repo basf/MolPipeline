@@ -91,12 +91,12 @@ class MolToMolReaction(MolToMolPipelineElement):
             parameters["handle_multi"] = self.handle_multi
         return parameters
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set the parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dictionary containing parameters to be set.
 
         Returns
@@ -108,9 +108,9 @@ class MolToMolReaction(MolToMolPipelineElement):
         if "reaction" in parameters:
             self.reaction = parameters["reaction"]
         if "additive_list" in parameters:
-            self.additive_list = parameters["additive_list"]  # type: ignore
+            self.additive_list = parameters["additive_list"]
         if "handle_multi" in parameters:
-            self.handle_multi = parameters["handle_multi"]  # type: ignore
+            self.handle_multi = parameters["handle_multi"]
         return self
 
     @property
