@@ -118,9 +118,7 @@ class ElementFilter(_MolToMolPipelineElement):
         self._allowed_element_numbers: dict[int, tuple[Optional[int], Optional[int]]]
         if allowed_element_numbers is None:
             allowed_element_numbers = self.DEFAULT_ALLOWED_ELEMENT_NUMBERS
-        if isinstance(allowed_element_numbers, list) or isinstance(
-            allowed_element_numbers, set
-        ):
+        if isinstance(allowed_element_numbers, (list, set)):
             self._allowed_element_numbers = {
                 atom_number: (1, None) for atom_number in allowed_element_numbers
             }
@@ -190,6 +188,12 @@ class ElementFilter(_MolToMolPipelineElement):
         elements_list = [atom.GetAtomicNum() for atom in value.GetAtoms()]
         elements_count_dict = _list_to_dict_with_counts(elements_list)
         for element, count in elements_count_dict.items():
+            if element not in self.allowed_element_numbers:
+                return InvalidInstance(
+                    self.uuid,
+                    f"Molecule contains forbidden element {element}.",
+                    self.name,
+                )
             min_count, max_count = self.allowed_element_numbers[element]
             if (min_count is not None and count < min_count) or (
                 max_count is not None and count > max_count
@@ -253,8 +257,7 @@ class SmartsFilter(_BasePatternsFilter):
                             self.name,
                         )
                     )
-                else:
-                    match_counts += 1
+                match_counts += 1
         if self.mode == "any":
             return (
                 value
@@ -265,27 +268,25 @@ class SmartsFilter(_BasePatternsFilter):
                     self.name,
                 )
             )
-        else:
-            if match_counts == len(self.patterns):
-                return (
-                    value
-                    if self.keep
-                    else InvalidInstance(
-                        self.uuid,
-                        "Molecule matches one of the SmartsFilter patterns.",
-                        self.name,
-                    )
+        if match_counts == len(self.patterns):
+            return (
+                value
+                if self.keep
+                else InvalidInstance(
+                    self.uuid,
+                    "Molecule matches one of the SmartsFilter patterns.",
+                    self.name,
                 )
-            else:
-                return (
-                    value
-                    if not self.keep
-                    else InvalidInstance(
-                        self.uuid,
-                        "Molecule does not match all of the SmartsFilter patterns.",
-                        self.name,
-                    )
-                )
+            )
+        return (
+            value
+            if not self.keep
+            else InvalidInstance(
+                self.uuid,
+                "Molecule does not match all of the SmartsFilter patterns.",
+                self.name,
+            )
+        )
 
 
 class SmilesFilter(_BasePatternsFilter):
@@ -340,16 +341,15 @@ class SmilesFilter(_BasePatternsFilter):
                     self.name,
                 )
             )
-        else:
-            return (
-                value
-                if self.keep
-                else InvalidInstance(
-                    self.uuid,
-                    "Molecule does not match all of the SmilesFilter patterns.",
-                    self.name,
-                )
+        return (
+            value
+            if self.keep
+            else InvalidInstance(
+                self.uuid,
+                "Molecule does not match all of the SmilesFilter patterns.",
+                self.name,
             )
+        )
 
 
 class DescriptorsFilter(_MolToMolPipelineElement):
@@ -484,16 +484,15 @@ class DescriptorsFilter(_MolToMolPipelineElement):
                     self.name,
                 )
             )
-        else:
-            return (
-                value
-                if self.keep
-                else InvalidInstance(
-                    self.uuid,
-                    "Molecule does not match all of the DescriptorsFilter descriptors.",
-                    self.name,
-                )
+        return (
+            value
+            if self.keep
+            else InvalidInstance(
+                self.uuid,
+                "Molecule does not match all of the DescriptorsFilter descriptors.",
+                self.name,
             )
+        )
 
 
 class MixtureFilter(_MolToMolPipelineElement):

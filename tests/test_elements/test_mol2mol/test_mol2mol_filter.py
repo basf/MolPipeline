@@ -37,19 +37,19 @@ class MolFilterTest(unittest.TestCase):
     def test_element_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed chemical elements."""
         default_atoms_dict = {
-            1: (None, None),
-            5: (None, None),
-            6: (None, None),
-            7: (None, None),
-            8: (None, None),
-            9: (None, None),
-            14: (None, None),
-            15: (None, None),
-            16: (None, None),
-            17: (None, None),
-            34: (None, None),
-            35: (None, None),
-            53: (None, None),
+            1: (1, None),
+            5: (1, None),
+            6: (1, None),
+            7: (1, None),
+            8: (1, None),
+            9: (1, None),
+            14: (1, None),
+            15: (1, None),
+            16: (1, None),
+            17: (1, None),
+            34: (1, None),
+            35: (1, None),
+            53: (1, None),
         }
 
         element_filter = ElementFilter()

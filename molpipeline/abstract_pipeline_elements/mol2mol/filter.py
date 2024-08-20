@@ -70,7 +70,7 @@ class BasePatternsFilter(MolToMolPipelineElement, abc.ABC):
             List of patterns.
         """
         self._patterns: dict[str, tuple[Optional[int], Optional[int]]]
-        if isinstance(patterns, list) or isinstance(patterns, set):
+        if isinstance(patterns, (list, set)):
             self._patterns = {pat: (1, None) for pat in patterns}
         else:
             self._patterns = {}
