@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold as RDKIT_MurckoScaffold
 
 from molpipeline.abstract_pipeline_elements.core import (
@@ -65,6 +66,8 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
 
     def __init__(
         self,
+        generic_atoms: bool = False,
+        generic_bonds: bool = False,
         name: str = "MakeScaffoldGeneric",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -73,6 +76,10 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
 
         Parameters
         ----------
+        generic_atoms: bool
+            If True, all atoms in the molecule are set to generic atoms (*).
+        generic_bonds: bool
+            If True, all bonds in the molecule are set to any bonds.
         name: str
             Name of pipeline element.
         n_jobs: int
@@ -84,6 +91,8 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         -------
         None
         """
+        self.generic_atoms = generic_atoms
+        self.generic_bonds = generic_bonds
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -100,4 +109,11 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
             Molecule where all atoms are carbon and all bonds are single bonds.
             If transformation failed, it returns InvalidInstance.
         """
-        return RDKIT_MurckoScaffold.MakeScaffoldGeneric(value)
+        scaffold = RDKIT_MurckoScaffold.GetScaffoldForMol(value)
+        if self.generic_atoms:
+            for atom in scaffold.GetAtoms():
+                atom.SetAtomicNum(0)
+        if self.generic_bonds:
+            for bond in scaffold.GetBonds():
+                bond.SetBondType(Chem.rdchem.BondType.UNSPECIFIED)
+        return scaffold
