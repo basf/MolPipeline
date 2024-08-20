@@ -165,7 +165,11 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         generic_atoms = param_copy.pop("generic_atoms", None)
         generic_bonds = param_copy.pop("generic_bonds", None)
         if generic_atoms is not None:
+            if not isinstance(generic_atoms, bool):
+                raise ValueError("generic_atoms must be a boolean.")
             self.generic_atoms = generic_atoms
         if generic_bonds is not None:
+            if not isinstance(generic_bonds, bool):
+                raise ValueError("generic_bonds must be a boolean.")
             self.generic_bonds = generic_bonds
         return self
