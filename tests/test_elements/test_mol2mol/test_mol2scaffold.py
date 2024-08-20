@@ -1,7 +1,7 @@
 """Test the mol2scaffold module."""
 
-from unittest import TestCase
 from typing import Any
+from unittest import TestCase
 
 from molpipeline import Pipeline
 from molpipeline.any2mol import AutoToMol
@@ -44,7 +44,9 @@ class TestMakeScaffoldGeneric(TestCase):
         )
         self.smiles_list = ["Cc1ccc(=O)[nH]c1", "O=CC1CCC(c2ccccc2)CC1", "CCC"]
 
-    def check_generic_scaffold(self, params: dict[str, Any], expected_scaffold_list: list[str]) -> None:
+    def check_generic_scaffold(
+        self, params: dict[str, Any], expected_scaffold_list: list[str]
+    ) -> None:
         """Helper function to set parameters and check the results.
 
         Parameters
