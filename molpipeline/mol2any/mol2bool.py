@@ -11,7 +11,6 @@ from molpipeline.abstract_pipeline_elements.core import (
 class MolToBool(MolToAnyPipelineElement):
     """Element to generate a bool array from input."""
 
-
     def pretransform_single(self, value: Any) -> bool:
         """Transform a value to a bool representation.
 

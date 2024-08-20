@@ -14,7 +14,6 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 class SmilesToMol(_StringToMolPipelineElement):
     """Transforms Smiles to RDKit Mol objects."""
 
-
     def pretransform_single(self, value: str) -> OptionalMol:
         """Transform Smiles string to molecule.
 
