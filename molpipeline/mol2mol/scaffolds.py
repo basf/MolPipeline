@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, Self
 
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold as RDKIT_MurckoScaffold
@@ -147,3 +147,25 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
                 }
             )
         return parent_params
+
+    def set_params(self, **parameters: dict[str, Any]) -> Self:
+        """Set parameters of pipeline element.
+
+        Parameters
+        ----------
+        parameters: dict[str, Any]
+            Parameters to set.
+
+        Returns
+        -------
+        Self
+            Pipeline element with set parameters.
+        """
+        param_copy = parameters.copy()
+        generic_atoms = param_copy.pop("generic_atoms", None)
+        generic_bonds = param_copy.pop("generic_bonds", None)
+        if generic_atoms is not None:
+            self.generic_atoms = generic_atoms
+        if generic_bonds is not None:
+            self.generic_bonds = generic_bonds
+        return self
