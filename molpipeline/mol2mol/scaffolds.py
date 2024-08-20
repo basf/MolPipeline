@@ -109,7 +109,7 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
             Molecule where all atoms are carbon and all bonds are single bonds.
             If transformation failed, it returns InvalidInstance.
         """
-        scaffold = RDKIT_MurckoScaffold.GetScaffoldForMol(value)
+        scaffold = RDKIT_MurckoScaffold.MakeScaffoldGeneric(value)
         if self.generic_atoms:
             for atom in scaffold.GetAtoms():
                 atom.SetAtomicNum(0)
