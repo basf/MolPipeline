@@ -12,7 +12,7 @@ from molpipeline.mol2mol.scaffolds import MakeScaffoldGeneric, MurckoScaffold
 class TestMurckoScaffold(TestCase):
     """Test the MurckoScaffold class."""
 
-    def test_murcko_scaffold_generation_pipeline(self):
+    def test_murcko_scaffold_generation_pipeline(self) -> None:
         """Test the scaffold generation."""
         scaffold_pipeline = Pipeline(
             steps=[
