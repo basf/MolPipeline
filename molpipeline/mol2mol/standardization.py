@@ -162,7 +162,6 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
 class LargestFragmentChooser(_MolToMolPipelineElement):
     """MolToMolPipelineElement which returns the largest fragment of a molecule."""
 
-
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Return largest fragment of molecule.
 
@@ -181,7 +180,6 @@ class LargestFragmentChooser(_MolToMolPipelineElement):
 
 class MetalDisconnector(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
-
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Cleave bonds with metals.
@@ -205,7 +203,6 @@ class MetalDisconnector(_MolToMolPipelineElement):
 
 class IsotopeRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes isotope information of atoms in a molecule."""
-
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove isotope information of each atom.
@@ -231,7 +228,6 @@ class IsotopeRemover(_MolToMolPipelineElement):
 class ExplicitHydrogenRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes explicit hydrogen atoms from a molecule."""
 
-
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove explicit hydrogen atoms.
 
@@ -250,7 +246,6 @@ class ExplicitHydrogenRemover(_MolToMolPipelineElement):
 
 class StereoRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes stereo-information from the molecule."""
-
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove stereo-information in molecule.
@@ -272,7 +267,6 @@ class StereoRemover(_MolToMolPipelineElement):
 
 class SaltRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes metal ions from molecule."""
-
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove metal ions.
@@ -458,7 +452,6 @@ class SolventRemover(_MolToMolPipelineElement):
 
 class Uncharger(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes charges in a molecule, if possible."""
-
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove charges of molecule.
