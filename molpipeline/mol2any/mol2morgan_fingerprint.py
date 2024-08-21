@@ -104,12 +104,12 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             parameters["n_bits"] = self._n_bits
         return parameters
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dictionary of parameter names and values.
 
         Returns
@@ -120,7 +120,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         parameter_copy = dict(parameters)
         n_bits = parameter_copy.pop("n_bits", None)
         if n_bits is not None:
-            self._n_bits = n_bits  # type: ignore
+            self._n_bits = n_bits
         super().set_params(**parameter_copy)
 
         return self

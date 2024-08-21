@@ -140,12 +140,12 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
         return parameters
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set object parameters relevant for copying the class.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dictionary of parameter names and values.
 
         Returns
@@ -160,7 +160,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
                 raise ValueError(
                     f"return_as has to be one of {get_args(OutputDatatype)}! (Received: {return_as})"
                 )
-            self._return_as = return_as  # type: ignore
+            self._return_as = return_as
         super().set_params(**parameter_dict_copy)
         return self
 
@@ -300,12 +300,12 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
         return parameters
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set object parameters relevant for copying the class.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dictionary of parameter names and values.
 
         Returns
@@ -398,12 +398,12 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         parameters.pop("fill_value", None)
         return parameters
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dictionary of parameter names and values.
 
         Returns
@@ -417,7 +417,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
 
         # explicitly check for None, since 0 is a valid value
         if radius is not None:
-            self._radius = radius  # type: ignore
+            self._radius = radius
         # explicitly check for None, since False is a valid value
         if use_features is not None:
             self._use_features = bool(use_features)

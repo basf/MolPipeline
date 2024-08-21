@@ -152,12 +152,12 @@ class Mol2PathFP(
             parameters["n_bits"] = self._n_bits
         return parameters
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dictionary of parameter names and values.
 
         Returns
@@ -168,28 +168,28 @@ class Mol2PathFP(
         parameter_copy = dict(parameters)
         min_path = parameter_copy.pop("min_path", None)
         if min_path is not None:
-            self._min_path = min_path  # type: ignore
+            self._min_path = min_path
         max_path = parameter_copy.pop("max_path", None)
         if max_path is not None:
-            self._max_path = max_path  # type: ignore
+            self._max_path = max_path
         use_hs = parameter_copy.pop("use_hs", None)
         if use_hs is not None:
-            self._use_hs = use_hs  # type: ignore
+            self._use_hs = use_hs
         branched_paths = parameter_copy.pop("branched_paths", None)
         if branched_paths is not None:
-            self._branched_paths = branched_paths  # type: ignore
+            self._branched_paths = branched_paths
         use_bond_order = parameter_copy.pop("use_bond_order", None)
         if use_bond_order is not None:
-            self._use_bond_order = use_bond_order  # type: ignore
+            self._use_bond_order = use_bond_order
         count_simulation = parameter_copy.pop("count_simulation", None)
         if count_simulation is not None:
-            self._count_simulation = count_simulation  # type: ignore
+            self._count_simulation = count_simulation
         count_bounds = parameter_copy.pop("count_bounds", None)
         if count_bounds is not None:
-            self._count_bounds = count_bounds  # type: ignore
+            self._count_bounds = count_bounds
         num_bits_per_feature = parameter_copy.pop("num_bits_per_feature", None)
         if num_bits_per_feature is not None:
-            self._num_bits_per_feature = num_bits_per_feature  # type: ignore
+            self._num_bits_per_feature = num_bits_per_feature
         atom_invariants_generator = parameter_copy.pop(
             "atom_invariants_generator", None
         )
@@ -197,7 +197,7 @@ class Mol2PathFP(
             self._atom_invariants_generator = atom_invariants_generator
         n_bits = parameter_copy.pop("n_bits", None)  # pylint: disable=duplicate-code
         if n_bits is not None:
-            self._n_bits = n_bits  # type: ignore
+            self._n_bits = n_bits
         super().set_params(**parameter_copy)
         return self
 

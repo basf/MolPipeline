@@ -113,12 +113,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         return parameters
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameters to set.
 
         Returns
@@ -129,7 +129,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         parameter_copy = dict(parameters)
         element_list = parameter_copy.pop("element_list", None)
         if element_list is not None:
-            self._element_list = element_list  # type: ignore
+            self._element_list = element_list
         step_params: dict[str, dict[str, Any]] = {}
         step_dict = dict(self._element_list)
         to_delete_list = []
