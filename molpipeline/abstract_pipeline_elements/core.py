@@ -91,7 +91,7 @@ class RemovedInstance:  # pylint: disable=too-few-public-methods
 class ABCPipelineElement(abc.ABC):
     """Ancestor of all PipelineElements."""
 
-    name: Optional[str]
+    name: str
     _requires_fitting: bool = False
     uuid: str
 
@@ -336,7 +336,7 @@ class TransformingPipelineElement(ABCPipelineElement):
 
     _input_type: str
     _output_type: str
-    name: Optional[str]
+    name: str
 
     def __init__(
         self,
