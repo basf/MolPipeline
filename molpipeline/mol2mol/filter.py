@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, Optional, TypeVar, Union
+from collections import Counter
+from typing import Any, Literal, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -20,30 +21,7 @@ from molpipeline.abstract_pipeline_elements.mol2mol import (
     BasePatternsFilter as _BasePatternsFilter,
 )
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
-
-_T = TypeVar("_T")
-
-
-def _list_to_dict_with_counts(elements_list: list[_T]) -> dict[_T, int]:
-    """Convert list to dictionary with counts of elements.
-
-    Parameters
-    ----------
-    elements_list: list[_T]
-        List of elements.
-
-    Returns
-    -------
-    dict[_T, int]
-        Dictionary with elements as keys and counts as values.
-    """
-    counts_dict: dict[_T, int] = {}
-    for element in elements_list:
-        if element in counts_dict:
-            counts_dict[element] += 1
-        else:
-            counts_dict[element] = 1
-    return counts_dict
+from molpipeline.utils.value_conversions import count_value_to_tuple
 
 
 class ElementFilter(_MolToMolPipelineElement):
@@ -120,15 +98,13 @@ class ElementFilter(_MolToMolPipelineElement):
             allowed_element_numbers = self.DEFAULT_ALLOWED_ELEMENT_NUMBERS
         if isinstance(allowed_element_numbers, (list, set)):
             self._allowed_element_numbers = {
-                atom_number: (1, None) for atom_number in allowed_element_numbers
+                atom_number: (0, None) for atom_number in allowed_element_numbers
             }
         else:
-            self._allowed_element_numbers = {}
-            for atom_number, count in allowed_element_numbers.items():
-                if isinstance(count, int):
-                    self._allowed_element_numbers[atom_number] = (count, count)
-                else:
-                    self._allowed_element_numbers[atom_number] = count
+            self._allowed_element_numbers = {
+                atom_number: count_value_to_tuple(count)
+                for atom_number, count in allowed_element_numbers.items()
+            }
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters of ElementFilter.
@@ -185,16 +161,20 @@ class ElementFilter(_MolToMolPipelineElement):
         OptionalMol
             Molecule if it contains only allowed elements, else InvalidInstance.
         """
-        elements_list = [atom.GetAtomicNum() for atom in value.GetAtoms()]
-        elements_count_dict = _list_to_dict_with_counts(elements_list)
-        for element, count in elements_count_dict.items():
-            if element not in self.allowed_element_numbers:
-                return InvalidInstance(
-                    self.uuid,
-                    f"Molecule contains forbidden element {element}.",
-                    self.name,
-                )
-            min_count, max_count = self.allowed_element_numbers[element]
+        to_process_value = (
+            Chem.AddHs(value) if 1 in self.allowed_element_numbers else value
+        )
+
+        elements_list = [atom.GetAtomicNum() for atom in to_process_value.GetAtoms()]
+        elements_counter = Counter(elements_list)
+        if any(
+            element not in self.allowed_element_numbers for element in elements_counter
+        ):
+            return InvalidInstance(
+                self.uuid, "Molecule contains forbidden chemical element.", self.name
+            )
+        for element, (min_count, max_count) in self.allowed_element_numbers.items():
+            count = elements_counter[element]
             if (min_count is not None and count < min_count) or (
                 max_count is not None and count > max_count
             ):

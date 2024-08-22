@@ -9,10 +9,13 @@ except ImportError:
     from typing_extensions import Self
 
 from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
+from molpipeline.utils.value_conversions import count_value_to_tuple
 
 
 class BasePatternsFilter(MolToMolPipelineElement, abc.ABC):
     """Filter to keep or remove molecules based on patterns."""
+
+    _patterns: dict[str, tuple[Optional[int], Optional[int]]]
 
     def __init__(
         self,
@@ -69,16 +72,12 @@ class BasePatternsFilter(MolToMolPipelineElement, abc.ABC):
         patterns: Union[list[str], dict[str, Union[int, tuple[Optional[int], Optional[int]]]]]
             List of patterns.
         """
-        self._patterns: dict[str, tuple[Optional[int], Optional[int]]]
         if isinstance(patterns, (list, set)):
             self._patterns = {pat: (1, None) for pat in patterns}
         else:
-            self._patterns = {}
-            for pat, count in patterns.items():
-                if isinstance(count, int):
-                    self._patterns[pat] = (count, count)
-                else:
-                    self._patterns[pat] = count
+            self._patterns = {
+                pat: count_value_to_tuple(count) for pat, count in patterns.items()
+            }
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters of PatternFilter.

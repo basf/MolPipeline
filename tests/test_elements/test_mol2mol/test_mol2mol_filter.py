@@ -37,19 +37,19 @@ class MolFilterTest(unittest.TestCase):
     def test_element_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed chemical elements."""
         default_atoms_dict = {
-            1: (1, None),
-            5: (1, None),
-            6: (1, None),
-            7: (1, None),
-            8: (1, None),
-            9: (1, None),
-            14: (1, None),
-            15: (1, None),
-            16: (1, None),
-            17: (1, None),
-            34: (1, None),
-            35: (1, None),
-            53: (1, None),
+            1: (0, None),
+            5: (0, None),
+            6: (0, None),
+            7: (0, None),
+            8: (0, None),
+            9: (0, None),
+            14: (0, None),
+            15: (0, None),
+            16: (0, None),
+            17: (0, None),
+            34: (0, None),
+            35: (0, None),
+            53: (0, None),
         }
 
         element_filter = ElementFilter()
@@ -67,7 +67,7 @@ class MolFilterTest(unittest.TestCase):
             filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_CL_BR]
         )
         pipeline.set_params(
-            ElementFilter__allowed_element_numbers={6: 6, 1: (5, 6), 17: 1}
+            ElementFilter__allowed_element_numbers={6: 6, 1: (5, 6), 17: (0, 1)}
         )
         filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(filtered_smiles_2, [SMILES_BENZENE, SMILES_CHLOROBENZENE])
@@ -120,6 +120,31 @@ class MolFilterTest(unittest.TestCase):
             )
             filtered_smiles_5 = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles_5, [SMILES_ANTIMONY, SMILES_METAL_AU])
+
+    def test_smarts_filter_parallel(self) -> None:
+        """Test if molecules are filtered correctly by allowed SMARTS patterns in parallel."""
+        smarts_pats: dict[str, Union[int, tuple[Optional[int], Optional[int]]]] = {
+            "c": (4, None),
+            "Cl": 1,
+            "cc": (1, None),
+            "ccc": (1, None),
+            "cccc": (1, None),
+            "ccccc": (1, None),
+            "cccccc": (1, None),
+            "c1ccccc1": (1, None),
+            "cCl": 1,
+        }
+        smarts_filter = SmartsFilter(smarts_pats, mode="all", n_jobs=-1)
+        pipeline = Pipeline(
+            [
+                ("Smiles2Mol", SmilesToMol()),
+                ("SmartsFilter", smarts_filter),
+                ("Mol2Smiles", MolToSmiles()),
+                ("ErrorFilter", ErrorFilter()),
+            ],
+        )
+        filtered_smiles = pipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(filtered_smiles, [SMILES_CHLOROBENZENE])
 
     def test_descriptor_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed descriptors."""
