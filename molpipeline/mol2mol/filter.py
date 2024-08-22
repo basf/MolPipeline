@@ -230,7 +230,7 @@ class SmartsFilter(_BasePatternsFilter):
                 if self.mode == "any":
                     return (
                         value
-                        if self.keep
+                        if self.keep_matches
                         else InvalidInstance(
                             self.uuid,
                             f"Molecule contains forbidden SMARTS pattern {match_smarts}.",
@@ -241,7 +241,7 @@ class SmartsFilter(_BasePatternsFilter):
         if self.mode == "any":
             return (
                 value
-                if not self.keep
+                if not self.keep_matches
                 else InvalidInstance(
                     self.uuid,
                     "Molecule does not match any of the SmartsFilter patterns.",
@@ -251,7 +251,7 @@ class SmartsFilter(_BasePatternsFilter):
         if match_counts == len(self.patterns):
             return (
                 value
-                if self.keep
+                if self.keep_matches
                 else InvalidInstance(
                     self.uuid,
                     "Molecule matches one of the SmartsFilter patterns.",
@@ -260,7 +260,7 @@ class SmartsFilter(_BasePatternsFilter):
             )
         return (
             value
-            if not self.keep
+            if not self.keep_matches
             else InvalidInstance(
                 self.uuid,
                 "Molecule does not match all of the SmartsFilter patterns.",
@@ -293,7 +293,7 @@ class SmilesFilter(_BasePatternsFilter):
                 if self.mode == "any":
                     return (
                         value
-                        if self.keep
+                        if self.keep_matches
                         else InvalidInstance(
                             self.uuid,
                             f"Molecule contains forbidden SMILES pattern {pattern}.",
@@ -304,7 +304,7 @@ class SmilesFilter(_BasePatternsFilter):
                 if self.mode == "all":
                     return (
                         value
-                        if not self.keep
+                        if not self.keep_matches
                         else InvalidInstance(
                             self.uuid,
                             "Molecule does not match all required patterns.",
@@ -314,7 +314,7 @@ class SmilesFilter(_BasePatternsFilter):
         if self.mode == "any":
             return (
                 value
-                if not self.keep
+                if not self.keep_matches
                 else InvalidInstance(
                     self.uuid,
                     "Molecule does not match any of the SmilesFilter patterns.",
@@ -323,7 +323,7 @@ class SmilesFilter(_BasePatternsFilter):
             )
         return (
             value
-            if self.keep
+            if self.keep_matches
             else InvalidInstance(
                 self.uuid,
                 "Molecule does not match all of the SmilesFilter patterns.",
@@ -338,7 +338,7 @@ class DescriptorsFilter(_MolToMolPipelineElement):
     def __init__(
         self,
         descriptors: dict[str, tuple[Optional[float], Optional[float]]],
-        keep: bool = True,
+        keep_matches: bool = True,
         mode: Literal["any", "all"] = "any",
         name: Optional[str] = None,
         n_jobs: int = 1,
@@ -351,7 +351,7 @@ class DescriptorsFilter(_MolToMolPipelineElement):
         descriptors: dict[str, tuple[Optional[float], Optional[float]]]
             Dictionary of RDKit descriptors to filter by.
             The value must be a tuple of minimum and maximum. If None, no limit is set.
-        keep: bool, optional (default: True)
+        keep_matches: bool, optional (default: True)
             If True, molecules containing the specified descriptors are kept, else removed.
         mode: Literal["any", "all"], optional (default: "any")
             If "any", at least one of the specified descriptors must be present in the molecule.
@@ -365,7 +365,7 @@ class DescriptorsFilter(_MolToMolPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.descriptors = descriptors
-        self.keep = keep
+        self.keep_matches = keep_matches
         self.mode = mode
 
     @property
@@ -411,9 +411,32 @@ class DescriptorsFilter(_MolToMolPipelineElement):
             }
         else:
             params["descriptors"] = self.descriptors
-        params["keep"] = self.keep
+        params["keep_matches"] = self.keep_matches
         params["mode"] = self.mode
         return params
+
+    def set_params(self, **parameters: Any) -> Self:
+        """Set parameters of PatternFilter.
+
+        Parameters
+        ----------
+        parameters: Any
+            Parameters to set.
+
+        Returns
+        -------
+        Self
+            Self.
+        """
+        parameter_copy = dict(parameters)
+        if "descriptors" in parameter_copy:
+            self.patterns = parameter_copy.pop("descriptors")
+        if "keep_matches" in parameter_copy:
+            self.keep_matches = parameter_copy.pop("keep_matches")
+        if "mode" in parameter_copy:
+            self.mode = parameter_copy.pop("mode")
+        super().set_params(**parameter_copy)
+        return self
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Invalidate or validate molecule based on specified RDKit descriptors.
@@ -436,7 +459,7 @@ class DescriptorsFilter(_MolToMolPipelineElement):
                 if self.mode == "any":
                     return (
                         value
-                        if self.keep
+                        if self.keep_matches
                         else InvalidInstance(
                             self.uuid,
                             f"Molecule contains forbidden descriptor {descriptor}.",
@@ -447,7 +470,7 @@ class DescriptorsFilter(_MolToMolPipelineElement):
                 if self.mode == "all":
                     return (
                         value
-                        if not self.keep
+                        if not self.keep_matches
                         else InvalidInstance(
                             self.uuid,
                             "Molecule does not match all required descriptors.",
@@ -457,7 +480,7 @@ class DescriptorsFilter(_MolToMolPipelineElement):
         if self.mode == "any":
             return (
                 value
-                if not self.keep
+                if not self.keep_matches
                 else InvalidInstance(
                     self.uuid,
                     "Molecule does not match any of the DescriptorsFilter descriptors.",
@@ -466,7 +489,7 @@ class DescriptorsFilter(_MolToMolPipelineElement):
             )
         return (
             value
-            if self.keep
+            if self.keep_matches
             else InvalidInstance(
                 self.uuid,
                 "Molecule does not match all of the DescriptorsFilter descriptors.",

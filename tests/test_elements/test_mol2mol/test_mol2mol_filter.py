@@ -101,20 +101,20 @@ class MolFilterTest(unittest.TestCase):
                 filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_CL_BR]
             )
 
-            pipeline.set_params(SmartsFilter__keep=False)
+            pipeline.set_params(SmartsFilter__keep_matches=False)
             filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles_2, [SMILES_ANTIMONY, SMILES_METAL_AU])
 
-            pipeline.set_params(SmartsFilter__mode="all", SmartsFilter__keep=True)
+            pipeline.set_params(SmartsFilter__mode="all", SmartsFilter__keep_matches=True)
             filtered_smiles_3 = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles_3, [SMILES_CHLOROBENZENE])
 
-            pipeline.set_params(SmartsFilter__keep=True, SmartsFilter__patterns=["I"])
+            pipeline.set_params(SmartsFilter__keep_matches=True, SmartsFilter__patterns=["I"])
             filtered_smiles_4 = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles_4, [])
 
             pipeline.set_params(
-                SmartsFilter__keep=False,
+                SmartsFilter__keep_matches=False,
                 SmartsFilter__mode="any",
                 SmartsFilter__patterns=new_input_as_list,
             )
@@ -170,7 +170,7 @@ class MolFilterTest(unittest.TestCase):
         filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(filtered_smiles_2, [SMILES_CL_BR])
 
-        pipeline.set_params(DescriptorsFilter__keep=False)
+        pipeline.set_params(DescriptorsFilter__keep_matches=False)
         filtered_smiles_3 = pipeline.fit_transform(SMILES_LIST)
         # why is this not
         self.assertEqual(
