@@ -107,12 +107,12 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             params["standardizer"] = self._standardizer
         return params
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dictionary with parameter names and corresponding values.
 
         Returns
@@ -123,7 +123,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         parameter_copy = dict(parameters)
         standardizer = parameter_copy.pop("standardizer", None)
         if standardizer is not None:
-            self._standardizer = standardizer  # type: ignore
+            self._standardizer = standardizer
         super().set_params(**parameter_copy)
         return self
 

@@ -73,12 +73,12 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
             params["return_as_numpy_array"] = self.return_as_numpy_array
         return params
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters of the object.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dictionary containing all parameters defining the object.
 
         Returns

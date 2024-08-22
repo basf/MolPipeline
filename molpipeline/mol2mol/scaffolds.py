@@ -24,29 +24,6 @@ class MurckoScaffold(_MolToMolPipelineElement):
     The Murcko-scaffold is composed of all rings and the linker atoms between them.
     """
 
-    def __init__(
-        self,
-        name: str = "MurckoScaffold",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize MurckoScaffold.
-
-        Parameters
-        ----------
-        name: str
-            Name of pipeline element.
-        n_jobs: int
-            Number of jobs to use for parallelization.
-        uuid: Optional[str]
-            UUID of pipeline element.
-
-        Returns
-        -------
-        None
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Extract Murco-scaffold of molecule.
 
