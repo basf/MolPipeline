@@ -45,6 +45,8 @@ class CustomFilter(_MolToMolPipelineElement):
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Pretransform single value.
 
+        Applies the custom boolean function to the molecule.
+
         Parameters
         ----------
         value : RDKitMol
