@@ -8,8 +8,41 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
+from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
+    MolToMolPipelineElement,
+    OptionalMol,
+    RDKitMol,
+)
 from molpipeline.utils.value_conversions import count_value_to_tuple
+
+
+def _within_boundaries(
+    lower_bound: Optional[float], upper_bound: Optional[float], value: float
+) -> bool:
+    """Check if a value is within the specified boundaries.
+
+    Boundaries given as None are ignored.
+
+    Parameters
+    ----------
+    lower_bound: Optional[float]
+        Lower boundary.
+    upper_bound: Optional[float]
+        Upper boundary.
+    value: float
+        Value to check.
+
+    Returns
+    -------
+    bool
+        True if the value is within the boundaries, else False.
+    """
+    if lower_bound is not None and value < lower_bound:
+        return False
+    if upper_bound is not None and value > upper_bound:
+        return False
+    return True
 
 
 class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
@@ -85,6 +118,98 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         params["mode"] = self.mode
         return params
 
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Invalidate or validate molecule based on specified filter.
+
+        There are four possible scenarios:
+        - Mode = "any" & "keep_matches" = True: Needs to match at least one filter element.
+        - Mode = "any" & "keep_matches" = False: Must not match any filter element.
+        - Mode = "all" & "keep_matches" = True: Needs to match all filter elements.
+        - Mode = "all" & "keep_matches" = False: Must not match all filter elements.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to check.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule that matches defined filter elements, else InvalidInstance.
+        """
+        for filter_element, (min_count, max_count) in self.filter_elements.items():
+            count = self._calculate_single_element_value(filter_element, value)
+            if _within_boundaries(min_count, max_count, count):
+                # For "any" mode we can return early if a match is found
+                if self.mode == "any":
+                    if not self.keep_matches:
+                        value = InvalidInstance(
+                            self.uuid,
+                            f"Molecule contains forbidden filter element {filter_element}.",
+                            self.name,
+                        )
+                    return value
+            else:
+                # For "all" mode we can return early if a match is not found
+                if self.mode == "all":
+                    if self.keep_matches:
+                        value = InvalidInstance(
+                            self.uuid,
+                            f"Molecule does not contain required filter element {filter_element}.",
+                            self.name,
+                        )
+                    return value
+
+        # If this point is reached, no or all patterns were found
+        # If mode is "any", finishing the loop means no match was found
+        if self.mode == "any":
+            if self.keep_matches:
+                value = InvalidInstance(
+                    self.uuid,
+                    "Molecule does not match any of the required filter elements.",
+                    self.name,
+                )
+            #  else: No match with forbidden filter elements was found, return original molecule
+            return value
+
+        if self.mode == "all":
+            if not self.keep_matches:
+                value = InvalidInstance(
+                    self.uuid,
+                    "Molecule matches all forbidden filter elements.",
+                    self.name,
+                )
+            #  else: All required filter elements were found, return original molecule
+            return value
+
+        raise ValueError(f"Invalid mode: {self.mode}")
+
+    @abc.abstractmethod
+    def _calculate_single_element_value(
+        self, filter_element: Any, value: RDKitMol
+    ) -> float:
+        """Calculate the value of a single match.
+
+        Parameters
+        ----------
+        filter_element: Any
+            Match case to calculate.
+        value: RDKitMol
+            Molecule to calculate the match for.
+
+        Returns
+        -------
+        float
+            Value of the match.
+        """
+
+    @property
+    @abc.abstractmethod
+    def filter_elements(
+        self,
+    ) -> dict[str, tuple[Optional[Union[float, int]], Optional[Union[float, int]]]]:
+        """Get filter elements as dict."""
+
 
 class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     """Filter to keep or remove molecules based on patterns."""
@@ -152,6 +277,11 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             self._patterns = {
                 pat: count_value_to_tuple(count) for pat, count in patterns.items()
             }
+
+    @property
+    def filter_elements(self) -> dict[str, tuple[Optional[int], Optional[int]]]:
+        """Get filter elements as dict."""
+        return self.patterns
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters of PatternFilter.

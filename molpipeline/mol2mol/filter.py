@@ -11,7 +11,7 @@ except ImportError:
     from typing_extensions import Self
 
 from rdkit import Chem
-from rdkit.Chem import Descriptors, FilterCatalog
+from rdkit.Chem import Descriptors
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.core import (
@@ -25,34 +25,6 @@ from molpipeline.abstract_pipeline_elements.mol2mol import (
 )
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 from molpipeline.utils.value_conversions import count_value_to_tuple
-
-
-def _within_boundaries(
-    lower_bound: Optional[float], upper_bound: Optional[float], value: float
-) -> bool:
-    """Check if a value is within the specified boundaries.
-
-    Boundaries given as None are ignored.
-
-    Parameters
-    ----------
-    lower_bound: Optional[float]
-        Lower boundary.
-    upper_bound: Optional[float]
-        Upper boundary.
-    value: float
-        Value to check.
-
-    Returns
-    -------
-    bool
-        True if the value is within the boundaries, else False.
-    """
-    if lower_bound is not None and value < lower_bound:
-        return False
-    if upper_bound is not None and value > upper_bound:
-        return False
-    return True
 
 
 class ElementFilter(_MolToMolPipelineElement):
@@ -217,146 +189,53 @@ class ElementFilter(_MolToMolPipelineElement):
         return value
 
 
+# should we combine smarts and smiles filter within a single class? option usesmiles?
+# should we check the input patterns for valid smarts/smiles?
+# should we apply the same logic to ElementFilter?
 class SmartsFilter(_BasePatternsFilter):
     """Filter to keep or remove molecules based on SMARTS patterns."""
 
-    @property
-    def smarts_filter(self) -> FilterCatalog.FilterCatalog:
-        """Get the SMARTS filter."""
-        smarts_matcher_list = [
-            FilterCatalog.SmartsMatcher(smarts, smarts)
-            for i, smarts in enumerate(self.patterns)
-        ]
-        rdkit_filter = FilterCatalog.FilterCatalog()
-        for smarts_matcher in smarts_matcher_list:
-            if not smarts_matcher.IsValid():
-                raise ValueError(f"Invalid SMARTS: {smarts_matcher.GetPattern()}")
-            entry = FilterCatalog.FilterCatalogEntry(
-                smarts_matcher.GetName(), smarts_matcher
-            )
-            rdkit_filter.AddEntry(entry)
-        return rdkit_filter
-
-    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Invalidate or validate molecule matching any or all of the specified SMARTS patterns.
+    def _calculate_single_element_value(
+        self, filter_element: Any, value: RDKitMol
+    ) -> float:
+        """Calculate a single smarts match count for a molecule.
 
         Parameters
         ----------
+        filter_element: Any
+            smarts to calculate match count for.
         value: RDKitMol
-            Molecule to check.
+            Molecule to calculate smarts match count for.
 
         Returns
         -------
-        OptionalMol
-            Molecule that matches defined smarts filter, else InvalidInstance.
+        float
+            smarts match count value.
         """
-        match_counts = 0
-        for smarts_match in self.smarts_filter.GetMatches(value):
-            match_smarts = smarts_match.GetDescription()
-            all_matches = value.GetSubstructMatches(Chem.MolFromSmarts(match_smarts))
-            min_count, max_count = self.patterns[match_smarts]
-            if _within_boundaries(min_count, max_count, len(all_matches)):
-                if self.mode == "any":
-                    return (
-                        value
-                        if self.keep_matches
-                        else InvalidInstance(
-                            self.uuid,
-                            f"Molecule contains forbidden SMARTS pattern {match_smarts}.",
-                            self.name,
-                        )
-                    )
-                match_counts += 1
-        if self.mode == "any":
-            return (
-                value
-                if not self.keep_matches
-                else InvalidInstance(
-                    self.uuid,
-                    "Molecule does not match any of the SmartsFilter patterns.",
-                    self.name,
-                )
-            )
-        if match_counts == len(self.patterns):
-            return (
-                value
-                if self.keep_matches
-                else InvalidInstance(
-                    self.uuid,
-                    "Molecule matches one of the SmartsFilter patterns.",
-                    self.name,
-                )
-            )
-        return (
-            value
-            if not self.keep_matches
-            else InvalidInstance(
-                self.uuid,
-                "Molecule does not match all of the SmartsFilter patterns.",
-                self.name,
-            )
-        )
+        return len(value.GetSubstructMatches(Chem.MolFromSmarts(filter_element)))
 
 
 class SmilesFilter(_BasePatternsFilter):
     """Filter to keep or remove molecules based on SMILES patterns."""
 
-    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Invalidate or validate molecule matching any or all of the specified SMILES patterns.
+    def _calculate_single_element_value(
+        self, filter_element: Any, value: RDKitMol
+    ) -> float:
+        """Calculate a single smiles match count for a molecule.
 
         Parameters
         ----------
+        filter_element: Any
+            smiles to calculate match count for.
         value: RDKitMol
-            Molecule to check.
+            Molecule to calculate smiles match count for.
 
         Returns
         -------
-        OptionalMol
-            Molecule that matches defined smiles filter, else InvalidInstance.
+        float
+            smiles match count value.
         """
-        for pattern, (min_count, max_count) in self.patterns.items():
-            all_matches = value.GetSubstructMatches(Chem.MolFromSmiles(pattern))
-            if _within_boundaries(min_count, max_count, len(all_matches)):
-                if self.mode == "any":
-                    return (
-                        value
-                        if self.keep_matches
-                        else InvalidInstance(
-                            self.uuid,
-                            f"Molecule contains forbidden SMILES pattern {pattern}.",
-                            self.name,
-                        )
-                    )
-            else:
-                if self.mode == "all":
-                    return (
-                        value
-                        if not self.keep_matches
-                        else InvalidInstance(
-                            self.uuid,
-                            "Molecule does not match all required patterns.",
-                            self.name,
-                        )
-                    )
-        if self.mode == "any":
-            return (
-                value
-                if not self.keep_matches
-                else InvalidInstance(
-                    self.uuid,
-                    "Molecule does not match any of the SmilesFilter patterns.",
-                    self.name,
-                )
-            )
-        return (
-            value
-            if self.keep_matches
-            else InvalidInstance(
-                self.uuid,
-                "Molecule does not match all of the SmilesFilter patterns.",
-                self.name,
-            )
-        )
+        return len(value.GetSubstructMatches(Chem.MolFromSmiles(filter_element)))
 
 
 class DescriptorsFilter(_BaseKeepMatchesFilter):
@@ -417,6 +296,30 @@ class DescriptorsFilter(_BaseKeepMatchesFilter):
                 "You are trying to use an invalid descriptor. Use RDKit Descriptors module."
             )
 
+    @property
+    def filter_elements(self) -> dict[str, tuple[Optional[float], Optional[float]]]:
+        """Get filter elements."""
+        return self.descriptors
+
+    def _calculate_single_element_value(
+        self, filter_element: Any, value: RDKitMol
+    ) -> float:
+        """Calculate a single descriptor value for a molecule.
+
+        Parameters
+        ----------
+        filter_element: Any
+            Descriptor to calculate.
+        value: RDKitMol
+            Molecule to calculate descriptor for.
+
+        Returns
+        -------
+        float
+            Descriptor value.
+        """
+        return getattr(Descriptors, filter_element)(value)
+
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters of DescriptorFilter.
 
@@ -458,73 +361,6 @@ class DescriptorsFilter(_BaseKeepMatchesFilter):
             self.descriptors = parameter_copy.pop("descriptors")
         super().set_params(**parameter_copy)
         return self
-
-    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Invalidate or validate molecule based on specified RDKit descriptors.
-
-        There are four possible scenarios:
-        - Mode = "any" & "keep_matches" = True: Needs to match at least one descriptor.
-        - Mode = "any" & "keep_matches" = False: Must not match any descriptor.
-        - Mode = "all" & "keep_matches" = True: Needs to match all descriptors.
-        - Mode = "all" & "keep_matches" = False: Must not match all descriptors.
-
-        Parameters
-        ----------
-        value: RDKitMol
-            Molecule to check.
-
-        Returns
-        -------
-        OptionalMol
-            Molecule that matches defined descriptors filter, else InvalidInstance.
-        """
-        for descriptor, (min_count, max_count) in self.descriptors.items():
-            descriptor_value = getattr(Descriptors, descriptor)(value)
-
-            if _within_boundaries(min_count, max_count, descriptor_value):
-                # For "any" mode we can return early if a match is found
-                if self.mode == "any":
-                    if not self.keep_matches:
-                        value = InvalidInstance(
-                            self.uuid,
-                            f"Molecule contains forbidden descriptor {descriptor}.",
-                            self.name,
-                        )
-                    return value
-            else:
-                # For "all" mode we can return early if a match is not found
-                if self.mode == "all":
-                    if self.keep_matches:
-                        value = InvalidInstance(
-                            self.uuid,
-                            f"Molecule does not contain required descriptor {descriptor}.",
-                            self.name,
-                        )
-                    return value
-
-        # If this point is reached, no or all patterns were found
-        # If mode is "any", finishing the loop means no match was found
-        if self.mode == "any":
-            if self.keep_matches:
-                value = InvalidInstance(
-                    self.uuid,
-                    "Molecule does not match any of the required descriptors.",
-                    self.name,
-                )
-            #  else: No match with forbidden descriptors was found, return original molecule
-            return value
-
-        if self.mode == "all":
-            if not self.keep_matches:
-                value = InvalidInstance(
-                    self.uuid,
-                    "Molecule matches all forbidden descriptors.",
-                    self.name,
-                )
-            #  else: All required descriptors were found, return original molecule
-            return value
-
-        raise ValueError(f"Invalid mode: {self.mode}")
 
 
 class MixtureFilter(_MolToMolPipelineElement):
