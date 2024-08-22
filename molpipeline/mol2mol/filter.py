@@ -18,6 +18,9 @@ from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
 )
 from molpipeline.abstract_pipeline_elements.mol2mol import (
+    BaseKeepMatchesFilter as _BaseKeepMatchesFilter,
+)
+from molpipeline.abstract_pipeline_elements.mol2mol import (
     BasePatternsFilter as _BasePatternsFilter,
 )
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
@@ -332,7 +335,7 @@ class SmilesFilter(_BasePatternsFilter):
         )
 
 
-class DescriptorsFilter(_MolToMolPipelineElement):
+class DescriptorsFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on RDKit descriptors."""
 
     def __init__(
@@ -363,10 +366,10 @@ class DescriptorsFilter(_MolToMolPipelineElement):
         uuid: str, optional (default: None)
             Unique identifier of the pipeline element.
         """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        super().__init__(
+            keep_matches=keep_matches, mode=mode, name=name, n_jobs=n_jobs, uuid=uuid
+        )
         self.descriptors = descriptors
-        self.keep_matches = keep_matches
-        self.mode = mode
 
     @property
     def descriptors(self) -> dict[str, tuple[Optional[float], Optional[float]]]:
@@ -411,8 +414,6 @@ class DescriptorsFilter(_MolToMolPipelineElement):
             }
         else:
             params["descriptors"] = self.descriptors
-        params["keep_matches"] = self.keep_matches
-        params["mode"] = self.mode
         return params
 
     def set_params(self, **parameters: Any) -> Self:
@@ -431,10 +432,6 @@ class DescriptorsFilter(_MolToMolPipelineElement):
         parameter_copy = dict(parameters)
         if "descriptors" in parameter_copy:
             self.patterns = parameter_copy.pop("descriptors")
-        if "keep_matches" in parameter_copy:
-            self.keep_matches = parameter_copy.pop("keep_matches")
-        if "mode" in parameter_copy:
-            self.mode = parameter_copy.pop("mode")
         super().set_params(**parameter_copy)
         return self
 

@@ -12,7 +12,81 @@ from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
 from molpipeline.utils.value_conversions import count_value_to_tuple
 
 
-class BasePatternsFilter(MolToMolPipelineElement, abc.ABC):
+class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
+    """Filter to keep or remove molecules based on patterns."""
+
+    keep_matches: bool
+    mode: Literal["any", "all"]
+
+    def __init__(
+        self,
+        keep_matches: bool = True,
+        mode: Literal["any", "all"] = "any",
+        name: Optional[str] = None,
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize BasePatternsFilter.
+
+        Parameters
+        ----------
+        keep_matches: bool, optional (default: True)
+            If True, molecules containing the specified patterns are kept, else removed.
+        mode: Literal["any", "all"], optional (default: "any")
+            If "any", at least one of the specified patterns must be present in the molecule.
+            If "all", all of the specified patterns must be present in the molecule.
+        name: Optional[str], optional (default: None)
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            Unique identifier of the pipeline element.
+        """
+        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        self.keep_matches = keep_matches
+        self.mode = mode
+
+    def set_params(self, **parameters: Any) -> Self:
+        """Set parameters of BaseKeepMatchesFilter.
+
+        Parameters
+        ----------
+        parameters: Any
+            Parameters to set.
+
+        Returns
+        -------
+        Self
+            Self.
+        """
+        parameter_copy = dict(parameters)
+        if "keep_matches" in parameter_copy:
+            self.keep_matches = parameter_copy.pop("keep_matches")
+        if "mode" in parameter_copy:
+            self.mode = parameter_copy.pop("mode")
+        super().set_params(**parameter_copy)
+        return self
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters of PatternFilter.
+
+        Parameters
+        ----------
+        deep: bool, optional (default: True)
+            If True, return the parameters of all subobjects that are PipelineElements.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters of BaseKeepMatchesFilter.
+        """
+        params = super().get_params(deep=deep)
+        params["keep_matches"] = self.keep_matches
+        params["mode"] = self.mode
+        return params
+
+
+class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     """Filter to keep or remove molecules based on patterns."""
 
     _patterns: dict[str, tuple[Optional[int], Optional[int]]]
@@ -48,10 +122,10 @@ class BasePatternsFilter(MolToMolPipelineElement, abc.ABC):
         uuid: str, optional (default: None)
             Unique identifier of the pipeline element.
         """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        super().__init__(
+            keep_matches=keep_matches, mode=mode, name=name, n_jobs=n_jobs, uuid=uuid
+        )
         self.patterns = patterns  # type: ignore
-        self.keep_matches = keep_matches
-        self.mode = mode
 
     @property
     def patterns(self) -> dict[str, tuple[Optional[int], Optional[int]]]:
@@ -100,8 +174,6 @@ class BasePatternsFilter(MolToMolPipelineElement, abc.ABC):
             }
         else:
             params["patterns"] = self.patterns
-        params["keep_matches"] = self.keep_matches
-        params["mode"] = self.mode
         return params
 
     def set_params(self, **parameters: Any) -> Self:
@@ -120,9 +192,5 @@ class BasePatternsFilter(MolToMolPipelineElement, abc.ABC):
         parameter_copy = dict(parameters)
         if "patterns" in parameter_copy:
             self.patterns = parameter_copy.pop("patterns")
-        if "keep_matches" in parameter_copy:
-            self.keep_matches = parameter_copy.pop("keep_matches")
-        if "mode" in parameter_copy:
-            self.mode = parameter_copy.pop("mode")
         super().set_params(**parameter_copy)
         return self
