@@ -105,11 +105,15 @@ class MolFilterTest(unittest.TestCase):
             filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles_2, [SMILES_ANTIMONY, SMILES_METAL_AU])
 
-            pipeline.set_params(SmartsFilter__mode="all", SmartsFilter__keep_matches=True)
+            pipeline.set_params(
+                SmartsFilter__mode="all", SmartsFilter__keep_matches=True
+            )
             filtered_smiles_3 = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles_3, [SMILES_CHLOROBENZENE])
 
-            pipeline.set_params(SmartsFilter__keep_matches=True, SmartsFilter__patterns=["I"])
+            pipeline.set_params(
+                SmartsFilter__keep_matches=True, SmartsFilter__patterns=["I"]
+            )
             filtered_smiles_4 = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles_4, [])
 
