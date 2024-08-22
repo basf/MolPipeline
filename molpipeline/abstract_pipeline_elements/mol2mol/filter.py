@@ -1,7 +1,7 @@
 """Abstract classes for filters."""
 
 import abc
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union, Mapping
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -207,7 +207,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     @abc.abstractmethod
     def filter_elements(
         self,
-    ) -> dict[str, tuple[Optional[Union[float, int]], Optional[Union[float, int]]]]:
+    ) -> Mapping[str, tuple[Optional[Union[float, int]], Optional[Union[float, int]]]]:
         """Get filter elements as dict."""
 
 
@@ -279,7 +279,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             }
 
     @property
-    def filter_elements(self) -> dict[str, tuple[Optional[int], Optional[int]]]:
+    def filter_elements(self) -> Mapping[str, tuple[Optional[int], Optional[int]]]:
         """Get filter elements as dict."""
         return self.patterns
 
