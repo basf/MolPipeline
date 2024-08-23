@@ -25,8 +25,7 @@ class TestMurckoScaffold(TestCase):
         expected_scaffold_list = ["O=c1cccc[nH]1", "c1ccc(C2CCCCC2)cc1", ""]
 
         scaffold_list = scaffold_pipeline.transform(smiles_list)
-        for scaffold, expected_scaffold in zip(scaffold_list, expected_scaffold_list):
-            self.assertEqual(expected_scaffold, scaffold)
+        self.assertListEqual(expected_scaffold_list, scaffold_list)
 
 
 class TestMakeScaffoldGeneric(TestCase):
@@ -60,10 +59,7 @@ class TestMakeScaffoldGeneric(TestCase):
         generic_scaffold_list = self.generic_scaffold_pipeline.transform(
             self.smiles_list
         )
-        for generic_scaffold, expected_generic_scaffold in zip(
-            generic_scaffold_list, expected_scaffold_list
-        ):
-            self.assertEqual(expected_generic_scaffold, generic_scaffold)
+        self.assertListEqual(expected_scaffold_list, generic_scaffold_list)
 
     def test_generic_scaffold_generation_pipeline(self) -> None:
         """Test the generic scaffold generation."""
