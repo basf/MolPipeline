@@ -56,6 +56,11 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
     ) -> None:
         """Initialize MakeScaffoldGeneric.
 
+        Note
+        ----
+        Making atoms and or bonds generic allows to check their presence in via SubstructureSearches.
+        Otherwise, all atoms and bonds are set to carbon and single bond, which may not match the molecule.
+
         Parameters
         ----------
         generic_atoms: bool
