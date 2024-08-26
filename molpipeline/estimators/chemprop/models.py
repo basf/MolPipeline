@@ -354,7 +354,7 @@ class ChempropMulticlassClassifier(ChempropModel):
     """Chemprop model with default parameters for regression tasks."""
 
     def __init__(
-        self,        
+        self,
         n_classes: int,
         model: MPNN | None = None,
         lightning_trainer: pl.Trainer | None = None,
@@ -365,7 +365,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         """Initialize the chemprop regressor model.
 
         Parameters
-        ----------        
+        ----------
         n_classes : int
             The number of classes for the classifier.
         model : MPNN | None, optional
@@ -436,7 +436,9 @@ class ChempropMulticlassClassifier(ChempropModel):
         self._check_correct_input(y)
         return super().fit(X, y)
 
-    def _check_correct_input(self, y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64]) -> None:
+    def _check_correct_input(
+        self, y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
+    ) -> None:
         """Check if the input for the multi-class classifier is correct.
 
         Parameters
