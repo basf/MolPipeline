@@ -348,3 +348,69 @@ class ChempropRegressor(ChempropModel):
             n_jobs=n_jobs,
             **kwargs,
         )
+
+class ChempropMulticlassClassifier(ChempropModel):
+    """Chemprop model with default parameters for regression tasks."""
+
+    def __init__(
+        self,
+        model: MPNN | None = None,
+        lightning_trainer: pl.Trainer | None = None,
+        batch_size: int = 64,
+        n_jobs: int = 1,
+        n_classes: int = 3,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the chemprop regressor model.
+
+        Parameters
+        ----------
+        model : MPNN | None, optional
+            The chemprop model to wrap. If None, a default model will be used.
+        lightning_trainer : pl.Trainer, optional
+            The lightning trainer to use, by default None
+        batch_size : int, optional (default=64)
+            The batch size to use.
+        n_jobs : int, optional (default=1)
+            The number of jobs to use.
+        kwargs : Any
+            Parameters set using `set_params`.
+            Can be used to modify components of the model.
+        """
+        if model is None:
+            bond_encoder = BondMessagePassing()
+            agg = SumAggregation()
+            predictor = MulticlassClassificationFFN(n_classes=n_classes)
+            model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
+        super().__init__(
+            model=model,
+            lightning_trainer=lightning_trainer,
+            batch_size=batch_size,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+        self.n_classes = n_classes
+
+    def set_params(self, **params: Any) -> Self:
+        """Set the parameters of the model and check if it is a binary classifier.
+
+        Parameters
+        ----------
+        **params
+            The parameters to set.
+
+        Returns
+        -------
+        Self
+            The model with the new parameters.
+        """
+        super().set_params(**params)
+        if not self._is_multiclass_classifier():
+            raise ValueError("ChempropMulticlassClassifier should contain more than 2 classes.")
+        return self
+    
+    def get_params(self, deep: bool = False) -> dict[str, Any]:
+        params = super().get_params(deep)
+        return params
+    
+
