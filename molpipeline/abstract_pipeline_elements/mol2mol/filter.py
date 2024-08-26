@@ -1,7 +1,7 @@
 """Abstract classes for filters."""
 
 import abc
-from typing import Any, Literal, Optional, Union, Mapping
+from typing import Any, Literal, Mapping, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
