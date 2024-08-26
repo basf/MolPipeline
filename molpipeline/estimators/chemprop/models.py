@@ -413,4 +413,48 @@ class ChempropMulticlassClassifier(ChempropModel):
         params = super().get_params(deep)
         return params
     
+    def fit(
+        self,
+        X: MoleculeDataset,
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
+    ) -> Self:
+        """Fit the model to the data.
 
+        Parameters
+        ----------
+        X : MoleculeDataset
+            The input data.
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
+            The target data.
+
+        Returns
+        -------
+        Self
+            The fitted model.
+        """
+        self._check_correct_input(y)
+        return super().fit(X, y)
+    
+    def _check_correct_input(self,y) -> None:
+        """Checks if the input for the multi-class classifier is correct.
+
+        Parameters
+        ----------
+        y : _type_
+            Indended classes for the dataset
+
+        Raises
+        ------
+        ValueError
+            if the classes found in y are not matching n_classes or if the class labels do not start from 0 to n_classes-1
+        """
+        unique_y = np.unique(y)
+        log = []
+        if self.n_classes != len(unique_y):
+            log.append(f"Given number of classes in init (n_classes) does not match the number of unique classes (found {unique_y}) in the target data.")
+        if sorted(unique_y) != list(range(self.n_classes)):
+            err = f"Classes need to be in the range from 0 to {self.n_classes-1}. Found {unique_y}. Please correct the input data accordingly."
+            print(err)
+            log.append(err)
+        if log:
+            raise ValueError("\n".join(log))
