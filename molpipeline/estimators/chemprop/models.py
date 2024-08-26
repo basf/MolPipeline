@@ -349,6 +349,7 @@ class ChempropRegressor(ChempropModel):
             **kwargs,
         )
 
+
 class ChempropMulticlassClassifier(ChempropModel):
     """Chemprop model with default parameters for regression tasks."""
 
@@ -373,6 +374,8 @@ class ChempropMulticlassClassifier(ChempropModel):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        n_classes : int, optional (default=3)
+            The number of classes for the classifier.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -406,13 +409,11 @@ class ChempropMulticlassClassifier(ChempropModel):
         """
         super().set_params(**params)
         if not self._is_multiclass_classifier():
-            raise ValueError("ChempropMulticlassClassifier should contain more than 2 classes.")
+            raise ValueError(
+                "ChempropMulticlassClassifier should contain more than 2 classes."
+            )
         return self
-    
-    def get_params(self, deep: bool = False) -> dict[str, Any]:
-        params = super().get_params(deep)
-        return params
-    
+
     def fit(
         self,
         X: MoleculeDataset,
@@ -434,8 +435,8 @@ class ChempropMulticlassClassifier(ChempropModel):
         """
         self._check_correct_input(y)
         return super().fit(X, y)
-    
-    def _check_correct_input(self,y) -> None:
+
+    def _check_correct_input(self, y) -> None:
         """Checks if the input for the multi-class classifier is correct.
 
         Parameters
@@ -451,7 +452,9 @@ class ChempropMulticlassClassifier(ChempropModel):
         unique_y = np.unique(y)
         log = []
         if self.n_classes != len(unique_y):
-            log.append(f"Given number of classes in init (n_classes) does not match the number of unique classes (found {unique_y}) in the target data.")
+            log.append(
+                f"Given number of classes in init (n_classes) does not match the number of unique classes (found {unique_y}) in the target data."
+            )
         if sorted(unique_y) != list(range(self.n_classes)):
             err = f"Classes need to be in the range from 0 to {self.n_classes-1}. Found {unique_y}. Please correct the input data accordingly."
             print(err)
