@@ -4,10 +4,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from sklearn.model_selection import GroupShuffleSplit
 
-from molpipeline import Pipeline
-from molpipeline.any2mol import AutoToMol
-from molpipeline.model_selection.splitter import GroupShuffleSplit
-from molpipeline.mol2any.mol2bool import MolToBool
+from molpipeline.experimental.model_selection.splitter import GroupShuffleSplit
 
 
 class TestSampleBasedGroupShuffleSplit(unittest.TestCase):
