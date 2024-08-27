@@ -312,9 +312,6 @@ class TestClassificationPipeline(unittest.TestCase):
         molecule_net_bbbp_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz", sep="\t", nrows=100
         )
-        molecule_net_bbbp_df.to_csv(
-            "molecule_net_bbbp.tsv.gz", sep="\t", index=False
-        )  # TODO: remove this line?
         classification_model = get_classification_pipeline()
         classification_model.fit(
             molecule_net_bbbp_df["smiles"].tolist(),
