@@ -410,7 +410,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         super().set_params(**params)
         if not self._is_multiclass_classifier():
             raise ValueError(
-                "ChempropMulticlassClassifier should contain more than 2 classes."
+                "The model's predictor or the number of classes are invalid. Use a multiclass predictor and more than 2 classes."
             )
         return self
 
