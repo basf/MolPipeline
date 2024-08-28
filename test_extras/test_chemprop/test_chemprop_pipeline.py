@@ -143,6 +143,11 @@ def get_classification_pipeline() -> Pipeline:
 def get_multiclass_classification_pipeline(n_classes: int) -> Pipeline:
     """Get the Chemprop model pipeline for classification.
 
+    Parameters
+    ----------
+    n_classes : int
+        The number of classes for model initialization.
+
     Returns
     -------
     Pipeline
