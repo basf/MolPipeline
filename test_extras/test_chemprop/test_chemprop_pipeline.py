@@ -141,7 +141,7 @@ def get_classification_pipeline() -> Pipeline:
 
 
 def get_multiclass_classification_pipeline(n_classes: int) -> Pipeline:
-    """Get the Chemprop model pipeline for classification.
+    """Get the Chemprop model pipeline for multiclass classification.
 
     Parameters
     ----------
@@ -151,7 +151,7 @@ def get_multiclass_classification_pipeline(n_classes: int) -> Pipeline:
     Returns
     -------
     Pipeline
-        The Chemprop model pipeline for classification.
+        The Chemprop model pipeline for multiclass classification.
     """
     smiles2mol = SmilesToMol()
     mol2chemprop = MolToChemprop()
@@ -343,16 +343,14 @@ class TestClassificationPipeline(unittest.TestCase):
 
 
 class TestMulticlassClassificationPipeline(unittest.TestCase):
-    """Test the Chemprop model pipeline for classification."""
+    """Test the Chemprop model pipeline for multiclass classification."""
 
     def test_prediction(self) -> None:
-        """Test the prediction of the classification model."""
+        """Test the prediction of the multiclass classification model."""
 
         test_data_df = pd.read_csv(
             TEST_DATA_DIR / "multiclass_mock.tsv", sep="\t", index_col=False
         )
-        print(test_data_df.head())
-        print(test_data_df.columns)
         classification_model = get_multiclass_classification_pipeline(n_classes=3)
         mols = test_data_df["Molecule"].tolist()
         classification_model.fit(
@@ -369,12 +367,13 @@ class TestMulticlassClassificationPipeline(unittest.TestCase):
         pred_copy = model_copy.predict(mols)
         proba_copy = model_copy.predict_proba(mols)
 
-        nan_indices = np.isnan(pred)
-        self.assertListEqual(nan_indices.tolist(), np.isnan(pred_copy).tolist())
-        self.assertTrue(np.allclose(pred[~nan_indices], pred_copy[~nan_indices]))
+        nan_mask = np.isnan(pred)
+        self.assertListEqual(nan_mask.tolist(), np.isnan(pred_copy).tolist())
+        self.assertTrue(np.allclose(pred[~nan_mask], pred_copy[~nan_mask]))
 
         self.assertEqual(proba.shape, proba_copy.shape)
-        self.assertTrue(np.allclose(proba[~nan_indices], proba_copy[~nan_indices]))
+        self.assertEqual(pred.shape, pred_copy.shape)
+        self.assertTrue(np.allclose(proba[~nan_mask], proba_copy[~nan_mask]))
 
         with self.assertRaises(ValueError):
             classification_model.fit(
