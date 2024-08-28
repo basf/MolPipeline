@@ -393,6 +393,7 @@ class ChempropMulticlassClassifier(ChempropModel):
             **kwargs,
         )
         self.n_classes = n_classes
+        self._is_multiclass_classifier()
 
     def set_params(self, **params: Any) -> Self:
         """Set the parameters of the model and check if it is a multiclass classifier.
