@@ -140,7 +140,7 @@ def get_classification_pipeline() -> Pipeline:
     return model_pipeline
 
 
-def get_multiclass_classification_pipeline() -> Pipeline:
+def get_multiclass_classification_pipeline(n_classes: int) -> Pipeline:
     """Get the Chemprop model pipeline for classification.
 
     Returns
@@ -155,7 +155,7 @@ def get_multiclass_classification_pipeline() -> Pipeline:
         error_filter, fill_value=np.nan
     )
     chemprop_model = ChempropMulticlassClassifier(
-        n_classes=3, lightning_trainer=DEFAULT_TRAINER
+        n_classes=n_classes, lightning_trainer=DEFAULT_TRAINER
     )
     model_pipeline = Pipeline(
         steps=[
@@ -348,7 +348,7 @@ class TestMulticlassClassificationPipeline(unittest.TestCase):
         )
         print(test_data_df.head())
         print(test_data_df.columns)
-        classification_model = get_multiclass_classification_pipeline()
+        classification_model = get_multiclass_classification_pipeline(n_classes=3)
         mols = test_data_df["Molecule"].tolist()
         classification_model.fit(
             mols,
@@ -375,4 +375,10 @@ class TestMulticlassClassificationPipeline(unittest.TestCase):
             classification_model.fit(
                 mols,
                 test_data_df["Label"].add(1).to_numpy(),
+            )
+        with self.assertRaises(ValueError):
+            classification_model = get_multiclass_classification_pipeline(n_classes=2)
+            classification_model.fit(
+                mols,
+                test_data_df["Label"].to_numpy(),
             )
