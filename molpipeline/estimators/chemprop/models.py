@@ -444,13 +444,13 @@ class ChempropMulticlassClassifier(ChempropModel):
 
         Parameters
         ----------
-        y : _type_
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             Indended classes for the dataset
 
         Raises
         ------
         ValueError
-            if the classes found in y are not matching n_classes or if the class labels do not start from 0 to n_classes-1
+            If the classes found in y are not matching n_classes or if the class labels do not start from 0 to n_classes-1.
         """
         unique_y = np.unique(y)
         log = []
@@ -460,7 +460,6 @@ class ChempropMulticlassClassifier(ChempropModel):
             )
         if sorted(unique_y) != list(range(self.n_classes)):
             err = f"Classes need to be in the range from 0 to {self.n_classes-1}. Found {unique_y}. Please correct the input data accordingly."
-            print(err)
             log.append(err)
         if log:
             raise ValueError("\n".join(log))
