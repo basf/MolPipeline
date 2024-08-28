@@ -112,7 +112,7 @@ class ChempropModel(ABCChemprop):
         bool
             True if the model is a multiclass classifier, False otherwise.
         """
-        if isinstance(self.model.predictor, MulticlassClassificationFFN):
+        if isinstance(self.model.predictor, MulticlassClassificationFFN) and self.n_classes > 2:
             return True
         return False
 
@@ -351,7 +351,7 @@ class ChempropRegressor(ChempropModel):
 
 
 class ChempropMulticlassClassifier(ChempropModel):
-    """Chemprop model with default parameters for regression tasks."""
+    """Chemprop model with default parameters for multiclass classification tasks."""
 
     def __init__(
         self,
@@ -362,7 +362,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         n_jobs: int = 1,
         **kwargs: Any,
     ) -> None:
-        """Initialize the chemprop regressor model.
+        """Initialize the chemprop multiclass model.
 
         Parameters
         ----------
@@ -395,7 +395,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         self.n_classes = n_classes
 
     def set_params(self, **params: Any) -> Self:
-        """Set the parameters of the model and check if it is a binary classifier.
+        """Set the parameters of the model and check if it is a multiclass classifier.
 
         Parameters
         ----------
