@@ -209,14 +209,14 @@ class ValueGrid(Grid2D):
 
     def map2color(
         self,
-        c_map: colors.Colormap | str,
-        v_lim: Sequence[float] | None = None,
+        c_map: colors.Colormap,
+        normalizer: colors.Normalize,
     ) -> ColorGrid:
         """Generate a ColorGrid from `self.values` according to given colormap.
 
         Parameters
         ----------
-        c_map: Union[colors.Colormap, str]
+        c_map: colors.Colormap
             Colormap to be used for mapping values to colors.
         v_lim: Optional[Tuple[float, float]]
             Limits for the colormap. If not given, the maximum absolute value of `self.values` is used as limit.
@@ -227,15 +227,30 @@ class ValueGrid(Grid2D):
             ColorGrid with colors corresponding to ValueGrid.
         """
         color_grid = ColorGrid(self.x_lim, self.y_lim, self.x_res, self.y_res)
-        if not v_lim:
-            abs_max = np.max(np.abs(self.values))
-            v_lim = -abs_max, abs_max
-        normalizer = colors.Normalize(vmin=v_lim[0], vmax=v_lim[1])
-        if isinstance(c_map, str):
-            c_map = cm.get_cmap(c_map)
         norm = normalizer(self.values)
         color_grid.color_grid = np.array(c_map(norm))
         return color_grid
+
+
+def get_color_normalizer_from_data(
+    values: npt.NDArray[np.float64],
+) -> colors.Normalize:
+    """Create a color normalizer based on the data distribution of 'values'.
+
+    Parameters
+    ----------
+    values: npt.NDArray[np.float64]
+        Data to derive limits of normalizer. The maximum absolute value of
+        values` is used as limit.
+
+    Returns
+    -------
+    colors.Normalize
+        Normalizer for colors.
+    """
+    abs_max = np.max(np.abs(values))
+    normalizer = colors.Normalize(vmin=-abs_max, vmax=abs_max)
+    return normalizer
 
 
 def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
