@@ -10,7 +10,7 @@ import numpy.typing as npt
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(kw_only=True)
 class Explanation:
     """Class representing explanations of a prediction."""
 
@@ -50,3 +50,13 @@ class Explanation:
                 ),
             ]
         )
+
+
+@dataclasses.dataclass(kw_only=True)
+class SHAPExplanation(Explanation):
+    """Class representing SHAP explanations of a prediction.
+
+    This Explanation holds additional information only present in SHAP explanations.
+    """
+
+    expected_value: npt.NDArray[np.float64]

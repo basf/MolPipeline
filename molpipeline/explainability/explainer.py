@@ -12,7 +12,7 @@ from scipy.sparse import issparse, spmatrix
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import OptionalMol
-from molpipeline.explainability.explanation import Explanation
+from molpipeline.explainability.explanation import Explanation, SHAPExplanation
 from molpipeline.explainability.fingerprint_utils import fingerprint_shap_to_atomweights
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import SubpipelineExtractor
@@ -213,7 +213,7 @@ class SHAPTreeExplainer(AbstractExplainer):
         return True
 
     # pylint: disable=C0103,W0613
-    def explain(self, X: Any, **kwargs: Any) -> list[Explanation]:
+    def explain(self, X: Any, **kwargs: Any) -> list[SHAPExplanation]:
         """Explain the predictions for the input data.
 
         If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.
@@ -278,7 +278,7 @@ class SHAPTreeExplainer(AbstractExplainer):
                 )
 
             explanation_results.append(
-                Explanation(
+                SHAPExplanation(
                     feature_vector=feature_vector,
                     feature_names=feature_names,
                     molecule=molecule,
@@ -286,6 +286,7 @@ class SHAPTreeExplainer(AbstractExplainer):
                     feature_weights=feature_weights,
                     atom_weights=atom_weights,
                     bond_weights=bond_weights,
+                    expected_value=self.explainer.expected_value,
                 )
             )
 
