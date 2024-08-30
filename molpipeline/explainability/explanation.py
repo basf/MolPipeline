@@ -59,4 +59,4 @@ class SHAPExplanation(Explanation):
     This Explanation holds additional information only present in SHAP explanations.
     """
 
-    expected_value: npt.NDArray[np.float64] = np.nan
+    expected_value: npt.NDArray[np.float64] | None = None
