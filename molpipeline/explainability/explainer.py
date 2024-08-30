@@ -12,7 +12,7 @@ from scipy.sparse import issparse, spmatrix
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import OptionalMol
-from molpipeline.explainability.explanation import Explanation, SHAPExplanation
+from molpipeline.explainability.explanation import SHAPExplanation
 from molpipeline.explainability.fingerprint_utils import fingerprint_shap_to_atomweights
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import SubpipelineExtractor
