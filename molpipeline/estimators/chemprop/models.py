@@ -112,7 +112,7 @@ class ChempropModel(ABCChemprop):
         bool
             True if the model is a multiclass classifier, False otherwise.
         """
-        if isinstance(self.model.predictor, MulticlassClassificationFFN) and self.n_classes > 2:
+        if isinstance(self.model.predictor, MulticlassClassificationFFN):
             return True
         return False
 
@@ -385,6 +385,7 @@ class ChempropMulticlassClassifier(ChempropModel):
             agg = SumAggregation()
             predictor = MulticlassClassificationFFN(n_classes=n_classes)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
+        self.n_classes = n_classes
         super().__init__(
             model=model,
             lightning_trainer=lightning_trainer,
@@ -392,8 +393,7 @@ class ChempropMulticlassClassifier(ChempropModel):
             n_jobs=n_jobs,
             **kwargs,
         )
-        self.n_classes = n_classes
-        self._is_multiclass_classifier()
+        self._is_valid_multiclass_classifier()
 
     def set_params(self, **params: Any) -> Self:
         """Set the parameters of the model and check if it is a multiclass classifier.
@@ -409,7 +409,7 @@ class ChempropMulticlassClassifier(ChempropModel):
             The model with the new parameters.
         """
         super().set_params(**params)
-        if not self._is_multiclass_classifier():
+        if not self._is_valid_multiclass_classifier():
             raise ValueError(
                 "The model's predictor or the number of classes are invalid. Use a multiclass predictor and more than 2 classes."
             )
@@ -463,3 +463,15 @@ class ChempropMulticlassClassifier(ChempropModel):
             log.append(err)
         if log:
             raise ValueError("\n".join(log))
+
+    def _is_valid_multiclass_classifier(self) -> bool:
+        """Check if a multiclass classifier is valid. Needs to be of the correct class and have more than 2 classes.
+
+        Returns
+        -------
+        bool
+            True if is a valid multiclass classifier, False otherwise.
+        """
+        has_correct_class = self._is_multiclass_classifier()
+        has_classes = self.n_classes > 2
+        return has_correct_class and has_classes
