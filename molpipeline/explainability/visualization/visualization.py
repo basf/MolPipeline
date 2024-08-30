@@ -7,15 +7,14 @@ Much of the visualization code in this file originates from projects of Christia
 
 from __future__ import annotations
 
-import io
 from typing import Sequence
 
 import numpy as np
 import numpy.typing as npt
+from matplotlib import colors
+from matplotlib import pyplot as plt
+from matplotlib.colors import Colormap
 from PIL import Image
-from matplotlib import pyplot as plt, colors
-from matplotlib.colors import Colormap, ListedColormap
-from matplotlib.pyplot import get_cmap
 from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdMolDraw2D
@@ -24,97 +23,18 @@ from molpipeline.abstract_pipeline_elements.core import RDKitMol
 from molpipeline.explainability.explanation import SHAPExplanation
 from molpipeline.explainability.visualization.gauss import GaussFunctor2D
 from molpipeline.explainability.visualization.heatmaps import (
-    color_canvas,
     ValueGrid,
+    color_canvas,
     get_color_normalizer_from_data,
 )
-
-RGBAtuple = tuple[float, float, float, float]
-
-
-def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float]]:
-    """Return the extent of the molecule.
-
-    x- and y-coordinates of all atoms in the molecule are accessed, returning min- and max-values for both axes.
-
-    Parameters
-    ----------
-    mol: Chem.Mol
-        RDKit Molecule object of which the limits are determined.
-
-    Returns
-    -------
-    tuple[tuple[float, float], tuple[float, float]]
-        Limits of the molecule.
-    """
-    coords_list = []
-    conf = mol.GetConformer(0)
-    for i, _ in enumerate(mol.GetAtoms()):
-        pos = conf.GetAtomPosition(i)
-        coords_list.append((pos.x, pos.y))
-    coords: npt.NDArray[np.float64] = np.array(coords_list)
-    min_p = np.min(coords, axis=0)
-    max_p = np.max(coords, axis=0)
-    x_lim = min_p[0], max_p[0]
-    y_lim = min_p[1], max_p[1]
-    return x_lim, y_lim
-
-
-def pad(
-    lim: Sequence[float] | npt.NDArray[np.float64], ratio: float
-) -> tuple[float, float]:
-    """Take a 2-dimensional vector and adds len(vector) * ratio / 2 to each side and returns obtained vector.
-
-    Parameters
-    ----------
-    lim: Sequence[float] | npt.NDArray[np.float64]
-        Limits which are extended.
-    ratio: float
-        factor by which the limits are extended.
-
-    Returns
-    -------
-    List[float, float]
-        Extended limits
-    """
-    diff = max(lim) - min(lim)
-    diff *= ratio / 2
-    return lim[0] - diff, lim[1] + diff
-
-
-def color_tuple_to_colormap(
-    color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple]
-) -> Colormap:
-    """Convert a color tuple to a colormap.
-
-    Parameters
-    ----------
-    color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple]
-        The color tuple.
-
-    Returns
-    -------
-    Colormap
-        The colormap (a matplotlib data structure).
-    """
-    if len(color_tuple) != 3:
-        raise ValueError("Color tuple must have 3 elements")
-
-    # Definition of color
-    col1, col2, col3 = map(np.array, color_tuple)
-
-    # Creating linear gradient for color mixing
-    linspace = np.linspace(0, 1, int(128))
-    linspace4d = np.vstack([linspace] * 4).T
-
-    # interpolating values for 0 to 0.5 by mixing purple and white
-    zero_to_half = linspace4d * col2 + (1 - linspace4d) * col3
-    # interpolating values for 0.5 to 1 by mixing white and yellow
-    half_to_one = col1 * linspace4d + col2 * (1 - linspace4d)
-
-    # Creating new colormap from
-    newcmp = ListedColormap(np.vstack([zero_to_half, half_to_one]))
-    return newcmp
+from molpipeline.explainability.visualization.utils import (
+    RGBAtuple,
+    get_color_map_from_input,
+    get_mol_lims,
+    pad,
+    plt_to_pil,
+    to_png,
+)
 
 
 def _make_grid_from_mol(
@@ -348,29 +268,6 @@ def make_sum_of_gaussians_grid(
     return value_grid
 
 
-def get_color_map_from_input(
-    color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None
-) -> Colormap:
-    # read user definer color scheme as ColorMap
-    if color is None:
-        coolwarm = (
-            (0.017, 0.50, 0.850, 0.5),
-            (1.0, 1.0, 1.0, 0.5),
-            (1.0, 0.25, 0.0, 0.5),
-        )
-        coolwarm = (coolwarm[2], coolwarm[1], coolwarm[0])
-        color = coolwarm
-    if isinstance(color, Colormap):
-        color_map = color
-    elif isinstance(color, tuple):
-        color_map = color_tuple_to_colormap(color)  # type: ignore
-    elif isinstance(color, str):
-        color_map = get_cmap(color)
-    else:
-        raise ValueError("Color must be a tuple, string or ColorMap.")
-    return color_map
-
-
 def _structure_heatmap(
     mol: RDKitMol,
     atom_weights: npt.NDArray[np.float64],
@@ -378,8 +275,8 @@ def _structure_heatmap(
     width: int = 600,
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
-) -> Draw.MolDraw2D:
-    """Create a Gaussian plot on the molecular structure, highlight atoms with weighted Gaussians.
+) -> tuple[Draw.MolDraw2D, ValueGrid, ValueGrid, colors.Normalize, Colormap]:
+    """Create a heatmap of the molecular structure, highlighting atoms with weighted Gaussian's.
 
     Parameters
     ----------
@@ -396,8 +293,9 @@ def _structure_heatmap(
 
     Returns
     -------
-    Draw.MolDraw2D
-        The configured drawer.
+    Draw.MolDraw2D, ValueGrid, ColorGrid, colors.Normalize, Colormap
+        The configured drawer, the value grid, the color grid, the normalizer, and the
+        color map.
     """
     drawer = Draw.MolDraw2DCairo(width, height)
     # Coloring atoms of element 0 to 100 black
@@ -447,11 +345,33 @@ def structure_heatmap(
     width: int = 600,
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
-) -> Draw.MolDraw2D:
+) -> Image.Image:
+    """Create a Gaussian plot on the molecular structure, highlight atoms with weighted Gaussians.
+
+    Parameters
+    ----------
+    mol: RDKitMol
+        The molecule.
+    atom_weights: npt.NDArray[np.float64]
+        The atom weights.
+    color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None
+        The color map.
+    width: int
+        The width of the image in number of pixels.
+    height: int
+        The height of the image in number of pixels.
+
+    Returns
+    -------
+    Image
+        The image as PNG.
+    """
     drawer, *_ = _structure_heatmap(
         mol, atom_weights, color, width, height, color_limits
     )
-    return drawer
+    figure_bytes = drawer.GetDrawingText()
+    image = to_png(figure_bytes)
+    return image
 
 
 def structure_heatmap_shap_explanation(
@@ -460,8 +380,27 @@ def structure_heatmap_shap_explanation(
     width: int = 600,
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
-) -> Draw.MolDraw2D:
-    # TODO this should only work if the feature vector is binary. Maybe raise an error otherwise? Or do something else?
+) -> Image.Image:
+    """Create a heatmap of the molecular structure and display SHAP prediction composition.
+
+    Parameters
+    ----------
+    explanation: SHAPExplanation
+        The SHAP explanation.
+    color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None
+        The color map.
+    width: int
+        The width of the image in number of pixels.
+    height: int
+        The height of the image in number of pixels.
+    color_limits: tuple[float, float] | None
+        The color limits.
+
+    Returns
+    -------
+    Image
+        The image as PNG.
+    """
     present_shap = explanation.feature_weights[:, 1] * explanation.feature_vector
     absent_shap = explanation.feature_weights[:, 1] * (1 - explanation.feature_vector)
     sum_present_shap = sum(present_shap)
@@ -476,7 +415,7 @@ def structure_heatmap_shap_explanation(
         color_limits=color_limits,
     )
     figure_bytes = drawer.GetDrawingText()
-    image = show_png(figure_bytes)
+    image = to_png(figure_bytes)
     image_array = np.array(image)
 
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -504,22 +443,11 @@ def structure_heatmap_shap_explanation(
         f"$features_{{absent}}={sum_absent_shap:.2f}$"
     )
     fig.text(0.5, 0.18, text, ha="center")
-    return fig
 
+    image = plt_to_pil(fig)
+    # clear the figure and memory
+    plt.close()
+    plt.clf()
+    plt.cla()
 
-def show_png(data: bytes) -> Image.Image:
-    """Show a PNG image from a byte stream.
-
-    Parameters
-    ----------
-    data: bytes
-        The image data.
-
-    Returns
-    -------
-    Image
-        The image.
-    """
-    bio = io.BytesIO(data)
-    img = Image.open(bio)
-    return img
+    return image
