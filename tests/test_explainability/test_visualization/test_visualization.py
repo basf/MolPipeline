@@ -9,13 +9,14 @@ from sklearn.ensemble import RandomForestClassifier
 
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.explainability import Explanation, SHAPTreeExplainer
-from molpipeline.explainability.explanation import SHAPExplanation
+from molpipeline.explainability import (
+    SHAPExplanation,
+    SHAPTreeExplainer,
+    structure_heatmap,
+    structure_heatmap_shap,
+)
 from molpipeline.explainability.visualization.visualization import (
     make_sum_of_gaussians_grid,
-    structure_heatmap,
-    structure_heatmap_shap_explanation,
-    to_png,
 )
 from molpipeline.mol2any import MolToMorganFP
 
@@ -26,7 +27,13 @@ _RANDOM_STATE = 67056
 
 
 def _get_test_shap_explanations() -> list[SHAPExplanation]:
-    """Get test explanations."""
+    """Get test explanations.
+
+    Returns
+    -------
+    list[SHAPExplanation]
+        List of SHAP explanations.
+    """
     pipeline = Pipeline(
         [
             ("smi2mol", SmilesToMol()),
@@ -71,7 +78,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
         for explanation in self.explanations:
             self.assertTrue(explanation.is_valid())
             self.assertIsInstance(explanation.atom_weights, np.ndarray)
-            image = structure_heatmap_shap_explanation(
+            image = structure_heatmap_shap(
                 explanation=explanation,
                 width=128,
                 height=128,
