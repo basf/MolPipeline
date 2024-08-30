@@ -442,7 +442,7 @@ def structure_heatmap_shap(
         f"$P(y=1|X) = {explanation.prediction[1]:.2f}$ ="
         "\n"
         "\n"
-        f"  $expected \ value={explanation.expected_value[1]:.2f}$   +   "
+        f"  $expected \ value={explanation.expected_value[1]:.2f}$   +   "  # noqa: W605
         f"$features_{{present}}= {sum_present_shap:.2f}$   +   "
         f"$features_{{absent}}={sum_absent_shap:.2f}$"
     )

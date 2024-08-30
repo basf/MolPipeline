@@ -1,6 +1,7 @@
 """Test visualization methods for explanations."""
 
 import unittest
+from typing import ClassVar
 
 import numpy as np
 from rdkit import Chem
@@ -54,6 +55,8 @@ def _get_test_shap_explanations() -> list[SHAPExplanation]:
 class TestExplainabilityVisualization(unittest.TestCase):
     """Test the public interface of the visualization methods for explanations."""
 
+    explanations: ClassVar[list[SHAPExplanation]]
+
     @classmethod
     def setUpClass(cls) -> None:
         """Set up the tests."""
@@ -89,6 +92,8 @@ class TestExplainabilityVisualization(unittest.TestCase):
 
 class TestSumOfGaussiansGrid(unittest.TestCase):
     """Test visualization methods for explanations."""
+
+    explanations: ClassVar[list[SHAPExplanation]]
 
     @classmethod
     def setUpClass(cls) -> None:

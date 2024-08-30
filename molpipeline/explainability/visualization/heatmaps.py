@@ -10,7 +10,7 @@ from typing import Callable, Sequence
 
 import numpy as np
 import numpy.typing as npt
-from matplotlib import cm, colors
+from matplotlib import colors
 from rdkit.Chem import Draw
 from rdkit.Geometry.rdGeometry import Point2D
 
@@ -218,8 +218,8 @@ class ValueGrid(Grid2D):
         ----------
         c_map: colors.Colormap
             Colormap to be used for mapping values to colors.
-        v_lim: Optional[Tuple[float, float]]
-            Limits for the colormap. If not given, the maximum absolute value of `self.values` is used as limit.
+        normalizer: colors.Normalize
+            Normalizer to be used for mapping values to colors.
 
         Returns
         -------

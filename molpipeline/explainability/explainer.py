@@ -117,12 +117,12 @@ def _convert_shap_feature_weights_to_atom_weights(
 
 
 # pylint: disable=R0903
-class AbstractExplainer(abc.ABC):
+class AbstractSHAPExplainer(abc.ABC):
     """Abstract class for explainer objects."""
 
     # pylint: disable=C0103,W0613
     @abc.abstractmethod
-    def explain(self, X: Any, **kwargs: Any) -> list[Explanation]:
+    def explain(self, X: Any, **kwargs: Any) -> list[SHAPExplanation]:
         """Explain the predictions for the input data.
 
         Parameters
@@ -134,13 +134,13 @@ class AbstractExplainer(abc.ABC):
 
         Returns
         -------
-        list[Explanation]
+        list[Explanation] | list[SHAPExplanation]
             List of explanations corresponding to the input samples.
         """
 
 
 # pylint: disable=R0903
-class SHAPTreeExplainer(AbstractExplainer):
+class SHAPTreeExplainer(AbstractSHAPExplainer):
     """Class for SHAP's TreeExplainer wrapper."""
 
     def __init__(self, pipeline: Pipeline, **kwargs: Any) -> None:
@@ -228,7 +228,7 @@ class SHAPTreeExplainer(AbstractExplainer):
 
         Returns
         -------
-        list[Explanation]
+        list[SHAPExplanation]
             List of explanations corresponding to the input data.
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
@@ -242,7 +242,7 @@ class SHAPTreeExplainer(AbstractExplainer):
             prediction = _get_predictions(self.pipeline, input_sample)
             if not self._prediction_is_valid(prediction):
                 # we use the prediction to check if the input is valid. If not, we cannot explain it.
-                explanation_results.append(Explanation())
+                explanation_results.append(SHAPExplanation())
                 continue
 
             if prediction.ndim > 1:
