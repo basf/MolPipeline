@@ -408,6 +408,10 @@ def structure_heatmap_shap(
         raise ValueError("SHAPExplanation does not contain feature weights.")
     if explanation.feature_vector is None:
         raise ValueError("SHAPExplanation does not contain feature_vector.")
+    if explanation.expected_value is None:
+        raise ValueError("SHAPExplanation does not contain expected value.")
+    if explanation.prediction is None:
+        raise ValueError("SHAPExplanation does not contain prediction.")
     if explanation.molecule is None:
         raise ValueError("SHAPExplanation does not contain molecule.")
     if explanation.atom_weights is None:
@@ -418,7 +422,7 @@ def structure_heatmap_shap(
     sum_present_shap = sum(present_shap)
     sum_absent_shap = sum(absent_shap)
 
-    drawer, value_grid, color_grid, normalizer, color_map = _structure_heatmap(
+    drawer, _, _, normalizer, color_map = _structure_heatmap(
         explanation.molecule,
         explanation.atom_weights,
         color=color,
@@ -450,7 +454,7 @@ def structure_heatmap_shap(
         f"$P(y=1|X) = {explanation.prediction[1]:.2f}$ ="
         "\n"
         "\n"
-        f"  $expected \ value={explanation.expected_value[1]:.2f}$   +   "  # noqa: W605
+        f"  $expected \ value={explanation.expected_value[1]:.2f}$   +   "  # noqa: W605 # pylint: disable=W1401
         f"$features_{{present}}= {sum_present_shap:.2f}$   +   "
         f"$features_{{absent}}={sum_absent_shap:.2f}$"
     )
