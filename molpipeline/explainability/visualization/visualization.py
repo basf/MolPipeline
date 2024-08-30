@@ -453,7 +453,7 @@ def structure_heatmap_shap(
     if isinstance(explanation.prediction, float):
         # regression case
         raise NotImplementedError("Regression case not yet implemented.")
-    elif isinstance(explanation.prediction, np.ndarray):
+    if isinstance(explanation.prediction, np.ndarray):
         if len(explanation.prediction) == 2:
             # binary classification case
             text = (
