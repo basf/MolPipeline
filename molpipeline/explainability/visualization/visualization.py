@@ -211,6 +211,8 @@ def make_sum_of_gaussians_grid(
     ----------
     mol: Chem.Mol
         RDKit molecule object which is displayed.
+    grid_resolution: Sequence[int] | None
+        Number of pixels of x- and y-axis.
     atom_weights: Sequence[float] | npt.NDArray[np.float64] | None
         Array of weights for atoms.
     bond_weights: Sequence[float] | npt.NDArray[np.float64] | None
@@ -221,8 +223,6 @@ def make_sum_of_gaussians_grid(
         Value for the width of displayed bond weights (perpendicular to bond-axis).
     bond_length: float
         Value for the length of displayed bond weights (along the bond-axis).
-    grid_resolution: Sequence[int] | None
-        Number of pixels of x- and y-axis.
     padding: Sequence[float] | None
         Increase of heatmap size, relative to size of molecule. Usually the heatmap is increased by 100% in each axis
         by padding 50% in each side.
@@ -290,6 +290,8 @@ def _structure_heatmap(
         The width of the image in number of pixels.
     height: int
         The height of the image in number of pixels.
+    color_limits: tuple[float, float] | None
+        The color limits.
 
     Returns
     -------
@@ -360,6 +362,8 @@ def structure_heatmap(
         The width of the image in number of pixels.
     height: int
         The height of the image in number of pixels.
+    color_limits: tuple[float, float] | None
+        The color limits.
 
     Returns
     -------
@@ -374,7 +378,7 @@ def structure_heatmap(
     return image
 
 
-def structure_heatmap_shap_explanation(
+def structure_heatmap_shap(
     explanation: SHAPExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
