@@ -191,12 +191,12 @@ def _add_gaussians_for_bonds(
 def make_sum_of_gaussians_grid(
     mol: Chem.Mol,
     grid_resolution: Sequence[int],
+    padding: Sequence[float],
     atom_weights: Sequence[float] | npt.NDArray[np.float64] | None = None,
     bond_weights: Sequence[float] | npt.NDArray[np.float64] | None = None,
     atom_width: float = 0.3,
     bond_width: float = 0.25,
     bond_length: float = 0.5,
-    padding: Sequence[float] | None = None,
 ) -> rdMolDraw2D:
     """Map weights of atoms and bonds to the drawing of a RDKit molecular depiction.
 
@@ -211,8 +211,10 @@ def make_sum_of_gaussians_grid(
     ----------
     mol: Chem.Mol
         RDKit molecule object which is displayed.
-    grid_resolution: Sequence[int] | None
+    grid_resolution: Sequence[int]
         Number of pixels of x- and y-axis.
+    padding: Sequence[float]
+        Increase of heatmap size, relative to size of molecule.
     atom_weights: Sequence[float] | npt.NDArray[np.float64] | None
         Array of weights for atoms.
     bond_weights: Sequence[float] | npt.NDArray[np.float64] | None
@@ -223,9 +225,6 @@ def make_sum_of_gaussians_grid(
         Value for the width of displayed bond weights (perpendicular to bond-axis).
     bond_length: float
         Value for the length of displayed bond weights (along the bond-axis).
-    padding: Sequence[float] | None
-        Increase of heatmap size, relative to size of molecule. Usually the heatmap is increased by 100% in each axis
-        by padding 50% in each side.
 
     Returns
     -------
@@ -405,6 +404,15 @@ def structure_heatmap_shap(
     Image
         The image as PNG.
     """
+    if explanation.feature_weights is None:
+        raise ValueError("SHAPExplanation does not contain feature weights.")
+    if explanation.feature_vector is None:
+        raise ValueError("SHAPExplanation does not contain feature_vector.")
+    if explanation.molecule is None:
+        raise ValueError("SHAPExplanation does not contain molecule.")
+    if explanation.atom_weights is None:
+        raise ValueError("SHAPExplanation does not contain atom weights.")
+
     present_shap = explanation.feature_weights[:, 1] * explanation.feature_vector
     absent_shap = explanation.feature_weights[:, 1] * (1 - explanation.feature_vector)
     sum_present_shap = sum(present_shap)
