@@ -17,7 +17,6 @@ try:
     from chemprop.data import MoleculeDataset, build_dataloader
     from chemprop.nn.predictors import (
         BinaryClassificationFFNBase,
-        MulticlassClassificationFFN,
     )
     from lightning import pytorch as pl
 except ImportError as error:
@@ -34,6 +33,7 @@ from molpipeline.estimators.chemprop.component_wrapper import (
     BondMessagePassing,
     RegressionFFN,
     SumAggregation,
+    MulticlassClassificationFFN,
 )
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 
@@ -385,7 +385,10 @@ class ChempropMulticlassClassifier(ChempropModel):
             agg = SumAggregation()
             predictor = MulticlassClassificationFFN(n_classes=n_classes)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
-        self.n_classes = n_classes
+        if n_classes != predictor.n_classes:
+            raise ValueError(
+                "The number of classes in the predictor does not match the number of classes."
+            )
         super().__init__(
             model=model,
             lightning_trainer=lightning_trainer,
@@ -394,6 +397,17 @@ class ChempropMulticlassClassifier(ChempropModel):
             **kwargs,
         )
         self._is_valid_multiclass_classifier()
+
+    @property
+    def n_classes(self) -> int:
+        """Return the number of classes."""
+        return self.model.predictor.n_classes
+    
+    @n_classes.setter
+    def n_classes(self, n_classes: int) -> None:
+        """Set the number of classes."""
+        self.model.predictor.n_classes = n_classes
+        self.model.reinitialize_network()
 
     def set_params(self, **params: Any) -> Self:
         """Set the parameters of the model and check if it is a multiclass classifier.
@@ -465,13 +479,13 @@ class ChempropMulticlassClassifier(ChempropModel):
             raise ValueError("\n".join(log))
 
     def _is_valid_multiclass_classifier(self) -> bool:
-        """Check if a multiclass classifier is valid. Needs to be of the correct class and have more than 2 classes.
+        """Check if a multiclass classifier is valid. Model FFN needs to be of the correct class and model needs to have more than 2 classes.
 
         Returns
         -------
         bool
             True if is a valid multiclass classifier, False otherwise.
         """
-        has_correct_class = self._is_multiclass_classifier()
+        has_correct_model = isinstance(self.model.predictor, MulticlassClassificationFFN)
         has_classes = self.n_classes > 2
-        return has_correct_class and has_classes
+        return has_correct_model and has_classes

@@ -10,12 +10,17 @@ from sklearn.base import clone
 
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
+    BondMessagePassing,
     MeanAggregation,
+    MulticlassClassificationFFN,
+    BinaryClassificationFFN,
     RegressionFFN,
+    SumAggregation,
 )
 from molpipeline.estimators.chemprop.models import (
     ChempropClassifier,
     ChempropModel,
+    ChempropMulticlassClassifier,
     ChempropRegressor,
 )
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
@@ -26,6 +31,7 @@ from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare
 from test_extras.test_chemprop.chemprop_test_utils.constant_vars import (
     DEFAULT_PARAMS,
     NO_IDENTITY_CHECK,
+    DEFAULT_SET_PARAMS,
 )
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_chemprop_model_binary_classification_mpnn,
@@ -127,6 +133,7 @@ class TestChempropModel(unittest.TestCase):
                 )
 
 
+
 class TestChempropClassifier(unittest.TestCase):
     """Test the Chemprop classifier model."""
 
@@ -150,6 +157,13 @@ class TestChempropClassifier(unittest.TestCase):
                 self.assertEqual(
                     param_dict[param_name], param, f"Test failed for {param_name}"
                 )
+    def test_set_params(self) -> None:
+        """Test the set_params methods."""
+        chemprop_model = ChempropClassifier(lightning_trainer__accelerator="cpu")
+        chemprop_model.set_params(**DEFAULT_SET_PARAMS)
+        current_params = chemprop_model.get_params(deep=True)
+        for param,value in DEFAULT_SET_PARAMS.items():
+            self.assertEqual(current_params[param], value)
 
 
 class TestChempropRegressor(unittest.TestCase):
@@ -177,3 +191,54 @@ class TestChempropRegressor(unittest.TestCase):
                 self.assertEqual(
                     param_dict[param_name], param, f"Test failed for {param_name}"
                 )
+
+class TestChempropMulticlassClassifier(unittest.TestCase):
+    """Test the Chemprop classifier model."""
+
+    def test_get_params(self) -> None:
+        """Test the get_params and set_params methods."""
+        n_classes = 3
+        chemprop_model = ChempropMulticlassClassifier(lightning_trainer__accelerator="cpu", n_classes=n_classes)
+        param_dict = chemprop_model.get_params(deep=True)
+        expected_params = dict(DEFAULT_PARAMS)  # Shallow copy
+        expected_params["n_classes"] = n_classes
+        self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
+        for param_name, param in expected_params.items():
+            if param_name in NO_IDENTITY_CHECK:
+                if isinstance(param, Iterable):
+                    self.assertIsInstance(param_dict[param_name], type(param))
+                    for i, p in enumerate(param):
+                        self.assertIsInstance(param_dict[param_name][i], p)
+                elif isinstance(param, type):
+                    self.assertIsInstance(param_dict[param_name], param)
+                else:
+                    raise ValueError(f"{param_name} should be a type.")
+            else:
+                self.assertEqual(
+                    param_dict[param_name], param, f"Test failed for {param_name}"
+                )
+    
+    def test_set_params(self) -> None:
+        """Test the set_params methods."""
+        chemprop_model = ChempropMulticlassClassifier(lightning_trainer__accelerator="cpu", n_classes=3)
+        chemprop_model.set_params(**DEFAULT_SET_PARAMS)
+        params = {"n_classes": 4, "batch_size": 20, "lightning_trainer__max_epochs":10, "model__predictor__n_layers":2}
+        chemprop_model.set_params(**params)
+        current_params = chemprop_model.get_params(deep=True)
+        for param,value in params.items():
+            self.assertEqual(current_params[param], value)
+    
+    def test_error_for_multiclass_predictor(self) -> None:
+        """Test the error for using a multiclass predictor for a binary classification model."""
+        chemprop_model = ChempropMulticlassClassifier(lightning_trainer__accelerator="cpu", n_classes=3)
+        with self.assertRaises(ValueError):
+            chemprop_model.set_params(model__predictor=RegressionFFN)
+        bond_encoder = BondMessagePassing()
+        agg = SumAggregation()
+        predictor = MulticlassClassificationFFN(n_classes=2)
+        with self.assertRaises(ValueError):
+            model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
+        predictor = RegressionFFN()
+        with self.assertRaises(ValueError):
+            model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
+

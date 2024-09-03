@@ -163,6 +163,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         task_weights: Tensor | None = None,
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
+        **kwargs: Any,
     ):
         """Initialize the BinaryClassificationFFN class.
 
@@ -200,6 +201,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             activation=activation,
             criterion=criterion,
             output_transform=output_transform,
+            **kwargs,
         )
         self.n_tasks = n_tasks
         self._input_dim = input_dim
@@ -322,6 +324,36 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
     n_targets: int = 1
     _T_default_criterion = CrossEntropyLoss
     _T_default_metric = CrossEntropyMetric
+
+    def __init__(
+        self,
+        n_classes: int,
+        n_tasks: int = 1,
+        input_dim: int = DEFAULT_HIDDEN_DIM,
+        hidden_dim: int = 300,
+        n_layers: int = 1,
+        dropout: float = 0.0,
+        activation: str = "relu",
+        criterion: LossFunction | None = None,
+        task_weights: Tensor | None = None,
+        threshold: float | None = None,
+        output_transform: UnscaleTransform | None = None,
+    ):
+        super().__init__(
+            n_tasks * n_classes,
+            input_dim,
+            hidden_dim,
+            n_layers,
+            dropout,
+            activation,
+            criterion,
+            task_weights,
+            threshold,
+            output_transform,
+            n_classes=n_classes
+        )
+
+        self.n_classes = n_classes
 
 
 class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type: ignore
