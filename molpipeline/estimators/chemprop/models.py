@@ -379,7 +379,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
-        
+
         Raises
         ------
         AttributeError
@@ -393,7 +393,9 @@ class ChempropMulticlassClassifier(ChempropModel):
             predictor = MulticlassClassificationFFN(n_classes=n_classes)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
         if not hasattr(model.predictor, "n_classes"):
-            raise AttributeError("The predictor does not have an attribute n_classes.Please use a MulticlassClassificationFFN predictor or define n_classes.")
+            raise AttributeError(
+                "The predictor does not have an attribute n_classes.Please use a MulticlassClassificationFFN predictor or define n_classes."
+            )
         if n_classes != model.predictor.n_classes:
             raise ValueError(
                 "The number of classes in the predictor does not match the number of classes."
@@ -411,7 +413,7 @@ class ChempropMulticlassClassifier(ChempropModel):
     def n_classes(self) -> int:
         """Return the number of classes."""
         return self.model.predictor.n_classes
-    
+
     @n_classes.setter
     def n_classes(self, n_classes: int) -> None:
         """Set the number of classes."""
@@ -495,6 +497,8 @@ class ChempropMulticlassClassifier(ChempropModel):
         bool
             True if is a valid multiclass classifier, False otherwise.
         """
-        has_correct_model = isinstance(self.model.predictor, MulticlassClassificationFFN)
+        has_correct_model = isinstance(
+            self.model.predictor, MulticlassClassificationFFN
+        )
         has_classes = self.n_classes > 2
         return has_correct_model and has_classes

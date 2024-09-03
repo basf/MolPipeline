@@ -350,7 +350,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
             task_weights,
             threshold,
             output_transform,
-            n_classes=n_classes
+            n_classes=n_classes,
         )
 
         self.n_classes = n_classes
