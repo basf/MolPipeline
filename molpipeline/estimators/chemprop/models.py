@@ -379,13 +379,22 @@ class ChempropMulticlassClassifier(ChempropModel):
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
+        
+        Raises
+        ------
+        AttributeError
+            If the passed model.predictor does not have an attribute n_classes.
+        ValueError
+            If the number of classes in the predictor does not match the number of classes given as attribute.
         """
         if model is None:
             bond_encoder = BondMessagePassing()
             agg = SumAggregation()
             predictor = MulticlassClassificationFFN(n_classes=n_classes)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
-        if n_classes != predictor.n_classes:
+        if not hasattr(model.predictor, "n_classes"):
+            raise AttributeError("The predictor does not have an attribute n_classes.Please use a MulticlassClassificationFFN predictor or define n_classes.")
+        if n_classes != model.predictor.n_classes:
             raise ValueError(
                 "The number of classes in the predictor does not match the number of classes."
             )
