@@ -416,7 +416,13 @@ class ChempropMulticlassClassifier(ChempropModel):
 
     @n_classes.setter
     def n_classes(self, n_classes: int) -> None:
-        """Set the number of classes."""
+        """Set the number of classes.
+
+        Parameters
+        ----------
+        n_classes : int
+            number of classes
+        """
         self.model.predictor.n_classes = n_classes
         self.model.reinitialize_network()
 

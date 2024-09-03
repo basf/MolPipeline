@@ -339,6 +339,33 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
     ):
+        """Initialize the MulticlassClassificationFFN class.
+
+        Parameters
+        ----------
+        n_classes : int
+            how many classes are expected in the output
+        n_tasks : int, optional (default=1)
+            Number of tasks.
+        input_dim : int, optional (default=DEFAULT_HIDDEN_DIM)
+            Input dimension.
+        hidden_dim : int, optional (default=300)
+            Hidden dimension.
+        n_layers : int, optional (default=1)
+            Number of layers.
+        dropout : float, optional (default=0)
+            Dropout rate.
+        activation : str, optional (default="relu")
+            Activation function.
+        criterion : LossFunction or None, optional (default=None)
+            Loss function. None defaults to BCELoss.
+        task_weights : Tensor or None, optional (default=None)
+            Task weights.
+        threshold : float or None, optional (default=None)
+            Threshold for binary classification.
+        output_transform : UnscaleTransform or None, optional (default=None)
+            Transformations to apply to the output. None defaults to UnscaleTransform.
+        """
         super().__init__(
             n_tasks,
             input_dim,
