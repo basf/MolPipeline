@@ -13,7 +13,6 @@ from molpipeline.estimators.chemprop.component_wrapper import (
     BondMessagePassing,
     MeanAggregation,
     MulticlassClassificationFFN,
-    BinaryClassificationFFN,
     RegressionFFN,
     SumAggregation,
 )
@@ -251,12 +250,12 @@ class TestChempropMulticlassClassifier(unittest.TestCase):
         with self.assertRaises(ValueError):
             predictor = MulticlassClassificationFFN(n_classes=2)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
-            chemprop_model = ChempropMulticlassClassifier(n_classes=2, model=model)
+            ChempropMulticlassClassifier(n_classes=2, model=model)
         with self.assertRaises(ValueError):
             predictor = MulticlassClassificationFFN(n_classes=3)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
-            chemprop_model = ChempropMulticlassClassifier(n_classes=4, model=model)
+            ChempropMulticlassClassifier(n_classes=4, model=model)
         with self.assertRaises(AttributeError):
             predictor = RegressionFFN()
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
-            chemprop_model = ChempropMulticlassClassifier(n_classes=4, model=model)
+            ChempropMulticlassClassifier(n_classes=4, model=model)

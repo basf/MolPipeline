@@ -189,6 +189,8 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             Threshold for binary classification.
         output_transform : UnscaleTransform or None, optional (default=None)
             Transformations to apply to the output. None defaults to UnscaleTransform.
+        kwargs : Any
+            Additional keyword arguments.
         """
         if task_weights is None:
             task_weights = torch.ones(n_tasks)
