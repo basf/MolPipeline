@@ -340,7 +340,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         output_transform: UnscaleTransform | None = None,
     ):
         super().__init__(
-            n_tasks * n_classes,
+            n_tasks,
             input_dim,
             hidden_dim,
             n_layers,
