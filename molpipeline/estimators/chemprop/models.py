@@ -394,7 +394,7 @@ class ChempropMulticlassClassifier(ChempropModel):
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
         if not hasattr(model.predictor, "n_classes"):
             raise AttributeError(
-                "The predictor does not have an attribute n_classes.Please use a MulticlassClassificationFFN predictor or define n_classes."
+                "The predictor does not have an attribute n_classes. Please use a MulticlassClassificationFFN predictor or define n_classes."
             )
         if n_classes != model.predictor.n_classes:
             raise ValueError(
