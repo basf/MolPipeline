@@ -58,8 +58,9 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
 
         Note
         ----
-        Making atoms and or bonds generic allows to check their presence in via SubstructureSearches.
-        Otherwise, all atoms and bonds are set to carbon and single bond, which may not match the molecule.
+        Making atoms or bonds generic will generate SMARTS strings instead of SMILES strings.
+        This can be useful to search for scaffolds and substructures in data sets.
+        Per default, the scaffold is returned as SMILES string with all atoms set to carbon and all bonds are single bonds.
 
         Parameters
         ----------
