@@ -11,7 +11,7 @@ except ImportError:
     from typing_extensions import Self
 
 from numpy import typing as npt
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import BaseEstimator, TransformerMixin
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.error_handling import FilterReinserter
@@ -194,15 +194,10 @@ class PostPredictionWrapper(PostPredictionTransformation):
         dict[str, Any]
             Parameters.
         """
+        param_dict = {"wrapped_estimator": self.wrapped_estimator}
         if deep:
-            param_dict = {
-                "wrapped_estimator": clone(self.wrapped_estimator),
-            }
-        else:
-            param_dict = {
-                "wrapped_estimator": self.wrapped_estimator,
-            }
-        param_dict.update(self.wrapped_estimator.get_params(deep=deep))
+            for key, value in self.wrapped_estimator.get_params(deep=deep).items():
+                param_dict[f"wrapped_estimator__{key}"] = value
         return param_dict
 
     def set_params(self, **params: Any) -> Self:
@@ -219,12 +214,12 @@ class PostPredictionWrapper(PostPredictionTransformation):
             Parameters.
         """
         param_copy = dict(params)
-        wrapped_estimator = param_copy.pop("wrapped_estimator")
-        if wrapped_estimator:
-            self.wrapped_estimator = wrapped_estimator
-        if param_copy:
-            if isinstance(self.wrapped_estimator, ABCPipelineElement):
-                self.wrapped_estimator.set_params(**param_copy)
-            else:
-                self.wrapped_estimator.set_params(**param_copy)
+        if "wrapped_estimator" in param_copy:
+            self.wrapped_estimator = param_copy.pop("wrapped_estimator")
+        wrapped_params = {}
+        for key, value in param_copy.items():
+            estimator, _, param = key.partition("__")
+            if estimator == "wrapped_estimator":
+                wrapped_params[param] = value
+        self.wrapped_estimator.set_params(**param_copy)
         return self
