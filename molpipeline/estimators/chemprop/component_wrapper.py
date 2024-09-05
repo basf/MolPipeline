@@ -163,6 +163,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         task_weights: Tensor | None = None,
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
+        **kwargs: Any,
     ):
         """Initialize the BinaryClassificationFFN class.
 
@@ -188,6 +189,8 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             Threshold for binary classification.
         output_transform : UnscaleTransform or None, optional (default=None)
             Transformations to apply to the output. None defaults to UnscaleTransform.
+        kwargs : Any
+            Additional keyword arguments.
         """
         if task_weights is None:
             task_weights = torch.ones(n_tasks)
@@ -200,6 +203,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             activation=activation,
             criterion=criterion,
             output_transform=output_transform,
+            **kwargs,
         )
         self.n_tasks = n_tasks
         self._input_dim = input_dim
@@ -322,6 +326,63 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
     n_targets: int = 1
     _T_default_criterion = CrossEntropyLoss
     _T_default_metric = CrossEntropyMetric
+
+    def __init__(
+        self,
+        n_classes: int,
+        n_tasks: int = 1,
+        input_dim: int = DEFAULT_HIDDEN_DIM,
+        hidden_dim: int = 300,
+        n_layers: int = 1,
+        dropout: float = 0.0,
+        activation: str = "relu",
+        criterion: LossFunction | None = None,
+        task_weights: Tensor | None = None,
+        threshold: float | None = None,
+        output_transform: UnscaleTransform | None = None,
+    ):
+        """Initialize the MulticlassClassificationFFN class.
+
+        Parameters
+        ----------
+        n_classes : int
+            how many classes are expected in the output
+        n_tasks : int, optional (default=1)
+            Number of tasks.
+        input_dim : int, optional (default=DEFAULT_HIDDEN_DIM)
+            Input dimension.
+        hidden_dim : int, optional (default=300)
+            Hidden dimension.
+        n_layers : int, optional (default=1)
+            Number of layers.
+        dropout : float, optional (default=0)
+            Dropout rate.
+        activation : str, optional (default="relu")
+            Activation function.
+        criterion : LossFunction or None, optional (default=None)
+            Loss function. None defaults to BCELoss.
+        task_weights : Tensor or None, optional (default=None)
+            Task weights.
+        threshold : float or None, optional (default=None)
+            Threshold for binary classification.
+        output_transform : UnscaleTransform or None, optional (default=None)
+            Transformations to apply to the output. None defaults to UnscaleTransform.
+        """
+        super().__init__(
+            n_tasks,
+            input_dim,
+            hidden_dim,
+            n_layers,
+            dropout,
+            activation,
+            criterion,
+            task_weights,
+            threshold,
+            output_transform,
+            n_classes=n_classes,
+        )
+
+        self.n_classes = n_classes
 
 
 class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type: ignore
