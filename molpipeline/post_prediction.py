@@ -216,10 +216,10 @@ class PostPredictionWrapper(PostPredictionTransformation):
         param_copy = dict(params)
         if "wrapped_estimator" in param_copy:
             self.wrapped_estimator = param_copy.pop("wrapped_estimator")
-        wrapped_params = {}
+        wrapped_estimator_params = {}
         for key, value in param_copy.items():
             estimator, _, param = key.partition("__")
             if estimator == "wrapped_estimator":
-                wrapped_params[param] = value
-        self.wrapped_estimator.set_params(**param_copy)
+                wrapped_estimator_params[param] = value
+        self.wrapped_estimator.set_params(**wrapped_estimator_params)
         return self
