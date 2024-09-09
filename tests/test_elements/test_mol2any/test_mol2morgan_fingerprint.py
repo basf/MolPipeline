@@ -128,6 +128,27 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         }
         self.assertRaises(ValueError, mol_fp.set_params, **params)
 
+    def test_bit2atom_mapping(self) -> None:
+        """Test that the mapping from bits to atom weights works as intended."""
+        # lower n_bit values, e.g. 2048, will lead to a bit clash during folding,
+        # for the test smiles "NCCOCCCC(=O)O".
+        # We want no folding clashes in this test to check the correct length
+        # of the bit-to-atom mapping.
+        n_bits = 2100
+        sparse_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="sparse")
+        dense_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="dense")
+        explicit_bit_vect_morgan = MolToMorganFP(
+            radius=2, n_bits=n_bits, return_as="explicit_bit_vect"
+        )
+
+        smi2mol = SmilesToMol()
+        for test_smi in test_smiles:
+            for fp_gen in [sparse_morgan, dense_morgan, explicit_bit_vect_morgan]:
+                mol = smi2mol.transform([test_smi])[0]
+                fp = fp_gen.transform([mol])
+                mapping = fp_gen.bit2atom_mapping(mol)
+                self.assertEqual(np.sum(fp), len(mapping))  # type: ignore
+
 
 if __name__ == "__main__":
     unittest.main()
