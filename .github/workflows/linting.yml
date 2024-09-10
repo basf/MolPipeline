@@ -150,7 +150,7 @@ jobs:
           pip install isort
       - name: Analysing the code with isort
         run: |
-          isort --profile black .
+          isort --profile black --check-only .
 
   test_basis:
     needs:
