@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import abc
 
-from molpipeline.abstract_pipeline_elements.core import AnyToMolPipelineElement
-from molpipeline.utils.molpipeline_types import OptionalMol
+from molpipeline.abstract_pipeline_elements.core import (
+    AnyToMolPipelineElement,
+    InvalidInstance,
+)
+from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
@@ -42,4 +45,61 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         -------
         OptionalMol
             RDKit molecule if representation was valid, else InvalidInstance.
+        """
+
+
+class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
+    """Transforms string representation to RDKit Mol objects."""
+
+    def pretransform_single(self, value: str) -> OptionalMol:
+        """Transform string to molecule.
+
+        Parameters
+        ----------
+        value: str
+            string representation.
+
+        Returns
+        -------
+        OptionalMol
+            Rdkit molecule if valid string representation, else None.
+        """
+        if value is None:
+            return InvalidInstance(
+                self.uuid,
+                f"Invalid representation: {value}",
+                self.name,
+            )
+
+        if not isinstance(value, str):
+            return InvalidInstance(
+                self.uuid,
+                f"Not a string: {value}",
+                self.name,
+            )
+
+        mol: RDKitMol = self.string_to_mol(value)
+
+        if not mol:
+            return InvalidInstance(
+                self.uuid,
+                f"Invalid representation: {value}",
+                self.name,
+            )
+        mol.SetProp("identifier", value)
+        return mol
+
+    @abc.abstractmethod
+    def string_to_mol(self, value: str) -> RDKitMol:
+        """Transform string representation to molecule.
+
+        Parameters
+        ----------
+        value: str
+            string representation
+
+        Returns
+        -------
+        RDKitMol
+            Rdkit molecule if valid representation, else None.
         """
