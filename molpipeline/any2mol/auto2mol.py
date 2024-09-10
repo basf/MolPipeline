@@ -9,6 +9,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
 )
 from molpipeline.any2mol.bin2mol import BinaryToMol
+from molpipeline.any2mol.inchi2mol import InchiToMol
 from molpipeline.any2mol.sdf2mol import SDFToMol
 from molpipeline.any2mol.smiles2mol import SmilesToMol
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
@@ -29,6 +30,7 @@ class AutoToMol(AnyToMolPipelineElement):
         uuid: Optional[str] = None,
         elements: tuple[AnyToMolPipelineElement, ...] = (
             SmilesToMol(),
+            InchiToMol(),
             BinaryToMol(),
             SDFToMol(),
         ),
@@ -44,7 +46,7 @@ class AutoToMol(AnyToMolPipelineElement):
         uuid: str, optional (default=None)
             Unique identifier of PipelineElement.
         elements: tuple[AnyToMol, ...], optional (default=(SmilesToMol(),
-            BinaryToMol(), SDFToMol()))
+            InchiToMol(), BinaryToMol(), SDFToMol()))
             Elements to try to transform the input to a molecule.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)

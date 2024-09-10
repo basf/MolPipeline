@@ -5,16 +5,15 @@ from __future__ import annotations
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
-    StringToMolPipelineElement as _StringToMolPipelineElement,
+    SimpleStringToMolElement,
 )
-from molpipeline.abstract_pipeline_elements.core import InvalidInstance
-from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
-class SmilesToMol(_StringToMolPipelineElement):
+class SmilesToMol(SimpleStringToMolElement):
     """Transforms Smiles to RDKit Mol objects."""
 
-    def pretransform_single(self, value: str) -> OptionalMol:
+    def string_to_mol(self, value: str) -> RDKitMol:
         """Transform Smiles string to molecule.
 
         Parameters
@@ -24,30 +23,7 @@ class SmilesToMol(_StringToMolPipelineElement):
 
         Returns
         -------
-        OptionalMol
+        RDKitMol
             Rdkit molecule if valid SMILES, else None.
         """
-        if value is None:
-            return InvalidInstance(
-                self.uuid,
-                f"Invalid SMILES: {value}",
-                self.name,
-            )
-
-        if not isinstance(value, str):
-            return InvalidInstance(
-                self.uuid,
-                f"Not a string: {value}",
-                self.name,
-            )
-
-        mol: RDKitMol = Chem.MolFromSmiles(value)
-
-        if not mol:
-            return InvalidInstance(
-                self.uuid,
-                f"Invalid SMILES: {value}",
-                self.name,
-            )
-        mol.SetProp("identifier", value)
-        return mol
+        return Chem.MolFromSmiles(value)
