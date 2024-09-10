@@ -253,6 +253,7 @@ class NoneTest(unittest.TestCase):
         self.assertRaises(ValueError, pipeline2.fit_transform, test_values)
 
     def test_molsanitize_error(self) -> None:
+        """Test if MolSanitizeException is caught and catched by ErrorFilter."""
 
         class DummyMolSanitizeExc(MolToMolPipelineElement):
             """MolToMolPipelineElement with dummy molsanitize exception."""
@@ -289,5 +290,4 @@ class NoneTest(unittest.TestCase):
         )
 
         result = pipeline.transform(["c1ccccc1", "CCCCCCC", "c1cc"])
-
         self.assertEqual(result, [None, "CCCCCCC", None])
