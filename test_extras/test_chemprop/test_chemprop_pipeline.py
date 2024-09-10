@@ -22,8 +22,8 @@ from molpipeline.estimators.chemprop.component_wrapper import (
 from molpipeline.estimators.chemprop.models import (
     ChempropClassifier,
     ChempropModel,
-    ChempropRegressor,
     ChempropMulticlassClassifier,
+    ChempropRegressor,
 )
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
