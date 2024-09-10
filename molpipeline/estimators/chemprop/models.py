@@ -15,9 +15,7 @@ from sklearn.utils.metaestimators import available_if
 
 try:
     from chemprop.data import MoleculeDataset, build_dataloader
-    from chemprop.nn.predictors import (
-        BinaryClassificationFFNBase,
-    )
+    from chemprop.nn.predictors import BinaryClassificationFFNBase
     from lightning import pytorch as pl
 except ImportError as error:
     logger.error(
@@ -31,9 +29,9 @@ from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
     BinaryClassificationFFN,
     BondMessagePassing,
+    MulticlassClassificationFFN,
     RegressionFFN,
     SumAggregation,
-    MulticlassClassificationFFN,
 )
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 

@@ -28,10 +28,10 @@ from molpipeline.utils.json_operations import recursive_from_json, recursive_to_
 # pylint: disable=relative-beyond-top-level
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
 from test_extras.test_chemprop.chemprop_test_utils.constant_vars import (
-    NO_IDENTITY_CHECK,
-    DEFAULT_SET_PARAMS,
     DEFAULT_BINARY_CLASSIFICATION_PARAMS,
     DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS,
+    DEFAULT_SET_PARAMS,
+    NO_IDENTITY_CHECK,
 )
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_chemprop_model_binary_classification_mpnn,

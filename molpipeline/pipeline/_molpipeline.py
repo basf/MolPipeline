@@ -349,7 +349,7 @@ class _MolPipeline:
                 elif isinstance(p_element, FilterReinserter):
                     iter_value = p_element.transform_single(iter_value)
             except MolSanitizeException as err:
-                return InvalidInstance(
+                iter_value = InvalidInstance(
                     p_element.uuid,
                     f"RDKit MolSanitizeException: {err.args}",
                     p_element.name,
