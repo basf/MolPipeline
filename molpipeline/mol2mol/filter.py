@@ -87,9 +87,7 @@ class ElementFilter(_MolToMolPipelineElement):
     @allowed_element_numbers.setter
     def allowed_element_numbers(
         self,
-        allowed_element_numbers: Optional[
-            Union[list[int], dict[int, IntCountRange]]
-        ],
+        allowed_element_numbers: Optional[Union[list[int], dict[int, IntCountRange]]],
     ) -> None:
         """Set allowed element numbers as dict.
 
@@ -196,7 +194,7 @@ class ElementFilter(_MolToMolPipelineElement):
 # should we apply the same logic to ElementFilter?
 class SmartsFilter(_BasePatternsFilter):
     """Filter to keep or remove molecules based on SMARTS patterns.
-    
+
     Notes
     -----
     There are four possible scenarios:
@@ -207,12 +205,24 @@ class SmartsFilter(_BasePatternsFilter):
     """
 
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
+        """Convert SMARTS pattern to RDKit molecule.
+
+        Parameters
+        ----------
+        pattern: str
+            SMARTS pattern to convert.
+
+        Returns
+        -------
+        RDKitMol
+            RDKit molecule.
+        """
         return Chem.MolFromSmarts(pattern)
 
 
 class SmilesFilter(_BasePatternsFilter):
     """Filter to keep or remove molecules based on SMILES patterns.
-    
+
     Notes
     -----
     There are four possible scenarios:
@@ -223,12 +233,24 @@ class SmilesFilter(_BasePatternsFilter):
     """
 
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
+        """Convert SMILES pattern to RDKit molecule.
+
+        Parameters
+        ----------
+        pattern: str
+            SMILES pattern to convert.
+
+        Returns
+        -------
+        RDKitMol
+            RDKit molecule.
+        """
         return Chem.MolFromSmiles(pattern)
 
 
 class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on RDKit descriptors.
-    
+
     Notes
     -----
     There are four possible scenarios:
@@ -277,9 +299,7 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         return self._descriptors
 
     @descriptors.setter
-    def descriptors(
-        self, descriptors: dict[str, FloatCountRange]
-    ) -> None:
+    def descriptors(self, descriptors: dict[str, FloatCountRange]) -> None:
         """Set allowed descriptors as dict.
 
         Parameters

@@ -10,9 +10,8 @@ IntCountRange: TypeAlias = Union[int, tuple[Optional[int], Optional[int]]]
 
 FloatCountRange: TypeAlias = tuple[Optional[float], Optional[float]]
 
-def count_value_to_tuple(
-    count: IntCountRange
-) -> tuple[Optional[int], Optional[int]]:
+
+def count_value_to_tuple(count: IntCountRange) -> tuple[Optional[int], Optional[int]]:
     """Convert a count value to a tuple.
 
     Parameters

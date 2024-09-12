@@ -1,11 +1,11 @@
 """Init the module for mol2mol pipeline elements."""
 
 from molpipeline.mol2mol.filter import (
-    RDKitDescriptorsFilter,
     ElementFilter,
     EmptyMoleculeFilter,
     InorganicsFilter,
     MixtureFilter,
+    RDKitDescriptorsFilter,
     SmartsFilter,
     SmilesFilter,
 )

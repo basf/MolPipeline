@@ -16,13 +16,10 @@ from molpipeline.abstract_pipeline_elements.core import (
 )
 from molpipeline.utils.value_conversions import IntCountRange, count_value_to_tuple
 
-
 # possible mode types for a KeepMatchesFilter:
 # - "any" means one match is enough
 # - "all" means all elements must be matched
 FilterModeType: TypeAlias = Literal["any", "all"]
-
-
 
 
 def _within_boundaries(
@@ -55,7 +52,7 @@ def _within_boundaries(
 
 class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     """Filter to keep or remove molecules based on patterns.
-    
+
     Notes
     -----
     There are four possible scenarios:
@@ -230,22 +227,21 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
 class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     """Filter to keep or remove molecules based on patterns.
-    
+
     Notes
     -----
     There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
-        - mode = "any" & keep_matches = False: Must not match any filter element.
-        - mode = "all" & keep_matches = True: Needs to match all filter elements.
-        - mode = "all" & keep_matches = False: Must not match all filter elements."""
+    - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+    - mode = "any" & keep_matches = False: Must not match any filter element.
+    - mode = "all" & keep_matches = True: Needs to match all filter elements.
+    - mode = "all" & keep_matches = False: Must not match all filter elements.
+    """
 
     _patterns: dict[str, tuple[Optional[int], Optional[int]]]
 
     def __init__(
         self,
-        patterns: Union[
-            list[str], dict[str, IntCountRange]
-        ],
+        patterns: Union[list[str], dict[str, IntCountRange]],
         keep_matches: bool = True,
         mode: FilterModeType = "any",
         name: Optional[str] = None,
@@ -285,9 +281,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     @patterns.setter
     def patterns(
         self,
-        patterns: Union[
-            list[str], dict[str, IntCountRange]
-        ],
+        patterns: Union[list[str], dict[str, IntCountRange]],
     ) -> None:
         """Set allowed patterns as dict.
 
@@ -302,25 +296,44 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             self._patterns = {
                 pat: count_value_to_tuple(count) for pat, count in patterns.items()
             }
-        self.patterns_mol_dict = list(self._patterns.keys())
+        self.patterns_mol_dict = list(self._patterns.keys())  # type: ignore
 
     @property
     def patterns_mol_dict(self) -> Mapping[str, RDKitMol]:
+        """Get patterns as dict with RDKitMol objects."""
         return self._patterns_mol_dict
-    
+
     @patterns_mol_dict.setter
     def patterns_mol_dict(self, patterns: list[str]) -> None:
+        """Set patterns as dict with RDKitMol objects.
+
+        Parameters
+        ----------
+        patterns: list[str]
+            List of patterns.
+        """
         self._patterns_mol_dict = {pat: self._pattern_to_mol(pat) for pat in patterns}
 
     @abc.abstractmethod
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
-        """Function to convert pattern to Rdkitmol object."""
+        """Convert pattern to Rdkitmol object.
+
+        Parameters
+        ----------
+        pattern: str
+            Pattern to convert.
+
+        Returns
+        -------
+        RDKitMol
+            RDKitMol object of the pattern.
+        """
 
     @property
     def filter_elements(self) -> Mapping[str, tuple[Optional[int], Optional[int]]]:
         """Get filter elements as dict."""
         return self.patterns
-    
+
     def _calculate_single_element_value(
         self, filter_element: Any, value: RDKitMol
     ) -> int:

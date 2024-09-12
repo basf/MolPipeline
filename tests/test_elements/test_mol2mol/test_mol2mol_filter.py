@@ -1,16 +1,15 @@
 """Test MolFilter, which invalidate molecules based on criteria defined in the respective filter."""
 
 import unittest
-from typing import Optional, Union
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2mol import (
-    RDKitDescriptorsFilter,
     ElementFilter,
     InorganicsFilter,
     MixtureFilter,
+    RDKitDescriptorsFilter,
     SmartsFilter,
     SmilesFilter,
 )
@@ -158,7 +157,6 @@ class MolFilterTest(unittest.TestCase):
             "NumHAcceptors": (2, 10),
         }
 
-
         descriptor_filter = RDKitDescriptorsFilter(descriptors)
 
         pipeline = Pipeline(
@@ -187,32 +185,41 @@ class MolFilterTest(unittest.TestCase):
         filtered_smiles_4 = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(filtered_smiles_4, [])
 
-        pipeline.set_params(DescriptorsFilter__mode = "any", DescriptorsFilter__keep_matches=True)
+        pipeline.set_params(
+            DescriptorsFilter__mode="any", DescriptorsFilter__keep_matches=True
+        )
 
-        pipeline.set_params(DescriptorsFilter__descriptors = {
-            "NumHAcceptors": (1.99, 4),
-        })
+        pipeline.set_params(
+            DescriptorsFilter__descriptors={
+                "NumHAcceptors": (1.99, 4),
+            }
+        )
         result_lower_in_bound = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(result_lower_in_bound, [SMILES_CL_BR])
 
-        pipeline.set_params(DescriptorsFilter__descriptors = {
-            "NumHAcceptors": (2.01, 4),
-        })
+        pipeline.set_params(
+            DescriptorsFilter__descriptors={
+                "NumHAcceptors": (2.01, 4),
+            }
+        )
         result_lower_out_bound = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(result_lower_out_bound, [])
 
-        pipeline.set_params(DescriptorsFilter__descriptors = {
-            "NumHAcceptors": (1, 2.01),
-        })
+        pipeline.set_params(
+            DescriptorsFilter__descriptors={
+                "NumHAcceptors": (1, 2.01),
+            }
+        )
         result_upper_in_bound = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(result_upper_in_bound, [SMILES_CL_BR])
 
-        pipeline.set_params(DescriptorsFilter__descriptors = {
-            "NumHAcceptors": (1, 1.99),
-        })
+        pipeline.set_params(
+            DescriptorsFilter__descriptors={
+                "NumHAcceptors": (1, 1.99),
+            }
+        )
         result_upper_out_bound = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(result_upper_out_bound, [])
-
 
     def test_invalidate_mixtures(self) -> None:
         """Test if mixtures are correctly invalidated."""
