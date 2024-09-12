@@ -5,6 +5,7 @@ from molpipeline.mol2mol.filter import (
     EmptyMoleculeFilter,
     InorganicsFilter,
     MixtureFilter,
+    ComplexFilter,
     RDKitDescriptorsFilter,
     SmartsFilter,
     SmilesFilter,
@@ -47,4 +48,5 @@ __all__ = (
     "SmartsFilter",
     "SmilesFilter",
     "RDKitDescriptorsFilter",
+    "ComplexFilter",
 )

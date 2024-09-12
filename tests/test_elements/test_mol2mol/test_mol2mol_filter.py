@@ -9,6 +9,7 @@ from molpipeline.mol2mol import (
     ElementFilter,
     InorganicsFilter,
     MixtureFilter,
+    ComplexFilter,
     RDKitDescriptorsFilter,
     SmartsFilter,
     SmilesFilter,
@@ -71,6 +72,29 @@ class MolFilterTest(unittest.TestCase):
         )
         filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(filtered_smiles_2, [SMILES_BENZENE, SMILES_CHLOROBENZENE])
+
+    def test_multi_element_filter(self) -> None:
+        """Test if molecules are filtered correctly by allowed chemical elements."""
+        element_filter_1 = ElementFilter({6: 6, 1: 6})
+        element_filter_2 = ElementFilter({6: 6, 1: 5, 17: 1})
+
+        multi_element_filter = ComplexFilter((element_filter_1, element_filter_2))
+
+        pipeline = Pipeline(
+            [
+                ("Smiles2Mol", SmilesToMol()),
+                ("MultiElementFilter", multi_element_filter),
+                ("Mol2Smiles", MolToSmiles()),
+                ("ErrorFilter", ErrorFilter()),
+            ],
+        )
+
+        filtered_smiles = pipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE])
+
+        pipeline.set_params(MultiElementFilter__mode="all")
+        filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(filtered_smiles_2, [])
 
     def test_smarts_smiles_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed SMARTS patterns."""

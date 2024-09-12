@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, Literal, Optional, Union
 
-from molpipeline.utils.value_conversions import FloatCountRange, IntCountRange
-
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
@@ -26,7 +24,11 @@ from molpipeline.abstract_pipeline_elements.mol2mol import (
     BasePatternsFilter as _BasePatternsFilter,
 )
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
-from molpipeline.utils.value_conversions import count_value_to_tuple
+from molpipeline.utils.value_conversions import (
+    FloatCountRange,
+    IntCountRange,
+    count_value_to_tuple,
+)
 
 
 class ElementFilter(_MolToMolPipelineElement):
@@ -189,9 +191,6 @@ class ElementFilter(_MolToMolPipelineElement):
         return value
 
 
-# should we combine smarts and smiles filter within a single class? option usesmiles?
-# should we check the input patterns for valid smarts/smiles?
-# should we apply the same logic to ElementFilter?
 class SmartsFilter(_BasePatternsFilter):
     """Filter to keep or remove molecules based on SMARTS patterns.
 
@@ -246,6 +245,135 @@ class SmilesFilter(_BasePatternsFilter):
             RDKit molecule.
         """
         return Chem.MolFromSmiles(pattern)
+
+
+class ComplexFilter(_BaseKeepMatchesFilter):
+    """Filter to keep or remove molecules based on multiple filter elements.
+
+    Notes
+    -----
+    There are four possible scenarios:
+        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+        - mode = "any" & keep_matches = False: Must not match any filter element.
+        - mode = "all" & keep_matches = True: Needs to match all filter elements.
+        - mode = "all" & keep_matches = False: Must not match all filter elements.
+    """
+
+    def __init__(
+        self,
+        filter_elements: tuple[_MolToMolPipelineElement, ...],
+        keep_matches: bool = True,
+        mode: Literal["any", "all"] = "any",
+        name: Optional[str] = None,
+        n_jobs: int = 1,
+        uuid: Optional[str] = None,
+    ) -> None:
+        """Initialize ComplexFilter.
+
+        Parameters
+        ----------
+        filter_elements: tuple[_MolToMolPipelineElement, ...]
+            tuple of filter elements.
+        keep_matches: bool, optional (default: True)
+            If True, molecules containing the specified patterns are kept, else removed.
+        mode: Literal["any", "all"], optional (default: "any")
+            If "any", at least one of the specified patterns must be present in the molecule.
+            If "all", all of the specified patterns must be present in the molecule.
+        name: Optional[str], optional (default: None)
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            Unique identifier of the pipeline element.
+        """
+        super().__init__(
+            keep_matches=keep_matches, mode=mode, name=name, n_jobs=n_jobs, uuid=uuid
+        )
+        self.filter_elements = {element: (1, None) for element in filter_elements}
+
+    @property
+    def filter_elements(
+        self,
+    ) -> dict[_MolToMolPipelineElement, tuple[int, Optional[int]]]:
+        """Get filter elements."""
+        return self._filter_elements
+
+    @filter_elements.setter
+    def filter_elements(
+        self, filter_elements: dict[_MolToMolPipelineElement, tuple[int, Optional[int]]]
+    ) -> None:
+        """Set filter elements.
+
+        Parameters
+        ----------
+        filter_elements: dict[_MolToMolPipelineElement, tuple[int, Optional[int]]]
+            Filter elements to set.
+        """
+        self._filter_elements = filter_elements
+
+    def _calculate_single_element_value(
+        self, filter_element: Any, value: RDKitMol
+    ) -> int:
+        """Calculate a single filter match for a molecule.
+
+        Parameters
+        ----------
+        filter_element: Any
+            MolToMol Filter to calculate.
+        value: RDKitMol
+            Molecule to calculate filter match for.
+
+        Returns
+        -------
+        int
+            Filter match.
+        """
+        mol = filter_element.pretransform_single(value)
+        if isinstance(mol, InvalidInstance):
+            return 0
+        return 1
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters of ComplexFilter.
+
+        Parameters
+        ----------
+        deep: bool, optional (default: True)
+            If True, return the parameters of all subobjects that are PipelineElements.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters of ComplexFilter.
+        """
+        params = super().get_params(deep=deep)
+        if deep:
+            params["filter_elements"] = {
+                element: (count_tuple[0], count_tuple[1])
+                for element, count_tuple in self.filter_elements.items()
+            }
+        else:
+            params["filter_elements"] = self.filter_elements
+        return params
+
+    def set_params(self, **parameters: Any) -> Self:
+        """Set parameters of ComplexFilter.
+
+        Parameters
+        ----------
+        parameters: Any
+            Parameters to set.
+
+        Returns
+        -------
+        Self
+            Self.
+        """
+        parameter_copy = dict(parameters)
+        if "filter_elements" in parameter_copy:
+            self.filter_elements = parameter_copy.pop("filter_elements")
+        super().set_params(**parameter_copy)
+        return self
 
 
 class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
@@ -361,7 +489,7 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         return params
 
     def set_params(self, **parameters: Any) -> Self:
-        """Set parameters of PatternFilter.
+        """Set parameters of DescriptorFilter.
 
         Parameters
         ----------

@@ -14,7 +14,11 @@ from molpipeline.abstract_pipeline_elements.core import (
     OptionalMol,
     RDKitMol,
 )
-from molpipeline.utils.value_conversions import IntCountRange, count_value_to_tuple
+from molpipeline.utils.value_conversions import (
+    FloatCountRange,
+    IntCountRange,
+    count_value_to_tuple,
+)
 
 # possible mode types for a KeepMatchesFilter:
 # - "any" means one match is enough
@@ -221,7 +225,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     @abc.abstractmethod
     def filter_elements(
         self,
-    ) -> Mapping[str, tuple[Optional[Union[float, int]], Optional[Union[float, int]]]]:
+    ) -> Mapping[Any, FloatCountRange]:
         """Get filter elements as dict."""
 
 
