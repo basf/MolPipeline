@@ -1,7 +1,7 @@
 """Abstract classes for filters."""
 
 import abc
-from typing import Any, Literal, Mapping, Optional, Union
+from typing import Any, Literal, Mapping, Optional, TypeAlias, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -14,7 +14,15 @@ from molpipeline.abstract_pipeline_elements.core import (
     OptionalMol,
     RDKitMol,
 )
-from molpipeline.utils.value_conversions import count_value_to_tuple
+from molpipeline.utils.value_conversions import IntCountRange, count_value_to_tuple
+
+
+# possible mode types for a KeepMatchesFilter:
+# - "any" means one match is enough
+# - "all" means all elements must be matched
+FilterModeType: TypeAlias = Literal["any", "all"]
+
+
 
 
 def _within_boundaries(
@@ -46,15 +54,24 @@ def _within_boundaries(
 
 
 class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
-    """Filter to keep or remove molecules based on patterns."""
+    """Filter to keep or remove molecules based on patterns.
+    
+    Notes
+    -----
+    There are four possible scenarios:
+        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+        - mode = "any" & keep_matches = False: Must not match any filter element.
+        - mode = "all" & keep_matches = True: Needs to match all filter elements.
+        - mode = "all" & keep_matches = False: Must not match all filter elements.
+    """
 
     keep_matches: bool
-    mode: Literal["any", "all"]
+    mode: FilterModeType
 
     def __init__(
         self,
         keep_matches: bool = True,
-        mode: Literal["any", "all"] = "any",
+        mode: FilterModeType = "any",
         name: Optional[str] = None,
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -65,7 +82,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         ----------
         keep_matches: bool, optional (default: True)
             If True, molecules containing the specified patterns are kept, else removed.
-        mode: Literal["any", "all"], optional (default: "any")
+        mode: FilterModeType, optional (default: "any")
             If "any", at least one of the specified patterns must be present in the molecule.
             If "all", all of the specified patterns must be present in the molecule.
         name: Optional[str], optional (default: None)
@@ -122,10 +139,10 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         """Invalidate or validate molecule based on specified filter.
 
         There are four possible scenarios:
-        - Mode = "any" & "keep_matches" = True: Needs to match at least one filter element.
-        - Mode = "any" & "keep_matches" = False: Must not match any filter element.
-        - Mode = "all" & "keep_matches" = True: Needs to match all filter elements.
-        - Mode = "all" & "keep_matches" = False: Must not match all filter elements.
+        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+        - mode = "any" & keep_matches = False: Must not match any filter element.
+        - mode = "all" & keep_matches = True: Needs to match all filter elements.
+        - mode = "all" & keep_matches = False: Must not match all filter elements.
 
         Parameters
         ----------
@@ -212,17 +229,25 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
 
 class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
-    """Filter to keep or remove molecules based on patterns."""
+    """Filter to keep or remove molecules based on patterns.
+    
+    Notes
+    -----
+    There are four possible scenarios:
+        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+        - mode = "any" & keep_matches = False: Must not match any filter element.
+        - mode = "all" & keep_matches = True: Needs to match all filter elements.
+        - mode = "all" & keep_matches = False: Must not match all filter elements."""
 
     _patterns: dict[str, tuple[Optional[int], Optional[int]]]
 
     def __init__(
         self,
         patterns: Union[
-            list[str], dict[str, Union[int, tuple[Optional[int], Optional[int]]]]
+            list[str], dict[str, IntCountRange]
         ],
         keep_matches: bool = True,
-        mode: Literal["any", "all"] = "any",
+        mode: FilterModeType = "any",
         name: Optional[str] = None,
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -231,13 +256,13 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
 
         Parameters
         ----------
-        patterns: Union[list[str], dict[str, Union[int, tuple[Optional[int], Optional[int]]]]]
+        patterns: Union[list[str], dict[str, CountRange]]
             List of patterns to allow in molecules.
             Alternatively, a dictionary can be passed with patterns as keys
             and an int for exact count or a tuple of minimum and maximum.
         keep_matches: bool, optional (default: True)
             If True, molecules containing the specified patterns are kept, else removed.
-        mode: Literal["any", "all"], optional (default: "any")
+        mode: FilterModeType, optional (default: "any")
             If "any", at least one of the specified patterns must be present in the molecule.
             If "all", all of the specified patterns must be present in the molecule.
         name: Optional[str], optional (default: None)
@@ -261,14 +286,14 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     def patterns(
         self,
         patterns: Union[
-            list[str], dict[str, Union[int, tuple[Optional[int], Optional[int]]]]
+            list[str], dict[str, IntCountRange]
         ],
     ) -> None:
         """Set allowed patterns as dict.
 
         Parameters
         ----------
-        patterns: Union[list[str], dict[str, Union[int, tuple[Optional[int], Optional[int]]]]]
+        patterns: Union[list[str], dict[str, CountRange]]
             List of patterns.
         """
         if isinstance(patterns, (list, set)):
@@ -277,11 +302,43 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             self._patterns = {
                 pat: count_value_to_tuple(count) for pat, count in patterns.items()
             }
+        self.patterns_mol_dict = list(self._patterns.keys())
+
+    @property
+    def patterns_mol_dict(self) -> Mapping[str, RDKitMol]:
+        return self._patterns_mol_dict
+    
+    @patterns_mol_dict.setter
+    def patterns_mol_dict(self, patterns: list[str]) -> None:
+        self._patterns_mol_dict = {pat: self._pattern_to_mol(pat) for pat in patterns}
+
+    @abc.abstractmethod
+    def _pattern_to_mol(self, pattern: str) -> RDKitMol:
+        """Function to convert pattern to Rdkitmol object."""
 
     @property
     def filter_elements(self) -> Mapping[str, tuple[Optional[int], Optional[int]]]:
         """Get filter elements as dict."""
         return self.patterns
+    
+    def _calculate_single_element_value(
+        self, filter_element: Any, value: RDKitMol
+    ) -> int:
+        """Calculate a single match count for a molecule.
+
+        Parameters
+        ----------
+        filter_element: Any
+            smarts to calculate match count for.
+        value: RDKitMol
+            Molecule to calculate smarts match count for.
+
+        Returns
+        -------
+        int
+            smarts match count value.
+        """
+        return len(value.GetSubstructMatches(self.patterns_mol_dict[filter_element]))
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters of PatternFilter.

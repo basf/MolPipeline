@@ -1,7 +1,7 @@
 """Init the module for mol2mol pipeline elements."""
 
 from molpipeline.mol2mol.filter import (
-    DescriptorsFilter,
+    RDKitDescriptorsFilter,
     ElementFilter,
     EmptyMoleculeFilter,
     InorganicsFilter,
@@ -46,5 +46,5 @@ __all__ = (
     "InorganicsFilter",
     "SmartsFilter",
     "SmilesFilter",
-    "DescriptorsFilter",
+    "RDKitDescriptorsFilter",
 )

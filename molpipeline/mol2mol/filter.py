@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, Literal, Optional, Union
 
+from molpipeline.utils.value_conversions import FloatCountRange, IntCountRange
+
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
@@ -53,7 +55,7 @@ class ElementFilter(_MolToMolPipelineElement):
     def __init__(
         self,
         allowed_element_numbers: Optional[
-            Union[list[int], dict[int, Union[int, tuple[Optional[int], Optional[int]]]]]
+            Union[list[int], dict[int, IntCountRange]]
         ] = None,
         name: str = "ElementFilter",
         n_jobs: int = 1,
@@ -63,7 +65,7 @@ class ElementFilter(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        allowed_element_numbers: Optional[Union[list[int], dict[int, Union[int, tuple[Optional[int], Optional[int]]]]]]
+        allowed_element_numbers: Optional[Union[list[int], dict[int, CountRange]]]
             List of atomic numbers of elements to allowed in molecules. Per default allowed elements are:
             H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
             Alternatively, a dictionary can be passed with atomic numbers as keys and an int for exact count or a tuple of minimum and maximum
@@ -86,14 +88,14 @@ class ElementFilter(_MolToMolPipelineElement):
     def allowed_element_numbers(
         self,
         allowed_element_numbers: Optional[
-            Union[list[int], dict[int, Union[int, tuple[Optional[int], Optional[int]]]]]
+            Union[list[int], dict[int, IntCountRange]]
         ],
     ) -> None:
         """Set allowed element numbers as dict.
 
         Parameters
         ----------
-        allowed_element_numbers: Optional[Union[list[int], dict[int, Union[int, tuple[Optional[int], Optional[int]]]]]
+        allowed_element_numbers: Optional[Union[list[int], dict[int, CountRange]]
             List of atomic numbers of elements to allowed in molecules.
         """
         self._allowed_element_numbers: dict[int, tuple[Optional[int], Optional[int]]]
@@ -193,57 +195,52 @@ class ElementFilter(_MolToMolPipelineElement):
 # should we check the input patterns for valid smarts/smiles?
 # should we apply the same logic to ElementFilter?
 class SmartsFilter(_BasePatternsFilter):
-    """Filter to keep or remove molecules based on SMARTS patterns."""
+    """Filter to keep or remove molecules based on SMARTS patterns.
+    
+    Notes
+    -----
+    There are four possible scenarios:
+        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+        - mode = "any" & keep_matches = False: Must not match any filter element.
+        - mode = "all" & keep_matches = True: Needs to match all filter elements.
+        - mode = "all" & keep_matches = False: Must not match all filter elements.
+    """
 
-    def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol
-    ) -> float:
-        """Calculate a single smarts match count for a molecule.
-
-        Parameters
-        ----------
-        filter_element: Any
-            smarts to calculate match count for.
-        value: RDKitMol
-            Molecule to calculate smarts match count for.
-
-        Returns
-        -------
-        float
-            smarts match count value.
-        """
-        return len(value.GetSubstructMatches(Chem.MolFromSmarts(filter_element)))
+    def _pattern_to_mol(self, pattern: str) -> RDKitMol:
+        return Chem.MolFromSmarts(pattern)
 
 
 class SmilesFilter(_BasePatternsFilter):
-    """Filter to keep or remove molecules based on SMILES patterns."""
+    """Filter to keep or remove molecules based on SMILES patterns.
+    
+    Notes
+    -----
+    There are four possible scenarios:
+        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+        - mode = "any" & keep_matches = False: Must not match any filter element.
+        - mode = "all" & keep_matches = True: Needs to match all filter elements.
+        - mode = "all" & keep_matches = False: Must not match all filter elements.
+    """
 
-    def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol
-    ) -> float:
-        """Calculate a single smiles match count for a molecule.
-
-        Parameters
-        ----------
-        filter_element: Any
-            smiles to calculate match count for.
-        value: RDKitMol
-            Molecule to calculate smiles match count for.
-
-        Returns
-        -------
-        float
-            smiles match count value.
-        """
-        return len(value.GetSubstructMatches(Chem.MolFromSmiles(filter_element)))
+    def _pattern_to_mol(self, pattern: str) -> RDKitMol:
+        return Chem.MolFromSmiles(pattern)
 
 
-class DescriptorsFilter(_BaseKeepMatchesFilter):
-    """Filter to keep or remove molecules based on RDKit descriptors."""
+class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
+    """Filter to keep or remove molecules based on RDKit descriptors.
+    
+    Notes
+    -----
+    There are four possible scenarios:
+        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+        - mode = "any" & keep_matches = False: Must not match any filter element.
+        - mode = "all" & keep_matches = True: Needs to match all filter elements.
+        - mode = "all" & keep_matches = False: Must not match all filter elements.
+    """
 
     def __init__(
         self,
-        descriptors: dict[str, tuple[Optional[float], Optional[float]]],
+        descriptors: dict[str, FloatCountRange],
         keep_matches: bool = True,
         mode: Literal["any", "all"] = "any",
         name: Optional[str] = None,
@@ -254,7 +251,7 @@ class DescriptorsFilter(_BaseKeepMatchesFilter):
 
         Parameters
         ----------
-        descriptors: dict[str, tuple[Optional[float], Optional[float]]]
+        descriptors: dict[str, FloatCountRange]
             Dictionary of RDKit descriptors to filter by.
             The value must be a tuple of minimum and maximum. If None, no limit is set.
         keep_matches: bool, optional (default: True)
@@ -275,19 +272,19 @@ class DescriptorsFilter(_BaseKeepMatchesFilter):
         self.descriptors = descriptors
 
     @property
-    def descriptors(self) -> dict[str, tuple[Optional[float], Optional[float]]]:
+    def descriptors(self) -> dict[str, FloatCountRange]:
         """Get allowed descriptors as dict."""
         return self._descriptors
 
     @descriptors.setter
     def descriptors(
-        self, descriptors: dict[str, tuple[Optional[float], Optional[float]]]
+        self, descriptors: dict[str, FloatCountRange]
     ) -> None:
         """Set allowed descriptors as dict.
 
         Parameters
         ----------
-        descriptors: dict[str, tuple[Optional[float], Optional[float]]]
+        descriptors: dict[str, FloatCountRange]
             Dictionary of RDKit descriptors to filter by.
         """
         self._descriptors = descriptors
@@ -297,7 +294,7 @@ class DescriptorsFilter(_BaseKeepMatchesFilter):
             )
 
     @property
-    def filter_elements(self) -> dict[str, tuple[Optional[float], Optional[float]]]:
+    def filter_elements(self) -> dict[str, FloatCountRange]:
         """Get filter elements."""
         return self.descriptors
 

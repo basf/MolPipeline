@@ -7,13 +7,14 @@ from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2mol import (
-    DescriptorsFilter,
+    RDKitDescriptorsFilter,
     ElementFilter,
     InorganicsFilter,
     MixtureFilter,
     SmartsFilter,
     SmilesFilter,
 )
+from molpipeline.utils.value_conversions import FloatCountRange, IntCountRange
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
@@ -74,13 +75,13 @@ class MolFilterTest(unittest.TestCase):
 
     def test_smarts_smiles_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed SMARTS patterns."""
-        smarts_pats: dict[str, Union[int, tuple[Optional[int], Optional[int]]]] = {
+        smarts_pats: dict[str, IntCountRange] = {
             "c": (4, None),
             "Cl": 1,
         }
         smarts_filter = SmartsFilter(smarts_pats)
 
-        smiles_pats: dict[str, Union[int, tuple[Optional[int], Optional[int]]]] = {
+        smiles_pats: dict[str, IntCountRange] = {
             "c1ccccc1": (1, None),
             "Cl": 1,
         }
@@ -127,7 +128,7 @@ class MolFilterTest(unittest.TestCase):
 
     def test_smarts_filter_parallel(self) -> None:
         """Test if molecules are filtered correctly by allowed SMARTS patterns in parallel."""
-        smarts_pats: dict[str, Union[int, tuple[Optional[int], Optional[int]]]] = {
+        smarts_pats: dict[str, IntCountRange] = {
             "c": (4, None),
             "Cl": 1,
             "cc": (1, None),
@@ -138,7 +139,7 @@ class MolFilterTest(unittest.TestCase):
             "c1ccccc1": (1, None),
             "cCl": 1,
         }
-        smarts_filter = SmartsFilter(smarts_pats, mode="all", n_jobs=-1)
+        smarts_filter = SmartsFilter(smarts_pats, mode="all", n_jobs=2)
         pipeline = Pipeline(
             [
                 ("Smiles2Mol", SmilesToMol()),
@@ -152,12 +153,13 @@ class MolFilterTest(unittest.TestCase):
 
     def test_descriptor_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed descriptors."""
-        descriptors: dict[str, tuple[Optional[float], Optional[float]]] = {
+        descriptors: dict[str, FloatCountRange] = {
             "MolWt": (None, 190),
             "NumHAcceptors": (2, 10),
         }
 
-        descriptor_filter = DescriptorsFilter(descriptors)
+
+        descriptor_filter = RDKitDescriptorsFilter(descriptors)
 
         pipeline = Pipeline(
             [
@@ -176,7 +178,6 @@ class MolFilterTest(unittest.TestCase):
 
         pipeline.set_params(DescriptorsFilter__keep_matches=False)
         filtered_smiles_3 = pipeline.fit_transform(SMILES_LIST)
-        # why is this not
         self.assertEqual(
             filtered_smiles_3,
             [SMILES_ANTIMONY, SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_METAL_AU],
@@ -185,6 +186,33 @@ class MolFilterTest(unittest.TestCase):
         pipeline.set_params(DescriptorsFilter__mode="any")
         filtered_smiles_4 = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(filtered_smiles_4, [])
+
+        pipeline.set_params(DescriptorsFilter__mode = "any", DescriptorsFilter__keep_matches=True)
+
+        pipeline.set_params(DescriptorsFilter__descriptors = {
+            "NumHAcceptors": (1.99, 4),
+        })
+        result_lower_in_bound = pipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(result_lower_in_bound, [SMILES_CL_BR])
+
+        pipeline.set_params(DescriptorsFilter__descriptors = {
+            "NumHAcceptors": (2.01, 4),
+        })
+        result_lower_out_bound = pipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(result_lower_out_bound, [])
+
+        pipeline.set_params(DescriptorsFilter__descriptors = {
+            "NumHAcceptors": (1, 2.01),
+        })
+        result_upper_in_bound = pipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(result_upper_in_bound, [SMILES_CL_BR])
+
+        pipeline.set_params(DescriptorsFilter__descriptors = {
+            "NumHAcceptors": (1, 1.99),
+        })
+        result_upper_out_bound = pipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(result_upper_out_bound, [])
+
 
     def test_invalidate_mixtures(self) -> None:
         """Test if mixtures are correctly invalidated."""
