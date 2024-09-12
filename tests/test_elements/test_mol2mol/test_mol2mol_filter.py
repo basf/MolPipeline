@@ -111,7 +111,7 @@ class MolFilterTest(unittest.TestCase):
         smiles_filter = SmilesFilter(smiles_pats)
 
         for filter_ in [smarts_filter, smiles_filter]:
-            new_input_as_list = list(filter_.patterns.keys())
+            new_input_as_list = list(filter_.filter_elements.keys())
             pipeline = Pipeline(
                 [
                     ("Smiles2Mol", SmilesToMol()),
@@ -136,7 +136,7 @@ class MolFilterTest(unittest.TestCase):
             self.assertEqual(filtered_smiles_3, [SMILES_CHLOROBENZENE])
 
             pipeline.set_params(
-                SmartsFilter__keep_matches=True, SmartsFilter__patterns=["I"]
+                SmartsFilter__keep_matches=True, SmartsFilter__filter_elements=["I"]
             )
             filtered_smiles_4 = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles_4, [])
@@ -144,7 +144,7 @@ class MolFilterTest(unittest.TestCase):
             pipeline.set_params(
                 SmartsFilter__keep_matches=False,
                 SmartsFilter__mode="any",
-                SmartsFilter__patterns=new_input_as_list,
+                SmartsFilter__filter_elements=new_input_as_list,
             )
             filtered_smiles_5 = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles_5, [SMILES_ANTIMONY, SMILES_METAL_AU])
@@ -214,7 +214,7 @@ class MolFilterTest(unittest.TestCase):
         )
 
         pipeline.set_params(
-            DescriptorsFilter__descriptors={
+            DescriptorsFilter__filter_elements={
                 "NumHAcceptors": (2.00, 4),
             }
         )
@@ -222,7 +222,7 @@ class MolFilterTest(unittest.TestCase):
         self.assertEqual(result_lower_exact, [SMILES_CL_BR])
 
         pipeline.set_params(
-            DescriptorsFilter__descriptors={
+            DescriptorsFilter__filter_elements={
                 "NumHAcceptors": (1.99, 4),
             }
         )
@@ -230,7 +230,7 @@ class MolFilterTest(unittest.TestCase):
         self.assertEqual(result_lower_in_bound, [SMILES_CL_BR])
 
         pipeline.set_params(
-            DescriptorsFilter__descriptors={
+            DescriptorsFilter__filter_elements={
                 "NumHAcceptors": (2.01, 4),
             }
         )
@@ -238,7 +238,7 @@ class MolFilterTest(unittest.TestCase):
         self.assertEqual(result_lower_out_bound, [])
 
         pipeline.set_params(
-            DescriptorsFilter__descriptors={
+            DescriptorsFilter__filter_elements={
                 "NumHAcceptors": (1, 2.00),
             }
         )
@@ -246,7 +246,7 @@ class MolFilterTest(unittest.TestCase):
         self.assertEqual(result_upper_exact, [SMILES_CL_BR])
 
         pipeline.set_params(
-            DescriptorsFilter__descriptors={
+            DescriptorsFilter__filter_elements={
                 "NumHAcceptors": (1, 2.01),
             }
         )
@@ -254,7 +254,7 @@ class MolFilterTest(unittest.TestCase):
         self.assertEqual(result_upper_in_bound, [SMILES_CL_BR])
 
         pipeline.set_params(
-            DescriptorsFilter__descriptors={
+            DescriptorsFilter__filter_elements={
                 "NumHAcceptors": (1, 1.99),
             }
         )

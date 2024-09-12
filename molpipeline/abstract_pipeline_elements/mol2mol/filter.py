@@ -1,7 +1,7 @@
 """Abstract classes for filters."""
 
 import abc
-from typing import Any, Literal, Mapping, Optional, TypeAlias, Union
+from typing import Any, Literal, Mapping, Optional, Sequence, TypeAlias, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -72,6 +72,10 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
     def __init__(
         self,
+        filter_elements: Union[
+            Mapping[Any, Union[FloatCountRange, IntCountRange, IntOrIntCountRange]],
+            Sequence[Any],
+        ],
         keep_matches: bool = True,
         mode: FilterModeType = "any",
         name: Optional[str] = None,
@@ -82,6 +86,10 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
         Parameters
         ----------
+        filter_elements: Union[Mapping[Any, Union[FloatCountRange, IntCountRange, IntOrIntCountRange]], Sequence[Any]]
+            List of filter elements. Typically can be a list of patterns or a dictionary with patterns as keys and
+            an int for exact count or a tuple of minimum and maximum.
+            NOTE: for each child class, the type of filter_elements must be specified by the filter_elements setter.
         keep_matches: bool, optional (default: True)
             If True, molecules containing the specified patterns are kept, else removed.
         mode: FilterModeType, optional (default: "any")
@@ -95,8 +103,30 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
             Unique identifier of the pipeline element.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        self.filter_elements = filter_elements  # type: ignore
         self.keep_matches = keep_matches
         self.mode = mode
+
+    @property
+    @abc.abstractmethod
+    def filter_elements(
+        self,
+    ) -> Mapping[Any, FloatCountRange]:
+        """Get filter elements as dict."""
+
+    @filter_elements.setter
+    @abc.abstractmethod
+    def filter_elements(
+        self,
+        filter_elements: Union[Mapping[Any, FloatCountRange], Sequence[Any]],
+    ) -> None:
+        """Set filter elements as dict.
+
+        Parameters
+        ----------
+        filter_elements: Union[Mapping[Any, FloatCountRange], Sequence[Any]]
+            List of filter elements.
+        """
 
     def set_params(self, **parameters: Any) -> Self:
         """Set parameters of BaseKeepMatchesFilter.
@@ -116,6 +146,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
             self.keep_matches = parameter_copy.pop("keep_matches")
         if "mode" in parameter_copy:
             self.mode = parameter_copy.pop("mode")
+        if "filter_elements" in parameter_copy:
+            self.filter_elements = parameter_copy.pop("filter_elements")
         super().set_params(**parameter_copy)
         return self
 
@@ -135,6 +167,13 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         params = super().get_params(deep=deep)
         params["keep_matches"] = self.keep_matches
         params["mode"] = self.mode
+        if deep:
+            params["filter_elements"] = {
+                element: (count_tuple[0], count_tuple[1])
+                for element, count_tuple in self.filter_elements.items()
+            }
+        else:
+            params["filter_elements"] = self.filter_elements
         return params
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -222,16 +261,17 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
             Value of the match.
         """
 
-    @property
-    @abc.abstractmethod
-    def filter_elements(
-        self,
-    ) -> Mapping[Any, FloatCountRange]:
-        """Get filter elements as dict."""
-
 
 class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     """Filter to keep or remove molecules based on patterns.
+
+    Parameters
+    ----------
+    filter_elements: Union[Sequence[str], Mapping[str, IntOrIntCountRange]]
+        List of patterns to allow in molecules.
+        Alternatively, a dictionary can be passed with patterns as keys
+        and an int for exact count or a tuple of minimum and maximum.
+    [...]
 
     Notes
     -----
@@ -242,66 +282,32 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     - mode = "all" & keep_matches = False: Must not match all filter elements.
     """
 
-    _patterns: dict[str, IntCountRange]
-
-    def __init__(
-        self,
-        patterns: Union[list[str], dict[str, IntOrIntCountRange]],
-        keep_matches: bool = True,
-        mode: FilterModeType = "any",
-        name: Optional[str] = None,
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize BasePatternsFilter.
-
-        Parameters
-        ----------
-        patterns: Union[list[str], dict[str, IntOrIntCountRange]]
-            List of patterns to allow in molecules.
-            Alternatively, a dictionary can be passed with patterns as keys
-            and an int for exact count or a tuple of minimum and maximum.
-        keep_matches: bool, optional (default: True)
-            If True, molecules containing the specified patterns are kept, else removed.
-        mode: FilterModeType, optional (default: "any")
-            If "any", at least one of the specified patterns must be present in the molecule.
-            If "all", all of the specified patterns must be present in the molecule.
-        name: Optional[str], optional (default: None)
-            Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
-            Number of parallel jobs to use.
-        uuid: str, optional (default: None)
-            Unique identifier of the pipeline element.
-        """
-        super().__init__(
-            keep_matches=keep_matches, mode=mode, name=name, n_jobs=n_jobs, uuid=uuid
-        )
-        self.patterns = patterns  # type: ignore
+    _filter_elements: Mapping[str, IntCountRange]
 
     @property
-    def patterns(self) -> dict[str, IntCountRange]:
-        """Get allowed patterns as dict."""
-        return self._patterns
+    def filter_elements(self) -> Mapping[str, IntCountRange]:
+        """Get allowed filter elements (patterns) as dict."""
+        return self._filter_elements
 
-    @patterns.setter
-    def patterns(
+    @filter_elements.setter
+    def filter_elements(
         self,
-        patterns: Union[list[str], dict[str, IntOrIntCountRange]],
+        patterns: Union[list[str], Mapping[str, IntOrIntCountRange]],
     ) -> None:
-        """Set allowed patterns as dict.
+        """Set allowed filter elements (patterns) as dict.
 
         Parameters
         ----------
-        patterns: Union[list[str], dict[str, IntOrIntCountRange]]
+        patterns: Union[list[str], Mapping[str, IntOrIntCountRange]]
             List of patterns.
         """
         if isinstance(patterns, (list, set)):
-            self._patterns = {pat: (1, None) for pat in patterns}
+            self._filter_elements = {pat: (1, None) for pat in patterns}
         else:
-            self._patterns = {
+            self._filter_elements = {
                 pat: count_value_to_tuple(count) for pat, count in patterns.items()
             }
-        self.patterns_mol_dict = list(self._patterns.keys())  # type: ignore
+        self.patterns_mol_dict = list(self._filter_elements.keys())  # type: ignore
 
     @property
     def patterns_mol_dict(self) -> Mapping[str, RDKitMol]:
@@ -309,12 +315,12 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         return self._patterns_mol_dict
 
     @patterns_mol_dict.setter
-    def patterns_mol_dict(self, patterns: list[str]) -> None:
+    def patterns_mol_dict(self, patterns: Sequence[str]) -> None:
         """Set patterns as dict with RDKitMol objects.
 
         Parameters
         ----------
-        patterns: list[str]
+        patterns: Sequence[str]
             List of patterns.
         """
         self._patterns_mol_dict = {pat: self._pattern_to_mol(pat) for pat in patterns}
@@ -334,11 +340,6 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             RDKitMol object of the pattern.
         """
 
-    @property
-    def filter_elements(self) -> Mapping[str, IntCountRange]:
-        """Get filter elements as dict."""
-        return self.patterns
-
     def _calculate_single_element_value(
         self, filter_element: Any, value: RDKitMol
     ) -> int:
@@ -357,45 +358,3 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             smarts match count value.
         """
         return len(value.GetSubstructMatches(self.patterns_mol_dict[filter_element]))
-
-    def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get parameters of PatternFilter.
-
-        Parameters
-        ----------
-        deep: bool, optional (default: True)
-            If True, return the parameters of all subobjects that are PipelineElements.
-
-        Returns
-        -------
-        dict[str, Any]
-            Parameters of PatternFilter.
-        """
-        params = super().get_params(deep=deep)
-        if deep:
-            params["patterns"] = {
-                pat: (count_tuple[0], count_tuple[1])
-                for pat, count_tuple in self.patterns.items()
-            }
-        else:
-            params["patterns"] = self.patterns
-        return params
-
-    def set_params(self, **parameters: Any) -> Self:
-        """Set parameters of PatternFilter.
-
-        Parameters
-        ----------
-        parameters: Any
-            Parameters to set.
-
-        Returns
-        -------
-        Self
-            Self.
-        """
-        parameter_copy = dict(parameters)
-        if "patterns" in parameter_copy:
-            self.patterns = parameter_copy.pop("patterns")
-        super().set_params(**parameter_copy)
-        return self

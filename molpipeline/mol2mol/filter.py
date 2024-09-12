@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Literal, Optional, Union
+from typing import Any, Mapping, Optional, Sequence, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -253,6 +253,12 @@ class SmilesFilter(_BasePatternsFilter):
 class ComplexFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on multiple filter elements.
 
+    Parameters
+    ----------
+    filter_elements: Sequence[_MolToMolPipelineElement]
+        MolToMol elements to use as filters.
+    [...]
+
     Notes
     -----
     There are four possible scenarios:
@@ -262,48 +268,19 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         - mode = "all" & keep_matches = False: Must not match all filter elements.
     """
 
-    def __init__(
-        self,
-        filter_elements: tuple[_MolToMolPipelineElement, ...],
-        keep_matches: bool = True,
-        mode: Literal["any", "all"] = "any",
-        name: Optional[str] = None,
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize ComplexFilter.
-
-        Parameters
-        ----------
-        filter_elements: tuple[_MolToMolPipelineElement, ...]
-            tuple of filter elements.
-        keep_matches: bool, optional (default: True)
-            If True, molecules containing the specified patterns are kept, else removed.
-        mode: Literal["any", "all"], optional (default: "any")
-            If "any", at least one of the specified patterns must be present in the molecule.
-            If "all", all of the specified patterns must be present in the molecule.
-        name: Optional[str], optional (default: None)
-            Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
-            Number of parallel jobs to use.
-        uuid: str, optional (default: None)
-            Unique identifier of the pipeline element.
-        """
-        super().__init__(
-            keep_matches=keep_matches, mode=mode, name=name, n_jobs=n_jobs, uuid=uuid
-        )
-        self.filter_elements = {element: (1, None) for element in filter_elements}
+    _filter_elements: Mapping[_MolToMolPipelineElement, tuple[int, Optional[int]]]
 
     @property
     def filter_elements(
         self,
-    ) -> dict[_MolToMolPipelineElement, tuple[int, Optional[int]]]:
+    ) -> Mapping[_MolToMolPipelineElement, tuple[int, Optional[int]]]:
         """Get filter elements."""
         return self._filter_elements
 
     @filter_elements.setter
     def filter_elements(
-        self, filter_elements: dict[_MolToMolPipelineElement, tuple[int, Optional[int]]]
+        self,
+        filter_elements: Sequence[_MolToMolPipelineElement],
     ) -> None:
         """Set filter elements.
 
@@ -312,7 +289,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         filter_elements: dict[_MolToMolPipelineElement, tuple[int, Optional[int]]]
             Filter elements to set.
         """
-        self._filter_elements = filter_elements
+        self._filter_elements = {element: (1, None) for element in filter_elements}
 
     def _calculate_single_element_value(
         self, filter_element: Any, value: RDKitMol
@@ -336,51 +313,16 @@ class ComplexFilter(_BaseKeepMatchesFilter):
             return 0
         return 1
 
-    def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get parameters of ComplexFilter.
-
-        Parameters
-        ----------
-        deep: bool, optional (default: True)
-            If True, return the parameters of all subobjects that are PipelineElements.
-
-        Returns
-        -------
-        dict[str, Any]
-            Parameters of ComplexFilter.
-        """
-        params = super().get_params(deep=deep)
-        if deep:
-            params["filter_elements"] = {
-                element: (count_tuple[0], count_tuple[1])
-                for element, count_tuple in self.filter_elements.items()
-            }
-        else:
-            params["filter_elements"] = self.filter_elements
-        return params
-
-    def set_params(self, **parameters: Any) -> Self:
-        """Set parameters of ComplexFilter.
-
-        Parameters
-        ----------
-        parameters: Any
-            Parameters to set.
-
-        Returns
-        -------
-        Self
-            Self.
-        """
-        parameter_copy = dict(parameters)
-        if "filter_elements" in parameter_copy:
-            self.filter_elements = parameter_copy.pop("filter_elements")
-        super().set_params(**parameter_copy)
-        return self
-
 
 class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on RDKit descriptors.
+
+    Parameters
+    ----------
+    filter_elements: dict[str, FloatCountRange]
+        Dictionary of RDKit descriptors to filter by.
+        The value must be a tuple of minimum and maximum. If None, no limit is set.
+    [...]
 
     Notes
     -----
@@ -391,46 +333,13 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         - mode = "all" & keep_matches = False: Must not match all filter elements.
     """
 
-    def __init__(
-        self,
-        descriptors: dict[str, FloatCountRange],
-        keep_matches: bool = True,
-        mode: Literal["any", "all"] = "any",
-        name: Optional[str] = None,
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize DescriptorsFilter.
-
-        Parameters
-        ----------
-        descriptors: dict[str, FloatCountRange]
-            Dictionary of RDKit descriptors to filter by.
-            The value must be a tuple of minimum and maximum. If None, no limit is set.
-        keep_matches: bool, optional (default: True)
-            If True, molecules containing the specified descriptors are kept, else removed.
-        mode: Literal["any", "all"], optional (default: "any")
-            If "any", at least one of the specified descriptors must be present in the molecule.
-            If "all", all of the specified descriptors must be present in the molecule.
-        name: Optional[str], optional (default: None)
-            Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
-            Number of parallel jobs to use.
-        uuid: str, optional (default: None)
-            Unique identifier of the pipeline element.
-        """
-        super().__init__(
-            keep_matches=keep_matches, mode=mode, name=name, n_jobs=n_jobs, uuid=uuid
-        )
-        self.descriptors = descriptors
-
     @property
-    def descriptors(self) -> dict[str, FloatCountRange]:
+    def filter_elements(self) -> dict[str, FloatCountRange]:
         """Get allowed descriptors as dict."""
-        return self._descriptors
+        return self._filter_elements
 
-    @descriptors.setter
-    def descriptors(self, descriptors: dict[str, FloatCountRange]) -> None:
+    @filter_elements.setter
+    def filter_elements(self, descriptors: dict[str, FloatCountRange]) -> None:
         """Set allowed descriptors as dict.
 
         Parameters
@@ -438,16 +347,11 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         descriptors: dict[str, FloatCountRange]
             Dictionary of RDKit descriptors to filter by.
         """
-        self._descriptors = descriptors
+        self._filter_elements = descriptors
         if not all(hasattr(Descriptors, descriptor) for descriptor in descriptors):
             raise ValueError(
                 "You are trying to use an invalid descriptor. Use RDKit Descriptors module."
             )
-
-    @property
-    def filter_elements(self) -> dict[str, FloatCountRange]:
-        """Get filter elements."""
-        return self.descriptors
 
     def _calculate_single_element_value(
         self, filter_element: Any, value: RDKitMol
@@ -467,48 +371,6 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
             Descriptor value.
         """
         return getattr(Descriptors, filter_element)(value)
-
-    def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get parameters of DescriptorFilter.
-
-        Parameters
-        ----------
-        deep: bool, optional (default: True)
-            If True, return the parameters of all subobjects that are PipelineElements.
-
-        Returns
-        -------
-        dict[str, Any]
-            Parameters of DescriptorFilter.
-        """
-        params = super().get_params(deep=deep)
-        if deep:
-            params["descriptors"] = {
-                descriptor: (count_tuple[0], count_tuple[1])
-                for descriptor, count_tuple in self.descriptors.items()
-            }
-        else:
-            params["descriptors"] = self.descriptors
-        return params
-
-    def set_params(self, **parameters: Any) -> Self:
-        """Set parameters of DescriptorFilter.
-
-        Parameters
-        ----------
-        parameters: Any
-            Parameters to set.
-
-        Returns
-        -------
-        Self
-            Self.
-        """
-        parameter_copy = dict(parameters)
-        if "descriptors" in parameter_copy:
-            self.descriptors = parameter_copy.pop("descriptors")
-        super().set_params(**parameter_copy)
-        return self
 
 
 class MixtureFilter(_MolToMolPipelineElement):
