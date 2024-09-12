@@ -2,26 +2,28 @@
 
 from typing import Optional, Sequence, TypeAlias, Union
 
-# IntCountRange for Typing of count ranges
+FloatCountRange: TypeAlias = tuple[Optional[float], Optional[float]]
+
+IntCountRange: TypeAlias = tuple[Optional[int], Optional[int]]
+
+# IntOrIntCountRange for Typing of count ranges
 # - a single int for an exact value match
 # - a range given as a tuple with a lower and upper bound
 #   - both limits are optional
-IntCountRange: TypeAlias = Union[int, tuple[Optional[int], Optional[int]]]
-
-FloatCountRange: TypeAlias = tuple[Optional[float], Optional[float]]
+IntOrIntCountRange: TypeAlias = Union[int, IntCountRange]
 
 
-def count_value_to_tuple(count: IntCountRange) -> tuple[Optional[int], Optional[int]]:
+def count_value_to_tuple(count: IntOrIntCountRange) -> IntCountRange:
     """Convert a count value to a tuple.
 
     Parameters
     ----------
-    count: Union[int, tuple[Optional[int], Optional[int]]]
+    count: Union[int, IntCountRange]
         Count value. Can be a single int or a tuple of two values.
 
     Returns
     -------
-    tuple[Optional[int], Optional[int]]
+    IntCountRange
         Tuple of count values.
     """
     if isinstance(count, int):

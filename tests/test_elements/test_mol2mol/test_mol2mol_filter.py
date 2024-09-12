@@ -6,15 +6,15 @@ from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2mol import (
+    ComplexFilter,
     ElementFilter,
     InorganicsFilter,
     MixtureFilter,
-    ComplexFilter,
     RDKitDescriptorsFilter,
     SmartsFilter,
     SmilesFilter,
 )
-from molpipeline.utils.value_conversions import FloatCountRange, IntCountRange
+from molpipeline.utils.value_conversions import FloatCountRange, IntOrIntCountRange
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
@@ -73,7 +73,7 @@ class MolFilterTest(unittest.TestCase):
         filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(filtered_smiles_2, [SMILES_BENZENE, SMILES_CHLOROBENZENE])
 
-    def test_multi_element_filter(self) -> None:
+    def test_complex_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed chemical elements."""
         element_filter_1 = ElementFilter({6: 6, 1: 6})
         element_filter_2 = ElementFilter({6: 6, 1: 5, 17: 1})
@@ -98,13 +98,13 @@ class MolFilterTest(unittest.TestCase):
 
     def test_smarts_smiles_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed SMARTS patterns."""
-        smarts_pats: dict[str, IntCountRange] = {
+        smarts_pats: dict[str, IntOrIntCountRange] = {
             "c": (4, None),
             "Cl": 1,
         }
         smarts_filter = SmartsFilter(smarts_pats)
 
-        smiles_pats: dict[str, IntCountRange] = {
+        smiles_pats: dict[str, IntOrIntCountRange] = {
             "c1ccccc1": (1, None),
             "Cl": 1,
         }
@@ -151,7 +151,7 @@ class MolFilterTest(unittest.TestCase):
 
     def test_smarts_filter_parallel(self) -> None:
         """Test if molecules are filtered correctly by allowed SMARTS patterns in parallel."""
-        smarts_pats: dict[str, IntCountRange] = {
+        smarts_pats: dict[str, IntOrIntCountRange] = {
             "c": (4, None),
             "Cl": 1,
             "cc": (1, None),
@@ -215,6 +215,14 @@ class MolFilterTest(unittest.TestCase):
 
         pipeline.set_params(
             DescriptorsFilter__descriptors={
+                "NumHAcceptors": (2.00, 4),
+            }
+        )
+        result_lower_exact = pipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(result_lower_exact, [SMILES_CL_BR])
+
+        pipeline.set_params(
+            DescriptorsFilter__descriptors={
                 "NumHAcceptors": (1.99, 4),
             }
         )
@@ -228,6 +236,14 @@ class MolFilterTest(unittest.TestCase):
         )
         result_lower_out_bound = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(result_lower_out_bound, [])
+
+        pipeline.set_params(
+            DescriptorsFilter__descriptors={
+                "NumHAcceptors": (1, 2.00),
+            }
+        )
+        result_upper_exact = pipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(result_upper_exact, [SMILES_CL_BR])
 
         pipeline.set_params(
             DescriptorsFilter__descriptors={

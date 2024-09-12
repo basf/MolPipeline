@@ -27,6 +27,7 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 from molpipeline.utils.value_conversions import (
     FloatCountRange,
     IntCountRange,
+    IntOrIntCountRange,
     count_value_to_tuple,
 )
 
@@ -57,7 +58,7 @@ class ElementFilter(_MolToMolPipelineElement):
     def __init__(
         self,
         allowed_element_numbers: Optional[
-            Union[list[int], dict[int, IntCountRange]]
+            Union[list[int], dict[int, IntOrIntCountRange]]
         ] = None,
         name: str = "ElementFilter",
         n_jobs: int = 1,
@@ -67,7 +68,7 @@ class ElementFilter(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        allowed_element_numbers: Optional[Union[list[int], dict[int, CountRange]]]
+        allowed_element_numbers: Optional[Union[list[int], dict[int, IntOrIntCountRange]]]
             List of atomic numbers of elements to allowed in molecules. Per default allowed elements are:
             H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
             Alternatively, a dictionary can be passed with atomic numbers as keys and an int for exact count or a tuple of minimum and maximum
@@ -82,23 +83,25 @@ class ElementFilter(_MolToMolPipelineElement):
         self.allowed_element_numbers = allowed_element_numbers  # type: ignore
 
     @property
-    def allowed_element_numbers(self) -> dict[int, tuple[Optional[int], Optional[int]]]:
+    def allowed_element_numbers(self) -> dict[int, IntCountRange]:
         """Get allowed element numbers as dict."""
         return self._allowed_element_numbers
 
     @allowed_element_numbers.setter
     def allowed_element_numbers(
         self,
-        allowed_element_numbers: Optional[Union[list[int], dict[int, IntCountRange]]],
+        allowed_element_numbers: Optional[
+            Union[list[int], dict[int, IntOrIntCountRange]]
+        ],
     ) -> None:
         """Set allowed element numbers as dict.
 
         Parameters
         ----------
-        allowed_element_numbers: Optional[Union[list[int], dict[int, CountRange]]
+        allowed_element_numbers: Optional[Union[list[int], dict[int, IntOrIntCountRange]]
             List of atomic numbers of elements to allowed in molecules.
         """
-        self._allowed_element_numbers: dict[int, tuple[Optional[int], Optional[int]]]
+        self._allowed_element_numbers: dict[int, IntCountRange]
         if allowed_element_numbers is None:
             allowed_element_numbers = self.DEFAULT_ALLOWED_ELEMENT_NUMBERS
         if isinstance(allowed_element_numbers, (list, set)):

@@ -17,6 +17,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.utils.value_conversions import (
     FloatCountRange,
     IntCountRange,
+    IntOrIntCountRange,
     count_value_to_tuple,
 )
 
@@ -241,11 +242,11 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     - mode = "all" & keep_matches = False: Must not match all filter elements.
     """
 
-    _patterns: dict[str, tuple[Optional[int], Optional[int]]]
+    _patterns: dict[str, IntCountRange]
 
     def __init__(
         self,
-        patterns: Union[list[str], dict[str, IntCountRange]],
+        patterns: Union[list[str], dict[str, IntOrIntCountRange]],
         keep_matches: bool = True,
         mode: FilterModeType = "any",
         name: Optional[str] = None,
@@ -256,7 +257,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
 
         Parameters
         ----------
-        patterns: Union[list[str], dict[str, CountRange]]
+        patterns: Union[list[str], dict[str, IntOrIntCountRange]]
             List of patterns to allow in molecules.
             Alternatively, a dictionary can be passed with patterns as keys
             and an int for exact count or a tuple of minimum and maximum.
@@ -278,20 +279,20 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         self.patterns = patterns  # type: ignore
 
     @property
-    def patterns(self) -> dict[str, tuple[Optional[int], Optional[int]]]:
+    def patterns(self) -> dict[str, IntCountRange]:
         """Get allowed patterns as dict."""
         return self._patterns
 
     @patterns.setter
     def patterns(
         self,
-        patterns: Union[list[str], dict[str, IntCountRange]],
+        patterns: Union[list[str], dict[str, IntOrIntCountRange]],
     ) -> None:
         """Set allowed patterns as dict.
 
         Parameters
         ----------
-        patterns: Union[list[str], dict[str, CountRange]]
+        patterns: Union[list[str], dict[str, IntOrIntCountRange]]
             List of patterns.
         """
         if isinstance(patterns, (list, set)):
@@ -334,7 +335,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         """
 
     @property
-    def filter_elements(self) -> Mapping[str, tuple[Optional[int], Optional[int]]]:
+    def filter_elements(self) -> Mapping[str, IntCountRange]:
         """Get filter elements as dict."""
         return self.patterns
 
