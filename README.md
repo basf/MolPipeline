@@ -1,35 +1,53 @@
 # MolPipeline
-MolPipeline is a Python package providing RDKit functionality in a Scikit-learn like fashion.
+MolPipeline is a Python package for processing molecules with RDKit in scikit-learn.
+
+<p align="center"><img src=".github/molpipeline.png" height="250"/></p>
 
 ## Background
 
-The open-source package [scikit-learn](https://scikit-learn.org/) provides a large variety of machine
+The [scikit-learn](https://scikit-learn.org/) package provides a large variety of machine
 learning algorithms and data processing tools, among which is the `Pipeline` class, allowing users to
 prepend custom data processing steps to the machine learning model.
-`MolPipeline` extends this concept to the field of chemoinformatics by
-wrapping default functionalities of [RDKit](https://www.rdkit.org/), such as reading and writing SMILES strings
+`MolPipeline` extends this concept to the field of cheminformatics by
+wrapping standard [RDKit](https://www.rdkit.org/) functionality, such as reading and writing SMILES strings
 or calculating molecular descriptors from a molecule-object.
 
-A notable difference to the `Pipeline` class of scikit-learn is that the Pipline from `MolPipeline` allows for 
-instances to fail during processing without interrupting the whole pipeline.
-Such behaviour is useful when processing large datasets, where some SMILES strings might not encode valid molecules
-or some descriptors might not be calculable for certain molecules.
+MolPipeline aims to provide:
 
+- Automated end-to-end processing from molecule data sets to deployable machine learning models.
+- Scalable parallel processing and low memory usage through instance-based processing.
+- Standard pipeline building blocks for flexibly building custom pipelines for various
+cheminformatics tasks.
+- Consistent error handling for tracking, logging, and replacing failed instances (e.g., a
+SMILES string that could not be parsed correctly).
+- Integrated and self-contained pipeline serialization for easy deployment and tracking
+in version control.
 
 ## Publications
 
-The publication is freely available [here](https://chemrxiv.org/engage/chemrxiv/article-details/661fec7f418a5379b00ae036).
+Sieg J, Feldmann CW, Hemmerich J, Stork C, Sandfort F, Eiden P, and Mathea M, MolPipeline: A python package for processing
+molecules with RDKit in scikit-learn, 2024,
+[arXiv](https://chemrxiv.org/engage/chemrxiv/article-details/661fec7f418a5379b00ae036)
+
+Feldmann CW, Sieg J, and Mathea M, Analysis of uncertainty of neural
+fingerprint-based models, 2024 [repo](https://github.com/basf/neural-fingerprint-uncertainty)
 
 ## Installation
 ```commandline
 pip install molpipeline
 ```
 
-## Usage
+## Documentation
 
-See the [notebooks](notebooks) folder for basic and advanced examples of how to use Molpipeline.
+The [notebooks](notebooks) folder contains many basic and advanced examples of how to use Molpipeline.
 
-A basic example of how to use MolPipeline to create a fingerprint-based model is shown below (see also the [notebook](notebooks/01_getting_started_with_molpipeline.ipynb)): 
+A nice introduction to the basic usage is in the [getting started notebook](notebooks/01_getting_started_with_molpipeline.ipynb).
+
+## Quick Start
+
+### Model building
+
+Create a fingerprint-based prediction model:
 ```python
 from molpipeline import Pipeline
 from molpipeline.any2mol import AutoToMol
@@ -58,8 +76,20 @@ pipeline.predict(["CCC"])
 # output: array([0.29])
 ```
 
-Molpipeline also provides custom estimators for standard cheminformatics tasks that can be integrated into pipelines,
-like clustering for scaffold splits (see also the [notebook](notebooks/02_scaffold_split_with_custom_estimators.ipynb)):
+### Feature calculation
+
+
+
+Calculate molecular descriptors from SMILES strings:
+```python
+
+```
+
+
+### Clustering
+
+Molpipeline provides several clustering algorithms as sklearn-like estimators. For example, molecules can be
+clustered by their Murcko scaffold. See the [notebook](notebooks/02_scaffold_split_with_custom_estimators.ipynb) for scaffolds splits and further examples.
 
 ```python
 from molpipeline.estimators import MurckoScaffoldClustering
