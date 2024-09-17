@@ -78,13 +78,35 @@ pipeline.predict(["CCC"])
 
 ### Feature calculation
 
-
-
-Calculate molecular descriptors from SMILES strings:
+Calculating molecular descriptors from SMILES strings is straightforward. For example, physicochemical properties can
+be calculated like this:
 ```python
+from molpipeline import Pipeline
+from molpipeline.any2mol import AutoToMol
+from molpipeline.mol2any import MolToRDKitPhysChem
 
+pipeline_physchem = Pipeline(
+    [
+        ("auto2mol", AutoToMol()),
+        (
+            "physchem",
+            MolToRDKitPhysChem(
+                standardizer=None,
+                descriptor_list=["HeavyAtomMolWt", "TPSA", "NumHAcceptors"],
+            ),
+        ),
+    ],
+    n_jobs=-1,
+)
+physchem_matrix = pipeline_physchem.transform(["CCCCCC", "c1ccccc1(O)"])
+physchem_matrix
+# output: array([[72.066,  0.   ,  0.   ],
+#                [88.065, 20.23 ,  1.   ]])
 ```
 
+MolPipeline provides further features and descriptors from RDKit through pipeline elements, 
+for example Morgan (binary/count) fingerprints and MACCS keys.
+See the [04_feature_calculation notebook](notebooks/04_feature_calculation.ipynb) for more examples.
 
 ### Clustering
 
