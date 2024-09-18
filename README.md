@@ -25,12 +25,15 @@ in version control.
 
 ## Publications
 
-Sieg J, Feldmann CW, Hemmerich J, Stork C, Sandfort F, Eiden P, and Mathea M, MolPipeline: A python package for processing
-molecules with RDKit in scikit-learn, 2024,
-[arXiv](https://chemrxiv.org/engage/chemrxiv/article-details/661fec7f418a5379b00ae036)
+[Sieg J, Feldmann CW, Hemmerich J, Stork C, Sandfort F, Eiden P, and Mathea M, MolPipeline: A python package for processing
+molecules with RDKit in scikit-learn, J. Chem. Inf. Model., doi:10.1021/acs.jcim.4c00863, 2024](https://doi.org/10.1021/acs.jcim.4c00863)
+\
+Further links: [arXiv](https://chemrxiv.org/engage/chemrxiv/article-details/661fec7f418a5379b00ae036)
 
 Feldmann CW, Sieg J, and Mathea M, Analysis of uncertainty of neural
-fingerprint-based models, 2024 [repo](https://github.com/basf/neural-fingerprint-uncertainty)
+fingerprint-based models, 2024
+\
+Further links: [repository](https://github.com/basf/neural-fingerprint-uncertainty)
 
 ## Installation
 ```commandline
@@ -41,7 +44,7 @@ pip install molpipeline
 
 The [notebooks](notebooks) folder contains many basic and advanced examples of how to use Molpipeline.
 
-A nice introduction to the basic usage is in the [getting started notebook](notebooks/01_getting_started_with_molpipeline.ipynb).
+A nice introduction to the basic usage is in the [01_getting_started_with_molpipeline notebook](notebooks/01_getting_started_with_molpipeline.ipynb).
 
 ## Quick Start
 
@@ -104,14 +107,14 @@ physchem_matrix
 #                [88.065, 20.23 ,  1.   ]])
 ```
 
-MolPipeline provides further features and descriptors from RDKit through pipeline elements, 
+MolPipeline provides further features and descriptors from RDKit, 
 for example Morgan (binary/count) fingerprints and MACCS keys.
 See the [04_feature_calculation notebook](notebooks/04_feature_calculation.ipynb) for more examples.
 
 ### Clustering
 
 Molpipeline provides several clustering algorithms as sklearn-like estimators. For example, molecules can be
-clustered by their Murcko scaffold. See the [notebook](notebooks/02_scaffold_split_with_custom_estimators.ipynb) for scaffolds splits and further examples.
+clustered by their Murcko scaffold. See the [02_scaffold_split_with_custom_estimators notebook](notebooks/02_scaffold_split_with_custom_estimators.ipynb) for scaffolds splits and further examples.
 
 ```python
 from molpipeline.estimators import MurckoScaffoldClustering
