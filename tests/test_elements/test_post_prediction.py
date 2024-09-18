@@ -64,12 +64,19 @@ class TestPostPredictionWrapper(unittest.TestCase):
     def test_inverse_transform(self) -> None:
         """Test inverse_transform method."""
         rng = np.random.default_rng(20240918)
-        features = rng.random((100, 10))
+        features = rng.random((5, 10))
 
-        ppw = PostPredictionWrapper(PCA(n_components=3))
+        pca = PCA(n_components=3)
+        pca.fit(features)
+        pca_transformed = pca.transform(features)
+        pca_inverse = pca.inverse_transform(pca_transformed)
+
+        ppw = PostPredictionWrapper(clone(pca))
         ppw.fit(features)
         ppw_transformed = ppw.transform(features)
         ppw_inverse = ppw.inverse_transform(ppw_transformed)
 
         self.assertEqual(features.shape, ppw_inverse.shape)
-        self.assertTrue(np.allclose(features, ppw_inverse))
+        self.assertEqual(pca_inverse.shape, ppw_inverse.shape)
+
+        self.assertTrue(np.allclose(pca_inverse, ppw_inverse))
