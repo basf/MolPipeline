@@ -23,7 +23,7 @@ class TestPostPredictionWrapper(unittest.TestCase):
 
         wrapped_params = {}
         for key, value in ppw_params.items():
-            first, sep, rest = key.partition("__")
+            first, _, rest = key.partition("__")
             if first == "wrapped_estimator":
                 if rest == "":
                     self.assertEqual(rf, value)
