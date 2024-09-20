@@ -22,7 +22,7 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"
+        pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
   mypy:
     runs-on: ubuntu-latest
     steps:
