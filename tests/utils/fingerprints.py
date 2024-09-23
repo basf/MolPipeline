@@ -8,7 +8,7 @@ from rdkit import Chem
 
 # pylint: disable=no-name-in-module
 from rdkit.Chem import rdFingerprintGenerator as rdkit_fp
-from rdkit.DataStructs import ExplicitBitVect
+from rdkit.DataStructs import ExplicitBitVect, UIntSparseIntVect
 from scipy import sparse
 
 
@@ -59,6 +59,8 @@ def fingerprints_to_numpy(
     """
     if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):
         return np.array(fingerprints)
+    if all(isinstance(fp, UIntSparseIntVect) for fp in fingerprints):
+        return np.array([fp.ToList() for fp in fingerprints])
     if isinstance(fingerprints, sparse.csr_matrix):
         return fingerprints.toarray()
     if isinstance(fingerprints, np.ndarray):
