@@ -151,7 +151,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
     _T_default_criterion: LossFunction
     _T_default_metric: Metric
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         n_tasks: int = 1,
         input_dim: int = DEFAULT_HIDDEN_DIM,
@@ -327,7 +327,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
     _T_default_criterion = CrossEntropyLoss
     _T_default_metric = CrossEntropyMetric
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         n_classes: int,
         n_tasks: int = 1,
