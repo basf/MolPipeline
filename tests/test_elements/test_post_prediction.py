@@ -38,6 +38,7 @@ class TestPostPredictionWrapper(unittest.TestCase):
         ppw = PostPredictionWrapper(rf)
 
         ppw.set_params(wrapped_estimator__n_estimators=10)
+        self.assertIsInstance(ppw.wrapped_estimator, RandomForestClassifier)
         if not isinstance(ppw.wrapped_estimator, RandomForestClassifier):
             raise TypeError("Wrapped estimator is not a RandomForestClassifier.")
         self.assertEqual(ppw.wrapped_estimator.n_estimators, 10)
