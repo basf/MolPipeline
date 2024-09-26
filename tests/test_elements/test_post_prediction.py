@@ -49,7 +49,7 @@ class TestPostPredictionWrapper(unittest.TestCase):
     def test_fit_transform(self) -> None:
         """Test fit method."""
         rng = np.random.default_rng(20240918)
-        features = rng.random((100, 10))
+        features = rng.random((10, 5))
 
         pca = PCA(n_components=3)
         pca.fit(features)
@@ -65,7 +65,7 @@ class TestPostPredictionWrapper(unittest.TestCase):
     def test_inverse_transform(self) -> None:
         """Test inverse_transform method."""
         rng = np.random.default_rng(20240918)
-        features = rng.random((5, 10))
+        features = rng.random((10, 5))
 
         pca = PCA(n_components=3)
         pca.fit(features)
