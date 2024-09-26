@@ -27,7 +27,7 @@ class Mol2PathFP(
 
     """
 
-    # pylint: disable=too-many-arguments,too-many-locals
+    # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
     def __init__(
         self,
         min_path: int = 1,

@@ -151,12 +151,11 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         dict[int, list[tuple[int, int]]]
             Dictionary with bit position as key and list of tuples with atom index and radius as value.
         """
-        bit_info: dict[int, list[tuple[int, int]]] = {}
-        _ = AllChem.GetMorganFingerprintAsBitVect(
-            mol_obj,
-            self.radius,
-            useFeatures=self._use_features,
-            bitInfo=bit_info,
-            nBits=self._n_bits,
+        fp_generator = self._get_fp_generator()
+        additional_output = AllChem.AdditionalOutput()
+        additional_output.AllocateBitInfoMap()
+        _ = fp_generator.GetSparseFingerprint(
+            mol_obj, additionalOutput=additional_output
         )
+        bit_info = additional_output.GetBitInfoMap()
         return bit_info
