@@ -26,7 +26,7 @@ class TestPostPredictionWrapper(unittest.TestCase):
             first, _, rest = key.partition("__")
             if first == "wrapped_estimator":
                 if rest == "":
-                    self.assertEqual(rf, value)
+                    self.assertIs(rf, value)
                 else:
                     wrapped_params[rest] = value
 
