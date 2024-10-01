@@ -15,10 +15,7 @@ from sklearn.utils.metaestimators import available_if
 
 try:
     from chemprop.data import MoleculeDataset, build_dataloader
-    from chemprop.nn.predictors import (
-        BinaryClassificationFFNBase,
-        MulticlassClassificationFFN,
-    )
+    from chemprop.nn.predictors import BinaryClassificationFFNBase
     from lightning import pytorch as pl
 except ImportError as error:
     logger.error(
@@ -32,6 +29,7 @@ from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
     BinaryClassificationFFN,
     BondMessagePassing,
+    MulticlassClassificationFFN,
     RegressionFFN,
     SumAggregation,
 )
@@ -348,3 +346,163 @@ class ChempropRegressor(ChempropModel):
             n_jobs=n_jobs,
             **kwargs,
         )
+
+
+class ChempropMulticlassClassifier(ChempropModel):
+    """Chemprop model with default parameters for multiclass classification tasks."""
+
+    def __init__(
+        self,
+        n_classes: int,
+        model: MPNN | None = None,
+        lightning_trainer: pl.Trainer | None = None,
+        batch_size: int = 64,
+        n_jobs: int = 1,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the chemprop multiclass model.
+
+        Parameters
+        ----------
+        n_classes : int
+            The number of classes for the classifier.
+        model : MPNN | None, optional
+            The chemprop model to wrap. If None, a default model will be used.
+        lightning_trainer : pl.Trainer, optional
+            The lightning trainer to use, by default None
+        batch_size : int, optional (default=64)
+            The batch size to use.
+        n_jobs : int, optional (default=1)
+            The number of jobs to use.
+        kwargs : Any
+            Parameters set using `set_params`.
+            Can be used to modify components of the model.
+
+        Raises
+        ------
+        AttributeError
+            If the passed model.predictor does not have an attribute n_classes.
+        ValueError
+            If the number of classes in the predictor does not match the number of classes given as attribute.
+        """
+        if model is None:
+            bond_encoder = BondMessagePassing()
+            agg = SumAggregation()
+            predictor = MulticlassClassificationFFN(n_classes=n_classes)
+            model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
+        if not hasattr(model.predictor, "n_classes"):
+            raise AttributeError(
+                "The predictor does not have an attribute n_classes. Please use a MulticlassClassificationFFN predictor or define n_classes."
+            )
+        if n_classes != model.predictor.n_classes:
+            raise ValueError(
+                "The number of classes in the predictor does not match the number of classes."
+            )
+        super().__init__(
+            model=model,
+            lightning_trainer=lightning_trainer,
+            batch_size=batch_size,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+        self._is_valid_multiclass_classifier()
+
+    @property
+    def n_classes(self) -> int:
+        """Return the number of classes."""
+        return self.model.predictor.n_classes
+
+    @n_classes.setter
+    def n_classes(self, n_classes: int) -> None:
+        """Set the number of classes.
+
+        Parameters
+        ----------
+        n_classes : int
+            number of classes
+        """
+        self.model.predictor.n_classes = n_classes
+        self.model.reinitialize_network()
+
+    def set_params(self, **params: Any) -> Self:
+        """Set the parameters of the model and check if it is a multiclass classifier.
+
+        Parameters
+        ----------
+        **params
+            The parameters to set.
+
+        Returns
+        -------
+        Self
+            The model with the new parameters.
+        """
+        super().set_params(**params)
+        if not self._is_valid_multiclass_classifier():
+            raise ValueError(
+                "The model's predictor or the number of classes are invalid. Use a multiclass predictor and more than 2 classes."
+            )
+        return self
+
+    def fit(
+        self,
+        X: MoleculeDataset,
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
+    ) -> Self:
+        """Fit the model to the data.
+
+        Parameters
+        ----------
+        X : MoleculeDataset
+            The input data.
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
+            The target data.
+
+        Returns
+        -------
+        Self
+            The fitted model.
+        """
+        self._check_correct_input(y)
+        return super().fit(X, y)
+
+    def _check_correct_input(
+        self, y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
+    ) -> None:
+        """Check if the input for the multi-class classifier is correct.
+
+        Parameters
+        ----------
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
+            Indended classes for the dataset
+
+        Raises
+        ------
+        ValueError
+            If the classes found in y are not matching n_classes or if the class labels do not start from 0 to n_classes-1.
+        """
+        unique_y = np.unique(y)
+        log = []
+        if self.n_classes != len(unique_y):
+            log.append(
+                f"Given number of classes in init (n_classes) does not match the number of unique classes (found {unique_y}) in the target data."
+            )
+        if sorted(unique_y) != list(range(self.n_classes)):
+            err = f"Classes need to be in the range from 0 to {self.n_classes-1}. Found {unique_y}. Please correct the input data accordingly."
+            log.append(err)
+        if log:
+            raise ValueError("\n".join(log))
+
+    def _is_valid_multiclass_classifier(self) -> bool:
+        """Check if a multiclass classifier is valid. Model FFN needs to be of the correct class and model needs to have more than 2 classes.
+
+        Returns
+        -------
+        bool
+            True if is a valid multiclass classifier, False otherwise.
+        """
+        has_correct_model = isinstance(
+            self.model.predictor, MulticlassClassificationFFN
+        )
+        has_classes = self.n_classes > 2
+        return has_correct_model and has_classes

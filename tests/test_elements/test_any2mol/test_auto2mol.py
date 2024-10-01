@@ -17,6 +17,9 @@ SMILES_CHLOROBENZENE = "Clc1ccccc1"
 SMILES_CL_BR = "NC(Cl)(Br)C(=O)O"
 SMILES_METAL_AU = "OC[C@H]1OC(S[Au])[C@H](O)[C@@H](O)[C@@H]1O"
 
+INCHI_BENZENE = "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"
+INCHI_CHLOROBENZENE = "InChI=1S/C6H5Cl/c7-6-4-2-1-3-5-6/h1-5H"
+
 # SDF
 with gzip.open(TEST_DATA_DIR / "P86_B_400.sdf.gz") as file:
     SDF_P86_B_400 = file.read()
@@ -74,6 +77,31 @@ class TestAuto2Mol(unittest.TestCase):
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_smiles)
         self.assertEqual(len(test_smiles), len(actual_mols))
+        self.assertTrue(
+            all(
+                Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
+                for smiles_mol, original_mol in zip(actual_mols, expected_mols)
+            )
+        )
+        del log_block
+
+    def test_auto2mol_for_inchi(self) -> None:
+        """Test molecules can be read from inchi automatically."""
+
+        test_inchis = [INCHI_BENZENE, INCHI_CHLOROBENZENE]
+        expected_mols = [MOL_BENZENE, MOL_CHLOROBENZENE]
+
+        pipeline = Pipeline(
+            [
+                (
+                    "Auto2Mol",
+                    AutoToMol(),
+                ),
+            ]
+        )
+        log_block = rdBase.BlockLogs()
+        actual_mols = pipeline.fit_transform(test_inchis)
+        self.assertEqual(len(test_inchis), len(actual_mols))
         self.assertTrue(
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)

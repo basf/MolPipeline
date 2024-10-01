@@ -10,6 +10,7 @@ import numpy as np
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToMorganFP
+from tests.utils.fingerprints import fingerprints_to_numpy
 
 test_smiles = [
     "c1ccccc1",
@@ -127,6 +128,26 @@ class TestMol2MorganFingerprint(unittest.TestCase):
             "return_as": "invalid-option__11!",
         }
         self.assertRaises(ValueError, mol_fp.set_params, **params)
+
+    def test_bit2atom_mapping(self) -> None:
+        """Test that the mapping from bits to atom weights works as intended."""
+        n_bits = 2048
+        sparse_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="sparse")
+        dense_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="dense")
+        explicit_bit_vect_morgan = MolToMorganFP(
+            radius=2, n_bits=n_bits, return_as="explicit_bit_vect"
+        )
+
+        smi2mol = SmilesToMol()
+        for test_smi in test_smiles:
+            for fp_gen in [sparse_morgan, dense_morgan, explicit_bit_vect_morgan]:
+                for counted in [False, True]:
+                    mol = smi2mol.transform([test_smi])[0]
+                    fp_gen.set_params(counted=counted)
+                    fp = fp_gen.transform([mol])
+                    mapping = fp_gen.bit2atom_mapping(mol)
+                    np_fp = fingerprints_to_numpy(fp)
+                    self.assertEqual(np.nonzero(np_fp)[0].shape[0], len(mapping))  # type: ignore
 
 
 if __name__ == "__main__":

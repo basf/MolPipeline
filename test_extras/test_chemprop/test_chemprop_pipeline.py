@@ -22,6 +22,7 @@ from molpipeline.estimators.chemprop.component_wrapper import (
 from molpipeline.estimators.chemprop.models import (
     ChempropClassifier,
     ChempropModel,
+    ChempropMulticlassClassifier,
     ChempropRegressor,
 )
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
@@ -127,6 +128,40 @@ def get_classification_pipeline() -> Pipeline:
         error_filter, fill_value=np.nan
     )
     chemprop_model = ChempropClassifier(lightning_trainer=DEFAULT_TRAINER)
+    model_pipeline = Pipeline(
+        steps=[
+            ("smiles2mol", smiles2mol),
+            ("mol2chemprop", mol2chemprop),
+            ("error_filter", error_filter),
+            ("model", chemprop_model),
+            ("filter_reinserter", PostPredictionWrapper(filter_reinserter)),
+        ],
+    )
+    return model_pipeline
+
+
+def get_multiclass_classification_pipeline(n_classes: int) -> Pipeline:
+    """Get the Chemprop model pipeline for multiclass classification.
+
+    Parameters
+    ----------
+    n_classes : int
+        The number of classes for model initialization.
+
+    Returns
+    -------
+    Pipeline
+        The Chemprop model pipeline for multiclass classification.
+    """
+    smiles2mol = SmilesToMol()
+    mol2chemprop = MolToChemprop()
+    error_filter = ErrorFilter(filter_everything=True)
+    filter_reinserter = FilterReinserter.from_error_filter(
+        error_filter, fill_value=np.nan
+    )
+    chemprop_model = ChempropMulticlassClassifier(
+        n_classes=n_classes, lightning_trainer=DEFAULT_TRAINER
+    )
     model_pipeline = Pipeline(
         steps=[
             ("smiles2mol", smiles2mol),
@@ -282,7 +317,6 @@ class TestClassificationPipeline(unittest.TestCase):
         molecule_net_bbbp_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz", sep="\t", nrows=100
         )
-        molecule_net_bbbp_df.to_csv("molecule_net_bbbp.tsv.gz", sep="\t", index=False)
         classification_model = get_classification_pipeline()
         classification_model.fit(
             molecule_net_bbbp_df["smiles"].tolist(),
@@ -306,3 +340,49 @@ class TestClassificationPipeline(unittest.TestCase):
 
         self.assertEqual(proba.shape, proba_copy.shape)
         self.assertTrue(np.allclose(proba[~nan_indices], proba_copy[~nan_indices]))
+
+
+class TestMulticlassClassificationPipeline(unittest.TestCase):
+    """Test the Chemprop model pipeline for multiclass classification."""
+
+    def test_prediction(self) -> None:
+        """Test the prediction of the multiclass classification model."""
+
+        test_data_df = pd.read_csv(
+            TEST_DATA_DIR / "multiclass_mock.tsv", sep="\t", index_col=False
+        )
+        classification_model = get_multiclass_classification_pipeline(n_classes=3)
+        mols = test_data_df["Molecule"].tolist()
+        classification_model.fit(
+            mols,
+            test_data_df["Label"].to_numpy(),
+        )
+        pred = classification_model.predict(mols)
+        proba = classification_model.predict_proba(mols)
+        self.assertEqual(len(pred), len(test_data_df))
+        self.assertEqual(proba.shape[1], 3)
+        self.assertEqual(proba.shape[0], len(test_data_df))
+
+        model_copy = joblib_dump_load(classification_model)
+        pred_copy = model_copy.predict(mols)
+        proba_copy = model_copy.predict_proba(mols)
+
+        nan_mask = np.isnan(pred)
+        self.assertListEqual(nan_mask.tolist(), np.isnan(pred_copy).tolist())
+        self.assertTrue(np.allclose(pred[~nan_mask], pred_copy[~nan_mask]))
+
+        self.assertEqual(proba.shape, proba_copy.shape)
+        self.assertEqual(pred.shape, pred_copy.shape)
+        self.assertTrue(np.allclose(proba[~nan_mask], proba_copy[~nan_mask]))
+
+        with self.assertRaises(ValueError):
+            classification_model.fit(
+                mols,
+                test_data_df["Label"].add(1).to_numpy(),
+            )
+        with self.assertRaises(ValueError):
+            classification_model = get_multiclass_classification_pipeline(n_classes=2)
+            classification_model.fit(
+                mols,
+                test_data_df["Label"].to_numpy(),
+            )
