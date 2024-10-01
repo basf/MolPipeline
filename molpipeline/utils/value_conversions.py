@@ -1,16 +1,8 @@
 """Module for utilities converting values."""
 
-from typing import Optional, Sequence, TypeAlias, Union
+from typing import Sequence
 
-FloatCountRange: TypeAlias = tuple[Optional[float], Optional[float]]
-
-IntCountRange: TypeAlias = tuple[Optional[int], Optional[int]]
-
-# IntOrIntCountRange for Typing of count ranges
-# - a single int for an exact value match
-# - a range given as a tuple with a lower and upper bound
-#   - both limits are optional
-IntOrIntCountRange: TypeAlias = Union[int, IntCountRange]
+from molpipeline.utils.molpipeline_types import IntCountRange, IntOrIntCountRange
 
 
 def count_value_to_tuple(count: IntOrIntCountRange) -> IntCountRange:

@@ -3,7 +3,17 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Any, List, Literal, Optional, Protocol, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    List,
+    Literal,
+    Optional,
+    Protocol,
+    Tuple,
+    TypeAlias,
+    TypeVar,
+    Union,
+)
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -46,6 +56,16 @@ AnyIterable = TypeVar("AnyIterable", List[_T], npt.NDArray[_T])
 NumberIterable = TypeVar("NumberIterable", List[Number], npt.NDArray[Number])
 
 TypeConserverdIterable = TypeVar("TypeConserverdIterable", List[_T], npt.NDArray[_T])
+
+FloatCountRange: TypeAlias = tuple[Optional[float], Optional[float]]
+
+IntCountRange: TypeAlias = tuple[Optional[int], Optional[int]]
+
+# IntOrIntCountRange for Typing of count ranges
+# - a single int for an exact value match
+# - a range given as a tuple with a lower and upper bound
+#   - both limits are optional
+IntOrIntCountRange: TypeAlias = Union[int, IntCountRange]
 
 
 class AnySklearnEstimator(Protocol):

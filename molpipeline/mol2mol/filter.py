@@ -5,11 +5,14 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, Mapping, Optional, Sequence, Union
 
+from molpipeline.abstract_pipeline_elements.mol2mol.filter import _within_boundaries
+
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import Self
 
+from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 
@@ -23,13 +26,14 @@ from molpipeline.abstract_pipeline_elements.mol2mol import (
 from molpipeline.abstract_pipeline_elements.mol2mol import (
     BasePatternsFilter as _BasePatternsFilter,
 )
-from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
-from molpipeline.utils.value_conversions import (
+from molpipeline.utils.molpipeline_types import (
     FloatCountRange,
     IntCountRange,
     IntOrIntCountRange,
-    count_value_to_tuple,
+    OptionalMol,
+    RDKitMol,
 )
+from molpipeline.utils.value_conversions import count_value_to_tuple
 
 
 class ElementFilter(_MolToMolPipelineElement):
@@ -60,6 +64,7 @@ class ElementFilter(_MolToMolPipelineElement):
         allowed_element_numbers: Optional[
             Union[list[int], dict[int, IntOrIntCountRange]]
         ] = None,
+        add_hydrogens: bool = True,
         name: str = "ElementFilter",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -72,6 +77,8 @@ class ElementFilter(_MolToMolPipelineElement):
             List of atomic numbers of elements to allowed in molecules. Per default allowed elements are:
             H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
             Alternatively, a dictionary can be passed with atomic numbers as keys and an int for exact count or a tuple of minimum and maximum
+        add_hydrogens: bool, optional (default: True)
+            If True, in case Hydrogens are in allowed_element_list, add hydrogens to the molecule before filtering.
         name: str, optional (default: "ElementFilterPipe")
             Name of the pipeline element.
         n_jobs: int, optional (default: 1)
@@ -81,6 +88,32 @@ class ElementFilter(_MolToMolPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.allowed_element_numbers = allowed_element_numbers  # type: ignore
+        self.add_hydrogens = add_hydrogens
+
+    @property
+    def add_hydrogens(self) -> bool:
+        """Get add_hydrogens."""
+        return self._add_hydrogens
+
+    @add_hydrogens.setter
+    def add_hydrogens(self, add_hydrogens: bool) -> None:
+        """Set add_hydrogens.
+
+        Parameters
+        ----------
+        add_hydrogens: bool
+            If True, in case Hydrogens are in allowed_element_list, add hydrogens to the molecule before filtering.
+        """
+        self._add_hydrogens = add_hydrogens
+        if self.add_hydrogens and 1 in self.allowed_element_numbers:
+            self.process_hydrogens = True
+        else:
+            if 1 in self.allowed_element_numbers:
+                logger.warning(
+                    "Hydrogens are included in allowed_element_numbers, but add_hydrogens is set to False. "
+                    "Thus hydrogens are NOT added before filtering. You might receive unexpected results."
+                )
+            self.process_hydrogens = False
 
     @property
     def allowed_element_numbers(self) -> dict[int, IntCountRange]:
@@ -135,6 +168,7 @@ class ElementFilter(_MolToMolPipelineElement):
             }
         else:
             params["allowed_element_numbers"] = self.allowed_element_numbers
+        params["add_hydrogens"] = self.add_hydrogens
         return params
 
     def set_params(self, **parameters: Any) -> Self:
@@ -153,6 +187,8 @@ class ElementFilter(_MolToMolPipelineElement):
         parameter_copy = dict(parameters)
         if "allowed_element_numbers" in parameter_copy:
             self.allowed_element_numbers = parameter_copy.pop("allowed_element_numbers")
+        if "add_hydrogens" in parameter_copy:
+            self.add_hydrogens = parameter_copy.pop("add_hydrogens")
         super().set_params(**parameter_copy)
         return self
 
@@ -169,10 +205,7 @@ class ElementFilter(_MolToMolPipelineElement):
         OptionalMol
             Molecule if it contains only allowed elements, else InvalidInstance.
         """
-        to_process_value = (
-            Chem.AddHs(value) if 1 in self.allowed_element_numbers else value
-        )
-
+        to_process_value = Chem.AddHs(value) if self.process_hydrogens else value
         elements_list = [atom.GetAtomicNum() for atom in to_process_value.GetAtoms()]
         elements_counter = Counter(elements_list)
         if any(
@@ -181,11 +214,9 @@ class ElementFilter(_MolToMolPipelineElement):
             return InvalidInstance(
                 self.uuid, "Molecule contains forbidden chemical element.", self.name
             )
-        for element, (min_count, max_count) in self.allowed_element_numbers.items():
+        for element, (lower_limit, upper_limit) in self.allowed_element_numbers.items():
             count = elements_counter[element]
-            if (min_count is not None and count < min_count) or (
-                max_count is not None and count > max_count
-            ):
+            if not _within_boundaries(lower_limit, upper_limit, count):
                 return InvalidInstance(
                     self.uuid,
                     f"Molecule contains forbidden number of element {element}.",
@@ -225,6 +256,11 @@ class SmartsFilter(_BasePatternsFilter):
 class SmilesFilter(_BasePatternsFilter):
     """Filter to keep or remove molecules based on SMILES patterns.
 
+    In contrast to the SMARTSFilter, which also can match SMILES, the SmilesFilter
+    sanitizes the molecules and, e.g. checks kekulized bonds for aromaticity and
+    then sets it to aromatic while the SmartsFilter detects alternating single and
+    double bonds.
+
     Notes
     -----
     There are four possible scenarios:
@@ -253,7 +289,7 @@ class SmilesFilter(_BasePatternsFilter):
 class ComplexFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on multiple filter elements.
 
-    Parameters
+    Attributes
     ----------
     filter_elements: Sequence[_MolToMolPipelineElement]
         MolToMol elements to use as filters.
@@ -317,7 +353,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
 class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on RDKit descriptors.
 
-    Parameters
+    Attributes
     ----------
     filter_elements: dict[str, FloatCountRange]
         Dictionary of RDKit descriptors to filter by.
@@ -347,11 +383,11 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         descriptors: dict[str, FloatCountRange]
             Dictionary of RDKit descriptors to filter by.
         """
-        self._filter_elements = descriptors
         if not all(hasattr(Descriptors, descriptor) for descriptor in descriptors):
             raise ValueError(
                 "You are trying to use an invalid descriptor. Use RDKit Descriptors module."
             )
+        self._filter_elements = descriptors
 
     def _calculate_single_element_value(
         self, filter_element: Any, value: RDKitMol

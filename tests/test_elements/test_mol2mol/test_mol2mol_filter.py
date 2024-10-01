@@ -14,7 +14,7 @@ from molpipeline.mol2mol import (
     SmartsFilter,
     SmilesFilter,
 )
-from molpipeline.utils.value_conversions import FloatCountRange, IntOrIntCountRange
+from molpipeline.utils.molpipeline_types import FloatCountRange, IntOrIntCountRange
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
@@ -63,15 +63,29 @@ class MolFilterTest(unittest.TestCase):
                 ("ErrorFilter", ErrorFilter()),
             ],
         )
-        filtered_smiles = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(
-            filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_CL_BR]
-        )
-        pipeline.set_params(
-            ElementFilter__allowed_element_numbers={6: 6, 1: (5, 6), 17: (0, 1)}
-        )
-        filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(filtered_smiles_2, [SMILES_BENZENE, SMILES_CHLOROBENZENE])
+
+        test_params_list_with_results = [
+            {
+                "params": {},
+                "result": [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_CL_BR],
+            },
+            {
+                "params": {
+                    "ElementFilter__allowed_element_numbers": {
+                        6: 6,
+                        1: (5, 6),
+                        17: (0, 1),
+                    }
+                },
+                "result": [SMILES_BENZENE, SMILES_CHLOROBENZENE],
+            },
+            {"params": {"ElementFilter__add_hydrogens": False}, "result": []},
+        ]
+
+        for test_params in test_params_list_with_results:
+            pipeline.set_params(**test_params["params"])
+            filtered_smiles = pipeline.fit_transform(SMILES_LIST)
+            self.assertEqual(filtered_smiles, test_params["result"])
 
     def test_complex_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed chemical elements."""
@@ -120,34 +134,44 @@ class MolFilterTest(unittest.TestCase):
                     ("ErrorFilter", ErrorFilter()),
                 ],
             )
-            filtered_smiles = pipeline.fit_transform(SMILES_LIST)
-            self.assertEqual(
-                filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_CL_BR]
-            )
 
-            pipeline.set_params(SmartsFilter__keep_matches=False)
-            filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
-            self.assertEqual(filtered_smiles_2, [SMILES_ANTIMONY, SMILES_METAL_AU])
+            test_params_list_with_results = [
+                {
+                    "params": {},
+                    "result": [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_CL_BR],
+                },
+                {
+                    "params": {"SmartsFilter__keep_matches": False},
+                    "result": [SMILES_ANTIMONY, SMILES_METAL_AU],
+                },
+                {
+                    "params": {
+                        "SmartsFilter__mode": "all",
+                        "SmartsFilter__keep_matches": True,
+                    },
+                    "result": [SMILES_CHLOROBENZENE],
+                },
+                {
+                    "params": {
+                        "SmartsFilter__keep_matches": True,
+                        "SmartsFilter__filter_elements": ["I"],
+                    },
+                    "result": [],
+                },
+                {
+                    "params": {
+                        "SmartsFilter__keep_matches": False,
+                        "SmartsFilter__mode": "any",
+                        "SmartsFilter__filter_elements": new_input_as_list,
+                    },
+                    "result": [SMILES_ANTIMONY, SMILES_METAL_AU],
+                },
+            ]
 
-            pipeline.set_params(
-                SmartsFilter__mode="all", SmartsFilter__keep_matches=True
-            )
-            filtered_smiles_3 = pipeline.fit_transform(SMILES_LIST)
-            self.assertEqual(filtered_smiles_3, [SMILES_CHLOROBENZENE])
-
-            pipeline.set_params(
-                SmartsFilter__keep_matches=True, SmartsFilter__filter_elements=["I"]
-            )
-            filtered_smiles_4 = pipeline.fit_transform(SMILES_LIST)
-            self.assertEqual(filtered_smiles_4, [])
-
-            pipeline.set_params(
-                SmartsFilter__keep_matches=False,
-                SmartsFilter__mode="any",
-                SmartsFilter__filter_elements=new_input_as_list,
-            )
-            filtered_smiles_5 = pipeline.fit_transform(SMILES_LIST)
-            self.assertEqual(filtered_smiles_5, [SMILES_ANTIMONY, SMILES_METAL_AU])
+            for test_params in test_params_list_with_results:
+                pipeline.set_params(**test_params["params"])
+                filtered_smiles = pipeline.fit_transform(SMILES_LIST)
+                self.assertEqual(filtered_smiles, test_params["result"])
 
     def test_smarts_filter_parallel(self) -> None:
         """Test if molecules are filtered correctly by allowed SMARTS patterns in parallel."""
@@ -191,75 +215,62 @@ class MolFilterTest(unittest.TestCase):
                 ("ErrorFilter", ErrorFilter()),
             ],
         )
-        filtered_smiles = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(filtered_smiles, SMILES_LIST)
+        test_params_list_with_results = [
+            {"params": {}, "result": SMILES_LIST},
+            {"params": {"DescriptorsFilter__mode": "all"}, "result": [SMILES_CL_BR]},
+            {
+                "params": {"DescriptorsFilter__keep_matches": False},
+                "result": [
+                    SMILES_ANTIMONY,
+                    SMILES_BENZENE,
+                    SMILES_CHLOROBENZENE,
+                    SMILES_METAL_AU,
+                ],
+            },
+            {"params": {"DescriptorsFilter__mode": "any"}, "result": []},
+            {
+                "params": {
+                    "DescriptorsFilter__keep_matches": True,
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (2.00, 4)},
+                },
+                "result": [SMILES_CL_BR],
+            },
+            {
+                "params": {
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1.99, 4)}
+                },
+                "result": [SMILES_CL_BR],
+            },
+            {
+                "params": {
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (2.01, 4)}
+                },
+                "result": [],
+            },
+            {
+                "params": {
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1, 2.00)}
+                },
+                "result": [SMILES_CL_BR],
+            },
+            {
+                "params": {
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1, 2.01)}
+                },
+                "result": [SMILES_CL_BR],
+            },
+            {
+                "params": {
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1, 1.99)}
+                },
+                "result": [],
+            },
+        ]
 
-        pipeline.set_params(DescriptorsFilter__mode="all")
-        filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(filtered_smiles_2, [SMILES_CL_BR])
-
-        pipeline.set_params(DescriptorsFilter__keep_matches=False)
-        filtered_smiles_3 = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(
-            filtered_smiles_3,
-            [SMILES_ANTIMONY, SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_METAL_AU],
-        )
-
-        pipeline.set_params(DescriptorsFilter__mode="any")
-        filtered_smiles_4 = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(filtered_smiles_4, [])
-
-        pipeline.set_params(
-            DescriptorsFilter__mode="any", DescriptorsFilter__keep_matches=True
-        )
-
-        pipeline.set_params(
-            DescriptorsFilter__filter_elements={
-                "NumHAcceptors": (2.00, 4),
-            }
-        )
-        result_lower_exact = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(result_lower_exact, [SMILES_CL_BR])
-
-        pipeline.set_params(
-            DescriptorsFilter__filter_elements={
-                "NumHAcceptors": (1.99, 4),
-            }
-        )
-        result_lower_in_bound = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(result_lower_in_bound, [SMILES_CL_BR])
-
-        pipeline.set_params(
-            DescriptorsFilter__filter_elements={
-                "NumHAcceptors": (2.01, 4),
-            }
-        )
-        result_lower_out_bound = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(result_lower_out_bound, [])
-
-        pipeline.set_params(
-            DescriptorsFilter__filter_elements={
-                "NumHAcceptors": (1, 2.00),
-            }
-        )
-        result_upper_exact = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(result_upper_exact, [SMILES_CL_BR])
-
-        pipeline.set_params(
-            DescriptorsFilter__filter_elements={
-                "NumHAcceptors": (1, 2.01),
-            }
-        )
-        result_upper_in_bound = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(result_upper_in_bound, [SMILES_CL_BR])
-
-        pipeline.set_params(
-            DescriptorsFilter__filter_elements={
-                "NumHAcceptors": (1, 1.99),
-            }
-        )
-        result_upper_out_bound = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(result_upper_out_bound, [])
+        for test_params in test_params_list_with_results:
+            pipeline.set_params(**test_params["params"])
+            filtered_smiles = pipeline.fit_transform(SMILES_LIST)
+            self.assertEqual(filtered_smiles, test_params["result"])
 
     def test_invalidate_mixtures(self) -> None:
         """Test if mixtures are correctly invalidated."""

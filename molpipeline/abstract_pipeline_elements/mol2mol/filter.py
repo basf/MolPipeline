@@ -14,12 +14,12 @@ from molpipeline.abstract_pipeline_elements.core import (
     OptionalMol,
     RDKitMol,
 )
-from molpipeline.utils.value_conversions import (
+from molpipeline.utils.molpipeline_types import (
     FloatCountRange,
     IntCountRange,
     IntOrIntCountRange,
-    count_value_to_tuple,
 )
+from molpipeline.utils.value_conversions import count_value_to_tuple
 
 # possible mode types for a KeepMatchesFilter:
 # - "any" means one match is enough
@@ -28,7 +28,7 @@ FilterModeType: TypeAlias = Literal["any", "all"]
 
 
 def _within_boundaries(
-    lower_bound: Optional[float], upper_bound: Optional[float], value: float
+    lower_bound: Optional[float], upper_bound: Optional[float], property: float
 ) -> bool:
     """Check if a value is within the specified boundaries.
 
@@ -40,17 +40,17 @@ def _within_boundaries(
         Lower boundary.
     upper_bound: Optional[float]
         Upper boundary.
-    value: float
-        Value to check.
+    property: float
+        Property to check.
 
     Returns
     -------
     bool
         True if the value is within the boundaries, else False.
     """
-    if lower_bound is not None and value < lower_bound:
+    if lower_bound is not None and property < lower_bound:
         return False
-    if upper_bound is not None and value > upper_bound:
+    if upper_bound is not None and property > upper_bound:
         return False
     return True
 
@@ -167,13 +167,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         params = super().get_params(deep=deep)
         params["keep_matches"] = self.keep_matches
         params["mode"] = self.mode
-        if deep:
-            params["filter_elements"] = {
-                element: (count_tuple[0], count_tuple[1])
-                for element, count_tuple in self.filter_elements.items()
-            }
-        else:
-            params["filter_elements"] = self.filter_elements
+        params["filter_elements"] = self.filter_elements
         return params
 
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
@@ -195,9 +189,9 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         OptionalMol
             Molecule that matches defined filter elements, else InvalidInstance.
         """
-        for filter_element, (min_count, max_count) in self.filter_elements.items():
-            count = self._calculate_single_element_value(filter_element, value)
-            if _within_boundaries(min_count, max_count, count):
+        for filter_element, (lower_limit, upper_limit) in self.filter_elements.items():
+            property = self._calculate_single_element_value(filter_element, value)
+            if _within_boundaries(lower_limit, upper_limit, property):
                 # For "any" mode we can return early if a match is found
                 if self.mode == "any":
                     if not self.keep_matches:
@@ -265,7 +259,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     """Filter to keep or remove molecules based on patterns.
 
-    Parameters
+    Attributes
     ----------
     filter_elements: Union[Sequence[str], Mapping[str, IntOrIntCountRange]]
         List of patterns to allow in molecules.
