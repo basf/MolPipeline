@@ -28,7 +28,7 @@ FilterModeType: TypeAlias = Literal["any", "all"]
 
 
 def _within_boundaries(
-    lower_bound: Optional[float], upper_bound: Optional[float], property: float
+    lower_bound: Optional[float], upper_bound: Optional[float], property_value: float
 ) -> bool:
     """Check if a value is within the specified boundaries.
 
@@ -40,17 +40,17 @@ def _within_boundaries(
         Lower boundary.
     upper_bound: Optional[float]
         Upper boundary.
-    property: float
-        Property to check.
+    property_value: float
+        Property value to check.
 
     Returns
     -------
     bool
         True if the value is within the boundaries, else False.
     """
-    if lower_bound is not None and property < lower_bound:
+    if lower_bound is not None and property_value < lower_bound:
         return False
-    if upper_bound is not None and property > upper_bound:
+    if upper_bound is not None and property_value > upper_bound:
         return False
     return True
 
@@ -190,8 +190,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
             Molecule that matches defined filter elements, else InvalidInstance.
         """
         for filter_element, (lower_limit, upper_limit) in self.filter_elements.items():
-            property = self._calculate_single_element_value(filter_element, value)
-            if _within_boundaries(lower_limit, upper_limit, property):
+            property_value = self._calculate_single_element_value(filter_element, value)
+            if _within_boundaries(lower_limit, upper_limit, property_value):
                 # For "any" mode we can return early if a match is found
                 if self.mode == "any":
                     if not self.keep_matches:

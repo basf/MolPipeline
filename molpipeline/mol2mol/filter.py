@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, Mapping, Optional, Sequence, Union
 
-from molpipeline.abstract_pipeline_elements.mol2mol.filter import _within_boundaries
-
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
@@ -26,6 +24,7 @@ from molpipeline.abstract_pipeline_elements.mol2mol import (
 from molpipeline.abstract_pipeline_elements.mol2mol import (
     BasePatternsFilter as _BasePatternsFilter,
 )
+from molpipeline.abstract_pipeline_elements.mol2mol.filter import _within_boundaries
 from molpipeline.utils.molpipeline_types import (
     FloatCountRange,
     IntCountRange,
