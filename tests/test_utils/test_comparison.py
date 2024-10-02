@@ -17,8 +17,13 @@ from molpipeline.utils.comparison import check_pipelines_equivalent
 
 
 def get_test_pipeline() -> Pipeline:
-    """Get a test pipeline."""
+    """Get a test pipeline.
 
+    Returns
+    -------
+    Pipeline
+        Test pipeline.
+    """
     error_filter = ErrorFilter(filter_everything=True)
     pipeline = Pipeline(
         [
