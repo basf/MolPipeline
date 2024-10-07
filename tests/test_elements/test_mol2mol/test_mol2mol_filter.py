@@ -95,7 +95,7 @@ class ComplexFilterTest(unittest.TestCase):
     @staticmethod
     def _create_pipeline() -> Pipeline:
         """Create a pipeline with a complex filter.
-        
+
         Returns
         -------
         Pipeline
