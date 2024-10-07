@@ -93,7 +93,7 @@ class ComplexFilterTest(unittest.TestCase):
     """Unittest for ComplexFilter."""
 
     @staticmethod
-    def _create_pipeline():
+    def _create_pipeline() -> None:
         """Create a pipeline with a complex filter."""
         element_filter_1 = ElementFilter({6: 6, 1: 6})
         element_filter_2 = ElementFilter({6: 6, 1: 5, 17: 1})
