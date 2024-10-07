@@ -173,6 +173,22 @@ class MolFilterTest(unittest.TestCase):
                 filtered_smiles = pipeline.fit_transform(SMILES_LIST)
                 self.assertEqual(filtered_smiles, test_params["result"])
 
+    def test_smarts_smiles_filter_wrong_pattern(self) -> None:
+        """Test if molecules are filtered correctly by allowed SMARTS patterns."""
+        smarts_pats: dict[str, IntOrIntCountRange] = {
+            "cIOnk": (4, None),
+            "cC": 1,
+        }
+        with self.assertRaises(ValueError):
+            SmartsFilter(smarts_pats)
+
+        smiles_pats: dict[str, IntOrIntCountRange] = {
+            "cC": (1, None),
+            "Cl": 1,
+        }
+        with self.assertRaises(ValueError):
+            SmilesFilter(smiles_pats)
+
     def test_smarts_filter_parallel(self) -> None:
         """Test if molecules are filtered correctly by allowed SMARTS patterns in parallel."""
         smarts_pats: dict[str, IntOrIntCountRange] = {

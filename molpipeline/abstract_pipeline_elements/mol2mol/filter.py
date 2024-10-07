@@ -318,6 +318,11 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             List of patterns.
         """
         self._patterns_mol_dict = {pat: self._pattern_to_mol(pat) for pat in patterns}
+        failed_patterns = [
+            pat for pat, mol in self._patterns_mol_dict.items() if not mol
+        ]
+        if failed_patterns:
+            raise ValueError("Invalid pattern(s): " + ", ".join(failed_patterns))
 
     @abc.abstractmethod
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
