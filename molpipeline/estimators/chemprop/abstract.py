@@ -114,7 +114,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     def fit(
         self,
         X: MoleculeDataset,  # pylint: disable=invalid-name
-        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float_],
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
     ) -> Self:
         """Fit the model to the data.
 
@@ -122,7 +122,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         ----------
         X : MoleculeDataset
             The input data.
-        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float_]
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
 
         Returns

@@ -166,12 +166,12 @@ class _MolPipeline:
             "raise_nones": self.raise_nones,
         }
 
-    def set_params(self, **parameter_dict: dict[str, Any]) -> Self:
+    def set_params(self, **parameter_dict: Any) -> Self:
         """Set parameters of the pipeline and pipeline elements.
 
         Parameters
         ----------
-        parameter_dict: dict[str, Any]
+        parameter_dict: Any
             Dictionary containing the parameter names and corresponding values to be set.
 
         Returns
@@ -180,9 +180,9 @@ class _MolPipeline:
             MolPipeline object with updated parameters.
         """
         if "element_list" in parameter_dict:
-            self._element_list = parameter_dict["element_list"]  # type: ignore
+            self._element_list = parameter_dict["element_list"]
         if "n_jobs" in parameter_dict:
-            self.n_jobs = int(parameter_dict["n_jobs"])  # type: ignore
+            self.n_jobs = int(parameter_dict["n_jobs"])
         if "name" in parameter_dict:
             self.name = str(parameter_dict["name"])
         if "raise_nones" in parameter_dict:
@@ -349,7 +349,7 @@ class _MolPipeline:
                 elif isinstance(p_element, FilterReinserter):
                     iter_value = p_element.transform_single(iter_value)
             except MolSanitizeException as err:
-                return InvalidInstance(
+                iter_value = InvalidInstance(
                     p_element.uuid,
                     f"RDKit MolSanitizeException: {err.args}",
                     p_element.name,

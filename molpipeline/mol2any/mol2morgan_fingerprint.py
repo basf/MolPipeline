@@ -104,12 +104,12 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             parameters["n_bits"] = self._n_bits
         return parameters
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Dictionary of parameter names and values.
 
         Returns
@@ -120,7 +120,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         parameter_copy = dict(parameters)
         n_bits = parameter_copy.pop("n_bits", None)
         if n_bits is not None:
-            self._n_bits = n_bits  # type: ignore
+            self._n_bits = n_bits
         super().set_params(**parameter_copy)
 
         return self
@@ -151,12 +151,10 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         dict[int, list[tuple[int, int]]]
             Dictionary with bit position as key and list of tuples with atom index and radius as value.
         """
-        bit_info: dict[int, list[tuple[int, int]]] = {}
-        _ = AllChem.GetMorganFingerprintAsBitVect(
-            mol_obj,
-            self.radius,
-            useFeatures=self._use_features,
-            bitInfo=bit_info,
-            nBits=self._n_bits,
-        )
+        fp_generator = self._get_fp_generator()
+        additional_output = AllChem.AdditionalOutput()
+        additional_output.AllocateBitInfoMap()
+        # using the dense fingerprint here, to get indices after folding
+        _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
+        bit_info = additional_output.GetBitInfoMap()
         return bit_info

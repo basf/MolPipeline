@@ -113,12 +113,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         return parameters
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameters to set.
 
         Returns
@@ -129,7 +129,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         parameter_copy = dict(parameters)
         element_list = parameter_copy.pop("element_list", None)
         if element_list is not None:
-            self._element_list = element_list  # type: ignore
+            self._element_list = element_list
         step_params: dict[str, dict[str, Any]] = {}
         step_dict = dict(self._element_list)
         to_delete_list = []
@@ -155,23 +155,23 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     def assemble_output(
         self,
-        value_list: Iterable[npt.NDArray[np.float_]],
-    ) -> npt.NDArray[np.float_]:
+        value_list: Iterable[npt.NDArray[np.float64]],
+    ) -> npt.NDArray[np.float64]:
         """Transform output of all transform_single operations to matrix.
 
         Parameters
         ----------
-        value_list: Iterable[npt.NDArray[np.float_]]
+        value_list: Iterable[npt.NDArray[np.float64]]
             List of molecular descriptors or fingerprints which are concatenated to a single matrix.
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
         """
         return np.vstack(list(value_list))
 
-    def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float_]:
+    def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.
 
         Parameters
@@ -181,10 +181,10 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         Returns
         -------
-        npt.NDArray[np.float_]
+        npt.NDArray[np.float64]
             Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
         """
-        output: npt.NDArray[np.float_] = super().transform(values)
+        output: npt.NDArray[np.float64] = super().transform(values)
         return output
 
     def fit(
@@ -212,7 +212,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[list[Union[npt.NDArray[np.float_], dict[int, int]]], InvalidInstance]:
+    ) -> Union[list[Union[npt.NDArray[np.float64], dict[int, int]]], InvalidInstance]:
         """Get pretransform of each element and concatenate for output.
 
         Parameters
@@ -222,7 +222,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         Returns
         -------
-        Union[list[Union[npt.NDArray[np.float_], dict[int, int]]], InvalidInstance]
+        Union[list[Union[npt.NDArray[np.float64], dict[int, int]]], InvalidInstance]
             List of pretransformed values of each pipeline element.
             If any element returns None, InvalidInstance is returned.
         """

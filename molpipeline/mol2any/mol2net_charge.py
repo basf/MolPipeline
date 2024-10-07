@@ -77,7 +77,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
     def _get_net_charge_gasteiger(
         self, value: RDKitMol
-    ) -> npt.NDArray[np.float_] | InvalidInstance:
+    ) -> npt.NDArray[np.float64] | InvalidInstance:
         """Transform a single molecule to it's net charge using Gasteiger charges.
 
         Based on https://github.com/rdkit/rdkit/discussions/4331
@@ -89,7 +89,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
         Returns
         -------
-        Optional[npt.NDArray[np.float_]]
+        Optional[npt.NDArray[np.float64]]
             Net charge of the given molecule.
         """
         # copy molecule since ComputeGasteigerCharges modifies the molecule inplace
@@ -106,7 +106,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
     def pretransform_single(
         self, value: RDKitMol
-    ) -> npt.NDArray[np.float_] | InvalidInstance:
+    ) -> npt.NDArray[np.float64] | InvalidInstance:
         """Transform a single molecule to it's net charge.
 
         Parameters
@@ -116,11 +116,11 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
         Returns
         -------
-        Optional[npt.NDArray[np.float_]]
+        Optional[npt.NDArray[np.float64]]
             Net charge of the given molecule.
         """
         if self._charge_method == "formal_charge":
-            return np.array([Chem.GetFormalCharge(value)], dtype=np.float_)
+            return np.array([Chem.GetFormalCharge(value)], dtype=np.float64)
         if self._charge_method == "gasteiger":
             return self._get_net_charge_gasteiger(value)
         raise ValueError(f"Unknown charge policy: {self._charge_method}")
@@ -145,12 +145,12 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             parent_dict["charge_policy"] = self._charge_method
         return parent_dict
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameters to set
 
         Returns
@@ -161,6 +161,6 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         parameters_shallow_copy = dict(parameters)
         charge_policy = parameters_shallow_copy.pop("charge_policy", None)
         if charge_policy is not None:
-            self._charge_method = charge_policy  # type: ignore
+            self._charge_method = charge_policy
         super().set_params(**parameters_shallow_copy)
         return self

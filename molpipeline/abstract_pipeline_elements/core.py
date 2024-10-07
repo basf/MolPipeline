@@ -97,7 +97,7 @@ class ABCPipelineElement(abc.ABC):
 
     def __init__(
         self,
-        name: str = "ABCPipelineElement",
+        name: Optional[str] = None,
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
@@ -105,13 +105,15 @@ class ABCPipelineElement(abc.ABC):
 
         Parameters
         ----------
-        name: str
+        name: Optional[str], optional (default=None)
             Name of PipelineElement
         n_jobs: int
             Number of cores used for processing.
         uuid: Optional[str]
             Unique identifier of the PipelineElement.
         """
+        if name is None:
+            name = self.__class__.__name__
         self.name = name
         self.n_jobs = n_jobs
         if uuid is None:
@@ -182,12 +184,12 @@ class ABCPipelineElement(abc.ABC):
             "uuid": self.uuid,
         }
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """As the setter function cannot be assessed with super(), this method is implemented for inheritance.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameters to be set.
 
         Returns
@@ -338,7 +340,7 @@ class TransformingPipelineElement(ABCPipelineElement):
 
     def __init__(
         self,
-        name: str = "ABCPipelineElement",
+        name: Optional[str] = None,
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> None:
@@ -346,7 +348,7 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         Parameters
         ----------
-        name: str
+        name: Optional[str], optional (default=None)
             Name of PipelineElement
         n_jobs: int
             Number of cores used for processing.
@@ -377,12 +379,12 @@ class TransformingPipelineElement(ABCPipelineElement):
         return self.get_params()
 
     @parameters.setter
-    def parameters(self, **parameters: dict[str, Any]) -> None:
+    def parameters(self, **parameters: Any) -> None:
         """Set the parameters of the object.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Object parameters as a dictionary.
 
         Returns
@@ -616,25 +618,6 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
     _input_type = "RDKitMol"
     _output_type = "RDKitMol"
 
-    def __init__(
-        self,
-        name: str = "MolToMolPipelineElement",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize MolToMolPipelineElement.
-
-        Parameters
-        ----------
-        name: str
-            Name of the PipelineElement.
-        n_jobs: int
-            Number of cores used for processing.
-        uuid: Optional[str]
-            Unique identifier of the PipelineElement.
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
     def transform(self, values: list[OptionalMol]) -> list[OptionalMol]:
         """Transform list of molecules to list of molecules.
 
@@ -700,25 +683,6 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
 
     _output_type = "RDKitMol"
 
-    def __init__(
-        self,
-        name: str = "AnyToMolPipelineElement",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize AnyToMolPipelineElement.
-
-        Parameters
-        ----------
-        name: str
-            Name of the PipelineElement.
-        n_jobs: int
-            Number of cores used for processing.
-        uuid: Optional[str]
-            Unique identifier of the PipelineElement.
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-
     def transform(self, values: Any) -> list[OptionalMol]:
         """Transform list of instances to list of molecules.
 
@@ -755,25 +719,6 @@ class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
     _input_type = "RDKitMol"
-
-    def __init__(
-        self,
-        name: str = "MolToAnyPipelineElement",
-        n_jobs: int = 1,
-        uuid: Optional[str] = None,
-    ) -> None:
-        """Initialize MolToAnyPipelineElement.
-
-        Parameters
-        ----------
-        name: str
-            Name of the PipelineElement.
-        n_jobs: int
-            Number of cores used for processing.
-        uuid: Optional[str]
-            Unique identifier of the PipelineElement.
-        """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
     @abc.abstractmethod
     def pretransform_single(self, value: RDKitMol) -> Any:

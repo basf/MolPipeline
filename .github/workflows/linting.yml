@@ -22,7 +22,7 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"
+        pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
   mypy:
     runs-on: ubuntu-latest
     steps:
@@ -34,7 +34,6 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install "numpy<2.0.0"
         pip install mypy
         mypy . || exit_code=$?
         mypy --install-types --non-interactive
@@ -151,7 +150,7 @@ jobs:
           pip install isort
       - name: Analysing the code with isort
         run: |
-          isort --profile black .
+          isort --profile black --check-only .
 
   test_basis:
     needs:
@@ -182,7 +181,7 @@ jobs:
       - name: Run unit-tests
         run: |
           # Run only the core test suite in the tests directory.
-          coverage run -m unittest discover tests
+          coverage run --source=molpipeline,tests -m unittest discover tests
           # Create a coverage report. Fail if the coverage is below 85%. Exclude extra packages from the report.
           coverage report --fail-under=85 --omit="*chemprop*","*/*chemprop*/*"
 
@@ -208,7 +207,7 @@ jobs:
       - name: Run unit-tests for chemprop
         run: |
           # Run only the chemprop test suite.
-          coverage run -m unittest discover test_extras/test_chemprop
+          coverage run --source=molpipeline,tests -m unittest discover test_extras/test_chemprop
           # Create a coverage report. Fail if the coverage is below 85%. Include only chemprop files in the report.
           coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*"
 

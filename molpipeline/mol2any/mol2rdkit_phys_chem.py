@@ -119,7 +119,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[npt.NDArray[np.float_], InvalidInstance]:
+    ) -> Union[npt.NDArray[np.float64], InvalidInstance]:
         """Transform a single molecule to a descriptor vector.
 
         Parameters
@@ -129,7 +129,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
         Returns
         -------
-        Optional[npt.NDArray[np.float_]]
+        Optional[npt.NDArray[np.float64]]
             Descriptor vector for given molecule. None if calculation failed.
         """
         vec = np.full((len(self._descriptor_list),), np.nan)
@@ -170,12 +170,12 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             parent_dict["log_exceptions"] = self._log_exceptions
         return parent_dict
 
-    def set_params(self, **parameters: dict[str, Any]) -> Self:
+    def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
         Parameters
         ----------
-        parameters: dict[str, Any]
+        parameters: Any
             Parameters to set
 
         Returns
