@@ -14,6 +14,7 @@ from molpipeline.mol2mol import (
     SmartsFilter,
     SmilesFilter,
 )
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.molpipeline_types import FloatCountRange, IntOrIntCountRange
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
@@ -32,8 +33,8 @@ SMILES_LIST = [
 ]
 
 
-class MolFilterTest(unittest.TestCase):
-    """Unittest for MolFilter, which invalidate molecules based on criteria defined in the respective filter."""
+class ElementFilterTest(unittest.TestCase):
+    """Unittest for Elementiflter."""
 
     def test_element_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed chemical elements."""
@@ -87,12 +88,22 @@ class MolFilterTest(unittest.TestCase):
             filtered_smiles = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles, test_params["result"])
 
-    def test_complex_filter(self) -> None:
-        """Test if molecules are filtered correctly by allowed chemical elements."""
+
+class ComplexFilterTest(unittest.TestCase):
+    """Unittest for ComplexFilter."""
+
+    @staticmethod
+    def _create_pipeline():
+        """Create a pipeline with a complex filter."""
         element_filter_1 = ElementFilter({6: 6, 1: 6})
         element_filter_2 = ElementFilter({6: 6, 1: 5, 17: 1})
 
-        multi_element_filter = ComplexFilter((element_filter_1, element_filter_2))
+        multi_element_filter = ComplexFilter(
+            (
+                ("element_filter_1", element_filter_1),
+                ("element_filter_2", element_filter_2),
+            )
+        )
 
         pipeline = Pipeline(
             [
@@ -102,13 +113,59 @@ class MolFilterTest(unittest.TestCase):
                 ("ErrorFilter", ErrorFilter()),
             ],
         )
+        return pipeline
 
-        filtered_smiles = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(filtered_smiles, [SMILES_BENZENE, SMILES_CHLOROBENZENE])
+    def test_complex_filter(self) -> None:
+        """Test if molecules are filtered correctly by allowed chemical elements."""
+        pipeline = ComplexFilterTest._create_pipeline()
 
-        pipeline.set_params(MultiElementFilter__mode="all")
-        filtered_smiles_2 = pipeline.fit_transform(SMILES_LIST)
-        self.assertEqual(filtered_smiles_2, [])
+        test_params_list_with_results = [
+            {
+                "params": {},
+                "result": [SMILES_BENZENE, SMILES_CHLOROBENZENE],
+            },
+            {
+                "params": {"MultiElementFilter__mode": "all"},
+                "result": [],
+            },
+            {
+                "params": {
+                    "MultiElementFilter__mode": "any",
+                    "MultiElementFilter__pipeline_filter_elements__element_filter_1__add_hydrogens": False,
+                },
+                "result": [SMILES_CHLOROBENZENE],
+            },
+        ]
+
+        for test_params in test_params_list_with_results:
+            pipeline.set_params(**test_params["params"])
+            filtered_smiles = pipeline.fit_transform(SMILES_LIST)
+            self.assertEqual(filtered_smiles, test_params["result"])
+
+    def test_json_serialization(self) -> None:
+        """Test if complex filter can be serialized and deserialized."""
+        pipeline = ComplexFilterTest._create_pipeline()
+        json_object = recursive_to_json(pipeline)
+        newpipeline = recursive_from_json(json_object)
+        self.assertEqual(json_object, recursive_to_json(newpipeline))
+
+        pipeline_result = pipeline.fit_transform(SMILES_LIST)
+        newpipeline_result = newpipeline.fit_transform(SMILES_LIST)
+        self.assertEqual(pipeline_result, newpipeline_result)
+
+    def test_complex_filter_non_unique_names(self) -> None:
+        """Test if molecules are filtered correctly by allowed chemical elements."""
+        element_filter_1 = ElementFilter({6: 6, 1: 6})
+        element_filter_2 = ElementFilter({6: 6, 1: 5, 17: 1})
+
+        with self.assertRaises(ValueError):
+            ComplexFilter(
+                (("filter_1", element_filter_1), ("filter_1", element_filter_2))
+            )
+
+
+class SmartsSmilesFilterTest(unittest.TestCase):
+    """Unittest for SmartsFilter and SmilesFilter."""
 
     def test_smarts_smiles_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed SMARTS patterns."""
@@ -214,6 +271,10 @@ class MolFilterTest(unittest.TestCase):
         filtered_smiles = pipeline.fit_transform(SMILES_LIST)
         self.assertEqual(filtered_smiles, [SMILES_CHLOROBENZENE])
 
+
+class RDKitDescriptorsFilterTest(unittest.TestCase):
+    """Unittest for RDKitDescriptorsFilter."""
+
     def test_descriptor_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed descriptors."""
         descriptors: dict[str, FloatCountRange] = {
@@ -288,6 +349,10 @@ class MolFilterTest(unittest.TestCase):
             filtered_smiles = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles, test_params["result"])
 
+
+class MixtureFilterTest(unittest.TestCase):
+    """Unittest for MixtureFilter."""
+
     def test_invalidate_mixtures(self) -> None:
         """Test if mixtures are correctly invalidated."""
         mol_list = ["CCC.CC.C", "c1ccccc1.[Na+].[Cl-]", "c1ccccc1"]
@@ -310,6 +375,10 @@ class MolFilterTest(unittest.TestCase):
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_invalidated_mol_list, mols_processed)
+
+
+class InorganicsFilterTest(unittest.TestCase):
+    """Unittest for InorganicsFilter."""
 
     def test_inorganic_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed chemical elements."""

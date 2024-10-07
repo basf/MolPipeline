@@ -24,7 +24,10 @@ from molpipeline.abstract_pipeline_elements.mol2mol import (
 from molpipeline.abstract_pipeline_elements.mol2mol import (
     BasePatternsFilter as _BasePatternsFilter,
 )
-from molpipeline.abstract_pipeline_elements.mol2mol.filter import _within_boundaries
+from molpipeline.abstract_pipeline_elements.mol2mol.filter import (
+    FilterModeType,
+    _within_boundaries,
+)
 from molpipeline.utils.molpipeline_types import (
     FloatCountRange,
     IntCountRange,
@@ -290,8 +293,8 @@ class ComplexFilter(_BaseKeepMatchesFilter):
 
     Attributes
     ----------
-    filter_elements: Sequence[_MolToMolPipelineElement]
-        MolToMol elements to use as filters.
+    pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
+        pairs of unique names and MolToMol elements to use as filters.
     [...]
 
     Notes
@@ -303,28 +306,123 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         - mode = "all" & keep_matches = False: Must not match all filter elements.
     """
 
-    _filter_elements: Mapping[_MolToMolPipelineElement, tuple[int, Optional[int]]]
+    _filter_elements: Mapping[str, tuple[int, Optional[int]]]
+
+    def __init__(
+        self,
+        pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]],
+        keep_matches: bool = True,
+        mode: FilterModeType = "any",
+        name: str | None = None,
+        n_jobs: int = 1,
+        uuid: str | None = None,
+    ) -> None:
+        """Initialize ComplexFilter.
+
+        Parameters
+        ----------
+        pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
+            Filter elements to use.
+        keep_matches: bool, optional (default: True)
+            If True, keep matches, else remove matches.
+        mode: FilterModeType, optional (default: "any")
+            Mode to filter by.
+        name: str, optional (default: None)
+            Name of the pipeline element.
+        n_jobs: int, optional (default: 1)
+            Number of parallel jobs to use.
+        uuid: str, optional (default: None)
+            Unique identifier of the pipeline element.
+        """
+        self.pipeline_filter_elements = pipeline_filter_elements
+        super().__init__(
+            filter_elements=pipeline_filter_elements,
+            keep_matches=keep_matches,
+            mode=mode,
+            name=name,
+            n_jobs=n_jobs,
+            uuid=uuid,
+        )
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters of ComplexFilter.
+
+        Parameters
+        ----------
+        deep: bool, optional (default: True)
+            If True, return the parameters of all subobjects that are PipelineElements.
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameters of ComplexFilter.
+        """
+        params = super().get_params(deep)
+        params.pop("filter_elements")
+        params["pipeline_filter_elements"] = self.pipeline_filter_elements
+        if deep:
+            for name, element in self.pipeline_filter_elements:
+                deep_items = element.get_params().items()
+                params.update(
+                    ("pipeline_filter_elements" + "__" + name + "__" + key, val)
+                    for key, val in deep_items
+                )
+        return params
+
+    def set_params(self, **parameters: Any) -> Self:
+        """Set parameters of ComplexFilter.
+
+        Parameters
+        ----------
+        parameters: Any
+            Parameters to set.
+
+        Returns
+        -------
+        Self
+            Self.
+        """
+        parameter_copy = dict(parameters)
+        if "pipeline_filter_elements" in parameter_copy:
+            self.pipeline_filter_elements = parameter_copy.pop(
+                "pipeline_filter_elements"
+            )
+            self.filter_elements = self.pipeline_filter_elements  # type: ignore
+        for key in parameters:
+            if key.startswith("pipeline_filter_elements__"):
+                value = parameter_copy.pop(key)
+                element_name, element_key = key.split("__")[1:]
+                for name, element in self.pipeline_filter_elements:
+                    if name == element_name:
+                        element.set_params(**{element_key: value})
+        super().set_params(**parameter_copy)
+        return self
 
     @property
     def filter_elements(
         self,
-    ) -> Mapping[_MolToMolPipelineElement, tuple[int, Optional[int]]]:
+    ) -> Mapping[str, tuple[int, Optional[int]]]:
         """Get filter elements."""
         return self._filter_elements
 
     @filter_elements.setter
     def filter_elements(
         self,
-        filter_elements: Sequence[_MolToMolPipelineElement],
+        filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]],
     ) -> None:
         """Set filter elements.
 
         Parameters
         ----------
-        filter_elements: dict[_MolToMolPipelineElement, tuple[int, Optional[int]]]
+        filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
             Filter elements to set.
         """
-        self._filter_elements = {element: (1, None) for element in filter_elements}
+        self.filter_elements_dict = dict(filter_elements)
+        if not len(self.filter_elements_dict) == len(filter_elements):
+            raise ValueError("Filter elements names need to be unique.")
+        self._filter_elements = {
+            element_name: (1, None) for element_name, _element in filter_elements
+        }
 
     def _calculate_single_element_value(
         self, filter_element: Any, value: RDKitMol
@@ -343,7 +441,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         int
             Filter match.
         """
-        mol = filter_element.pretransform_single(value)
+        mol = self.filter_elements_dict[filter_element].pretransform_single(value)
         if isinstance(mol, InvalidInstance):
             return 0
         return 1
