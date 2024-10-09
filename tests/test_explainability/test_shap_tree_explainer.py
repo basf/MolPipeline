@@ -191,7 +191,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         n_bits = 64
 
         for estimator in estimators:
-            for fill_value in enumerate(fill_values):
+            for fill_value in fill_values:
 
                 # pipeline with ErrorFilter
                 error_filter1 = ErrorFilter()
