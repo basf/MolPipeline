@@ -169,6 +169,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
                     is_morgan_fingerprint=True,
                 )
 
+    # pylint: disable=too-many-locals
     def test_explanations_pipeline_with_invalid_inputs(self) -> None:
         """Test SHAP's TreeExplainer wrapper with invalid inputs."""
 
@@ -190,7 +191,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         n_bits = 64
 
         for estimator in estimators:
-            for fill_val_idx, fill_value in enumerate(fill_values):
+            for fill_value in enumerate(fill_values):
 
                 # pipeline with ErrorFilter
                 error_filter1 = ErrorFilter()
