@@ -3,7 +3,8 @@
 import unittest
 
 import numpy as np
-from rdkit import Chem
+import pandas as pd
+from rdkit import Chem, rdBase
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.ensemble import (
     GradientBoostingClassifier,
@@ -171,6 +172,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
     def test_explanations_pipeline_with_invalid_inputs(self) -> None:
         """Test SHAP's TreeExplainer wrapper with invalid inputs."""
 
+        # estimators to test
         estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
@@ -178,67 +180,77 @@ class TestSHAPTreeExplainer(unittest.TestCase):
             GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
         ]
 
+        # fill values considered invalid predictions
+        invalid_fill_values = [None, np.nan, pd.NA]
+        # fill values considered valid predictions (although outside the valid range)
+        valid_fill_values = [0, 999]
+        # fill values to test
+        fill_values = invalid_fill_values + valid_fill_values
+
         n_bits = 64
 
         for estimator in estimators:
+            for fill_val_idx, fill_value in enumerate(fill_values):
 
-            # pipeline with ErrorFilter
-            error_filter1 = ErrorFilter()
-            pipeline1 = Pipeline(
-                [
-                    ("smi2mol", SmilesToMol()),
-                    ("salt_remover", SaltRemover()),
-                    ("error_filter", error_filter1),
-                    ("morgan", MolToMorganFP(radius=1, n_bits=64)),
-                    ("model", estimator),
-                ]
-            )
+                # pipeline with ErrorFilter
+                error_filter1 = ErrorFilter()
+                pipeline1 = Pipeline(
+                    [
+                        ("smi2mol", SmilesToMol()),
+                        ("salt_remover", SaltRemover()),
+                        ("error_filter", error_filter1),
+                        ("morgan", MolToMorganFP(radius=1, n_bits=64)),
+                        ("model", estimator),
+                    ]
+                )
 
-            # pipeline with ErrorFilter and FilterReinserter
-            error_filter2 = ErrorFilter()
-            error_reinserter2 = PostPredictionWrapper(
-                FilterReinserter.from_error_filter(error_filter2, np.nan)
-            )
-            pipeline2 = Pipeline(
-                [
-                    ("smi2mol", SmilesToMol()),
-                    ("salt_remover", SaltRemover()),
-                    ("error_filter", error_filter2),
-                    ("morgan", MolToMorganFP(radius=1, n_bits=n_bits)),
-                    ("model", estimator),
-                    ("error_reinserter", error_reinserter2),
-                ]
-            )
+                # pipeline with ErrorFilter and FilterReinserter
+                error_filter2 = ErrorFilter()
+                error_reinserter2 = PostPredictionWrapper(
+                    FilterReinserter.from_error_filter(error_filter2, fill_value)
+                )
+                pipeline2 = Pipeline(
+                    [
+                        ("smi2mol", SmilesToMol()),
+                        ("salt_remover", SaltRemover()),
+                        ("error_filter", error_filter2),
+                        ("morgan", MolToMorganFP(radius=1, n_bits=n_bits)),
+                        ("model", estimator),
+                        ("error_reinserter", error_reinserter2),
+                    ]
+                )
 
-            for pipeline in [pipeline1, pipeline2]:
+                for pipeline in [pipeline1, pipeline2]:
 
-                pipeline.fit(TEST_SMILES_WITH_BAD_SMILES, CONTAINS_OX_BAD_SMILES)
+                    pipeline.fit(TEST_SMILES_WITH_BAD_SMILES, CONTAINS_OX_BAD_SMILES)
 
-                explainer = SHAPTreeExplainer(pipeline)
-                explanations = explainer.explain(TEST_SMILES_WITH_BAD_SMILES)
-                self.assertEqual(len(explanations), len(TEST_SMILES_WITH_BAD_SMILES))
-
-                # get the subpipeline that extracts the molecule from the input data
-                mol_reader_subpipeline = SubpipelineExtractor(
-                    pipeline
-                ).get_molecule_reader_subpipeline()
-                self.assertIsNotNone(mol_reader_subpipeline)
-
-                for i, explanation in enumerate(explanations):
-
-                    # check that bad input results in invalid explanation
-                    if i in [3, 7]:
-                        self.assertFalse(explanation.is_valid())
-                        continue
-
-                    self._test_valid_explanation(
-                        explanation,
-                        estimator,
-                        mol_reader_subpipeline,  # type: ignore[arg-type]
-                        n_bits,
-                        TEST_SMILES_WITH_BAD_SMILES[i],
-                        is_morgan_fingerprint=True,
+                    explainer = SHAPTreeExplainer(pipeline)
+                    log_block = rdBase.BlockLogs()  # pylint: disable=unused-variable
+                    explanations = explainer.explain(TEST_SMILES_WITH_BAD_SMILES)
+                    del log_block
+                    self.assertEqual(
+                        len(explanations), len(TEST_SMILES_WITH_BAD_SMILES)
                     )
+
+                    # get the subpipeline that extracts the molecule from the input data
+                    mol_reader_subpipeline = SubpipelineExtractor(
+                        pipeline
+                    ).get_molecule_reader_subpipeline()
+                    self.assertIsNotNone(mol_reader_subpipeline)
+
+                    for i, explanation in enumerate(explanations):
+                        if i in [3, 7]:
+                            self.assertFalse(explanation.is_valid())
+                            continue
+
+                        self._test_valid_explanation(
+                            explanation,
+                            estimator,
+                            mol_reader_subpipeline,  # type: ignore[arg-type]
+                            n_bits,
+                            TEST_SMILES_WITH_BAD_SMILES[i],
+                            is_morgan_fingerprint=True,
+                        )
 
     def test_explanations_pipeline_with_physchem(self) -> None:
         """Test SHAP's TreeExplainer wrapper on physchem feature vector."""

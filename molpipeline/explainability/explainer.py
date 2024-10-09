@@ -7,6 +7,7 @@ from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 import shap
 from scipy.sparse import issparse, spmatrix
 
@@ -60,12 +61,14 @@ def _get_predictions(
         The predictions.
     """
     if hasattr(pipeline, "predict_proba"):
-        return pipeline.predict_proba(feature_matrix)
-    if hasattr(pipeline, "decision_function"):
-        return pipeline.decision_function(feature_matrix)
-    if hasattr(pipeline, "predict"):
-        return pipeline.predict(feature_matrix)
-    raise ValueError("Could not determine the model output predictions")
+        prediction = pipeline.predict_proba(feature_matrix)
+    elif hasattr(pipeline, "decision_function"):
+        prediction = pipeline.decision_function(feature_matrix)
+    elif hasattr(pipeline, "predict"):
+        prediction = pipeline.predict(feature_matrix)
+    else:
+        raise ValueError("Could not determine the model output predictions")
+    return np.array(prediction)
 
 
 def _convert_shap_feature_weights_to_atom_weights(
@@ -141,7 +144,17 @@ class AbstractSHAPExplainer(abc.ABC):
 
 # pylint: disable=R0903
 class SHAPTreeExplainer(AbstractSHAPExplainer):
-    """Class for SHAP's TreeExplainer wrapper."""
+    """Class for SHAP's TreeExplainer wrapper.
+
+    Wraps SHAP's TreeExplainer to explain predictions of a pipeline containing a
+    tree-based model.
+
+    Note on failed instances:
+    SHAPTreeExplainer will automatically handle fill values for failed instances and
+    returns an invalid explanation for them. However, fill values that could be valid
+    predictions, e.g. 0, are not necessarily detected. Set the fill value to np.nan or
+    None if these failed instances should not be explained.
+    """
 
     def __init__(self, pipeline: Pipeline, **kwargs: Any) -> None:
         """Initialize the SHAPTreeExplainer.
@@ -181,10 +194,6 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
         if self.featurization_subpipeline is None:
             raise ValueError("Could not determine the featurization subpipeline.")
 
-        # extract fill values for checking error handling
-        self.fill_values = pipeline_extractor.get_all_filter_reinserter_fill_values()
-        self.fill_values_contain_nan = np.isnan(self.fill_values).any()
-
     def _prediction_is_valid(self, prediction: Any) -> bool:
         """Check if the prediction is valid using some heuristics.
 
@@ -203,11 +212,9 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
         if len(prediction) == 0:
             return False
 
-        # if a value in the prediction is a fill-value, we - assume - the explanation has failed.
-        if np.isin(prediction, self.fill_values).any():
-            return False
-        if self.fill_values_contain_nan and np.isnan(prediction).any():
-            # the extra nan check is necessary because np.isin does not work with nan
+        # use pandas.isna function to check for invalid predictions, e.g. None, np.nan,
+        # pd.NA. Note that fill values like 0 will be considered as valid predictions.
+        if pd.isna(prediction).any():
             return False
 
         return True
@@ -255,6 +262,13 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
             feature_vector = self.featurization_subpipeline.transform(input_sample)  # type: ignore[union-attr]
             feature_vector = _to_dense(feature_vector)
             feature_vector = np.asarray(feature_vector).squeeze()
+
+            if feature_vector.size == 0:
+                # if the feature vector is empty, we cannot explain the prediction.
+                # This happens for failed instances in pipeline with fill values
+                # that could be valid predictions, like 0.
+                explanation_results.append(SHAPExplanation())
+                continue
 
             # Feature names should also be extracted from the Pipeline.
             # But first, we need to add the names to the pipelines.
