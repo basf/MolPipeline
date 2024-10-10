@@ -1,7 +1,7 @@
 # MolPipeline
 MolPipeline is a Python package for processing molecules with RDKit in scikit-learn.
-
-<p align="center"><img src=".github/molpipeline.png" height="250"/></p>
+<br/><br/>
+<p align="center"><img src=".github/molpipeline.png" height="200"/></p>
 
 ## Background
 
@@ -30,8 +30,8 @@ molecules with RDKit in scikit-learn, J. Chem. Inf. Model., doi:10.1021/acs.jcim
 \
 Further links: [arXiv](https://chemrxiv.org/engage/chemrxiv/article-details/661fec7f418a5379b00ae036)
 
-Feldmann CW, Sieg J, and Mathea M, Analysis of uncertainty of neural
-fingerprint-based models, 2024
+[Feldmann CW, Sieg J, and Mathea M, Analysis of uncertainty of neural
+fingerprint-based models, 2024](https://doi.org/10.1039/D4FD00095A)
 \
 Further links: [repository](https://github.com/basf/neural-fingerprint-uncertainty)
 
