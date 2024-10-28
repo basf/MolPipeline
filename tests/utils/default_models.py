@@ -84,9 +84,9 @@ def get_standardization_pipeline(n_jobs: int = 1) -> Pipeline:
     standardization_pipeline = Pipeline(
         [
             ("smi2mol", SmilesToMol()),
-            ("element_filter", ElementFilter()),
             ("metal_disconnector", MetalDisconnector()),
             ("salt_remover", SaltRemover()),
+            ("element_filter", ElementFilter()),
             ("uncharge1", Uncharger()),
             ("canonical_tautomer", TautomerCanonicalizer()),
             ("uncharge2", Uncharger()),
