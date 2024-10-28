@@ -1,5 +1,6 @@
 """Test the comparison functions."""
 
+from typing import Callable
 from unittest import TestCase
 
 from molpipeline.utils.comparison import check_pipelines_equivalent
