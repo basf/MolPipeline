@@ -25,8 +25,13 @@ from molpipeline.mol2mol.filter import ElementFilter
 from molpipeline.post_prediction import PostPredictionWrapper
 
 
-def get_morgan_physchem_rf_pipeline() -> Pipeline:
+def get_morgan_physchem_rf_pipeline(n_jobs: int = 1) -> Pipeline:
     """Get a pipeline combining Morgan fingerprints and physicochemical properties with a RandomForestClassifier.
+
+    Parameters
+    ----------
+    n_jobs: int, default=-1
+        Number of parallel jobs to use.
 
     Returns
     -------
@@ -47,7 +52,7 @@ def get_morgan_physchem_rf_pipeline() -> Pipeline:
                 ),
             ),
             ("error_filter", error_filter),
-            ("rf", RandomForestClassifier()),
+            ("rf", RandomForestClassifier(n_jobs=n_jobs)),
             (
                 "filter_reinserter",
                 PostPredictionWrapper(
@@ -55,12 +60,12 @@ def get_morgan_physchem_rf_pipeline() -> Pipeline:
                 ),
             ),
         ],
-        n_jobs=1,
+        n_jobs=n_jobs,
     )
     return pipeline
 
 
-def get_standardization_pipeline(n_jobs: int = -1) -> Pipeline:
+def get_standardization_pipeline(n_jobs: int = 1) -> Pipeline:
     """Get the standardization pipeline.
 
     Parameters

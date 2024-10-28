@@ -19,7 +19,7 @@ class TestComparison(TestCase):
             get_standardization_pipeline,
             get_morgan_physchem_rf_pipeline,
         ]
-        for pipeline_method in pipline_method_list:
+        for pipeline_method in pipline_method_list:  # type: Callable[[int], Pipeline]
             pipeline_a = pipeline_method()
             pipeline_b = pipeline_method()
             self.assertTrue(check_pipelines_equivalent(pipeline_a, pipeline_b))
