@@ -22,8 +22,8 @@ class TestComparison(TestCase):
             get_morgan_physchem_rf_pipeline,
         ]
         for pipeline_method in pipline_method_list:
-            pipeline_a = pipeline_method()
-            pipeline_b = pipeline_method()
+            pipeline_a = pipeline_method(1)
+            pipeline_b = pipeline_method(1)
             self.assertTrue(check_pipelines_equivalent(pipeline_a, pipeline_b))
 
     def test_are_not_equal(self) -> None:
