@@ -9,7 +9,19 @@ from molpipeline.mol2any import (
     MolToConcatenatedVector,
     MolToMorganFP,
     MolToRDKitPhysChem,
+    MolToSmiles,
 )
+from molpipeline.mol2mol import (
+    EmptyMoleculeFilter,
+    FragmentDeduplicator,
+    MetalDisconnector,
+    MixtureFilter,
+    SaltRemover,
+    StereoRemover,
+    TautomerCanonicalizer,
+    Uncharger,
+)
+from molpipeline.mol2mol.filter import ElementFilter
 from molpipeline.post_prediction import PostPredictionWrapper
 
 
@@ -46,3 +58,63 @@ def get_morgan_physchem_rf_pipeline() -> Pipeline:
         n_jobs=1,
     )
     return pipeline
+
+
+def get_standardization_pipeline(n_jobs: int = -1) -> Pipeline:
+    """Get the standardization pipeline.
+
+    Parameters
+    ----------
+    n_jobs: int, optional (default=-1)
+        The number of jobs to use for standardization.
+        In case of -1, all available CPUs are used.
+
+    Returns
+    -------
+    Pipeline
+        The standardization pipeline.
+    """
+    element_filter = ElementFilter(
+        allowed_element_numbers=[
+            1,  # H
+            3,  # Li
+            5,  # B
+            6,  # C
+            7,  # N
+            8,  # O
+            9,  # F
+            11,  # Na
+            12,  # Mg
+            14,  # Si
+            15,  # P
+            16,  # S
+            17,  # Cl
+            19,  # K
+            20,  # Ca
+            34,  # Se
+            35,  # Br
+            53,  # I
+        ],
+    )
+    error_filter = ErrorFilter(filter_everything=True)
+    # Set up pipeline
+    standardization_pipeline = Pipeline(
+        [
+            ("smi2mol", SmilesToMol()),
+            ("element_filter", element_filter),
+            ("metal_disconnector", MetalDisconnector()),
+            ("salt_remover", SaltRemover()),
+            ("uncharge1", Uncharger()),
+            ("canonical_tautomer", TautomerCanonicalizer()),
+            ("uncharge2", Uncharger()),
+            ("stereo_remover", StereoRemover()),
+            ("fragment_deduplicator", FragmentDeduplicator()),
+            ("mixture_remover", MixtureFilter()),
+            ("empty_molecule_remover", EmptyMoleculeFilter()),
+            ("mol2smi", MolToSmiles()),
+            ("error_filter", error_filter),
+            ("error_replacer", FilterReinserter.from_error_filter(error_filter, None)),
+        ],
+        n_jobs=n_jobs,
+    )
+    return standardization_pipeline
