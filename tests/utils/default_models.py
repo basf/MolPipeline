@@ -79,34 +79,12 @@ def get_standardization_pipeline(n_jobs: int = 1) -> Pipeline:
     Pipeline
         The standardization pipeline.
     """
-    element_filter = ElementFilter(
-        allowed_element_numbers=[
-            1,  # H
-            3,  # Li
-            5,  # B
-            6,  # C
-            7,  # N
-            8,  # O
-            9,  # F
-            11,  # Na
-            12,  # Mg
-            14,  # Si
-            15,  # P
-            16,  # S
-            17,  # Cl
-            19,  # K
-            20,  # Ca
-            34,  # Se
-            35,  # Br
-            53,  # I
-        ],
-    )
     error_filter = ErrorFilter(filter_everything=True)
     # Set up pipeline
     standardization_pipeline = Pipeline(
         [
             ("smi2mol", SmilesToMol()),
-            ("element_filter", element_filter),
+            ("element_filter", ElementFilter()),
             ("metal_disconnector", MetalDisconnector()),
             ("salt_remover", SaltRemover()),
             ("uncharge1", Uncharger()),
