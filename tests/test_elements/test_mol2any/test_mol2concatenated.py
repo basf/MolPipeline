@@ -137,7 +137,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             net_charge_elem[1].n_features + 16 + physchem_elem[1].n_features,
         )
 
-    def test_features_names(self) -> None:
+    def test_features_names(self) -> None:  # pylint: disable=too-many-arguments
         """Test getting the names of features in the concatenated vector."""
 
         physchem_elem = (
@@ -170,7 +170,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
 
             for elements_subset in powerset:
                 conc_elem = MolToConcatenatedVector(
-                    elements_subset, feature_names_prefix=feature_names_prefix
+                    list(elements_subset), feature_names_prefix=feature_names_prefix
                 )
                 feature_names = conc_elem.feature_names
 
@@ -182,6 +182,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
 
                 seen_names = 0
                 for elem_name, elem in elements_subset:
+                    self.assertTrue(hasattr(elem, "feature_names"))
                     elem_feature_names = elem.feature_names
                     elem_n_features = len(elem_feature_names)
                     relevant_names = feature_names[

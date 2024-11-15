@@ -96,15 +96,16 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     @property
     def feature_names(self) -> list[str]:
         """Return the feature names of concatenated elements."""
-        if self._feature_names_prefix is None:
-            # use element name as prefix
-            prefix_function = lambda elem_name: elem_name
-        else:
-            prefix_function = lambda elem_name: f"{self._feature_names_prefix}"
         feature_names = []
         for name, element in self._element_list:
+            if self._feature_names_prefix is None:
+                # use element name as prefix
+                prefix = name
+            else:
+                # use user specified prefix
+                prefix = self._feature_names_prefix
+
             if hasattr(element, "feature_names"):
-                prefix = prefix_function(name)
                 feature_names.extend(
                     [f"{prefix}__{feature}" for feature in element.feature_names]
                 )
