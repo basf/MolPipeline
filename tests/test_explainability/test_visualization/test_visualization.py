@@ -109,12 +109,12 @@ class TestExplainabilityVisualization(unittest.TestCase):
         self.assertEqual(len(explanations1), 1)
         self.assertEqual(len(explanations2), 1)
         self.assertEqual(len(explanations3), 1)
-        self.assertIsInstance(explanations1[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertIsInstance(explanations2[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertIsInstance(explanations3[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertEqual(len(explanations1[0].atom_weights), 1)
-        self.assertEqual(len(explanations2[0].atom_weights), 1)
-        self.assertEqual(len(explanations3[0].atom_weights), 1)
+        self.assertIsInstance(explanations1[0].atom_weights, np.ndarray)
+        self.assertIsInstance(explanations2[0].atom_weights, np.ndarray)
+        self.assertIsInstance(explanations3[0].atom_weights, np.ndarray)
+        self.assertEqual(len(explanations1[0].atom_weights), 1)  # type: ignore[union-attr]
+        self.assertEqual(len(explanations2[0].atom_weights), 1)  # type: ignore[union-attr]
+        self.assertEqual(len(explanations3[0].atom_weights), 1)  # type: ignore[union-attr]
 
         # test visualization
         all_explanations = explanations1 + explanations2 + explanations3
