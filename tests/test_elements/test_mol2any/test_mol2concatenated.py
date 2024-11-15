@@ -183,7 +183,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                 seen_names = 0
                 for elem_name, elem in elements_subset:
                     self.assertTrue(hasattr(elem, "feature_names"))
-                    elem_feature_names = elem.feature_names
+                    elem_feature_names = elem.feature_names  # type: ignore[attr-defined]
                     elem_n_features = len(elem_feature_names)
                     relevant_names = feature_names[
                         seen_names : seen_names + elem_n_features
