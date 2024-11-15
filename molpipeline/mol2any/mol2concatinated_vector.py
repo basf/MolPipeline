@@ -32,6 +32,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     def __init__(
         self,
         element_list: list[tuple[str, MolToAnyPipelineElement]],
+        feature_names_prefix: Optional[str] = None,
         name: str = "MolToConcatenatedVector",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -43,6 +44,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         element_list: list[MolToAnyPipelineElement]
             List of Pipeline Elements of which the output is concatenated.
+        feature_names_prefix: str, optional (default=None)
+            Prefix for feature names. If None, the name of the pipeline element is used.
         name: str, optional (default="MolToConcatenatedVector")
             name of pipeline.
         n_jobs: int, optional (default=1)
@@ -53,6 +56,9 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Additional keyword arguments. Can be used to set parameters of the pipeline elements.
         """
         self._element_list = element_list
+        if len(element_list) == 0:
+            raise ValueError("element_list must contain at least one element.")
+        self._feature_names_prefix = feature_names_prefix
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         output_types = set()
         for _, element in self._element_list:
@@ -82,10 +88,31 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             elif hasattr(element, "n_bits"):
                 feature_count += element.n_bits
             else:
-                raise AssertionError(
+                raise ValueError(
                     f"Element {element} does not have n_features or n_bits."
                 )
         return feature_count
+
+    @property
+    def feature_names(self) -> list[str]:
+        """Return the feature names of concatenated elements."""
+        if self._feature_names_prefix is None:
+            # use element name as prefix
+            prefix_function = lambda elem_name: elem_name
+        else:
+            prefix_function = lambda elem_name: f"{self._feature_names_prefix}"
+        feature_names = []
+        for name, element in self._element_list:
+            if hasattr(element, "feature_names"):
+                prefix = prefix_function(name)
+                feature_names.extend(
+                    [f"{prefix}__{feature}" for feature in element.feature_names]
+                )
+            else:
+                raise ValueError(
+                    f"Element {element} does not have feature_names attribute."
+                )
+        return feature_names
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
