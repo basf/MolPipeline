@@ -90,14 +90,20 @@ class TestExplainabilityVisualization(unittest.TestCase):
             self.assertIsNotNone(image)
             self.assertEqual(image.format, "PNG")
 
-    def test_explicit_hydrogens(self):
+    def test_explicit_hydrogens(self) -> None:
         """Test that the visualization methods work with explicit hydrogens."""
-        mol_implicit_Hs = Chem.MolFromSmiles("C")
-        explanations1 = self.test_explainer.explain([Chem.MolToSmiles(mol_implicit_Hs)])
-        mol_added_Hs = Chem.AddHs(mol_implicit_Hs)
-        explanations2 = self.test_explainer.explain([Chem.MolToSmiles(mol_added_Hs)])
-        mol_explicit_Hs = Chem.MolFromSmiles("[H]C([H])([H])[H]")
-        explanations3 = self.test_explainer.explain([Chem.MolToSmiles(mol_explicit_Hs)])
+        mol_implicit_hydrogens = Chem.MolFromSmiles("C")
+        explanations1 = self.test_explainer.explain(
+            [Chem.MolToSmiles(mol_implicit_hydrogens)]
+        )
+        mol_added_hydrogens = Chem.AddHs(mol_implicit_hydrogens)
+        explanations2 = self.test_explainer.explain(
+            [Chem.MolToSmiles(mol_added_hydrogens)]
+        )
+        mol_explicit_hydrogens = Chem.MolFromSmiles("[H]C([H])([H])[H]")
+        explanations3 = self.test_explainer.explain(
+            [Chem.MolToSmiles(mol_explicit_hydrogens)]
+        )
 
         # test explanations' atom weights
         self.assertEqual(len(explanations1), 1)
