@@ -67,7 +67,7 @@ def _make_grid_from_mol(
     mol_height = yl[1] - yl[0]
     mol_width = xl[1] - xl[0]
 
-    height_to_width_ratio_mol = mol_height / mol_width
+    height_to_width_ratio_mol = mol_height / (1e-16 + mol_width)
     # the grids height / weight is the canvas height / width
     height_to_width_ratio_canvas = grid_resolution[1] / grid_resolution[0]
 
