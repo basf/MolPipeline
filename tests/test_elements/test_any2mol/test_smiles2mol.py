@@ -1,3 +1,5 @@
+"""Test smiles to mol pipeline element."""
+
 import unittest
 from typing import Any
 
@@ -5,7 +7,7 @@ from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 
 
-class TestAuto2Mol(unittest.TestCase):
+class TestSmiles2Mol(unittest.TestCase):
     """Test case for testing conversion of SMILES input to molecules."""
 
     def test_smiles2mol_explict_hydrogens(self) -> None:
