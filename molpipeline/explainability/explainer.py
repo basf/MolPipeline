@@ -13,7 +13,15 @@ from scipy.sparse import issparse, spmatrix
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import OptionalMol
-from molpipeline.explainability.explanation import SHAPExplanation
+from molpipeline.explainability.explanation import (
+    AtomExplanationMixin,
+    BondExplanationMixin,
+    FeatureExplanationMixin,
+    FeatureInfoMixin,
+    SHAPExplanationMixin,
+    SHAPFeatureAndAtomExplanation,
+    SHAPFeatureExplanation,
+)
 from molpipeline.explainability.fingerprint_utils import fingerprint_shap_to_atomweights
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import SubpipelineExtractor
@@ -125,7 +133,9 @@ class AbstractSHAPExplainer(abc.ABC):
 
     # pylint: disable=C0103,W0613
     @abc.abstractmethod
-    def explain(self, X: Any, **kwargs: Any) -> list[SHAPExplanation]:
+    def explain(
+        self, X: Any, **kwargs: Any
+    ) -> list[SHAPFeatureExplanation, SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
         Parameters
@@ -194,6 +204,12 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
         if self.featurization_subpipeline is None:
             raise ValueError("Could not determine the featurization subpipeline.")
 
+        featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
+        if isinstance(featurization_element, MolToMorganFP):
+            self.return_type = SHAPFeatureAndAtomExplanation
+        else:
+            self.return_type = SHAPFeatureExplanation
+
     def _prediction_is_valid(self, prediction: Any) -> bool:
         """Check if the prediction is valid using some heuristics.
 
@@ -220,7 +236,9 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
         return True
 
     # pylint: disable=C0103,W0613
-    def explain(self, X: Any, **kwargs: Any) -> list[SHAPExplanation]:
+    def explain(
+        self, X: Any, **kwargs: Any
+    ) -> list[SHAPFeatureExplanation, SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
         If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.
@@ -249,7 +267,7 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
             prediction = _get_predictions(self.pipeline, input_sample)
             if not self._prediction_is_valid(prediction):
                 # we use the prediction to check if the input is valid. If not, we cannot explain it.
-                explanation_results.append(SHAPExplanation())
+                explanation_results.append(self.return_type())
                 continue
 
             if prediction.ndim > 1:
@@ -267,7 +285,7 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
                 # if the feature vector is empty, we cannot explain the prediction.
                 # This happens for failed instances in pipeline with fill values
                 # that could be valid predictions, like 0.
-                explanation_results.append(SHAPExplanation())
+                explanation_results.append(self.return_type())
                 continue
 
             # Feature names should also be extracted from the Pipeline.
@@ -282,7 +300,9 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
             atom_weights = None
             bond_weights = None
 
-            if isinstance(featurization_element, MolToMorganFP):
+            if issubclass(self.return_type, AtomExplanationMixin) and isinstance(
+                featurization_element, MolToMorganFP
+            ):
                 # for Morgan fingerprint, we can map the shap values to atom weights
                 atom_weights = _convert_shap_feature_weights_to_atom_weights(
                     feature_weights,
@@ -291,17 +311,23 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
                     feature_vector,
                 )
 
-            explanation_results.append(
-                SHAPExplanation(
-                    feature_vector=feature_vector,
-                    feature_names=feature_names,
-                    molecule=molecule,
-                    prediction=prediction,
-                    feature_weights=feature_weights,
-                    atom_weights=atom_weights,
-                    bond_weights=bond_weights,
-                    expected_value=self.explainer.expected_value,
-                )
-            )
+            # gather all input data for the explanation type to be returned
+            explanation_data = {
+                "molecule": molecule,
+                "prediction": prediction,
+            }
+            if issubclass(self.return_type, FeatureInfoMixin):
+                explanation_data["feature_vector"] = feature_vector
+                explanation_data["feature_names"] = feature_names
+            if issubclass(self.return_type, FeatureExplanationMixin):
+                explanation_data["feature_weights"] = feature_weights
+            if issubclass(self.return_type, AtomExplanationMixin):
+                explanation_data["atom_weights"] = atom_weights
+            if issubclass(self.return_type, BondExplanationMixin):
+                explanation_data["bond_weights"] = bond_weights
+            if issubclass(self.return_type, SHAPExplanationMixin):
+                explanation_data["expected_value"] = self.explainer.expected_value
+
+            explanation_results.append(self.return_type(**explanation_data))
 
         return explanation_results

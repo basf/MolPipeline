@@ -20,7 +20,7 @@ from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
-from molpipeline.explainability.explanation import SHAPExplanation
+from molpipeline.explainability import SHAPFeatureAndAtomExplanation
 from molpipeline.explainability.visualization.gauss import GaussFunctor2D
 from molpipeline.explainability.visualization.heatmaps import (
     ValueGrid,
@@ -378,7 +378,7 @@ def structure_heatmap(
 
 
 def structure_heatmap_shap(
-    explanation: SHAPExplanation,
+    explanation: SHAPFeatureAndAtomExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
     height: int = 600,
@@ -405,17 +405,17 @@ def structure_heatmap_shap(
         The image as PNG.
     """
     if explanation.feature_weights is None:
-        raise ValueError("SHAPExplanation does not contain feature weights.")
+        raise ValueError("Explanation does not contain feature weights.")
     if explanation.feature_vector is None:
-        raise ValueError("SHAPExplanation does not contain feature_vector.")
+        raise ValueError("Explanation does not contain feature_vector.")
     if explanation.expected_value is None:
-        raise ValueError("SHAPExplanation does not contain expected value.")
+        raise ValueError("Explanation does not contain expected value.")
     if explanation.prediction is None:
-        raise ValueError("SHAPExplanation does not contain prediction.")
+        raise ValueError("Explanation does not contain prediction.")
     if explanation.molecule is None:
-        raise ValueError("SHAPExplanation does not contain molecule.")
+        raise ValueError("Explanation does not contain molecule.")
     if explanation.atom_weights is None:
-        raise ValueError("SHAPExplanation does not contain atom weights.")
+        raise ValueError("Explanation does not contain atom weights.")
 
     present_shap = explanation.feature_weights[:, 1] * explanation.feature_vector
     absent_shap = explanation.feature_weights[:, 1] * (1 - explanation.feature_vector)

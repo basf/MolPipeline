@@ -17,7 +17,10 @@ from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionW
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.explainability.explainer import SHAPTreeExplainer
-from molpipeline.explainability.explanation import Explanation
+from molpipeline.explainability.explanation import (
+    SHAPFeatureAndAtomExplanation,
+    SHAPFeatureExplanation,
+)
 from molpipeline.mol2any import (
     MolToConcatenatedVector,
     MolToMorganFP,
@@ -49,7 +52,7 @@ class TestSHAPTreeExplainer(unittest.TestCase):
 
     def _test_valid_explanation(
         self,
-        explanation: Explanation,
+        explanation: SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation,
         estimator: BaseEstimator,
         molecule_reader_subpipeline: Pipeline,
         nof_features: int,
@@ -73,6 +76,8 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         is_morgan_fingerprint : bool
             Whether the feature vector is a Morgan fingerprint or not.
         """
+        if not explanation.is_valid():
+            print()
         self.assertTrue(explanation.is_valid())
 
         self.assertIsInstance(explanation.feature_vector, np.ndarray)
@@ -114,18 +119,14 @@ class TestSHAPTreeExplainer(unittest.TestCase):
         else:
             raise ValueError("Error in unittest. Unsupported estimator.")
 
-        if is_morgan_fingerprint:
+        if (
+            is_morgan_fingerprint
+        ):  # TODO recplace with issubclass(explanation, AtomExplanationMixin)
             self.assertIsInstance(explanation.atom_weights, np.ndarray)
             self.assertEqual(
                 explanation.atom_weights.shape,  # type: ignore[union-attr]
                 (explanation.molecule.GetNumAtoms(),),  # type: ignore[union-attr]
             )
-        else:
-            self.assertIsNone(explanation.atom_weights)
-
-        self.assertIsNone(
-            explanation.bond_weights
-        )  # SHAPTreeExplainer doesn't set bond weights yet
 
     def test_explanations_fingerprint_pipeline(self) -> None:
         """Test SHAP's TreeExplainer wrapper on MolPipeline's pipelines with fingerprints."""

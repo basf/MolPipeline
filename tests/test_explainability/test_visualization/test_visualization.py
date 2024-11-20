@@ -11,7 +11,8 @@ from sklearn.ensemble import RandomForestClassifier
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.explainability import (
-    SHAPExplanation,
+    SHAPFeatureAndAtomExplanation,
+    SHAPFeatureExplanation,
     SHAPTreeExplainer,
     structure_heatmap,
     structure_heatmap_shap,
@@ -53,7 +54,9 @@ class TestExplainabilityVisualization(unittest.TestCase):
 
     test_pipeline: ClassVar[Pipeline]
     test_explainer: ClassVar[SHAPTreeExplainer]
-    test_explanations: ClassVar[list[SHAPExplanation]]
+    test_explanations: ClassVar[
+        list[SHAPFeatureAndAtomExplanation] | list[SHAPFeatureExplanation]
+    ]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -135,7 +138,9 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
 
     test_pipeline: ClassVar[Pipeline]
     test_explainer: ClassVar[SHAPTreeExplainer]
-    test_explanations: ClassVar[list[SHAPExplanation]]
+    test_explanations: ClassVar[
+        list[SHAPFeatureAndAtomExplanation] | list[SHAPFeatureExplanation]
+    ]
 
     @classmethod
     def setUpClass(cls) -> None:
