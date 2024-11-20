@@ -1,11 +1,15 @@
 """Test utils for logging."""
+
 from contextlib import contextmanager
 from typing import Generator
 
 from loguru import logger
 
+
 @contextmanager
-def capture_logs(level="INFO", format="{level}:{name}:{message}") -> Generator[list[str], None, None]:
+def capture_logs(
+    level="INFO", format="{level}:{name}:{message}"
+) -> Generator[list[str], None, None]:
     """Capture loguru-based logs.
 
     Custom context manager to test loguru-based logs. For details and usage examples,
@@ -17,6 +21,11 @@ def capture_logs(level="INFO", format="{level}:{name}:{message}") -> Generator[l
         Log level, by default "INFO"
     format : str, optional
         Log format, by default "{level}:{name}:{message}"
+
+    Yields
+    -------
+    list[str]
+        List of log messages
     """
     output: list[str] = []
     handler_id = logger.add(output.append, level=level, format=format)

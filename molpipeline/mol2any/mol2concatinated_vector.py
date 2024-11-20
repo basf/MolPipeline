@@ -11,9 +11,8 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
-from sklearn.base import clone
-
 from loguru import logger
+from sklearn.base import clone
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
