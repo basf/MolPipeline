@@ -164,7 +164,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         else:
             self._output_type = "mixed"
         self._requires_fitting = any(
-            element[1]._requires_fitting for element in element_list
+            element[1]._requires_fitting for element in element_list  # type: ignore[protected-access]
         )
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
@@ -197,22 +197,21 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         return parameters
 
-    def set_params(self, **parameters: Any) -> Self:
-        """Set parameters.
+    def _set_element_list(
+        self, parameter_copy: dict[str, Any], **parameters: Any
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Set the element list and run necessary configurations.
 
         Parameters
         ----------
-        parameters: Any
-            Parameters to set.
+        element_list: list[tuple[str, MolToAnyPipelineElement]]
+            List of pipeline elements.
 
-        Returns
-        -------
-        Self
-            Mol2ConcatenatedVector object with updated parameters.
+        Raises
+        ------
+        ValueError
+            If element_list is empty.
         """
-        parameter_copy = dict(parameters)
-
-        # handle element_list
         element_list = parameter_copy.pop("element_list", None)
         if element_list is not None:
             self._element_list = element_list
@@ -240,6 +239,27 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             _ = parameter_copy.pop(to_delete, None)
         for step, params in step_params.items():
             step_dict[step].set_params(**params)
+        return parameter_copy, parameters
+
+    def set_params(self, **parameters: Any) -> Self:
+        """Set parameters.
+
+        Parameters
+        ----------
+        parameters: Any
+            Parameters to set.
+
+        Returns
+        -------
+        Self
+            Mol2ConcatenatedVector object with updated parameters.
+        """
+        parameter_copy = dict(parameters)
+
+        # handle element_list
+        parameter_copy, parameters = self._set_element_list(
+            parameter_copy, **parameters
+        )
 
         # handle use_feature_names_prefix
         use_feature_names_prefix = parameter_copy.pop("use_feature_names_prefix", None)

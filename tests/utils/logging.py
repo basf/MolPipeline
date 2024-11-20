@@ -1,15 +1,18 @@
 """Test utils for logging."""
 
+from __future__ import annotations
+
 from contextlib import contextmanager
 from typing import Generator
 
+import loguru
 from loguru import logger
 
 
 @contextmanager
 def capture_logs(
     level="INFO", format="{level}:{name}:{message}"
-) -> Generator[list[str], None, None]:
+) -> Generator[list[loguru.Message], None, None]:  # ign
     """Capture loguru-based logs.
 
     Custom context manager to test loguru-based logs. For details and usage examples,
@@ -24,10 +27,15 @@ def capture_logs(
 
     Yields
     -------
-    list[str]
+    list[loguru.Message]
+        List of log messages
+
+    Returns
+    -------
+    Generator[list[loguru.Message], None, None]
         List of log messages
     """
-    output: list[str] = []
+    output: list[loguru.Message] = []
     handler_id = logger.add(output.append, level=level, format=format)
     yield output
     logger.remove(handler_id)

@@ -11,6 +11,7 @@ from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
 
 from molpipeline import Pipeline
+from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import (
     MolToConcatenatedVector,
@@ -234,7 +235,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
 
     def test_logging_feature_names_uniqueness(self) -> None:
         """Test that a warning is logged when feature names are not unique."""
-        elements = [
+        elements: list[tuple[str, MolToAnyPipelineElement]] = [
             (
                 "MorganFP",
                 MolToMorganFP(n_bits=17),
@@ -282,7 +283,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
 
     def test_getter_setter(self) -> None:
         """Test getter and setter methods."""
-        elements = [
+        elements: list[tuple[str, MolToAnyPipelineElement]] = [
             (
                 "MorganFP",
                 MolToMorganFP(n_bits=17),
