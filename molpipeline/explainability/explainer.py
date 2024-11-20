@@ -10,6 +10,7 @@ import numpy.typing as npt
 import pandas as pd
 import shap
 from scipy.sparse import issparse, spmatrix
+from sklearn.base import BaseEstimator
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import OptionalMol
@@ -48,6 +49,28 @@ def _to_dense(
     return feature_matrix
 
 
+def _get_prediction_function(pipeline: Pipeline | BaseEstimator) -> Any:
+    """Get the prediction function of a model.
+
+    Parameters
+    ----------
+    pipeline : Pipeline
+        The pipeline containing the model.
+
+    Returns
+    -------
+    Any
+        The prediction function.
+    """
+    if hasattr(pipeline, "predict_proba"):
+        return pipeline.predict_proba
+    if hasattr(pipeline, "decision_function"):
+        return pipeline.decision_function
+    if hasattr(pipeline, "predict"):
+        return pipeline.predict
+    raise ValueError("Could not determine the model output predictions")
+
+
 # This function might also be put at a more central position in the lib.
 def _get_predictions(
     pipeline: Pipeline, feature_matrix: npt.NDArray[Any] | spmatrix
@@ -68,14 +91,8 @@ def _get_predictions(
     npt.NDArray[np.float64]
         The predictions.
     """
-    if hasattr(pipeline, "predict_proba"):
-        prediction = pipeline.predict_proba(feature_matrix)
-    elif hasattr(pipeline, "decision_function"):
-        prediction = pipeline.decision_function(feature_matrix)
-    elif hasattr(pipeline, "predict"):
-        prediction = pipeline.predict(feature_matrix)
-    else:
-        raise ValueError("Could not determine the model output predictions")
+    prediction_function = _get_prediction_function(pipeline)
+    prediction = prediction_function(feature_matrix)
     return np.array(prediction)
 
 
@@ -129,7 +146,7 @@ def _convert_shap_feature_weights_to_atom_weights(
 
 # pylint: disable=R0903
 class AbstractSHAPExplainer(abc.ABC):
-    """Abstract class for explainer objects."""
+    """Abstract class for SHAP explainer objects."""
 
     # pylint: disable=C0103,W0613
     @abc.abstractmethod
@@ -153,22 +170,17 @@ class AbstractSHAPExplainer(abc.ABC):
 
 
 # pylint: disable=R0903
-class SHAPTreeExplainer(AbstractSHAPExplainer):
-    """Class for SHAP's TreeExplainer wrapper.
-
-    Wraps SHAP's TreeExplainer to explain predictions of a pipeline containing a
-    tree-based model.
-
-    Note on failed instances:
-    SHAPTreeExplainer will automatically handle fill values for failed instances and
-    returns an invalid explanation for them. However, fill values that could be valid
-    predictions, e.g. 0, are not necessarily detected. Set the fill value to np.nan or
-    None if these failed instances should not be explained.
-    """
+class _SHAPExplainerAdapter(AbstractSHAPExplainer):
+    """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
     return_type: type[SHAPFeatureExplanation] | type[SHAPFeatureAndAtomExplanation]
 
-    def __init__(self, pipeline: Pipeline, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        explainer_type: type[shap.Explainer, shap.TreeExplainer],
+        pipeline: Pipeline,
+        **kwargs: Any,
+    ) -> None:
         """Initialize the SHAPTreeExplainer.
 
         Parameters
@@ -186,8 +198,10 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
         if model is None:
             raise ValueError("Could not determine the model to explain.")
 
+        prediction_function = _get_prediction_function(model)
         # set up the actual explainer
-        self.explainer = shap.TreeExplainer(
+        self.explainer = explainer_type(
+            # prediction_function,
             model,
             **kwargs,
         )
@@ -334,3 +348,73 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
             explanation_results.append(self.return_type(**explanation_data))
 
         return explanation_results
+
+
+class SHAPExplainer(_SHAPExplainerAdapter):
+    """Wrapper for SHAP's Explainer that can handle pipelines and molecules."""
+
+    def __init__(
+        self,
+        pipeline: Pipeline,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the SHAPExplainer.
+
+        Parameters
+        ----------
+        pipeline : Pipeline
+            The pipeline containing the model to explain.
+        kwargs : Any
+            Additional keyword arguments for SHAP's Explainer.
+        """
+        super().__init__(shap.Explainer, pipeline, **kwargs)
+
+
+class SHAPTreeExplainer(_SHAPExplainerAdapter):
+    """Wrapper for SHAP's TreeExplainer that can handle pipelines and molecules.
+
+    Wraps SHAP's TreeExplainer to explain predictions of a pipeline containing a
+    tree-based model.
+
+    Note on failed instances:
+    SHAPTreeExplainer will automatically handle fill values for failed instances and
+    returns an invalid explanation for them. However, fill values that could be valid
+    predictions, e.g. 0, are not necessarily detected. Set the fill value to np.nan or
+    None if these failed instances should not be explained.
+    """
+
+    def __init__(
+        self,
+        pipeline: Pipeline,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the SHAPTreeExplainer.
+
+        Parameters
+        ----------
+        pipeline : Pipeline
+            The pipeline containing the model to explain.
+        kwargs : Any
+            Additional keyword arguments for SHAP's Explainer.
+        """
+        super().__init__(shap.TreeExplainer, pipeline, **kwargs)
+
+
+class SHAPKernelExplainer(_SHAPExplainerAdapter):
+    """Wrapper for SHAP's KernelExplainer that can handle pipelines and molecules."""
+
+    def __init__(
+        self,
+        pipeline: Pipeline,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the SHAPKernelExplainer.
+
+        Parameters
+        ----------
+        pipeline : Pipeline
+            The pipeline containing the model to explain.
+        kwargs : Any
+            Additional keyword arguments for SHAP's Explainer.
+        """
+        super().__init__(shap.KernelExplainer, pipeline, **kwargs)

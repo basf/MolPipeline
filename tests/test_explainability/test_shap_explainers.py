@@ -4,6 +4,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
+import shap
 from rdkit import Chem, rdBase
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.ensemble import (
@@ -12,11 +13,17 @@ from sklearn.ensemble import (
     RandomForestClassifier,
     RandomForestRegressor,
 )
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.svm import SVC, SVR
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.explainability.explainer import SHAPTreeExplainer
+from molpipeline.explainability.explainer import (
+    SHAPTreeExplainer,
+    SHAPExplainer,
+    SHAPKernelExplainer,
+)
 from molpipeline.explainability.explanation import (
     SHAPFeatureAndAtomExplanation,
     SHAPFeatureExplanation,
@@ -47,8 +54,8 @@ CONTAINS_OX_BAD_SMILES = [0, 1, 1, 0, 0, 1, 0, 1]
 _RANDOM_STATE = 67056
 
 
-class TestSHAPTreeExplainer(unittest.TestCase):
-    """Test SHAP's TreeExplainer wrapper."""
+class TestSHAPExplainers(unittest.TestCase):
+    """Test SHAP's Explainer wrappers."""
 
     def _test_valid_explanation(
         self,
@@ -131,44 +138,54 @@ class TestSHAPTreeExplainer(unittest.TestCase):
     def test_explanations_fingerprint_pipeline(self) -> None:
         """Test SHAP's TreeExplainer wrapper on MolPipeline's pipelines with fingerprints."""
 
-        estimators = [
+        tree_estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
             GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
         ]
+        # TODO: which estimators work with SHAP's Explainer and KernelExplainer?
+        # other_estimators = [SVC(kernel="rbf", probability=False), SVR(kernel="linear")]
+        # other_estimators = [LogisticRegression(), LinearRegression()]
+        other_estimators = []
         n_bits = 64
 
-        # test explanations with different estimators
-        for estimator in estimators:
-            pipeline = Pipeline(
-                [
-                    ("smi2mol", SmilesToMol()),
-                    ("morgan", MolToMorganFP(radius=1, n_bits=n_bits)),
-                    ("model", estimator),
-                ]
-            )
-            pipeline.fit(TEST_SMILES, CONTAINS_OX)
+        explainer_types = [SHAPExplainer, SHAPTreeExplainer]
+        explainer_estimators = [tree_estimators + other_estimators, tree_estimators]
+        # explainer_kwargs = [{}, {}]
 
-            explainer = SHAPTreeExplainer(pipeline)
-            explanations = explainer.explain(TEST_SMILES)
-            self.assertEqual(len(explanations), len(TEST_SMILES))
+        for estimators, explainer_type in zip(explainer_estimators, explainer_types):
 
-            # get the subpipeline that extracts the molecule from the input data
-            mol_reader_subpipeline = SubpipelineExtractor(
-                pipeline
-            ).get_molecule_reader_subpipeline()
-            self.assertIsInstance(mol_reader_subpipeline, Pipeline)
-
-            for i, explanation in enumerate(explanations):
-                self._test_valid_explanation(
-                    explanation,
-                    estimator,
-                    mol_reader_subpipeline,  # type: ignore[arg-type]
-                    n_bits,
-                    TEST_SMILES[i],
-                    is_morgan_fingerprint=True,
+            # test explanations with different estimators
+            for estimator in estimators:
+                pipeline = Pipeline(
+                    [
+                        ("smi2mol", SmilesToMol()),
+                        ("morgan", MolToMorganFP(radius=1, n_bits=n_bits)),
+                        ("model", estimator),
+                    ]
                 )
+                pipeline.fit(TEST_SMILES, CONTAINS_OX)
+
+                explainer = explainer_type(pipeline)
+                explanations = explainer.explain(TEST_SMILES)
+                self.assertEqual(len(explanations), len(TEST_SMILES))
+
+                # get the subpipeline that extracts the molecule from the input data
+                mol_reader_subpipeline = SubpipelineExtractor(
+                    pipeline
+                ).get_molecule_reader_subpipeline()
+                self.assertIsInstance(mol_reader_subpipeline, Pipeline)
+
+                for i, explanation in enumerate(explanations):
+                    self._test_valid_explanation(
+                        explanation,
+                        estimator,
+                        mol_reader_subpipeline,  # type: ignore[arg-type]
+                        n_bits,
+                        TEST_SMILES[i],
+                        is_morgan_fingerprint=True,
+                    )
 
     # pylint: disable=too-many-locals
     def test_explanations_pipeline_with_invalid_inputs(self) -> None:
