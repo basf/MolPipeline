@@ -164,8 +164,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         else:
             self._output_type = "mixed"
         self._requires_fitting = any(
-            element[1]._requires_fitting
-            for element in element_list  # pylint: disable=protected-access
+            element[1]._requires_fitting  # pylint: disable=protected-access
+            for element in element_list
         )
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:

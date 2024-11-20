@@ -11,7 +11,7 @@ from loguru import logger
 
 @contextmanager
 def capture_logs(
-    level: str = "INFO", format: str = "{level}:{name}:{message}"
+    level: str = "INFO", log_format: str = "{level}:{name}:{message}"
 ) -> Generator[list[loguru.Message], None, None]:
     """Capture loguru-based logs.
 
@@ -22,7 +22,7 @@ def capture_logs(
     ----------
     level : str, optional
         Log level, by default "INFO"
-    format : str, optional
+    log_format : str, optional
         Log format, by default "{level}:{name}:{message}"
 
     Yields
@@ -36,6 +36,6 @@ def capture_logs(
         List of log messages
     """
     output: list[loguru.Message] = []
-    handler_id = logger.add(output.append, level=level, format=format)
+    handler_id = logger.add(output.append, level=level, format=log_format)
     yield output
     logger.remove(handler_id)
