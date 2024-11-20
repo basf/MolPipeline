@@ -65,7 +65,7 @@ class SHAPFeatureExplanation(
     SHAPExplanationMixin,
     _AbstractMoleculeExplanation,  # base-class should be the last element https://www.ianlewis.org/en/mixins-and-python
 ):
-    """Explanation of a molecular prediction using feature importance scores and SHAP."""
+    """Explanation using feature importance scores from SHAP."""
 
     def is_valid(self) -> bool:
         """Check if the explanation is valid.
@@ -94,8 +94,7 @@ class SHAPFeatureAndAtomExplanation(
     AtomExplanationMixin,
     _AbstractMoleculeExplanation,
 ):
-    """Explanation of a molecular prediction using feature importance scores,
-    atom importance scores and SHAP."""
+    """Explanation using feature and atom importance scores from SHAP."""
 
     def is_valid(self) -> bool:
         """Check if the explanation is valid.

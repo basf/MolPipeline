@@ -135,7 +135,7 @@ class AbstractSHAPExplainer(abc.ABC):
     @abc.abstractmethod
     def explain(
         self, X: Any, **kwargs: Any
-    ) -> list[SHAPFeatureExplanation, SHAPFeatureAndAtomExplanation]:
+    ) -> list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
         Parameters
@@ -165,6 +165,8 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
     predictions, e.g. 0, are not necessarily detected. Set the fill value to np.nan or
     None if these failed instances should not be explained.
     """
+
+    return_type: type[SHAPFeatureExplanation] | type[SHAPFeatureAndAtomExplanation]
 
     def __init__(self, pipeline: Pipeline, **kwargs: Any) -> None:
         """Initialize the SHAPTreeExplainer.
@@ -204,6 +206,7 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
         if self.featurization_subpipeline is None:
             raise ValueError("Could not determine the featurization subpipeline.")
 
+        # determine type of returned explanation
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
         if isinstance(featurization_element, MolToMorganFP):
             self.return_type = SHAPFeatureAndAtomExplanation
@@ -238,7 +241,7 @@ class SHAPTreeExplainer(AbstractSHAPExplainer):
     # pylint: disable=C0103,W0613
     def explain(
         self, X: Any, **kwargs: Any
-    ) -> list[SHAPFeatureExplanation, SHAPFeatureAndAtomExplanation]:
+    ) -> list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
         If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.

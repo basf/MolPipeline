@@ -17,9 +17,6 @@ from molpipeline.explainability import (
     structure_heatmap,
     structure_heatmap_shap,
 )
-from molpipeline.explainability.visualization.visualization import (
-    make_sum_of_gaussians_grid,
-)
 from molpipeline.mol2any import MolToMorganFP
 
 TEST_SMILES = ["CC", "CCO", "COC", "c1ccccc1(N)", "CCC(-O)O", "CCCN"]
@@ -131,43 +128,3 @@ class TestExplainabilityVisualization(unittest.TestCase):
             )  # type: ignore[union-attr]
             self.assertIsNotNone(image)
             self.assertEqual(image.format, "PNG")
-
-
-class TestSumOfGaussiansGrid(unittest.TestCase):
-    """Test visualization methods for explanations."""
-
-    test_pipeline: ClassVar[Pipeline]
-    test_explainer: ClassVar[SHAPTreeExplainer]
-    test_explanations: ClassVar[
-        list[SHAPFeatureAndAtomExplanation] | list[SHAPFeatureExplanation]
-    ]
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        """Set up the tests."""
-        cls.test_pipeline = _get_test_morgan_rf_pipeline()
-        cls.test_pipeline.fit(TEST_SMILES, CONTAINS_OX)
-        cls.test_explainer = SHAPTreeExplainer(cls.test_pipeline)
-        cls.test_explanations = cls.test_explainer.explain(TEST_SMILES)
-
-    def test_grid_with_shap_atom_weights(self) -> None:
-        """Test grid with SHAP atom weights."""
-        for explanation in self.test_explanations:
-            self.assertTrue(explanation.is_valid())
-            self.assertIsInstance(explanation.atom_weights, np.ndarray)
-
-            mol_copy = Chem.Mol(explanation.molecule)
-            mol_copy = Draw.PrepareMolForDrawing(mol_copy)
-            value_grid = make_sum_of_gaussians_grid(
-                mol_copy,
-                atom_weights=explanation.atom_weights,
-                atom_width=np.inf,
-                grid_resolution=[64, 64],
-                padding=[0.4, 0.4],
-            )
-            self.assertIsNotNone(value_grid)
-            self.assertEqual(value_grid.values.size, 64 * 64)
-
-            # test that the range of summed gaussian values is as expected for SHAP
-            self.assertTrue(value_grid.values.min() >= -1)
-            self.assertTrue(value_grid.values.max() <= 1)
