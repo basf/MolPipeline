@@ -19,6 +19,7 @@ from molpipeline.mol2any import (
     MolToRDKitPhysChem,
 )
 from tests.utils.fingerprints import fingerprints_to_numpy
+from tests.utils.logging import capture_logs
 
 
 class TestConcatenatedFingerprint(unittest.TestCase):
@@ -94,8 +95,21 @@ class TestConcatenatedFingerprint(unittest.TestCase):
 
     def test_empty_element_list(self) -> None:
         """Test if an empty element list raises an error."""
+        # test constructor
         with self.assertRaises(ValueError):
             MolToConcatenatedVector([])
+
+        # test setter
+        concat_elem = MolToConcatenatedVector(
+            [
+                (
+                    "RDKitPhysChem",
+                    MolToRDKitPhysChem(),
+                )
+            ]
+        )
+        with self.assertRaises(ValueError):
+            concat_elem.set_params(element_list=[])
 
     def test_n_features(self) -> None:
         """Test getting the number of features in the concatenated vector."""
@@ -147,7 +161,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         net_charge_elem = ("NetCharge", MolToNetCharge())
         morgan_elem = (
             "MorganFP",
-            MolToMorganFP(n_bits=16),
+            MolToMorganFP(n_bits=17),
         )
         path_elem = (
             "PathFP",
@@ -158,9 +172,15 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             MolToMorganFP(n_bits=14),
         )
 
-        elements = [physchem_elem, net_charge_elem, morgan_elem, path_elem, maccs_elem]
+        elements = [
+            physchem_elem,
+            net_charge_elem,
+            morgan_elem,
+            path_elem,
+            maccs_elem,
+        ]
 
-        for feature_names_prefix in [None, "my_prefix"]:
+        for use_feature_names_prefix in [False, True]:
             # test all subsets are compatible
             powerset = itertools.chain.from_iterable(
                 itertools.combinations(elements, r) for r in range(len(elements) + 1)
@@ -170,9 +190,17 @@ class TestConcatenatedFingerprint(unittest.TestCase):
 
             for elements_subset in powerset:
                 conc_elem = MolToConcatenatedVector(
-                    list(elements_subset), feature_names_prefix=feature_names_prefix
+                    list(elements_subset),
+                    use_feature_names_prefix=use_feature_names_prefix,
                 )
                 feature_names = conc_elem.feature_names
+
+                if use_feature_names_prefix:
+                    # test feature names are unique if prefix is used or only one element is used
+                    self.assertEqual(
+                        len(feature_names),
+                        len(set(feature_names)),
+                    )
 
                 # test a feature names and n_features are consistent
                 self.assertEqual(
@@ -188,22 +216,101 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                     relevant_names = feature_names[
                         seen_names : seen_names + elem_n_features
                     ]
-                    prefixes, feat_names = map(
-                        list, zip(*[name.split("__") for name in relevant_names])
-                    )
-                    # test feature names are the same
-                    self.assertListEqual(elem_feature_names, feat_names)
 
-                    if feature_names_prefix is not None:
-                        # test prefixes are the same user given prefix
-                        self.assertTrue(
-                            all(prefix == feature_names_prefix for prefix in prefixes)
+                    if use_feature_names_prefix:
+                        # feature_names should be prefixed with element name
+                        prefixes, feat_names = map(
+                            list, zip(*[name.split("__") for name in relevant_names])
                         )
-                    else:
+                        # test feature names are the same
+                        self.assertListEqual(elem_feature_names, feat_names)
                         # test prefixes are the same as element names
                         self.assertTrue(all(prefix == elem_name for prefix in prefixes))
+                    else:
+                        # feature_names should be the same as element feature names
+                        self.assertListEqual(elem_feature_names, relevant_names)
 
                     seen_names += elem_n_features
+
+    def test_logging_feature_names_uniqueness(self) -> None:
+        """Test that a warning is logged when feature names are not unique."""
+        elements = [
+            (
+                "MorganFP",
+                MolToMorganFP(n_bits=17),
+            ),
+            (
+                "MorganFP_with_feats",
+                MolToMorganFP(n_bits=16, use_features=True),
+            ),
+        ]
+
+        # First test is with no prefix
+        use_feature_names_prefix = False
+        with capture_logs() as output:
+            conc_elem = MolToConcatenatedVector(
+                elements,
+                use_feature_names_prefix=use_feature_names_prefix,
+            )
+            feature_names = conc_elem.feature_names
+
+        # test log message
+        self.assertEqual(len(output), 1)
+        message = output[0]
+        self.assertIn(
+            "Feature names in MolToConcatenatedVector are not unique", message
+        )
+        self.assertEqual(message.record["level"].name, "WARNING")
+
+        # test feature names are NOT unique
+        self.assertNotEqual(len(feature_names), len(set(feature_names)))
+
+        # Second test is with prefix
+        use_feature_names_prefix = True
+        with capture_logs() as output:
+            conc_elem = MolToConcatenatedVector(
+                elements,
+                use_feature_names_prefix=use_feature_names_prefix,
+            )
+            feature_names = conc_elem.feature_names
+
+        # test log message
+        self.assertEqual(len(output), 0)
+
+        # test feature names are unique
+        self.assertEqual(len(feature_names), len(set(feature_names)))
+
+    def test_getter_setter(self) -> None:
+        """Test getter and setter methods."""
+        elements = [
+            (
+                "MorganFP",
+                MolToMorganFP(n_bits=17),
+            ),
+            (
+                "MorganFP_with_feats",
+                MolToMorganFP(n_bits=16, use_features=True),
+            ),
+        ]
+        concat_elem = MolToConcatenatedVector(
+            elements,
+            use_feature_names_prefix=True,
+        )
+        self.assertEqual(len(concat_elem.get_params()["element_list"]), 2)
+        self.assertEqual(concat_elem.get_params()["use_feature_names_prefix"], True)
+        # test that there are no duplicates in feature names
+        self.assertEqual(
+            len(concat_elem.feature_names), len(set(concat_elem.feature_names))
+        )
+        params: dict[str, Any] = {
+            "use_feature_names_prefix": False,
+        }
+        concat_elem.set_params(**params)
+        self.assertEqual(concat_elem.get_params()["use_feature_names_prefix"], False)
+        # test that there are duplicates in feature names
+        self.assertNotEqual(
+            len(concat_elem.feature_names), len(set(concat_elem.feature_names))
+        )
 
 
 if __name__ == "__main__":
