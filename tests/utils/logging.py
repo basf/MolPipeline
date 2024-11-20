@@ -11,8 +11,8 @@ from loguru import logger
 
 @contextmanager
 def capture_logs(
-    level="INFO", format="{level}:{name}:{message}"
-) -> Generator[list[loguru.Message], None, None]:  # ign
+    level: str = "INFO", format: str = "{level}:{name}:{message}"
+) -> Generator[list[loguru.Message], None, None]:
     """Capture loguru-based logs.
 
     Custom context manager to test loguru-based logs. For details and usage examples,

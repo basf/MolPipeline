@@ -164,7 +164,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         else:
             self._output_type = "mixed"
         self._requires_fitting = any(
-            element[1]._requires_fitting for element in element_list  # type: ignore[protected-access]
+            element[1]._requires_fitting
+            for element in element_list  # pylint: disable=protected-access
         )
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
@@ -204,13 +205,20 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        element_list: list[tuple[str, MolToAnyPipelineElement]]
-            List of pipeline elements.
+        parameter_copy: dict[str, Any]
+            Copy of parameters.
+        parameters: Any
+            Original parameters.
 
         Raises
         ------
         ValueError
             If element_list is empty.
+
+        Returns
+        -------
+        tuple[dict[str, Any], dict[str, Any]]
+            Updated parameter_copy and parameters.
         """
         element_list = parameter_copy.pop("element_list", None)
         if element_list is not None:
