@@ -5,7 +5,6 @@ from typing import ClassVar
 
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import Draw
 from sklearn.ensemble import RandomForestClassifier
 
 from molpipeline import Pipeline

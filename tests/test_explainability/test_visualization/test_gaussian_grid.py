@@ -27,6 +27,7 @@ CONTAINS_OX = [0, 1, 1, 0, 1, 0]
 class TestSumOfGaussiansGrid(unittest.TestCase):
     """Test sum of gaussian grid ."""
 
+    # pylint: disable=duplicate-code
     test_pipeline: ClassVar[Pipeline]
     test_explainer: ClassVar[SHAPTreeExplainer]
     test_explanations: ClassVar[

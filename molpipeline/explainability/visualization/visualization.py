@@ -20,7 +20,7 @@ from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
-from molpipeline.explainability import SHAPFeatureAndAtomExplanation
+from molpipeline.explainability.explanation import SHAPFeatureAndAtomExplanation
 from molpipeline.explainability.visualization.gauss import GaussFunctor2D
 from molpipeline.explainability.visualization.heatmaps import (
     ValueGrid,
