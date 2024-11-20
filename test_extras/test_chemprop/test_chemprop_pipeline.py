@@ -307,6 +307,9 @@ class TestRegressionPipeline(unittest.TestCase):
         pred_copy = model_copy.predict(molecule_net_logd_df["smiles"].tolist())
         self.assertTrue(np.allclose(pred, pred_copy))
 
+        # Test single prediction, this was causing an error before
+        _ = regression_model.predict([molecule_net_logd_df["smiles"].iloc[0]])
+
 
 class TestClassificationPipeline(unittest.TestCase):
     """Test the Chemprop model pipeline for classification."""
@@ -340,6 +343,9 @@ class TestClassificationPipeline(unittest.TestCase):
 
         self.assertEqual(proba.shape, proba_copy.shape)
         self.assertTrue(np.allclose(proba[~nan_indices], proba_copy[~nan_indices]))
+
+        # Test single prediction, this was causing an error before
+        _ = classification_model.predict([molecule_net_bbbp_df["smiles"].iloc[0]])
 
 
 class TestMulticlassClassificationPipeline(unittest.TestCase):
