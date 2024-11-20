@@ -308,7 +308,8 @@ class TestRegressionPipeline(unittest.TestCase):
         self.assertTrue(np.allclose(pred, pred_copy))
 
         # Test single prediction, this was causing an error before
-        _ = regression_model.predict([molecule_net_logd_df["smiles"].iloc[0]])
+        single_mol_pred = regression_model.predict([molecule_net_logd_df["smiles"].iloc[0]])
+        self.assertEqual(single_mol_pred.shape, (1,))
 
 
 class TestClassificationPipeline(unittest.TestCase):
@@ -345,7 +346,10 @@ class TestClassificationPipeline(unittest.TestCase):
         self.assertTrue(np.allclose(proba[~nan_indices], proba_copy[~nan_indices]))
 
         # Test single prediction, this was causing an error before
-        _ = classification_model.predict([molecule_net_bbbp_df["smiles"].iloc[0]])
+        single_mol_pred = classification_model.predict([molecule_net_bbbp_df["smiles"].iloc[0]])
+        self.assertEqual(single_mol_pred.shape, (1,))
+        single_mol_proba = classification_model.predict_proba([molecule_net_bbbp_df["smiles"].iloc[0]])
+        self.assertEqual(single_mol_proba.shape, (1, 2))
 
 
 class TestMulticlassClassificationPipeline(unittest.TestCase):
