@@ -21,6 +21,7 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
     """
 
     _n_bits = 167  # MACCS keys have 166 bits + 1 bit for an all-zero vector (bit 0)
+    _feature_names = [f"maccs_{i}" for i in range(_n_bits)]
 
     def pretransform_single(
         self, value: RDKitMol

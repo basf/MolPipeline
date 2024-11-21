@@ -21,7 +21,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
 class Mol2PathFP(
     MolToRDKitGenFPElement
 ):  # pylint: disable=too-many-instance-attributes
-    """Folded Morgan Fingerprint.
+    """Folded Path Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
 
@@ -99,9 +99,10 @@ class Mol2PathFP(
         )
         if not isinstance(n_bits, int) or n_bits < 1:
             raise ValueError(
-                f"Number of bits has to be a positve integer, which is > 0! (Received: {n_bits})"
+                f"Number of bits has to be a positive integer, which is > 0! (Received: {n_bits})"
             )
         self._n_bits = n_bits
+        self._feature_names = [f"path_{i}" for i in range(self._n_bits)]
         self._min_path = min_path
         self._max_path = max_path
         self._use_hs = use_hs

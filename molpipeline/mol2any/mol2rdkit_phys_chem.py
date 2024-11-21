@@ -72,6 +72,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             UUID of the PipelineElement. If None, a new UUID is generated.
         """
         self.descriptor_list = descriptor_list  # type: ignore
+        self._feature_names = self._descriptor_list
         self._return_with_errors = return_with_errors
         self._log_exceptions = log_exceptions
         super().__init__(
@@ -88,7 +89,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     @property
     def descriptor_list(self) -> list[str]:
-        """Return a copy of the descriptor list."""
+        """Return a copy of the descriptor list. Alias of `feature_names`."""
         return self._descriptor_list[:]
 
     @descriptor_list.setter
