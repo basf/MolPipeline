@@ -1,13 +1,11 @@
 """Test SHAP's TreeExplainer wrapper."""
 
 import unittest
-from typing import Dict, Any
+from typing import Any
 
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import scipy.sparse
-import shap
 from rdkit import Chem, rdBase
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.ensemble import (
@@ -16,20 +14,17 @@ from sklearn.ensemble import (
     RandomForestClassifier,
     RandomForestRegressor,
 )
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.svm import SVC, SVR
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.explainability.explainer import (
-    SHAPTreeExplainer,
-    SHAPKernelExplainer,
-)
+from molpipeline.explainability.explainer import SHAPKernelExplainer, SHAPTreeExplainer
 from molpipeline.explainability.explanation import (
+    AtomExplanationMixin,
     SHAPFeatureAndAtomExplanation,
     SHAPFeatureExplanation,
-    AtomExplanationMixin,
 )
 from molpipeline.mol2any import (
     MolToConcatenatedVector,
