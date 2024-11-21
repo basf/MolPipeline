@@ -14,7 +14,9 @@ from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import (
+    Mol2PathFP,
     MolToConcatenatedVector,
+    MolToMACCSFP,
     MolToMorganFP,
     MolToNetCharge,
     MolToRDKitPhysChem,
@@ -166,11 +168,11 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         )
         path_elem = (
             "PathFP",
-            MolToMorganFP(n_bits=15),
+            Mol2PathFP(n_bits=15),
         )
         maccs_elem = (
             "MACCSFP",
-            MolToMorganFP(n_bits=14),
+            MolToMACCSFP(),
         )
 
         elements = [
