@@ -143,8 +143,7 @@ class ChempropModel(ABCChemprop):
         test_data = build_dataloader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
         prediction_array = np.vstack(predictions)  # type: ignore
-        prediction_array = prediction_array.squeeze()
-
+        prediction_array = prediction_array.squeeze(axis=1)
         # Check if the predictions have the same length as the input dataset
         if prediction_array.shape[0] != len(X):
             raise AssertionError(
