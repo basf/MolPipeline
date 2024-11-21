@@ -391,6 +391,16 @@ class TestMulticlassClassificationPipeline(unittest.TestCase):
         self.assertEqual(pred.shape, pred_copy.shape)
         self.assertTrue(np.allclose(proba[~nan_mask], proba_copy[~nan_mask]))
 
+        # Test single prediction, this was causing an error before
+        single_mol_pred = classification_model.predict(
+            [test_data_df["Molecule"].iloc[0]]
+        )
+        self.assertEqual(single_mol_pred.shape, (1,))
+        single_mol_proba = classification_model.predict_proba(
+            [test_data_df["Molecule"].iloc[0]]
+        )
+        self.assertEqual(single_mol_proba.shape, (1, 3))
+
         with self.assertRaises(ValueError):
             classification_model.fit(
                 mols,
