@@ -307,6 +307,12 @@ class TestRegressionPipeline(unittest.TestCase):
         pred_copy = model_copy.predict(molecule_net_logd_df["smiles"].tolist())
         self.assertTrue(np.allclose(pred, pred_copy))
 
+        # Test single prediction, this was causing an error before
+        single_mol_pred = regression_model.predict(
+            [molecule_net_logd_df["smiles"].iloc[0]]
+        )
+        self.assertEqual(single_mol_pred.shape, (1,))
+
 
 class TestClassificationPipeline(unittest.TestCase):
     """Test the Chemprop model pipeline for classification."""
@@ -341,6 +347,16 @@ class TestClassificationPipeline(unittest.TestCase):
         self.assertEqual(proba.shape, proba_copy.shape)
         self.assertTrue(np.allclose(proba[~nan_indices], proba_copy[~nan_indices]))
 
+        # Test single prediction, this was causing an error before
+        single_mol_pred = classification_model.predict(
+            [molecule_net_bbbp_df["smiles"].iloc[0]]
+        )
+        self.assertEqual(single_mol_pred.shape, (1,))
+        single_mol_proba = classification_model.predict_proba(
+            [molecule_net_bbbp_df["smiles"].iloc[0]]
+        )
+        self.assertEqual(single_mol_proba.shape, (1, 2))
+
 
 class TestMulticlassClassificationPipeline(unittest.TestCase):
     """Test the Chemprop model pipeline for multiclass classification."""
@@ -374,6 +390,16 @@ class TestMulticlassClassificationPipeline(unittest.TestCase):
         self.assertEqual(proba.shape, proba_copy.shape)
         self.assertEqual(pred.shape, pred_copy.shape)
         self.assertTrue(np.allclose(proba[~nan_mask], proba_copy[~nan_mask]))
+
+        # Test single prediction, this was causing an error before
+        single_mol_pred = classification_model.predict(
+            [test_data_df["Molecule"].iloc[0]]
+        )
+        self.assertEqual(single_mol_pred.shape, (1,))
+        single_mol_proba = classification_model.predict_proba(
+            [test_data_df["Molecule"].iloc[0]]
+        )
+        self.assertEqual(single_mol_proba.shape, (1, 3))
 
         with self.assertRaises(ValueError):
             classification_model.fit(
