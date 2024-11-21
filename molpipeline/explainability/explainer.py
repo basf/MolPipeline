@@ -11,6 +11,7 @@ import pandas as pd
 import shap
 from scipy.sparse import issparse, spmatrix
 from sklearn.base import BaseEstimator
+from typing_extensions import override
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import OptionalMol
@@ -25,7 +26,7 @@ from molpipeline.explainability.explanation import (
 )
 from molpipeline.explainability.fingerprint_utils import fingerprint_shap_to_atomweights
 from molpipeline.mol2any import MolToMorganFP
-from molpipeline.utils.subpipeline import SubpipelineExtractor
+from molpipeline.utils.subpipeline import SubpipelineExtractor, get_model_from_pipeline
 
 
 # pylint: disable=C0103,W0613
@@ -170,14 +171,13 @@ class AbstractSHAPExplainer(abc.ABC):
 
 
 # pylint: disable=R0903
-class _SHAPExplainerAdapter(AbstractSHAPExplainer):
+class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
-    return_type: type[SHAPFeatureExplanation] | type[SHAPFeatureAndAtomExplanation]
+    return_type_: type[SHAPFeatureExplanation] | type[SHAPFeatureAndAtomExplanation]
 
     def __init__(
         self,
-        explainer_type: type[shap.Explainer, shap.TreeExplainer],
         pipeline: Pipeline,
         **kwargs: Any,
     ) -> None:
@@ -192,19 +192,6 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer):
         """
         self.pipeline = pipeline
         pipeline_extractor = SubpipelineExtractor(self.pipeline)
-
-        # extract the fitted model
-        model = pipeline_extractor.get_model_element()
-        if model is None:
-            raise ValueError("Could not determine the model to explain.")
-
-        prediction_function = _get_prediction_function(model)
-        # set up the actual explainer
-        self.explainer = explainer_type(
-            # prediction_function,
-            model,
-            **kwargs,
-        )
 
         # extract the molecule reader subpipeline
         self.molecule_reader_subpipeline = (
@@ -223,11 +210,32 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer):
         # determine type of returned explanation
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
         if isinstance(featurization_element, MolToMorganFP):
-            self.return_type = SHAPFeatureAndAtomExplanation
+            self.return_type_ = SHAPFeatureAndAtomExplanation
+            self.has_atom_weights_ = True
         else:
-            self.return_type = SHAPFeatureExplanation
+            self.return_type_ = SHAPFeatureExplanation
+            self.has_atom_weights_ = False
 
-    def _prediction_is_valid(self, prediction: Any) -> bool:
+        # call to abstract method to create the explainer object. Implementation in child classes.
+        self._create_explainer(**kwargs)
+
+    @abc.abstractmethod
+    def _create_explainer(self, **kwargs: Any) -> Any:
+        """Create the explainer object.
+
+        Parameters
+        ----------
+        kwargs : Any
+            Additional keyword arguments for the explainer.
+
+        Returns
+        -------
+        Any
+            The explainer object.
+        """
+
+    @staticmethod
+    def _prediction_is_valid(prediction: Any) -> bool:
         """Check if the prediction is valid using some heuristics.
 
         Can be used to catch inputs that failed the pipeline for some reason.
@@ -253,6 +261,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer):
         return True
 
     # pylint: disable=C0103,W0613
+    @override
     def explain(
         self, X: Any, **kwargs: Any
     ) -> list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]:
@@ -284,7 +293,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer):
             prediction = _get_predictions(self.pipeline, input_sample)
             if not self._prediction_is_valid(prediction):
                 # we use the prediction to check if the input is valid. If not, we cannot explain it.
-                explanation_results.append(self.return_type())
+                explanation_results.append(self.return_type_())
                 continue
 
             if prediction.ndim > 1:
@@ -302,7 +311,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer):
                 # if the feature vector is empty, we cannot explain the prediction.
                 # This happens for failed instances in pipeline with fill values
                 # that could be valid predictions, like 0.
-                explanation_results.append(self.return_type())
+                explanation_results.append(self.return_type_())
                 continue
 
             # Feature names should also be extracted from the Pipeline.
@@ -317,7 +326,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer):
             atom_weights = None
             bond_weights = None
 
-            if issubclass(self.return_type, AtomExplanationMixin) and isinstance(
+            if issubclass(self.return_type_, AtomExplanationMixin) and isinstance(
                 featurization_element, MolToMorganFP
             ):
                 # for Morgan fingerprint, we can map the shap values to atom weights
@@ -333,41 +342,21 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer):
                 "molecule": molecule,
                 "prediction": prediction,
             }
-            if issubclass(self.return_type, FeatureInfoMixin):
+            if issubclass(self.return_type_, FeatureInfoMixin):
                 explanation_data["feature_vector"] = feature_vector
                 explanation_data["feature_names"] = feature_names
-            if issubclass(self.return_type, FeatureExplanationMixin):
+            if issubclass(self.return_type_, FeatureExplanationMixin):
                 explanation_data["feature_weights"] = feature_weights
-            if issubclass(self.return_type, AtomExplanationMixin):
+            if issubclass(self.return_type_, AtomExplanationMixin):
                 explanation_data["atom_weights"] = atom_weights
-            if issubclass(self.return_type, BondExplanationMixin):
+            if issubclass(self.return_type_, BondExplanationMixin):
                 explanation_data["bond_weights"] = bond_weights
-            if issubclass(self.return_type, SHAPExplanationMixin):
+            if issubclass(self.return_type_, SHAPExplanationMixin):
                 explanation_data["expected_value"] = self.explainer.expected_value
 
-            explanation_results.append(self.return_type(**explanation_data))
+            explanation_results.append(self.return_type_(**explanation_data))
 
         return explanation_results
-
-
-class SHAPExplainer(_SHAPExplainerAdapter):
-    """Wrapper for SHAP's Explainer that can handle pipelines and molecules."""
-
-    def __init__(
-        self,
-        pipeline: Pipeline,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize the SHAPExplainer.
-
-        Parameters
-        ----------
-        pipeline : Pipeline
-            The pipeline containing the model to explain.
-        kwargs : Any
-            Additional keyword arguments for SHAP's Explainer.
-        """
-        super().__init__(shap.Explainer, pipeline, **kwargs)
 
 
 class SHAPTreeExplainer(_SHAPExplainerAdapter):
@@ -397,7 +386,27 @@ class SHAPTreeExplainer(_SHAPExplainerAdapter):
         kwargs : Any
             Additional keyword arguments for SHAP's Explainer.
         """
-        super().__init__(shap.TreeExplainer, pipeline, **kwargs)
+        super().__init__(pipeline, **kwargs)
+
+    @override
+    def _create_explainer(self, **kwargs: Any) -> Any:
+        """Create the TreeExplainer object from shap.
+
+        Parameters
+        ----------
+        kwargs : Any
+            Additional keyword arguments for the explainer.
+
+        Returns
+        -------
+        Any
+            The explainer object.
+        """
+        model = get_model_from_pipeline(self.pipeline, raise_not_found=True)
+        self.explainer = shap.TreeExplainer(
+            model,
+            **kwargs,
+        )
 
 
 class SHAPKernelExplainer(_SHAPExplainerAdapter):
@@ -417,4 +426,25 @@ class SHAPKernelExplainer(_SHAPExplainerAdapter):
         kwargs : Any
             Additional keyword arguments for SHAP's Explainer.
         """
-        super().__init__(shap.KernelExplainer, pipeline, **kwargs)
+        super().__init__(pipeline, **kwargs)
+
+    @override
+    def _create_explainer(self, **kwargs: Any) -> Any:
+        """Create the explainer object.
+
+        Parameters
+        ----------
+        kwargs : Any
+            Additional keyword arguments for the explainer.
+
+        Returns
+        -------
+        Any
+            The explainer object.
+        """
+        model = get_model_from_pipeline(self.pipeline, raise_not_found=True)
+        prediction_function = _get_prediction_function(model)
+        self.explainer = shap.KernelExplainer(
+            prediction_function,
+            **kwargs,
+        )

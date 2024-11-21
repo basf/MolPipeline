@@ -78,7 +78,7 @@ class SHAPFeatureExplanation(
         return all(
             [
                 self.feature_vector is not None,
-                # self.feature_names is not None, # TODO uncomment when PR is merged
+                # self.feature_names is not None,
                 self.molecule is not None,
                 self.prediction is not None,
                 self.feature_weights is not None,
