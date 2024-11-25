@@ -12,12 +12,15 @@ from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.explainability import (
     SHAPFeatureAndAtomExplanation,
-    SHAPFeatureExplanation,
     SHAPTreeExplainer,
     structure_heatmap,
     structure_heatmap_shap,
+    SHAPFeatureExplanation,
 )
-from molpipeline.explainability.explainer import SHAPKernelExplainer
+from molpipeline.explainability.explainer import (
+    SHAPKernelExplainer,
+    SHAPExplainerAdapter,
+)
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import get_featurization_subpipeline
 
@@ -53,9 +56,13 @@ class TestExplainabilityVisualization(unittest.TestCase):
 
     test_pipeline: ClassVar[Pipeline]
     test_tree_explainer: ClassVar[SHAPTreeExplainer]
-    test_tree_explanations: ClassVar[list[SHAPFeatureAndAtomExplanation]]
+    test_tree_explanations: ClassVar[
+        list[SHAPFeatureAndAtomExplanation | SHAPFeatureExplanation]
+    ]
     test_kernel_explainer: ClassVar[SHAPKernelExplainer]
-    test_kernel_explanations: ClassVar[list[SHAPFeatureAndAtomExplanation]]
+    test_kernel_explanations: ClassVar[
+        list[SHAPFeatureAndAtomExplanation | SHAPFeatureExplanation]
+    ]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -90,7 +97,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
         ]:
             for explanation in explanation_list:
                 self.assertTrue(explanation.is_valid())
-                self.assertIsInstance(explanation.atom_weights, np.ndarray)
+                self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
                 image = structure_heatmap(
                     explanation.molecule,
                     explanation.atom_weights,  # type: ignore[arg-type]
@@ -108,7 +115,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
         ]:
             for explanation in explanation_list:
                 self.assertTrue(explanation.is_valid())
-                self.assertIsInstance(explanation.atom_weights, np.ndarray)
+                self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
                 image = structure_heatmap_shap(
                     explanation=explanation,
                     width=128,

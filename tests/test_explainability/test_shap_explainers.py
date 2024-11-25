@@ -20,7 +20,11 @@ from sklearn.svm import SVC, SVR
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.explainability.explainer import SHAPKernelExplainer, SHAPTreeExplainer
+from molpipeline.explainability.explainer import (
+    SHAPKernelExplainer,
+    SHAPTreeExplainer,
+    SHAPExplainerAdapter,
+)
 from molpipeline.explainability.explanation import (
     AtomExplanationMixin,
     SHAPFeatureAndAtomExplanation,
@@ -190,7 +194,10 @@ class TestSHAPExplainers(unittest.TestCase):
         ]
         n_bits = 64
 
-        explainer_types = [SHAPKernelExplainer, SHAPTreeExplainer]
+        explainer_types = [
+            SHAPKernelExplainer,
+            SHAPTreeExplainer,
+        ]
         explainer_estimators = [tree_estimators + other_estimators, tree_estimators]
 
         for estimators, explainer_type in zip(explainer_estimators, explainer_types):
@@ -213,9 +220,7 @@ class TestSHAPExplainers(unittest.TestCase):
                         pipeline, TEST_SMILES
                     )
 
-                explainer: SHAPKernelExplainer | SHAPTreeExplainer = explainer_type(
-                    pipeline, **explainer_kwargs
-                )
+                explainer = explainer_type(pipeline, **explainer_kwargs)
                 explanations = explainer.explain(TEST_SMILES)
                 self.assertEqual(len(explanations), len(TEST_SMILES))
 

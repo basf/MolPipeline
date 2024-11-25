@@ -174,7 +174,7 @@ class AbstractSHAPExplainer(abc.ABC):
 
 
 # pylint: disable=R0903
-class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
+class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
     def __init__(
@@ -346,7 +346,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         return explanation_results
 
 
-class SHAPTreeExplainer(_SHAPExplainerAdapter):
+class SHAPTreeExplainer(SHAPExplainerAdapter):
     """Wrapper for SHAP's TreeExplainer that can handle pipelines and molecules.
 
     Wraps SHAP's TreeExplainer to explain predictions of a pipeline containing a
@@ -400,7 +400,7 @@ class SHAPTreeExplainer(_SHAPExplainerAdapter):
         return explainer
 
 
-class SHAPKernelExplainer(_SHAPExplainerAdapter):
+class SHAPKernelExplainer(SHAPExplainerAdapter):
     """Wrapper for SHAP's KernelExplainer that can handle pipelines and molecules."""
 
     def __init__(
