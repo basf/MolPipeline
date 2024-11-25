@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any
+from typing import Any, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
@@ -145,15 +145,18 @@ def _convert_shap_feature_weights_to_atom_weights(
     return atom_weights
 
 
+_SHAPExplainer_return_type_: TypeAlias = list[
+    SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
+]
+
+
 # pylint: disable=R0903
 class AbstractSHAPExplainer(abc.ABC):
     """Abstract class for SHAP explainer objects."""
 
-    Return_type_ = list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]
-
     # pylint: disable=C0103,W0613
     @abc.abstractmethod
-    def explain(self, X: Any, **kwargs: Any) -> Return_type_:
+    def explain(self, X: Any, **kwargs: Any) -> _SHAPExplainer_return_type_:
         """Explain the predictions for the input data.
 
         Parameters
@@ -173,8 +176,6 @@ class AbstractSHAPExplainer(abc.ABC):
 # pylint: disable=R0903
 class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
-
-    Return_type_ = AbstractSHAPExplainer.Return_type_
 
     def __init__(
         self,
@@ -250,7 +251,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
 
     # pylint: disable=C0103,W0613
     @override
-    def explain(self, X: Any, **kwargs: Any) -> Return_type_:
+    def explain(self, X: Any, **kwargs: Any) -> _SHAPExplainer_return_type_:
         """Explain the predictions for the input data.
 
         If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.
@@ -270,7 +271,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
 
-        explanation_results: _SHAPExplainerAdapter.Return_type_ = []
+        explanation_results: _SHAPExplainer_return_type_ = []
         for input_sample in X:
 
             input_sample = [input_sample]
