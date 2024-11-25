@@ -179,6 +179,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
     def __init__(
         self,
         pipeline: Pipeline,
+        explainer: SHAPTreeExplainer | SHAPKernelExplainer,
         **kwargs: Any,
     ) -> None:
         """Initialize the SHAPTreeExplainer.
@@ -187,10 +188,14 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         ----------
         pipeline : Pipeline
             The pipeline containing the model to explain.
+        explainer : SHAPTreeExplainer | SHAPKernelExplainer
+            The explainer object.
         kwargs : Any
             Additional keyword arguments for SHAP's TreeExplainer.
         """
         self.pipeline = pipeline
+        self.explainer = explainer
+
         pipeline_extractor = SubpipelineExtractor(self.pipeline)
 
         # extract the molecule reader subpipeline
@@ -215,24 +220,6 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         else:
             self.return_type_ = SHAPFeatureExplanation
             self.has_atom_weights_ = False
-
-        # call to abstract method to create the explainer object. Implementation in child classes.
-        self._create_explainer(**kwargs)
-
-    @abc.abstractmethod
-    def _create_explainer(self, **kwargs: Any) -> Any:
-        """Create the explainer object.
-
-        Parameters
-        ----------
-        kwargs : Any
-            Additional keyword arguments for the explainer.
-
-        Returns
-        -------
-        Any
-            The explainer object.
-        """
 
     @staticmethod
     def _prediction_is_valid(prediction: Any) -> bool:
@@ -279,7 +266,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
 
         Returns
         -------
-        list[SHAPExplanation]
+        list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]
             List of explanations corresponding to the input data.
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
@@ -377,7 +364,7 @@ class SHAPTreeExplainer(_SHAPExplainerAdapter):
         pipeline: Pipeline,
         **kwargs: Any,
     ) -> None:
-        """Initialize the SHAPTreeExplainer.
+        """Initialize the SHAPKernelExplainer.
 
         Parameters
         ----------
@@ -386,9 +373,10 @@ class SHAPTreeExplainer(_SHAPExplainerAdapter):
         kwargs : Any
             Additional keyword arguments for SHAP's Explainer.
         """
-        super().__init__(pipeline, **kwargs)
+        explainer = self._create_explainer(**kwargs)
+        super().__init__(pipeline, explainer, **kwargs)
 
-    @override
+    @staticmethod
     def _create_explainer(self, **kwargs: Any) -> Any:
         """Create the TreeExplainer object from shap.
 
@@ -403,10 +391,11 @@ class SHAPTreeExplainer(_SHAPExplainerAdapter):
             The explainer object.
         """
         model = get_model_from_pipeline(self.pipeline, raise_not_found=True)
-        self.explainer = shap.TreeExplainer(
+        explainer = shap.TreeExplainer(
             model,
             **kwargs,
         )
+        return explainer
 
 
 class SHAPKernelExplainer(_SHAPExplainerAdapter):
@@ -426,9 +415,10 @@ class SHAPKernelExplainer(_SHAPExplainerAdapter):
         kwargs : Any
             Additional keyword arguments for SHAP's Explainer.
         """
-        super().__init__(pipeline, **kwargs)
+        explainer = self._create_explainer(**kwargs)
+        super().__init__(pipeline, explainer, **kwargs)
 
-    @override
+    @staticmethod
     def _create_explainer(self, **kwargs: Any) -> Any:
         """Create the explainer object.
 
@@ -444,7 +434,8 @@ class SHAPKernelExplainer(_SHAPExplainerAdapter):
         """
         model = get_model_from_pipeline(self.pipeline, raise_not_found=True)
         prediction_function = _get_prediction_function(model)
-        self.explainer = shap.KernelExplainer(
+        explainer = shap.KernelExplainer(
             prediction_function,
             **kwargs,
         )
+        return explainer

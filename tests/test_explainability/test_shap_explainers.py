@@ -56,7 +56,7 @@ _RANDOM_STATE = 67056
 
 
 def _construct_kernel_shap_kwargs(
-    pipeline: Pipeline, X_data: list[str]
+    pipeline: Pipeline, data: list[str]
 ) -> dict[str, Any]:
     """Construct the kwargs for SHAPKernelExplainer.
 
@@ -68,7 +68,7 @@ def _construct_kernel_shap_kwargs(
     ----------
     pipeline : Pipeline
         The pipeline used for featurization.
-    X_data : list[str]
+    data : list[str]
         The input data, e.g. SMILES strings.
 
     Returns
@@ -77,10 +77,10 @@ def _construct_kernel_shap_kwargs(
         The kwargs for SHAPKernelExplainer
     """
     featurization_subpipeline = get_featurization_subpipeline(pipeline)
-    X_data_transformed = featurization_subpipeline.transform(X_data)
-    if scipy.sparse.issparse(X_data_transformed):
-        X_data_transformed = X_data_transformed.toarray()
-    return {"data": X_data_transformed}
+    data_transformed = featurization_subpipeline.transform(data)
+    if scipy.sparse.issparse(data_transformed):
+        data_transformed = data_transformed.toarray()
+    return {"data": data_transformed}
 
 
 class TestSHAPExplainers(unittest.TestCase):
