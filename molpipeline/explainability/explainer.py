@@ -149,11 +149,11 @@ def _convert_shap_feature_weights_to_atom_weights(
 class AbstractSHAPExplainer(abc.ABC):
     """Abstract class for SHAP explainer objects."""
 
+    Return_type_ = list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]
+
     # pylint: disable=C0103,W0613
     @abc.abstractmethod
-    def explain(
-        self, X: Any, **kwargs: Any
-    ) -> list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]:
+    def explain(self, X: Any, **kwargs: Any) -> Return_type_:
         """Explain the predictions for the input data.
 
         Parameters
@@ -165,7 +165,7 @@ class AbstractSHAPExplainer(abc.ABC):
 
         Returns
         -------
-        list[Explanation] | list[SHAPExplanation]
+        list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]
             List of explanations corresponding to the input samples.
         """
 
@@ -173,8 +173,6 @@ class AbstractSHAPExplainer(abc.ABC):
 # pylint: disable=R0903
 class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
-
-    Return_type_ = list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]
 
     def __init__(
         self,
@@ -265,7 +263,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
 
         Returns
         -------
-        list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]
+        list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]
             List of explanations corresponding to the input data.
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
