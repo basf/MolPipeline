@@ -214,12 +214,13 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
 
         # determine type of returned explanation
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
+        self.return_element_type_: type[
+            SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
+        ]
         if isinstance(featurization_element, MolToMorganFP):
             self.return_element_type_ = SHAPFeatureAndAtomExplanation
-            self.has_atom_weights_ = True
         else:
             self.return_element_type_ = SHAPFeatureExplanation
-            self.has_atom_weights_ = False
 
     @staticmethod
     def _prediction_is_valid(prediction: Any) -> bool:
