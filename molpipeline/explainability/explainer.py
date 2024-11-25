@@ -174,10 +174,7 @@ class AbstractSHAPExplainer(abc.ABC):
 class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
-    return_element_type_: (
-        type[SHAPFeatureExplanation] | type[SHAPFeatureAndAtomExplanation]
-    )
-    return_type_: list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]
+    Return_type_ = list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]
 
     def __init__(
         self,
@@ -252,7 +249,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
 
     # pylint: disable=C0103,W0613
     @override
-    def explain(self, X: Any, **kwargs: Any) -> return_type_:
+    def explain(self, X: Any, **kwargs: Any) -> Return_type_:
         """Explain the predictions for the input data.
 
         If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.
@@ -272,7 +269,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
 
-        explanation_results: _SHAPExplainerAdapter.return_type_ = []
+        explanation_results: _SHAPExplainerAdapter.Return_type_ = []
         for input_sample in X:
 
             input_sample = [input_sample]
