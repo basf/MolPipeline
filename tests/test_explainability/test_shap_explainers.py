@@ -79,7 +79,7 @@ def _construct_kernel_shap_kwargs(
     featurization_subpipeline = get_featurization_subpipeline(
         pipeline, raise_not_found=True
     )
-    data_transformed = featurization_subpipeline.transform(data)
+    data_transformed = featurization_subpipeline.transform(data)  # type: ignore[union-attr]
     if scipy.sparse.issparse(data_transformed):
         data_transformed = data_transformed.toarray()
     return {"data": data_transformed}
@@ -213,7 +213,9 @@ class TestSHAPExplainers(unittest.TestCase):
                         pipeline, TEST_SMILES
                     )
 
-                explainer = explainer_type(pipeline, **explainer_kwargs)
+                explainer: SHAPKernelExplainer | SHAPTreeExplainer = explainer_type(
+                    pipeline, **explainer_kwargs
+                )
                 explanations = explainer.explain(TEST_SMILES)
                 self.assertEqual(len(explanations), len(TEST_SMILES))
 

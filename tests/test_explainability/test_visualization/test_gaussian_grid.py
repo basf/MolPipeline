@@ -48,13 +48,13 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
         """Test grid with SHAP atom weights."""
         for explanation in self.test_explanations:
             self.assertTrue(explanation.is_valid())
-            self.assertIsInstance(explanation.atom_weights, np.ndarray)
+            self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
 
             mol_copy = Chem.Mol(explanation.molecule)
             mol_copy = Draw.PrepareMolForDrawing(mol_copy)
             value_grid = make_sum_of_gaussians_grid(
                 mol_copy,
-                atom_weights=explanation.atom_weights,
+                atom_weights=explanation.atom_weights,  # type: ignore[union-attr]
                 atom_width=np.inf,
                 grid_resolution=[64, 64],
                 padding=[0.4, 0.4],

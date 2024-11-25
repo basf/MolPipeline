@@ -53,9 +53,9 @@ class TestExplainabilityVisualization(unittest.TestCase):
 
     test_pipeline: ClassVar[Pipeline]
     test_tree_explainer: ClassVar[SHAPTreeExplainer]
-    test_tree_explanations: ClassVar[
-        list[SHAPFeatureAndAtomExplanation] | list[SHAPFeatureExplanation]
-    ]
+    test_tree_explanations: ClassVar[list[SHAPFeatureAndAtomExplanation]]
+    test_kernel_explainer: ClassVar[SHAPKernelExplainer]
+    test_kernel_explanations: ClassVar[list[SHAPFeatureAndAtomExplanation]]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -68,15 +68,17 @@ class TestExplainabilityVisualization(unittest.TestCase):
         cls.test_tree_explanations = cls.test_tree_explainer.explain(TEST_SMILES)
 
         # kernel explainer
-        featurization_subpipeline = get_featurization_subpipeline(cls.test_pipeline)
-        X_data_transformed = featurization_subpipeline.transform(TEST_SMILES)
-        if scipy.sparse.issparse(X_data_transformed):
+        featurization_subpipeline = get_featurization_subpipeline(
+            cls.test_pipeline, raise_not_found=True
+        )
+        data_transformed = featurization_subpipeline.transform(TEST_SMILES)  # type: ignore[union-attr]
+        if scipy.sparse.issparse(data_transformed):
             # convert sparse matrix to dense array because SHAPKernelExplainer
             # does not support sparse matrix as `data` and then explain dense matrices.
             # We stick to dense matrices for simplicity.
-            X_data_transformed = X_data_transformed.toarray()
+            data_transformed = data_transformed.toarray()
         cls.test_kernel_explainer = SHAPKernelExplainer(
-            cls.test_pipeline, data=X_data_transformed
+            cls.test_pipeline, data=data_transformed
         )
         cls.test_kernel_explanations = cls.test_kernel_explainer.explain(TEST_SMILES)
 
