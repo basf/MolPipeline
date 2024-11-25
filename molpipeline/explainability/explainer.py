@@ -174,6 +174,8 @@ class AbstractSHAPExplainer(abc.ABC):
 class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
+    Return_type_ = AbstractSHAPExplainer.Return_type_
+
     def __init__(
         self,
         pipeline: Pipeline,
