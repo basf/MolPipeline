@@ -301,11 +301,6 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
                 explanation_results.append(self.return_element_type_())
                 continue
 
-            # Feature names should also be extracted from the Pipeline.
-            # But first, we need to add the names to the pipelines.
-            # Therefore, feature_names is just None currently.
-            feature_names = None
-
             # compute the shap values for the features
             feature_weights = self.explainer.shap_values(feature_vector, **kwargs)
             feature_weights = np.asarray(feature_weights).squeeze()
@@ -331,7 +326,12 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
             }
             if issubclass(self.return_element_type_, FeatureInfoMixin):
                 explanation_data["feature_vector"] = feature_vector
-                explanation_data["feature_names"] = feature_names
+                if not hasattr(featurization_element, "feature_names"):
+                    raise ValueError(
+                        "Featurization element does not have a get_feature_names method."
+                    )
+                explanation_data["feature_names"] = featurization_element.feature_names
+
             if issubclass(self.return_element_type_, FeatureExplanationMixin):
                 explanation_data["feature_weights"] = feature_weights
             if issubclass(self.return_element_type_, AtomExplanationMixin):

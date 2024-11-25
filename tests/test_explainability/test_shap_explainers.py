@@ -124,9 +124,16 @@ class TestSHAPExplainers(unittest.TestCase):
             (nof_features,), explanation.feature_vector.shape  # type: ignore[union-attr]
         )
 
-        # feature names are not implemented yet
-        self.assertIsNone(explanation.feature_names)
-        # self.assertEqual(len(explanation.feature_names), explanation.feature_vector.shape[0])
+        # feature names should be a list of not empty strings
+        self.assertTrue(
+            all(
+                isinstance(name, str) and len(name) > 0
+                for name in explanation.feature_names
+            )
+        )
+        self.assertEqual(
+            len(explanation.feature_names), explanation.feature_vector.shape[0]
+        )
 
         self.assertIsInstance(explanation.molecule, RDKitMol)
         self.assertEqual(
@@ -176,9 +183,9 @@ class TestSHAPExplainers(unittest.TestCase):
                 (explanation.molecule.GetNumAtoms(),),  # type: ignore[union-attr]
             )
 
-    def test_explanations_fingerprint_pipeline(
+    def test_explanations_fingerprint_pipeline(  # pylint: disable=too-many-locals
         self,
-    ) -> None:  # pylint: disable=too-many-locals
+    ) -> None:
         """Test SHAP's TreeExplainer wrapper on MolPipeline's pipelines with fingerprints."""
 
         tree_estimators = [
@@ -371,6 +378,11 @@ class TestSHAPExplainers(unittest.TestCase):
                     explainer=explainer,
                 )
 
+                self.assertEqual(
+                    explanation.feature_names,
+                    pipeline.named_steps["physchem"].feature_names,
+                )
+
     def test_explanations_pipeline_with_concatenated_features(self) -> None:
         """Test SHAP's TreeExplainer wrapper on concatenated feature vector."""
 
@@ -427,4 +439,9 @@ class TestSHAPExplainers(unittest.TestCase):
                     pipeline.named_steps["features"].n_features,
                     TEST_SMILES[i],
                     explainer=explainer,
+                )
+
+                self.assertEqual(
+                    explanation.feature_names,
+                    pipeline.named_steps["features"].feature_names,
                 )
