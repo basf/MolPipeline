@@ -99,7 +99,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
                 self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
                 image = structure_heatmap(
                     explanation.molecule,
-                    explanation.atom_weights,  # type: ignore[union-type]
+                    explanation.atom_weights,  # type: ignore[union-attr]
                     width=128,
                     height=128,
                 )  # type: ignore[union-attr]
@@ -143,12 +143,15 @@ class TestExplainabilityVisualization(unittest.TestCase):
         self.assertEqual(len(explanations1), 1)
         self.assertEqual(len(explanations2), 1)
         self.assertEqual(len(explanations3), 1)
+        self.assertTrue(hasattr(explanations1[0], "atom_weights"))
+        self.assertTrue(hasattr(explanations2[0], "atom_weights"))
+        self.assertTrue(hasattr(explanations3[0], "atom_weights"))
         self.assertIsInstance(explanations1[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
         self.assertIsInstance(explanations2[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
         self.assertIsInstance(explanations3[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertEqual(len(explanations1[0].atom_weights), 1)  # type: ignore[arg-type]
-        self.assertEqual(len(explanations2[0].atom_weights), 1)  # type: ignore[arg-type]
-        self.assertEqual(len(explanations3[0].atom_weights), 1)  # type: ignore[arg-type]
+        self.assertEqual(len(explanations1[0].atom_weights), 1)  # type: ignore[union-attr]
+        self.assertEqual(len(explanations2[0].atom_weights), 1)  # type: ignore[union-attr]
+        self.assertEqual(len(explanations3[0].atom_weights), 1)  # type: ignore[union-attr]
 
         # test visualization
         all_explanations = explanations1 + explanations2 + explanations3
@@ -156,7 +159,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
             self.assertTrue(explanation.is_valid())
             image = structure_heatmap(
                 explanation.molecule,
-                explanation.atom_weights,  # type: ignore[union-attr]
+                explanation.atom_weights,  # type: ignore[union-attr, arg-type]
                 width=128,
                 height=128,
             )  # type: ignore[union-attr]
