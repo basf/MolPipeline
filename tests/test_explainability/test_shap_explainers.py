@@ -217,7 +217,7 @@ class TestSHAPExplainers(unittest.TestCase):
 
                 self.assertTrue(explainer.has_atom_weights_)
                 self.assertTrue(
-                    issubclass(explainer.return_type_, AtomExplanationMixin)
+                    issubclass(explainer.return_element_type_, AtomExplanationMixin)
                 )
 
                 # get the subpipeline that extracts the molecule from the input data

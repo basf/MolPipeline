@@ -174,12 +174,15 @@ class AbstractSHAPExplainer(abc.ABC):
 class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
-    return_type_: type[SHAPFeatureExplanation] | type[SHAPFeatureAndAtomExplanation]
+    return_element_type_: (
+        type[SHAPFeatureExplanation] | type[SHAPFeatureAndAtomExplanation]
+    )
+    return_type_: list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]
 
     def __init__(
         self,
         pipeline: Pipeline,
-        explainer: SHAPTreeExplainer | SHAPKernelExplainer,
+        explainer: shap.TreeExplainer | shap.KernelExplainer,
         **kwargs: Any,
     ) -> None:
         """Initialize the SHAPTreeExplainer.
@@ -188,8 +191,8 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         ----------
         pipeline : Pipeline
             The pipeline containing the model to explain.
-        explainer : SHAPTreeExplainer | SHAPKernelExplainer
-            The explainer object.
+        explainer : shap.TreeExplainer | shap.KernelExplainer
+            The shap explainer object.
         kwargs : Any
             Additional keyword arguments for SHAP's TreeExplainer.
         """
@@ -215,10 +218,10 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         # determine type of returned explanation
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
         if isinstance(featurization_element, MolToMorganFP):
-            self.return_type_ = SHAPFeatureAndAtomExplanation
+            self.return_element_type_ = SHAPFeatureAndAtomExplanation
             self.has_atom_weights_ = True
         else:
-            self.return_type_ = SHAPFeatureExplanation
+            self.return_element_type_ = SHAPFeatureExplanation
             self.has_atom_weights_ = False
 
     @staticmethod
@@ -249,9 +252,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
 
     # pylint: disable=C0103,W0613
     @override
-    def explain(
-        self, X: Any, **kwargs: Any
-    ) -> list[SHAPFeatureExplanation] | list[SHAPFeatureAndAtomExplanation]:
+    def explain(self, X: Any, **kwargs: Any) -> return_type_:
         """Explain the predictions for the input data.
 
         If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.
@@ -271,7 +272,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
 
-        explanation_results = []
+        explanation_results: _SHAPExplainerAdapter.return_type_ = []
         for input_sample in X:
 
             input_sample = [input_sample]
@@ -280,7 +281,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
             prediction = _get_predictions(self.pipeline, input_sample)
             if not self._prediction_is_valid(prediction):
                 # we use the prediction to check if the input is valid. If not, we cannot explain it.
-                explanation_results.append(self.return_type_())
+                explanation_results.append(self.return_element_type_())
                 continue
 
             if prediction.ndim > 1:
@@ -298,7 +299,7 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
                 # if the feature vector is empty, we cannot explain the prediction.
                 # This happens for failed instances in pipeline with fill values
                 # that could be valid predictions, like 0.
-                explanation_results.append(self.return_type_())
+                explanation_results.append(self.return_element_type_())
                 continue
 
             # Feature names should also be extracted from the Pipeline.
@@ -313,9 +314,9 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
             atom_weights = None
             bond_weights = None
 
-            if issubclass(self.return_type_, AtomExplanationMixin) and isinstance(
-                featurization_element, MolToMorganFP
-            ):
+            if issubclass(
+                self.return_element_type_, AtomExplanationMixin
+            ) and isinstance(featurization_element, MolToMorganFP):
                 # for Morgan fingerprint, we can map the shap values to atom weights
                 atom_weights = _convert_shap_feature_weights_to_atom_weights(
                     feature_weights,
@@ -329,19 +330,19 @@ class _SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
                 "molecule": molecule,
                 "prediction": prediction,
             }
-            if issubclass(self.return_type_, FeatureInfoMixin):
+            if issubclass(self.return_element_type_, FeatureInfoMixin):
                 explanation_data["feature_vector"] = feature_vector
                 explanation_data["feature_names"] = feature_names
-            if issubclass(self.return_type_, FeatureExplanationMixin):
+            if issubclass(self.return_element_type_, FeatureExplanationMixin):
                 explanation_data["feature_weights"] = feature_weights
-            if issubclass(self.return_type_, AtomExplanationMixin):
+            if issubclass(self.return_element_type_, AtomExplanationMixin):
                 explanation_data["atom_weights"] = atom_weights
-            if issubclass(self.return_type_, BondExplanationMixin):
+            if issubclass(self.return_element_type_, BondExplanationMixin):
                 explanation_data["bond_weights"] = bond_weights
-            if issubclass(self.return_type_, SHAPExplanationMixin):
+            if issubclass(self.return_element_type_, SHAPExplanationMixin):
                 explanation_data["expected_value"] = self.explainer.expected_value
 
-            explanation_results.append(self.return_type_(**explanation_data))
+            explanation_results.append(self.return_element_type_(**explanation_data))
 
         return explanation_results
 
@@ -373,24 +374,26 @@ class SHAPTreeExplainer(_SHAPExplainerAdapter):
         kwargs : Any
             Additional keyword arguments for SHAP's Explainer.
         """
-        explainer = self._create_explainer(**kwargs)
+        explainer = self._create_explainer(pipeline, **kwargs)
         super().__init__(pipeline, explainer, **kwargs)
 
     @staticmethod
-    def _create_explainer(self, **kwargs: Any) -> Any:
+    def _create_explainer(pipeline: Pipeline, **kwargs: Any) -> shap.TreeExplainer:
         """Create the TreeExplainer object from shap.
 
         Parameters
         ----------
+        pipeline : Pipeline
+            The pipeline containing the model to explain.
         kwargs : Any
             Additional keyword arguments for the explainer.
 
         Returns
         -------
-        Any
+        shap.TreeExplainer
             The explainer object.
         """
-        model = get_model_from_pipeline(self.pipeline, raise_not_found=True)
+        model = get_model_from_pipeline(pipeline, raise_not_found=True)
         explainer = shap.TreeExplainer(
             model,
             **kwargs,
@@ -415,24 +418,26 @@ class SHAPKernelExplainer(_SHAPExplainerAdapter):
         kwargs : Any
             Additional keyword arguments for SHAP's Explainer.
         """
-        explainer = self._create_explainer(**kwargs)
+        explainer = self._create_explainer(pipeline, **kwargs)
         super().__init__(pipeline, explainer, **kwargs)
 
     @staticmethod
-    def _create_explainer(self, **kwargs: Any) -> Any:
+    def _create_explainer(pipeline: Pipeline, **kwargs: Any) -> shap.KernelExplainer:
         """Create the explainer object.
 
         Parameters
         ----------
+        pipeline : Pipeline
+            The pipeline containing the model to explain.
         kwargs : Any
             Additional keyword arguments for the explainer.
 
         Returns
         -------
-        Any
+        shap.KernelExplainer
             The explainer object.
         """
-        model = get_model_from_pipeline(self.pipeline, raise_not_found=True)
+        model = get_model_from_pipeline(pipeline, raise_not_found=True)
         prediction_function = _get_prediction_function(model)
         explainer = shap.KernelExplainer(
             prediction_function,
