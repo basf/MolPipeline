@@ -330,7 +330,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
                     raise ValueError(
                         "Featurization element does not have a get_feature_names method."
                     )
-                explanation_data["feature_names"] = featurization_element.feature_names
+                explanation_data["feature_names"] = featurization_element.feature_names  # type: ignore[union-attr]
 
             if issubclass(self.return_element_type_, FeatureExplanationMixin):
                 explanation_data["feature_weights"] = feature_weights

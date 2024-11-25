@@ -12,14 +12,12 @@ from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.explainability import (
     SHAPFeatureAndAtomExplanation,
+    SHAPFeatureExplanation,
     SHAPTreeExplainer,
     structure_heatmap,
     structure_heatmap_shap,
-    SHAPFeatureExplanation,
 )
-from molpipeline.explainability.explainer import (
-    SHAPKernelExplainer,
-)
+from molpipeline.explainability.explainer import SHAPKernelExplainer
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import get_featurization_subpipeline
 

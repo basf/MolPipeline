@@ -20,10 +20,7 @@ from sklearn.svm import SVC, SVR
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.explainability.explainer import (
-    SHAPKernelExplainer,
-    SHAPTreeExplainer,
-)
+from molpipeline.explainability.explainer import SHAPKernelExplainer, SHAPTreeExplainer
 from molpipeline.explainability.explanation import (
     AtomExplanationMixin,
     SHAPFeatureAndAtomExplanation,
@@ -128,11 +125,11 @@ class TestSHAPExplainers(unittest.TestCase):
         self.assertTrue(
             all(
                 isinstance(name, str) and len(name) > 0
-                for name in explanation.feature_names
+                for name in explanation.feature_names  # type: ignore[union-attr]
             )
         )
         self.assertEqual(
-            len(explanation.feature_names), explanation.feature_vector.shape[0]
+            len(explanation.feature_names), explanation.feature_vector.shape[0]  # type: ignore
         )
 
         self.assertIsInstance(explanation.molecule, RDKitMol)
