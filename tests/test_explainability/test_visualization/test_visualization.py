@@ -19,7 +19,6 @@ from molpipeline.explainability import (
 )
 from molpipeline.explainability.explainer import (
     SHAPKernelExplainer,
-    SHAPExplainerAdapter,
 )
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import get_featurization_subpipeline
@@ -100,7 +99,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
                 self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
                 image = structure_heatmap(
                     explanation.molecule,
-                    explanation.atom_weights,  # type: ignore[arg-type]
+                    explanation.atom_weights,  # type: ignore[union-type]
                     width=128,
                     height=128,
                 )  # type: ignore[union-attr]
@@ -115,9 +114,10 @@ class TestExplainabilityVisualization(unittest.TestCase):
         ]:
             for explanation in explanation_list:
                 self.assertTrue(explanation.is_valid())
+                self.assertIsInstance(explanation, SHAPFeatureAndAtomExplanation)
                 self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
                 image = structure_heatmap_shap(
-                    explanation=explanation,
+                    explanation=explanation,  # type: ignore[arg-type]
                     width=128,
                     height=128,
                 )  # type: ignore[union-attr]
@@ -143,9 +143,9 @@ class TestExplainabilityVisualization(unittest.TestCase):
         self.assertEqual(len(explanations1), 1)
         self.assertEqual(len(explanations2), 1)
         self.assertEqual(len(explanations3), 1)
-        self.assertIsInstance(explanations1[0].atom_weights, np.ndarray)
-        self.assertIsInstance(explanations2[0].atom_weights, np.ndarray)
-        self.assertIsInstance(explanations3[0].atom_weights, np.ndarray)
+        self.assertIsInstance(explanations1[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
+        self.assertIsInstance(explanations2[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
+        self.assertIsInstance(explanations3[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
         self.assertEqual(len(explanations1[0].atom_weights), 1)  # type: ignore[arg-type]
         self.assertEqual(len(explanations2[0].atom_weights), 1)  # type: ignore[arg-type]
         self.assertEqual(len(explanations3[0].atom_weights), 1)  # type: ignore[arg-type]
@@ -156,7 +156,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
             self.assertTrue(explanation.is_valid())
             image = structure_heatmap(
                 explanation.molecule,
-                explanation.atom_weights,  # type: ignore[arg-type]
+                explanation.atom_weights,  # type: ignore[union-attr]
                 width=128,
                 height=128,
             )  # type: ignore[union-attr]

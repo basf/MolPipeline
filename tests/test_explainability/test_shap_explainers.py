@@ -23,7 +23,6 @@ from molpipeline.any2mol import SmilesToMol
 from molpipeline.explainability.explainer import (
     SHAPKernelExplainer,
     SHAPTreeExplainer,
-    SHAPExplainerAdapter,
 )
 from molpipeline.explainability.explanation import (
     AtomExplanationMixin,

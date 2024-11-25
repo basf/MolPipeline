@@ -31,7 +31,7 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
     test_pipeline: ClassVar[Pipeline]
     test_explainer: ClassVar[SHAPTreeExplainer]
     test_explanations: ClassVar[
-        list[SHAPFeatureAndAtomExplanation] | list[SHAPFeatureExplanation]
+        list[SHAPFeatureAndAtomExplanation | SHAPFeatureExplanation]
     ]
 
     @classmethod
