@@ -76,7 +76,9 @@ def _construct_kernel_shap_kwargs(
     dict[str, Any]
         The kwargs for SHAPKernelExplainer
     """
-    featurization_subpipeline = get_featurization_subpipeline(pipeline)
+    featurization_subpipeline = get_featurization_subpipeline(
+        pipeline, raise_not_found=True
+    )
     data_transformed = featurization_subpipeline.transform(data)
     if scipy.sparse.issparse(data_transformed):
         data_transformed = data_transformed.toarray()
@@ -151,8 +153,8 @@ class TestSHAPExplainers(unittest.TestCase):
                 # SVC seems to be handled differently by SHAP. It returns only a one dimensional
                 # feature array for binary classification.
                 self.assertTrue(
-                    (1,), explanation.prediction.shape
-                )  # type: ignore[union-attr]
+                    (1,), explanation.prediction.shape  # type: ignore[union-attr]
+                )
                 self.assertEqual(
                     (nof_features,), explanation.feature_weights.shape  # type: ignore[union-attr]
                 )
@@ -165,7 +167,7 @@ class TestSHAPExplainers(unittest.TestCase):
             raise ValueError("Error in unittest. Unsupported estimator.")
 
         if issubclass(type(explainer), AtomExplanationMixin):
-            self.assertIsInstance(explanation.atom_weights, np.ndarray)
+            self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
             self.assertEqual(
                 explanation.atom_weights.shape,  # type: ignore[union-attr]
                 (explanation.molecule.GetNumAtoms(),),  # type: ignore[union-attr]
@@ -215,7 +217,6 @@ class TestSHAPExplainers(unittest.TestCase):
                 explanations = explainer.explain(TEST_SMILES)
                 self.assertEqual(len(explanations), len(TEST_SMILES))
 
-                self.assertTrue(explainer.has_atom_weights_)
                 self.assertTrue(
                     issubclass(explainer.return_element_type_, AtomExplanationMixin)
                 )

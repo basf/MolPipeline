@@ -37,10 +37,12 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         """Set up the tests."""
-        cls.test_pipeline = _get_test_morgan_rf_pipeline()
+        cls.test_pipeline: Pipeline = _get_test_morgan_rf_pipeline()
         cls.test_pipeline.fit(TEST_SMILES, CONTAINS_OX)
-        cls.test_explainer = SHAPTreeExplainer(cls.test_pipeline)
-        cls.test_explanations = cls.test_explainer.explain(TEST_SMILES)
+        cls.test_explainer: SHAPTreeExplainer = SHAPTreeExplainer(cls.test_pipeline)
+        cls.test_explanations: list[SHAPFeatureAndAtomExplanation] = (
+            cls.test_explainer.explain(TEST_SMILES)
+        )
 
     def test_grid_with_shap_atom_weights(self) -> None:
         """Test grid with SHAP atom weights."""
