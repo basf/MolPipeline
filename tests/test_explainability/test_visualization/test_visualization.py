@@ -99,7 +99,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
                 self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
                 image = structure_heatmap(
                     explanation.molecule,
-                    explanation.atom_weights,  # type: ignore[union-attr]
+                    explanation.atom_weights,  # type: ignore
                     width=128,
                     height=128,
                 )  # type: ignore[union-attr]

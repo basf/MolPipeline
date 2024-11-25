@@ -176,7 +176,9 @@ class TestSHAPExplainers(unittest.TestCase):
                 (explanation.molecule.GetNumAtoms(),),  # type: ignore[union-attr]
             )
 
-    def test_explanations_fingerprint_pipeline(self) -> None:
+    def test_explanations_fingerprint_pipeline(
+        self,
+    ) -> None:  # pylint: disable=too-many-locals
         """Test SHAP's TreeExplainer wrapper on MolPipeline's pipelines with fingerprints."""
 
         tree_estimators = [
@@ -240,7 +242,7 @@ class TestSHAPExplainers(unittest.TestCase):
                         mol_reader_subpipeline,  # type: ignore[arg-type]
                         n_bits,
                         TEST_SMILES[i],
-                        explainer=explainer,
+                        explainer=explainer,  # type: ignore[arg-type]
                     )
 
     # pylint: disable=too-many-locals
