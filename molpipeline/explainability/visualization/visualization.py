@@ -417,68 +417,78 @@ def structure_heatmap_shap(
     if explanation.atom_weights is None:
         raise ValueError("Explanation does not contain atom weights.")
 
-    present_shap = explanation.feature_weights[:, 1] * explanation.feature_vector
-    absent_shap = explanation.feature_weights[:, 1] * (1 - explanation.feature_vector)
+    if explanation.feature_vector.max() > 1 or explanation.feature_vector.min() < 0:
+        raise ValueError(
+            f"Feature vector must be binary. Alternatively, use the structure_heatmap function instead."
+        )
+
+    if explanation.prediction.ndim > 2:
+        raise ValueError(
+            "Unsupported shape for prediction. Maximum 2 dimension is supported."
+        )
+
+    if explanation.feature_weights.ndim == 1:
+        feature_weights = explanation.feature_weights
+    elif explanation.feature_weights.ndim == 2:
+        feature_weights = explanation.feature_weights[:, 1]
+    else:
+        raise ValueError("Unsupported shape for feature weights.")
+
+    # determine present/absent features using the binary feature vector
+    present_shap = feature_weights * explanation.feature_vector
+    absent_shap = feature_weights * (1 - explanation.feature_vector)
     sum_present_shap = sum(present_shap)
     sum_absent_shap = sum(absent_shap)
 
-    drawer, _, _, normalizer, color_map = _structure_heatmap(
-        explanation.molecule,
-        explanation.atom_weights,
-        color=color,
-        width=width,
-        height=height,
-        color_limits=color_limits,
-    )
-    figure_bytes = drawer.GetDrawingText()
-    image = to_png(figure_bytes)
-    image_array = np.array(image)
+    with plt.ioff():
 
-    fig, ax = plt.subplots(figsize=(8, 8))
-
-    im = ax.imshow(
-        image_array,
-        cmap=color_map,
-        norm=normalizer,
-    )
-    # remove ticks
-    ax.set_xticks([])
-    ax.set_yticks([])
-    # remove border
-    for spine in ax.spines.values():
-        spine.set_visible(False)
-
-    fig.colorbar(im, ax=ax, orientation="vertical", fraction=0.015, pad=0.0)
-
-    if isinstance(explanation.prediction, float):
-        # regression case
-        raise NotImplementedError("Regression case not yet implemented.")
-    if isinstance(explanation.prediction, np.ndarray):
-        if len(explanation.prediction) == 2:
-            # binary classification case
-            text = (
-                f"$P(y=1|X) = {explanation.prediction[1]:.2f}$ ="
-                "\n"
-                "\n"
-                f"  $expected \ value={explanation.expected_value[1]:.2f}$   +   "  # noqa: W605 # pylint: disable=W1401
-                f"$features_{{present}}= {sum_present_shap:.2f}$   +   "
-                f"$features_{{absent}}={sum_absent_shap:.2f}$"
-            )
-        else:
-            raise ValueError(
-                "Unsupported number of classes for prediction. Only binary classification is supported."
-            )
-    else:
-        raise ValueError(
-            "Unsupported type for prediction. Expected float or np.ndarray."
+        drawer, _, _, normalizer, color_map = _structure_heatmap(
+            explanation.molecule,
+            explanation.atom_weights,
+            color=color,
+            width=width,
+            height=height,
+            color_limits=color_limits,
         )
+        figure_bytes = drawer.GetDrawingText()
+        image_heatmap = to_png(figure_bytes)
+        image_array = np.array(image_heatmap)
 
-    fig.text(0.5, 0.18, text, ha="center")
+        fig, ax = plt.subplots(figsize=(8, 8))
 
-    image = plt_to_pil(fig)
-    # clear the figure and memory
-    plt.close()
-    plt.clf()
-    plt.cla()
+        im = ax.imshow(
+            image_array,
+            cmap=color_map,
+            norm=normalizer,
+        )
+        # remove ticks
+        ax.set_xticks([])
+        ax.set_yticks([])
+        # remove border
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+        fig.colorbar(im, ax=ax, orientation="vertical", fraction=0.015, pad=0.0)
+
+        # note: the prediction/expected value of the last array element is used
+        text = (
+            f"$P(y=1|X) = {explanation.prediction[-1]:.2f}$ ="
+            "\n"
+            "\n"
+            f"  $expected \ value={explanation.expected_value[-1]:.2f}$   +   "  # noqa: W605 # pylint: disable=W1401
+            f"$features_{{present}}= {sum_present_shap:.2f}$   +   "
+            f"$features_{{absent}}={sum_absent_shap:.2f}$"
+        )
+        fig.text(0.5, 0.18, text, ha="center")
+
+        image = plt_to_pil(fig)
+        # clear the figure and memory
+        plt.close(fig)
+
+        # remove dpi info because it crashes ipython's display function
+        if "dpi" in image.info:
+            del image.info["dpi"]
+        # keep RDKit's image info
+        image.info.update(image_heatmap.info)
 
     return image

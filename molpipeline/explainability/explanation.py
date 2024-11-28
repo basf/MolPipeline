@@ -16,7 +16,7 @@ class _AbstractMoleculeExplanation(abc.ABC):
     """Abstract class representing an explanation for a prediction for a molecule."""
 
     molecule: RDKitMol | None = None
-    prediction: float | npt.NDArray[np.float64] | None = None
+    prediction: npt.NDArray[np.float64] | None = None
 
 
 @dataclasses.dataclass(kw_only=True)

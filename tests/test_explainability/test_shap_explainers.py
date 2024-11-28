@@ -1,11 +1,9 @@
 """Test SHAP's TreeExplainer wrapper."""
 
 import unittest
-from typing import Any
 
 import numpy as np
 import pandas as pd
-import scipy.sparse
 from rdkit import Chem, rdBase
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.ensemble import (
@@ -34,8 +32,8 @@ from molpipeline.mol2any import (
 from molpipeline.mol2mol import SaltRemover
 from molpipeline.utils.subpipeline import (
     SubpipelineExtractor,
-    get_featurization_subpipeline,
 )
+from tests.test_explainability.utils import construct_kernel_shap_kwargs
 
 TEST_SMILES = ["CC", "CCO", "COC", "c1ccccc1(N)", "CCC(-O)O", "CCCN"]
 CONTAINS_OX = [0, 1, 1, 0, 1, 0]
@@ -53,36 +51,6 @@ TEST_SMILES_WITH_BAD_SMILES = [
 CONTAINS_OX_BAD_SMILES = [0, 1, 1, 0, 0, 1, 0, 1]
 
 _RANDOM_STATE = 67056
-
-
-def _construct_kernel_shap_kwargs(
-    pipeline: Pipeline, data: list[str]
-) -> dict[str, Any]:
-    """Construct the kwargs for SHAPKernelExplainer.
-
-    Convert sparse matrix to dense array because SHAPKernelExplainer does not
-    support sparse matrix as `data` and then explain dense matrices.
-    We stick to dense matrices for simplicity.
-
-    Parameters
-    ----------
-    pipeline : Pipeline
-        The pipeline used for featurization.
-    data : list[str]
-        The input data, e.g. SMILES strings.
-
-    Returns
-    -------
-    dict[str, Any]
-        The kwargs for SHAPKernelExplainer
-    """
-    featurization_subpipeline = get_featurization_subpipeline(
-        pipeline, raise_not_found=True
-    )
-    data_transformed = featurization_subpipeline.transform(data)  # type: ignore[union-attr]
-    if scipy.sparse.issparse(data_transformed):
-        data_transformed = data_transformed.toarray()
-    return {"data": data_transformed}
 
 
 class TestSHAPExplainers(unittest.TestCase):
@@ -221,7 +189,7 @@ class TestSHAPExplainers(unittest.TestCase):
                 # some explainers require additional kwargs
                 explainer_kwargs = {}
                 if explainer_type == SHAPKernelExplainer:
-                    explainer_kwargs = _construct_kernel_shap_kwargs(
+                    explainer_kwargs = construct_kernel_shap_kwargs(
                         pipeline, TEST_SMILES
                     )
 

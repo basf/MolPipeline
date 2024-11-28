@@ -54,11 +54,11 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
                 mol_copy,
                 atom_weights=explanation.atom_weights,  # type: ignore[union-attr]
                 atom_width=np.inf,
-                grid_resolution=[64, 64],
+                grid_resolution=[8, 8],
                 padding=[0.4, 0.4],
             )
             self.assertIsNotNone(value_grid)
-            self.assertEqual(value_grid.values.size, 64 * 64)
+            self.assertEqual(value_grid.values.size, 8 * 8)
 
             # test that the range of summed gaussian values is as expected for SHAP
             self.assertTrue(value_grid.values.min() >= -1)

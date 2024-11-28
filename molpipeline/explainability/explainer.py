@@ -50,6 +50,26 @@ def _to_dense(
     return feature_matrix
 
 
+def _convert_to_array(value: Any) -> npt.NDArray[np.float64]:
+    """Convert a value to a numpy array.
+
+    Parameters
+    ----------
+    value : Any
+        The value to convert.
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        The value as a numpy array.
+    """
+    if isinstance(value, np.ndarray):
+        return value
+    if np.isscalar(value):
+        return np.array([value])
+    raise ValueError("Value is not a scalar or numpy array.")
+
+
 def _get_prediction_function(pipeline: Pipeline | BaseEstimator) -> Any:
     """Get the prediction function of a model.
 
@@ -339,7 +359,9 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
             if issubclass(self.return_element_type_, BondExplanationMixin):
                 explanation_data["bond_weights"] = bond_weights
             if issubclass(self.return_element_type_, SHAPExplanationMixin):
-                explanation_data["expected_value"] = self.explainer.expected_value
+                explanation_data["expected_value"] = _convert_to_array(
+                    self.explainer.expected_value
+                )
 
             explanation_results.append(self.return_element_type_(**explanation_data))
 
