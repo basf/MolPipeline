@@ -30,9 +30,7 @@ from molpipeline.mol2any import (
     MolToRDKitPhysChem,
 )
 from molpipeline.mol2mol import SaltRemover
-from molpipeline.utils.subpipeline import (
-    SubpipelineExtractor,
-)
+from molpipeline.utils.subpipeline import SubpipelineExtractor
 from tests.test_explainability.utils import construct_kernel_shap_kwargs
 
 TEST_SMILES = ["CC", "CCO", "COC", "c1ccccc1(N)", "CCC(-O)O", "CCCN"]

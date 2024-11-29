@@ -377,7 +377,7 @@ def structure_heatmap(
     return image
 
 
-def structure_heatmap_shap(
+def structure_heatmap_shap(  # pylint: disable=too-many-branches
     explanation: SHAPFeatureAndAtomExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
@@ -419,7 +419,7 @@ def structure_heatmap_shap(
 
     if explanation.feature_vector.max() > 1 or explanation.feature_vector.min() < 0:
         raise ValueError(
-            f"Feature vector must be binary. Alternatively, use the structure_heatmap function instead."
+            "Feature vector must be binary. Alternatively, use the structure_heatmap function instead."
         )
 
     if explanation.prediction.ndim > 2:

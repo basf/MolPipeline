@@ -75,6 +75,16 @@ class TestExplainabilityVisualization(unittest.TestCase):
         list[SHAPFeatureAndAtomExplanation | SHAPFeatureExplanation]
     ]
 
+    test_pipeline_reg: ClassVar[Pipeline]
+    test_tree_explainer_reg: ClassVar[SHAPTreeExplainer]
+    test_tree_explanations_reg: ClassVar[
+        list[SHAPFeatureAndAtomExplanation | SHAPFeatureExplanation]
+    ]
+    test_kernel_explainer_reg: ClassVar[SHAPKernelExplainer]
+    test_kernel_explanations_reg: ClassVar[
+        list[SHAPFeatureAndAtomExplanation | SHAPFeatureExplanation]
+    ]
+
     @classmethod
     def setUpClass(cls) -> None:
         """Set up the tests."""
