@@ -472,7 +472,7 @@ def structure_heatmap_shap(  # pylint: disable=too-many-branches
 
         # note: the prediction/expected value of the last array element is used
         text = (
-            f"$P(y=1|X) = {explanation.prediction[-1]:.2f}$ ="
+            f"$Prediction = {explanation.prediction[-1]:.2f}$ ="
             "\n"
             "\n"
             f"  $expected \ value={explanation.expected_value[-1]:.2f}$   +   "  # noqa: W605 # pylint: disable=W1401
