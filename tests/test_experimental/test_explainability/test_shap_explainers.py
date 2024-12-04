@@ -18,12 +18,13 @@ from sklearn.svm import SVC, SVR
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.explainability.explainer import SHAPKernelExplainer, SHAPTreeExplainer
-from molpipeline.explainability.explanation import (
-    AtomExplanationMixin,
+from molpipeline.experimental.explainability import (
     SHAPFeatureAndAtomExplanation,
     SHAPFeatureExplanation,
+    SHAPTreeExplainer,
+    SHAPKernelExplainer,
 )
+from molpipeline.experimental.explainability.explanation import AtomExplanationMixin
 from molpipeline.mol2any import (
     MolToConcatenatedVector,
     MolToMorganFP,
@@ -31,7 +32,9 @@ from molpipeline.mol2any import (
 )
 from molpipeline.mol2mol import SaltRemover
 from molpipeline.utils.subpipeline import SubpipelineExtractor
-from tests.test_explainability.utils import construct_kernel_shap_kwargs
+from tests.test_experimental.test_explainability.utils import (
+    construct_kernel_shap_kwargs,
+)
 
 TEST_SMILES = ["CC", "CCO", "COC", "c1ccccc1(N)", "CCC(-O)O", "CCCN"]
 CONTAINS_OX = [0, 1, 1, 0, 1, 0]
@@ -171,7 +174,9 @@ class TestSHAPExplainers(unittest.TestCase):
         ]
         explainer_estimators = [tree_estimators + other_estimators, tree_estimators]
 
-        for estimators, explainer_type in zip(explainer_estimators, explainer_types):
+        for estimators, explainer_type in zip(
+            explainer_estimators, explainer_types, strict=True
+        ):
 
             # test explanations with different estimators
             for estimator in estimators:

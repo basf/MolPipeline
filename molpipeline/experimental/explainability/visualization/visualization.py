@@ -20,20 +20,23 @@ from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
-from molpipeline.explainability.explanation import SHAPFeatureAndAtomExplanation
-from molpipeline.explainability.visualization.gauss import GaussFunctor2D
-from molpipeline.explainability.visualization.heatmaps import (
+from molpipeline.experimental.explainability import (
+    SHAPFeatureAndAtomExplanation,
+)
+
+from molpipeline.experimental.explainability.visualization.gauss import GaussFunctor2D
+from molpipeline.experimental.explainability.visualization.heatmaps import (
     ValueGrid,
     color_canvas,
     get_color_normalizer_from_data,
 )
-from molpipeline.explainability.visualization.utils import (
-    RGBAtuple,
+from molpipeline.experimental.explainability.visualization.utils import (
     get_color_map_from_input,
-    get_mol_lims,
-    pad,
     plt_to_pil,
     to_png,
+    get_mol_lims,
+    pad,
+    RGBAtuple,
 )
 
 
@@ -129,7 +132,6 @@ def _add_gaussians_for_atoms(
     return v_map
 
 
-# pylint: disable=too-many-locals
 def _add_gaussians_for_bonds(
     mol: Chem.Mol,
     conf: Chem.Conformer,
@@ -137,7 +139,7 @@ def _add_gaussians_for_bonds(
     bond_weights: npt.NDArray[np.float64],
     bond_width: float,
     bond_length: float,
-) -> ValueGrid:
+) -> ValueGrid:  # pylint: disable=too-many-locals
     """Add Gauss-functions centered at bonds to the grid.
 
     Parameters
@@ -475,7 +477,7 @@ def structure_heatmap_shap(  # pylint: disable=too-many-branches
             f"$Prediction = {explanation.prediction[-1]:.2f}$ ="
             "\n"
             "\n"
-            f"  $expected \ value={explanation.expected_value[-1]:.2f}$   +   "  # noqa: W605 # pylint: disable=W1401
+            f"  $expected \ value={explanation.expected_value[-1]:.2f}$   +   "  # noqa: W605 # pylint: disable=anomalous-backslash-in-string
             f"$features_{{present}}= {sum_present_shap:.2f}$   +   "
             f"$features_{{absent}}={sum_absent_shap:.2f}$"
         )

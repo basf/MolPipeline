@@ -9,16 +9,18 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.explainability import (
+from molpipeline.experimental.explainability import (
     SHAPFeatureAndAtomExplanation,
     SHAPFeatureExplanation,
+    SHAPKernelExplainer,
     SHAPTreeExplainer,
     structure_heatmap,
     structure_heatmap_shap,
 )
-from molpipeline.explainability.explainer import SHAPKernelExplainer
 from molpipeline.mol2any import MolToMorganFP
-from tests.test_explainability.utils import construct_kernel_shap_kwargs
+from tests.test_experimental.test_explainability.utils import (
+    construct_kernel_shap_kwargs,
+)
 
 TEST_SMILES = ["CC", "CCO", "COC", "c1ccccc1(N)", "CCC(-O)O", "CCCN"]
 CONTAINS_OX = [0, 1, 1, 0, 1, 0]  # classification labels

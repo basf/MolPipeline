@@ -9,8 +9,7 @@ import numpy as np
 import numpy.typing as npt
 
 
-# pylint: disable=too-few-public-methods
-class GaussFunctor2D:
+class GaussFunctor2D:  # pylint: disable=too-few-public-methods
     """2D Gaussian functor."""
 
     def __init__(

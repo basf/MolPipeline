@@ -83,11 +83,10 @@ def get_color_map_from_input(
     # read user definer color scheme as ColorMap
     if color is None:
         coolwarm = (
-            (0.017, 0.50, 0.850, 0.5),
-            (1.0, 1.0, 1.0, 0.5),
             (1.0, 0.25, 0.0, 0.5),
+            (1.0, 1.0, 1.0, 0.5),
+            (0.017, 0.50, 0.850, 0.5),
         )
-        coolwarm = (coolwarm[2], coolwarm[1], coolwarm[0])
         color = coolwarm
     if isinstance(color, Colormap):
         color_map = color

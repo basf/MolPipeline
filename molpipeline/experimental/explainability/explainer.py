@@ -15,7 +15,7 @@ from typing_extensions import override
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import OptionalMol
-from molpipeline.explainability.explanation import (
+from molpipeline.experimental.explainability.explanation import (
     AtomExplanationMixin,
     BondExplanationMixin,
     FeatureExplanationMixin,
@@ -24,12 +24,13 @@ from molpipeline.explainability.explanation import (
     SHAPFeatureAndAtomExplanation,
     SHAPFeatureExplanation,
 )
-from molpipeline.explainability.fingerprint_utils import fingerprint_shap_to_atomweights
+from molpipeline.experimental.explainability.fingerprint_utils import (
+    fingerprint_shap_to_atomweights,
+)
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import SubpipelineExtractor, get_model_from_pipeline
 
 
-# pylint: disable=C0103,W0613
 def _to_dense(
     feature_matrix: npt.NDArray[Any] | spmatrix,
 ) -> npt.NDArray[Any]:
@@ -170,13 +171,13 @@ _SHAPExplainer_return_type_: TypeAlias = list[
 ]
 
 
-# pylint: disable=R0903
 class AbstractSHAPExplainer(abc.ABC):
     """Abstract class for SHAP explainer objects."""
 
-    # pylint: disable=C0103,W0613
     @abc.abstractmethod
-    def explain(self, X: Any, **kwargs: Any) -> _SHAPExplainer_return_type_:
+    def explain(
+        self, X: Any, **kwargs: Any
+    ) -> _SHAPExplainer_return_type_:  # pylint: disable=invalid-name,unused-argument
         """Explain the predictions for the input data.
 
         Parameters
@@ -193,7 +194,6 @@ class AbstractSHAPExplainer(abc.ABC):
         """
 
 
-# pylint: disable=R0903
 class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
@@ -269,9 +269,10 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
 
         return True
 
-    # pylint: disable=C0103,W0613
     @override
-    def explain(self, X: Any, **kwargs: Any) -> _SHAPExplainer_return_type_:
+    def explain(
+        self, X: Any, **kwargs: Any
+    ) -> _SHAPExplainer_return_type_:  # pylint: disable=invalid-name,unused-argument
         """Explain the predictions for the input data.
 
         If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.
