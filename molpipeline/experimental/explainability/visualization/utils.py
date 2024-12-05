@@ -222,7 +222,6 @@ def calc_present_and_absent_shap_contributions(
     tuple[float, float]
         The sum of present and absent SHAP values.
     """
-
     if feature_vector.max() > 1 or feature_vector.min() < 0:
         raise ValueError(
             "Feature vector must be binary. Alternatively, use the structure_heatmap function instead."
