@@ -170,3 +170,68 @@ def plt_to_pil(figure: plt.Figure) -> Image.Image:
     bio.seek(0)
     img = Image.open(bio)
     return img
+
+
+def get_atom_coords_of_bond(
+    bond: Chem.Bond, conf: Chem.Conformer
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    """Get the two atom coordinates of a bond in the conformation.
+
+    Parameters
+    ----------
+    bond: Chem.Bond
+        The bond.
+    conf: Chem.Conformer
+        The conformation.
+
+    Returns
+    -------
+    tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
+        The atom coordinates.
+    """
+    a1 = bond.GetBeginAtom().GetIdx()
+    a1_pos = conf.GetAtomPosition(a1)
+    a1_coords = np.array([a1_pos.x, a1_pos.y])
+
+    a2 = bond.GetEndAtom().GetIdx()
+    a2_pos = conf.GetAtomPosition(a2)
+    a2_coords = np.array([a2_pos.x, a2_pos.y])
+
+    return a1_coords, a2_coords
+
+
+def calc_present_and_absent_shap_contributions(
+    feature_vector: npt.NDArray[np.float64], feature_weights: npt.NDArray[np.float64]
+) -> tuple[float, float]:
+    """Get the sum of present and absent SHAP values.
+
+    Parameters
+    ----------
+    feature_vector: npt.NDArray[np.float64]
+        The feature vector.
+    feature_weights: npt.NDArray[np.float64]
+        The feature weights.
+
+    Raises
+    ------
+    ValueError
+        If the feature vector is not binary.
+
+    Returns
+    -------
+    tuple[float, float]
+        The sum of present and absent SHAP values.
+    """
+
+    if feature_vector.max() > 1 or feature_vector.min() < 0:
+        raise ValueError(
+            "Feature vector must be binary. Alternatively, use the structure_heatmap function instead."
+        )
+
+    # determine present/absent features using the binary feature vector
+    present_shap = feature_weights * feature_vector
+    absent_shap = feature_weights * (1 - feature_vector)
+    sum_present_shap = sum(present_shap)
+    sum_absent_shap = sum(absent_shap)
+
+    return sum_present_shap, sum_absent_shap

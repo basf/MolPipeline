@@ -21,8 +21,8 @@ from molpipeline.any2mol import SmilesToMol
 from molpipeline.experimental.explainability import (
     SHAPFeatureAndAtomExplanation,
     SHAPFeatureExplanation,
-    SHAPTreeExplainer,
     SHAPKernelExplainer,
+    SHAPTreeExplainer,
 )
 from molpipeline.experimental.explainability.explanation import AtomExplanationMixin
 from molpipeline.mol2any import (

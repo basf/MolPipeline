@@ -166,18 +166,18 @@ def _convert_shap_feature_weights_to_atom_weights(
     return atom_weights
 
 
-_SHAPExplainer_return_type_: TypeAlias = list[
+ShapExplanation: TypeAlias = list[
     SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
 ]
 
 
-class AbstractSHAPExplainer(abc.ABC):
+class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
     """Abstract class for SHAP explainer objects."""
 
     @abc.abstractmethod
     def explain(
-        self, X: Any, **kwargs: Any
-    ) -> _SHAPExplainer_return_type_:  # pylint: disable=invalid-name,unused-argument
+        self, X: Any, **kwargs: Any  # pylint: disable=invalid-name,unused-argument
+    ) -> ShapExplanation:
         """Explain the predictions for the input data.
 
         Parameters
@@ -194,14 +194,15 @@ class AbstractSHAPExplainer(abc.ABC):
         """
 
 
-class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
+class SHAPExplainerAdapter(
+    AbstractSHAPExplainer, abc.ABC
+):  # pylint: disable=too-few-public-methods
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
     def __init__(
         self,
         pipeline: Pipeline,
         explainer: shap.TreeExplainer | shap.KernelExplainer,
-        **kwargs: Any,
     ) -> None:
         """Initialize the SHAPTreeExplainer.
 
@@ -211,8 +212,6 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
             The pipeline containing the model to explain.
         explainer : shap.TreeExplainer | shap.KernelExplainer
             The shap explainer object.
-        kwargs : Any
-            Additional keyword arguments for SHAP's TreeExplainer.
         """
         self.pipeline = pipeline
         self.explainer = explainer
@@ -271,8 +270,8 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
 
     @override
     def explain(
-        self, X: Any, **kwargs: Any
-    ) -> _SHAPExplainer_return_type_:  # pylint: disable=invalid-name,unused-argument
+        self, X: Any, **kwargs: Any  # pylint: disable=invalid-name,unused-argument
+    ) -> ShapExplanation:
         """Explain the predictions for the input data.
 
         If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.
@@ -292,7 +291,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
 
-        explanation_results: _SHAPExplainer_return_type_ = []
+        explanation_results: ShapExplanation = []
         for input_sample in X:
 
             input_sample = [input_sample]
@@ -369,7 +368,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):
         return explanation_results
 
 
-class SHAPTreeExplainer(SHAPExplainerAdapter):
+class SHAPTreeExplainer(SHAPExplainerAdapter):  # pylint: disable=too-few-public-methods
     """Wrapper for SHAP's TreeExplainer that can handle pipelines and molecules.
 
     Wraps SHAP's TreeExplainer to explain predictions of a pipeline containing a
@@ -397,7 +396,7 @@ class SHAPTreeExplainer(SHAPExplainerAdapter):
             Additional keyword arguments for SHAP's Explainer.
         """
         explainer = self._create_explainer(pipeline, **kwargs)
-        super().__init__(pipeline, explainer, **kwargs)
+        super().__init__(pipeline, explainer)
 
     @staticmethod
     def _create_explainer(pipeline: Pipeline, **kwargs: Any) -> shap.TreeExplainer:
@@ -423,7 +422,9 @@ class SHAPTreeExplainer(SHAPExplainerAdapter):
         return explainer
 
 
-class SHAPKernelExplainer(SHAPExplainerAdapter):
+class SHAPKernelExplainer(
+    SHAPExplainerAdapter
+):  # pylint: disable=too-few-public-methods
     """Wrapper for SHAP's KernelExplainer that can handle pipelines and molecules."""
 
     def __init__(
@@ -441,7 +442,7 @@ class SHAPKernelExplainer(SHAPExplainerAdapter):
             Additional keyword arguments for SHAP's Explainer.
         """
         explainer = self._create_explainer(pipeline, **kwargs)
-        super().__init__(pipeline, explainer, **kwargs)
+        super().__init__(pipeline, explainer)
 
     @staticmethod
     def _create_explainer(pipeline: Pipeline, **kwargs: Any) -> shap.KernelExplainer:

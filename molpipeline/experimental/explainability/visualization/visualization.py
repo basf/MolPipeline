@@ -20,10 +20,9 @@ from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
-from molpipeline.experimental.explainability import (
+from molpipeline.experimental.explainability.explanation import (
     SHAPFeatureAndAtomExplanation,
 )
-
 from molpipeline.experimental.explainability.visualization.gauss import GaussFunctor2D
 from molpipeline.experimental.explainability.visualization.heatmaps import (
     ValueGrid,
@@ -31,12 +30,14 @@ from molpipeline.experimental.explainability.visualization.heatmaps import (
     get_color_normalizer_from_data,
 )
 from molpipeline.experimental.explainability.visualization.utils import (
+    RGBAtuple,
+    calc_present_and_absent_shap_contributions,
+    get_atom_coords_of_bond,
     get_color_map_from_input,
-    plt_to_pil,
-    to_png,
     get_mol_lims,
     pad,
-    RGBAtuple,
+    plt_to_pil,
+    to_png,
 )
 
 
@@ -163,16 +164,11 @@ def _add_gaussians_for_bonds(
         ValueGrid object with added functions.
     """
     # Adding Gauss-functions centered at bonds (position between the two bonded-atoms)
-    for i, b in enumerate(mol.GetBonds()):
+    for i, bond in enumerate(mol.GetBonds()):
         if bond_weights[i] == 0:
             continue
-        a1 = b.GetBeginAtom().GetIdx()
-        a1_pos = conf.GetAtomPosition(a1)
-        a1_coords = np.array([a1_pos.x, a1_pos.y])
 
-        a2 = b.GetEndAtom().GetIdx()
-        a2_pos = conf.GetAtomPosition(a2)
-        a2_coords = np.array([a2_pos.x, a2_pos.y])
+        a1_coords, a2_coords = get_atom_coords_of_bond(bond, conf)
 
         diff = a2_coords - a1_coords
         angle = np.arctan2(diff[0], diff[1])
@@ -379,7 +375,7 @@ def structure_heatmap(
     return image
 
 
-def structure_heatmap_shap(  # pylint: disable=too-many-branches
+def structure_heatmap_shap(  # pylint: disable=too-many-branches, too-many-locals
     explanation: SHAPFeatureAndAtomExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
@@ -419,11 +415,6 @@ def structure_heatmap_shap(  # pylint: disable=too-many-branches
     if explanation.atom_weights is None:
         raise ValueError("Explanation does not contain atom weights.")
 
-    if explanation.feature_vector.max() > 1 or explanation.feature_vector.min() < 0:
-        raise ValueError(
-            "Feature vector must be binary. Alternatively, use the structure_heatmap function instead."
-        )
-
     if explanation.prediction.ndim > 2:
         raise ValueError(
             "Unsupported shape for prediction. Maximum 2 dimension is supported."
@@ -436,11 +427,10 @@ def structure_heatmap_shap(  # pylint: disable=too-many-branches
     else:
         raise ValueError("Unsupported shape for feature weights.")
 
-    # determine present/absent features using the binary feature vector
-    present_shap = feature_weights * explanation.feature_vector
-    absent_shap = feature_weights * (1 - explanation.feature_vector)
-    sum_present_shap = sum(present_shap)
-    sum_absent_shap = sum(absent_shap)
+    # calculate the sum of the SHAP values for present and absent features
+    sum_present_shap, sum_absent_shap = calc_present_and_absent_shap_contributions(
+        explanation.feature_vector, feature_weights
+    )
 
     with plt.ioff():
 
