@@ -228,6 +228,7 @@ class Pipeline(_Pipeline):
             Training objectives.
         routed_params : dict[str, Any], optional
             Parameters for each step as returned by process_routing.
+            Not optional in reality.
         raw_params : dict[str, Any], optional
             Parameters passed by the user, used when `transform_input`
 
@@ -239,6 +240,8 @@ class Pipeline(_Pipeline):
         # shallow copy of steps - this should really be steps_
         self.steps = list(self.steps)
         self._validate_steps()
+        if routed_params is None:
+            raise AssertionError("routed_params should not be None.")
 
         # Set up the memory
         memory: joblib.Memory = check_memory(self.memory)
