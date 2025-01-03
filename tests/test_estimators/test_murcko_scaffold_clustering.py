@@ -42,7 +42,7 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
 
             self.assertEqual(estimator_ignore_linear.n_clusters_, 2)
             self.assertListEqual(
-                scaffold_cluster_labels.tolist(), expected_scaffold_labels
+                list(scaffold_cluster_labels), expected_scaffold_labels
             )
 
             # test linear molecule handling. We expect the linear molecules to be ignored.
@@ -52,7 +52,7 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
             expected_nan_mask = [False, False, False, True, True, True]
 
             self.assertEqual(estimator_ignore_linear.n_clusters_, 2)
-            self.assertListEqual(nan_mask.tolist(), expected_nan_mask)
+            self.assertListEqual(list(nan_mask), expected_nan_mask)
             self.assertListEqual(cluster_labels[~nan_mask].tolist(), [1.0, 0.0, 1.0])
 
     def test_murcko_scaffold_clustering_own_cluster(self) -> None:
@@ -73,7 +73,7 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
             cluster_labels = estimator_cluster_linear.fit_predict(input_smiles)
             expected_cluster_labels = [1.0, 0.0, 1.0, 2.0, 2.0, 2.0]
             self.assertEqual(estimator_cluster_linear.n_clusters_, 3)
-            self.assertListEqual(cluster_labels.tolist(), expected_cluster_labels)
+            self.assertListEqual(list(cluster_labels), expected_cluster_labels)
 
     def test_murcko_scaffold_clustering_generic(self) -> None:
         """Test Murcko scaffold clustering estimator with generic scaffold."""
@@ -89,7 +89,7 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
         expected_scaffold_labels = [1.0, 0.0, 1.0, 1.0]
 
         self.assertEqual(estimator.n_clusters_, 2)
-        self.assertListEqual(scaffold_cluster_labels.tolist(), expected_scaffold_labels)
+        self.assertListEqual(list(scaffold_cluster_labels), expected_scaffold_labels)
 
         # test that without make_generic we get a different result
         estimator2: MurckoScaffoldClustering = MurckoScaffoldClustering(
@@ -102,9 +102,7 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
         expected_scaffold_labels2 = [1.0, 0.0, 1.0, 2.0]
 
         self.assertEqual(estimator2.n_clusters_, 3)
-        self.assertListEqual(
-            scaffold_cluster_labels2.tolist(), expected_scaffold_labels2
-        )
+        self.assertListEqual(list(scaffold_cluster_labels2), expected_scaffold_labels2)
 
     def test_murcko_scaffold_clustering(self) -> None:
         """Test Murcko scaffold clustering estimator for purely linear molecules."""
