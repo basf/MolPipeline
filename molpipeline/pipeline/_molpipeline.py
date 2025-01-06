@@ -257,10 +257,10 @@ class _MolPipeline:
             self.fit_transform(x_input)
         return self
 
-    def fit_transform(
+    def fit_transform(  # pylint: disable=invalid-name,unused-argument
         self,
         x_input: Any,
-        y: Any = None,  # pylint: disable=invalid-name
+        y: Any = None,
         **fit_params: dict[str, Any],
     ) -> Any:
         """Fit the MolPipeline according to x_input and return the transformed molecules.
@@ -280,16 +280,14 @@ class _MolPipeline:
             Transformed molecules.
         """
         iter_input = x_input
-        _ = y  # Making pylint happy, does no(t a)thing
-        _ = fit_params  # Making pylint happy
 
-        # The meta elements merge steps which do not require fitting to improve parallelization
-        iter_element_list = self._get_meta_element_list()
         removed_rows: dict[ErrorFilter, list[int]] = {}
         for error_filter in self._filter_elements:
             removed_rows[error_filter] = []
         iter_idx_array = np.arange(len(iter_input))
-        for i_element in iter_element_list:
+
+        # The meta elements merge steps which do not require fitting to improve parallelization
+        for i_element in self._get_meta_element_list():
             if not isinstance(i_element, (TransformingPipelineElement, _MolPipeline)):
                 continue
             i_element.n_jobs = self.n_jobs
