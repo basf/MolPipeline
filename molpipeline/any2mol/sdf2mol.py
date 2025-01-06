@@ -120,6 +120,6 @@ class SDFToMol(_StringToMolPipelineElement):
                 self.name,
             )
         if self.identifier == "smiles":
-            mol.SetProp("identifier", self.mol_counter)
+            mol.SetProp("identifier", str(self.mol_counter))
         self.mol_counter += 1
         return mol
