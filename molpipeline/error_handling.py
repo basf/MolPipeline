@@ -241,7 +241,7 @@ class ErrorFilter(ABCPipelineElement):
                     out_list.append(value)
             return out_list  # type: ignore  # mypy does not support higher-kinded types
         if isinstance(values, np.ndarray):
-            return np.delete(values, self.error_indices, axis=0, dtype=values)  # type: ignore
+            return np.delete(values, self.error_indices, axis=0)  # type: ignore
         raise TypeError(f"Unexpected Type: {type(values)}")
 
     def transform(self, values: TypeFixedVarSeq) -> TypeFixedVarSeq:
