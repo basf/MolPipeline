@@ -56,7 +56,7 @@ def tanimoto_distance_sparse(
     npt.NDArray[np.float64]
         Matrix of similarity values between instances of A (rows/first dim) , and instances of B (columns/second dim).
     """
-    return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)
+    return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
 
 
 def self_tanimoto_similarity(
@@ -98,4 +98,4 @@ def self_tanimoto_distance(
     npt.NDArray[np.float64]
         Square matrix of similarity values between all instances in the matrix.
     """
-    return 1 - self_tanimoto_similarity(matrix_a)
+    return 1 - self_tanimoto_similarity(matrix_a)  # type: ignore
