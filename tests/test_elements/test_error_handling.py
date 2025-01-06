@@ -235,8 +235,9 @@ class NoneTest(unittest.TestCase):
             return_as_numpy_array=True,
         )
         error_filter = ErrorFilter.from_element_list([mock2mock])
+        fill_value: list[Any] = []
         error_replacer = FilterReinserter.from_error_filter(
-            error_filter=error_filter, fill_value=[]
+            error_filter=error_filter, fill_value=fill_value
         )
         pipeline = Pipeline(
             [
