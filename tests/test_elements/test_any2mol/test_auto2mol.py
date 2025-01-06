@@ -22,7 +22,7 @@ INCHI_CHLOROBENZENE = "InChI=1S/C6H5Cl/c7-6-4-2-1-3-5-6/h1-5H"
 
 # SDF
 with gzip.open(TEST_DATA_DIR / "P86_B_400.sdf.gz") as file:
-    SDF_P86_B_400 = file.read()
+    SDF_P86_B_400 = file.read().decode("UTF-8")
 _sdf_supplier = Chem.SDMolSupplier()
 _sdf_supplier.SetData(SDF_P86_B_400)
 
