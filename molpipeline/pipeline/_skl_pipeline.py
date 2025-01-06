@@ -228,7 +228,9 @@ class Pipeline(_Pipeline):
             Training objectives.
         routed_params : dict[str, Any], optional
             Parameters for each step as returned by process_routing.
-            Not optional in reality.
+            Although this is marked as optional, it should not be None.
+            The awkward (argward?) typing is due to inheritance from sklearn.
+            Can be an empty dictionary.
         raw_params : dict[str, Any], optional
             Parameters passed by the user, used when `transform_input`
 
