@@ -312,8 +312,8 @@ class _MolPipeline:
         for error_filter in self._filter_elements:
             removed_idx_list = removed_rows[error_filter]
             error_filter.error_indices = []
-            for new_idx, idx in enumerate(iter_idx_array):
-                if idx in removed_idx_list:
+            for new_idx, _idx in enumerate(iter_idx_array):
+                if _idx in removed_idx_list:
                     error_filter.error_indices.append(new_idx)
             error_filter.n_total = len(iter_idx_array)
             iter_idx_array = error_filter.co_transform(iter_idx_array)
