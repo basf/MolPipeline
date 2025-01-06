@@ -25,7 +25,7 @@ from molpipeline.error_handling import (
     FilterReinserter,
     _MultipleErrorFilter,
 )
-from molpipeline.utils.molpipeline_types import NumberIterable
+from molpipeline.utils.molpipeline_types import TypeFixedVarSeq
 from molpipeline.utils.multi_proc import check_available_cores
 
 
@@ -441,7 +441,7 @@ class _MolPipeline:
         agg_filter.set_total(len(x_input))
         self._finish()
 
-    def co_transform(self, x_input: NumberIterable) -> NumberIterable:
+    def co_transform(self, x_input: TypeFixedVarSeq) -> TypeFixedVarSeq:
         """Filter flagged rows from the input.
 
         Parameters
