@@ -149,6 +149,14 @@ class TestMol2MorganFingerprint(unittest.TestCase):
                     np_fp = fingerprints_to_numpy(fp)
                     self.assertEqual(np.nonzero(np_fp)[0].shape[0], len(mapping))  # type: ignore
 
+    def test_feature_names(self) -> None:
+        """Test if the feature names are correct."""
+        mol_fp = MolToMorganFP(n_bits=1024)
+        feature_names = mol_fp.feature_names
+        self.assertEqual(len(feature_names), 1024)
+        # feature names should be unique
+        self.assertEqual(len(feature_names), len(set(feature_names)))
+
 
 if __name__ == "__main__":
     unittest.main()

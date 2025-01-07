@@ -32,6 +32,8 @@ def remove_irrelevant_params(params: _T) -> _T:
     if isinstance(params, dict):
         params_new = {}
         for key, value in params.items():
+            if not isinstance(key, str):
+                continue
             if key.split("__")[-1] in irrelevant_params:
                 continue
             params_new[key] = remove_irrelevant_params(value)
