@@ -202,7 +202,7 @@ class Mol2PathFP(
         super().set_params(**parameter_copy)
         return self
 
-    def _get_fp_generator(self) -> rdFingerprintGenerator.GetRDKitFPGenerator:
+    def _get_fp_generator(self) -> rdFingerprintGenerator.FingerprintGenerator64:
         """Get the fingerprint generator for the RDKit path fingerprint.
 
         Returns

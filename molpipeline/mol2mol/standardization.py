@@ -22,24 +22,24 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 MolHashing = Union[
-    "rdMolHash.HashFunction.AnonymousGraph",
-    "rdMolHash.HashFunction.ArthorSubstructureOrder",
-    "rdMolHash.HashFunction.AtomBondCounts",
-    "rdMolHash.HashFunction.CanonicalSmiles",
-    "rdMolHash.HashFunction.DegreeVector",
-    "rdMolHash.HashFunction.ElementGraph",
-    "rdMolHash.HashFunction.ExtendedMurcko",
-    "rdMolHash.HashFunction.HetAtomProtomer",
-    "rdMolHash.HashFunction.HetAtomTautomer",
-    "rdMolHash.HashFunction.HetAtomTautomerv2",
-    "rdMolHash.HashFunction.Mesomer",
-    "rdMolHash.HashFunction.MolFormula",
-    "rdMolHash.HashFunction.MurckoScaffold",
-    "rdMolHash.HashFunction.NetCharge",
-    "rdMolHash.HashFunction.RedoxPair",
-    "rdMolHash.HashFunction.Regioisomer",
-    "rdMolHash.HashFunction.SmallWorldIndexBR",
-    "rdMolHash.HashFunction.SmallWorldIndexBRL",
+    "rdMolHash.HashFunction.AnonymousGraph",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.ArthorSubstructureOrder",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.AtomBondCounts",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.CanonicalSmiles",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.DegreeVector",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.ElementGraph",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.ExtendedMurcko",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.HetAtomProtomer",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.HetAtomTautomer",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.HetAtomTautomerv2",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.Mesomer",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.MolFormula",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.MurckoScaffold",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.NetCharge",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.RedoxPair",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.Regioisomer",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.SmallWorldIndexBR",  # type: ignore[valid-type]
+    "rdMolHash.HashFunction.SmallWorldIndexBRL",  # type: ignore[valid-type]
 ]
 
 
