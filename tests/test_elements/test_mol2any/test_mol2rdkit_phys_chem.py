@@ -234,6 +234,13 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
             "fr_thiophene",
             "fr_unbrch_alkane",
             "fr_urea",
+            'NumUnspecifiedAtomStereoCenters',
+            'NumBridgeheadAtoms',
+            'NumAmideBonds',
+            'NumHeterocycles',
+            'NumAtomStereoCenters',
+            'Phi',
+            'NumSpiroAtoms',
         }
         self.assertSetEqual(expected_descriptors, set(DEFAULT_DESCRIPTORS))
 
