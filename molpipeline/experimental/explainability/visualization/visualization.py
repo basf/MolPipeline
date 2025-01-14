@@ -173,7 +173,7 @@ def _add_gaussians_for_bonds(
         diff = a2_coords - a1_coords
         angle = np.arctan2(diff[0], diff[1])
 
-        bond_center = (a1_coords + a2_coords) / np.float64(2)
+        bond_center = np.float64((a1_coords + a2_coords) / 2)
 
         func = GaussFunctor2D(
             center=bond_center,
