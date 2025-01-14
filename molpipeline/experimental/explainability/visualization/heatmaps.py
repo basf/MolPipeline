@@ -50,17 +50,19 @@ class Grid2D(abc.ABC):
         self.y_lim = y_lim
         self.x_res = x_res
         self.y_res = y_res
+        self._dx = (max(self.x_lim) - min(self.x_lim)) / self.x_res
+        self._dy = (max(self.y_lim) - min(self.y_lim)) / self.y_res
         self.values = np.zeros((self.x_res, self.y_res))
 
     @property
     def dx(self) -> float:
         """Length of cell in x-direction."""
-        return (max(self.x_lim) - min(self.x_lim)) / self.x_res
+        return self._dx
 
     @property
     def dy(self) -> float:
         """Length of cell in y-direction."""
-        return (max(self.y_lim) - min(self.y_lim)) / self.y_res
+        return self._dy
 
     def grid_field_center(self, x_idx: int, y_idx: int) -> tuple[float, float]:
         """Center of cell specified by index along x and y.
@@ -149,6 +151,9 @@ class ValueGrid(Grid2D):
         y_lim: Sequence[float],
         x_res: int,
         y_res: int,
+        function_list: (
+            list[Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]] | None
+        ) = None,
     ):
         """Initialize the ValueGrid with limits and resolution of the axes.
 
@@ -162,11 +167,18 @@ class ValueGrid(Grid2D):
             Resolution (number of cells) along x-axis.
         y_res: int
             Resolution (number of cells) along y-axis.
+        function_list: list[Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]], optional
+            List of functions to be evaluated for each cell, by default None.
         """
         super().__init__(x_lim, y_lim, x_res, y_res)
-        self.function_list: list[
-            Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
-        ] = []
+        if function_list is not None:
+            self.function_list: list[
+                Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
+            ] = function_list
+        else:
+            self.function_list: list[
+                Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
+            ] = []
         self.values = np.zeros((self.x_res, self.y_res))
 
     def add_function(

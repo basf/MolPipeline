@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, Callable
 
 import numpy as np
 import numpy.typing as npt
@@ -11,7 +11,11 @@ import pandas as pd
 import shap
 from scipy.sparse import issparse, spmatrix
 from sklearn.base import BaseEstimator
-from typing_extensions import override
+
+try:
+    from typing import override  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import override
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import OptionalMol
@@ -51,27 +55,9 @@ def _to_dense(
     return feature_matrix
 
 
-def _convert_to_array(value: Any) -> npt.NDArray[np.float64]:
-    """Convert a value to a numpy array.
-
-    Parameters
-    ----------
-    value : Any
-        The value to convert.
-
-    Returns
-    -------
-    npt.NDArray[np.float64]
-        The value as a numpy array.
-    """
-    if isinstance(value, np.ndarray):
-        return value
-    if np.isscalar(value):
-        return np.array([value])
-    raise ValueError("Value is not a scalar or numpy array.")
-
-
-def _get_prediction_function(pipeline: Pipeline | BaseEstimator) -> Any:
+def _get_prediction_function(
+    pipeline: Pipeline | BaseEstimator,
+) -> Callable[[npt.Arraylike], npt.Arraylike]:
     """Get the prediction function of a model.
 
     Parameters
@@ -359,7 +345,7 @@ class SHAPExplainerAdapter(
             if issubclass(self.return_element_type_, BondExplanationMixin):
                 explanation_data["bond_weights"] = bond_weights
             if issubclass(self.return_element_type_, SHAPExplanationMixin):
-                explanation_data["expected_value"] = _convert_to_array(
+                explanation_data["expected_value"] = np.atleast_1d(
                     self.explainer.expected_value
                 )
 
