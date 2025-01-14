@@ -5,10 +5,10 @@ from __future__ import annotations
 from numbers import Number
 from typing import (
     Any,
-    List,
     Literal,
     Optional,
     Protocol,
+    Sequence,
     Tuple,
     TypeAlias,
     TypeVar,
@@ -35,30 +35,22 @@ __all__ = [
     "AnyPredictor",
     "AnySklearnEstimator",
     "AnyTransformer",
-    "AnyIterable",
     "AnySklearnEstimator",
     "AnyStep",
     "Number",
-    "NumberIterable",
     "OptionalMol",
     "RDKitMol",
-    "TypeConserverdIterable",
 ]
 # One liner type definitions
 
 AnyNumpyElement = TypeVar("AnyNumpyElement", bound=np.generic)
 
 _T = TypeVar("_T")
-# mypy: ignore-errors
-AnyIterable = TypeVar("AnyIterable", List[_T], npt.NDArray[_T])
-
-# mypy: ignore-errors
-NumberIterable = TypeVar("NumberIterable", List[Number], npt.NDArray[Number])
-
-TypeConserverdIterable = TypeVar("TypeConserverdIterable", List[_T], npt.NDArray[_T])
+_NT = TypeVar("_NT", bound=np.generic)
+TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_NT])  # type: ignore
+AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 
 FloatCountRange: TypeAlias = tuple[Optional[float], Optional[float]]
-
 IntCountRange: TypeAlias = tuple[Optional[int], Optional[int]]
 
 # IntOrIntCountRange for Typing of count ranges

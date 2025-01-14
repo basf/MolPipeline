@@ -56,6 +56,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             UUID of the pipeline element, by default None
         """
         self._descriptor_list = ["NetCharge"]
+        self._feature_names = self._descriptor_list
         self._charge_method = charge_method
         # pylint: disable=R0801
         super().__init__(
@@ -72,7 +73,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
     @property
     def descriptor_list(self) -> list[str]:
-        """Return a copy of the descriptor list."""
+        """Return a copy of the descriptor list. Alias of `feature_names`."""
         return self._descriptor_list[:]
 
     def _get_net_charge_gasteiger(

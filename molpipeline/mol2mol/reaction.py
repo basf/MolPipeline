@@ -172,5 +172,5 @@ class MolToMolReaction(MolToMolPipelineElement):
                 self.uuid, "Reaction did not yield any product.", self.name
             )
         product = product_list[0][0]
-        AllChem.SanitizeMol(product)
+        AllChem.SanitizeMol(product)  # type: ignore[attr-defined]
         return product
