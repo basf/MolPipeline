@@ -687,7 +687,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         ):
             raise ValueError(
                 f"Length of values does not match length of values in fit. "
-                f"Expected: {self.error_filter.n_total -len(self.error_filter.error_indices)}  - Received :{len(values)}"
+                f"Expected: {self.error_filter.n_total - len(self.error_filter.error_indices)}  - Received :{len(values)}"
             )
         return self.fill_with_dummy(values)
 
