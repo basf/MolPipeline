@@ -170,7 +170,9 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         params["filter_elements"] = self.filter_elements
         return params
 
-    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+    def pretransform_single(  # pylint: disable=too-many-return-statements
+        self, value: RDKitMol
+    ) -> OptionalMol:
         """Invalidate or validate molecule based on specified filter.
 
         There are four possible scenarios:
@@ -195,7 +197,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                 # For "any" mode we can return early if a match is found
                 if self.mode == "any":
                     if not self.keep_matches:
-                        value = InvalidInstance(
+                        return InvalidInstance(
                             self.uuid,
                             f"Molecule contains forbidden filter element {filter_element}.",
                             self.name,
@@ -205,7 +207,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                 # For "all" mode we can return early if a match is not found
                 if self.mode == "all":
                     if self.keep_matches:
-                        value = InvalidInstance(
+                        return InvalidInstance(
                             self.uuid,
                             f"Molecule does not contain required filter element {filter_element}.",
                             self.name,
@@ -216,7 +218,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         # If mode is "any", finishing the loop means no match was found
         if self.mode == "any":
             if self.keep_matches:
-                value = InvalidInstance(
+                return InvalidInstance(
                     self.uuid,
                     "Molecule does not match any of the required filter elements.",
                     self.name,
@@ -226,7 +228,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
         if self.mode == "all":
             if not self.keep_matches:
-                value = InvalidInstance(
+                return InvalidInstance(
                     self.uuid,
                     "Molecule matches all forbidden filter elements.",
                     self.name,

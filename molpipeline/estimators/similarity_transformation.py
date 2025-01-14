@@ -66,7 +66,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         if not isinstance(matrix_b, csr_matrix):
             matrix_b = csr_matrix(matrix_b)
         if self.distance:
-            return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)
+            return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
         return tanimoto_similarity_sparse(matrix_a, matrix_b)
 
     def fit(

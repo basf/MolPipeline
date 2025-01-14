@@ -142,6 +142,14 @@ class TestMol2PathFingerprint(unittest.TestCase):
         }
         self.assertRaises(ValueError, mol_fp.set_params, **params)
 
+    def test_feature_names(self) -> None:
+        """Test if the feature names are correct."""
+        mol_fp = Mol2PathFP(n_bits=1024)
+        feature_names = mol_fp.feature_names
+        self.assertEqual(len(feature_names), 1024)
+        # feature names should be unique
+        self.assertEqual(len(feature_names), len(set(feature_names)))
+
 
 if __name__ == "__main__":
     unittest.main()

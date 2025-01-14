@@ -33,6 +33,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     """Abstract class for PipelineElements which transform molecules to integer vectors."""
 
     _n_bits: int
+    _feature_names: list[str]
     _output_type = "binary"
     _return_as: OutputDatatype
 
@@ -70,6 +71,11 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     def n_bits(self) -> int:
         """Get number of bits in (or size of) fingerprint."""
         return self._n_bits
+
+    @property
+    def feature_names(self) -> list[str]:
+        """Get feature names."""
+        return self._feature_names[:]
 
     @overload
     def assemble_output(  # type: ignore
@@ -232,12 +238,12 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         self.counted = counted
 
     @abc.abstractmethod
-    def _get_fp_generator(self) -> rdFingerprintGenerator.FingeprintGenerator64:
+    def _get_fp_generator(self) -> rdFingerprintGenerator.FingerprintGenerator64:
         """Get fingerprint generator.
 
         Returns
         -------
-        rdFingerprintGenerator.FingeprintGenerator64
+        rdFingerprintGenerator.FingerprintGenerator64
             Fingerprint generator.
         """
 

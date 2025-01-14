@@ -51,7 +51,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
 
     def __init__(
         self,
-        wrapped_estimator: Union[AnyPredictor, AnyTransformer, FilterReinserter],
+        wrapped_estimator: Union[AnyPredictor, AnyTransformer, FilterReinserter[Any]],
         **kwargs: Any,
     ) -> None:
         """Initialize PostPredictionWrapper.

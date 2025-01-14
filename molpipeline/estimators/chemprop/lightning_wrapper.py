@@ -45,12 +45,13 @@ def get_device(trainer: pl.Trainer) -> str | Accelerator:
     str
         The device used by the lightning trainer.
     """
+    devices: str | Accelerator
     if isinstance(trainer.accelerator, CPUAccelerator):
         devices = "cpu"
     elif isinstance(trainer.accelerator, CUDAAccelerator):
         devices = "gpu"
     else:
-        devices = trainer.accelerator  # type: ignore[attr-defined]
+        devices = trainer.accelerator
     return devices
 
 
@@ -106,7 +107,7 @@ def get_trainer_path(trainer: pl.Trainer) -> str | None:
         None if the path is the current path.
     """
     curr_path = str(Path(".").resolve())
-    trainer_path = trainer.default_root_dir
+    trainer_path: str | None = trainer.default_root_dir
     if trainer_path == curr_path:
         trainer_path = None
     return trainer_path

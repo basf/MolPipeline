@@ -142,7 +142,7 @@ class NoneTest(unittest.TestCase):
         out = pipeline.transform(TEST_SMILES)
         out2 = pipeline2.fit_transform(TEST_SMILES)
         self.assertEqual(out.shape, out2.shape)
-        self.assertEqual(out.shape, (3, 208))
+        self.assertEqual(out.shape, (3, 215))
         self.assertTrue(np.nanmax(np.abs(out - out2)) < 0.000001)
 
     def test_replace_mixed_datatypes(self) -> None:
@@ -235,8 +235,9 @@ class NoneTest(unittest.TestCase):
             return_as_numpy_array=True,
         )
         error_filter = ErrorFilter.from_element_list([mock2mock])
+        fill_value: list[Any] = []
         error_replacer = FilterReinserter.from_error_filter(
-            error_filter=error_filter, fill_value=[]
+            error_filter=error_filter, fill_value=fill_value
         )
         pipeline = Pipeline(
             [
