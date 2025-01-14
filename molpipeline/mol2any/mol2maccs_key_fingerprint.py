@@ -39,7 +39,7 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
             MACCS key fingerprint.
 
         """
-        fingerprint = MACCSkeys.GenMACCSKeys(value)
+        fingerprint = MACCSkeys.GenMACCSKeys(value)  # type: ignore[attr-defined]
         if self._return_as == "explicit_bit_vect":
             return fingerprint
         if self._return_as == "dense":

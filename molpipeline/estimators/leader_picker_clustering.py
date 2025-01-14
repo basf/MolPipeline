@@ -14,7 +14,7 @@ from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.utils._param_validation import Interval
 
 try:
-    from typing import Any, Self
+    from typing import Any, Self, Sequence
 except ImportError:
     from typing_extensions import Self
 
@@ -69,7 +69,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
 
     @staticmethod
     def _assign_points_to_clusters_based_on_centroid(
-        picks: list[int], fps: list[ExplicitBitVect]
+        picks: Sequence[int], fps: Sequence[ExplicitBitVect]
     ) -> tuple[int, npt.NDArray[np.int32]]:
         """Assign points to clusters based on centroid.
 
@@ -77,9 +77,9 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
 
         Parameters
         ----------
-        picks : list[int]
+        picks : Sequence[int]
             Indices of selected cluster centroids to which the remaining data will be assigned.
-        fps : list[ExplicitBitVect]
+        fps : Sequence[ExplicitBitVect]
             Fingerprints of the whole data sets.
 
         Returns

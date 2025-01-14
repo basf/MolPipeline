@@ -214,6 +214,7 @@ class Pipeline(_Pipeline):
         X: Any,  # pylint: disable=invalid-name
         y: Any = None,  # pylint: disable=invalid-name
         routed_params: dict[str, Any] | None = None,
+        raw_params: dict[str, Any] | None = None,
     ) -> tuple[Any, Any]:
         """Fit the model by fitting all transformers except the final estimator.
 
@@ -227,6 +228,11 @@ class Pipeline(_Pipeline):
             Training objectives.
         routed_params : dict[str, Any], optional
             Parameters for each step as returned by process_routing.
+            Although this is marked as optional, it should not be None.
+            The awkward (argward?) typing is due to inheritance from sklearn.
+            Can be an empty dictionary.
+        raw_params : dict[str, Any], optional
+            Parameters passed by the user, used when `transform_input`
 
         Returns
         -------
@@ -236,6 +242,8 @@ class Pipeline(_Pipeline):
         # shallow copy of steps - this should really be steps_
         self.steps = list(self.steps)
         self._validate_steps()
+        if routed_params is None:
+            raise AssertionError("routed_params should not be None.")
 
         # Set up the memory
         memory: joblib.Memory = check_memory(self.memory)
@@ -255,18 +263,19 @@ class Pipeline(_Pipeline):
                 cloned_transformer = clone(transformer)
             if isinstance(cloned_transformer, _MolPipeline):
                 if routed_params:
-                    fit_parameter = {
+                    step_params = {
                         "element_parameters": [routed_params[n] for n in name]
                     }
                 else:
-                    fit_parameter = {}
+                    step_params = {}
             elif isinstance(name, list):
                 raise AssertionError()
             else:
-                if routed_params:
-                    fit_parameter = routed_params[name]
-                else:
-                    fit_parameter = {}
+                step_params = self._get_metadata_for_step(
+                    step_idx=step_idx,
+                    step_params=routed_params[name],
+                    all_params=raw_params,
+                )
 
             # Fit or load from cache the current transformer
             X, fitted_transformer = fit_transform_one_cached(
@@ -276,7 +285,7 @@ class Pipeline(_Pipeline):
                 None,
                 message_clsname="Pipeline",
                 message=self._log_message(step_idx),
-                params=fit_parameter,
+                params=step_params,
             )
             # Replace the transformer of the step with the fitted
             # transformer. This is necessary when loading the transformer

@@ -126,7 +126,9 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
 
         return self
 
-    def _get_fp_generator(self) -> rdFingerprintGenerator.FingerprintGenerator:
+    def _get_fp_generator(
+        self,
+    ) -> rdFingerprintGenerator.FingerprintGenerator64:
         """Get the fingerprint generator.
 
         Returns
