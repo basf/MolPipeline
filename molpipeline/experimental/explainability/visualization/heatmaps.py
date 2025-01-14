@@ -176,9 +176,7 @@ class ValueGrid(Grid2D):
                 Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
             ] = function_list
         else:
-            self.function_list: list[
-                Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
-            ] = []
+            self.function_list = []
         self.values = np.zeros((self.x_res, self.y_res))
 
     def add_function(

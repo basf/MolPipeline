@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, TypeAlias, Callable
+from typing import Any, Callable, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
