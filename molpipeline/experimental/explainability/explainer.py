@@ -57,7 +57,7 @@ def _to_dense(
 
 def _get_prediction_function(
     pipeline: Pipeline | BaseEstimator,
-) -> Callable[[npt.Arraylike], npt.Arraylike]:
+) -> Callable[[npt.ArrayLike], npt.ArrayLike]:
     """Get the prediction function of a model.
 
     Parameters
