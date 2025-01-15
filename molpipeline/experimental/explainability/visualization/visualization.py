@@ -288,6 +288,11 @@ def _add_shap_present_absent_features_text(
     sum_absent_shap: float
         The sum of the SHAP values for absent features.
     """
+    if explanation.prediction[-1] is None:
+        raise AssertionError("Prediction value is None.")
+    if explanation.expected_value[-1] is None:
+        raise AssertionError("Expected value is None.")
+
     color1 = "black"
     color2 = "green"
     color3 = "darkorchid"
@@ -579,7 +584,9 @@ def structure_heatmap_shap(  # pylint: disable=too-many-branches, too-many-local
 
         fig.colorbar(im, ax=ax, orientation="vertical", fraction=0.015, pad=0.0)
 
-        _add_shap_present_absent_features_text(fig, explanation, sum_present_shap, sum_absent_shap)
+        _add_shap_present_absent_features_text(
+            fig, explanation, sum_present_shap, sum_absent_shap
+        )
 
         image = plt_to_pil(fig)
         # clear the figure and memory
