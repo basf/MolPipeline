@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Callable, TypeAlias
+from typing import Any, Callable
 
 import numpy as np
 import numpy.typing as npt
@@ -152,18 +152,13 @@ def _convert_shap_feature_weights_to_atom_weights(
     return atom_weights
 
 
-ShapExplanation: TypeAlias = list[
-    SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
-]
-
-
 class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
     """Abstract class for SHAP explainer objects."""
 
     @abc.abstractmethod
     def explain(
         self, X: Any, **kwargs: Any  # pylint: disable=invalid-name,unused-argument
-    ) -> ShapExplanation:
+    ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
         Parameters
@@ -184,6 +179,9 @@ class SHAPExplainerAdapter(
     AbstractSHAPExplainer, abc.ABC
 ):  # pylint: disable=too-few-public-methods
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
+
+    # used for dynamically defining the return type of the explain method
+    return_element_type_: type[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]
 
     def __init__(
         self,
@@ -220,9 +218,6 @@ class SHAPExplainerAdapter(
 
         # determine type of returned explanation
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
-        self.return_element_type_: type[
-            SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
-        ]
         if isinstance(featurization_element, MolToMorganFP):
             self.return_element_type_ = SHAPFeatureAndAtomExplanation
         else:
@@ -257,7 +252,7 @@ class SHAPExplainerAdapter(
     @override
     def explain(
         self, X: Any, **kwargs: Any  # pylint: disable=invalid-name,unused-argument
-    ) -> ShapExplanation:
+    ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
         If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.
@@ -277,7 +272,9 @@ class SHAPExplainerAdapter(
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
 
-        explanation_results: ShapExplanation = []
+        explanation_results: list[
+            SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
+        ] = []
         for input_sample in X:
 
             input_sample = [input_sample]
