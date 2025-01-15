@@ -14,8 +14,8 @@ import numpy.typing as npt
 from matplotlib import colors
 from matplotlib import pyplot as plt
 from matplotlib.colors import Colormap
-from PIL import Image
 from matplotlib.figure import Figure
+from PIL import Image
 from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdMolDraw2D
