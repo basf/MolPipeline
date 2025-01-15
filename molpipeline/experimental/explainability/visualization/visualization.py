@@ -288,9 +288,9 @@ def _add_shap_present_absent_features_text(
     sum_absent_shap: float
         The sum of the SHAP values for absent features.
     """
-    if explanation.prediction[-1] is None:
+    if explanation.prediction is None:
         raise AssertionError("Prediction value is None.")
-    if explanation.expected_value[-1] is None:
+    if explanation.expected_value is None:
         raise AssertionError("Expected value is None.")
 
     color1 = "black"
