@@ -15,6 +15,7 @@ from matplotlib import colors
 from matplotlib import pyplot as plt
 from matplotlib.colors import Colormap
 from PIL import Image
+from matplotlib.figure import Figure
 from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdMolDraw2D
@@ -265,6 +266,122 @@ def make_sum_of_gaussians_grid(
     return value_grid
 
 
+def _add_shap_present_absent_features_text(
+    fig: Figure,
+    explanation: SHAPFeatureAndAtomExplanation,
+    sum_present_shap: float,
+    sum_absent_shap: float,
+) -> None:
+    """Add text to the figure to display the SHAP prediction composition.
+
+    The added text includes the prediction value, the expected value, the sum of the SHAP values for present features,
+    and the sum of the SHAP values for absent features.
+
+    Parameters
+    ----------
+    fig: Figure
+        The figure.
+    explanation: SHAPFeatureAndAtomExplanation
+        The SHAP explanation.
+    sum_present_shap: float
+        The sum of the SHAP values for present features.
+    sum_absent_shap: float
+        The sum of the SHAP values for absent features.
+    """
+    color1 = "black"
+    color2 = "green"
+    color3 = "darkorchid"
+
+    fontsize_numbers = 11
+    delta = 0.04
+    offset = 0.375
+    fig.text(
+        offset + delta,
+        0.18,
+        f"{explanation.prediction[-1]:.2f} =",
+        fontsize=fontsize_numbers,
+        ha="center",
+    )
+    fig.text(
+        offset + 2 * delta,
+        0.18,
+        f" {"" if explanation.expected_value[-1] >= 0 else "-"}",
+        ha="center",
+        fontsize=fontsize_numbers,
+        color=color1,
+    )
+    fig.text(
+        offset + 3 * delta,
+        0.18,
+        f" {abs(explanation.expected_value[-1]):.2f}",
+        ha="center",
+        fontsize=fontsize_numbers,
+        color=color1,
+    )
+    fig.text(
+        offset + 4 * delta,
+        0.18,
+        f" {"+" if sum_present_shap >= 0 else "-"}",
+        ha="center",
+        fontsize=fontsize_numbers,
+        color=color2,
+    )
+    fig.text(
+        offset + 5 * delta,
+        0.18,
+        f" {abs(sum_present_shap):.2f}",
+        ha="center",
+        fontsize=fontsize_numbers,
+        color=color2,
+    )
+    fig.text(
+        offset + 6 * delta,
+        0.18,
+        f" {"+" if sum_absent_shap >= 0 else "-"}",
+        fontsize=fontsize_numbers,
+        ha="center",
+        color=color3,
+    )
+    fig.text(
+        offset + 7 * delta,
+        0.18,
+        f" {abs(sum_absent_shap):.2f}",
+        ha="center",
+        fontsize=fontsize_numbers,
+        color=color3,
+    )
+
+    delta = 0.05
+    offset = offset + 0.0165
+    fig.text(offset, 0.13, "prediction =", ha="center", fontsize=10)
+    fig.text(
+        offset + 2 * delta,
+        0.12,
+        "expected\nvalue",
+        ha="center",
+        fontsize=10,
+        color=color1,
+    )
+    fig.text(offset + 3 * delta, 0.13, " + ", ha="center", fontsize=10, color=color2)
+    fig.text(
+        offset + 4 * delta,
+        0.12,
+        "features\npresent",
+        ha="center",
+        fontsize=10,
+        color=color2,
+    )
+    fig.text(offset + 5 * delta, 0.13, " + ", ha="center", fontsize=10, color=color3)
+    fig.text(
+        offset + 6 * delta,
+        0.12,
+        "features\nabsent",
+        ha="center",
+        fontsize=10,
+        color=color3,
+    )
+
+
 def _structure_heatmap(
     mol: RDKitMol,
     atom_weights: npt.NDArray[np.float64],
@@ -462,16 +579,7 @@ def structure_heatmap_shap(  # pylint: disable=too-many-branches, too-many-local
 
         fig.colorbar(im, ax=ax, orientation="vertical", fraction=0.015, pad=0.0)
 
-        # note: the prediction/expected value of the last array element is used
-        text = (
-            f"$Prediction = {explanation.prediction[-1]:.2f}$ ="
-            "\n"
-            "\n"
-            f"  $expected \ value={explanation.expected_value[-1]:.2f}$   +   "  # noqa: W605 # pylint: disable=anomalous-backslash-in-string
-            f"$features_{{present}}= {sum_present_shap:.2f}$   +   "
-            f"$features_{{absent}}={sum_absent_shap:.2f}$"
-        )
-        fig.text(0.5, 0.18, text, ha="center")
+        _add_shap_present_absent_features_text(fig, explanation, sum_present_shap, sum_absent_shap)
 
         image = plt_to_pil(fig)
         # clear the figure and memory
