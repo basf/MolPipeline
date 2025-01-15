@@ -310,7 +310,7 @@ def _add_shap_present_absent_features_text(
     fig.text(
         offset + 2 * delta,
         0.18,
-        f" {"" if explanation.expected_value[-1] >= 0 else "-"}",
+        f" {'' if explanation.expected_value[-1] >= 0 else '-'}",
         ha="center",
         fontsize=fontsize_numbers,
         color=color1,
@@ -326,7 +326,7 @@ def _add_shap_present_absent_features_text(
     fig.text(
         offset + 4 * delta,
         0.18,
-        f" {"+" if sum_present_shap >= 0 else "-"}",
+        f" {'+' if sum_present_shap >= 0 else '-'}",
         ha="center",
         fontsize=fontsize_numbers,
         color=color2,
@@ -342,7 +342,7 @@ def _add_shap_present_absent_features_text(
     fig.text(
         offset + 6 * delta,
         0.18,
-        f" {"+" if sum_absent_shap >= 0 else "-"}",
+        f" {'+' if sum_absent_shap >= 0 else '-'}",
         fontsize=fontsize_numbers,
         ha="center",
         color=color3,
