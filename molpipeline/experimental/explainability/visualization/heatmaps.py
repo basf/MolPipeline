@@ -145,6 +145,9 @@ class ValueGrid(Grid2D):
     functions.
     """
 
+    # list of functions to be evaluated for each grid cell
+    function_list: list[Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]]
+
     def __init__(
         self,
         x_lim: Sequence[float],
@@ -172,9 +175,7 @@ class ValueGrid(Grid2D):
         """
         super().__init__(x_lim, y_lim, x_res, y_res)
         if function_list is not None:
-            self.function_list: list[
-                Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
-            ] = function_list
+            self.function_list = function_list
         else:
             self.function_list = []
         self.values = np.zeros((self.x_res, self.y_res))
