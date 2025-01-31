@@ -66,7 +66,7 @@ def pad(
 
 
 def get_color_map_from_input(
-    color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None
+    color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None,
 ) -> Colormap:
     """Get a colormap from a user defined color scheme.
 
@@ -100,7 +100,7 @@ def get_color_map_from_input(
 
 
 def color_tuple_to_colormap(
-    color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple]
+    color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple],
 ) -> Colormap:
     """Convert a color tuple to a colormap.
 
