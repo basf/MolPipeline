@@ -15,7 +15,9 @@ from rdkit.Chem import SanitizeMol  # pylint: disable=no-name-in-module
 from rdkit.Chem import rdMolHash, rdmolops
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
-from molpipeline.abstract_pipeline_elements.core import InvalidInstance
+from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
+)
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
 )

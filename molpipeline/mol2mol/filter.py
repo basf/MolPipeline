@@ -14,7 +14,9 @@ from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 
-from molpipeline.abstract_pipeline_elements.core import InvalidInstance
+from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
+)
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
 )
