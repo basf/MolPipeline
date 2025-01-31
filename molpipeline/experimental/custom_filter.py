@@ -9,7 +9,9 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-from molpipeline.abstract_pipeline_elements.core import InvalidInstance
+from molpipeline.abstract_pipeline_elements.core import (
+    InvalidInstance,
+)
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
 )

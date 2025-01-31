@@ -21,7 +21,9 @@ from sklearn.utils import Bunch
 from sklearn.utils.metadata_routing import (
     _routing_enabled,  # pylint: disable=protected-access
 )
-from sklearn.utils.metadata_routing import process_routing
+from sklearn.utils.metadata_routing import (
+    process_routing,
+)
 from sklearn.utils.metaestimators import available_if
 from sklearn.utils.validation import check_memory
 
