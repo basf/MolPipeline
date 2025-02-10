@@ -3,11 +3,13 @@
 from unittest import TestCase
 
 import numpy as np
+from scipy.sparse import csr_matrix
 from sklearn.base import clone
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators import NamedNearestNeighbors, TanimotoToTraining
+from molpipeline.estimators.nearest_neighbor import NearestNeighborsRetrieverTanimoto
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.kernel import tanimoto_distance_sparse
 
@@ -31,6 +33,15 @@ TWO_NN_SIMILARITIES = np.array(
         [1.0, 3 / 14],
         [1.0, 4 / 9],
         [1.0, 4 / 9],
+    ]
+)
+
+FOUR_NN_SIMILARITIES = np.array(
+    [
+        [1.0, 3 / 14, 0.0, 0.0],
+        [1.0, 3 / 14, 0.038461538461538464, 0.0],
+        [1.0, 4 / 9, 0.0, 0.0],
+        [1.0, 4 / 9, 0.038461538461538464, 0.0],
     ]
 )
 
@@ -209,3 +220,95 @@ class TestNamedNearestNeighbors(TestCase):
         self.assertTrue(
             1 - np.allclose(distances[1:, :].astype(np.float64), TWO_NN_SIMILARITIES)
         )
+
+
+class TestNearestNeighborsRetrieverTanimoto(TestCase):
+    """Test nearest neighbors retriever with tanimoto."""
+
+    example_fingerprints: csr_matrix
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        """Set up the tests."""
+        morgan_pipeline = Pipeline(
+            [
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToMorganFP()),
+            ]
+        )
+        cls.example_fingerprints = morgan_pipeline.transform(TEST_SMILES)
+
+    def test_k_equals_1(self) -> None:
+        """Test the k=1 retrieval."""
+        target_fps = self.example_fingerprints
+        query_fps = self.example_fingerprints
+
+        retriever = NearestNeighborsRetrieverTanimoto(target_fps, k=1)
+        indices, similarities = retriever.predict(query_fps)
+        self.assertTrue(np.array_equal(indices, np.array([0, 1, 2, 3])))
+        self.assertTrue(np.allclose(similarities, np.array([1, 1, 1, 1])))
+
+        # test parallel
+        retriever = NearestNeighborsRetrieverTanimoto(
+            target_fps, k=1, n_jobs=2, batch_size=2
+        )
+        indices, similarities = retriever.predict(query_fps)
+        self.assertTrue(np.array_equal(indices, np.array([0, 1, 2, 3])))
+        self.assertTrue(np.allclose(similarities, np.array([1, 1, 1, 1])))
+
+    def test_k_greater_1_less_n(self) -> None:
+        """Test k>1 and k<n retrieval."""
+        target_fps = self.example_fingerprints
+        query_fps = self.example_fingerprints
+
+        retriever = NearestNeighborsRetrieverTanimoto(target_fps, k=2)
+        indices, similarities = retriever.predict(query_fps)
+        self.assertTrue(
+            np.array_equal(indices, np.array([[0, 1], [1, 0], [2, 3], [3, 2]]))
+        )
+        self.assertTrue(np.allclose(similarities, TWO_NN_SIMILARITIES))
+
+        # test parallel
+        retriever = NearestNeighborsRetrieverTanimoto(
+            target_fps, k=2, n_jobs=2, batch_size=2
+        )
+        indices, similarities = retriever.predict(query_fps)
+        self.assertTrue(
+            np.array_equal(indices, np.array([[0, 1], [1, 0], [2, 3], [3, 2]]))
+        )
+        self.assertTrue(np.allclose(similarities, TWO_NN_SIMILARITIES))
+
+    def test_k_equals_n(self) -> None:
+        """Test k=n retrieval."""
+        target_fps = self.example_fingerprints
+        query_fps = self.example_fingerprints
+
+        retriever = NearestNeighborsRetrieverTanimoto(target_fps, k=target_fps.shape[0])
+        indices, similarities = retriever.predict(query_fps)
+        self.assertTrue(
+            np.array_equal(
+                indices,
+                np.array([[0, 1, 3, 2], [1, 0, 3, 2], [2, 3, 1, 0], [3, 2, 1, 0]]),
+            )
+        )
+        self.assertTrue(np.allclose(similarities, FOUR_NN_SIMILARITIES))
+
+        # test parallel
+        retriever = NearestNeighborsRetrieverTanimoto(
+            target_fps, k=target_fps.shape[0], n_jobs=2, batch_size=2
+        )
+        indices, similarities = retriever.predict(query_fps)
+        self.assertTrue(
+            np.array_equal(
+                indices,
+                np.array([[0, 1, 3, 2], [1, 0, 3, 2], [2, 3, 1, 0], [3, 2, 1, 0]]),
+            )
+        )
+        self.assertTrue(np.allclose(similarities, FOUR_NN_SIMILARITIES))
+
+    # [
+    #     [1.0, 3 / 14, 0.0, 0.0],
+    #     [1.0, 3 / 14, 0.038461538461538464, 0.0],
+    #     [1.0, 4 / 9, 0.0, 0.0],
+    #     [1.0, 4 / 9, 0.038461538461538464, 0.0],
+    # ]
