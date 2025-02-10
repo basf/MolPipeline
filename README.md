@@ -35,6 +35,21 @@ fingerprint-based models, 2024](https://doi.org/10.1039/D4FD00095A)
 \
 Further links: [repository](https://github.com/basf/neural-fingerprint-uncertainty)
 
+# Table of Contents
+
+- [MolPipeline](#molpipeline)
+  - [Background](#background)
+  - [Publications](#publications)
+- [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Documentation](#documentation)
+  - [Quick start](#quick-start)
+    - [Model building](#model-building)
+    - [Feature calculation](#feature-calculation)
+    - [Clustering](#clustering)
+    - [Explainability](#explainability)
+  - [License](#license)
+
 ## Installation
 ```commandline
 pip install molpipeline
