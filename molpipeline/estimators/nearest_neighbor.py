@@ -231,6 +231,12 @@ class NearestNeighborsRetrieverTanimoto:  # pylint: disable=too-few-public-metho
         ----------
         target_fingerprints: sparse.csr_matrix
             Fingerprints of target molecules. Must be a binary sparse matrix.
+        k: int, optional (default=None)
+            Number of nearest neighbors to find. If None, all neighbors are returned.
+        batch_size: int, optional (default=1000)
+            Size of the batches for parallel processing.
+        n_jobs: int, optional (default=1)
+            Number of parallel jobs to run for neighbors search.
         """
         self.target_fingerprints = target_fingerprints
         if k is None:
