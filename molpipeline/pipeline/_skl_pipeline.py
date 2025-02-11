@@ -868,7 +868,13 @@ class Pipeline(_Pipeline):
         raise ValueError("Last step has no classes_ attribute.")
 
     def __sklearn_tags__(self) -> Tags:
-        """Return the sklearn tags."""
+        """Return the sklearn tags.
+
+        Returns
+        -------
+        Tags
+            The sklearn tags.
+        """
         tags = super().__sklearn_tags__()
 
         if not self.steps:
