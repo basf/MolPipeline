@@ -399,7 +399,9 @@ class PipelineCompatibilityTest(unittest.TestCase):
                 ),
             ]
         )
-        calibrated_pipeline = CalibratedClassifierCV(s_pipeline, cv=2, ensemble=True, method="isotonic")
+        calibrated_pipeline = CalibratedClassifierCV(
+            s_pipeline, cv=2, ensemble=True, method="isotonic"
+        )
         calibrated_pipeline.fit(TEST_SMILES, CONTAINS_OX)
         predicted_value_array = calibrated_pipeline.predict(TEST_SMILES)
         predicted_proba_array = calibrated_pipeline.predict_proba(TEST_SMILES)
@@ -407,7 +409,6 @@ class PipelineCompatibilityTest(unittest.TestCase):
         self.assertIsInstance(predicted_proba_array, np.ndarray)
         self.assertEqual(predicted_value_array.shape, (len(TEST_SMILES),))
         self.assertEqual(predicted_proba_array.shape, (len(TEST_SMILES),))
-
 
 
 if __name__ == "__main__":
