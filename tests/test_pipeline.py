@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from joblib import Memory
 from sklearn.base import BaseEstimator
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
@@ -373,6 +374,33 @@ class PipelineTest(unittest.TestCase):
                 mem.clear(warn=False)
         self.assertEqual(best_param_dict[True], best_param_dict[False])
         self.assertTrue(np.allclose(prediction_dict[True], prediction_dict[False]))
+
+
+class PipleCompatibillityTest(unittest.TestCase):
+    """Test if the pipeline is compatible with other sklearn functionalities."""
+
+    def test_calibrated_classifier(self) -> None:
+        """Test if the pipeline can be used in a sklearn pipeline.
+
+        Returns
+        -------
+        None
+        """
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
+        d_tree = DecisionTreeClassifier()
+        s_pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("morgan", mol2morgan),
+                ("decision_tree", d_tree),
+            ]
+        )
+        calibrated_pipeline = CalibtatedClassifierCV(s_pipeline)
+        calibrated_pipeline.fit(TEST_SMILES, CONTAINS_OX)
+        predicted_value_array = s_pipeline.predict(TEST_SMILES)
+        for pred_val, true_val in zip(predicted_value_array, CONTAINS_OX):
+            self.assertEqual(pred_val, true_val)
 
 
 if __name__ == "__main__":
