@@ -376,7 +376,7 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(np.allclose(prediction_dict[True], prediction_dict[False]))
 
 
-class PipleCompatibillityTest(unittest.TestCase):
+class PipelineCompatibilityTest(unittest.TestCase):
     """Test if the pipeline is compatible with other sklearn functionalities."""
 
     def test_calibrated_classifier(self) -> None:
@@ -394,7 +394,7 @@ class PipleCompatibillityTest(unittest.TestCase):
                 (
                     "error_replacer",
                     PostPredictionWrapper(
-                        FilterReinserter.from_error_filter(error_filter, None)
+                        FilterReinserter.from_error_filter(error_filter, np.nan)
                     ),
                 ),
             ]
