@@ -19,7 +19,7 @@ from sklearn.base import clone
 from sklearn.pipeline import Pipeline as _Pipeline
 from sklearn.pipeline import _final_estimator_has, _fit_transform_one
 from sklearn.utils import Bunch
-from sklearn.utils._tags import get_tags, Tags  # pylint: disable=protected-access
+from sklearn.utils._tags import Tags, get_tags  # pylint: disable=protected-access
 from sklearn.utils.metadata_routing import (
     _routing_enabled,  # pylint: disable=protected-access
 )
