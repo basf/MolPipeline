@@ -26,11 +26,31 @@ from molpipeline.estimators.chemprop.models import (
     ChempropMulticlassClassifier,
     ChempropRegressor,
 )
+from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
 from tests import TEST_DATA_DIR
+
+
+def get_smiles_checker_pipeline() -> Pipeline:
+    """Get a pipeline that reads and writes the SMILES string."""
+    smiles2mol = SmilesToMol()
+    mol2smiles = MolToSmiles()
+    error_filter = ErrorFilter(filter_everything=True)
+    filter_reinserter = FilterReinserter.from_error_filter(
+        error_filter, fill_value=np.nan
+    )
+    smiles_pipeline = Pipeline(
+        [
+            ("smiles2mol", smiles2mol),
+            ("error_filter", error_filter),
+            ("mol2smiles", mol2smiles),
+            ("filter_reinserter", filter_reinserter),
+        ],
+    )
+    return smiles_pipeline
 
 
 # pylint: disable=duplicate-code
@@ -320,9 +340,16 @@ class TestClassificationPipeline(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up repeated variables."""
-        self.molecule_net_bbbp_df = pd.read_csv(
+        molecule_net_bbbp_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz", sep="\t", nrows=100
         )
+        smiles_pipeline = get_smiles_checker_pipeline()
+        molecule_net_bbbp_df["smiles"] = smiles_pipeline.transform(
+            molecule_net_bbbp_df["smiles"]
+        )
+        molecule_net_bbbp_df = molecule_net_bbbp_df.dropna(subset=["smiles", "p_np"])
+
+        self.molecule_net_bbbp_df = molecule_net_bbbp_df
 
     def test_prediction(self) -> None:
         """Test the prediction of the classification model."""
