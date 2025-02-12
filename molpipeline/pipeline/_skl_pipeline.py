@@ -870,6 +870,11 @@ class Pipeline(_Pipeline):
     def __sklearn_tags__(self) -> Tags:
         """Return the sklearn tags.
 
+        Note
+        ----
+        This method is copied from the original sklearn implementation.
+        Changes are marked with a comment.
+
         Returns
         -------
         Tags
@@ -900,7 +905,7 @@ class Pipeline(_Pipeline):
             pass
 
         try:
-            # Only the _final_estimator is changed from the original implementation
+            # Only the _final_estimator is changed from the original implementation is changed in the following 2 lines
             if (
                 self._final_estimator is not None
                 and self._final_estimator != "passthrough"
@@ -923,6 +928,11 @@ class Pipeline(_Pipeline):
 
         Please check :ref:`User Guide <metadata_routing>` on how the routing
         mechanism works.
+
+        Note
+        ----
+        This method is copied from the original sklearn implementation.
+        Changes are marked with a comment.
 
         Returns
         -------
@@ -966,6 +976,7 @@ class Pipeline(_Pipeline):
 
             router.add(method_mapping=method_mapping, **{name: trans})
 
+        # Only the _non_post_processing_steps is changed from the original implementation is changed in the following line
         final_name, final_est = self._non_post_processing_steps()[-1]
         if final_est is None or final_est == "passthrough":
             return router
