@@ -11,6 +11,11 @@ import numpy as np
 import numpy.typing as npt
 from loguru import logger
 from sklearn.base import clone
+from sklearn.utils._tags import (
+    ClassifierTags,
+    RegressorTags,
+    Tags,
+)
 from sklearn.utils.metaestimators import available_if
 
 try:
@@ -123,6 +128,24 @@ class ChempropModel(ABCChemprop):
             True if the model is a classifier, False otherwise.
         """
         return self._is_binary_classifier() or self._is_multiclass_classifier()
+
+    def __sklearn_tags__(self) -> Tags:
+        """Return the sklearn tags.
+
+        Returns
+        -------
+        Tags
+            The sklearn tags for the model.
+        """
+        tags = super().__sklearn_tags__()
+        if self._is_classifier():
+            tags.estimator_type = "classifier"
+            tags.classifier_tags = ClassifierTags()
+        else:
+            tags.estimator_type = "regressor"
+            tags.regressor_tags = RegressorTags()
+        tags.target_tags.required = True
+        return tags
 
     def _predict(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
