@@ -35,7 +35,15 @@ from tests import TEST_DATA_DIR
 
 
 def get_smiles_checker_pipeline() -> Pipeline:
-    """Get a pipeline that reads and writes the SMILES string."""
+    """Get a pipeline that reads and writes the SMILES string.
+
+    Invalid SMILES strings are replaced with NaN.
+
+    Returns
+    -------
+    Pipeline
+        The pipeline that reads and writes the SMILES string.
+    """
     smiles2mol = SmilesToMol()
     mol2smiles = MolToSmiles()
     error_filter = ErrorFilter(filter_everything=True)
