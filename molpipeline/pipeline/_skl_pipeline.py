@@ -216,8 +216,8 @@ class Pipeline(_Pipeline):
     # pylint: disable=too-many-locals,too-many-branches
     def _fit(
         self,
-        X: Any,  # pylint: disable=invalid-name
-        y: Any = None,  # pylint: disable=invalid-name
+        X: Any,
+        y: Any = None,
         routed_params: dict[str, Any] | None = None,
         raw_params: dict[str, Any] | None = None,
     ) -> tuple[Any, Any]:
@@ -669,9 +669,7 @@ class Pipeline(_Pipeline):
             Result of calling `fit_predict` on the final estimator.
         """
         routed_params = self._check_method_params(method="fit_predict", props=params)
-        iter_input, iter_label = self._fit(
-            X, y, routed_params
-        )  # pylint: disable=invalid-name
+        iter_input, iter_label = self._fit(X, y, routed_params)
 
         params_last_step = routed_params[self._non_post_processing_steps()[-1][0]]
         with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
