@@ -1,5 +1,7 @@
 """Defines a pipeline is exposed to the user, accessible via pipeline."""
 
+# pylint: disable=too-many-lines
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -14,18 +16,15 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from sklearn.base import _fit_context  # pylint: disable=protected-access
-from sklearn.base import clone
+from sklearn.base import _fit_context, clone
 from sklearn.pipeline import Pipeline as _Pipeline
 from sklearn.pipeline import _final_estimator_has, _fit_transform_one
 from sklearn.utils import Bunch
-from sklearn.utils._tags import Tags, get_tags  # pylint: disable=protected-access
-from sklearn.utils.metadata_routing import (
-    _routing_enabled,  # pylint: disable=protected-access
-)
+from sklearn.utils._tags import Tags, get_tags
 from sklearn.utils.metadata_routing import (
     MetadataRouter,
     MethodMapping,
+    _routing_enabled,
     process_routing,
 )
 from sklearn.utils.metaestimators import available_if
