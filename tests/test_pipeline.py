@@ -224,7 +224,6 @@ class PipelineTest(unittest.TestCase):
         # Compare with expected output (Which is the same as the output without the faulty smiles)
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
-
     def test_caching(self) -> None:
         """Test if the caching gives the same results and is faster on the second run."""
 
@@ -280,7 +279,6 @@ class PipelineTest(unittest.TestCase):
 
 class PipelineCompatibilityTest(unittest.TestCase):
     """Test if the pipeline is compatible with other sklearn functionalities."""
-
 
     def test_gridsearchcv(self) -> None:
         """Test if the MolPipeline can be used in sklearn's GridSearchCV."""
@@ -342,7 +340,6 @@ class PipelineCompatibilityTest(unittest.TestCase):
             for k, value in param_grid.items():
                 self.assertIn(grid_search_cv.best_params_[k], value)
 
-
     def test_gridsearch_cache(self) -> None:
         """Run a short GridSearchCV and check if the caching and not caching gives the same results."""
         h_params = {
@@ -381,7 +378,6 @@ class PipelineCompatibilityTest(unittest.TestCase):
                 mem.clear(warn=False)
         self.assertEqual(best_param_dict[True], best_param_dict[False])
         self.assertTrue(np.allclose(prediction_dict[True], prediction_dict[False]))
-
 
     def test_calibrated_classifier(self) -> None:
         """Test if the pipeline can be used with a CalibratedClassifierCV."""
