@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-import multiprocessing
 from typing import Any, Callable, Literal, Sequence, Union
 
 from joblib import Parallel, delayed
+from scipy.sparse import csr_matrix
+from sklearn.base import BaseEstimator
+
+from molpipeline.utils.multi_proc import check_available_cores
 
 try:
     from typing import Self
@@ -207,8 +210,8 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         return self.predict(X, return_distance=return_distance, n_neighbors=n_neighbors)
 
 
-class NearestNeighborsRetrieverTanimoto:  # pylint: disable=too-few-public-methods
-    """k-nearest neighbors between data sets using Tanimoto similarity.
+class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
+    """k-nearest neighbors (KNN) between data sets using Tanimoto similarity.
 
     This class uses the Tanimoto similarity to find the k-nearest neighbors of a query set in a target set.
     The full similarity matrix is computed and reduced to the k-nearest neighbors. A dot-product based
@@ -218,42 +221,85 @@ class NearestNeighborsRetrieverTanimoto:  # pylint: disable=too-few-public-metho
     the batches can be processed in parallel using joblib.
     """
 
+    target_indices_mapping_: npt.NDArray[np.int64] | None
+
     def __init__(
         self,
-        target_fingerprints: sparse.csr_matrix,
-        k: int | None = None,
+        *,
+        k: int | None,
         batch_size: int = 1000,
         n_jobs: int = 1,
     ):
-        """Initialize NearestNeighborsRetrieverTanimoto.
+        """Initialize TanimotoKNN.
 
         Parameters
         ----------
-        target_fingerprints: sparse.csr_matrix
-            Fingerprints of target molecules. Must be a binary sparse matrix.
-        k: int, optional (default=None)
+        k: int | None
             Number of nearest neighbors to find. If None, all neighbors are returned.
         batch_size: int, optional (default=1000)
             Size of the batches for parallel processing.
         n_jobs: int, optional (default=1)
             Number of parallel jobs to run for neighbors search.
         """
-        self.target_fingerprints = target_fingerprints
-        if k is None:
-            self.k = self.target_fingerprints.shape[0]
-        else:
-            self.k = k
+        self.target_fingerprints: csr_matrix | None = None
+        self.k = k
         self.batch_size = batch_size
-        if n_jobs == -1:
-            self.n_jobs = multiprocessing.cpu_count()
-        else:
-            self.n_jobs = n_jobs
+        self.n_jobs = check_available_cores(n_jobs)
+        self.knn_reduce_function: (
+            Callable[
+                [npt.NDArray[np.float64]],
+                tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]],
+            ]
+            | None
+        ) = None
+
+    def fit(
+        self,
+        X: sparse.csr_matrix,  # pylint: disable=invalid-name
+        y: Sequence[Any] | None = None,  # pylint: disable=invalid-name
+    ) -> Self:
+        """Fit the estimator using X as target fingerprint data set.
+
+        Parameters
+        ----------
+        X : sparse.csr_matrix
+            The target fingerprint data set. By calling `predict`, searches are performed
+            against this target data set.
+        y : Sequence[Any]
+            Target values. Here values are used as returned nearest neighbors.
+            Must have the same length as X.
+            Will be stored as the learned_names_ attribute as npt.NDArray[Any].
+
+        Returns
+        -------
+        Self
+            The instance itself.
+
+        Raises
+        ------
+        ValueError
+            If the input arrays have different lengths or do not have a shape nor len attribute.
+        """
+        if y is None:
+            y = list(range(X.shape[0]))
+        if X.shape[0] != get_length(y):
+            raise ValueError("X and y must have the same length.")
+
+        if self.k is None:
+            # set k to the number of target fingerprints if k is None
+            self.k = X.shape[0]
+
+        # determine the recude function dependent on the value of k
         if self.k == 1:
             self.knn_reduce_function = self._reduce_k_equals_1
-        elif self.k < self.target_fingerprints.shape[0]:
+        elif self.k < X.shape[0]:
             self.knn_reduce_function = self._reduce_k_greater_1_less_n
         else:
-            self.knn_reduce_function = self._reduct_to_indices_k_equals_n
+            self.knn_reduce_function = self._reduce_k_equals_n
+
+        self.target_indices_mapping_ = np.array(y)
+        self.target_fingerprints = X
+        return self
 
     @staticmethod
     def _reduce_k_equals_1(
@@ -320,7 +366,7 @@ class NearestNeighborsRetrieverTanimoto:  # pylint: disable=too-few-public-metho
         return topk_indices_sorted, topk_similarities_sorted
 
     @staticmethod
-    def _reduct_to_indices_k_equals_n(
+    def _reduce_k_equals_n(
         similarity_matrix: npt.NDArray[np.float64],
     ) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
         """Reduce similarity matrix to k=n nearest neighbors.
@@ -360,11 +406,16 @@ class NearestNeighborsRetrieverTanimoto:  # pylint: disable=too-few-public-metho
             query_batch, self.target_fingerprints
         )
 
+        if self.knn_reduce_function is None:
+            raise AssertionError(
+                "The knn_reduce_function has not been set. This should happen in the fit function."
+            )
         # reduce the similarity matrix to the k nearest neighbors
         return self.knn_reduce_function(similarity_mat_chunk)
 
     def predict(
-        self, query_fingerprints: sparse.csr_matrix
+        self,
+        query_fingerprints: sparse.csr_matrix,
     ) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
         """Predict the k-nearest neighbors of the query fingerprints.
 
@@ -378,6 +429,12 @@ class NearestNeighborsRetrieverTanimoto:  # pylint: disable=too-few-public-metho
         tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]
             Indices of the k-nearest neighbors in the target fingerprints and the corresponding similarities.
         """
+        if self.target_fingerprints is None:
+            raise ValueError("The model has not been fitted yet.")
+        if self.k is None:
+            raise AssertionError(
+                "The number of neighbors k has not been set. This should happen in the fit function."
+            )
         if query_fingerprints.shape[1] != self.target_fingerprints.shape[1]:
             raise ValueError(
                 "The number of features in the query fingerprints does not match the number of features in the target fingerprints."

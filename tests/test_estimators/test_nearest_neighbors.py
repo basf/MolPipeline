@@ -9,7 +9,7 @@ from sklearn.base import clone
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators import NamedNearestNeighbors, TanimotoToTraining
-from molpipeline.estimators.nearest_neighbor import NearestNeighborsRetrieverTanimoto
+from molpipeline.estimators.nearest_neighbor import TanimotoKNN
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.kernel import tanimoto_distance_sparse
 
@@ -222,8 +222,8 @@ class TestNamedNearestNeighbors(TestCase):
         )
 
 
-class TestNearestNeighborsRetrieverTanimoto(TestCase):
-    """Test nearest neighbors retriever with tanimoto."""
+class TestTanimotoKNN(TestCase):
+    """Test TanimotoKNN estimator."""
 
     example_fingerprints: csr_matrix
 
@@ -243,16 +243,16 @@ class TestNearestNeighborsRetrieverTanimoto(TestCase):
         target_fps = self.example_fingerprints
         query_fps = self.example_fingerprints
 
-        retriever = NearestNeighborsRetrieverTanimoto(target_fps, k=1)
-        indices, similarities = retriever.predict(query_fps)
+        knn = TanimotoKNN(k=1)
+        knn.fit(target_fps)
+        indices, similarities = knn.predict(query_fps)
         self.assertTrue(np.array_equal(indices, np.array([0, 1, 2, 3])))
         self.assertTrue(np.allclose(similarities, np.array([1, 1, 1, 1])))
 
         # test parallel
-        retriever = NearestNeighborsRetrieverTanimoto(
-            target_fps, k=1, n_jobs=2, batch_size=2
-        )
-        indices, similarities = retriever.predict(query_fps)
+        knn = TanimotoKNN(k=1, n_jobs=2, batch_size=2)
+        knn.fit(target_fps)
+        indices, similarities = knn.predict(query_fps)
         self.assertTrue(np.array_equal(indices, np.array([0, 1, 2, 3])))
         self.assertTrue(np.allclose(similarities, np.array([1, 1, 1, 1])))
 
@@ -261,18 +261,18 @@ class TestNearestNeighborsRetrieverTanimoto(TestCase):
         target_fps = self.example_fingerprints
         query_fps = self.example_fingerprints
 
-        retriever = NearestNeighborsRetrieverTanimoto(target_fps, k=2)
-        indices, similarities = retriever.predict(query_fps)
+        knn = TanimotoKNN(k=2)
+        knn.fit(target_fps)
+        indices, similarities = knn.predict(query_fps)
         self.assertTrue(
             np.array_equal(indices, np.array([[0, 1], [1, 0], [2, 3], [3, 2]]))
         )
         self.assertTrue(np.allclose(similarities, TWO_NN_SIMILARITIES))
 
         # test parallel
-        retriever = NearestNeighborsRetrieverTanimoto(
-            target_fps, k=2, n_jobs=2, batch_size=2
-        )
-        indices, similarities = retriever.predict(query_fps)
+        knn = TanimotoKNN(k=2, n_jobs=2, batch_size=2)
+        knn.fit(target_fps)
+        indices, similarities = knn.predict(query_fps)
         self.assertTrue(
             np.array_equal(indices, np.array([[0, 1], [1, 0], [2, 3], [3, 2]]))
         )
@@ -283,8 +283,9 @@ class TestNearestNeighborsRetrieverTanimoto(TestCase):
         target_fps = self.example_fingerprints
         query_fps = self.example_fingerprints
 
-        retriever = NearestNeighborsRetrieverTanimoto(target_fps, k=target_fps.shape[0])
-        indices, similarities = retriever.predict(query_fps)
+        knn = TanimotoKNN(k=target_fps.shape[0])
+        knn.fit(target_fps)
+        indices, similarities = knn.predict(query_fps)
         self.assertTrue(
             np.array_equal(
                 indices,
@@ -294,10 +295,9 @@ class TestNearestNeighborsRetrieverTanimoto(TestCase):
         self.assertTrue(np.allclose(similarities, FOUR_NN_SIMILARITIES))
 
         # test parallel
-        retriever = NearestNeighborsRetrieverTanimoto(
-            target_fps, k=target_fps.shape[0], n_jobs=2, batch_size=2
-        )
-        indices, similarities = retriever.predict(query_fps)
+        knn = TanimotoKNN(k=target_fps.shape[0], n_jobs=2, batch_size=2)
+        knn.fit(target_fps)
+        indices, similarities = knn.predict(query_fps)
         self.assertTrue(
             np.array_equal(
                 indices,
@@ -306,9 +306,37 @@ class TestNearestNeighborsRetrieverTanimoto(TestCase):
         )
         self.assertTrue(np.allclose(similarities, FOUR_NN_SIMILARITIES))
 
-    # [
-    #     [1.0, 3 / 14, 0.0, 0.0],
-    #     [1.0, 3 / 14, 0.038461538461538464, 0.0],
-    #     [1.0, 4 / 9, 0.0, 0.0],
-    #     [1.0, 4 / 9, 0.038461538461538464, 0.0],
-    # ]
+    def test_pipeline(self) -> None:
+        """Test TanimotoKNN in a pipeline."""
+        # test normal pipeline
+        pipeline = Pipeline(
+            [
+                ("mol", SmilesToMol()),
+                ("fingerprint", MolToMorganFP()),
+                ("knn", TanimotoKNN(k=1)),
+            ]
+        )
+        pipeline.fit(TEST_SMILES)
+        indices, similarities = pipeline.predict(TEST_SMILES)
+        self.assertTrue(np.array_equal(indices, np.array([0, 1, 2, 3])))
+        self.assertTrue(np.allclose(similarities, np.array([1, 1, 1, 1])))
+
+        # test pipeline with failing smiles
+        test_smiles = [
+            "c1ccccc1",
+            "c1cc(-C(=O)O)ccc1",
+            "I am a failing smiles :)",
+            "CCCCCCN",
+            "CCCCCCO",
+        ]
+        pipeline = Pipeline(
+            [
+                ("mol", SmilesToMol()),
+                ("error_filter", ErrorFilter(filter_everything=True)),
+                ("fingerprint", MolToMorganFP()),
+                ("knn", TanimotoKNN(k=1)),
+            ]
+        )
+        pipeline.fit(test_smiles)
+        indices, similarities = pipeline.predict(test_smiles)
+        todo assert right result
