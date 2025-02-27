@@ -41,7 +41,6 @@ class _MolPipeline:
         element_list: list[ABCPipelineElement],
         n_jobs: int = 1,
         name: str = "MolPipeline",
-        raise_nones: bool = False,
     ) -> None:
         """Initialize MolPipeline.
 
@@ -53,8 +52,6 @@ class _MolPipeline:
             Number of cores used.
         name: str
             Name of pipeline.
-        raise_nones: bool
-            If True, raise an error if a None is encountered in the pipeline.
 
         Returns
         -------
@@ -66,7 +63,6 @@ class _MolPipeline:
         self._requires_fitting = any(
             element.requires_fitting for element in self._element_list
         )
-        self.raise_nones = raise_nones
 
     @property
     def _filter_elements(self) -> list[ErrorFilter]:
@@ -157,13 +153,11 @@ class _MolPipeline:
                 "element_list": self.element_list,
                 "n_jobs": self.n_jobs,
                 "name": self.name,
-                "raise_nones": self.raise_nones,
             }
         return {
             "element_list": self._element_list,
             "n_jobs": self.n_jobs,
             "name": self.name,
-            "raise_nones": self.raise_nones,
         }
 
     def set_params(self, **parameter_dict: Any) -> Self:
@@ -185,8 +179,6 @@ class _MolPipeline:
             self.n_jobs = int(parameter_dict["n_jobs"])
         if "name" in parameter_dict:
             self.name = str(parameter_dict["name"])
-        if "raise_nones" in parameter_dict:
-            self.raise_nones = bool(parameter_dict["raise_nones"])
         return self
 
     @property
