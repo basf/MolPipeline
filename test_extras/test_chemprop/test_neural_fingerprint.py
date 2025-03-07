@@ -33,3 +33,8 @@ class TestChempropNeuralFingerprint(unittest.TestCase):
         chemprop_json = recursive_to_json(chemprop_fp_encoder)
         chemprop_encoder_copy = recursive_from_json(chemprop_json)
         compare_params(self, chemprop_fp_encoder, chemprop_encoder_copy)
+
+    def test_output_type(self) -> None:
+        """Test the output type."""
+        chemprop_fp_encoder = get_neural_fp_encoder()
+        self.assertEqual(chemprop_fp_encoder.output_type, "float")
