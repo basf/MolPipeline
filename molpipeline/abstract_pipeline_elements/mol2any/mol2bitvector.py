@@ -330,6 +330,13 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
     """Abstract Class for Morgan fingerprints."""
 
+    @property
+    def output_type(self) -> str:
+        """Get output type."""
+        if self.counted:
+            return "integer"
+        return "binary"
+
     # pylint: disable=R0913
     def __init__(
         self,
