@@ -12,7 +12,17 @@ from molpipeline.estimators.chemprop.abstract import ABCChemprop
 
 
 class ChempropNeuralFP(ABCChemprop):
-    """Wrap Chemprop in a sklearn like transformer returning the neural fingerprint as a numpy array."""
+    """Wrap Chemprop in a sklearn like transformer returning the neural fingerprint as a numpy array.
+
+    This class is not a (grand-) child of MolToAnyPipelineElement, as it does not support the `pretransform_single`
+    method. To maintain compatibility with the MolToAnyPipelineElement, the `output_type` property is implemented.
+    It can be used as any other transformer in the pipeline, except in the `MolToConcatenatedVector`.
+    """
+
+    @property
+    def output_type(self) -> str:
+        """Return the output type of the transformer."""
+        return "float"
 
     def __init__(
         self,
