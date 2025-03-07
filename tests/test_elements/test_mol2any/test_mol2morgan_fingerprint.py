@@ -63,6 +63,13 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertTrue(np.any(output_counted > output_binary))
 
     def test_output_types(self) -> None:
+        """Test if the output types are correct for counted and binary fingerprints."""
+        mol_fp = MolToMorganFP(counted=False)
+        self.assertEqual(mol_fp.output_type, "binary")
+        mol_fp = MolToMorganFP(counted=True)
+        self.assertEqual(mol_fp.output_type, "integer")
+
+    def test_return_value_types(self) -> None:
         """Test equality of different output_types."""
 
         smi2mol = SmilesToMol()
