@@ -62,7 +62,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     def fit(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
+        X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
     ) -> Self:
         """Fit the model.
