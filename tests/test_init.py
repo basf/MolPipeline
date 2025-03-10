@@ -6,8 +6,9 @@ from molpipeline import __version__
 
 
 class TestInit(unittest.TestCase):
+    """Test functionality set at package init."""
 
-    def test_version(self):
+    def test_version(self) -> None:
         """Test that the package has a version."""
         self.assertIsInstance(__version__, str)
         splitted = __version__.split(".")
