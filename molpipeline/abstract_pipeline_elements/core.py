@@ -18,7 +18,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from loguru import logger
 from rdkit import Chem
-from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
+from rdkit.Chem import Mol as RDKitMol
 
 from molpipeline.utils.multi_proc import check_available_cores
 
@@ -392,23 +392,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         None
         """
         self.set_params(**parameters)
-
-    def copy(self) -> Self:
-        """Copy the object.
-
-        Returns
-        -------
-        Self
-            Copy of the object.
-        """
-        recreated_object = self.__class__(**self.parameters)
-        for key, value in self.additional_attributes.items():
-            if not hasattr(recreated_object, key):
-                raise AssertionError(
-                    f"Cannot set attribute {key} on {self.__class__.__name__}. This should not happen!"
-                )
-            setattr(recreated_object, key, copy.copy(value))
-        return recreated_object
 
     def fit_to_result(self, values: Any) -> Self:
         """Fit object to result of transformed values.
