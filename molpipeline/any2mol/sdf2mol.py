@@ -86,10 +86,6 @@ class SDFToMol(_StringToMolPipelineElement):
             self.identifier = parameters["identifier"]
         return self
 
-    def finish(self) -> None:
-        """Reset the mol counter which assigns identifiers."""
-        self.mol_counter = 0
-
     def pretransform_single(self, value: str) -> OptionalMol:
         """Transform an SDF-strings to a rdkit molecule.
 

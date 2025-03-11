@@ -229,12 +229,6 @@ class ABCPipelineElement(abc.ABC):
         """Return whether the object requires fitting or not."""
         return self._requires_fitting
 
-    def finish(self) -> None:
-        """Inform object that iteration has been finished. Does in most cases nothing.
-
-        Called after all transform singles have been processed. From MolPipeline
-        """
-
     def fit(self, values: Any, labels: Any = None) -> Self:
         """Fit object to input_values.
 
@@ -562,7 +556,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         output_rows = self.pretransform(values)
         output_rows = self.finalize_list(output_rows)
         output = self.assemble_output(output_rows)
-        self.finish()
         return output
 
 
