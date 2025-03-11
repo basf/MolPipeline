@@ -14,7 +14,6 @@ except ImportError:
 
 from uuid import uuid4
 
-import numpy as np
 from joblib import Parallel, delayed
 from loguru import logger
 from rdkit import Chem
@@ -204,11 +203,6 @@ class ABCPipelineElement(abc.ABC):
                 )
             setattr(self, att_name, att_value)
         return self
-
-    @property
-    def additional_attributes(self) -> dict[str, Any]:
-        """Any attribute relevant for recreating and exact copy, which is not a parameter."""
-        return {}
 
     @property
     def n_jobs(self) -> int:
@@ -570,29 +564,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         output = self.assemble_output(output_rows)
         self.finish()
         return output
-
-    def to_json(self) -> dict[str, Any]:
-        """Return all defining attributes of object as dict.
-
-        Returns
-        -------
-        dict[str, Any]
-            A dictionary with all attributes necessary to initialize a object with same parameters.
-        """
-        json_dict: dict[str, Any] = {
-            "__name__": self.__class__.__name__,
-            "__module__": self.__class__.__module__,
-        }
-        json_dict.update(self.parameters)
-        if self.additional_attributes:
-            adittional_attributes = {}
-            for key, value in self.additional_attributes.items():
-                if isinstance(value, np.ndarray):
-                    adittional_attributes[key] = value.tolist()
-                else:
-                    adittional_attributes[key] = value
-            json_dict["additional_attributes"] = adittional_attributes
-        return json_dict
 
 
 class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
