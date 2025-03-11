@@ -224,7 +224,7 @@ class _MolPipeline:
     def fit(
         self,
         x_input: Any,
-        y: Any = None,  # pylint: disable=invalid-name
+        y: Any = None,
         **fit_params: dict[Any, Any],
     ) -> Self:
         """Fit the MolPipeline according to x_input.
@@ -249,7 +249,7 @@ class _MolPipeline:
             self.fit_transform(x_input)
         return self
 
-    def fit_transform(  # pylint: disable=invalid-name,unused-argument
+    def fit_transform(  # pylint: disable=unused-argument
         self,
         x_input: Any,
         y: Any = None,
@@ -396,11 +396,6 @@ class _MolPipeline:
             return last_element.assemble_output(value_list)
         return list(value_list)
 
-    def _finish(self) -> None:
-        """Inform each pipeline element that the iterations have finished."""
-        for p_element in self._element_list:
-            p_element.finish()
-
     def _transform_iterator(self, x_input: Any) -> Any:
         """Transform the input according to the sequence of provided PipelineElements.
 
@@ -431,7 +426,6 @@ class _MolPipeline:
             else:
                 yield transformed_value
         agg_filter.set_total(len(x_input))
-        self._finish()
 
     def co_transform(self, x_input: TypeFixedVarSeq) -> TypeFixedVarSeq:
         """Filter flagged rows from the input.
