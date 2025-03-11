@@ -24,12 +24,10 @@ class SDFToMol(_StringToMolPipelineElement):
     """PipelineElement transforming a list of SDF strings to mol_objects."""
 
     identifier: str
-    mol_counter: int
 
-    # pylint: disable=R0913
     def __init__(
         self,
-        identifier: str = "enumerate",
+        identifier: str = "smiles",
         name: str = "SDF2Mol",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -39,7 +37,7 @@ class SDFToMol(_StringToMolPipelineElement):
         Parameters
         ----------
         identifier: str
-            Method of assigning identifiers to molecules. At the moment molecules are counted.
+            Method of assigning identifiers to molecules. At the moment only "smiles" is supported.
         name: str
             Name of PipelineElement
         n_jobs: int
@@ -49,7 +47,6 @@ class SDFToMol(_StringToMolPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.identifier = identifier
-        self.mol_counter = 0
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -120,6 +117,5 @@ class SDFToMol(_StringToMolPipelineElement):
                 self.name,
             )
         if self.identifier == "smiles":
-            mol.SetProp("identifier", str(self.mol_counter))
-        self.mol_counter += 1
+            mol.SetProp("identifier", Chem.MolToSmiles(mol))
         return mol
