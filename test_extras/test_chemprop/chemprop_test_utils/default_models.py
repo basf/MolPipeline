@@ -1,5 +1,7 @@
 """Functions for creating default chemprop models."""
 
+from typing import Any
+
 from molpipeline.estimators.chemprop import ChempropModel, ChempropNeuralFP
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
@@ -28,8 +30,15 @@ def get_binary_classification_mpnn() -> MPNN:
     return mpnn
 
 
-def get_neural_fp_encoder() -> ChempropNeuralFP:
+def get_neural_fp_encoder(
+    init_kwargs: dict[str, Any] | None = None,
+) -> ChempropNeuralFP:
     """Get the Chemprop model.
+
+    Parameters
+    ----------
+    init_kwargs : dict[str, Any], optional
+        Additional keyword arguments to pass to `ChempropNeuralFP` during initialization.
 
     Returns
     -------
@@ -37,7 +46,10 @@ def get_neural_fp_encoder() -> ChempropNeuralFP:
         The Chemprop model.
     """
     mpnn = get_binary_classification_mpnn()
-    chemprop_model = ChempropNeuralFP(model=mpnn, lightning_trainer__accelerator="cpu")
+    init_kwargs = init_kwargs or {}
+    chemprop_model = ChempropNeuralFP(
+        model=mpnn, lightning_trainer__accelerator="cpu", **init_kwargs
+    )
     return chemprop_model
 
 
