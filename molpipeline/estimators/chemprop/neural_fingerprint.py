@@ -51,6 +51,7 @@ class ChempropNeuralFP(ABCChemprop):
             Parameters for components of the model.
         """
         # pylint: disable=duplicate-code
+        self.disable_fitting = disable_fitting
         super().__init__(
             model=model,
             lightning_trainer=lightning_trainer,
@@ -58,7 +59,6 @@ class ChempropNeuralFP(ABCChemprop):
             n_jobs=n_jobs,
             **kwargs,
         )
-        self.disable_fitting = disable_fitting
 
     def fit(
         self,
