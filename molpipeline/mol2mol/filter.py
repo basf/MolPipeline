@@ -147,7 +147,7 @@ class ElementFilter(_MolToMolPipelineElement):
             }
         else:
             self._allowed_element_numbers = {
-                atom_number: count_value_to_tuple(count)
+                int(atom_number): count_value_to_tuple(count)
                 for atom_number, count in allowed_element_numbers.items()
             }
 
