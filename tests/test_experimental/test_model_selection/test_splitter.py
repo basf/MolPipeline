@@ -78,17 +78,24 @@ class TestGroupShuffleSplit(unittest.TestCase):
                 self.assertEqual(gss.get_n_splits(X, y, groups=groups_i), n_splits)
 
                 l_unique = np.unique(groups_i)
-                l = np.asarray(groups_i)
+                groups_i_array = np.asarray(groups_i)
 
                 for train, test in gss.split(X, y, groups=groups_i):
                     # First test: no train group is in the test set and vice versa
-                    l_train_unique = np.unique(l[train])
-                    l_test_unique = np.unique(l[test])
-                    self.assertFalse(np.any(np.isin(l[train], l_test_unique)))
-                    self.assertFalse(np.any(np.isin(l[test], l_train_unique)))
+                    l_train_unique = np.unique(groups_i_array[train])
+                    l_test_unique = np.unique(groups_i_array[test])
+                    self.assertFalse(
+                        np.any(np.isin(groups_i_array[train], l_test_unique))
+                    )
+                    self.assertFalse(
+                        np.any(np.isin(groups_i_array[test], l_train_unique))
+                    )
 
                     # Second test: train and test add up to all the data
-                    self.assertEqual(l[train].size + l[test].size, l.size)
+                    self.assertEqual(
+                        groups_i_array[train].size + groups_i_array[test].size,
+                        groups_i_array.size,
+                    )
 
                     # Third test: train and test are disjoint
                     assert_array_equal(np.intersect1d(train, test), [])
