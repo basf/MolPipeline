@@ -11,6 +11,11 @@ import numpy as np
 import numpy.typing as npt
 from loguru import logger
 from sklearn.base import clone
+from sklearn.utils._tags import (
+    ClassifierTags,
+    RegressorTags,
+    Tags,
+)
 from sklearn.utils.metaestimators import available_if
 
 try:
@@ -124,6 +129,24 @@ class ChempropModel(ABCChemprop):
         """
         return self._is_binary_classifier() or self._is_multiclass_classifier()
 
+    def __sklearn_tags__(self) -> Tags:
+        """Return the sklearn tags.
+
+        Returns
+        -------
+        Tags
+            The sklearn tags for the model.
+        """
+        tags = super().__sklearn_tags__()
+        if self._is_classifier():
+            tags.estimator_type = "classifier"
+            tags.classifier_tags = ClassifierTags()
+        else:
+            tags.estimator_type = "regressor"
+            tags.regressor_tags = RegressorTags()
+        tags.target_tags.required = True
+        return tags
+
     def _predict(
         self, X: MoleculeDataset  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
@@ -143,8 +166,7 @@ class ChempropModel(ABCChemprop):
         test_data = build_dataloader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
         prediction_array = np.vstack(predictions)  # type: ignore
-        prediction_array = prediction_array.squeeze()
-
+        prediction_array = prediction_array.squeeze(axis=1)
         # Check if the predictions have the same length as the input dataset
         if prediction_array.shape[0] != len(X):
             raise AssertionError(

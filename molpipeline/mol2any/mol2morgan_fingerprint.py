@@ -83,6 +83,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
                 f"Number of bits has to be a positve integer, which is > 0! (Received: {n_bits})"
             )
         self._n_bits = n_bits
+        self._feature_names = [f"morgan_{i}" for i in range(self._n_bits)]
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -125,7 +126,9 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
 
         return self
 
-    def _get_fp_generator(self) -> rdFingerprintGenerator.FingerprintGenerator:
+    def _get_fp_generator(
+        self,
+    ) -> rdFingerprintGenerator.FingerprintGenerator64:
         """Get the fingerprint generator.
 
         Returns

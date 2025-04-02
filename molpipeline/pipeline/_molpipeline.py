@@ -25,7 +25,7 @@ from molpipeline.error_handling import (
     FilterReinserter,
     _MultipleErrorFilter,
 )
-from molpipeline.utils.molpipeline_types import NumberIterable
+from molpipeline.utils.molpipeline_types import TypeFixedVarSeq
 from molpipeline.utils.multi_proc import check_available_cores
 
 
@@ -41,7 +41,6 @@ class _MolPipeline:
         element_list: list[ABCPipelineElement],
         n_jobs: int = 1,
         name: str = "MolPipeline",
-        raise_nones: bool = False,
     ) -> None:
         """Initialize MolPipeline.
 
@@ -53,8 +52,6 @@ class _MolPipeline:
             Number of cores used.
         name: str
             Name of pipeline.
-        raise_nones: bool
-            If True, raise an error if a None is encountered in the pipeline.
 
         Returns
         -------
@@ -66,7 +63,6 @@ class _MolPipeline:
         self._requires_fitting = any(
             element.requires_fitting for element in self._element_list
         )
-        self.raise_nones = raise_nones
 
     @property
     def _filter_elements(self) -> list[ErrorFilter]:
@@ -157,13 +153,11 @@ class _MolPipeline:
                 "element_list": self.element_list,
                 "n_jobs": self.n_jobs,
                 "name": self.name,
-                "raise_nones": self.raise_nones,
             }
         return {
             "element_list": self._element_list,
             "n_jobs": self.n_jobs,
             "name": self.name,
-            "raise_nones": self.raise_nones,
         }
 
     def set_params(self, **parameter_dict: Any) -> Self:
@@ -185,8 +179,6 @@ class _MolPipeline:
             self.n_jobs = int(parameter_dict["n_jobs"])
         if "name" in parameter_dict:
             self.name = str(parameter_dict["name"])
-        if "raise_nones" in parameter_dict:
-            self.raise_nones = bool(parameter_dict["raise_nones"])
         return self
 
     @property
@@ -257,10 +249,10 @@ class _MolPipeline:
             self.fit_transform(x_input)
         return self
 
-    def fit_transform(
+    def fit_transform(  # pylint: disable=invalid-name,unused-argument
         self,
         x_input: Any,
-        y: Any = None,  # pylint: disable=invalid-name
+        y: Any = None,
         **fit_params: dict[str, Any],
     ) -> Any:
         """Fit the MolPipeline according to x_input and return the transformed molecules.
@@ -280,16 +272,14 @@ class _MolPipeline:
             Transformed molecules.
         """
         iter_input = x_input
-        _ = y  # Making pylint happy, does no(t a)thing
-        _ = fit_params  # Making pylint happy
 
-        # The meta elements merge steps which do not require fitting to improve parallelization
-        iter_element_list = self._get_meta_element_list()
         removed_rows: dict[ErrorFilter, list[int]] = {}
         for error_filter in self._filter_elements:
             removed_rows[error_filter] = []
         iter_idx_array = np.arange(len(iter_input))
-        for i_element in iter_element_list:
+
+        # The meta elements merge steps which do not require fitting to improve parallelization
+        for i_element in self._get_meta_element_list():
             if not isinstance(i_element, (TransformingPipelineElement, _MolPipeline)):
                 continue
             i_element.n_jobs = self.n_jobs
@@ -314,8 +304,8 @@ class _MolPipeline:
         for error_filter in self._filter_elements:
             removed_idx_list = removed_rows[error_filter]
             error_filter.error_indices = []
-            for new_idx, idx in enumerate(iter_idx_array):
-                if idx in removed_idx_list:
+            for new_idx, _idx in enumerate(iter_idx_array):
+                if _idx in removed_idx_list:
                     error_filter.error_indices.append(new_idx)
             error_filter.n_total = len(iter_idx_array)
             iter_idx_array = error_filter.co_transform(iter_idx_array)
@@ -443,7 +433,7 @@ class _MolPipeline:
         agg_filter.set_total(len(x_input))
         self._finish()
 
-    def co_transform(self, x_input: NumberIterable) -> NumberIterable:
+    def co_transform(self, x_input: TypeFixedVarSeq) -> TypeFixedVarSeq:
         """Filter flagged rows from the input.
 
         Parameters

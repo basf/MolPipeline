@@ -9,6 +9,7 @@ import numpy as np
 import numpy.typing as npt
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
+from sklearn.utils.validation import validate_data
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import AutoToMol
@@ -165,7 +166,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         Self
             Fitted estimator.
         """
-        X = self._validate_data(X, ensure_min_samples=2, ensure_2d=False, dtype=None)
+        X = validate_data(self, X=X, ensure_min_samples=2, ensure_2d=False, dtype=None)
         return self._fit(X)
 
     # pylint: disable=C0103,W0613

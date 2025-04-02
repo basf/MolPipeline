@@ -1,7 +1,10 @@
 """Defines a pipeline is exposed to the user, accessible via pipeline."""
 
+# pylint: disable=too-many-lines
+
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any, Iterable, List, Literal, Optional, Tuple, TypeVar, Union
 
 try:
@@ -13,15 +16,17 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from sklearn.base import _fit_context  # pylint: disable=protected-access
-from sklearn.base import clone
+from sklearn.base import _fit_context, clone
 from sklearn.pipeline import Pipeline as _Pipeline
 from sklearn.pipeline import _final_estimator_has, _fit_transform_one
 from sklearn.utils import Bunch
+from sklearn.utils._tags import Tags, get_tags
 from sklearn.utils.metadata_routing import (
-    _routing_enabled,  # pylint: disable=protected-access
+    MetadataRouter,
+    MethodMapping,
+    _routing_enabled,
+    process_routing,
 )
-from sklearn.utils.metadata_routing import process_routing
 from sklearn.utils.metaestimators import available_if
 from sklearn.utils.validation import check_memory
 
@@ -211,9 +216,10 @@ class Pipeline(_Pipeline):
     # pylint: disable=too-many-locals,too-many-branches
     def _fit(
         self,
-        X: Any,  # pylint: disable=invalid-name
-        y: Any = None,  # pylint: disable=invalid-name
+        X: Any,
+        y: Any = None,
         routed_params: dict[str, Any] | None = None,
+        raw_params: dict[str, Any] | None = None,
     ) -> tuple[Any, Any]:
         """Fit the model by fitting all transformers except the final estimator.
 
@@ -227,6 +233,11 @@ class Pipeline(_Pipeline):
             Training objectives.
         routed_params : dict[str, Any], optional
             Parameters for each step as returned by process_routing.
+            Although this is marked as optional, it should not be None.
+            The awkward (argward?) typing is due to inheritance from sklearn.
+            Can be an empty dictionary.
+        raw_params : dict[str, Any], optional
+            Parameters passed by the user, used when `transform_input`
 
         Returns
         -------
@@ -236,6 +247,8 @@ class Pipeline(_Pipeline):
         # shallow copy of steps - this should really be steps_
         self.steps = list(self.steps)
         self._validate_steps()
+        if routed_params is None:
+            raise AssertionError("routed_params should not be None.")
 
         # Set up the memory
         memory: joblib.Memory = check_memory(self.memory)
@@ -255,18 +268,19 @@ class Pipeline(_Pipeline):
                 cloned_transformer = clone(transformer)
             if isinstance(cloned_transformer, _MolPipeline):
                 if routed_params:
-                    fit_parameter = {
+                    step_params = {
                         "element_parameters": [routed_params[n] for n in name]
                     }
                 else:
-                    fit_parameter = {}
+                    step_params = {}
             elif isinstance(name, list):
                 raise AssertionError()
             else:
-                if routed_params:
-                    fit_parameter = routed_params[name]
-                else:
-                    fit_parameter = {}
+                step_params = self._get_metadata_for_step(
+                    step_idx=step_idx,
+                    step_params=routed_params[name],
+                    all_params=raw_params,
+                )
 
             # Fit or load from cache the current transformer
             X, fitted_transformer = fit_transform_one_cached(
@@ -276,7 +290,7 @@ class Pipeline(_Pipeline):
                 None,
                 message_clsname="Pipeline",
                 message=self._log_message(step_idx),
-                params=fit_parameter,
+                params=step_params,
             )
             # Replace the transformer of the step with the fitted
             # transformer. This is necessary when loading the transformer
@@ -471,7 +485,9 @@ class Pipeline(_Pipeline):
                         "All input rows were filtered out! Model is not fitted!"
                     )
                 else:
-                    fit_params_last_step = routed_params[self.steps[-1][0]]
+                    fit_params_last_step = routed_params[
+                        self._non_post_processing_steps()[-1][0]
+                    ]
                     self._final_estimator.fit(Xt, yt, **fit_params_last_step["fit"])
 
         return self
@@ -541,7 +557,9 @@ class Pipeline(_Pipeline):
             elif is_empty(iter_input):
                 logger.warning("All input rows were filtered out! Model is not fitted!")
             else:
-                last_step_params = routed_params[self.steps[-1][0]]
+                last_step_params = routed_params[
+                    self._non_post_processing_steps()[-1][0]
+                ]
                 if hasattr(last_step, "fit_transform"):
                     iter_input = last_step.fit_transform(
                         iter_input, iter_label, **last_step_params["fit_transform"]
@@ -604,7 +622,8 @@ class Pipeline(_Pipeline):
         elif hasattr(self._final_estimator, "predict"):
             if _routing_enabled():
                 iter_input = self._final_estimator.predict(
-                    iter_input, **routed_params[self._final_estimator].predict
+                    iter_input,
+                    **routed_params[self._non_post_processing_steps()[-1][0]].predict,
                 )
             else:
                 iter_input = self._final_estimator.predict(iter_input, **params)
@@ -650,11 +669,9 @@ class Pipeline(_Pipeline):
             Result of calling `fit_predict` on the final estimator.
         """
         routed_params = self._check_method_params(method="fit_predict", props=params)
-        iter_input, iter_label = self._fit(
-            X, y, routed_params
-        )  # pylint: disable=invalid-name
+        iter_input, iter_label = self._fit(X, y, routed_params)
 
-        params_last_step = routed_params[self.steps[-1][0]]
+        params_last_step = routed_params[self._non_post_processing_steps()[-1][0]]
         with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator == "passthrough":
                 y_pred = iter_input
@@ -713,7 +730,10 @@ class Pipeline(_Pipeline):
         elif hasattr(self._final_estimator, "predict_proba"):
             if _routing_enabled():
                 iter_input = self._final_estimator.predict_proba(
-                    iter_input, **routed_params[self.steps[-1][0]].predict_proba
+                    iter_input,
+                    **routed_params[
+                        self._non_post_processing_steps()[-1][0]
+                    ].predict_proba,
                 )
             else:
                 iter_input = self._final_estimator.predict_proba(iter_input, **params)
@@ -843,3 +863,140 @@ class Pipeline(_Pipeline):
         if hasattr(last_step, "classes_"):
             return last_step.classes_
         raise ValueError("Last step has no classes_ attribute.")
+
+    def __sklearn_tags__(self) -> Tags:
+        """Return the sklearn tags.
+
+        Note
+        ----
+        This method is copied from the original sklearn implementation.
+        Changes are marked with a comment.
+
+        Returns
+        -------
+        Tags
+            The sklearn tags.
+        """
+        tags = super().__sklearn_tags__()
+
+        if not self.steps:
+            return tags
+
+        try:
+            if self.steps[0][1] is not None and self.steps[0][1] != "passthrough":
+                tags.input_tags.pairwise = get_tags(
+                    self.steps[0][1]
+                ).input_tags.pairwise
+            # WARNING: the sparse tag can be incorrect.
+            # Some Pipelines accepting sparse data are wrongly tagged sparse=False.
+            # For example Pipeline([PCA(), estimator]) accepts sparse data
+            # even if the estimator doesn't as PCA outputs a dense array.
+            tags.input_tags.sparse = all(
+                get_tags(step).input_tags.sparse
+                for name, step in self.steps
+                if step != "passthrough"
+            )
+        except (ValueError, AttributeError, TypeError):
+            # This happens when the `steps` is not a list of (name, estimator)
+            # tuples and `fit` is not called yet to validate the steps.
+            pass
+
+        try:
+            # Only the _final_estimator is changed from the original implementation is changed in the following 2 lines
+            if (
+                self._final_estimator is not None
+                and self._final_estimator != "passthrough"
+            ):
+                last_step_tags = get_tags(self._final_estimator)
+                tags.estimator_type = last_step_tags.estimator_type
+                tags.target_tags.multi_output = last_step_tags.target_tags.multi_output
+                tags.classifier_tags = deepcopy(last_step_tags.classifier_tags)
+                tags.regressor_tags = deepcopy(last_step_tags.regressor_tags)
+                tags.transformer_tags = deepcopy(last_step_tags.transformer_tags)
+        except (ValueError, AttributeError, TypeError):
+            # This happens when the `steps` is not a list of (name, estimator)
+            # tuples and `fit` is not called yet to validate the steps.
+            pass
+
+        return tags
+
+    def get_metadata_routing(self) -> MetadataRouter:
+        """Get metadata routing of this object.
+
+        Please check :ref:`User Guide <metadata_routing>` on how the routing
+        mechanism works.
+
+        Note
+        ----
+        This method is copied from the original sklearn implementation.
+        Changes are marked with a comment.
+
+        Returns
+        -------
+        MetadataRouter
+            A :class:`~sklearn.utils.metadata_routing.MetadataRouter` encapsulating
+            routing information.
+        """
+        router = MetadataRouter(owner=self.__class__.__name__)
+
+        # first we add all steps except the last one
+        for _, name, trans in self._iter(with_final=False, filter_passthrough=True):
+            method_mapping = MethodMapping()
+            # fit, fit_predict, and fit_transform call fit_transform if it
+            # exists, or else fit and transform
+            if hasattr(trans, "fit_transform"):
+                (
+                    method_mapping.add(caller="fit", callee="fit_transform")
+                    .add(caller="fit_transform", callee="fit_transform")
+                    .add(caller="fit_predict", callee="fit_transform")
+                )
+            else:
+                (
+                    method_mapping.add(caller="fit", callee="fit")
+                    .add(caller="fit", callee="transform")
+                    .add(caller="fit_transform", callee="fit")
+                    .add(caller="fit_transform", callee="transform")
+                    .add(caller="fit_predict", callee="fit")
+                    .add(caller="fit_predict", callee="transform")
+                )
+
+            (
+                method_mapping.add(caller="predict", callee="transform")
+                .add(caller="predict", callee="transform")
+                .add(caller="predict_proba", callee="transform")
+                .add(caller="decision_function", callee="transform")
+                .add(caller="predict_log_proba", callee="transform")
+                .add(caller="transform", callee="transform")
+                .add(caller="inverse_transform", callee="inverse_transform")
+                .add(caller="score", callee="transform")
+            )
+
+            router.add(method_mapping=method_mapping, **{name: trans})
+
+        # Only the _non_post_processing_steps is changed from the original implementation is changed in the following line
+        final_name, final_est = self._non_post_processing_steps()[-1]
+        if final_est is None or final_est == "passthrough":
+            return router
+
+        # then we add the last step
+        method_mapping = MethodMapping()
+        if hasattr(final_est, "fit_transform"):
+            method_mapping.add(caller="fit_transform", callee="fit_transform")
+        else:
+            method_mapping.add(caller="fit", callee="fit").add(
+                caller="fit", callee="transform"
+            )
+        (
+            method_mapping.add(caller="fit", callee="fit")
+            .add(caller="predict", callee="predict")
+            .add(caller="fit_predict", callee="fit_predict")
+            .add(caller="predict_proba", callee="predict_proba")
+            .add(caller="decision_function", callee="decision_function")
+            .add(caller="predict_log_proba", callee="predict_log_proba")
+            .add(caller="transform", callee="transform")
+            .add(caller="inverse_transform", callee="inverse_transform")
+            .add(caller="score", callee="score")
+        )
+
+        router.add(method_mapping=method_mapping, **{final_name: final_est})
+        return router

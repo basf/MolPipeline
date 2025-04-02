@@ -35,7 +35,9 @@ class TestBin2Mol(unittest.TestCase):
         ]
         for mol in test_mols:
             bin2mol = BinaryToMol()
-            mol = bin2mol.pretransform_single(mol.ToBinary())
+            transformed_mol = bin2mol.pretransform_single(mol.ToBinary())
             log_block = rdBase.BlockLogs()
-            self.assertEqual(Chem.MolToInchi(mol), Chem.MolToInchi(mol))
+            self.assertEqual(
+                Chem.MolToInchi(transformed_mol), Chem.MolToInchi(transformed_mol)
+            )
             del log_block

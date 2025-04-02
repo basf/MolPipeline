@@ -155,7 +155,7 @@ def builtin_to_json(obj: tuple[Any, ...]) -> tuple[Any, ...]:
 
 @typing.overload
 def builtin_to_json(
-    obj: types.FunctionType | set[Any] | dict[Any, Any]
+    obj: types.FunctionType | set[Any] | dict[Any, Any],
 ) -> dict[str, Any]:
     """Transform a builtin object to an object savable as json file.
 
