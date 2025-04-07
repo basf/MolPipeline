@@ -7,6 +7,7 @@ from typing import Any
 
 import numpy as np
 
+from abstract_pipeline_elements.core import InvalidInstance
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToMorganFP
@@ -150,6 +151,8 @@ class TestMol2MorganFingerprint(unittest.TestCase):
             for fp_gen in [sparse_morgan, dense_morgan, explicit_bit_vect_morgan]:
                 for counted in [False, True]:
                     mol = smi2mol.transform([test_smi])[0]
+                    if isinstance(mol, InvalidInstance):
+                        raise AssertionError(f"Invalid molecule: {test_smi}")
                     fp_gen.set_params(counted=counted)
                     fp = fp_gen.transform([mol])
                     mapping = fp_gen.bit2atom_mapping(mol)
