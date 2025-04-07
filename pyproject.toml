@@ -47,10 +47,13 @@ exclude = ["tests", "docs"]
 
 [dependency-groups]
 dev = [
+    "bandit>=1.8.3",
     "black[jupyter]>=25.1.0",
     "coverage>=7.8.0",
     "docsig>=0.69.3",
     "flake8>=7.2.0",
+    "interrogate>=1.7.0",
+    "isort>=6.0.1",
     "mypy>=1.15.0",
     "pydocstyle>=6.3.0",
     "pylint>=3.3.6",
