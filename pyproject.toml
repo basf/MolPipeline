@@ -35,6 +35,9 @@ notebooks = [
     "seaborn>=0.13.2",
 ]
 
+[tool.bandit]
+exclude_dirs = [".venv"]
+
 [tool.setuptools.dynamic]
 version = {attr = "molpipeline.__version__"}
 
