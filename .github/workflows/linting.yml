@@ -17,12 +17,11 @@ jobs:
         python-version: "3.11"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install $(find . -name "requirement*" -type f -printf ' -r %p')
-        pip install pylint
+        python -m pip install uv
+        uv install torch --index-url https://download.pytorch.org/whl/cpu
     - name: Analysing the code with pylint
       run: |
-        pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
+        uv run pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
   mypy:
     runs-on: ubuntu-latest
     steps:
@@ -33,13 +32,12 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install mypy
-        mypy . || exit_code=$?
-        mypy --install-types --non-interactive
+        python -m pip install uv
+        uv run mypy . || exit_code=$?
+        uv run mypy --install-types --non-interactive
     - name: Analysing the code with mypy
       run: |
-        mypy --ignore-missing-imports --disallow-any-generics --disallow-untyped-defs --no-implicit-optional --disallow-incomplete-defs . 
+        uv run mypy --ignore-missing-imports --disallow-any-generics --disallow-untyped-defs --no-implicit-optional --disallow-incomplete-defs .
   pydocstyle:
     runs-on: ubuntu-latest
     steps:
@@ -50,11 +48,10 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install pydocstyle
+        python -m pip install uv
     - name: Analysing the code with pydocstyle
       run: |
-        pydocstyle .
+        uv run pydocstyle .
 
   docsig:
     runs-on: ubuntu-latest
@@ -66,11 +63,10 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install docsig
+        python -m pip install uv
     - name: Analysing the code with docsig
       run: |
-        docsig --check-class-constructor --check-dunders --check-protected-class-methods --check-nested --check-overridden --check-protected .
+        uv run docsig --check-class-constructor --check-dunders --check-protected-class-methods --check-nested --check-overridden --check-protected .
 
   black:
     runs-on: ubuntu-latest
@@ -82,11 +78,10 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install black[jupyter]
+        python -m pip install uv
     - name: Analysing the code with black
       run: |
-        black --check .
+        uv run black --check .
 
   flake8:
     runs-on: ubuntu-latest
@@ -98,11 +93,10 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install flake8
+          python -m pip install uv
       - name: Analysing the code with flake8
         run: |
-          flake8 --extend-ignore=D203,E203,E501,W503 .
+          uv run flake8 --extend-ignore=D203,E203,E501,W503 .
 
   interrogate:
     runs-on: ubuntu-latest
@@ -114,11 +108,11 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install interrogate
+          python -m pip install uv
+          uv install interrogate
       - name: Analysing the code with interrogate
         run: |
-         interrogate --ignore-overloaded-functions -vv .
+         uv run interrogate --ignore-overloaded-functions -vv .
 
   bandit:
     runs-on: ubuntu-latest
@@ -130,11 +124,11 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install bandit
+          python -m pip install uv
+          uv pip install bandit
       - name: Analysing the code with bandit
         run: |
-         bandit -r --skip=B404,B603,B602 .
+         uv run bandit -r --skip=B404,B603,B602 .
 
   isort:
     runs-on: ubuntu-latest
@@ -146,11 +140,11 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install isort
+          python -m pip install uv
+          uv install isort
       - name: Analysing the code with isort
         run: |
-          isort --profile black --check-only .
+          uv run isort --profile black --check-only .
 
   test_basis:
     needs:
@@ -175,15 +169,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install package
         run: |
-          python -m pip install --upgrade pip
-          pip install coverage
-          pip install .
+          python -m pip install uv
       - name: Run unit-tests
         run: |
           # Run only the core test suite in the tests directory.
-          coverage run --source=molpipeline,tests -m unittest discover tests
+          uv run coverage run --source=molpipeline,tests -m unittest discover tests
           # Create a coverage report. Fail if the coverage is below 85%. Exclude extra packages from the report.
-          coverage report --fail-under=85 --omit="*chemprop*","*/*chemprop*/*"
+          uv run coverage report --fail-under=85 --omit="*chemprop*","*/*chemprop*/*"
 
   test_chemprop:
     needs:
@@ -200,16 +192,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install package
         run: |
-          python -m pip install --upgrade pip
-          pip install coverage
-          pip install torch
-          pip install .[chemprop]
+          python -m pip install uv
+          uv install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Run unit-tests for chemprop
         run: |
           # Run only the chemprop test suite.
-          coverage run --source=molpipeline,tests -m unittest discover test_extras/test_chemprop
+          uv run coverage run --source=molpipeline,tests -m unittest discover test_extras/test_chemprop
           # Create a coverage report. Fail if the coverage is below 85%. Include only chemprop files in the report.
-          coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*"
+          uv run coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*"
 
   test_notebooks:
     needs:
@@ -223,8 +213,7 @@ jobs:
           python-version: "3.11"
       - name: Install package
         run: |
-          python -m pip install --upgrade pip
-          pip install .[notebooks]
+          python -m pip install uv
       - name: Run unit-tests for notebooks
         run: |
-          python test_extras/test_notebooks/test_notebooks.py  --continue-on-failure
+          uv run python test_extras/test_notebooks/test_notebooks.py  --continue-on-failure
