@@ -27,3 +27,13 @@ exclude = ["tests", "docs"]
 
 [tool.setuptools.package-data]
 "molpipeline" = ["py.typed"]
+
+[tool.ruff.lint]
+preview = true
+select = ["E", "F", "I", "B", "Q", "S", "W", "D", "DOC", "PL"]
+
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = ["PLE1142", "W391"]
+
+[tool.ruff.lint.pylint]
+max-positional-args = 10
