@@ -172,7 +172,9 @@ def main() -> None:
 
     for notebook_dir in NOTEBOOK_DIRS:
         run_notebooks(
-            base_path / notebook_dir, skip_notebook_prefixes_paths, args.continue_on_error
+            base_path / notebook_dir,
+            skip_notebook_prefixes_paths,
+            args.continue_on_error,
         )
 
 
