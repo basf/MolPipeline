@@ -7,8 +7,8 @@ from typing import Any
 
 import numpy as np
 
-from abstract_pipeline_elements.core import InvalidInstance
 from molpipeline import Pipeline
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToMorganFP
 from tests.utils.fingerprints import fingerprints_to_numpy
