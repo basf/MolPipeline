@@ -162,15 +162,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: astral-sh/setup-uv@v5
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install coverage
+          pip install -r pyproject.toml
       - name: Run unit-tests
         run: |
           # Run only the core test suite in the tests directory.
-          uv run coverage run --source=molpipeline,tests -m unittest discover tests
+          coverage run --source=molpipeline,tests -m unittest discover tests
           # Create a coverage report. Fail if the coverage is below 85%. Exclude extra packages from the report.
-          uv run coverage report --fail-under=85 --omit="*chemprop*","*/*chemprop*/*"
+          coverage report --fail-under=85 --omit="*chemprop*","*/*chemprop*/*"
 
   test_chemprop:
     needs:
@@ -182,7 +187,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install package
