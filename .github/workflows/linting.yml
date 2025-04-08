@@ -12,12 +12,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: astral-sh/setup-uv@v5
       with:
         python-version: "3.11"
     - name: Install dependencies
       run: |
-        python -m pip install uv
         uv sync --all-extras
         uv pip install torch --index-url https://download.pytorch.org/whl/cpu
     - name: Analysing the code with pylint
@@ -28,12 +27,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: astral-sh/setup-uv@v5
       with:
-        python-version: "3.13"
+        python-version: "3.12"
     - name: Install dependencies
       run: |
-        python -m pip install uv
         uv run mypy . || exit_code=$?
         uv run mypy --install-types --non-interactive
     - name: Analysing the code with mypy
@@ -49,10 +47,10 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install uv
+        python -m pip install pydocstyle
     - name: Analysing the code with pydocstyle
       run: |
-        uv run pydocstyle .
+        run pydocstyle .
 
   docsig:
     runs-on: ubuntu-latest
@@ -64,10 +62,10 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install uv
+        python -m pip install docsig
     - name: Analysing the code with docsig
       run: |
-        uv run docsig --check-class-constructor --check-dunders --check-protected-class-methods --check-nested --check-overridden --check-protected .
+        docsig --check-class-constructor --check-dunders --check-protected-class-methods --check-nested --check-overridden --check-protected .
 
   black:
     runs-on: ubuntu-latest
@@ -79,10 +77,10 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install uv
+        python -m pip install black
     - name: Analysing the code with black
       run: |
-        uv run black --check .
+        black --check .
 
   flake8:
     runs-on: ubuntu-latest
@@ -94,10 +92,10 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install uv
+          python -m pip install flake8
       - name: Analysing the code with flake8
         run: |
-          uv run flake8 --extend-ignore=D203,E203,E501,W503 --extend-exclude .venv .
+          flake8 --extend-ignore=D203,E203,E501,W503 --extend-exclude .venv .
 
   interrogate:
     runs-on: ubuntu-latest
@@ -109,10 +107,10 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install uv
+          python -m pip install interrogate
       - name: Analysing the code with interrogate
         run: |
-         uv run interrogate --ignore-overloaded-functions -vv .
+         interrogate --ignore-overloaded-functions -vv .
 
   bandit:
     runs-on: ubuntu-latest
@@ -124,10 +122,10 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install uv
+          python -m pip install bandit
       - name: Analysing the code with bandit
         run: |
-         uv run bandit -r --skip=B404,B603,B602 -c pyproject.toml .
+         bandit -r --skip=B404,B603,B602 -c pyproject.toml .
 
   isort:
     runs-on: ubuntu-latest
@@ -139,10 +137,10 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install uv
+          python -m pip install isort
       - name: Analysing the code with isort
         run: |
-          uv run isort --profile black --check-only .
+          isort --profile black --check-only .
 
   test_basis:
     needs:
