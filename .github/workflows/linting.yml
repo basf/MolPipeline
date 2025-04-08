@@ -50,7 +50,7 @@ jobs:
         python -m pip install pydocstyle
     - name: Analysing the code with pydocstyle
       run: |
-        run pydocstyle .
+        pydocstyle .
 
   docsig:
     runs-on: ubuntu-latest
