@@ -191,7 +191,7 @@ jobs:
       - name: Install package
         run: |
           uv sync --all-extras
-          uv add torch --index-url https://download.pytorch.org/whl/cpu
+          uv pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Run unit-tests for chemprop
         run: |
           # Run only the chemprop test suite.
