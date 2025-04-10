@@ -143,7 +143,9 @@ class ElementFilter(_MolToMolPipelineElement):
         if allowed_element_numbers is None:
             allowed_element_numbers = self.DEFAULT_ALLOWED_ELEMENT_NUMBERS
         if isinstance(allowed_element_numbers, (list, set)):
-            self._allowed_element_numbers = dict.fromkeys(allowed_element_numbers, (0, None))
+            self._allowed_element_numbers = dict.fromkeys(
+                allowed_element_numbers, (0, None)
+            )
         else:
             self._allowed_element_numbers = {
                 int(atom_number): count_value_to_tuple(count)

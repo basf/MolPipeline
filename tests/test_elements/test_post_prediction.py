@@ -34,7 +34,7 @@ class TestPostPredictionWrapper(unittest.TestCase):
 
     def test_set_params(self) -> None:
         """Test set_params method.
-        
+
         Raises
         ------
         TypeError
