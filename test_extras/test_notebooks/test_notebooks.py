@@ -168,10 +168,13 @@ def main() -> None:
     args = parser.parse_args()
 
     skip_notebook_prefixes_paths = [Path(prefix) for prefix in SKIP_NOTEBOOKS_PREFIXES]
+    base_path = Path(__file__).parents[1].resolve()
 
     for notebook_dir in NOTEBOOK_DIRS:
         run_notebooks(
-            Path(notebook_dir), skip_notebook_prefixes_paths, args.continue_on_error
+            base_path / notebook_dir,
+            skip_notebook_prefixes_paths,
+            args.continue_on_error,
         )
 
 

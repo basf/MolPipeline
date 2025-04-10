@@ -18,7 +18,7 @@ except ImportError:
     from typing_extensions import override
 
 from molpipeline import Pipeline
-from molpipeline.abstract_pipeline_elements.core import OptionalMol
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance, OptionalMol
 from molpipeline.experimental.explainability.explanation import (
     AtomExplanationMixin,
     BondExplanationMixin,
@@ -128,6 +128,10 @@ def _convert_shap_feature_weights_to_atom_weights(
     npt.NDArray[np.float64]
         The atom weights.
     """
+    if isinstance(molecule, InvalidInstance):
+        raise ValueError(
+            "Molecule is None. Cannot convert SHAP values to atom weights."
+        )
     if feature_weights.ndim == 1:
         # regression case
         feature_weights_present_bits_only = feature_weights.copy()
@@ -147,7 +151,8 @@ def _convert_shap_feature_weights_to_atom_weights(
             molecule,
             featurization_element,
             feature_weights_present_bits_only,
-        )
+        ),
+        dtype=np.float64,
     )
     return atom_weights
 
@@ -157,7 +162,7 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
 
     @abc.abstractmethod
     def explain(
-        self, X: Any, **kwargs: Any  # pylint: disable=invalid-name,unused-argument
+        self, X: Any, **kwargs: Any  # pylint: disable=invalid-name
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
@@ -251,7 +256,7 @@ class SHAPExplainerAdapter(
 
     @override
     def explain(
-        self, X: Any, **kwargs: Any  # pylint: disable=invalid-name,unused-argument
+        self, X: Any, **kwargs: Any
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
