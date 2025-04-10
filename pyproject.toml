@@ -94,5 +94,6 @@ dev = [
     "mypy>=1.15.0",
     "pydocstyle>=6.3.0",
     "pylint>=3.3.6",
+    "pyright>=1.1.399",
     "rdkit-stubs>=0.8",
 ]
