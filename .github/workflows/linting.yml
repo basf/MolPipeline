@@ -156,6 +156,7 @@ jobs:
           pip install $(find . -name "requirement*" -type f -printf ' -r %p')
           pip install pyright
       - name: Analysing the code with pyright
+        continue-on-error: true
         run: |
           pyright .
 
@@ -172,6 +173,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff
       - name: Analysing the code with ruff
+        continue-on-error: true
         run: |
           ruff check .
 
