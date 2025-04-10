@@ -38,6 +38,40 @@ notebooks = [
 [tool.bandit]
 exclude_dirs = [".venv"]
 
+[tool.ruff.lint]
+preview = true
+select = [
+    "A",   # flake8-buildins
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "E",   # pycodestyle - errors
+    "F",   # pyflakes
+    "I",   # isort
+    "Q",   # flake8-quotes
+    "RUF", # ruff specific rules
+    "S",   # flake8-bandit
+    "W",   # pycodestyle - warnings
+    "D",   # pydocstyle
+    "DOC", # pydoclint
+    "PL",  # pylint
+    "UP"   # pyupgrade
+]
+ignore = [
+    "D203", # 1 blank line required before class docstring
+    "D213", # blank-line-before-class-docstring
+    "E501", # line-too-long
+    "PLR0913", # too-many-arguments
+]
+
+[tool.ruff.lint.pylint]
+max-positional-args = 10
+
+[tool.pyright]
+reportMissingImports = true
+reportMissingTypeStubs = false
+venvPath = "."
+venv = ".venv"
+
 [tool.setuptools.dynamic]
 version = {attr = "molpipeline.__version__"}
 
