@@ -868,12 +868,12 @@ class Pipeline(_Pipeline):
     def __sklearn_tags__(self) -> Tags:
         """Return the sklearn tags.
 
-        Note:
-        ----
+        Notes
+        -----
         This method is copied from the original sklearn implementation.
         Changes are marked with a comment.
 
-        Returns:
+        Returns
         -------
         Tags
             The sklearn tags.
@@ -927,12 +927,12 @@ class Pipeline(_Pipeline):
         Please check :ref:`User Guide <metadata_routing>` on how the routing
         mechanism works.
 
-        Note:
-        ----
+        Notes
+        -----
         This method is copied from the original sklearn implementation.
         Changes are marked with a comment.
 
-        Returns:
+        Returns
         -------
         MetadataRouter
             A :class:`~sklearn.utils.metadata_routing.MetadataRouter` encapsulating
