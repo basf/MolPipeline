@@ -46,7 +46,7 @@ class TestMakeScaffoldGeneric(TestCase):
     def check_generic_scaffold(
         self, params: dict[str, Any], expected_scaffold_list: list[str]
     ) -> None:
-        """Set parameters and check the results.
+        """Helper function to set parameters and check the results.
 
         Parameters
         ----------

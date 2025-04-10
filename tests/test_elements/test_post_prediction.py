@@ -25,7 +25,7 @@ class TestPostPredictionWrapper(unittest.TestCase):
         for key, value in ppw_params.items():
             first, _, rest = key.partition("__")
             if first == "wrapped_estimator":
-                if not rest:
+                if rest == "":
                     self.assertIs(rf, value)
                 else:
                     wrapped_params[rest] = value
@@ -33,13 +33,7 @@ class TestPostPredictionWrapper(unittest.TestCase):
         self.assertDictEqual(rf_params, wrapped_params)
 
     def test_set_params(self) -> None:
-        """Test set_params method.
-
-        Raises
-        ------
-        TypeError
-            If the wrapped estimator is not a RandomForestClassifier.
-        """
+        """Test set_params method."""
         rf = RandomForestClassifier()
         ppw = PostPredictionWrapper(rf)
 

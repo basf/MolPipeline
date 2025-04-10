@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 
@@ -28,7 +28,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         invalid_values: set[Any] | None = None,
         return_as_numpy_array: bool = False,
         name: str = "dummy",
-        uuid: str | None = None,
+        uuid: Optional[str] = None,
         n_jobs: int = 1,
     ) -> None:
         """Initialize MockTransformingPipelineElement.
@@ -41,7 +41,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
             If True return output as numpy array, otherwise as list.
         name: str, optional (default="dummy")
             Name of PipelineElement
-        uuid: str | None, optional (default=None)
+        uuid: str, optional (default=None)
             Unique identifier of PipelineElement.
         n_jobs: int, optional (default=1)
             Number of jobs to run in parallel.

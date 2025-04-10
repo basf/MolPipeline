@@ -25,7 +25,12 @@ class TestMolToMACCSFP(unittest.TestCase):
     """Unittest for MolToMACCSFP, which calculates MACCS Key Fingerprints."""
 
     def test_can_be_constructed(self) -> None:
-        """Test if the MolToMACCSFP pipeline element can be constructed."""
+        """Test if the MolToMACCSFP pipeline element can be constructed.
+
+        Returns
+        -------
+        None
+        """
         mol_fp = MolToMACCSFP()
         mol_fp_copy = mol_fp.copy()
         self.assertTrue(mol_fp_copy is not mol_fp)

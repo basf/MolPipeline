@@ -46,7 +46,12 @@ class PipelineTest(unittest.TestCase):
     """Unit test for the functionality of the pipeline class."""
 
     def test_fit_transform_single_core(self) -> None:
-        """Test if the generation of the fingerprint matrix works as expected."""
+        """Test if the generation of the fingerprint matrix works as expected.
+
+        Returns
+        -------
+        None
+        """
         # Create pipeline
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
@@ -64,7 +69,12 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
     def test_sklearn_pipeline(self) -> None:
-        """Test if the pipeline can be used in a sklearn pipeline."""
+        """Test if the pipeline can be used in a sklearn pipeline.
+
+        Returns
+        -------
+        None
+        """
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
@@ -81,7 +91,12 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(pred_val, true_val)
 
     def test_sklearn_pipeline_parallel(self) -> None:
-        """Test if the pipeline can be used in a sklearn pipeline."""
+        """Test if the pipeline can be used in a sklearn pipeline.
+
+        Returns
+        -------
+        None
+        """
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
@@ -100,7 +115,12 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(pred_val, true_val)
 
     def test_salt_removal(self) -> None:
-        """Test if salts are correctly removed from molecules."""
+        """Test if salts are correctly removed from molecules.
+
+        Returns
+        -------
+        None
+        """
         smiles_with_salt_list = ["CCO-[Na]", "CCC(=O)[O-].[Li+]", "CCC(=O)-O-[K]"]
         smiles_without_salt_list = ["CCO", "CCC(=O)O", "CCC(=O)O"]
 
@@ -121,14 +141,19 @@ class PipelineTest(unittest.TestCase):
                 ("mol2smi", mol2smi),
             ]
         )
-        generated_smiles_list = salt_remover_pipeline.transform(smiles_with_salt_list)
+        generated_smiles = salt_remover_pipeline.transform(smiles_with_salt_list)
         for generated_smiles, smiles_without_salt in zip(
-            generated_smiles_list, smiles_without_salt_list
+            generated_smiles, smiles_without_salt_list
         ):
             self.assertEqual(generated_smiles, smiles_without_salt)
 
     def test_json_generation(self) -> None:
-        """Test that the json representation of a pipeline can be loaded back into a pipeline."""
+        """Test that the json representation of a pipeline can be loaded back into a pipeline.
+
+        Returns
+        -------
+        None
+        """
         # Create pipeline
         smi2mol = SmilesToMol()
         metal_disconnector = MetalDisconnector()
@@ -170,7 +195,12 @@ class PipelineTest(unittest.TestCase):
                     self.assertEqual(value, original_params[key])
 
     def test_fit_transform_record_remove_nones(self) -> None:
-        """Test if the generation of the fingerprint matrix works as expected."""
+        """Test if the generation of the fingerprint matrix works as expected.
+
+        Returns
+        -------
+        None
+        """
         smi2mol = SmilesToMol()
         salt_remover = SaltRemover()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)

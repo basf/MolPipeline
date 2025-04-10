@@ -1,7 +1,6 @@
 """Test the custom filter element."""
 
 import unittest
-from typing import ClassVar
 
 from molpipeline import Pipeline
 from molpipeline.any2mol import AutoToMol
@@ -12,7 +11,7 @@ from molpipeline.mol2any import MolToBool
 class TestCustomFilter(unittest.TestCase):
     """Test the custom filter element."""
 
-    smiles_list: ClassVar[list[str]] = [
+    smiles_list = [
         "CC",
         "CCC",
         "CCCC",

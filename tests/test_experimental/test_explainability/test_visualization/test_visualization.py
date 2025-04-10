@@ -38,11 +38,6 @@ def _get_test_morgan_rf_pipeline(task: str = "classification") -> Pipeline:
     task : str, optional (default="classification")
         Task of the pipeline. Either "classification" or "regression".
 
-    Raises
-    ------
-    ValueError
-        If the task is not "classification" or "regression".
-
     Returns
     -------
     Pipeline
@@ -137,14 +132,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
         )
 
     def test_structure_heatmap_fingerprint_based_atom_coloring(self) -> None:
-        """Test structure heatmap fingerprint-based atom coloring.
-
-        Raises
-        ------
-        ValueError
-            If the molecule is not a Chem.Mol object.
-
-        """
+        """Test structure heatmap fingerprint-based atom coloring."""
         for explanation_list in [
             self.test_tree_explanations_clf,
             self.test_kernel_explanations_clf,
@@ -187,13 +175,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
                 self.assertEqual(image.format, "PNG")
 
     def test_explicit_hydrogens(self) -> None:
-        """Test that the visualization methods work with explicit hydrogens.
-
-        Raises
-        ------
-        ValueError
-            If the molecule is not a Chem.Mol object.
-        """
+        """Test that the visualization methods work with explicit hydrogens."""
         mol_implicit_hydrogens = Chem.MolFromSmiles("C")
         explanations1 = self.test_tree_explainer_clf.explain(
             [Chem.MolToSmiles(mol_implicit_hydrogens)]

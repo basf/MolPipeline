@@ -28,7 +28,12 @@ class TestNetChargeCalculator(unittest.TestCase):
     """Unittest for MolToNetCharge, which calculates net charges of molecules."""
 
     def test_net_charge_calculation_formal_charge(self) -> None:
-        """Test if the net charge calculation works as expected for formal charges."""
+        """Test if the net charge calculation works as expected for formal charges.
+
+        Returns
+        -------
+        None
+        """
         # we need the error filter and reinserter to handle the case where the charge calculation fails
         error_filter = ErrorFilter(filter_everything=True)
         pipeline = Pipeline(
@@ -58,7 +63,12 @@ class TestNetChargeCalculator(unittest.TestCase):
         )
 
     def test_net_charge_calculation_gasteiger(self) -> None:
-        """Test if the net charge calculation works as expected for gasteiger charges."""
+        """Test if the net charge calculation works as expected for gasteiger charges.
+
+        Returns
+        -------
+        None
+        """
         # we need the error filter and reinserter to handle the case where the charge calculation fails
         error_filter = ErrorFilter(filter_everything=True)
         pipeline = Pipeline(

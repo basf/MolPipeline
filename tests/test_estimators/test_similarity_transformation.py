@@ -1,4 +1,4 @@
-"""Tests for the precomputed kernel estimators."""
+"""This module tests the precomputed kernel estimators."""
 
 from __future__ import annotations
 
@@ -212,8 +212,8 @@ class TestTanimotoSimilarityToTraining(unittest.TestCase):
                 ("error_replacer", PostPredictionWrapper(error_replacer)),
             ]
         )
-        full_pipeline.fit([*COMPOUND_LIST, "C#C#C", IS_AROMATIC, False])
-        prediction = full_pipeline.predict([*COMPOUND_LIST, "C#C#C"]).tolist()
+        full_pipeline.fit(COMPOUND_LIST + ["C#C#C"], IS_AROMATIC + [False])
+        prediction = full_pipeline.predict(COMPOUND_LIST + ["C#C#C"]).tolist()
         self.assertListEqual(prediction[:-1], IS_AROMATIC)
         self.assertTrue(np.isnan(prediction[-1]))
 

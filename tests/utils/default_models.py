@@ -1,4 +1,4 @@
-"""Module for default models used in testing molpipeline functions and classes."""
+"""This module contains the default models used for testing molpipeline functions and classes."""
 
 from sklearn.ensemble import RandomForestClassifier
 
