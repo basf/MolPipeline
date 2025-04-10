@@ -279,12 +279,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
 
     def test_explicit_hydrogen_removal_pipeline_element(self) -> None:
-        """Test if explicit hydrogen removal pipeline element works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if explicit hydrogen removal pipeline element works as expected."""
         mol_list = ["[H]c1ccccc1", "Cc1cncn(-[H])1", "[H][H]"]
         expected_largest_fragment_smiles_list = ["c1ccccc1", "Cc1cnc[nH]1", "[H][H]"]
 

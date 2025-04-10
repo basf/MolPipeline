@@ -66,7 +66,7 @@ class TestSHAPExplainers(unittest.TestCase):
         test_smiles: str,
         explainer: SHAPKernelExplainer | SHAPTreeExplainer,
     ) -> None:
-        """Helper method to test if the explanation is valid and has the correct shape and content.
+        """Test if the explanation is valid and has the correct shape and content.
 
         Parameters
         ----------
@@ -82,6 +82,11 @@ class TestSHAPExplainers(unittest.TestCase):
             The SMILES string of the molecule.
         explainer : SHAPKernelExplainer | SHAPTreeExplainer
             The explainer used to generate the explanation.
+
+        Raises
+        ------
+        ValueError
+            If the explanation is not valid or has the wrong shape or content.
         """
         self.assertTrue(explanation.is_valid())
 
@@ -289,7 +294,7 @@ class TestSHAPExplainers(unittest.TestCase):
                     self.assertIsNotNone(mol_reader_subpipeline)
 
                     for i, explanation in enumerate(explanations):
-                        if i in [3, 7]:
+                        if i in {3, 7}:
                             self.assertFalse(explanation.is_valid())
                             continue
 
