@@ -2,7 +2,7 @@
 
 import logging
 import unittest
-from typing import Iterable
+from collections.abc import Iterable
 
 import torch
 from chemprop.nn.loss import MSELoss

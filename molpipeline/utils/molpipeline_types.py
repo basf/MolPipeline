@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from numbers import Number
 from typing import (
     Any,
     Literal,
     Optional,
     Protocol,
-    Sequence,
     Tuple,
     TypeAlias,
     TypeVar,
@@ -34,9 +34,9 @@ __all__ = [
     "AnyNumpyElement",
     "AnyPredictor",
     "AnySklearnEstimator",
-    "AnyTransformer",
     "AnySklearnEstimator",
     "AnyStep",
+    "AnyTransformer",
     "Number",
     "OptionalMol",
     "RDKitMol",

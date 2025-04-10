@@ -238,6 +238,7 @@ class SHAPExplainerAdapter(
         ----------
         prediction : Any
             The prediction.
+
         Returns
         -------
         bool

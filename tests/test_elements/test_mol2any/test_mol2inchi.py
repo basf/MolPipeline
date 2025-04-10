@@ -24,7 +24,6 @@ class TestMol2Inchi(unittest.TestCase):
         -------
         None
         """
-
         input_smiles = ["CN(C)CCOC(C1=CC=CC=C1)C1=CC=CC=C1"]
         expected_inchis = [
             "InChI=1S/C17H21NO/c1-18(2)13-14-19-17(15-9-5-3-6-10-15)16-11-7-4-8-12-16/h3-12,17H,13-14H2,1-2H3"
@@ -45,7 +44,6 @@ class TestMol2Inchi(unittest.TestCase):
         -------
         None
         """
-
         input_smiles = ["CN(C)CCOC(C1=CC=CC=C1)C1=CC=CC=C1"]
         expected_inchikeys = ["ZZVUWRFHKOJYTH-UHFFFAOYSA-N"]
 

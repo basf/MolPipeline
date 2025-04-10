@@ -28,7 +28,6 @@ class NoneTest(unittest.TestCase):
 
     def test_error_dummy_fill_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-
         smi2mol = SmilesToMol()
         mol2smi = MolToSmiles()
         remove_error = ErrorFilter.from_element_list([smi2mol, mol2smi])
@@ -120,7 +119,6 @@ class NoneTest(unittest.TestCase):
 
     def test_dummy_fill_physchem_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
-
         smi2mol = SmilesToMol()
         mol2physchem = MolToRDKitPhysChem()
         remove_none = ErrorFilter.from_element_list([smi2mol, mol2physchem])
@@ -147,7 +145,6 @@ class NoneTest(unittest.TestCase):
 
     def test_replace_mixed_datatypes(self) -> None:
         """Assert that invalid values are replaced by fill value."""
-
         # test values
         test_values = [
             123,
@@ -212,17 +209,15 @@ class NoneTest(unittest.TestCase):
             if isinstance(fill_value, float) and np.isnan(fill_value).all():
                 self.assertTrue(np.isnan(out[1]).all())
                 self.assertTrue(np.isnan(out2[1]).all())
+            elif fill_value is None:
+                self.assertIsNone(out[1])
+                self.assertIsNone(out2[1])
             else:
-                if fill_value is None:
-                    self.assertIsNone(out[1])
-                    self.assertIsNone(out2[1])
-                else:
-                    self.assertEqual(out[1], fill_value)
-                    self.assertEqual(out2[1], fill_value)
+                self.assertEqual(out[1], fill_value)
+                self.assertEqual(out2[1], fill_value)
 
     def test_replace_mixed_datatypes_expected_failures(self) -> None:
         """Test expected failures when replacing invalid values."""
-
         # test values
         test_values = [
             123,

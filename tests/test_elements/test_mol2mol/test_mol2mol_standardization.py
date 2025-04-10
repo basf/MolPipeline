@@ -52,7 +52,6 @@ class MolStandardizationTest(unittest.TestCase):
         -------
         None
         """
-
         # example where metal disconnection leads to inconsistent ringinfo -> Sanitization is necessary.
         smiles_uninitialized_ringinfo_after_disconnect = (
             "OC[C@H]1OC(S[Au])[C@H](O)[C@@H](O)[C@@H]1O"
@@ -190,7 +189,6 @@ class MolStandardizationTest(unittest.TestCase):
         -------
         None
         """
-
         mol_list = [
             "[Na+].ClCC(=O)[O-]",
             "[Ca+2].BrCC(=O)[O-].CCC(=O)[O-]",
@@ -219,7 +217,6 @@ class MolStandardizationTest(unittest.TestCase):
         -------
         None
         """
-
         mol_list = [
             "[OH2].c1ccccc1",
             "ClCCl.c1ccccc1",
@@ -265,7 +262,6 @@ class MolStandardizationTest(unittest.TestCase):
         -------
         None
         """
-
         mol_list = ["[2H]c1ccccc1", "CC[13CH2][19F]"]
         expected_largest_fragment_smiles_list = ["[H]c1ccccc1", "CCCF"]
 
@@ -289,7 +285,6 @@ class MolStandardizationTest(unittest.TestCase):
         -------
         None
         """
-
         mol_list = ["[H]c1ccccc1", "Cc1cncn(-[H])1", "[H][H]"]
         expected_largest_fragment_smiles_list = ["c1ccccc1", "Cc1cnc[nH]1", "[H][H]"]
 

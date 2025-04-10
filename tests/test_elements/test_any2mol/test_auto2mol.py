@@ -44,7 +44,6 @@ class TestAuto2Mol(unittest.TestCase):
 
     def test_auto2mol_for_smiles(self) -> None:
         """Test molecules can be read from smiles automatically."""
-
         test_smiles = [
             SMILES_ANTIMONY,
             SMILES_BENZENE,
@@ -87,7 +86,6 @@ class TestAuto2Mol(unittest.TestCase):
 
     def test_auto2mol_for_inchi(self) -> None:
         """Test molecules can be read from inchi automatically."""
-
         test_inchis = [INCHI_BENZENE, INCHI_CHLOROBENZENE]
         expected_mols = [MOL_BENZENE, MOL_CHLOROBENZENE]
 
@@ -112,7 +110,6 @@ class TestAuto2Mol(unittest.TestCase):
 
     def test_auto2mol_for_sdf(self) -> None:
         """Test molecules can be read from sdf automatically."""
-
         pipeline = Pipeline(
             [
                 (
@@ -137,7 +134,6 @@ class TestAuto2Mol(unittest.TestCase):
 
     def test_auto2mol_for_binary(self) -> None:
         """Test molecules can be read from binary automatically."""
-
         test_bin_mols = [
             MOL_ANTIMONY.ToBinary(),
             MOL_BENZENE.ToBinary(),
@@ -180,7 +176,6 @@ class TestAuto2Mol(unittest.TestCase):
 
     def test_auto2mol_for_molecule(self) -> None:
         """Test molecules can be read from molecules automatically."""
-
         test_mols = [
             MOL_ANTIMONY,
             MOL_BENZENE,
@@ -223,7 +218,6 @@ class TestAuto2Mol(unittest.TestCase):
 
     def test_auto2mol_mixed_inputs(self) -> None:
         """Test molecules can be read from mixed inputs automatically."""
-
         test_inputs = [
             SDF_P86_B_400,
             MOL_ANTIMONY.ToBinary(),
@@ -268,7 +262,6 @@ class TestAuto2Mol(unittest.TestCase):
 
     def test_auto2mol_invalid_input_nones(self) -> None:
         """Test molecules can be read from invalid input with Nones automatically."""
-
         test_inputs = [
             SDF_P86_B_400,
             None,
@@ -304,7 +297,6 @@ class TestAuto2Mol(unittest.TestCase):
 
     def test_auto2mol_invalid_input_no_matching_reader(self) -> None:
         """Test molecules can be read from invalid input with no matching readers automatically."""
-
         test_inputs = [
             SDF_P86_B_400,
             MOL_BENZENE,
@@ -334,7 +326,6 @@ class TestAuto2Mol(unittest.TestCase):
 
     def test_auto2mol_invalid_input_empty_elements(self) -> None:
         """Test molecules can be read from invalid input with no reader elements automatically."""
-
         test_inputs = [
             SDF_P86_B_400,
             MOL_BENZENE,

@@ -9,8 +9,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 
 
 class MolToBool(MolToAnyPipelineElement):
-    """
-    Element to generate a bool array from input.
+    """Element to generate a bool array from input.
 
     Valid molecules are passed as True, InvalidInstances are passed as False.
     """

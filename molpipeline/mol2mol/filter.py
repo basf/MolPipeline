@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Mapping, Optional, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, Optional, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -142,9 +143,7 @@ class ElementFilter(_MolToMolPipelineElement):
         if allowed_element_numbers is None:
             allowed_element_numbers = self.DEFAULT_ALLOWED_ELEMENT_NUMBERS
         if isinstance(allowed_element_numbers, (list, set)):
-            self._allowed_element_numbers = {
-                atom_number: (0, None) for atom_number in allowed_element_numbers
-            }
+            self._allowed_element_numbers = dict.fromkeys(allowed_element_numbers, (0, None))
         else:
             self._allowed_element_numbers = {
                 int(atom_number): count_value_to_tuple(count)

@@ -62,6 +62,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
             PipelineElement to be wrapped.
         kwargs: Any
             Parameter of the wrapped_estimator
+
         Returns
         -------
         None

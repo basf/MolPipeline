@@ -4,7 +4,8 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import Any, Iterable, Literal, Optional, get_args, overload
+from collections.abc import Iterable
+from typing import Any, Literal, Optional, get_args, overload
 
 try:
     from typing import Self, TypeAlias  # type: ignore[attr-defined]
@@ -283,7 +284,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         if self.counted:
             return fingerprint.GetNonzeroElements()
 
-        return {pos: 1 for pos in fingerprint.GetOnBits()}
+        return dict.fromkeys(fingerprint.GetOnBits(), 1)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get object parameters relevant for copying the class.

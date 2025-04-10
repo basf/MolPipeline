@@ -127,7 +127,6 @@ def get_regression_pipeline(n_tasks: int = 1) -> Pipeline:
     Pipeline
         The Chemprop model pipeline for regression.
     """
-
     smiles2mol = SmilesToMol()
     mol2chemprop = MolToChemprop()
     error_filter = ErrorFilter(filter_everything=True)
@@ -326,7 +325,6 @@ class TestRegressionPipeline(unittest.TestCase):
 
     def test_prediction(self) -> None:
         """Test the prediction of the regression model."""
-
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
         )
@@ -355,7 +353,6 @@ class TestMultiRegressionPipeline(unittest.TestCase):
 
     def test_prediction(self) -> None:
         """Test the prediction of the multiple regression model."""
-
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
         )
@@ -480,7 +477,6 @@ class TestMulticlassClassificationPipeline(unittest.TestCase):
 
     def test_prediction(self) -> None:
         """Test the prediction of the multiclass classification model."""
-
         test_data_df = pd.read_csv(
             TEST_DATA_DIR / "multiclass_mock.tsv", sep="\t", index_col=False
         )

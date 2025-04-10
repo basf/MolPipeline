@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Union
+from collections.abc import Iterable
+from typing import Any, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]

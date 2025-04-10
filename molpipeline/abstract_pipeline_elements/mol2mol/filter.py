@@ -1,7 +1,8 @@
 """Abstract classes for filters."""
 
 import abc
-from typing import Any, Literal, Mapping, Optional, Sequence, TypeAlias, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal, Optional, TypeAlias, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -203,16 +204,15 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                             self.name,
                         )
                     return value
-            else:
-                # For "all" mode we can return early if a match is not found
-                if self.mode == "all":
-                    if self.keep_matches:
-                        return InvalidInstance(
-                            self.uuid,
-                            f"Molecule does not contain required filter element {filter_element}.",
-                            self.name,
-                        )
-                    return value
+            # For "all" mode we can return early if a match is not found
+            elif self.mode == "all":
+                if self.keep_matches:
+                    return InvalidInstance(
+                        self.uuid,
+                        f"Molecule does not contain required filter element {filter_element}.",
+                        self.name,
+                    )
+                return value
 
         # If this point is reached, no or all patterns were found
         # If mode is "any", finishing the loop means no match was found
@@ -298,7 +298,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             List of patterns.
         """
         if isinstance(patterns, (list, set)):
-            self._filter_elements = {pat: (1, None) for pat in patterns}
+            self._filter_elements = dict.fromkeys(patterns, (1, None))
         else:
             self._filter_elements = {
                 pat: count_value_to_tuple(count) for pat, count in patterns.items()

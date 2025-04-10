@@ -153,7 +153,6 @@ class TestSHAPExplainers(unittest.TestCase):
         self,
     ) -> None:
         """Test SHAP's TreeExplainer wrapper on MolPipeline's pipelines with fingerprints."""
-
         tree_estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
@@ -223,7 +222,6 @@ class TestSHAPExplainers(unittest.TestCase):
     # pylint: disable=too-many-locals
     def test_explanations_pipeline_with_invalid_inputs(self) -> None:
         """Test SHAP's TreeExplainer wrapper with invalid inputs."""
-
         # estimators to test
         estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
@@ -306,7 +304,6 @@ class TestSHAPExplainers(unittest.TestCase):
 
     def test_explanations_pipeline_with_physchem(self) -> None:
         """Test SHAP's TreeExplainer wrapper on physchem feature vector."""
-
         estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
@@ -353,7 +350,6 @@ class TestSHAPExplainers(unittest.TestCase):
 
     def test_explanations_pipeline_with_concatenated_features(self) -> None:
         """Test SHAP's TreeExplainer wrapper on concatenated feature vector."""
-
         estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),

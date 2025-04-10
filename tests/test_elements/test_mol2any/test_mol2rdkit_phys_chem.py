@@ -308,7 +308,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
     def test_optional_nan_value_handling(self) -> None:
         """Test the handling of partly failed descriptor calculations."""
-
         ok_smiles_list = [
             "CC",
             "C(C)CCO",
@@ -380,7 +379,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
     def test_unknown_descriptor_name(self) -> None:
         """Test the handling of unknown descriptor names."""
-
         self.assertRaises(
             ValueError,
             MolToRDKitPhysChem,
@@ -389,7 +387,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
     def test_exception_handling(self) -> None:
         """Test exception handling during descriptor calculation."""
-
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),

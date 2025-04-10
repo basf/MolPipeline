@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import timeit
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
 from loguru import logger
 

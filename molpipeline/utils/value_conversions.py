@@ -1,6 +1,6 @@
 """Module for utilities converting values."""
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from molpipeline.utils.molpipeline_types import IntCountRange, IntOrIntCountRange
 

@@ -41,7 +41,6 @@ class TestMol2PathFingerprint(unittest.TestCase):
 
     def test_output_types(self) -> None:
         """Test equality of different output_types."""
-
         smi2mol = SmilesToMol()
         sparse_path_fp = Mol2PathFP(n_bits=1024, return_as="sparse")
         dense_path_fp = Mol2PathFP(n_bits=1024, return_as="dense")
@@ -133,7 +132,6 @@ class TestMol2PathFingerprint(unittest.TestCase):
 
     def test_setter_getter_error_handling(self) -> None:
         """Test if the setters and getters work as expected when errors are encountered."""
-
         mol_fp = Mol2PathFP()
         params: dict[str, Any] = {
             "min_path": 2,

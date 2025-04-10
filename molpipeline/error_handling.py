@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, Iterable, Optional, Sequence, TypeVar
+from collections.abc import Iterable, Sequence
+from typing import Any, Generic, Optional, TypeVar
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -20,7 +21,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 )
 from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
 
-__all__ = ["FilterReinserter", "ErrorFilter", "_MultipleErrorFilter"]
+__all__ = ["ErrorFilter", "FilterReinserter", "_MultipleErrorFilter"]
 
 _T = TypeVar("_T")
 _S = TypeVar("_S")
@@ -85,8 +86,7 @@ class ErrorFilter(ABCPipelineElement):
         n_jobs: int = 1,
         uuid: Optional[str] = None,
     ) -> Self:
-        """
-        Initialize NoneCollector from a list of Pipeline Elements.
+        """Initialize NoneCollector from a list of Pipeline Elements.
 
         Parameters
         ----------

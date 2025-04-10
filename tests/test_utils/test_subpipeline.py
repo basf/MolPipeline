@@ -17,7 +17,6 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
     def test_get_molecule_reader_element(self) -> None:
         """Test extracting molecule reader element from pipelines."""
-
         # test basic example
         pipeline = Pipeline(
             [
@@ -44,7 +43,6 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
     def test_get_featurization_element(self) -> None:
         """Test extracting featurization element from pipelines."""
-
         # test basic example
         pipeline = Pipeline(
             [
@@ -78,7 +76,6 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
     def test_get_model_element(self) -> None:
         """Test extracting model element from pipeline."""
-
         # test basic example
         pipeline = Pipeline(
             [
@@ -112,7 +109,6 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
     def test_get_molecule_reader_subpipeline(self) -> None:
         """Test extracting subpipeline up to the molecule reader element from pipelines."""
-
         # test basic example
         pipeline = Pipeline(
             [
@@ -146,7 +142,6 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
     def test_get_featurization_subpipeline(self) -> None:
         """Test extracting subpipeline up to the featurization element from pipelines."""
-
         # test basic example
         pipeline = Pipeline(
             [
@@ -188,7 +183,6 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
     def test_get_model_subpipeline(self) -> None:
         """Test extracting subpipeline up to the model element from pipelines."""
-
         # test basic example
         pipeline = Pipeline(
             [
@@ -230,7 +224,6 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
     def test_get_subpipeline(self) -> None:
         """Test extracting subpipeline as a certain interval from the original pipeline."""
-
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
@@ -311,7 +304,6 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
     def test_get_all_filter_reinserter_fill_values(self) -> None:
         """Test extracting all FilterReinserter fill values from pipelines."""
-
         test_fill_values = [None, np.nan]
 
         for test_fill_value in test_fill_values:

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any, Optional
 
 import numpy as np
 

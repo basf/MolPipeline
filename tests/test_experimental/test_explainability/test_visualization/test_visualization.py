@@ -43,7 +43,6 @@ def _get_test_morgan_rf_pipeline(task: str = "classification") -> Pipeline:
     Pipeline
         Pipeline with Morgan fingerprints and a random forest classifier.
     """
-
     if task == "classification":
         model = RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE)
     elif task == "regression":
