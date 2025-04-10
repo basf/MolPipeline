@@ -32,6 +32,7 @@ from test_extras.test_chemprop.chemprop_test_utils.constant_vars import (
     DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS,
     DEFAULT_SET_PARAMS,
     NO_IDENTITY_CHECK,
+    DEFAULT_REGRESSION_PARAMS,
 )
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_chemprop_model_binary_classification_mpnn,
@@ -175,7 +176,7 @@ class TestChempropRegressor(unittest.TestCase):
         """Test the get_params and set_params methods."""
         chemprop_model = ChempropRegressor(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
-        expected_params = dict(DEFAULT_BINARY_CLASSIFICATION_PARAMS)
+        expected_params = dict(DEFAULT_REGRESSION_PARAMS)
         expected_params["model__predictor"] = RegressionFFN
         expected_params["model__predictor__criterion"] = MSELoss
         self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
