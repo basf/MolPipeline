@@ -1,7 +1,7 @@
 """Initialize Chemprop module."""
 
 try:
-    from molpipeline.estimators.chemprop.models import (
+    from molpipeline.estimators.chemprop.models import (  # noqa: F401
         ChempropClassifier,
         ChempropModel,
         ChempropNeuralFP,
