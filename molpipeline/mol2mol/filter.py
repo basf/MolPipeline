@@ -482,6 +482,12 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         ----------
         descriptors: dict[str, FloatCountRange]
             Dictionary of RDKit descriptors to filter by.
+
+        Raises
+        ------
+        ValueError
+            If an invalid descriptor is used.
+
         """
         if not all(hasattr(Descriptors, descriptor) for descriptor in descriptors):
             raise ValueError(

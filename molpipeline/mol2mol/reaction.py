@@ -37,7 +37,7 @@ class MolToMolReaction(MolToMolPipelineElement):
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
         name: str = "MolToMolReaction",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToMolReaction.
 
@@ -127,9 +127,10 @@ class MolToMolReaction(MolToMolPipelineElement):
         reaction: AllChem.ChemicalReaction
             Reaction which is applied to molecules.
 
-        Returns
-        -------
-        None
+        Raises
+        ------
+        TypeError
+            If reaction is not a ChemicalReaction.
         """
         if not isinstance(reaction, AllChem.ChemicalReaction):
             raise TypeError("Not a Chemical reaction!")

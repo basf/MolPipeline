@@ -26,12 +26,7 @@ class MolStandardizationTest(unittest.TestCase):
     """Test if the mol2mol standardization elements work as expected."""
 
     def test_stereo_removal(self) -> None:
-        """Test if stereo-information is removed correctly.
-
-        Returns
-        -------
-        None
-        """
+        """Test if stereo-information is removed correctly."""
         smi2mol = SmilesToMol()
         stereo_removal = StereoRemover()
         mol2smi = MolToSmiles()
@@ -46,12 +41,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(stereo_removed_mol_list, NON_STEREO_MOL_LIST)
 
     def test_metal_disconnector_does_not_lose_ringinfo(self) -> None:
-        """Test metal disconnector returns valid molecules containing ring info.
-
-        Returns
-        -------
-        None
-        """
+        """Test metal disconnector returns valid molecules containing ring info."""
         # example where metal disconnection leads to inconsistent ringinfo -> Sanitization is necessary.
         smiles_uninitialized_ringinfo_after_disconnect = (
             "OC[C@H]1OC(S[Au])[C@H](O)[C@@H](O)[C@@H]1O"
@@ -73,12 +63,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(mols_processed[0].GetRingInfo().NumRings(), 1)
 
     def test_duplicate_fragment_by_hash_removal(self) -> None:
-        """Test if duplicate fragements are correctly removed by DeduplicateFragmentsByInchiElement.
-
-        Returns
-        -------
-        None
-        """
+        """Test if duplicate fragements are correctly removed by DeduplicateFragmentsByInchiElement."""
         duplicate_fragment_smiles_lust = [
             "CC.CC.C",
             "c1ccccc1.C1=C-C=C-C=C1",
@@ -106,12 +91,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(expected_unique_fragment_smiles_list, mols_processed)
 
     def test_tautomer_canonicalization(self) -> None:
-        """Test if correct tautomers are generated.
-
-        Returns
-        -------
-        None
-        """
+        """Test if correct tautomers are generated."""
         non_canonical_tautomer_list = [
             "Oc1c(cccc3)c3nc2ccncc12",
             "CN=c1nc[nH]cc1",
@@ -137,12 +117,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(canonical_tautomer_list, mols_processed)
 
     def test_charge_neutralization(self) -> None:
-        """Test if charge neutralization works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if charge neutralization works as expected."""
         mol_list = ["CC(=O)-[O-]", "CC(=O)-[O-].C[NH+](C)C"]
         expected_charge_neutralized_smiles_list = ["CC(=O)O", "CC(=O)O.CN(C)C"]
 
@@ -160,12 +135,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(expected_charge_neutralized_smiles_list, mols_processed)
 
     def test_largest_fragment_chooser_element(self) -> None:
-        """Test if largest fragment chooser element works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if largest fragment chooser element works as expected."""
         mol_list = ["CCC.CC.C", "c1ccccc1.[Na+].[Cl-]"]
         expected_largest_fragment_smiles_list = ["CCC", "c1ccccc1"]
 
@@ -183,12 +153,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
 
     def test_salt_removal_pipeline_element(self) -> None:
-        """Test if salt removal pipeline element works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if salt removal pipeline element works as expected."""
         mol_list = [
             "[Na+].ClCC(=O)[O-]",
             "[Ca+2].BrCC(=O)[O-].CCC(=O)[O-]",
@@ -211,12 +176,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(expected_smiles_list, mols_processed)
 
     def test_solvent_removal_pipeline_element(self) -> None:
-        """Test if solvent removal pipeline element works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if solvent removal pipeline element works as expected."""
         mol_list = [
             "[OH2].c1ccccc1",
             "ClCCl.c1ccccc1",
@@ -256,12 +216,7 @@ class MolStandardizationTest(unittest.TestCase):
         self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
 
     def test_isotopeinfo_removal_pipeline_element(self) -> None:
-        """Test if isotopinfo removal pipeline element works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if isotopinfo removal pipeline element works as expected."""
         mol_list = ["[2H]c1ccccc1", "CC[13CH2][19F]"]
         expected_largest_fragment_smiles_list = ["[H]c1ccccc1", "CCCF"]
 

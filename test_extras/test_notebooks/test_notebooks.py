@@ -153,7 +153,7 @@ def run_notebooks(
 
 
 def main() -> None:
-    """Main function to run the Jupyter notebooks."""
+    """Run the Jupyter notebooks."""
     parser = argparse.ArgumentParser(
         description="Test if all Jupyter notebooks in a directory run through with error code 0"
     )
