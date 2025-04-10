@@ -29,11 +29,6 @@ def capture_logs(
     ------
     list[loguru.Message]
         List of log messages
-
-    Returns
-    -------
-    Generator[list[loguru.Message], None, None]
-        List of log messages
     """
     output: list[loguru.Message] = []
     handler_id = logger.add(output.append, level=level, format=log_format)

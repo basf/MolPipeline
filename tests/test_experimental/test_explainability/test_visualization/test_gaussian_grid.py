@@ -43,7 +43,14 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
         cls.test_explanations = cls.test_explainer.explain(TEST_SMILES)
 
     def test_grid_with_shap_atom_weights(self) -> None:
-        """Test grid with SHAP atom weights."""
+        """Test grid with SHAP atom weights.
+
+        Raises
+        ------
+        ValueError
+            If the molecule is not a Chem.Mol object.
+
+        """
         for explanation in self.test_explanations:
             self.assertTrue(explanation.is_valid())
             self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
