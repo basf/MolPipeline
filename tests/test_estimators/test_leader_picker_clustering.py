@@ -19,7 +19,6 @@ class TestLeaderPickerEstimator(unittest.TestCase):
 
     def test_leader_picker_clustering_estimator(self) -> None:
         """Test LeaderPicker clustering estimator."""
-
         fingerprint_matrix = [
             DataStructs.CreateFromBitString(x)
             for x in [
@@ -79,7 +78,6 @@ class TestLeaderPickerEstimator(unittest.TestCase):
 
     def test_leader_picker_pipeline(self) -> None:
         """Test leader picker clustering in pipeline."""
-
         test_smiles = ["C", "N", "c1ccccc1", "c1ccc(O)cc1", "CCCCCCO", "CCCCCCC"]
 
         distances = [0.05, 0.95]

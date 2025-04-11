@@ -154,7 +154,6 @@ class TestNamedNearestNeighbors(TestCase):
 
     def test_fit_predict_invalid(self) -> None:
         """Test the fit_predict method with invalid smiles."""
-
         with_invald_smiles = ["CC1CC"] + TEST_SMILES
 
         error_filter = ErrorFilter(filter_everything=True)

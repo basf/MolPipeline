@@ -1,7 +1,8 @@
 """Wrapper classes for the chemprop components to make them compatible with scikit-learn."""
 
 import abc
-from typing import Any, Iterable, Self
+from collections.abc import Iterable
+from typing import Any, Self
 
 import torch
 from chemprop.conf import DEFAULT_ATOM_FDIM, DEFAULT_BOND_FDIM, DEFAULT_HIDDEN_DIM

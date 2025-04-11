@@ -154,7 +154,6 @@ class PipelineTest(unittest.TestCase):
         -------
         None
         """
-
         # Create pipeline
         smi2mol = SmilesToMol()
         metal_disconnector = MetalDisconnector()
@@ -193,10 +192,11 @@ class PipelineTest(unittest.TestCase):
                 if isinstance(value, BaseEstimator):
                     self.assertEqual(type(value), type(original_params[key]))
                 else:
-                    self.assertEqual(loaded_params[key], original_params[key])
+                    self.assertEqual(value, original_params[key])
 
     def test_fit_transform_record_remove_nones(self) -> None:
         """Test if the generation of the fingerprint matrix works as expected.
+
         Returns
         -------
         None
@@ -226,7 +226,6 @@ class PipelineTest(unittest.TestCase):
 
     def test_caching(self) -> None:
         """Test if the caching gives the same results and is faster on the second run."""
-
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20
         )
@@ -282,7 +281,6 @@ class PipelineCompatibilityTest(unittest.TestCase):
 
     def test_gridsearchcv(self) -> None:
         """Test if the MolPipeline can be used in sklearn's GridSearchCV."""
-
         descriptor_elements_to_test: list[dict[str, Any]] = [
             {
                 "name": "morgan",

@@ -6,7 +6,8 @@ Much of the visualization code in this file originates from projects of Christia
 """
 
 import abc
-from typing import Callable, Sequence
+from collections.abc import Sequence
+from typing import Callable
 
 import numpy as np
 import numpy.typing as npt

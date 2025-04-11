@@ -106,7 +106,7 @@ class ElementFilterTest(unittest.TestCase):
             temp_file_path = Path(temp_folder) / "test.json"
             with open(temp_file_path, "w", encoding="UTF-8") as out_file:
                 json.dump(json_object, out_file)
-            with open(temp_file_path, "r", encoding="UTF-8") as in_file:
+            with open(temp_file_path, encoding="UTF-8") as in_file:
                 loaded_json_object = json.load(in_file)
         recreated_element_filter = recursive_from_json(loaded_json_object)
 

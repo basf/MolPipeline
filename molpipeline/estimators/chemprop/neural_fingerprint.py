@@ -1,6 +1,7 @@
 """Wrap Chemprop in a sklearn like transformer returning the neural fingerprint as a numpy array."""
 
-from typing import Any, Self, Sequence
+from collections.abc import Sequence
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt

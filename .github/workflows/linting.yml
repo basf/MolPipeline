@@ -142,6 +142,32 @@ jobs:
         run: |
           isort --profile black --check-only .
 
+  pyright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - name: Analysing the code with pyright
+        continue-on-error: true
+        run: |
+          uv run pyright .
+
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - name: Analysing the code with ruff
+        continue-on-error: true
+        run: |
+          uv run ruff check
+
   test_basis:
     needs:
         - pylint

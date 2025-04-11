@@ -7,7 +7,7 @@ Much of the visualization code in this file originates from projects of Christia
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -423,7 +423,7 @@ def _structure_heatmap(
     """
     drawer = Draw.MolDraw2DCairo(width, height)
     # Coloring atoms of element 0 to 100 black
-    drawer.drawOptions().updateAtomPalette({i: (0, 0, 0, 1) for i in range(100)})
+    drawer.drawOptions().updateAtomPalette(dict.fromkeys(range(100), (0, 0, 0, 1)))
     draw_opt = drawer.drawOptions()
     draw_opt.padding = 0.2
 

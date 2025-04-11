@@ -72,7 +72,6 @@ class TestMol2MorganFingerprint(unittest.TestCase):
 
     def test_return_value_types(self) -> None:
         """Test equality of different output_types."""
-
         smi2mol = SmilesToMol()
         sparse_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="sparse")
         dense_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
@@ -128,7 +127,6 @@ class TestMol2MorganFingerprint(unittest.TestCase):
 
     def test_setter_getter_error_handling(self) -> None:
         """Test if the setters and getters work as expected when errors are encountered."""
-
         mol_fp = MolToMorganFP()
         params: dict[str, Any] = {
             "radius": 2,

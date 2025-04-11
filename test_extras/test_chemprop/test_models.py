@@ -2,7 +2,7 @@
 
 import logging
 import unittest
-from typing import Iterable
+from collections.abc import Iterable
 
 import torch
 from chemprop.nn.loss import MSELoss
@@ -24,8 +24,6 @@ from molpipeline.estimators.chemprop.models import (
 )
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
-
-# pylint: disable=relative-beyond-top-level
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
 from test_extras.test_chemprop.chemprop_test_utils.constant_vars import (
     DEFAULT_BINARY_CLASSIFICATION_PARAMS,

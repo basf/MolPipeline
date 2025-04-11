@@ -1,6 +1,7 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 try:
     from typing import Self
@@ -515,7 +516,7 @@ class ChempropMulticlassClassifier(ChempropModel):
                 f"Given number of classes in init (n_classes) does not match the number of unique classes (found {unique_y}) in the target data."
             )
         if sorted(unique_y) != list(range(self.n_classes)):
-            err = f"Classes need to be in the range from 0 to {self.n_classes-1}. Found {unique_y}. Please correct the input data accordingly."
+            err = f"Classes need to be in the range from 0 to {self.n_classes - 1}. Found {unique_y}. Please correct the input data accordingly."
             log.append(err)
         if log:
             raise ValueError("\n".join(log))
