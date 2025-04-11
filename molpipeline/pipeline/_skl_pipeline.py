@@ -4,8 +4,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Iterable, List, Literal, Optional, Tuple, TypeVar, Union
+from typing import Any, List, Literal, Optional, Tuple, TypeVar, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -162,7 +163,7 @@ class Pipeline(_Pipeline):
             If True, passthrough steps are filtered out.
 
         Returns
-        ------
+        -------
         Iterable[_AggregatedPipelineStep]
             The _AggregatedPipelineStep is composed of the index, the name and the transformer.
         """
@@ -412,7 +413,7 @@ class Pipeline(_Pipeline):
         are filtered out.
 
         Returns
-        ------
+        -------
         Iterable[_AggregatedPipelineStep]
             The _AggregatedPipelineStep is composed of the index, the name and the transformer.
         """
@@ -867,8 +868,8 @@ class Pipeline(_Pipeline):
     def __sklearn_tags__(self) -> Tags:
         """Return the sklearn tags.
 
-        Note
-        ----
+        Notes
+        -----
         This method is copied from the original sklearn implementation.
         Changes are marked with a comment.
 
@@ -926,8 +927,8 @@ class Pipeline(_Pipeline):
         Please check :ref:`User Guide <metadata_routing>` on how the routing
         mechanism works.
 
-        Note
-        ----
+        Notes
+        -----
         This method is copied from the original sklearn implementation.
         Changes are marked with a comment.
 

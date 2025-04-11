@@ -38,6 +38,7 @@ class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
         ----------
         value: Chem.Mol
             Molecule to be transformed to SMILES representation.
+
         Returns
         -------
         str

@@ -27,7 +27,6 @@ class TestMol2Binary(unittest.TestCase):
 
     def test_mol_to_binary(self) -> None:
         """Test if smiles converted correctly to binary string."""
-
         test_smiles = [
             SMILES_ANTIMONY,
             SMILES_BENZENE,
@@ -63,7 +62,6 @@ class TestMol2Binary(unittest.TestCase):
 
     def test_mol_to_binary_invalid_input(self) -> None:
         """Test how invalid input is handled."""
-
         pipeline = Pipeline(
             [
                 ("Mol2Binary", MolToBinary()),

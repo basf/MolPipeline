@@ -116,7 +116,6 @@ class TestConcatenatedFingerprint(unittest.TestCase):
 
     def test_n_features(self) -> None:
         """Test getting the number of features in the concatenated vector."""
-
         physchem_elem = (
             "RDKitPhysChem",
             MolToRDKitPhysChem(),
@@ -156,7 +155,6 @@ class TestConcatenatedFingerprint(unittest.TestCase):
 
     def test_features_names(self) -> None:  # pylint: disable-msg=too-many-locals
         """Test getting the names of features in the concatenated vector."""
-
         physchem_elem = (
             "RDKitPhysChem",
             MolToRDKitPhysChem(),

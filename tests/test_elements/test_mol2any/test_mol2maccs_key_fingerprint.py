@@ -42,7 +42,6 @@ class TestMolToMACCSFP(unittest.TestCase):
 
     def test_output_types(self) -> None:
         """Test equality of different output_types."""
-
         smi2mol = SmilesToMol()
         sparse_maccs = MolToMACCSFP(return_as="sparse")
         dense_maccs = MolToMACCSFP(return_as="dense")
@@ -92,7 +91,6 @@ class TestMolToMACCSFP(unittest.TestCase):
 
     def test_setter_getter_error_handling(self) -> None:
         """Test if the setters and getters work as expected when errors are encountered."""
-
         mol_fp = MolToMACCSFP()
         params: dict[str, Any] = {
             "return_as": "invalid-option",

@@ -7,7 +7,7 @@ Much of the visualization code in this file originates from projects of Christia
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -26,6 +26,7 @@ from molpipeline.experimental.explainability.explanation import (
 )
 from molpipeline.experimental.explainability.visualization.gauss import GaussFunctor2D
 from molpipeline.experimental.explainability.visualization.heatmaps import (
+    ColorGrid,
     ValueGrid,
     color_canvas,
     get_color_normalizer_from_data,
@@ -141,7 +142,7 @@ def _add_gaussians_for_bonds(
     bond_weights: npt.NDArray[np.float64],
     bond_width: float,
     bond_length: float,
-) -> ValueGrid:  # pylint: disable=too-many-locals
+) -> ValueGrid:
     """Add Gauss-functions centered at bonds to the grid.
 
     Parameters
@@ -196,7 +197,7 @@ def make_sum_of_gaussians_grid(
     atom_width: float = 0.3,
     bond_width: float = 0.25,
     bond_length: float = 0.5,
-) -> rdMolDraw2D:
+) -> ValueGrid:
     """Map weights of atoms and bonds to the drawing of a RDKit molecular depiction.
 
     For each atom and bond of depicted molecule a Gauss-function, centered at the respective object, is created and
@@ -227,8 +228,8 @@ def make_sum_of_gaussians_grid(
 
     Returns
     -------
-    rdMolDraw2D.MolDraw2D
-        Drawing of molecule and corresponding heatmap.
+    ValueGrid
+        ValueGrid object with added functions.
     """
     # assign default values and convert to numpy array
     if atom_weights is None:
@@ -394,7 +395,9 @@ def _structure_heatmap(
     width: int = 600,
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
-) -> tuple[Draw.MolDraw2D, ValueGrid, ValueGrid, colors.Normalize, Colormap]:
+) -> tuple[
+    rdMolDraw2D.MolDraw2DCairo, ValueGrid, ColorGrid, colors.Normalize, Colormap
+]:
     """Create a heatmap of the molecular structure, highlighting atoms with weighted Gaussian's.
 
     Parameters
@@ -414,13 +417,13 @@ def _structure_heatmap(
 
     Returns
     -------
-    Draw.MolDraw2D, ValueGrid, ColorGrid, colors.Normalize, Colormap
+    rdMolDraw2D.MolDraw2DCairo, ValueGrid, ColorGrid, colors.Normalize, Colormap
         The configured drawer, the value grid, the color grid, the normalizer, and the
         color map.
     """
     drawer = Draw.MolDraw2DCairo(width, height)
     # Coloring atoms of element 0 to 100 black
-    drawer.drawOptions().updateAtomPalette({i: (0, 0, 0, 1) for i in range(100)})
+    drawer.drawOptions().updateAtomPalette(dict.fromkeys(range(100), (0, 0, 0, 1)))
     draw_opt = drawer.drawOptions()
     draw_opt.padding = 0.2
 
@@ -497,7 +500,7 @@ def structure_heatmap(
     return image
 
 
-def structure_heatmap_shap(  # pylint: disable=too-many-branches, too-many-locals
+def structure_heatmap_shap(  # pylint: disable=too-many-locals
     explanation: SHAPFeatureAndAtomExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,

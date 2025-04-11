@@ -1,6 +1,7 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 try:
     from typing import Self
@@ -166,7 +167,8 @@ class ChempropModel(ABCChemprop):
         test_data = build_dataloader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
         prediction_array = np.vstack(predictions)  # type: ignore
-        prediction_array = prediction_array.squeeze(axis=1)
+        if prediction_array.shape[1] == 1:
+            prediction_array = prediction_array.squeeze(axis=1)
         # Check if the predictions have the same length as the input dataset
         if prediction_array.shape[0] != len(X):
             raise AssertionError(
@@ -336,6 +338,7 @@ class ChempropRegressor(ChempropModel):
         self,
         model: MPNN | None = None,
         lightning_trainer: pl.Trainer | None = None,
+        n_tasks: int = 1,
         batch_size: int = 64,
         n_jobs: int = 1,
         **kwargs: Any,
@@ -348,6 +351,8 @@ class ChempropRegressor(ChempropModel):
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
             The lightning trainer to use, by default None
+        n_tasks : int
+            The number of tasks for the regressor, e.g. number of target variables.
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
@@ -359,7 +364,7 @@ class ChempropRegressor(ChempropModel):
         if model is None:
             bond_encoder = BondMessagePassing()
             agg = SumAggregation()
-            predictor = RegressionFFN()
+            predictor = RegressionFFN(n_tasks=n_tasks)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
         super().__init__(
             model=model,
@@ -368,6 +373,7 @@ class ChempropRegressor(ChempropModel):
             n_jobs=n_jobs,
             **kwargs,
         )
+        self.n_tasks = n_tasks
 
 
 class ChempropMulticlassClassifier(ChempropModel):
@@ -510,7 +516,7 @@ class ChempropMulticlassClassifier(ChempropModel):
                 f"Given number of classes in init (n_classes) does not match the number of unique classes (found {unique_y}) in the target data."
             )
         if sorted(unique_y) != list(range(self.n_classes)):
-            err = f"Classes need to be in the range from 0 to {self.n_classes-1}. Found {unique_y}. Please correct the input data accordingly."
+            err = f"Classes need to be in the range from 0 to {self.n_classes - 1}. Found {unique_y}. Please correct the input data accordingly."
             log.append(err)
         if log:
             raise ValueError("\n".join(log))

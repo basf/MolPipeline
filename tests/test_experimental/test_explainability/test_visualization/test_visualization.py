@@ -43,7 +43,6 @@ def _get_test_morgan_rf_pipeline(task: str = "classification") -> Pipeline:
     Pipeline
         Pipeline with Morgan fingerprints and a random forest classifier.
     """
-
     if task == "classification":
         model = RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE)
     elif task == "regression":
@@ -143,8 +142,11 @@ class TestExplainabilityVisualization(unittest.TestCase):
             for explanation in explanation_list:
                 self.assertTrue(explanation.is_valid())
                 self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
+                mol = explanation.molecule
+                if not isinstance(mol, Chem.Mol):
+                    raise ValueError("Expected a Chem.Mol object.")
                 image = structure_heatmap(
-                    explanation.molecule,
+                    mol,
                     explanation.atom_weights,  # type: ignore
                     width=8,
                     height=8,
@@ -205,8 +207,11 @@ class TestExplainabilityVisualization(unittest.TestCase):
         all_explanations = explanations1 + explanations2 + explanations3
         for explanation in all_explanations:
             self.assertTrue(explanation.is_valid())
+            mol = explanation.molecule
+            if not isinstance(mol, Chem.Mol):
+                raise ValueError("Expected a Chem.Mol object.")
             image = structure_heatmap(
-                explanation.molecule,
+                mol,
                 explanation.atom_weights,  # type: ignore
                 width=8,
                 height=8,

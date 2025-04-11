@@ -12,17 +12,17 @@ from molpipeline.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 from molpipeline.mol2any.mol2smiles import MolToSmiles
 
 __all__ = [
+    "Mol2PathFP",
     "MolToBinary",
+    "MolToBool",
     "MolToConcatenatedVector",
-    "MolToSmiles",
+    "MolToInchi",
+    "MolToInchiKey",
     "MolToMACCSFP",
     "MolToMorganFP",
     "MolToNetCharge",
-    "Mol2PathFP",
-    "MolToInchi",
-    "MolToInchiKey",
     "MolToRDKitPhysChem",
-    "MolToBool",
+    "MolToSmiles",
 ]
 
 try:

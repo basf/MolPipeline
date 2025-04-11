@@ -13,8 +13,8 @@ from molpipeline.estimators.chemprop.lightning_wrapper import (
 class TestLightningWrapper(unittest.TestCase):
     """Test the lightning wrapper functions.
 
-    Note
-    ----
+    Notes
+    -----
     These tests are not exhaustive.
     """
 

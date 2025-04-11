@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Literal, Sequence, Union
+from collections.abc import Sequence
+from typing import Any, Callable, Literal, Union
 
 try:
     from typing import Self

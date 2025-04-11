@@ -1,7 +1,7 @@
 """Utility functions for visualization of molecules and their explanations."""
 
 import io
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -121,7 +121,7 @@ def color_tuple_to_colormap(
     col1, col2, col3 = map(np.array, color_tuple)
 
     # Creating linear gradient for color mixing
-    linspace = np.linspace(0, 1, int(128))
+    linspace = np.linspace(0, 1, 128)
     linspace4d = np.vstack([linspace] * 4).T
 
     # interpolating values for 0 to 0.5 by mixing purple and white

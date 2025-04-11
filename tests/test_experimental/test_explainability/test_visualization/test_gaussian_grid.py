@@ -48,7 +48,10 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
             self.assertTrue(explanation.is_valid())
             self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
 
-            mol_copy = Chem.Mol(explanation.molecule)
+            mol = explanation.molecule
+            if not isinstance(mol, Chem.Mol):
+                raise ValueError("Expected a Chem.Mol object.")
+            mol_copy = Chem.Mol(mol)
             mol_copy = Draw.PrepareMolForDrawing(mol_copy)
             value_grid = make_sum_of_gaussians_grid(
                 mol_copy,
@@ -58,8 +61,9 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
                 padding=[0.4, 0.4],
             )
             self.assertIsNotNone(value_grid)
-            self.assertEqual(value_grid.values.size, 8 * 8)
+            grid_values = value_grid.values  # type: ignore[attr-defined]
+            self.assertEqual(grid_values.size, 8 * 8)
 
             # test that the range of summed gaussian values is as expected for SHAP
-            self.assertTrue(value_grid.values.min() >= -1)
-            self.assertTrue(value_grid.values.max() <= 1)
+            self.assertTrue(grid_values.min() >= -1)
+            self.assertTrue(grid_values.max() <= 1)

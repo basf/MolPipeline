@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
 import loguru
 from loguru import logger
@@ -26,7 +26,7 @@ def capture_logs(
         Log format, by default "{level}:{name}:{message}"
 
     Yields
-    -------
+    ------
     list[loguru.Message]
         List of log messages
 

@@ -1,7 +1,8 @@
 """Parent class of wrapper for Chemprop to make it compatible with scikit-learn."""
 
 import abc
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 # pylint: disable=duplicate-code
 try:
