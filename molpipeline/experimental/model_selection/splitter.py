@@ -12,14 +12,14 @@ from sklearn.model_selection._split import _validate_shuffle_split
 from sklearn.utils import check_array, shuffle
 from sklearn.utils.validation import _num_samples, check_random_state
 
-SplitSizeOption = Literal["groups", "samples"]
+SplitModeOption = Literal["groups", "samples"]
 
 
 class GroupShuffleSplit(BaseShuffleSplit):
     """Creates a shuffle split while considering groups.
 
     This is a modified version of sklearn's GroupShuffleSplit which can control with
-    the `split_size` parameter whether `train_size` and `test_size` refer to the number
+    the `split_mode` parameter whether `train_size` and `test_size` refer to the number
     of groups (sklearn's implementation) or the number of samples.
 
     Note that this functionality is also an open PR in sklearn:
@@ -32,7 +32,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
         *,
         test_size: float | None = None,
         train_size: float | None = None,
-        split_size: SplitSizeOption = "groups",
+        split_mode: SplitModeOption = "groups",
         random_state: int | RandomState | None = None
     ) -> None:
         """Create a new GroupShuffleSplit.
@@ -49,7 +49,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
             If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the train split.
             If int, represents the absolute number of train samples.
             If None, the value is set to the complement of the test size.
-        split_size: SplitSizeOption, default='groups'
+        split_mode: SplitSizeOption, default='groups'
             Determines whether `train_size` and `test_size` refer to the number of groups or the number of samples.
         random_state: int | RandomState | None, default=None
             Controls the randomness of the training and testing indices produced.
@@ -62,13 +62,13 @@ class GroupShuffleSplit(BaseShuffleSplit):
             random_state=random_state,
         )
         self._default_test_size = 0.2
-        if split_size not in get_args(SplitSizeOption):
+        if split_mode not in get_args(SplitModeOption):
             raise ValueError(
-                "Bad parameter 'split_size'. Allowed are 'groups' and 'samples'."
+                "Bad parameter 'split_mode'. Allowed are 'groups' and 'samples'."
             )
-        self.split_size = split_size
+        self.split_mode = split_mode
 
-    def _iter_indices_split_size_samples(
+    def _iter_indices_split_mode_samples(
         self, X: Any, groups: npt.ArrayLike  # pylint: disable=invalid-name
     ) -> Generator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None]:
         """Generate indices to split data into training and test sets.
@@ -98,49 +98,63 @@ class GroupShuffleSplit(BaseShuffleSplit):
         )
         rng = check_random_state(self.random_state)
 
-        classes, group_indices, group_counts = np.unique(
+        unique_groups, group_indices, group_counts = np.unique(
             groups,
             return_inverse=True,
             return_counts=True,
         )
-        class_indices = np.arange(len(classes))
+        unique_groups_indices = np.arange(len(unique_groups))
 
         for _ in range(self.n_splits):
 
             # pre-compute random assignments to train or test set for each group
-            random_bucket_assignments = rng.randint(0, 2, size=len(classes))
+            random_bucket_assignments = rng.randint(0, 2, size=len(unique_groups))
 
             # randomize the group order for assignment to train/test
-            group_counts_shuffled, class_indices_shuffled = shuffle(
-                group_counts, class_indices, random_state=rng
+            group_counts_shuffled, unique_groups_indices_shuffled = shuffle(
+                group_counts, unique_groups_indices, random_state=rng
             )
 
             # track train and test sets in arrays of length 2
-            samples_sizes = np.array([n_train, n_test], dtype=np.int_)
+            samples_sizes_target = np.array([n_train, n_test], dtype=np.int_)
             bucket_sizes = np.zeros(2, dtype=np.int_)
             bucket_elements: list[list[int]] = [[], []]
 
-            for class_index, group_size, bucket_index in zip(
-                class_indices_shuffled, group_counts_shuffled, random_bucket_assignments
+            # assign groups to buckets randomly but consider their size:
+            #    1. if the group fits in the randomly assigned bucket, assign it there.
+            #    2. if it fits into the other bucket, assign it there.
+            #    3. if it does not fit in both buckets, assign it to the bucket which
+            #       will be closer to its target size.
+            for group_index, group_size, random_bucket_index in zip(
+                unique_groups_indices_shuffled,  # the indices of the unique groups
+                group_counts_shuffled,  # the size of the groups in number of samples
+                random_bucket_assignments,  # the random bucket assignments
             ):
-                first_bucket_size = bucket_sizes[bucket_index] + group_size
-                second_bucket_size = bucket_sizes[1 - bucket_index] + group_size
+                first_bucket_size = bucket_sizes[random_bucket_index] + group_size
+                second_bucket_size = bucket_sizes[1 - random_bucket_index] + group_size
 
                 # first, try to assign the group randomly to a bucket
-                bucket_selection = bucket_index
-                if first_bucket_size <= samples_sizes[bucket_index]:
-                    bucket_selection = bucket_index
-                elif second_bucket_size <= samples_sizes[1 - bucket_index]:
-                    bucket_selection = 1 - bucket_index
+                bucket_selection = random_bucket_index
+                if first_bucket_size <= samples_sizes_target[random_bucket_index]:
+                    bucket_selection = random_bucket_index
+                elif (
+                    second_bucket_size <= samples_sizes_target[1 - random_bucket_index]
+                ):
+                    bucket_selection = 1 - random_bucket_index
                 else:
                     # the group does not fit in any bucket. It is assigned to the bucket
                     # which will be closer to its target sample sizes.
-                    first_diff = first_bucket_size - samples_sizes[bucket_index]
-                    second_diff = second_bucket_size - samples_sizes[1 - bucket_index]
+                    first_diff = (
+                        first_bucket_size - samples_sizes_target[random_bucket_index]
+                    )
+                    second_diff = (
+                        second_bucket_size
+                        - samples_sizes_target[1 - random_bucket_index]
+                    )
                     if second_diff < first_diff:
-                        bucket_selection = 1 - bucket_index
+                        bucket_selection = 1 - random_bucket_index
 
-                bucket_elements[bucket_selection].append(class_index)
+                bucket_elements[bucket_selection].append(group_index)
                 bucket_sizes[bucket_selection] += group_size
 
             # map group indices back to sample indices
@@ -182,13 +196,13 @@ class GroupShuffleSplit(BaseShuffleSplit):
         ValueError
             If the 'groups' parameter is None.
         AssertionError
-            If the 'split_size' parameter is not 'groups' or 'samples'.
+            If the 'split_mode' parameter is not 'groups' or 'samples'.
         """
         if groups is None:
             raise ValueError("The 'groups' parameter should not be None.")
         groups = check_array(groups, input_name="groups", ensure_2d=False, dtype=None)
 
-        if self.split_size == "groups":
+        if self.split_mode == "groups":
             if groups is None:
                 # assert for mypy
                 raise AssertionError("The 'groups' parameter should not be None.")
@@ -201,11 +215,11 @@ class GroupShuffleSplit(BaseShuffleSplit):
                 test = np.flatnonzero(np.isin(group_indices, group_test))
 
                 yield train, test
-        elif self.split_size == "samples":
+        elif self.split_mode == "samples":
             if groups is None:
                 # assert for mypy
                 raise AssertionError("The 'groups' parameter should not be None.")
-            yield from self._iter_indices_split_size_samples(X, groups)
+            yield from self._iter_indices_split_mode_samples(X, groups)
 
         else:
-            raise AssertionError("Unknown parameter for 'split_size'.")
+            raise AssertionError("Unknown parameter for 'split_mode'.")

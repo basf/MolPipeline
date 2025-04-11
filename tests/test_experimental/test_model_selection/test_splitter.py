@@ -9,7 +9,7 @@ from sklearn.model_selection import GroupShuffleSplit as SklearnGroupShuffleSpli
 
 from molpipeline.experimental.model_selection.splitter import (
     GroupShuffleSplit,
-    SplitSizeOption,
+    SplitModeOption,
 )
 
 _TEST_GROUPS = (
@@ -37,24 +37,30 @@ class TestGroupShuffleSplit(unittest.TestCase):
             X = np.ones(10)  # pylint: disable=invalid-name
             y = np.ones(10)
             groups = range(10)
-            for split_size in get_args(SplitSizeOption):
-                X_train, X_test = next(  # pylint: disable=invalid-name
-                    GroupShuffleSplit(
-                        train_size=train_size, split_size=split_size
-                    ).split(X, y, groups)
-                )
+            for split_mode in get_args(SplitModeOption):
+                split_generator = GroupShuffleSplit(
+                    train_size=train_size, split_mode=split_mode
+                ).split(X, y, groups)
+                X_train, X_test = next(split_generator)  # pylint: disable=invalid-name
                 self.assertEqual(len(X_train), exp_train)
                 self.assertEqual(len(X_test), exp_test)
 
-    def test_invalid_split_size(self) -> None:
-        """Test that an invalid split size raises a ValueError."""
+    def test_invalid_split_mode(self) -> None:
+        """Test that an invalid split mode raises a ValueError."""
+        # test invalid constructor argument
         with self.assertRaises(ValueError):
             GroupShuffleSplit(
                 1,
                 test_size=0.3,
-                split_size="Not a valid option.",  # type: ignore[arg-type]
+                split_mode="Not a valid option.",  # type: ignore[arg-type]
                 random_state=0,
             )
+
+        # test overwrite split_mode raises
+        with self.assertRaises(AssertionError):
+            split_generator = GroupShuffleSplit(train_size=0.7, split_mode="samples")
+            split_generator.split_mode = "Not a valid option."  # type: ignore[assignment]
+            next(split_generator.split(X=[1, 2, 3], y=[1, 2, 3], groups=[1, 2, 3]))
 
     def test_different_input(self) -> None:
         """ "Test that the splitter works with different input types.
@@ -66,9 +72,9 @@ class TestGroupShuffleSplit(unittest.TestCase):
             X = y = np.ones(len(groups_i))  # pylint: disable=invalid-name
             n_splits = 6
             test_size = 1.0 / 3
-            for split_size in get_args(SplitSizeOption):
+            for split_mode in get_args(SplitModeOption):
                 gss = GroupShuffleSplit(
-                    n_splits, test_size=test_size, random_state=0, split_size=split_size
+                    n_splits, test_size=test_size, random_state=0, split_mode=split_mode
                 )
 
                 # Make sure the repr works
@@ -114,7 +120,7 @@ class TestGroupShuffleSplit(unittest.TestCase):
                     )
 
     def test_compare_to_sklearn_implementation(self) -> None:
-        """Test that MolPipelines implementation produces the same results as sklearn's for split_size='groups'."""
+        """Test that MolPipelines implementation produces the same results as sklearn's for split_mode='groups'."""
         random_seed = 987
         for groups_i in _TEST_GROUPS:
             X = y = np.ones(len(groups_i))  # pylint: disable=invalid-name
@@ -124,7 +130,7 @@ class TestGroupShuffleSplit(unittest.TestCase):
                 n_splits,
                 test_size=test_size,
                 random_state=random_seed,
-                split_size="groups",
+                split_mode="groups",
             )
             gss_sklearn = SklearnGroupShuffleSplit(
                 n_splits,
