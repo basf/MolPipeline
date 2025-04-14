@@ -125,34 +125,30 @@ class GroupShuffleSplit(BaseShuffleSplit):
             #    2. if it fits into the other bucket, assign it there.
             #    3. if it does not fit in both buckets, assign it to the bucket which
             #       will be closer to its target size.
-            for group_index, group_size, random_bucket_index in zip(
-                unique_groups_indices_shuffled,  # the indices of the unique groups
-                group_counts_shuffled,  # the size of the groups in number of samples
-                random_bucket_assignments,  # the random bucket assignments
-            ):
-                first_bucket_size = bucket_sizes[random_bucket_index] + group_size
-                second_bucket_size = bucket_sizes[1 - random_bucket_index] + group_size
+            for i, group_index in enumerate(unique_groups_indices_shuffled):
+                group_size = group_counts_shuffled[i]
+                assigned_bucket = random_bucket_assignments[i]
+
+                first_bucket_size = bucket_sizes[assigned_bucket] + group_size
+                second_bucket_size = bucket_sizes[1 - assigned_bucket] + group_size
 
                 # first, try to assign the group randomly to a bucket
-                bucket_selection = random_bucket_index
-                if first_bucket_size <= samples_sizes_target[random_bucket_index]:
-                    bucket_selection = random_bucket_index
-                elif (
-                    second_bucket_size <= samples_sizes_target[1 - random_bucket_index]
-                ):
-                    bucket_selection = 1 - random_bucket_index
+                bucket_selection = assigned_bucket
+                if first_bucket_size <= samples_sizes_target[assigned_bucket]:
+                    bucket_selection = assigned_bucket
+                elif second_bucket_size <= samples_sizes_target[1 - assigned_bucket]:
+                    bucket_selection = 1 - assigned_bucket
                 else:
                     # the group does not fit in any bucket. It is assigned to the bucket
                     # which will be closer to its target sample sizes.
                     first_diff = (
-                        first_bucket_size - samples_sizes_target[random_bucket_index]
+                        first_bucket_size - samples_sizes_target[assigned_bucket]
                     )
                     second_diff = (
-                        second_bucket_size
-                        - samples_sizes_target[1 - random_bucket_index]
+                        second_bucket_size - samples_sizes_target[1 - assigned_bucket]
                     )
                     if second_diff < first_diff:
-                        bucket_selection = 1 - random_bucket_index
+                        bucket_selection = 1 - assigned_bucket
 
                 bucket_elements[bucket_selection].append(group_index)
                 bucket_sizes[bucket_selection] += group_size
