@@ -219,15 +219,16 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
         Parameters
         ----------
-        counted: bool
+        counted: bool, default=False
             Whether to count the bits or not.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
-            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
-        name: str
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+            Type of output.
+            When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
+        name: str, default="MolToRDKitGenFin"
             Name of PipelineElement.
-        n_jobs:
+        n_jobs: int, default=1
             Number of jobs.
-        uuid: Optional[str]
+        uuid: str | None, optional
             Unique identifier.
         """
         super().__init__(
@@ -353,22 +354,24 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
 
         Parameters
         ----------
-        radius: int
+        radius: int, default=2
             Radius of fingerprint.
-        use_features: bool
+        use_features: bool, default=False
             Whether to represent atoms by element or category (donor, acceptor. etc.)
-        counted: bool
+        counted: bool, default=False
             Whether to count the bits or not.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
-            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
-            holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
-            rdkit.DataStructs.cDataStructs.ExplicitBitVect.
-        name: str
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+            Type of output.
+            When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
+            holding a sparse representation of the bit vectors.
+            With "dense" a numpy matrix will be returned.
+            With "explicit_bit_vect" the fingerprints will be returned as a list of 
+            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+        name: str, default="AbstractMorgan"
             Name of PipelineElement.
-        n_jobs:
+        n_jobs: int, default=1
             Number of jobs.
-        uuid: Optional[str]
+        uuid: str | None, optional
             Unique identifier.
         """
         # pylint: disable=R0801
