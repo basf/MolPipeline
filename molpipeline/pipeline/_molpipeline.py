@@ -194,7 +194,7 @@ class _MolPipeline:
 
         Returns
         -------
-        list[Union[ABCPipelineElement, _MolPipeline]]
+        list[ABCPipelineElement | _MolPipeline]
             List of pipeline elements and meta elements.
         """
         meta_element_list: list[ABCPipelineElement | _MolPipeline] = []
@@ -225,7 +225,7 @@ class _MolPipeline:
     def fit(
         self,
         x_input: Any,
-        y: Any = None,  # pylint: disable=invalid-name
+        y: Any = None,
         **fit_params: dict[Any, Any],
     ) -> Self:
         """Fit the MolPipeline according to x_input.
@@ -250,7 +250,7 @@ class _MolPipeline:
             self.fit_transform(x_input)
         return self
 
-    def fit_transform(  # pylint: disable=invalid-name,unused-argument
+    def fit_transform(  # pylint: disable=unused-argument
         self,
         x_input: Any,
         y: Any = None,
