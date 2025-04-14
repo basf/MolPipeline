@@ -31,13 +31,13 @@ class SmilesToMol(SimpleStringToMolElement):
 
         Parameters
         ----------
-        remove_hydrogens: bool
+        remove_hydrogens: bool, default=True
             Whether to remove hydrogens from the molecule.
-        name: str
+        name: str, default='smiles2mol'
             Name of the object.
-        n_jobs: int
+        n_jobs: int, default=1
             Number of jobs to run in parallel.
-        uuid: Optional[str]
+        uuid: str | None, optional
             UUID of the object.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
