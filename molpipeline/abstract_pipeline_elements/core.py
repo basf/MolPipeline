@@ -19,7 +19,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from loguru import logger
 from rdkit import Chem
-from rdkit.Chem import Mol as RDKitMol  # pylint: disable=no-name-in-module
+from rdkit.Chem import Mol as RDKitMol
 
 from molpipeline.utils.multi_proc import check_available_cores
 
@@ -33,7 +33,7 @@ class InvalidInstance(NamedTuple):
         Id of the element which could not be processed.
     message: str
         Message why the element could not be processed.
-    element_name: Optional[str]
+    element_name: str | None
         Optional name of the element which could not be processed.
         The name of the pipeline element is often more descriptive than the id.
     """
@@ -68,7 +68,7 @@ class RemovedInstance:  # pylint: disable=too-few-public-methods
         ----------
         filter_element_id: str
             FilterElement which removed the molecule.
-        message: Optional[str]
+        message: str | None, optional
             Optional message why the molecule was removed.
 
         Returns
@@ -106,11 +106,11 @@ class ABCPipelineElement(abc.ABC):
 
         Parameters
         ----------
-        name: Optional[str], optional (default=None)
+        name: str | None, optional
             Name of PipelineElement
-        n_jobs: int
+        n_jobs: int, default=1
             Number of cores used for processing.
-        uuid: Optional[str]
+        uuid: str | None, optional
             Unique identifier of the PipelineElement.
         """
         if name is None:
@@ -164,7 +164,7 @@ class ABCPipelineElement(abc.ABC):
 
         Parameters
         ----------
-        deep: bool
+        deep: bool, default=True
             If True get a deep copy of the parameters.
 
         Returns
@@ -349,11 +349,11 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         Parameters
         ----------
-        name: Optional[str], optional (default=None)
+        name: str | None, optional
             Name of PipelineElement
-        n_jobs: int
+        n_jobs: int, default=1
             Number of cores used for processing.
-        uuid: Optional[str]
+        uuid: str | None, optional
             Unique identifier of the PipelineElement.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
