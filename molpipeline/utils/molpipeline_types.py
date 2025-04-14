@@ -93,7 +93,7 @@ class AnySklearnEstimator(Protocol):
     def fit(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: npt.NDArray[Any] | None,  # pylint: disable=invalid-name
+        y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> Self:
         """Fit the model with X.
@@ -102,7 +102,7 @@ class AnySklearnEstimator(Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: Optional[npt.NDArray[Any]]
+        y: npt.NDArray[Any] | None
             Target values.
         fit_params: Any
             Additional parameters for fitting.
@@ -121,7 +121,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
     def fit_predict(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: npt.NDArray[Any] | None,  # pylint: disable=invalid-name
+        y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return predictions.
@@ -130,7 +130,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: Optional[npt.NDArray[Any]]
+        y: npt.NDArray[Any] | None
             Target values.
         fit_params: Any
             Additional parameters for fitting.
@@ -148,7 +148,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
     def fit_transform(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: npt.NDArray[Any] | None,  # pylint: disable=invalid-name
+        y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return the transformed array.
@@ -157,7 +157,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: Optional[npt.NDArray[Any]]
+        y: npt.NDArray[Any] | None
             Target values.
         fit_params: Any
             Additional parameters for fitting.
