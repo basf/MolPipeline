@@ -11,7 +11,7 @@ except ImportError:
 
 from rdkit import Chem
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
-from rdkit.Chem import SanitizeMol  # pylint: disable=no-name-in-module
+from rdkit.Chem import SanitizeMol
 from rdkit.Chem import (
     rdMolHash,
     rdmolops,
@@ -114,13 +114,13 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        name: str, optional (default: "FragmentDeduplicator")
+        name: str, default="FragmentDeduplicator"
             Name of the pipeline element.
-        hashing_method: MolHashing, optional (default: rdMolHash.HashFunction.HetAtomTautomer)
+        hashing_method: MolHashing, default=rdMolHash.HashFunction.HetAtomTautomer
             MolHashing method to use for comparing fragments.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str | None, optional
             Unique identifier of the pipeline element.
 
         Returns
@@ -321,7 +321,7 @@ class SolventRemover(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        solvent_smiles_list: list[str], optional (default=None)
+        solvent_smiles_list: list[str], optional
             List of SMILES of fragments to remove, by default None which uses the default solvent list:
             - WATER	[OH2]
             - DICHLOROMETHANE	ClCCl
@@ -333,11 +333,11 @@ class SolventRemover(_MolToMolPipelineElement):
             - DMSO	CS(=O)C
             - ETHANOL	CCO
             - Trimethylamine	CN(C)C  # Not in ChEMBL list
-        name: str, optional (default="SolventRemover")
+        name: str, default="SolventRemover"
             Name of the pipeline element.
-        n_jobs: int, optional (default=1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default=None)
+        uuid: str | None, optional
             Unique identifier of the pipeline element. If None, a random UUID is generated.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
