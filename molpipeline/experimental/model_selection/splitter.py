@@ -42,17 +42,20 @@ class GroupShuffleSplit(BaseShuffleSplit):
         ----------
         n_splits: int, default=5
             Number of re-shuffling & splitting iterations.
-        test_size: float | None, default=None
-            If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the test split.
+        test_size: float | None, optional
+            If float, should be between 0.0 and 1.0 and represent the proportion of the
+            dataset to include in the test split.
             If int, represents the absolute number of test samples.
             If None, the value is set to the complement of the train size.
-        train_size: float | None, default=None
-            If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the train split.
+        train_size: float | None, optional
+            If float, should be between 0.0 and 1.0 and represent the proportion of the
+            dataset to include in the train split.
             If int, represents the absolute number of train samples.
             If None, the value is set to the complement of the test size.
         split_mode: SplitSizeOption, default='groups'
-            Determines whether `train_size` and `test_size` refer to the number of groups or the number of samples.
-        random_state: int | RandomState | None, default=None
+            Determines whether `train_size` and `test_size` refer to the number of
+            groups or the number of samples.
+        random_state: int | RandomState | None, optional
             Controls the randomness of the training and testing indices produced.
             Pass an int for reproducible output across multiple function calls.
         """
@@ -81,7 +84,8 @@ class GroupShuffleSplit(BaseShuffleSplit):
         X: Any
             The input data to split.
         groups: npt.ArrayLike
-            Group labels for the samples used while splitting the dataset into train/test set.
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
             This parameter is required and should not be None.
 
         Yields
@@ -166,7 +170,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
 
     def _iter_indices(
         self,
-        X: Any,  # pylint: disable=invalid-name
+        X: Any,
         y: Any = None,
         groups: npt.ArrayLike | None = None,
     ) -> Generator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None]:
@@ -179,7 +183,8 @@ class GroupShuffleSplit(BaseShuffleSplit):
         y: Any, optional
             The target variable for supervised learning problems. Default is None.
         groups: npt.ArrayLike | None
-            Group labels for the samples used while splitting the dataset into train/test set.
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
             This parameter is required and should not be None.
 
         Yields
