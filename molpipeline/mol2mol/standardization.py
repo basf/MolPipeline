@@ -11,8 +11,8 @@ except ImportError:
 
 from rdkit import Chem
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
-from rdkit.Chem import SanitizeMol
 from rdkit.Chem import (
+    SanitizeMol,
     rdMolHash,
     rdmolops,
 )
