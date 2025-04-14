@@ -166,7 +166,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
 
     def _iter_indices(
         self,
-        X: Any,
+        X: Any,  # pylint: disable=invalid-name
         y: Any = None,
         groups: npt.ArrayLike | None = None,
     ) -> Generator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None]:

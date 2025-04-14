@@ -319,8 +319,8 @@ class Pipeline(_Pipeline):
 
     def _transform(
         self,
-        X: Any,
-        routed_params: Bunch,  # pylint: disable=invalid-name
+        X: Any,  # pylint: disable=invalid-name
+        routed_params: Bunch,
     ) -> Any:
         """Transform the data, and skip final estimator.
 
