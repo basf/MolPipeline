@@ -79,7 +79,7 @@ class Pipeline(_Pipeline):
         ----------
         steps: list[tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]]
             List of (name, Estimator) tuples.
-        memory: str, optional
+        memory: str | joblib.Memory | None, optional
             Path to cache transformers.
         verbose: bool, optional
             If True, print additional information.
