@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -32,7 +32,7 @@ class SDFToMol(_StringToMolPipelineElement):
         identifier: str = "enumerate",
         name: str = "SDF2Mol",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize SDFToMol.
 

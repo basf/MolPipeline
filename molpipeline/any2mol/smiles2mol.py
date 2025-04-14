@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -25,7 +25,7 @@ class SmilesToMol(SimpleStringToMolElement):
         remove_hydrogens: bool = True,
         name: str = "smiles2mol",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize SmilesToMol object.
 

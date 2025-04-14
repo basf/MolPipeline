@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -66,13 +66,13 @@ class ElementFilter(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        allowed_element_numbers: Optional[
-            Union[list[int], dict[int, IntOrIntCountRange]]
-        ] = None,
+        allowed_element_numbers: list[int]
+        | dict[int, IntOrIntCountRange]
+        | None = None,
         add_hydrogens: bool = True,
         name: str = "ElementFilter",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize ElementFilter.
 
@@ -128,9 +128,7 @@ class ElementFilter(_MolToMolPipelineElement):
     @allowed_element_numbers.setter
     def allowed_element_numbers(
         self,
-        allowed_element_numbers: Optional[
-            Union[list[int], dict[int, IntOrIntCountRange]]
-        ],
+        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None,
     ) -> None:
         """Set allowed element numbers as dict.
 
@@ -309,7 +307,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         - mode = "all" & keep_matches = False: Must not match all filter elements.
     """
 
-    _filter_elements: Mapping[str, tuple[int, Optional[int]]]
+    _filter_elements: Mapping[str, tuple[int, int | None]]
 
     def __init__(
         self,
@@ -404,7 +402,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
     @property
     def filter_elements(
         self,
-    ) -> Mapping[str, tuple[int, Optional[int]]]:
+    ) -> Mapping[str, tuple[int, int | None]]:
         """Get filter elements."""
         return self._filter_elements
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 try:
     from typing import Self  # pylint: disable=no-name-in-module
@@ -52,7 +52,7 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         generic_bonds: bool = False,
         name: str = "MakeScaffoldGeneric",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MakeScaffoldGeneric.
 

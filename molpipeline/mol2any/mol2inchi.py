@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
@@ -38,7 +36,7 @@ class MolToInchiKey(_MolToStringPipelineElement):
         self,
         name: str = "MolToInchiKey",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ):
         """Initialize MolToInchiKey.
 

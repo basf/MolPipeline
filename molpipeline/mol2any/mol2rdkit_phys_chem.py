@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -43,13 +43,13 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     def __init__(
         self,
-        descriptor_list: Optional[list[str]] = None,
+        descriptor_list: list[str] | None = None,
         return_with_errors: bool = False,
-        standardizer: Optional[AnyTransformer] = StandardScaler(),
+        standardizer: AnyTransformer | None = StandardScaler(),
         log_exceptions: bool = True,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToRDKitPhysChem.
 
@@ -120,7 +120,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[npt.NDArray[np.float64], InvalidInstance]:
+    ) -> npt.NDArray[np.float64] | InvalidInstance:
         """Transform a single molecule to a descriptor vector.
 
         Parameters

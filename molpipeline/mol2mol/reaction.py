@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -37,7 +37,7 @@ class MolToMolReaction(MolToMolPipelineElement):
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
         name: str = "MolToMolReaction",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToMolReaction.
 

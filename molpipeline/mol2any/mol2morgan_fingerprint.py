@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -36,7 +36,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "MolToMorganFP",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToMorganFP.
 

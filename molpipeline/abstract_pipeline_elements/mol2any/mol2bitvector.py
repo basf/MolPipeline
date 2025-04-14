@@ -5,7 +5,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 import abc
 import copy
 from collections.abc import Iterable
-from typing import Any, Literal, Optional, get_args, overload
+from typing import Any, Literal, get_args, overload
 
 try:
     from typing import Self, TypeAlias  # type: ignore[attr-defined]
@@ -43,7 +43,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return_as: OutputDatatype = "sparse",
         name: str = "MolToFingerprintPipelineElement",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ):
         """Initialize abstract class.
 
@@ -213,7 +213,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         return_as: OutputDatatype = "sparse",
         name: str = "MolToRDKitGenFin",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ):
         """Initialize abstract class.
 
@@ -347,7 +347,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ):
         """Initialize abstract class.
 

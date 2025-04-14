@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -11,8 +11,8 @@ except ImportError:
 
 from rdkit import Chem
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
-from rdkit.Chem import SanitizeMol  # pylint: disable=no-name-in-module
 from rdkit.Chem import (
+    SanitizeMol,  # pylint: disable=no-name-in-module
     rdMolHash,
     rdmolops,
 )
@@ -108,7 +108,7 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
         name: str = "FragmentDeduplicator",
         hashing_method: MolHashing = rdMolHash.HashFunction.HetAtomTautomer,
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize FragmentDeduplicator.
 
@@ -309,10 +309,10 @@ class SolventRemover(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        solvent_smiles_list: Optional[list[str]] = None,
+        solvent_smiles_list: list[str] | None = None,
         name: str = "SolventRemover",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize SolventRemover.
 

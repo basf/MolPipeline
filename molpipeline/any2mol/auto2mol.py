@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from molpipeline.abstract_pipeline_elements.core import (
     AnyToMolPipelineElement,
@@ -27,7 +27,7 @@ class AutoToMol(AnyToMolPipelineElement):
         self,
         name: str = "auto2mol",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
         elements: tuple[AnyToMolPipelineElement, ...] = (
             SmilesToMol(),
             InchiToMol(),

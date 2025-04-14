@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -26,7 +26,7 @@ class CustomFilter(_MolToMolPipelineElement):
         func: Callable[[RDKitMol], bool],
         name: str = "CustomFilter",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize CustomFilter.
 

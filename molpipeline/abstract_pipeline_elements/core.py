@@ -6,7 +6,7 @@ import abc
 import copy
 import inspect
 from collections.abc import Iterable
-from typing import Any, NamedTuple, Optional, Union
+from typing import Any, NamedTuple, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -40,7 +40,7 @@ class InvalidInstance(NamedTuple):
 
     element_id: str
     message: str
-    element_name: Optional[str] = None
+    element_name: str | None = None
 
     def __repr__(self) -> str:
         """Return string representation of InvalidInstance.
@@ -61,7 +61,7 @@ OptionalMol = Union[RDKitMol, InvalidInstance]
 class RemovedInstance:  # pylint: disable=too-few-public-methods
     """Object which is returned by a ErrorFilter if an Invalid instance was removed."""
 
-    def __init__(self, filter_element_id: str, message: Optional[str] = None) -> None:
+    def __init__(self, filter_element_id: str, message: str | None = None) -> None:
         """Initialize RemovedInstance.
 
         Parameters
@@ -98,9 +98,9 @@ class ABCPipelineElement(abc.ABC):
 
     def __init__(
         self,
-        name: Optional[str] = None,
+        name: str | None = None,
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize ABCPipelineElement.
 
@@ -341,9 +341,9 @@ class TransformingPipelineElement(ABCPipelineElement):
 
     def __init__(
         self,
-        name: Optional[str] = None,
+        name: str | None = None,
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize ABCPipelineElement.
 

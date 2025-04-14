@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -18,9 +18,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
 )
 
 
-class Mol2PathFP(
-    MolToRDKitGenFPElement
-):  # pylint: disable=too-many-instance-attributes
+class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-attributes
     """Folded Path Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
@@ -44,7 +42,7 @@ class Mol2PathFP(
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "Mol2PathFP",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize Mol2PathFP.
 

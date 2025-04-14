@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -49,7 +49,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         mol_featurizer: VectorFeaturizer[RDKitMol] | None = None,
         name: str = "Mol2Chemprop",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToChemprop.
 

@@ -1,6 +1,7 @@
 """Splitter for creating train/test sets."""
 
-from typing import Any, Generator, Literal, get_args
+from collections.abc import Generator
+from typing import Any, Literal, get_args
 
 import numpy as np
 import numpy.typing as npt
@@ -33,7 +34,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
         test_size: float | None = None,
         train_size: float | None = None,
         split_mode: SplitModeOption = "groups",
-        random_state: int | RandomState | None = None
+        random_state: int | RandomState | None = None,
     ) -> None:
         """Create a new GroupShuffleSplit.
 
@@ -69,7 +70,9 @@ class GroupShuffleSplit(BaseShuffleSplit):
         self.split_mode = split_mode
 
     def _iter_indices_split_mode_samples(
-        self, X: Any, groups: npt.ArrayLike  # pylint: disable=invalid-name
+        self,
+        X: Any,
+        groups: npt.ArrayLike,  # pylint: disable=invalid-name
     ) -> Generator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None]:
         """Generate indices to split data into training and test sets.
 
@@ -106,7 +109,6 @@ class GroupShuffleSplit(BaseShuffleSplit):
         unique_groups_indices = np.arange(len(unique_groups))
 
         for _ in range(self.n_splits):
-
             # pre-compute random assignments to train or test set for each group
             random_bucket_assignments = rng.randint(0, 2, size=len(unique_groups))
 

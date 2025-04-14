@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import abc
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -28,16 +28,16 @@ from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
 
-    _standardizer: Optional[AnyTransformer]
+    _standardizer: AnyTransformer | None
     _output_type = "float"
     _feature_names: list[str]
 
     def __init__(
         self,
-        standardizer: Optional[AnyTransformer] = StandardScaler(),
+        standardizer: AnyTransformer | None = StandardScaler(),
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToDescriptorPipelineElement.
 
@@ -210,7 +210,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     @abc.abstractmethod
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[npt.NDArray[np.float64], InvalidInstance]:
+    ) -> npt.NDArray[np.float64] | InvalidInstance:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters
