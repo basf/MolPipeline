@@ -27,7 +27,6 @@ _T = TypeVar("_T")
 _S = TypeVar("_S")
 
 
-# pylint: disable=R0903
 class ErrorFilter(ABCPipelineElement):
     """Collects None values and can fill Dummy values to matrices where None values were removed."""
 
@@ -48,20 +47,17 @@ class ErrorFilter(ABCPipelineElement):
 
         Parameters
         ----------
-        element_ids: list[str]
+        element_ids: list[str] | None, optional
             List of Pipeline Elements for which InvalidInstances can be removed.
-        filter_everything: bool, optional (default: True)
+        filter_everything: bool, default=True
             If True, element_ids are ignored and all InvalidInstances are removed.
-        name: str, optional (default: "ErrorFilter")
+        name: str, default="ErrorFilter"
             Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str | None, optional
             UUID of the pipeline element.
 
-        Returns
-        -------
-        None
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.error_indices = []
@@ -92,16 +88,16 @@ class ErrorFilter(ABCPipelineElement):
         ----------
         element_list: Iterable[TransformingPipelineElement]
             List of Pipeline Elements for which None can be removed.
-        name: str, optional (default: "ErrorFilter")
+        name: str, default="ErrorFilter"
             Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str | None, optional
             UUID of the pipeline element.
 
         Returns
         -------
-        ErrorFilter
+        Self
             Constructed ErrorFilter object.
         """
         element_ids = {element.uuid for element in element_list}
@@ -173,9 +169,7 @@ class ErrorFilter(ABCPipelineElement):
             return True
         return False
 
-    def fit(
-        self, values: AnyVarSeq, labels: Any = None
-    ) -> Self:  # pylint: disable=unused-argument
+    def fit(self, values: AnyVarSeq, labels: Any = None) -> Self:
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
@@ -438,11 +432,11 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             Id of the ErrorFilter to use for filling removed values.
         fill_value: Any
             Value which is used to fill removed values.
-        name: str, optional (default: "FilterReinserter")
+        name: str, default="FilterReinserter"
             Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str | None, optional
             UUID of the pipeline element.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
@@ -467,16 +461,16 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             ErrorFilter to use for filling removed values.
         fill_value: Any
             Value which is used to fill removed values.
-        name: str, optional (default: "FilterReinserter")
+        name: str, default="FilterReinserter"
             Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str | None, optional
             UUID of the pipeline element.
 
         Returns
         -------
-        FilterReinserter
+        Self
             Constructed FilterReinserter object.
         """
         filler = cls(
@@ -524,7 +518,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
 
         Returns
         -------
-        self
+        Self
             The instance itself.
         """
         parameter_copy = dict(parameters)
@@ -667,7 +661,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
     def transform(
         self,
         values: TypeFixedVarSeq,
-        **params: Any,  # pylint: disable=unused-argument
+        **params: Any,
     ) -> TypeFixedVarSeq:
         """Transform iterable of values by removing invalid instances.
 
