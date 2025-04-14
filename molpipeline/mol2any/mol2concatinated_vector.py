@@ -321,7 +321,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     def fit(
         self,
         values: list[RDKitMol],
-        labels: Any = None,  # pylint: disable=unused-argument
+        labels: Any = None,
     ) -> Self:
         """Fit each pipeline element.
 
@@ -353,7 +353,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         Returns
         -------
-        Union[list[Union[npt.NDArray[np.float64], dict[int, int]]], InvalidInstance]
+        list[npt.NDArray[np.float64] | dict[int, int]] | InvalidInstance
             List of pretransformed values of each pipeline element.
             If any element returns None, InvalidInstance is returned.
         """
