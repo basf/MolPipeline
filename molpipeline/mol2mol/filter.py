@@ -66,9 +66,9 @@ class ElementFilter(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        allowed_element_numbers: list[int]
-        | dict[int, IntOrIntCountRange]
-        | None = None,
+        allowed_element_numbers: (
+            list[int] | dict[int, IntOrIntCountRange] | None
+        ) = None,
         add_hydrogens: bool = True,
         name: str = "ElementFilter",
         n_jobs: int = 1,

@@ -173,7 +173,9 @@ class ErrorFilter(ABCPipelineElement):
             return True
         return False
 
-    def fit(self, values: AnyVarSeq, labels: Any = None) -> Self:  # pylint: disable=unused-argument
+    def fit(
+        self, values: AnyVarSeq, labels: Any = None
+    ) -> Self:  # pylint: disable=unused-argument
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
