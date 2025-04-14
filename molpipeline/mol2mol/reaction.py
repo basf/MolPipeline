@@ -46,14 +46,15 @@ class MolToMolReaction(MolToMolPipelineElement):
         reaction: AllChem.ChemicalReaction
             Reaction which is applied to input.
         additive_list: list[Chem.Mol]
-            Molecules which are added as educts to the reaction, but are not part of input.
-        handle_multi: Literal["pass", "warn", "raise"]
+            Molecules which are added as educts to the reaction,
+            but are not part of input.
+        handle_multi: Literal["pass", "warn", "raise"], default="warn"
             How to handle reaction where multiple products are possible.
-        name: str, optional (default="MolToMolReaction")
+        name: str, default="MolToMolReaction"
             Name of PipelineElement.
-        n_jobs: int, optional (default=1)
+        n_jobs: int, default=1
             Number of cores used.
-        uuid: str | None, optional (default=None)
+        uuid: str | None, optional
             UUID of the pipeline element. If None, a random UUID is generated.
         """
         super().__init__(
