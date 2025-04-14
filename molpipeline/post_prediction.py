@@ -58,14 +58,11 @@ class PostPredictionWrapper(PostPredictionTransformation):
 
         Parameters
         ----------
-        wrapped_estimator: PipelineElement
+        wrapped_estimator: AnyPredictor | AnyTransformer | FilterReinserter[Any]
             PipelineElement to be wrapped.
         kwargs: Any
             Parameter of the wrapped_estimator
 
-        Returns
-        -------
-        None
         """
         self.wrapped_estimator = wrapped_estimator
         if kwargs:
@@ -77,7 +74,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
     def fit(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: npt.NDArray[Any] | None = None,  # pylint: disable=invalid-name
+        y: npt.NDArray[Any] | None = None,
         **params: Any,
     ) -> Self:
         """Fit PostPredictionWrapper.
@@ -104,7 +101,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
 
     def transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Transform data.
@@ -141,7 +138,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
         ----------
         X: npt.NDArray[Any]
             Input data.
-        y: npt.NDArray[Any]
+        y: npt.NDArray[Any] | None, optional
             Target data.
         **params: Any
             Additional parameters for fitting.
