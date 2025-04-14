@@ -1,7 +1,5 @@
 """Abstract classes for transforming rdkit molecules to float vectors."""
 
-# pylint: disable=too-many-arguments
-
 from __future__ import annotations
 
 import abc
@@ -43,18 +41,15 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        standardizer: Optional[AnyTransformer], default=StandardScaler()
+        standardizer: AnyTransformer | None default=StandardScaler()
             The output is post_processed according to the standardizer if not None.
-        name: str:
+        name: str, default='MolToDescriptorPipelineElement'
             Name of the PipelineElement.
-        n_jobs: int:
+        n_jobs: int, default=1
             Number of jobs to use for parallelization.
-        uuid: Optional[str]
+        uuid: str | None, optional
             UUID of the PipelineElement.
 
-        Returns
-        -------
-        None
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self._standardizer = standardizer
@@ -220,6 +215,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Returns
         -------
-        npt.NDArray[np.float64]
+        npt.NDArray[np.float64] | InvalidInstance
             Vector with descriptor values of molecule.
+
         """
