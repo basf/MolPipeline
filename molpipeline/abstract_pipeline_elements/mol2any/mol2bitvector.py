@@ -365,7 +365,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
             When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors.
             With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of 
+            With "explicit_bit_vect" the fingerprints will be returned as a list of
             RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
         name: str, default="AbstractMorgan"
             Name of PipelineElement.
