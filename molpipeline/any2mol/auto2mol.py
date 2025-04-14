@@ -48,13 +48,14 @@ class AutoToMol(AnyToMolPipelineElement):
             - SDFToMol
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-        elements = elements or (
-            SmilesToMol(),
-            InchiToMol(),
-            BinaryToMol(),
-            SDFToMol(),
-        )
         # pipeline elements for transforming the input to a molecule
+        if elements is None:
+            elements = (
+                SmilesToMol(),
+                InchiToMol(),
+                BinaryToMol(),
+                SDFToMol(),
+            )
         self.elements = elements
 
     def pretransform_single(self, value: Any) -> OptionalMol:
