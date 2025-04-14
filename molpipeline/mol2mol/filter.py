@@ -78,17 +78,21 @@ class ElementFilter(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        allowed_element_numbers: Optional[Union[list[int], dict[int, IntOrIntCountRange]]]
-            List of atomic numbers of elements to allowed in molecules. Per default allowed elements are:
+        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None,
+            optional
+            List of atomic numbers of elements to allowed in molecules.
+            Per default allowed elements are:
             H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
-            Alternatively, a dictionary can be passed with atomic numbers as keys and an int for exact count or a tuple of minimum and maximum
+            Alternatively, a dictionary can be passed with atomic numbers as keys and an
+            int for exact count or a tuple of minimum and maximum.
         add_hydrogens: bool, optional (default: True)
-            If True, in case Hydrogens are in allowed_element_list, add hydrogens to the molecule before filtering.
-        name: str, optional (default: "ElementFilterPipe")
+            If True, in case Hydrogens are in allowed_element_list, add hydrogens to the
+            molecule before filtering.
+        name: str, default="ElementFilterPipe"
             Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str, optional
             Unique identifier of the pipeline element.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
@@ -134,7 +138,7 @@ class ElementFilter(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        allowed_element_numbers: Optional[Union[list[int], dict[int, IntOrIntCountRange]]
+        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None
             List of atomic numbers of elements to allowed in molecules.
         """
         self._allowed_element_numbers: dict[int, IntCountRange]
