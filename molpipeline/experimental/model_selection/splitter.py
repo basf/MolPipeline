@@ -71,8 +71,8 @@ class GroupShuffleSplit(BaseShuffleSplit):
 
     def _iter_indices_split_mode_samples(
         self,
-        X: Any,
-        groups: npt.ArrayLike,  # pylint: disable=invalid-name
+        X: Any,  # pylint: disable=invalid-name
+        groups: npt.ArrayLike,
     ) -> Generator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None]:
         """Generate indices to split data into training and test sets.
 
