@@ -122,7 +122,7 @@ physchem_matrix
 #                [88.065, 20.23 ,  1.   ]])
 ```
 
-MolPipeline provides further features and descriptors from RDKit, 
+MolPipeline provides further features and descriptors from RDKit,
 for example Morgan (binary/count) fingerprints and MACCS keys.
 See the [04_feature_calculation notebook](notebooks/04_feature_calculation.ipynb) for more examples.
 
