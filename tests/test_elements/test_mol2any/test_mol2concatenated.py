@@ -52,7 +52,6 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         ]
 
         for fp_output_type in fingerprint_morgan_output_types:
-
             concat_vector_element = MolToConcatenatedVector(
                 [
                     (

@@ -87,7 +87,8 @@ class TestSHAPExplainers(unittest.TestCase):
 
         self.assertIsInstance(explanation.feature_vector, np.ndarray)
         self.assertEqual(
-            (nof_features,), explanation.feature_vector.shape  # type: ignore[union-attr]
+            (nof_features,),
+            explanation.feature_vector.shape,  # type: ignore[union-attr]
         )
 
         # feature names should be a list of not empty strings
@@ -98,7 +99,8 @@ class TestSHAPExplainers(unittest.TestCase):
             )
         )
         self.assertEqual(
-            len(explanation.feature_names), explanation.feature_vector.shape[0]  # type: ignore
+            len(explanation.feature_names),  # type: ignore
+            explanation.feature_vector.shape[0],  # type: ignore
         )
 
         self.assertIsInstance(explanation.molecule, RDKitMol)
@@ -112,7 +114,8 @@ class TestSHAPExplainers(unittest.TestCase):
         if is_regressor(estimator):
             self.assertTrue((1,), explanation.prediction.shape)  # type: ignore[union-attr]
             self.assertEqual(
-                (nof_features,), explanation.feature_weights.shape  # type: ignore[union-attr]
+                (nof_features,),
+                explanation.feature_weights.shape,  # type: ignore[union-attr]
             )
         elif is_classifier(estimator):
             self.assertTrue((2,), explanation.prediction.shape)  # type: ignore[union-attr]
@@ -123,21 +126,25 @@ class TestSHAPExplainers(unittest.TestCase):
                 # https://github.com/shap/shap/issues/3177 returning only one feature weight
                 # which is also based on log odds. This check is a workaround until the bug is fixed.
                 self.assertEqual(
-                    (nof_features,), explanation.feature_weights.shape  # type: ignore[union-attr]
+                    (nof_features,),
+                    explanation.feature_weights.shape,  # type: ignore[union-attr]
                 )
             elif isinstance(estimator, SVC):
                 # SVC seems to be handled differently by SHAP. It returns only a one dimensional
                 # feature array for binary classification.
                 self.assertTrue(
-                    (1,), explanation.prediction.shape  # type: ignore[union-attr]
+                    (1,),
+                    explanation.prediction.shape,  # type: ignore[union-attr]
                 )
                 self.assertEqual(
-                    (nof_features,), explanation.feature_weights.shape  # type: ignore[union-attr]
+                    (nof_features,),
+                    explanation.feature_weights.shape,  # type: ignore[union-attr]
                 )
             else:
                 # normal binary classification case
                 self.assertEqual(
-                    (nof_features, 2), explanation.feature_weights.shape  # type: ignore[union-attr]
+                    (nof_features, 2),
+                    explanation.feature_weights.shape,  # type: ignore[union-attr]
                 )
         else:
             raise ValueError("Error in unittest. Unsupported estimator.")
@@ -176,7 +183,6 @@ class TestSHAPExplainers(unittest.TestCase):
         for estimators, explainer_type in zip(
             explainer_estimators, explainer_types, strict=True
         ):
-
             # test explanations with different estimators
             for estimator in estimators:
                 pipeline = Pipeline(
@@ -241,7 +247,6 @@ class TestSHAPExplainers(unittest.TestCase):
 
         for estimator in estimators:
             for fill_value in fill_values:
-
                 # pipeline with ErrorFilter
                 error_filter1 = ErrorFilter()
                 pipeline1 = Pipeline(
@@ -271,11 +276,10 @@ class TestSHAPExplainers(unittest.TestCase):
                 )
 
                 for pipeline in [pipeline1, pipeline2]:
-
                     pipeline.fit(TEST_SMILES_WITH_BAD_SMILES, CONTAINS_OX_BAD_SMILES)
 
                     explainer = SHAPTreeExplainer(pipeline)
-                    log_block = rdBase.BlockLogs()  # pylint: disable=unused-variable
+                    log_block = rdBase.BlockLogs()
                     explanations = explainer.explain(TEST_SMILES_WITH_BAD_SMILES)
                     del log_block
                     self.assertEqual(
