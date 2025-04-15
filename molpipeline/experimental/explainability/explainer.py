@@ -162,7 +162,9 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
 
     @abc.abstractmethod
     def explain(
-        self, X: Any, **kwargs: Any  # pylint: disable=invalid-name
+        self,
+        X: Any,  # pylint: disable=invalid-name
+        **kwargs: Any,
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
@@ -180,9 +182,7 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
         """
 
 
-class SHAPExplainerAdapter(
-    AbstractSHAPExplainer, abc.ABC
-):  # pylint: disable=too-few-public-methods
+class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=too-few-public-methods
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
     # used for dynamically defining the return type of the explain method
@@ -282,7 +282,6 @@ class SHAPExplainerAdapter(
             SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
         ] = []
         for input_sample in X:
-
             input_sample = [input_sample]
 
             # get predictions
@@ -411,9 +410,7 @@ class SHAPTreeExplainer(SHAPExplainerAdapter):  # pylint: disable=too-few-public
         return explainer
 
 
-class SHAPKernelExplainer(
-    SHAPExplainerAdapter
-):  # pylint: disable=too-few-public-methods
+class SHAPKernelExplainer(SHAPExplainerAdapter):  # pylint: disable=too-few-public-methods
     """Wrapper for SHAP's KernelExplainer that can handle pipelines and molecules."""
 
     def __init__(
