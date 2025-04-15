@@ -157,7 +157,9 @@ class MolToMolReaction(MolToMolPipelineElement):
         if len(product_list) > 1:
             if self.handle_multi == "warn":
                 warnings.warn(
-                    "Not able to handle multiple reactions. An arbitrary reaction is selected."
+                    "Not able to handle multiple reactions. "
+                    "An arbitrary reaction is selected.",
+                    stacklevel=2,
                 )
             elif self.handle_multi == "raise":
                 if mol.HasProp("identifier"):

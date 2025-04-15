@@ -162,7 +162,9 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
 
     @abc.abstractmethod
     def explain(
-        self, X: Any, **kwargs: Any  # pylint: disable=invalid-name
+        self,
+        X: Any,  # pylint: disable=invalid-name
+        **kwargs: Any,
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
@@ -282,7 +284,6 @@ class SHAPExplainerAdapter(
             SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
         ] = []
         for input_sample in X:
-
             input_sample = [input_sample]
 
             # get predictions

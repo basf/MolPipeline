@@ -20,7 +20,8 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
     extra_bond_fdim: InitVar[int]
 
     def get_params(
-        self, deep: bool = True  # pylint: disable=unused-argument
+        self,
+        deep: bool = True,  # pylint: disable=unused-argument
     ) -> dict[str, InitVar[int]]:
         """Get parameters for the featurizer.
 

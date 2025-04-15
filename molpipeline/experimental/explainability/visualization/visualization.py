@@ -358,7 +358,7 @@ def _add_shap_present_absent_features_text(
     )
 
     delta = 0.05
-    offset = offset + 0.0165
+    offset += 0.0165
     fig.text(offset, 0.13, "prediction =", ha="center", fontsize=10)
     fig.text(
         offset + 2 * delta,
@@ -558,7 +558,6 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     )
 
     with plt.ioff():
-
         drawer, _, _, normalizer, color_map = _structure_heatmap(
             explanation.molecule,
             explanation.atom_weights,
