@@ -59,7 +59,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
         return_with_errors: bool, default=False
             False: Returns an InvalidInstance if any error occurs during calculations.
-            Tru: Returns a vector with NaN values for failed descriptor calculations.
+            True: Returns a vector with NaN values for failed descriptor calculations.
         standardizer: AnyTransformer | None, default=StandardScaler()
             Standardizer to use.
         log_exceptions: bool, default=True
