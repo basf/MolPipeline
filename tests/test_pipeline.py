@@ -233,7 +233,6 @@ class PipelineTest(unittest.TestCase):
         for cache_activated in [False, True]:
             pipeline = get_exec_counted_rf_regressor(_RANDOM_STATE)
             with tempfile.TemporaryDirectory() as temp_dir:
-
                 if cache_activated:
                     cache_dir = Path(temp_dir) / ".cache"
                     mem = Memory(location=cache_dir, verbose=0)
@@ -300,7 +299,6 @@ class PipelineCompatibilityTest(unittest.TestCase):
         ]
 
         for test_data_dict in descriptor_elements_to_test:
-
             name = test_data_dict["name"]
             element = test_data_dict["element"]
             param_grid = test_data_dict["param_grid"]

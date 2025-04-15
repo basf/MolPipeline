@@ -154,7 +154,7 @@ class TestNamedNearestNeighbors(TestCase):
 
     def test_fit_predict_invalid(self) -> None:
         """Test the fit_predict method with invalid smiles."""
-        with_invald_smiles = ["CC1CC"] + TEST_SMILES
+        with_invald_smiles = ["CC1CC", *TEST_SMILES]
 
         error_filter = ErrorFilter(filter_everything=True)
         model = Pipeline(
@@ -174,14 +174,14 @@ class TestNamedNearestNeighbors(TestCase):
             ]
         )
         result = model.fit_predict(with_invald_smiles, with_invald_smiles).tolist()
-        self.assertListEqual(result, [["invalid", "invalid"]] + TWO_NN)
+        self.assertListEqual(result, [["invalid", "invalid"], *TWO_NN])
 
         result_only_valid = model.predict(TEST_SMILES).tolist()
         self.assertListEqual(result_only_valid, TWO_NN)
 
     def test_fit_and_predict_invalid_with_distance(self) -> None:
         """Test the fit_predict method with invalid smiles and distance."""
-        with_invald_smiles = ["CC1CC"] + TEST_SMILES
+        with_invald_smiles = ["CC1CC", *TEST_SMILES]
 
         error_filter = ErrorFilter(filter_everything=True)
         model = Pipeline(
@@ -204,7 +204,7 @@ class TestNamedNearestNeighbors(TestCase):
         result = model.predict(with_invald_smiles, **{"return_distance": True})
         neighbors = result[:, :, 0]
         distances = result[:, :, 1]
-        self.assertListEqual(neighbors.tolist(), [["invalid", "invalid"]] + TWO_NN)
+        self.assertListEqual(neighbors.tolist(), [["invalid", "invalid"], *TWO_NN])
         self.assertTrue(
             1 - np.allclose(distances[1:, :].astype(np.float64), TWO_NN_SIMILARITIES)
         )

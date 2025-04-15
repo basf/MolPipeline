@@ -75,7 +75,7 @@ class TestChempropModel(unittest.TestCase):
         chemprop_model.set_params(**new_params)
         model_params = chemprop_model.get_params(deep=True)
         for param_name, param in new_params.items():
-            if param_name in ["model__agg"]:
+            if param_name in {"model__agg"}:
                 self.assertIsInstance(model_params[param_name], type(param))
                 continue
             self.assertEqual(param, model_params[param_name])

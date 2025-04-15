@@ -52,7 +52,6 @@ def get_notebook_paths_from_dir(notebook_dir: Path) -> list[Path]:
     # Find all Jupyter notebook files in the directory
     notebooks_paths = []
     for notebook_path in notebook_dir.rglob("*.ipynb"):
-
         if ".ipynb_checkpoints" in str(notebook_path.resolve()):
             # skip jetbrains checkpoints
             continue
@@ -115,7 +114,6 @@ def run_notebooks(
     nof_errors = 0
     # Loop through each notebook
     for notebooks_path in notebooks_paths:
-
         # Execute the notebook and capture the error code
         cmd = [
             "jupyter",
