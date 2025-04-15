@@ -31,9 +31,7 @@ from chemprop.nn.predictors import MulticlassDirichletFFN as _MulticlassDirichle
 from chemprop.nn.predictors import MveFFN as _MveFFN
 from chemprop.nn.predictors import RegressionFFN as _RegressionFFN
 from chemprop.nn.predictors import SpectralFFN as _SpectralFFN
-from chemprop.nn.predictors import (
-    _FFNPredictorBase as _Predictor,
-)
+from chemprop.nn.predictors import _FFNPredictorBase as _Predictor
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
