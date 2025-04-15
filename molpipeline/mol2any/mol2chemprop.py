@@ -22,6 +22,7 @@ except ImportError:
     warnings.warn(
         "chemprop not installed. MolToChemprop will not work.",
         ImportWarning,
+        stacklevel=2,
     )
 
 

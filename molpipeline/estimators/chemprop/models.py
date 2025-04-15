@@ -149,7 +149,8 @@ class ChempropModel(ABCChemprop):
         return tags
 
     def _predict(
-        self, X: MoleculeDataset  # pylint: disable=invalid-name
+        self,
+        X: MoleculeDataset,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Predict the labels.
 
@@ -207,7 +208,8 @@ class ChempropModel(ABCChemprop):
         return super().fit(X, y)
 
     def predict(
-        self, X: MoleculeDataset  # pylint: disable=invalid-name
+        self,
+        X: MoleculeDataset,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Predict the output.
 
@@ -234,7 +236,8 @@ class ChempropModel(ABCChemprop):
 
     @available_if(_is_classifier)
     def predict_proba(
-        self, X: MoleculeDataset  # pylint: disable=invalid-name
+        self,
+        X: MoleculeDataset,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Predict the probabilities.
 
