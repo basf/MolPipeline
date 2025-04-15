@@ -266,7 +266,9 @@ def recursive_to_json(obj: Any) -> Any:
         # If the object is not a sklearn model, a warning is raised
         # as it might not be possible to recreate the object.
         warnings.warn(
-            f"{type(obj)} has no get_params method. No parameters for initialization are retained."
+            f"{type(obj)} has no get_params method."
+            f"No parameters for initialization are retained.",
+            stacklevel=2,
         )
 
     return object_dict
