@@ -54,9 +54,6 @@ class _MolPipeline:
         name: str
             Name of pipeline.
 
-        Returns
-        -------
-        None
         """
         self._element_list = element_list
         self.n_jobs = n_jobs
@@ -105,9 +102,6 @@ class _MolPipeline:
             Number of cores requested for transformation steps.
             If fewer cores than requested are available, the number of cores is set to maximum available.
 
-        Returns
-        -------
-        None
         """
         self._n_jobs = check_available_cores(requested_jobs)
 
@@ -125,9 +119,6 @@ class _MolPipeline:
         parameter_dict: dict[str, Any]
             Dictionary containing the parameter names and corresponding values to be set.
 
-        Returns
-        -------
-        None
         """
         self.set_params(**parameter_dict)
 
