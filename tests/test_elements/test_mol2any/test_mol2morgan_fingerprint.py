@@ -126,7 +126,14 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertRaises(ValueError, mol_fp.set_params, **params)
 
     def test_bit2atom_mapping(self) -> None:
-        """Test that the mapping from bits to atom weights works as intended."""
+        """Test that the mapping from bits to atom weights works as intended.
+
+        Raises
+        ------
+        AssertionError
+            The SMILES provided by the unit test are invalid.
+
+        """
         n_bits = 2048
         sparse_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="sparse")
         dense_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="dense")

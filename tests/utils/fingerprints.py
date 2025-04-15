@@ -50,10 +50,16 @@ def fingerprints_to_numpy(
     fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_]
         Fingerprint matrix.
 
+    Raises
+    ------
+    ValueError
+        If the fingerprints are not in a supported format.
+
     Returns
     -------
     npt.NDArray
         Numpy fingerprint matrix.
+
     """
     if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):
         return np.array(fingerprints)

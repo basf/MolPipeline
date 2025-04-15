@@ -171,7 +171,14 @@ class TestChempropRegressor(unittest.TestCase):
     """Test the Chemprop regressor model."""
 
     def test_get_params(self) -> None:
-        """Test the get_params and set_params methods."""
+        """Test the get_params and set_params methods.
+
+        Raises
+        ------
+        ValueError
+            If the parameters from NO_IDENTITY_CHECK are not of the expected type.
+
+        """
         chemprop_model = ChempropRegressor(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_REGRESSION_PARAMS)
@@ -198,7 +205,14 @@ class TestChempropMulticlassClassifier(unittest.TestCase):
     """Test the Chemprop classifier model."""
 
     def test_get_params(self) -> None:
-        """Test the get_params and set_params methods."""
+        """Test the get_params and set_params methods.
+
+        Raises
+        ------
+        ValueError
+            If the parameters from NO_IDENTITY_CHECK are not of the expected type.
+
+        """
         n_classes = 3
         chemprop_model = ChempropMulticlassClassifier(
             lightning_trainer__accelerator="cpu", n_classes=n_classes

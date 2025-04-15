@@ -82,6 +82,12 @@ class TestSHAPExplainers(unittest.TestCase):
             The SMILES string of the molecule.
         explainer : SHAPKernelExplainer | SHAPTreeExplainer
             The explainer used to generate the explanation.
+
+        Raises
+        ------
+        ValueError
+            If an unsupported estimator is used in the unittest.
+
         """
         self.assertTrue(explanation.is_valid())
 
