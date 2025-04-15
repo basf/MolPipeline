@@ -19,12 +19,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
     """Unittest for MolToRDKitPhysChem, which calculates RDKitPhysChem Descriptors."""
 
     def test_descriptor_list(self) -> None:
-        """Test if the descriptor list is as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the descriptor list is as expected."""
         expected_descriptors = {
             "MaxAbsEStateIndex",
             "MaxEStateIndex",
@@ -249,9 +244,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
         Compared to precalculated values.
 
-        Returns
-        -------
-        None
         """
         expected_df = pd.read_csv(data_path, sep="\t")
         descriptor_names = expected_df.drop(columns=["smiles"]).columns.tolist()
@@ -272,12 +264,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         self.assertTrue(np.allclose(output, property_vector))  # add assertion here
 
     def test_descriptor_normalization(self) -> None:
-        """Test if the normalization of RDKitPhysChem Descriptors works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the normalization of RDKitPhysChem Descriptors works as expected."""
         smi2mol = SmilesToMol()
         property_element = MolToRDKitPhysChem(standardizer=StandardScaler())
         pipeline = Pipeline(

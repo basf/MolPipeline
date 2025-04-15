@@ -76,9 +76,6 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         uuid: str | None
             UUID of pipeline element.
 
-        Returns
-        -------
-        None
         """
         self.generic_atoms = generic_atoms
         self.generic_bonds = generic_bonds

@@ -71,9 +71,6 @@ class RemovedInstance:  # pylint: disable=too-few-public-methods
         message: str | None, optional
             Optional message why the molecule was removed.
 
-        Returns
-        -------
-        None
         """
         self.filter_element_id = filter_element_id
         self.message = message
@@ -225,9 +222,6 @@ class ABCPipelineElement(abc.ABC):
         n_jobs: int
             Number of cores used for processing.
 
-        Returns
-        -------
-        None
         """
         self._n_jobs = check_available_cores(n_jobs)
 
@@ -388,9 +382,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         parameters: Any
             Object parameters as a dictionary.
 
-        Returns
-        -------
-        None
         """
         self.set_params(**parameters)
 

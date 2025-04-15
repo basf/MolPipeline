@@ -399,9 +399,6 @@ class _MultipleErrorFilter:
         total: int
             Total number of instances seen during transformation.
 
-        Returns
-        -------
-        None
         """
         for error_filter in self.error_filter_list:
             error_filter.n_total = total

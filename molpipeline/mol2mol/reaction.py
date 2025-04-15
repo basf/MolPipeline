@@ -128,9 +128,6 @@ class MolToMolReaction(MolToMolPipelineElement):
         reaction: AllChem.ChemicalReaction
             Reaction which is applied to molecules.
 
-        Returns
-        -------
-        None
         """
         if not isinstance(reaction, AllChem.ChemicalReaction):
             raise TypeError("Not a Chemical reaction!")
