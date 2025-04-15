@@ -32,7 +32,7 @@ from chemprop.nn.predictors import MveFFN as _MveFFN
 from chemprop.nn.predictors import RegressionFFN as _RegressionFFN
 from chemprop.nn.predictors import SpectralFFN as _SpectralFFN
 from chemprop.nn.predictors import (
-    _FFNPredictorBase as _Predictor,  # pylint: disable=protected-access
+    _FFNPredictorBase as _Predictor,
 )
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
@@ -477,7 +477,7 @@ class MPNN(_MPNN, BaseEstimator):
             # pylint: disable=protected-access
             self.metrics = [self.predictor._T_default_metric, self.criterion]
         else:
-            self.metrics = list(self.metric_list) + [self.criterion]
+            self.metrics = [*list(self.metric_list), self.criterion]
 
         return self
 
