@@ -32,7 +32,7 @@ RDKIT_DESCRIPTOR_DICT = dict(Descriptors.descList)
 # MolWt is removed as ExactMolWt is already included.
 # Ipc is removed because it causes trouble with numpy.
 DEFAULT_DESCRIPTORS = [
-    name for name in RDKIT_DESCRIPTOR_DICT if name not in ["MolWt", "Ipc"]
+    name for name in RDKIT_DESCRIPTOR_DICT if name not in {"MolWt", "Ipc"}
 ]
 
 
