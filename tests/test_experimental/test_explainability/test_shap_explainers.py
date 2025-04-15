@@ -293,7 +293,7 @@ class TestSHAPExplainers(unittest.TestCase):
                     self.assertIsNotNone(mol_reader_subpipeline)
 
                     for i, explanation in enumerate(explanations):
-                        if i in [3, 7]:
+                        if i in {3, 7}:
                             self.assertFalse(explanation.is_valid())
                             continue
 

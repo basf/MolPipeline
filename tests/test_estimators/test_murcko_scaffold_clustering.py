@@ -14,7 +14,7 @@ SCAFFOLD_SMILES: list[str] = [
     "c1ccccc1",
 ]
 
-SCAFFOLD_SMILES_TEST_GENERIC: list[str] = SCAFFOLD_SMILES + ["c1ncccc1"]
+SCAFFOLD_SMILES_TEST_GENERIC: list[str] = [*SCAFFOLD_SMILES, "c1ncccc1"]
 
 LINEAR_SMILES: list[str] = ["CC", "CCC", "CCCN"]
 
