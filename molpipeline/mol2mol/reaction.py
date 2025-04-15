@@ -157,7 +157,7 @@ class MolToMolReaction(MolToMolPipelineElement):
         if len(product_list) > 1:
             if self.handle_multi == "warn":
                 warnings.warn(
-                    "Not able to handle multiple reactions."
+                    "Not able to handle multiple reactions. "
                     "An arbitrary reaction is selected.",
                     stacklevel=2,
                 )
