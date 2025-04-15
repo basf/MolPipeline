@@ -1,7 +1,0 @@
-*.swp
-__pycache__
-molpipeline.egg-info/
-lib/
-build/
-lightning_logs/
-
