@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Union
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -82,7 +82,7 @@ class _MolPipeline:
     @property
     def _transforming_elements(
         self,
-    ) -> list[Union[TransformingPipelineElement, _MolPipeline]]:
+    ) -> list[TransformingPipelineElement | _MolPipeline]:
         """Get the elements which transform the input."""
         return [
             element
@@ -189,15 +189,15 @@ class _MolPipeline:
 
     def _get_meta_element_list(
         self,
-    ) -> list[Union[ABCPipelineElement, _MolPipeline]]:
+    ) -> list[ABCPipelineElement | _MolPipeline]:
         """Merge elements which do not require fitting to a meta element which improves parallelization.
 
         Returns
         -------
-        list[Union[ABCPipelineElement, _MolPipeline]]
+        list[ABCPipelineElement | _MolPipeline]
             List of pipeline elements and meta elements.
         """
-        meta_element_list: list[Union[ABCPipelineElement, _MolPipeline]] = []
+        meta_element_list: list[ABCPipelineElement | _MolPipeline] = []
         no_fit_element_list: list[ABCPipelineElement] = []
         for element in self._element_list:
             if (
@@ -225,7 +225,7 @@ class _MolPipeline:
     def fit(
         self,
         x_input: Any,
-        y: Any = None,  # pylint: disable=invalid-name
+        y: Any = None,
         **fit_params: dict[Any, Any],
     ) -> Self:
         """Fit the MolPipeline according to x_input.
@@ -250,7 +250,7 @@ class _MolPipeline:
             self.fit_transform(x_input)
         return self
 
-    def fit_transform(  # pylint: disable=invalid-name,unused-argument
+    def fit_transform(  # pylint: disable=unused-argument
         self,
         x_input: Any,
         y: Any = None,

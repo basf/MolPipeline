@@ -1,6 +1,7 @@
 """Splitter for creating train/test sets."""
 
-from typing import Any, Generator, Literal, get_args
+from collections.abc import Generator
+from typing import Any, Literal, get_args
 
 import numpy as np
 import numpy.typing as npt
@@ -33,7 +34,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
         test_size: float | None = None,
         train_size: float | None = None,
         split_mode: SplitModeOption = "groups",
-        random_state: int | RandomState | None = None
+        random_state: int | RandomState | None = None,
     ) -> None:
         """Create a new GroupShuffleSplit.
 
@@ -41,17 +42,20 @@ class GroupShuffleSplit(BaseShuffleSplit):
         ----------
         n_splits: int, default=5
             Number of re-shuffling & splitting iterations.
-        test_size: float | None, default=None
-            If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the test split.
+        test_size: float | None, optional
+            If float, should be between 0.0 and 1.0 and represent the proportion of the
+            dataset to include in the test split.
             If int, represents the absolute number of test samples.
             If None, the value is set to the complement of the train size.
-        train_size: float | None, default=None
-            If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the train split.
+        train_size: float | None, optional
+            If float, should be between 0.0 and 1.0 and represent the proportion of the
+            dataset to include in the train split.
             If int, represents the absolute number of train samples.
             If None, the value is set to the complement of the test size.
         split_mode: SplitSizeOption, default='groups'
-            Determines whether `train_size` and `test_size` refer to the number of groups or the number of samples.
-        random_state: int | RandomState | None, default=None
+            Determines whether `train_size` and `test_size` refer to the number of
+            groups or the number of samples.
+        random_state: int | RandomState | None, optional
             Controls the randomness of the training and testing indices produced.
             Pass an int for reproducible output across multiple function calls.
         """
@@ -69,7 +73,9 @@ class GroupShuffleSplit(BaseShuffleSplit):
         self.split_mode = split_mode
 
     def _iter_indices_split_mode_samples(
-        self, X: Any, groups: npt.ArrayLike  # pylint: disable=invalid-name
+        self,
+        X: Any,  # pylint: disable=invalid-name
+        groups: npt.ArrayLike,
     ) -> Generator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None]:
         """Generate indices to split data into training and test sets.
 
@@ -78,7 +84,8 @@ class GroupShuffleSplit(BaseShuffleSplit):
         X: Any
             The input data to split.
         groups: npt.ArrayLike
-            Group labels for the samples used while splitting the dataset into train/test set.
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
             This parameter is required and should not be None.
 
         Yields
@@ -106,7 +113,6 @@ class GroupShuffleSplit(BaseShuffleSplit):
         unique_groups_indices = np.arange(len(unique_groups))
 
         for _ in range(self.n_splits):
-
             # pre-compute random assignments to train or test set for each group
             random_bucket_assignments = rng.randint(0, 2, size=len(unique_groups))
 
@@ -177,7 +183,8 @@ class GroupShuffleSplit(BaseShuffleSplit):
         y: Any, optional
             The target variable for supervised learning problems. Default is None.
         groups: npt.ArrayLike | None
-            Group labels for the samples used while splitting the dataset into train/test set.
+            Group labels for the samples used while splitting the dataset into
+            train/test set.
             This parameter is required and should not be None.
 
         Yields

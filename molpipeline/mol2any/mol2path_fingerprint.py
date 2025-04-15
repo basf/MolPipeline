@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -44,45 +44,46 @@ class Mol2PathFP(
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "Mol2PathFP",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize Mol2PathFP.
 
         Parameters
         ----------
-        min_path: int, optional (default=1)
+        min_path: int, default=1
             Minimum path length.
-        max_path: int, optional (default=7)
+        max_path: int, default=7
             Maximum path length.
-        use_hs: bool, optional (default=True)
+        use_hs: bool, default=True
             Include hydrogens (If explicit hydrogens are present in the molecule).
-        branched_paths: bool, optional (default=True)
+        branched_paths: bool, default=True
             Include branched paths.
-        use_bond_order: bool, optional (default=True)
+        use_bond_order: bool, default=True
             Include bond order in path.
-        count_simulation: bool, optional (default=False)
+        count_simulation: bool, default=False
             Count simulation.
-        count_bounds: Any, optional (default=None)
+        count_bounds: Any, optional
             Set the bins for the bond count.
-        n_bits: int, optional (default=2048)
+        n_bits: int, default=2048
             Size of fingerprint.
-        num_bits_per_feature: int, optional (default=2)
+        num_bits_per_feature: int, default=2
             Number of bits per feature.
-        atom_invariants_generator: Any, optional (default=None)
+        atom_invariants_generator: Any, default=None
             Atom invariants generator.
-        counted: bool, optional (default=False)
+        counted: bool, default=False
             If True, the fingerprint will be counted.
             If False, the fingerprint will be binary.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
-            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
-            holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
-            rdkit.DataStructs.cDataStructs.ExplicitBitVect.
-        name: str, optional (default="MolToMorganFP")
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+            Type of output. When "sparse" the fingerprints will be returned as a
+            scipy.sparse.csr_matrix holding a sparse representation of the bit vectors.
+            With "dense" a numpy matrix will be returned.
+            With "explicit_bit_vect" the fingerprints will be returned as a list of
+            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+        name: str, default="MolToMorganFP"
             Name of PipelineElement
-        n_jobs: int, optional (default=1)
+        n_jobs: int, default=1
             Number of cores to use.
-        uuid: str | None, optional (default=None)
+        uuid: str | None, optional
             UUID of the PipelineElement.
 
         References

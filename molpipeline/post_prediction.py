@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Optional, Union
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -51,21 +51,18 @@ class PostPredictionWrapper(PostPredictionTransformation):
 
     def __init__(
         self,
-        wrapped_estimator: Union[AnyPredictor, AnyTransformer, FilterReinserter[Any]],
+        wrapped_estimator: AnyPredictor | AnyTransformer | FilterReinserter[Any],
         **kwargs: Any,
     ) -> None:
         """Initialize PostPredictionWrapper.
 
         Parameters
         ----------
-        wrapped_estimator: PipelineElement
+        wrapped_estimator: AnyPredictor | AnyTransformer | FilterReinserter[Any]
             PipelineElement to be wrapped.
         kwargs: Any
             Parameter of the wrapped_estimator
 
-        Returns
-        -------
-        None
         """
         self.wrapped_estimator = wrapped_estimator
         if kwargs:
@@ -77,7 +74,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
     def fit(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: Optional[npt.NDArray[Any]] = None,  # pylint: disable=invalid-name
+        y: npt.NDArray[Any] | None = None,
         **params: Any,
     ) -> Self:
         """Fit PostPredictionWrapper.
@@ -104,7 +101,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
 
     def transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Transform data.
@@ -132,7 +129,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
     def fit_transform(
         self,
         X: npt.NDArray[Any],
-        y: Optional[npt.NDArray[Any]] = None,
+        y: npt.NDArray[Any] | None = None,
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Fit and transform data.
@@ -141,7 +138,7 @@ class PostPredictionWrapper(PostPredictionTransformation):
         ----------
         X: npt.NDArray[Any]
             Input data.
-        y: npt.NDArray[Any]
+        y: npt.NDArray[Any] | None, optional
             Target data.
         **params: Any
             Additional parameters for fitting.
@@ -162,7 +159,8 @@ class PostPredictionWrapper(PostPredictionTransformation):
         )
 
     def inverse_transform(
-        self, X: npt.NDArray[Any]  # pylint: disable=invalid-name
+        self,
+        X: npt.NDArray[Any],  # pylint: disable=invalid-name
     ) -> npt.NDArray[Any]:
         """Inverse transform data.
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 try:
     from typing import Self  # pylint: disable=no-name-in-module
@@ -52,27 +52,28 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         generic_bonds: bool = False,
         name: str = "MakeScaffoldGeneric",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MakeScaffoldGeneric.
 
         Note
         ----
-        Making atoms or bonds generic will generate SMARTS strings instead of SMILES strings.
+        Making atoms or bonds generic will generate SMARTS strings instead of SMILES.
         This can be useful to search for scaffolds and substructures in data sets.
-        Per default, the scaffold is returned as SMILES string with all atoms set to carbon and all bonds are single bonds.
+        Per default, the scaffold is returned as SMILES with all atoms set to carbon and
+        all bonds are single bonds.
 
         Parameters
         ----------
-        generic_atoms: bool
+        generic_atoms: bool, default=False
             If True, all atoms in the molecule are set to generic atoms (*).
-        generic_bonds: bool
+        generic_bonds: bool, default=False
             If True, all bonds in the molecule are set to any bonds.
-        name: str
+        name: str, default="MakeScaffoldGeneric"
             Name of pipeline element.
-        n_jobs: int
+        n_jobs: int, default=1
             Number of jobs to use for parallelization.
-        uuid: Optional[str]
+        uuid: str | None
             UUID of pipeline element.
 
         Returns

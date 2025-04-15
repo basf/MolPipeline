@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -43,32 +43,32 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     def __init__(
         self,
-        descriptor_list: Optional[list[str]] = None,
+        descriptor_list: list[str] | None = None,
         return_with_errors: bool = False,
-        standardizer: Optional[AnyTransformer] = StandardScaler(),
+        standardizer: AnyTransformer | None = StandardScaler(),
         log_exceptions: bool = True,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToRDKitPhysChem.
 
         Parameters
         ----------
-        descriptor_list: Optional[list[str]], optional (default=None)
+        descriptor_list: list[str] | None, optional
             List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
-        return_with_errors: bool, optional (default = False)
-            If False, the pipeline element will return an InvalidInstance if any error occurs during calculations.
-            If True, the pipeline element will return a vector with NaN values for failed descriptor calculations.
-        standardizer: Optional[AnyTransformer], optional (default=StandardScaler())
+        return_with_errors: bool, default=False
+            False: Returns an InvalidInstance if any error occurs during calculations.
+            True: Returns a vector with NaN values for failed descriptor calculations.
+        standardizer: AnyTransformer | None, default=StandardScaler()
             Standardizer to use.
-        log_exceptions: bool, optional (default=True)
-            If True, traceback of exceptions occurring during descriptor calculation are logged.
-        name: str, optional (default="Mol2RDKitPhysChem")
+        log_exceptions: bool, default=True
+            Log traceback of exceptions occurring during descriptor calculation.
+        name: str, default="Mol2RDKitPhysChem"
             Name of the PipelineElement.
-        n_jobs: int, optional (default=1)
+        n_jobs: int, default=1
             Number of jobs to use for parallelization.
-        uuid: Optional[str], optional (default=None)
+        uuid: str | None, optional
             UUID of the PipelineElement. If None, a new UUID is generated.
         """
         self.descriptor_list = descriptor_list  # type: ignore
@@ -120,7 +120,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[npt.NDArray[np.float64], InvalidInstance]:
+    ) -> npt.NDArray[np.float64] | InvalidInstance:
         """Transform a single molecule to a descriptor vector.
 
         Parameters
@@ -130,11 +130,12 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
         Returns
         -------
-        Optional[npt.NDArray[np.float64]]
-            Descriptor vector for given molecule. None if calculation failed.
+        npt.NDArray[np.float64] | InvalidInstance
+            Descriptor vector for given molecule.
+            Failure is indicated by an InvalidInstance.
         """
         vec = np.full((len(self._descriptor_list),), np.nan)
-        log_block = rdBase.BlockLogs()  # pylint: disable=unused-variable
+        log_block = rdBase.BlockLogs()
         for i, name in enumerate(self._descriptor_list):
             descriptor_func = RDKIT_DESCRIPTOR_DICT[name]
             try:

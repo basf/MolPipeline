@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -37,7 +37,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         use_feature_names_prefix: bool = True,
         name: str = "MolToConcatenatedVector",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize MolToConcatenatedVector.
@@ -321,7 +321,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     def fit(
         self,
         values: list[RDKitMol],
-        labels: Any = None,  # pylint: disable=unused-argument
+        labels: Any = None,
     ) -> Self:
         """Fit each pipeline element.
 
@@ -343,7 +343,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[list[Union[npt.NDArray[np.float64], dict[int, int]]], InvalidInstance]:
+    ) -> list[npt.NDArray[np.float64] | dict[int, int]] | InvalidInstance:
         """Get pretransform of each element and concatenate for output.
 
         Parameters
@@ -353,7 +353,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         Returns
         -------
-        Union[list[Union[npt.NDArray[np.float64], dict[int, int]]], InvalidInstance]
+        list[npt.NDArray[np.float64] | dict[int, int]] | InvalidInstance
             List of pretransformed values of each pipeline element.
             If any element returns None, InvalidInstance is returned.
         """

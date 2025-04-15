@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -66,29 +66,33 @@ class ElementFilter(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        allowed_element_numbers: Optional[
-            Union[list[int], dict[int, IntOrIntCountRange]]
-        ] = None,
+        allowed_element_numbers: (
+            list[int] | dict[int, IntOrIntCountRange] | None
+        ) = None,
         add_hydrogens: bool = True,
         name: str = "ElementFilter",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize ElementFilter.
 
         Parameters
         ----------
-        allowed_element_numbers: Optional[Union[list[int], dict[int, IntOrIntCountRange]]]
-            List of atomic numbers of elements to allowed in molecules. Per default allowed elements are:
+        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None,
+            optional
+            List of atomic numbers of elements to allowed in molecules.
+            Per default allowed elements are:
             H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
-            Alternatively, a dictionary can be passed with atomic numbers as keys and an int for exact count or a tuple of minimum and maximum
+            Alternatively, a dictionary can be passed with atomic numbers as keys and an
+            int for exact count or a tuple of minimum and maximum.
         add_hydrogens: bool, optional (default: True)
-            If True, in case Hydrogens are in allowed_element_list, add hydrogens to the molecule before filtering.
-        name: str, optional (default: "ElementFilterPipe")
+            If True, in case Hydrogens are in allowed_element_list, add hydrogens to the
+            molecule before filtering.
+        name: str, default="ElementFilterPipe"
             Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str, optional
             Unique identifier of the pipeline element.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
@@ -128,15 +132,13 @@ class ElementFilter(_MolToMolPipelineElement):
     @allowed_element_numbers.setter
     def allowed_element_numbers(
         self,
-        allowed_element_numbers: Optional[
-            Union[list[int], dict[int, IntOrIntCountRange]]
-        ],
+        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None,
     ) -> None:
         """Set allowed element numbers as dict.
 
         Parameters
         ----------
-        allowed_element_numbers: Optional[Union[list[int], dict[int, IntOrIntCountRange]]
+        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None
             List of atomic numbers of elements to allowed in molecules.
         """
         self._allowed_element_numbers: dict[int, IntCountRange]
@@ -309,7 +311,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         - mode = "all" & keep_matches = False: Must not match all filter elements.
     """
 
-    _filter_elements: Mapping[str, tuple[int, Optional[int]]]
+    _filter_elements: Mapping[str, tuple[int, int | None]]
 
     def __init__(
         self,
@@ -404,7 +406,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
     @property
     def filter_elements(
         self,
-    ) -> Mapping[str, tuple[int, Optional[int]]]:
+    ) -> Mapping[str, tuple[int, int | None]]:
         """Get filter elements."""
         return self._filter_elements
 

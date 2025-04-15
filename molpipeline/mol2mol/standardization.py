@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -11,8 +11,8 @@ except ImportError:
 
 from rdkit import Chem
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
-from rdkit.Chem import SanitizeMol  # pylint: disable=no-name-in-module
 from rdkit.Chem import (
+    SanitizeMol,
     rdMolHash,
     rdmolops,
 )
@@ -108,19 +108,19 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
         name: str = "FragmentDeduplicator",
         hashing_method: MolHashing = rdMolHash.HashFunction.HetAtomTautomer,
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize FragmentDeduplicator.
 
         Parameters
         ----------
-        name: str, optional (default: "FragmentDeduplicator")
+        name: str, default="FragmentDeduplicator"
             Name of the pipeline element.
-        hashing_method: MolHashing, optional (default: rdMolHash.HashFunction.HetAtomTautomer)
+        hashing_method: MolHashing, default=rdMolHash.HashFunction.HetAtomTautomer
             MolHashing method to use for comparing fragments.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str | None, optional
             Unique identifier of the pipeline element.
 
         Returns
@@ -309,10 +309,10 @@ class SolventRemover(_MolToMolPipelineElement):
 
     def __init__(
         self,
-        solvent_smiles_list: Optional[list[str]] = None,
+        solvent_smiles_list: list[str] | None = None,
         name: str = "SolventRemover",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize SolventRemover.
 
@@ -321,7 +321,7 @@ class SolventRemover(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        solvent_smiles_list: list[str], optional (default=None)
+        solvent_smiles_list: list[str], optional
             List of SMILES of fragments to remove, by default None which uses the default solvent list:
             - WATER	[OH2]
             - DICHLOROMETHANE	ClCCl
@@ -333,11 +333,11 @@ class SolventRemover(_MolToMolPipelineElement):
             - DMSO	CS(=O)C
             - ETHANOL	CCO
             - Trimethylamine	CN(C)C  # Not in ChEMBL list
-        name: str, optional (default="SolventRemover")
+        name: str, default="SolventRemover"
             Name of the pipeline element.
-        n_jobs: int, optional (default=1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default=None)
+        uuid: str | None, optional
             Unique identifier of the pipeline element. If None, a random UUID is generated.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)

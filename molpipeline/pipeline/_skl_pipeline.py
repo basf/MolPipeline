@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, List, Literal, Optional, Tuple, TypeVar, Union
+from typing import Any, Literal, TypeVar, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -54,8 +54,8 @@ _T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
 
 
-_IndexedStep = Tuple[int, str, AnyElement]
-_AggStep = Tuple[List[int], List[str], _MolPipeline]
+_IndexedStep = tuple[int, str, AnyElement]
+_AggStep = tuple[list[int], list[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
 
 
@@ -69,7 +69,7 @@ class Pipeline(_Pipeline):
         self,
         steps: list[AnyStep],
         *,
-        memory: Optional[Union[str, joblib.Memory]] = None,
+        memory: str | joblib.Memory | None = None,
         verbose: bool = False,
         n_jobs: int = 1,
     ):
@@ -79,7 +79,7 @@ class Pipeline(_Pipeline):
         ----------
         steps: list[tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]]
             List of (name, Estimator) tuples.
-        memory: str, optional
+        memory: str | joblib.Memory | None, optional
             Path to cache transformers.
         verbose: bool, optional
             If True, print additional information.
@@ -167,7 +167,7 @@ class Pipeline(_Pipeline):
         Iterable[_AggregatedPipelineStep]
             The _AggregatedPipelineStep is composed of the index, the name and the transformer.
         """
-        last_element: Optional[_AggregatedPipelineStep] = None
+        last_element: _AggregatedPipelineStep | None = None
 
         # This loop delays the output by one in order to identify the last step
         for step in self._agg_non_postpred_steps():
@@ -202,13 +202,13 @@ class Pipeline(_Pipeline):
     @property
     def _final_estimator(
         self,
-    ) -> Union[
-        Literal["passthrough"],
-        AnyTransformer,
-        AnyPredictor,
-        _MolPipeline,
-        ABCPipelineElement,
-    ]:
+    ) -> (
+        Literal["passthrough"]
+        | AnyTransformer
+        | AnyPredictor
+        | _MolPipeline
+        | ABCPipelineElement
+    ):
         """Return the lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())
         last_element = element_list[-1]
@@ -318,7 +318,9 @@ class Pipeline(_Pipeline):
         return X, y
 
     def _transform(
-        self, X: Any, routed_params: Bunch  # pylint: disable=invalid-name
+        self,
+        X: Any,  # pylint: disable=invalid-name
+        routed_params: Bunch,
     ) -> Any:
         """Transform the data, and skip final estimator.
 
