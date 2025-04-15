@@ -85,7 +85,8 @@ class ChempropNeuralFP(ABCChemprop):
         return super().fit(X, y)
 
     def transform(
-        self, X: MoleculeDataset  # pylint: disable=invalid-name
+        self,
+        X: MoleculeDataset,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Transform the input.
 
