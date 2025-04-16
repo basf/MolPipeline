@@ -348,7 +348,9 @@ class SubpipelineExtractor:
         ------
         ValueError
             If the first element is not found in the pipeline.
+        ValueError
             If the second element is not found in the pipeline.
+        ValueError
             If the second element is before the first element.
 
         Returns
