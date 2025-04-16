@@ -749,6 +749,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         list[Number]
             List where dummy values were inserted to replace instances which could not
             be processed.
+
         """
         filled_list: list[_S | _T] = []
         next_value_pos = 0
