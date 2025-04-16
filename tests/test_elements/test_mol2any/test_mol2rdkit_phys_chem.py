@@ -403,6 +403,14 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         output = pipeline.fit_transform(["[HH]"])
         self.assertTrue(output.shape == (1, len(DEFAULT_DESCRIPTORS)))
 
+    def test_empty_descriptor_list(self) -> None:
+        """Test that an empty descriptor list raises ValueError."""
+        with self.assertRaises(ValueError) as context:
+            MolToRDKitPhysChem(descriptor_list=[])
+        self.assertTrue(
+            str(context.exception).startswith("Empty descriptor_list is not allowed")
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
