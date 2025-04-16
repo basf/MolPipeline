@@ -361,6 +361,11 @@ class SolventRemover(_MolToMolPipelineElement):
         solvent_smiles_list: list[str]
             List of SMILES of fragments to remove.
 
+        Raises
+        ------
+        ValueError
+            If the SMILES cannot be converted to a molecule.
+
         """
         self._solvent_smiles_list = solvent_smiles_list
         solvent_mol_list = []

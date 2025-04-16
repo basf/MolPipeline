@@ -142,10 +142,17 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         parameters: dict[str, Any]
             Parameters to set.
 
+
+        Raises
+        ------
+        ValueError
+            If parameters are not valid.
+
         Returns
         -------
         Self
             Pipeline element with set parameters.
+
         """
         param_copy = parameters.copy()
         generic_atoms = param_copy.pop("generic_atoms", None)

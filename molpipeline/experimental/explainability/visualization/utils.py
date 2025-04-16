@@ -75,10 +75,16 @@ def get_color_map_from_input(
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None
         The color scheme.
 
+    Raises
+    ------
+    ValueError
+        If the color scheme is not valid.
+
     Returns
     -------
     Colormap
         The colormap.
+
     """
     # read user definer color scheme as ColorMap
     if color is None:
@@ -108,6 +114,11 @@ def color_tuple_to_colormap(
     ----------
     color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple]
         The color tuple.
+
+    Raises
+    ------
+    ValueError
+        If the color tuple is not of length 3.
 
     Returns
     -------
