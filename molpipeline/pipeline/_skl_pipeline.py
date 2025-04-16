@@ -114,6 +114,7 @@ class Pipeline(_Pipeline):
         ------
         TypeError
             If the steps do not implement fit and transform or are not 'passthrough'.
+
         """
         names = [name for name, _ in self.steps]
 
