@@ -88,6 +88,7 @@ class ChempropModel(ABCChemprop):
         ------
         ValueError
             If the model is not a classifier.
+        ValueError
             If the classes are not set.
 
         """
@@ -442,7 +443,9 @@ class ChempropMulticlassClassifier(ChempropModel):
         AttributeError
             If the passed model.predictor does not have an attribute n_classes.
         ValueError
-            If the number of classes in the predictor does not match the number of classes given as attribute.
+            If the number of classes in the predictor does not match the number of
+            classes given as attribute.
+
         """
         if model is None:
             bond_encoder = BondMessagePassing()
@@ -495,7 +498,6 @@ class ChempropMulticlassClassifier(ChempropModel):
         ------
         ValueError
             If the model's predictor or the number of classes are invalid.
-            Use a multiclass predictor and more than 2 classes.
 
         Returns
         -------
@@ -546,7 +548,9 @@ class ChempropMulticlassClassifier(ChempropModel):
         Raises
         ------
         ValueError
-            If the classes found in y are not matching n_classes or if the class labels do not start from 0 to n_classes-1.
+            If the classes found in y are not matching n_classes or if the class labels
+            do not start from 0 to n_classes-1.
+
         """
         unique_y = np.unique(y)
         log = []
@@ -561,12 +565,15 @@ class ChempropMulticlassClassifier(ChempropModel):
             raise ValueError("\n".join(log))
 
     def _is_valid_multiclass_classifier(self) -> bool:
-        """Check if a multiclass classifier is valid. Model FFN needs to be of the correct class and model needs to have more than 2 classes.
+        """Check if a multiclass classifier is valid.
+        
+        Model FFN needs to be of the correct class and model needs to have more than 2 classes.
 
         Returns
         -------
         bool
             True if is a valid multiclass classifier, False otherwise.
+
         """
         has_correct_model = isinstance(
             self.model.predictor, MulticlassClassificationFFN
