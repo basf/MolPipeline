@@ -46,6 +46,7 @@ class Grid2D(abc.ABC):
         ------
         ValueError
             If x_lim or y_lim is not of length 2.
+
         """
         if len(x_lim) != 2:
             raise ValueError("x_lim must be of length 2.")
@@ -197,6 +198,7 @@ class ValueGrid(Grid2D):
             Function to be evaluated for each cell.
             The function should take an array of positions and return an array of
             values, e.g. a Gaussian function.
+
         """
         self.function_list.append(function)
 
