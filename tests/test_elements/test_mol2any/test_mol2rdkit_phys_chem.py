@@ -404,15 +404,11 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         self.assertTrue(output.shape == (1, len(DEFAULT_DESCRIPTORS)))
 
     def test_empty_descriptor_list(self) -> None:
-        """Test that an empty descriptor list defaults to DEFAULT_DESCRIPTORS."""
-        empty_descriptor_element = MolToRDKitPhysChem(descriptor_list=[])
-
-        # test that the descriptor list is set to DEFAULT_DESCRIPTORS
-        self.assertListEqual(
-            empty_descriptor_element.descriptor_list, DEFAULT_DESCRIPTORS
-        )
-        self.assertListEqual(
-            empty_descriptor_element.feature_names, DEFAULT_DESCRIPTORS
+        """Test that an empty descriptor list raises ValueError."""
+        with self.assertRaises(ValueError) as context:
+            MolToRDKitPhysChem(descriptor_list=[])
+        self.assertTrue(
+            str(context.exception).startswith("Empty descriptor_list is not allowed")
         )
 
 
