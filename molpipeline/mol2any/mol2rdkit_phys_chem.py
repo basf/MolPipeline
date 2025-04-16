@@ -106,7 +106,11 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         ValueError
             If an unknown descriptor name is used.
         """
-        if descriptor_list is None or descriptor_list is DEFAULT_DESCRIPTORS:
+        if (
+            descriptor_list is None
+            or len(descriptor_list) == 0
+            or descriptor_list is DEFAULT_DESCRIPTORS
+        ):
             # if None or DEFAULT_DESCRIPTORS are used, set the default descriptors
             self._descriptor_list = DEFAULT_DESCRIPTORS
         else:
