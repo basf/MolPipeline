@@ -258,6 +258,12 @@ class _MolPipeline:
         fit_params: Any
             Parameters. Only for SKlearn compatibility.
 
+        Raises
+        ------
+        AssertionError
+            If a subpipeline requires fitting, which by definition should not be the
+            case.
+
         Returns
         -------
         Any
@@ -401,10 +407,11 @@ class _MolPipeline:
         x_input: Any
             Molecular representations which are subsequently transformed.
 
-        Returns
-        -------
+        Yields
+        ------
         Any
             Transformed molecular representations.
+
         """
         agg_filter = self._filter_elements_agg
         for filter_element in self._filter_elements:
