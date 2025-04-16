@@ -18,13 +18,12 @@ def check_available_cores(n_requested_cores: int) -> int:
     ------
     TypeError
         If n_requested_cores is not an integer.
-    ModuleNotFoundError
-        If the multiprocessing library cannot be imported.
 
     Returns
     -------
     int
         Number of used cores.
+
     """
     if not isinstance(n_requested_cores, int):
         raise TypeError(f"Not an integer: {n_requested_cores}")
