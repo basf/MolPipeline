@@ -222,6 +222,7 @@ class SHAPExplainerAdapter(
         ------
         ValueError
             If the molecule reader subpipeline could not be determined.
+        ValueError
             If the featurization subpipeline could not be determined.
 
         """
