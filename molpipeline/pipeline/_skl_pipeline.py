@@ -179,11 +179,6 @@ class Pipeline(_Pipeline):
             The _AggregatedPipelineStep is composed of the index, the name and the
             transformer.
 
-        Returns
-        -------
-        Iterable[_AggregatedPipelineStep]
-            The _AggregatedPipelineStep is composed of the index, the name and the transformer.
-
         """
         last_element: _AggregatedPipelineStep | None = None
 
@@ -459,11 +454,6 @@ class Pipeline(_Pipeline):
             The _AggregatedPipelineStep is composed of the index, the name and the
             transformer.
 
-
-        Returns
-        -------
-        Iterable[_AggregatedPipelineStep]
-            The _AggregatedPipelineStep is composed of the index, the name and the transformer.
         """
         aggregated_transformer_list = []
         for i, (name_i, step_i) in enumerate(self._non_post_processing_steps()):
