@@ -236,6 +236,7 @@ def make_sum_of_gaussians_grid(
     -------
     ValueGrid
         ValueGrid object with added functions.
+
     """
     # assign default values and convert to numpy array
     if atom_weights is None:
