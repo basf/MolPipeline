@@ -14,6 +14,13 @@ def check_available_cores(n_requested_cores: int) -> int:
     n_requested_cores: int
         Number of requested cores.
 
+    Raises
+    ------
+    TypeError
+        If n_requested_cores is not an integer.
+    ModuleNotFoundError
+        If the multiprocessing library cannot be imported.
+
     Returns
     -------
     int
