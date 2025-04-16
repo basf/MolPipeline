@@ -258,13 +258,14 @@ class Pipeline(_Pipeline):
         ------
         AssertionError
             If routed_params is None or if the transformer is 'passthrough'.
+        AssertionError
             If the names are a list and the step is not a Pipeline.
-
 
         Returns
         -------
         tuple[Any, Any]
             The transformed data and the transformed objectives.
+
         """
         # shallow copy of steps - this should really be steps_
         self.steps = list(self.steps)
