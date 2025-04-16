@@ -23,6 +23,7 @@ def tanimoto_similarity_sparse(
     -------
     npt.NDArray[np.float64]
         Matrix of similarity values between instances of A (rows/first dim) , and instances of B (columns/second dim).
+
     """
     intersection = matrix_a.dot(matrix_b.transpose()).toarray()
     norm_1 = np.array(matrix_a.multiply(matrix_a).sum(axis=1))
@@ -55,6 +56,7 @@ def tanimoto_distance_sparse(
     -------
     npt.NDArray[np.float64]
         Matrix of similarity values between instances of A (rows/first dim) , and instances of B (columns/second dim).
+
     """
     return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
 
@@ -78,6 +80,7 @@ def self_tanimoto_similarity(
     -------
     npt.NDArray[np.float64]
         Square matrix of similarity values between all instances in the matrix.
+
     """
     if isinstance(matrix_a, np.ndarray):
         sparse_matrix = sparse.csr_matrix(matrix_a)
@@ -102,5 +105,6 @@ def self_tanimoto_distance(
     -------
     npt.NDArray[np.float64]
         Square matrix of similarity values between all instances in the matrix.
+
     """
     return 1 - self_tanimoto_similarity(matrix_a)  # type: ignore
