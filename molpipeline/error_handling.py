@@ -561,6 +561,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         ------
         ValueError
             If the ErrorFilter is not set.
+
         """
         if self._error_filter is None:
             raise ValueError("ErrorFilter not set")
