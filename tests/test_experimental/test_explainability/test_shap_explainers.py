@@ -66,7 +66,7 @@ class TestSHAPExplainers(unittest.TestCase):
         test_smiles: str,
         explainer: SHAPKernelExplainer | SHAPTreeExplainer,
     ) -> None:
-        """Helper method to test if the explanation is valid and has the correct shape and content.
+        """Test if the explanation is valid and has the correct shape and content.
 
         Parameters
         ----------

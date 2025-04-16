@@ -63,10 +63,14 @@ class TestGroupShuffleSplit(unittest.TestCase):
             next(split_generator.split(X=[1, 2, 3], y=[1, 2, 3], groups=[1, 2, 3]))
 
     def test_different_input(self) -> None:
-        """ "Test that the splitter works with different input types.
+        """Test that the splitter works with different input types.
 
-        This test inspired from sklearn
-        https://github.com/scikit-learn/scikit-learn/blob/812ff67e6725a8ca207a37f5ed4bfeafc5d1265d/sklearn/model_selection/tests/test_split.py#L1010
+        This test inspired from sklearn. [1]
+
+        References
+        ----------
+        [1] https://github.com/scikit-learn/scikit-learn/blob/812ff67e6725a8ca207a37f5ed4bfeafc5d1265d/sklearn/model_selection/tests/test_split.py#L1010
+
         """
         for groups_i in _TEST_GROUPS:
             X = y = np.ones(len(groups_i))  # pylint: disable=invalid-name

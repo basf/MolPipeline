@@ -151,9 +151,9 @@ def run_notebooks(
 
 
 def main() -> None:
-    """Main function to run the Jupyter notebooks."""
+    """Run the Jupyter notebooks and check if they execute without error."""
     parser = argparse.ArgumentParser(
-        description="Test if all Jupyter notebooks in a directory run through with error code 0"
+        description="Test if all Jupyter notebooks run through with error code 0"
     )
     parser.add_argument(
         "-c",
