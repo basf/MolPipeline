@@ -545,9 +545,21 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     Raises
     ------
     ValueError
-        If the explanation does not contain feature weights, feature vector,
-        expected value, prediction, molecule, or atom weights.
-        IF the prediction has more than 2 dimensions.
+        If the explanation does not contain feature weights.
+    ValueError
+        If the explanation does not contain feature vector.
+    ValueError
+        If the explanation does not contain expected value.
+    ValueError
+        If the explanation does not contain prediction.
+    ValueError
+        If the explanation does not contain molecule.
+    ValueError
+        If the explanation does not contain atom weights.
+    ValueError
+        If the prediction has more than 2 dimensions.
+    ValueError
+        If the feature weights have an unsupported shape.
 
     Returns
     -------
