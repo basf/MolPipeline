@@ -566,7 +566,7 @@ class ChempropMulticlassClassifier(ChempropModel):
 
     def _is_valid_multiclass_classifier(self) -> bool:
         """Check if a multiclass classifier is valid.
-        
+
         Model FFN needs to be of the correct class and model needs to have more than 2 classes.
 
         Returns
