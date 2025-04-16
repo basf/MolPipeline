@@ -351,7 +351,6 @@ class SubpipelineExtractor:
             If the second element is not found in the pipeline.
             If the second element is before the first element.
 
-
         Returns
         -------
         Pipeline | None
