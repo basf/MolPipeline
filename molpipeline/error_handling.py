@@ -552,10 +552,16 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         error_filter_list: list[ErrorFilter]
             List of ErrorFilters to select from.
 
+        Raises
+        ------
+        ValueError
+            If the ErrorFilter with the given id is not found in the list.
+
         Returns
         -------
         Self
             FilterReinserter with updated ErrorFilter.
+
         """
         for error_filter in error_filter_list:
             if error_filter.uuid == self.error_filter_id:
@@ -671,10 +677,16 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         **params: Any
             Additional keyword arguments.
 
+        Raises
+        ------
+        ValueError
+            If the length of the values does not match the length of the values in fit.
+
         Returns
         -------
         TypeFixedVarSeq
             Iterable where invalid instances were removed.
+
         """
         if len(values) != self.error_filter.n_total - len(
             self.error_filter.error_indices
@@ -693,10 +705,16 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         list_to_fill: list[Number]
             List to fill with dummy values.
 
+        Raises
+        ------
+        AssertionError
+            If the length of the list does not match the expected length.
+
         Returns
         -------
         list[Number]
-            List where dummy values were inserted to replace instances which could not be processed.
+            List where dummy values were inserted to replace instances which could not
+            be processed.
         """
         filled_list: list[_S | _T] = []
         next_value_pos = 0
@@ -707,7 +725,9 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
                 filled_list.append(list_to_fill[next_value_pos])
                 next_value_pos += 1
         if len(list_to_fill) != next_value_pos:
-            raise AssertionError()
+            raise AssertionError(
+                "Length of list does not match length of values in fit"
+            )
         return filled_list
 
     def _fill_numpy_arr(self, value_array: npt.NDArray[Any]) -> npt.NDArray[Any]:
@@ -750,10 +770,16 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         value_container: TypeFixedVarSeq
             Iterable to fill with dummy values.
 
+        Raises
+        -------
+        TypeError
+            If value_container is not a list or numpy array.
+
         Returns
         -------
         AnyVarSeq
             Iterable where dummy values were inserted to replace molecules which could not be processed.
+
         """
         if isinstance(value_container, list):
             return self._fill_list(value_container)  # type: ignore

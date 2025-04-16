@@ -28,10 +28,16 @@ def assign_prediction_importance(
     weights : npt.NDArray[np.float64]
         The weights.
 
+    Raises
+    ------
+    AssertionError
+        If the weights and atom contributions don't sum to the same value.
+
     Returns
     -------
     dict[int, float]
         The atom contribution.
+
     """
     atom_contribution: dict[int, float] = defaultdict(lambda: 0)
     for bit, atom_env_list in bit_dict.items():  # type: int, Sequence[AtomEnvironment]

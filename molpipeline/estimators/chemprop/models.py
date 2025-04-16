@@ -82,7 +82,15 @@ class ChempropModel(ABCChemprop):
 
     @property
     def classes_(self) -> npt.NDArray[np.int_]:
-        """Return the classes."""
+        """Return the classes.
+
+        Raises
+        ------
+        ValueError
+            If the model is not a classifier.
+            If the classes are not set.
+
+        """
         if not self._is_classifier():
             raise ValueError("Model is not a classifier.")
         if self._classes_ is None:
@@ -158,6 +166,14 @@ class ChempropModel(ABCChemprop):
         ----------
         X : MoleculeDataset
             The input data.
+
+        Raises
+        ------
+        AssertionError
+            If the predictions do not have the same length as the input dataset.
+        ValueError
+            If the model is a binary classifier and the predictions do not have the
+            correct shape.
 
         Returns
         -------
@@ -299,6 +315,12 @@ class ChempropClassifier(ChempropModel):
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
+
+        Raises
+        ------
+        ValueError
+            If the model's predictor is not a binary classifier.
+
         """
         if model is None:
             bond_encoder = BondMessagePassing()
@@ -323,10 +345,16 @@ class ChempropClassifier(ChempropModel):
         **params
             The parameters to set.
 
+        Raises
+        ------
+        ValueError
+            If the model's predictor is not a binary classifier.
+
         Returns
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         if not self._is_binary_classifier():
@@ -463,15 +491,23 @@ class ChempropMulticlassClassifier(ChempropModel):
         **params
             The parameters to set.
 
+        Raises
+        ------
+        ValueError
+            If the model's predictor or the number of classes are invalid.
+            Use a multiclass predictor and more than 2 classes.
+
         Returns
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         if not self._is_valid_multiclass_classifier():
             raise ValueError(
-                "The model's predictor or the number of classes are invalid. Use a multiclass predictor and more than 2 classes."
+                "The model's predictor or the number of classes are invalid. "
+                "Use a multiclass predictor and more than 2 classes."
             )
         return self
 

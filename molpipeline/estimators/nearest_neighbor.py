@@ -152,6 +152,11 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         n_neighbors : int, optional (default = None)
             Number of neighbors to get. If None, the value set at initialization is used.
 
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted yet.
+
         Returns
         -------
         tuple[npt.NDArray[Any], npt.NDArray[np.float64]] | npt.NDArray[Any]

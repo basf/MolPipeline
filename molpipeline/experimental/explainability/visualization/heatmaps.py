@@ -41,6 +41,11 @@ class Grid2D(abc.ABC):
             Resolution (number of cells) along x-axis.
         y_res: int
             Resolution (number of cells) along y-axis.
+
+        Raises
+        ------
+        ValueError
+            If x_lim or y_lim is not of length 2.
         """
         if len(x_lim) != 2:
             raise ValueError("x_lim must be of length 2.")
