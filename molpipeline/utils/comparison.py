@@ -89,6 +89,11 @@ def check_pipelines_equivalent(pipeline_a: Pipeline, pipeline_b: Pipeline) -> bo
     pipeline_b : Pipeline
         Pipeline to compare.
 
+    Raises
+    ------
+    ValueError
+        If the pipelines are not of type Pipeline.
+
     Returns
     -------
     bool

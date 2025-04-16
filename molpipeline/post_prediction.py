@@ -113,10 +113,16 @@ class PostPredictionWrapper(PostPredictionTransformation):
         **params : Any
             Additional parameters for transformation.
 
+        Raises
+        ------
+        AttributeError
+            If the wrapped estimator doesn't have a predict or transform method.
+
         Returns
         -------
         npt.NDArray[Any]
             Transformed data.
+
         """
         if hasattr(self.wrapped_estimator, "predict"):
             return self.wrapped_estimator.predict(X, **params)
@@ -143,10 +149,16 @@ class PostPredictionWrapper(PostPredictionTransformation):
         **params: Any
             Additional parameters for fitting.
 
+        Raises
+        ------
+        AttributeError
+            If the wrapped estimator doesn't have a fit_predict or fit_transform method.
+
         Returns
         -------
         npt.NDArray[Any]
             Transformed data.
+
         """
         if hasattr(self.wrapped_estimator, "fit_predict"):
             return self.wrapped_estimator.fit_predict(X, y, **params)
@@ -168,6 +180,11 @@ class PostPredictionWrapper(PostPredictionTransformation):
         ----------
         X: npt.NDArray[Any]
             Input data.
+
+        Raises
+        ------
+        AttributeError
+            If the wrapped estimator does not have an inverse_transform method.
 
         Returns
         -------
