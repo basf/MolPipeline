@@ -187,10 +187,16 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         value: RDKitMol
             Molecule to check.
 
+        Raises
+        ------
+        ValueError
+            If the mode is not "any" or "all".
+
         Returns
         -------
         OptionalMol
             Molecule that matches defined filter elements, else InvalidInstance.
+
         """
         for filter_element, (lower_limit, upper_limit) in self.filter_elements.items():
             property_value = self._calculate_single_element_value(filter_element, value)
@@ -318,6 +324,12 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         ----------
         patterns: Sequence[str]
             List of patterns.
+
+        Raises
+        ------
+        ValueError
+            If the patterns are not valid SMILES or SMARTS.
+
         """
         self._patterns_mol_dict = {pat: self._pattern_to_mol(pat) for pat in patterns}
         failed_patterns = [

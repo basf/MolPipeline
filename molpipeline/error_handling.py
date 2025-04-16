@@ -58,6 +58,11 @@ class ErrorFilter(ABCPipelineElement):
         uuid: str | None, optional
             UUID of the pipeline element.
 
+        Raises
+        ------
+        ValueError
+            If element_ids is None and filter_everything is False.
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.error_indices = []
@@ -134,10 +139,16 @@ class ErrorFilter(ABCPipelineElement):
         parameters: Any
             Dict of arameters to set.
 
+        Raises
+        ------
+        TypeError
+            If element_ids is not a set.
+
         Returns
         -------
         Self
             Self with updated parameters.
+
         """
         param_copy = dict(parameters)
         if "element_ids" in param_copy:
@@ -221,10 +232,18 @@ class ErrorFilter(ABCPipelineElement):
         values: TypeFixedVarSeq
             Values to be transformed.
 
+        Raises
+        ------
+        ValueError
+            If the length of the values does not match the length of the values in fit.
+        TypeError
+            If the type of values is not a list or numpy array.
+
         Returns
         -------
         TypeFixedVarSeq
             Input where rows are removed.
+
         """
         if self.n_total != len(values):
             raise ValueError("Length of values does not match length of values in fit")
@@ -375,6 +394,14 @@ class _MultipleErrorFilter:
             Index of the invalid instance.
         value: Any
             Value of the invalid instance.
+
+        Raises
+        ------
+        TypeError
+            If value is not a RemovedInstance.
+        ValueError
+            If value is not captured by any ErrorFilter.
+
         """
         if not isinstance(value, RemovedInstance):
             raise TypeError(f"Unexpected Type: {type(value)}")
@@ -528,7 +555,13 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
 
     @property
     def error_filter(self) -> ErrorFilter:
-        """Get the ErrorFilter connected to this FilterReinserter."""
+        """Get the ErrorFilter connected to this FilterReinserter.
+
+        Raises
+        ------
+        ValueError
+            If the ErrorFilter is not set.
+        """
         if self._error_filter is None:
             raise ValueError("ErrorFilter not set")
         return self._error_filter
@@ -771,7 +804,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             Iterable to fill with dummy values.
 
         Raises
-        -------
+        ------
         TypeError
             If value_container is not a list or numpy array.
 

@@ -190,10 +190,16 @@ class ABCPipelineElement(abc.ABC):
         parameters: Any
             Parameters to be set.
 
+        Raises
+        ------
+        ValueError
+            If the parameter is not a valid parameter of the object.
+
         Returns
         -------
         Self
             Self with updated parameters.
+
         """
         for att_name, att_value in parameters.items():
             if not hasattr(self, att_name):
@@ -388,10 +394,16 @@ class TransformingPipelineElement(ABCPipelineElement):
     def copy(self) -> Self:
         """Copy the object.
 
+        Raises
+        ------
+        AssertionError
+            If the object cannot be copied.
+
         Returns
         -------
         Self
             Copy of the object.
+
         """
         recreated_object = self.__class__(**self.parameters)
         for key, value in self.additional_attributes.items():
