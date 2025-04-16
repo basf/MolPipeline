@@ -20,6 +20,7 @@ def remove_irrelevant_params(params: _T) -> _T:
     -------
     TypeVar
         Parameters without irrelevant parameters.
+
     """
     if isinstance(params, list):
         return [remove_irrelevant_params(val) for val in params]
@@ -57,6 +58,7 @@ def compare_recursive(  # pylint: disable=too-many-return-statements
     -------
     bool
         True if the values are the same, False otherwise.
+
     """
     if value_a.__class__ != value_b.__class__:
         return False
@@ -98,6 +100,7 @@ def check_pipelines_equivalent(pipeline_a: Pipeline, pipeline_b: Pipeline) -> bo
     -------
     bool
         True if the pipelines are the same, False otherwise.
+
     """
     if not isinstance(pipeline_a, Pipeline) or not isinstance(pipeline_b, Pipeline):
         raise ValueError("Both inputs should be of type Pipeline.")
