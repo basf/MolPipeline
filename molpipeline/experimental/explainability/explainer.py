@@ -133,6 +133,7 @@ def _convert_shap_feature_weights_to_atom_weights(
     ------
     ValueError
         If the molecule is None.
+    ValueError
         If the feature weights have an unsupported number of dimensions.
 
     Returns
