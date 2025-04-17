@@ -527,7 +527,7 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     The image is a heatmap of the molecular structure, where the colors represent the
     SHAP values of the substructure features in which the atoms are contained. These
     values are calculated based on the feature weights and the feature vector.
-    In addition, the expected value for the prediction, the  contribution of the present
+    In addition, the expected value for the prediction, the contribution of the present
     and absent features, and the prediction are displayed.
 
     Parameters
