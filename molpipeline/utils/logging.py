@@ -65,6 +65,7 @@ def print_elapsed_time(
     -------
     context_manager
         Prints elapsed time upon exit if verbose.
+
     """
     if message is None:
         yield

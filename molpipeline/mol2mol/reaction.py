@@ -128,9 +128,11 @@ class MolToMolReaction(MolToMolPipelineElement):
         reaction: AllChem.ChemicalReaction
             Reaction which is applied to molecules.
 
-        Returns
-        -------
-        None
+        Raises
+        ------
+        TypeError
+            If reaction is not a ChemicalReaction.
+
         """
         if not isinstance(reaction, AllChem.ChemicalReaction):
             raise TypeError("Not a Chemical reaction!")
@@ -144,10 +146,17 @@ class MolToMolReaction(MolToMolPipelineElement):
         value: RDKitMol
             Molecule to apply reaction to.
 
+        Raises
+        ------
+        ValueError
+            If reaction is resulting in multiple products and handle_multi is set to
+            "raise".
+
         Returns
         -------
         OptionalMol
             Product of reaction if possible, else InvalidInstance.
+
         """
         mol = value  # Only value to keep signature consistent.
         reactant_list: list[RDKitMol] = list(self.additive_list)

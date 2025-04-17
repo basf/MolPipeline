@@ -24,12 +24,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
     """Unittest for MolToFoldedMorganFingerprint, which calculates folded Morgan Fingerprints."""
 
     def test_can_be_constructed(self) -> None:
-        """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed."""
         mol_fp = MolToMorganFP()
         mol_fp_copy = mol_fp.copy()
         self.assertTrue(mol_fp_copy is not mol_fp)
@@ -40,12 +35,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
             self.assertEqual(value, mol_fp_recreated.get_params()[key])
 
     def test_counted_bits(self) -> None:
-        """Test if the option counted bits works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the option counted bits works as expected."""
         mol_fp = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
         smi2mol = SmilesToMol()
         pipeline = Pipeline(
@@ -136,7 +126,14 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertRaises(ValueError, mol_fp.set_params, **params)
 
     def test_bit2atom_mapping(self) -> None:
-        """Test that the mapping from bits to atom weights works as intended."""
+        """Test that the mapping from bits to atom weights works as intended.
+
+        Raises
+        ------
+        AssertionError
+            The SMILES provided by the unit test are invalid.
+
+        """
         n_bits = 2048
         sparse_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="sparse")
         dense_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="dense")

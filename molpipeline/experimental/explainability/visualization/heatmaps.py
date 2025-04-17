@@ -41,6 +41,12 @@ class Grid2D(abc.ABC):
             Resolution (number of cells) along x-axis.
         y_res: int
             Resolution (number of cells) along y-axis.
+
+        Raises
+        ------
+        ValueError
+            If x_lim or y_lim is not of length 2.
+
         """
         if len(x_lim) != 2:
             raise ValueError("x_lim must be of length 2.")
@@ -184,20 +190,29 @@ class ValueGrid(Grid2D):
     def add_function(
         self, function: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
     ) -> None:
-        """Add a function to the grid which is evaluated for each cell, when `self.evaluate` is called.
+        """Add a function to the grid which is evaluated for each cell.
 
         Parameters
         ----------
         function: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
-            Function to be evaluated for each cell. The function should take an array of positions and return an array
-            of values, e.g. a Gaussian function.
+            Function to be evaluated for each cell.
+            The function should take an array of positions and return an array of
+            values, e.g. a Gaussian function.
+
         """
         self.function_list.append(function)
 
     def evaluate(self) -> None:
-        """Evaluate each function for each cell. Values of cells are calculated as the sum of all function-values.
+        """Evaluate each function for each cell.
 
+        Values of cells are calculated as the sum of all function-values.
         The results are saved to `self.values`.
+
+        Raises
+        ------
+        AssertionError
+            If the function does not return the correct shape.
+
         """
         self.values = np.zeros((self.x_res, self.y_res))
         x_y0_list = np.array(
@@ -215,7 +230,8 @@ class ValueGrid(Grid2D):
             values = values.reshape(self.y_res, self.x_res).T
             if values.shape != self.values.shape:
                 raise AssertionError(
-                    f"Function does not return correct shape. Shape was {(values.shape, self.values.shape)}"
+                    f"Function does not return correct shape. "
+                    f"Shape was {(values.shape, self.values.shape)}"
                 )
             self.values += values
 

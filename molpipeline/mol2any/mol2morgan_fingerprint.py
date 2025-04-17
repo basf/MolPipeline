@@ -69,6 +69,12 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         ----------
             [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
+
+        Raises
+        ------
+        ValueError
+            If n_bits is not a positive integer.
+
         """
         # pylint: disable=R0801
         super().__init__(
@@ -82,7 +88,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         )
         if not isinstance(n_bits, int) or n_bits < 1:
             raise ValueError(
-                f"Number of bits has to be a positve integer, which is > 0! (Received: {n_bits})"
+                f"Number of bits has to be a integer > 0! (Received: {n_bits})"
             )
         self._n_bits = n_bits
         self._feature_names = [f"morgan_{i}" for i in range(self._n_bits)]

@@ -155,17 +155,24 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         parameters: Any
             Dictionary of parameter names and values.
 
+        Raises
+        ------
+        ValueError
+            If return_as is not one of the allowed values.
+
         Returns
         -------
         Self
             Copied object with updated parameters.
+
         """
         parameter_dict_copy = dict(parameters)
         return_as = parameter_dict_copy.pop("return_as", None)
         if return_as is not None:
             if return_as not in get_args(OutputDatatype):
                 raise ValueError(
-                    f"return_as has to be one of {get_args(OutputDatatype)}! (Received: {return_as})"
+                    f"return_as has to be one of {get_args(OutputDatatype)}! "
+                    f"(Received: {return_as})"
                 )
             self._return_as = return_as
         super().set_params(**parameter_dict_copy)
@@ -373,6 +380,12 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
             Number of jobs.
         uuid: str | None, optional
             Unique identifier.
+
+        Raises
+        ------
+        ValueError
+            If radius is not a positive integer.
+
         """
         # pylint: disable=R0801
         super().__init__(

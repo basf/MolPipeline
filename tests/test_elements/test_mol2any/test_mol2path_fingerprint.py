@@ -24,12 +24,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
     """Unittest for Mol2PathFP, which calculates the RDKit Path Fingerprint."""
 
     def test_can_be_constructed(self) -> None:
-        """Test if the Mol2PathFP pipeline element can be constructed.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the Mol2PathFP pipeline element can be constructed."""
         mol_fp = Mol2PathFP()
         mol_fp_copy = mol_fp.copy()
         self.assertTrue(mol_fp_copy is not mol_fp)
@@ -82,12 +77,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
         )
 
     def test_counted_bits(self) -> None:
-        """Test if the option counted bits works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the option counted bits works as expected."""
         mol_fp = Mol2PathFP(n_bits=1024, return_as="dense")
         smi2mol = SmilesToMol()
         pipeline = Pipeline(

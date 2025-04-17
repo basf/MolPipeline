@@ -54,9 +54,6 @@ class _MolPipeline:
         name: str
             Name of pipeline.
 
-        Returns
-        -------
-        None
         """
         self._element_list = element_list
         self.n_jobs = n_jobs
@@ -105,9 +102,6 @@ class _MolPipeline:
             Number of cores requested for transformation steps.
             If fewer cores than requested are available, the number of cores is set to maximum available.
 
-        Returns
-        -------
-        None
         """
         self._n_jobs = check_available_cores(requested_jobs)
 
@@ -125,9 +119,6 @@ class _MolPipeline:
         parameter_dict: dict[str, Any]
             Dictionary containing the parameter names and corresponding values to be set.
 
-        Returns
-        -------
-        None
         """
         self.set_params(**parameter_dict)
 
@@ -266,6 +257,12 @@ class _MolPipeline:
             Optional label of input. Only for SKlearn compatibility.
         fit_params: Any
             Parameters. Only for SKlearn compatibility.
+
+        Raises
+        ------
+        AssertionError
+            If a subpipeline requires fitting, which by definition should not be the
+            case.
 
         Returns
         -------
@@ -410,10 +407,11 @@ class _MolPipeline:
         x_input: Any
             Molecular representations which are subsequently transformed.
 
-        Returns
-        -------
+        Yields
+        ------
         Any
             Transformed molecular representations.
+
         """
         agg_filter = self._filter_elements_agg
         for filter_element in self._filter_elements:

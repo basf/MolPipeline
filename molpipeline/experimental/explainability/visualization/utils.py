@@ -29,6 +29,7 @@ def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float
     -------
     tuple[tuple[float, float], tuple[float, float]]
         Limits of the molecule.
+
     """
     coords_list = []
     conf = mol.GetConformer(0)
@@ -59,6 +60,7 @@ def pad(
     -------
     List[float, float]
         Extended limits
+
     """
     diff = max(lim) - min(lim)
     diff *= ratio / 2
@@ -75,10 +77,16 @@ def get_color_map_from_input(
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None
         The color scheme.
 
+    Raises
+    ------
+    ValueError
+        If the color scheme is not valid.
+
     Returns
     -------
     Colormap
         The colormap.
+
     """
     # read user definer color scheme as ColorMap
     if color is None:
@@ -109,10 +117,16 @@ def color_tuple_to_colormap(
     color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple]
         The color tuple.
 
+    Raises
+    ------
+    ValueError
+        If the color tuple is not of length 3.
+
     Returns
     -------
     Colormap
         The colormap (a matplotlib data structure).
+
     """
     if len(color_tuple) != 3:
         raise ValueError("Color tuple must have 3 elements")
@@ -146,6 +160,7 @@ def to_png(data: bytes) -> Image.Image:
     -------
     Image
         The image.
+
     """
     bio = io.BytesIO(data)
     img = Image.open(bio)
@@ -164,6 +179,7 @@ def plt_to_pil(figure: plt.Figure) -> Image.Image:
     -------
     Image
         The image.
+
     """
     bio = io.BytesIO()
     figure.savefig(bio, format="png")
@@ -188,6 +204,7 @@ def get_atom_coords_of_bond(
     -------
     tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
         The atom coordinates.
+
     """
     a1 = bond.GetBeginAtom().GetIdx()
     a1_pos = conf.GetAtomPosition(a1)
@@ -221,6 +238,7 @@ def calc_present_and_absent_shap_contributions(
     -------
     tuple[float, float]
         The sum of present and absent SHAP values.
+
     """
     if feature_vector.max() > 1 or feature_vector.min() < 0:
         raise ValueError(

@@ -421,6 +421,12 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         ----------
         filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
             Filter elements to set.
+
+        Raises
+        ------
+        ValueError
+            If filter elements names are not unique.
+
         """
         self.filter_elements_dict = dict(filter_elements)
         if not len(self.filter_elements_dict) == len(filter_elements):
@@ -484,6 +490,12 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         ----------
         descriptors: dict[str, FloatCountRange]
             Dictionary of RDKit descriptors to filter by.
+
+        Raises
+        ------
+        ValueError
+            If an invalid descriptor is used.
+
         """
         if not all(hasattr(Descriptors, descriptor) for descriptor in descriptors):
             raise ValueError(

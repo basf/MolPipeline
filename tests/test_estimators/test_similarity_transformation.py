@@ -1,4 +1,4 @@
-"""This module tests the precomputed kernel estimators."""
+"""Unit tests for the TanimotoToTraining estimator."""
 
 from __future__ import annotations
 

@@ -46,7 +46,7 @@ class TestMakeScaffoldGeneric(TestCase):
     def check_generic_scaffold(
         self, params: dict[str, Any], expected_scaffold_list: list[str]
     ) -> None:
-        """Helper function to set parameters and check the results.
+        """Set parameters and check the results.
 
         Parameters
         ----------
@@ -54,6 +54,7 @@ class TestMakeScaffoldGeneric(TestCase):
             Parameters to set for the pipeline.
         expected_scaffold_list: list[str]
             Expected output of the pipeline.
+
         """
         self.generic_scaffold_pipeline.set_params(**params)
         generic_scaffold_list = self.generic_scaffold_pipeline.transform(

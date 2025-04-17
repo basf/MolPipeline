@@ -58,6 +58,11 @@ class ErrorFilter(ABCPipelineElement):
         uuid: str | None, optional
             UUID of the pipeline element.
 
+        Raises
+        ------
+        ValueError
+            If element_ids is None and filter_everything is False.
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.error_indices = []
@@ -134,10 +139,16 @@ class ErrorFilter(ABCPipelineElement):
         parameters: Any
             Dict of arameters to set.
 
+        Raises
+        ------
+        TypeError
+            If element_ids is not a set.
+
         Returns
         -------
         Self
             Self with updated parameters.
+
         """
         param_copy = dict(parameters)
         if "element_ids" in param_copy:
@@ -221,10 +232,18 @@ class ErrorFilter(ABCPipelineElement):
         values: TypeFixedVarSeq
             Values to be transformed.
 
+        Raises
+        ------
+        ValueError
+            If the length of the values does not match the length of the values in fit.
+        TypeError
+            If the type of values is not a list or numpy array.
+
         Returns
         -------
         TypeFixedVarSeq
             Input where rows are removed.
+
         """
         if self.n_total != len(values):
             raise ValueError("Length of values does not match length of values in fit")
@@ -375,6 +394,14 @@ class _MultipleErrorFilter:
             Index of the invalid instance.
         value: Any
             Value of the invalid instance.
+
+        Raises
+        ------
+        TypeError
+            If value is not a RemovedInstance.
+        ValueError
+            If value is not captured by any ErrorFilter.
+
         """
         if not isinstance(value, RemovedInstance):
             raise TypeError(f"Unexpected Type: {type(value)}")
@@ -399,9 +426,6 @@ class _MultipleErrorFilter:
         total: int
             Total number of instances seen during transformation.
 
-        Returns
-        -------
-        None
         """
         for error_filter in self.error_filter_list:
             error_filter.n_total = total
@@ -531,7 +555,14 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
 
     @property
     def error_filter(self) -> ErrorFilter:
-        """Get the ErrorFilter connected to this FilterReinserter."""
+        """Get the ErrorFilter connected to this FilterReinserter.
+
+        Raises
+        ------
+        ValueError
+            If the ErrorFilter is not set.
+
+        """
         if self._error_filter is None:
             raise ValueError("ErrorFilter not set")
         return self._error_filter
@@ -555,10 +586,16 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         error_filter_list: list[ErrorFilter]
             List of ErrorFilters to select from.
 
+        Raises
+        ------
+        ValueError
+            If the ErrorFilter with the given id is not found in the list.
+
         Returns
         -------
         Self
             FilterReinserter with updated ErrorFilter.
+
         """
         for error_filter in error_filter_list:
             if error_filter.uuid == self.error_filter_id:
@@ -674,10 +711,16 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         **params: Any
             Additional keyword arguments.
 
+        Raises
+        ------
+        ValueError
+            If the length of the values does not match the length of the values in fit.
+
         Returns
         -------
         TypeFixedVarSeq
             Iterable where invalid instances were removed.
+
         """
         if len(values) != self.error_filter.n_total - len(
             self.error_filter.error_indices
@@ -696,10 +739,17 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         list_to_fill: list[Number]
             List to fill with dummy values.
 
+        Raises
+        ------
+        AssertionError
+            If the length of the list does not match the expected length.
+
         Returns
         -------
         list[Number]
-            List where dummy values were inserted to replace instances which could not be processed.
+            List where dummy values were inserted to replace instances which could not
+            be processed.
+
         """
         filled_list: list[_S | _T] = []
         next_value_pos = 0
@@ -710,7 +760,9 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
                 filled_list.append(list_to_fill[next_value_pos])
                 next_value_pos += 1
         if len(list_to_fill) != next_value_pos:
-            raise AssertionError()
+            raise AssertionError(
+                "Length of list does not match length of values in fit"
+            )
         return filled_list
 
     def _fill_numpy_arr(self, value_array: npt.NDArray[Any]) -> npt.NDArray[Any]:
@@ -753,10 +805,16 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         value_container: TypeFixedVarSeq
             Iterable to fill with dummy values.
 
+        Raises
+        ------
+        TypeError
+            If value_container is not a list or numpy array.
+
         Returns
         -------
         AnyVarSeq
             Iterable where dummy values were inserted to replace molecules which could not be processed.
+
         """
         if isinstance(value_container, list):
             return self._fill_list(value_container)  # type: ignore

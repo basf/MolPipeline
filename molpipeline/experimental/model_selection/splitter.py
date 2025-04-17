@@ -58,6 +58,12 @@ class GroupShuffleSplit(BaseShuffleSplit):
         random_state: int | RandomState | None, optional
             Controls the randomness of the training and testing indices produced.
             Pass an int for reproducible output across multiple function calls.
+
+        Raises
+        ------
+        ValueError
+            If `split_mode` is not 'groups' or 'samples'.
+
         """
         super().__init__(
             n_splits=n_splits,

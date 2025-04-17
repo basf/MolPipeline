@@ -71,9 +71,6 @@ class RemovedInstance:  # pylint: disable=too-few-public-methods
         message: str | None, optional
             Optional message why the molecule was removed.
 
-        Returns
-        -------
-        None
         """
         self.filter_element_id = filter_element_id
         self.message = message
@@ -193,10 +190,16 @@ class ABCPipelineElement(abc.ABC):
         parameters: Any
             Parameters to be set.
 
+        Raises
+        ------
+        ValueError
+            If the parameter is not a valid parameter of the object.
+
         Returns
         -------
         Self
             Self with updated parameters.
+
         """
         for att_name, att_value in parameters.items():
             if not hasattr(self, att_name):
@@ -225,9 +228,6 @@ class ABCPipelineElement(abc.ABC):
         n_jobs: int
             Number of cores used for processing.
 
-        Returns
-        -------
-        None
         """
         self._n_jobs = check_available_cores(n_jobs)
 
@@ -388,19 +388,22 @@ class TransformingPipelineElement(ABCPipelineElement):
         parameters: Any
             Object parameters as a dictionary.
 
-        Returns
-        -------
-        None
         """
         self.set_params(**parameters)
 
     def copy(self) -> Self:
         """Copy the object.
 
+        Raises
+        ------
+        AssertionError
+            If the object cannot be copied.
+
         Returns
         -------
         Self
             Copy of the object.
+
         """
         recreated_object = self.__class__(**self.parameters)
         for key, value in self.additional_attributes.items():

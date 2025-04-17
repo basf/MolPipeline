@@ -19,11 +19,6 @@ def is_empty(value: Any) -> bool:
     -------
     bool
         True if value is empty, False otherwise.
-
-    Raises
-    ------
-    TypeError
-        If value does not have a shape or len attribute.
     """
     if get_length(value) == 0:
         return True
@@ -37,6 +32,11 @@ def get_length(values: Any) -> int:
     ----------
     values: Any
         Values to be checked.
+
+    Raises
+    ------
+    TypeError
+        If values does not have a shape or len attribute.
 
     Returns
     -------

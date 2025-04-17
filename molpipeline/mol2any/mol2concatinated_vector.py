@@ -58,6 +58,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             UUID of the pipeline element. If None, a random UUID is generated.
         kwargs: Any
             Additional keyword arguments. Can be used to set parameters of the pipeline elements.
+
+        Raises
+        ------
+        ValueError
+            If element_list is empty.
+
         """
         self._element_list = element_list
         if len(element_list) == 0:
@@ -79,7 +85,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     @property
     def n_features(self) -> int:
-        """Calculates and returns the number of features."""
+        """Calculates and returns the number of features.
+
+        Raises
+        ------
+        ValueError
+            If element does not have `n_features` or `n_bits`.
+
+        """
         feature_count = 0
         for _, element in self._element_list:
             if hasattr(element, "n_features"):

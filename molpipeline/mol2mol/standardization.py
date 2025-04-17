@@ -123,9 +123,6 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
         uuid: str | None, optional
             Unique identifier of the pipeline element.
 
-        Returns
-        -------
-        None
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.hashing_method = hashing_method
@@ -364,9 +361,11 @@ class SolventRemover(_MolToMolPipelineElement):
         solvent_smiles_list: list[str]
             List of SMILES of fragments to remove.
 
-        Returns
-        -------
-        None
+        Raises
+        ------
+        ValueError
+            If the SMILES cannot be converted to a molecule.
+
         """
         self._solvent_smiles_list = solvent_smiles_list
         solvent_mol_list = []

@@ -226,10 +226,17 @@ def make_sum_of_gaussians_grid(
     bond_length: float
         Value for the length of displayed bond weights (along the bond-axis).
 
+    Raises
+    ------
+    ValueError
+        If the length of `atom_weights` or `bond_weights` does not match the number of
+        atoms or bonds in the molecule.
+
     Returns
     -------
     ValueGrid
         ValueGrid object with added functions.
+
     """
     # assign default values and convert to numpy array
     if atom_weights is None:
@@ -288,6 +295,12 @@ def _add_shap_present_absent_features_text(
         The sum of the SHAP values for present features.
     sum_absent_shap: float
         The sum of the SHAP values for absent features.
+
+    Raises
+    ------
+    AssertionError
+        If the prediction or expected value is None.
+
     """
     if explanation.prediction is None:
         raise AssertionError("Prediction value is None.")
@@ -470,7 +483,9 @@ def structure_heatmap(
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
 ) -> Image.Image:
-    """Create a Gaussian plot on the molecular structure, highlight atoms with weighted Gaussians.
+    """Create a Gaussian plot on the molecular structure.
+
+    Atoms are highlighted with weighted Gaussians.
 
     Parameters
     ----------
@@ -507,7 +522,13 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
 ) -> Image.Image:
-    """Create a heatmap of the molecular structure and display SHAP prediction composition.
+    """Create an image of the molecular structure with SHAP values.
+
+    The image is a heatmap of the molecular structure, where the colors represent the
+    SHAP values of the substructure features in which the atoms are contained. These
+    values are calculated based on the feature weights and the feature vector.
+    In addition, the expected value for the prediction, the contribution of the present
+    and absent features, and the prediction are displayed.
 
     Parameters
     ----------
@@ -522,10 +543,30 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     color_limits: tuple[float, float] | None
         The color limits.
 
+    Raises
+    ------
+    ValueError
+        If the explanation does not contain feature weights.
+    ValueError
+        If the explanation does not contain feature vector.
+    ValueError
+        If the explanation does not contain expected value.
+    ValueError
+        If the explanation does not contain prediction.
+    ValueError
+        If the explanation does not contain molecule.
+    ValueError
+        If the explanation does not contain atom weights.
+    ValueError
+        If the prediction has more than 2 dimensions.
+    ValueError
+        If the feature weights have an unsupported shape.
+
     Returns
     -------
     Image
         The image as PNG.
+
     """
     if explanation.feature_weights is None:
         raise ValueError("Explanation does not contain feature weights.")

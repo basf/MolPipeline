@@ -255,17 +255,23 @@ class NoneTest(unittest.TestCase):
             """MolToMolPipelineElement with dummy molsanitize exception."""
 
             def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-                """Dummy Mol.
+                """Raise MolSanitizeException if value is c1ccccc1.
 
                 Parameters
                 ----------
                 value: RDKitMol
-                    Molecule.
+                    Molecule
+
+                Raises
+                ------
+                MolSanitizeException
+                    Dummy exception used for testing.
 
                 Returns
                 -------
                 OptionalMol
                     Molecule.
+
                 """
                 if Chem.MolToSmiles(value) == "c1ccccc1":
                     raise MolSanitizeException("This is a dummy exception.")

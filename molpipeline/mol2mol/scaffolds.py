@@ -76,9 +76,6 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         uuid: str | None
             UUID of pipeline element.
 
-        Returns
-        -------
-        None
         """
         self.generic_atoms = generic_atoms
         self.generic_bonds = generic_bonds
@@ -145,10 +142,17 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         parameters: dict[str, Any]
             Parameters to set.
 
+
+        Raises
+        ------
+        ValueError
+            If parameters are not valid.
+
         Returns
         -------
         Self
             Pipeline element with set parameters.
+
         """
         param_copy = parameters.copy()
         generic_atoms = param_copy.pop("generic_atoms", None)

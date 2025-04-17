@@ -13,10 +13,18 @@ def count_value_to_tuple(count: IntOrIntCountRange) -> IntCountRange:
     count: Union[int, IntCountRange]
         Count value. Can be a single int or a tuple of two values.
 
+    Raises
+    ------
+    ValueError
+        If the count is a sequence of length other than 2.
+    TypeError
+        If the count is not an int or a sequence.
+
     Returns
     -------
     IntCountRange
         Tuple of count values.
+
     """
     if isinstance(count, int):
         return count, count

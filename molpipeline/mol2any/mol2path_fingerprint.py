@@ -89,6 +89,11 @@ class Mol2PathFP(
         References
         ----------
         [1] https://www.rdkit.org/docs/source/rdkit.Chem.rdFingerprintGenerator.html#rdkit.Chem.rdFingerprintGenerator.GetRDKitFPGenerator
+
+        Raises
+        ------
+        ValueError
+            If the number of bits is not a positive integer.
         """
         # pylint: disable=R0801
         super().__init__(
@@ -100,7 +105,7 @@ class Mol2PathFP(
         )
         if not isinstance(n_bits, int) or n_bits < 1:
             raise ValueError(
-                f"Number of bits has to be a positive integer, which is > 0! (Received: {n_bits})"
+                f"Number of bits has to be an integer > 0! (Received: {n_bits})"
             )
         self._n_bits = n_bits
         self._feature_names = [f"path_{i}" for i in range(self._n_bits)]

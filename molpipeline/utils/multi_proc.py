@@ -14,10 +14,16 @@ def check_available_cores(n_requested_cores: int) -> int:
     n_requested_cores: int
         Number of requested cores.
 
+    Raises
+    ------
+    TypeError
+        If n_requested_cores is not an integer.
+
     Returns
     -------
     int
         Number of used cores.
+
     """
     if not isinstance(n_requested_cores, int):
         raise TypeError(f"Not an integer: {n_requested_cores}")
