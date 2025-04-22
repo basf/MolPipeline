@@ -91,11 +91,16 @@ ignore = [
     "D213", # blank-line-before-class-docstring
     "D413", # missing-blank-line-after-last-section # TO REMOVE
     "E501", # line-too-long # TO REMOVE
+    "ERA001",  # Found commented-out code  # TO REMOVE
     "PLR0913", # too-many-arguments
     "PGH003",  # Blanket type ignore for types
+    "PLC2701", # Private name import  # TO REMOVE
     "PLW2901", # Redefined loop variable
+    "RET504",  # Unnecessary assignment  # TO REMOVE
     "RUF100", #  Unused noqa  # TO REMOVE
     "S311",  #  suspicious-non-cryptographic-random-usage
+    "SIM114",  # Combine `if` branches  # TO REMOVE
+    "SLF001",  # Private member accessed  # TO REMOVE
 ]
  [tool.ruff.lint.per-file-ignores]
  "*.ipynb" = [
