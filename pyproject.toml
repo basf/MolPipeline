@@ -93,7 +93,7 @@ ignore = [
     "B008",   #  Do not perform function call `StandardScaler` in argument defaults  # TO REMOVE
     "B020",   #  Loop control variable `generated_smiles` overrides iterable it iterates  # TO REMOVE
     "B024",   #  `xxx` is an abstract base class, but it has no abstract methods or properties  # TO REMOVE
-    "B027",   #  `xxx` is an empty method in an abstract base class, but has no abstract decorator
+    "B027",   #  `xxx` is an empty method in an abstract base class, but has no abstract decorator  # TO REMOVE
     "COM812", # Trailing comma missing # TO REMOVE
     "DOC202", # Docstring should not have a returns section because the function doesn't return anything  # TO REMOVE
     "D203", # 1 blank line required before class docstring  # TO REMOVE
