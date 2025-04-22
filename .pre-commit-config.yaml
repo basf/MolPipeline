@@ -48,6 +48,8 @@ repos:
     rev: v1.1.398
     hooks:
       - id: pyright
+        args: [-p, pyrightconfig.json]
+        verbose: true
 
   - repo: https://github.com/PyCQA/flake8
     rev: 7.0.0

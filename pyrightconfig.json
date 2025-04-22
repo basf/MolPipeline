@@ -1,0 +1,47 @@
+{
+  "include": [
+    "molpipeline",
+    "tests",
+    "test_extras"
+  ],
+
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "src/experimental",
+    "src/typestubs"
+  ],
+
+  "ignore": [
+    "src/oldstuff"
+  ],
+
+  "defineConstant": {
+    "DEBUG": true
+  },
+
+  "reportAbstractUsage": "warning",
+  "reportAssignmentType": "warning",
+  "reportAttributeAccessIssue": "warning",
+  "reportArgumentType": "warning",
+  "reportCallIssue": "warning",
+  "reportClassNotInstantiated": "reportIndexIssue",
+  "reportGeneralTypeIssues": "warning",
+  "reportIncompatibleMethodOverride": "warning",
+  "reportInvalidTypeForm": "warning",
+  "reportIndexIssue": "warning",
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": "warning",
+  "reportOptionalMemberAccess": "warning",
+  "reportOptionalSubscript": "warning",
+  "reportPossiblyUnboundVariable": "warning",
+  "reportPrivateImportUsage": "warning",
+  "reportRedeclaration": "warning",
+  "reportReturnType": "warning",
+  "reportUnhashable": "warning",
+
+
+  "pythonVersion": "3.10",
+  "venvPath": ".",
+  "venv": ".venv"
+}
