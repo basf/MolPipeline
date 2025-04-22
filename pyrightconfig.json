@@ -6,10 +6,7 @@
   ],
 
   "exclude": [
-    "**/node_modules",
-    "**/__pycache__",
-    "src/experimental",
-    "src/typestubs"
+    "**/__pycache__"
   ],
 
   "ignore": [
