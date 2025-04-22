@@ -38,7 +38,7 @@ class SDFToMol(_StringToMolPipelineElement):
         ----------
         identifier: str | None, default='smiles'
             Method of assigning identifiers to molecules.
-            At the moment molecules are counted.
+            If None, no identifier is assigned.
         name: str, default='SDF2Mol'
             Name of PipelineElement
         n_jobs: int, default=1
