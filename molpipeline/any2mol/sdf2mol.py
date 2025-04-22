@@ -27,7 +27,7 @@ class SDFToMol(_StringToMolPipelineElement):
 
     def __init__(
         self,
-        identifier: str | None = "enumerate",
+        identifier: str | None = "smiles",
         name: str = "SDF2Mol",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -36,7 +36,7 @@ class SDFToMol(_StringToMolPipelineElement):
 
         Parameters
         ----------
-        identifier: str | None, default='enumerate'
+        identifier: str | None, default='smiles'
             Method of assigning identifiers to molecules.
             At the moment molecules are counted.
         name: str, default='SDF2Mol'
