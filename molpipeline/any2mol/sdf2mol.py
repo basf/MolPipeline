@@ -27,7 +27,7 @@ class SDFToMol(_StringToMolPipelineElement):
 
     def __init__(
         self,
-        identifier: str | None = "smiles",
+        identifier: str | None = "enumerate",
         name: str = "SDF2Mol",
         n_jobs: int = 1,
         uuid: str | None = None,
