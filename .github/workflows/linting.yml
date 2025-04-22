@@ -152,7 +152,7 @@ jobs:
           python-version: "3.13"
       - name: Analysing the code with pyright
         run: |
-          uv run pyright .
+          uv run --all-extras pyright .
 
   ruff:
     runs-on: ubuntu-latest
