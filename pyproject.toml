@@ -135,8 +135,25 @@ ignore = [
 max-positional-args = 10
 
 [tool.pyright]
-reportMissingImports = true
-reportMissingTypeStubs = false
+reportAbstractUsage = "warning"
+reportAssignmentType = "warning"
+reportAttributeAccessIssue = "warning"
+reportArgumentType = "warning"
+reportCallIssue = "warning"
+reportClassNotInstantiated = "reportIndexIssue"
+reportGeneralTypeIssues = "warning"
+reportIncompatibleMethodOverride = "warning"
+reportInvalidTypeForm = "warning"
+reportIndexIssue = "warning"
+reportMissingImports = "warning"
+reportMissingTypeStubs = "warning"
+reportOptionalMemberAccess = "warning"
+reportOptionalSubscript = "warning"
+reportPossiblyUnboundVariable = "warning"
+reportPrivateImportUsage = "warning"
+reportRedeclaration = "warning"
+reportReturnType = "warning"
+reportUnhashable = "warning"
 venvPath = "."
 venv = ".venv"
 

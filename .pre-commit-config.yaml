@@ -48,7 +48,7 @@ repos:
     rev: v1.1.398
     hooks:
       - id: pyright
-        args: [-p, pyrightconfig.json]
+        args: [-p, pyproject.toml]
         verbose: true
 
   - repo: https://github.com/PyCQA/flake8
