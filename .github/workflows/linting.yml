@@ -151,7 +151,6 @@ jobs:
         with:
           python-version: "3.13"
       - name: Analysing the code with pyright
-        continue-on-error: true
         run: |
           uv run pyright .
 
