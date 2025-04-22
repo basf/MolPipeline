@@ -23,11 +23,11 @@ from molpipeline.utils.molpipeline_types import OptionalMol
 class SDFToMol(_StringToMolPipelineElement):
     """PipelineElement transforming a list of SDF strings to mol_objects."""
 
-    identifier: str
+    identifier: str | None
 
     def __init__(
         self,
-        identifier: str = "smiles",
+        identifier: str | None = "smiles",
         name: str = "SDF2Mol",
         n_jobs: int = 1,
         uuid: Optional[str] = None,
@@ -36,7 +36,7 @@ class SDFToMol(_StringToMolPipelineElement):
 
         Parameters
         ----------
-        identifier: str
+        identifier: str | None, default="smiles"
             Method of assigning identifiers to molecules. At the moment only "smiles" is supported.
         name: str
             Name of PipelineElement
