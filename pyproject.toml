@@ -167,6 +167,7 @@ reportReturnType = "warning"
 reportUnhashable = "warning"
 venvPath = "."
 venv = ".venv"
+pythonVersion = "3.11"
 
 [tool.setuptools.dynamic]
 version = {attr = "molpipeline.__version__"}
