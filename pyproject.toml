@@ -92,7 +92,10 @@ ignore = [
     "D413", # missing-blank-line-after-last-section # TO REMOVE
     "E501", # line-too-long # TO REMOVE
     "ERA001",  # Found commented-out code  # TO REMOVE
+    "FA102",  # Missing `from __future__ import annotations`  # TO REMOVE
+    "N803",  #  Argument name should be lowercase  # TO REMOVE
     "PLR0913", # too-many-arguments
+    "PLR2004", # Magic value used in comparison  # TO REMOVE
     "PGH003",  # Blanket type ignore for types
     "PLC2701", # Private name import  # TO REMOVE
     "PLW2901", # Redefined loop variable
