@@ -164,7 +164,6 @@ jobs:
         with:
           python-version: "3.13"
       - name: Analysing the code with ruff
-        continue-on-error: true
         run: |
           uv run ruff check --config pyproject.toml
 
@@ -179,6 +178,8 @@ jobs:
         - interrogate
         - bandit
         - isort
+        - ruff
+        - pyright
     runs-on: ubuntu-latest
     strategy:
       matrix:
