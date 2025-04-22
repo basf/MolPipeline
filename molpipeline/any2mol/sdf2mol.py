@@ -37,7 +37,9 @@ class SDFToMol(_StringToMolPipelineElement):
         Parameters
         ----------
         identifier: str | None, default="smiles"
-            Method of assigning identifiers to molecules. At the moment only "smiles" is supported.
+            Method of assigning identifiers to molecules.
+            At the moment only "smiles" is supported.
+            If None, no identifier will be assigned.
         name: str
             Name of PipelineElement
         n_jobs: int
