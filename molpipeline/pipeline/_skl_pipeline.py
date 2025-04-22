@@ -4,8 +4,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Iterable, List, Literal, Optional, Tuple, TypeVar, Union
+from typing import Any, Literal, TypeVar, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -53,8 +54,8 @@ _T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
 
 
-_IndexedStep = Tuple[int, str, AnyElement]
-_AggStep = Tuple[List[int], List[str], _MolPipeline]
+_IndexedStep = tuple[int, str, AnyElement]
+_AggStep = tuple[list[int], list[str], _MolPipeline]
 _AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
 
 
@@ -68,7 +69,7 @@ class Pipeline(_Pipeline):
         self,
         steps: list[AnyStep],
         *,
-        memory: Optional[Union[str, joblib.Memory]] = None,
+        memory: str | joblib.Memory | None = None,
         verbose: bool = False,
         n_jobs: int = 1,
     ):
@@ -78,7 +79,7 @@ class Pipeline(_Pipeline):
         ----------
         steps: list[tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]]
             List of (name, Estimator) tuples.
-        memory: str, optional
+        memory: str | joblib.Memory | None, optional
             Path to cache transformers.
         verbose: bool, optional
             If True, print additional information.
@@ -107,7 +108,14 @@ class Pipeline(_Pipeline):
             error_replacer.select_error_filter(error_filter_list)
 
     def _validate_steps(self) -> None:
-        """Validate the steps."""
+        """Validate the steps.
+
+        Raises
+        ------
+        TypeError
+            If the steps do not implement fit and transform or are not 'passthrough'.
+
+        """
         names = [name for name, _ in self.steps]
 
         # validate names
@@ -161,12 +169,19 @@ class Pipeline(_Pipeline):
         filter_passthrough: bool, optional
             If True, passthrough steps are filtered out.
 
-        Returns
+        Raises
         ------
-        Iterable[_AggregatedPipelineStep]
-            The _AggregatedPipelineStep is composed of the index, the name and the transformer.
+        AssertionError
+            If the pipeline has no steps.
+
+        Yields
+        ------
+        _AggregatedPipelineStep
+            The _AggregatedPipelineStep is composed of the index, the name and the
+            transformer.
+
         """
-        last_element: Optional[_AggregatedPipelineStep] = None
+        last_element: _AggregatedPipelineStep | None = None
 
         # This loop delays the output by one in order to identify the last step
         for step in self._agg_non_postpred_steps():
@@ -201,13 +216,13 @@ class Pipeline(_Pipeline):
     @property
     def _final_estimator(
         self,
-    ) -> Union[
-        Literal["passthrough"],
-        AnyTransformer,
-        AnyPredictor,
-        _MolPipeline,
-        ABCPipelineElement,
-    ]:
+    ) -> (
+        Literal["passthrough"]
+        | AnyTransformer
+        | AnyPredictor
+        | _MolPipeline
+        | ABCPipelineElement
+    ):
         """Return the lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())
         last_element = element_list[-1]
@@ -239,10 +254,18 @@ class Pipeline(_Pipeline):
         raw_params : dict[str, Any], optional
             Parameters passed by the user, used when `transform_input`
 
+        Raises
+        ------
+        AssertionError
+            If routed_params is None or if the transformer is 'passthrough'.
+        AssertionError
+            If the names are a list and the step is not a Pipeline.
+
         Returns
         -------
         tuple[Any, Any]
             The transformed data and the transformed objectives.
+
         """
         # shallow copy of steps - this should really be steps_
         self.steps = list(self.steps)
@@ -274,7 +297,9 @@ class Pipeline(_Pipeline):
                 else:
                     step_params = {}
             elif isinstance(name, list):
-                raise AssertionError()
+                raise AssertionError(
+                    "Names should not be a list, when the step is not a Pipeline"
+                )
             else:
                 step_params = self._get_metadata_for_step(
                     step_idx=step_idx,
@@ -317,7 +342,9 @@ class Pipeline(_Pipeline):
         return X, y
 
     def _transform(
-        self, X: Any, routed_params: Bunch  # pylint: disable=invalid-name
+        self,
+        X: Any,  # pylint: disable=invalid-name
+        routed_params: Bunch,
     ) -> Any:
         """Transform the data, and skip final estimator.
 
@@ -331,6 +358,12 @@ class Pipeline(_Pipeline):
 
         routed_params: Bunch
             parameters for each step as returned by process_routing
+
+        Raises
+        ------
+        AssertionError
+            If one of the transformers is 'passthrough' or does not implement
+            `transform`.
 
         Returns
         -------
@@ -369,6 +402,11 @@ class Pipeline(_Pipeline):
     ) -> list[AnyStep]:
         """Return all steps before the first PostPredictionTransformation.
 
+        Raises
+        ------
+        AssertionError
+            If a PostPredictionTransformation is found before the last step.
+
         Returns
         -------
         list[AnyStep]
@@ -382,7 +420,8 @@ class Pipeline(_Pipeline):
             if start_adding:
                 if isinstance(step_estimator, PostPredictionTransformation):
                     raise AssertionError(
-                        "PipelineElement of type PostPredictionTransformation occured before the last step."
+                        "PipelineElement of type PostPredictionTransformation occured "
+                        "before the last step."
                     )
                 non_post_processing_steps.append((step_name, step_estimator))
         return list(non_post_processing_steps[::-1])
@@ -411,10 +450,12 @@ class Pipeline(_Pipeline):
         When filter_passthrough is True, 'passthrough' and None transformers
         are filtered out.
 
-        Returns
+        Yields
         ------
-        Iterable[_AggregatedPipelineStep]
-            The _AggregatedPipelineStep is composed of the index, the name and the transformer.
+        _AggregatedPipelineStep
+            The _AggregatedPipelineStep is composed of the index, the name and the
+            transformer.
+
         """
         aggregated_transformer_list = []
         for i, (name_i, step_i) in enumerate(self._non_post_processing_steps()):
@@ -543,10 +584,17 @@ class Pipeline(_Pipeline):
             each parameter name is prefixed such that parameter ``p`` for step
             ``s`` has key ``s__p``.
 
+        Raises
+        ------
+        TypeError
+            If the last step does not implement `fit_transform` or `fit` and
+            `transform`.
+
         Returns
         -------
         Xt : ndarray of shape (n_samples, n_transformed_features)
             Transformed samples.
+
         """
         routed_params = self._check_method_params(method="fit_transform", props=params)
         iter_input, iter_label = self._fit(X, y, routed_params)
@@ -602,6 +650,12 @@ class Pipeline(_Pipeline):
             final estimator.
 
             .. versionadded:: 0.20
+
+        Raises
+        ------
+        AssertionError
+            If the final estimator does not implement `predict`.
+            In this case this function should not be available.
 
         Returns
         -------
@@ -663,6 +717,12 @@ class Pipeline(_Pipeline):
             each parameter name is prefixed such that parameter ``p`` for step
             ``s`` has key ``s__p``.
 
+        Raises
+        ------
+        AssertionError
+            If the final estimator does not implement `fit_predict`.
+            In this case this function should not be available.
+
         Returns
         -------
         y_pred : ndarray
@@ -685,7 +745,8 @@ class Pipeline(_Pipeline):
                 )
             else:
                 raise AssertionError(
-                    "Final estimator does not implement fit_predict, hence this function should not be available."
+                    "Final estimator does not implement fit_predict, "
+                    "hence this function should not be available."
                 )
             for _, post_element in self._post_processing_steps():
                 y_pred = post_element.fit_transform(y_pred, iter_label)
@@ -713,7 +774,11 @@ class Pipeline(_Pipeline):
             transformations in the pipeline are not propagated to the
             final estimator.
 
-            .. versionadded:: 0.20
+        Raises
+        ------
+        AssertionError
+            If the final estimator does not implement `predict_proba`.
+            In this case this function should not be available.
 
         Returns
         -------
@@ -739,7 +804,8 @@ class Pipeline(_Pipeline):
                 iter_input = self._final_estimator.predict_proba(iter_input, **params)
         else:
             raise AssertionError(
-                "Final estimator does not implement predict_proba, hence this function should not be available."
+                "Final estimator does not implement predict_proba, "
+                "hence this function should not be available."
             )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)
@@ -777,10 +843,17 @@ class Pipeline(_Pipeline):
         **params : Any
             Parameters to the ``transform`` method of each estimator.
 
+        Raises
+        ------
+        AssertionError
+            If the final estimator does not implement `transform` or
+            `fit_transform` or is passthrough.
+
         Returns
         -------
         Xt : ndarray of shape (n_samples, n_transformed_features)
             Transformed data.
+
         """
         routed_params = process_routing(self, "transform", **params)
         iter_input = X
@@ -799,7 +872,8 @@ class Pipeline(_Pipeline):
                 )
             else:
                 raise AssertionError(
-                    "Non transformer ocurred in transformation step. This should have been caught in the validation step."
+                    "Non transformer ocurred in transformation step."
+                    "This should have been caught in the validation step."
                 )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input, **params)
@@ -816,6 +890,11 @@ class Pipeline(_Pipeline):
             of the pipeline.
         **params : Any
             Parameters to the ``decision_function`` method of the final estimator.
+
+        Raises
+        ------
+        AssertionError
+            If the final estimator does not implement `decision_function`.
 
         Returns
         -------
@@ -843,7 +922,8 @@ class Pipeline(_Pipeline):
                 )
         else:
             raise AssertionError(
-                "Final estimator does not implement `decision_function`, hence this function should not be available."
+                "Final estimator does not implement `decision_function`, "
+                "hence this function should not be available."
             )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)
@@ -851,7 +931,16 @@ class Pipeline(_Pipeline):
 
     @property
     def classes_(self) -> list[Any] | npt.NDArray[Any]:
-        """Return the classes of the last element, which is not a PostPredictionTransformation."""
+        """Return the classes of the last element.
+
+        PostPredictionTransformation elements are not considered as last element.
+
+        Raises
+        ------
+        ValueError
+            If the last step is passthrough or has no classes_ attribute.
+
+        """
         check_last = [
             step
             for step in self.steps
@@ -867,8 +956,8 @@ class Pipeline(_Pipeline):
     def __sklearn_tags__(self) -> Tags:
         """Return the sklearn tags.
 
-        Note
-        ----
+        Notes
+        -----
         This method is copied from the original sklearn implementation.
         Changes are marked with a comment.
 
@@ -926,8 +1015,8 @@ class Pipeline(_Pipeline):
         Please check :ref:`User Guide <metadata_routing>` on how the routing
         mechanism works.
 
-        Note
-        ----
+        Notes
+        -----
         This method is copied from the original sklearn implementation.
         Changes are marked with a comment.
 

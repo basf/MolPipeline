@@ -1,6 +1,9 @@
 """Test MolFilter, which invalidate molecules based on criteria defined in the respective filter."""
 
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
@@ -14,6 +17,7 @@ from molpipeline.mol2mol import (
     SmartsFilter,
     SmilesFilter,
 )
+from molpipeline.utils.comparison import compare_recursive
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from molpipeline.utils.molpipeline_types import FloatCountRange, IntOrIntCountRange
 
@@ -87,6 +91,34 @@ class ElementFilterTest(unittest.TestCase):
             pipeline.set_params(**test_params["params"])
             filtered_smiles = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles, test_params["result"])
+
+    def test_json_roundtrip(self) -> None:
+        """Test if ElementFilter can be serialized and deserialized.
+
+        Notes
+        -----
+        It is important to save the ElementFilter as a JSON file and then load it back.
+        This is because json.dumps() sets the keys of the dictionary to strings.
+        """
+        element_filter = ElementFilter()
+        json_object = recursive_to_json(element_filter)
+        with tempfile.TemporaryDirectory() as temp_folder:
+            temp_file_path = Path(temp_folder) / "test.json"
+            with open(temp_file_path, "w", encoding="UTF-8") as out_file:
+                json.dump(json_object, out_file)
+            with open(temp_file_path, encoding="UTF-8") as in_file:
+                loaded_json_object = json.load(in_file)
+        recreated_element_filter = recursive_from_json(loaded_json_object)
+
+        original_params = element_filter.get_params()
+        recreated_params = recreated_element_filter.get_params()
+        self.assertEqual(original_params.keys(), recreated_params.keys())
+        for param_name, original_value in original_params.items():
+            with self.subTest(param_name=param_name):
+                self.assertTrue(
+                    compare_recursive(original_value, recreated_params[param_name]),
+                    f"Original: {original_value}, Recreated: {recreated_params[param_name]}",
+                )
 
 
 class ComplexFilterTest(unittest.TestCase):

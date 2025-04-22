@@ -14,10 +14,10 @@ from molpipeline.experimental.explainability.visualization.visualization import 
 )
 
 __all__ = [
-    "SHAPTreeExplainer",
-    "SHAPKernelExplainer",
-    "SHAPFeatureExplanation",
     "SHAPFeatureAndAtomExplanation",
+    "SHAPFeatureExplanation",
+    "SHAPKernelExplainer",
+    "SHAPTreeExplainer",
     "structure_heatmap",
     "structure_heatmap_shap",
 ]

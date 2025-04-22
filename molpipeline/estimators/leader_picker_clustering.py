@@ -14,7 +14,8 @@ from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.utils._param_validation import Interval
 
 try:
-    from typing import Any, Self, Sequence
+    from collections.abc import Sequence
+    from typing import Any, Self
 except ImportError:
     from typing_extensions import Self
 

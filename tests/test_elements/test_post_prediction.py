@@ -33,7 +33,14 @@ class TestPostPredictionWrapper(unittest.TestCase):
         self.assertDictEqual(rf_params, wrapped_params)
 
     def test_set_params(self) -> None:
-        """Test set_params method."""
+        """Test set_params method.
+
+        Raises
+        ------
+        TypeError
+            If the wrapped estimator is not a RandomForestClassifier.
+
+        """
         rf = RandomForestClassifier()
         ppw = PostPredictionWrapper(rf)
 

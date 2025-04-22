@@ -18,7 +18,7 @@ except ImportError:
     from typing_extensions import override
 
 from molpipeline import Pipeline
-from molpipeline.abstract_pipeline_elements.core import OptionalMol
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance, OptionalMol
 from molpipeline.experimental.explainability.explanation import (
     AtomExplanationMixin,
     BondExplanationMixin,
@@ -65,10 +65,16 @@ def _get_prediction_function(
     pipeline : Pipeline
         The pipeline containing the model.
 
+    Raises
+    ------
+    ValueError
+        If no prediction function could be found.
+
     Returns
     -------
     Any
         The prediction function.
+
     """
     if hasattr(pipeline, "predict_proba"):
         return pipeline.predict_proba
@@ -123,11 +129,23 @@ def _convert_shap_feature_weights_to_atom_weights(
     feature_vector : npt.NDArray[np.float64]
         The feature vector.
 
+    Raises
+    ------
+    ValueError
+        If the molecule is None.
+    ValueError
+        If the feature weights have an unsupported number of dimensions.
+
     Returns
     -------
     npt.NDArray[np.float64]
         The atom weights.
+
     """
+    if isinstance(molecule, InvalidInstance):
+        raise ValueError(
+            "Molecule is None. Cannot convert SHAP values to atom weights."
+        )
     if feature_weights.ndim == 1:
         # regression case
         feature_weights_present_bits_only = feature_weights.copy()
@@ -147,7 +165,8 @@ def _convert_shap_feature_weights_to_atom_weights(
             molecule,
             featurization_element,
             feature_weights_present_bits_only,
-        )
+        ),
+        dtype=np.float64,
     )
     return atom_weights
 
@@ -157,7 +176,9 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
 
     @abc.abstractmethod
     def explain(
-        self, X: Any, **kwargs: Any  # pylint: disable=invalid-name,unused-argument
+        self,
+        X: Any,  # pylint: disable=invalid-name
+        **kwargs: Any,
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
@@ -196,6 +217,14 @@ class SHAPExplainerAdapter(
             The pipeline containing the model to explain.
         explainer : shap.TreeExplainer | shap.KernelExplainer
             The shap explainer object.
+
+        Raises
+        ------
+        ValueError
+            If the molecule reader subpipeline could not be determined.
+        ValueError
+            If the featurization subpipeline could not be determined.
+
         """
         self.pipeline = pipeline
         self.explainer = explainer
@@ -233,6 +262,7 @@ class SHAPExplainerAdapter(
         ----------
         prediction : Any
             The prediction.
+
         Returns
         -------
         bool
@@ -251,7 +281,7 @@ class SHAPExplainerAdapter(
 
     @override
     def explain(
-        self, X: Any, **kwargs: Any  # pylint: disable=invalid-name,unused-argument
+        self, X: Any, **kwargs: Any
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
@@ -265,10 +295,16 @@ class SHAPExplainerAdapter(
         kwargs : Any
             Additional keyword arguments for SHAP's TreeExplainer.shap_values.
 
+        Raises
+        ------
+        ValueError
+            If the featurization element does not have a get_feature_names method.
+
         Returns
         -------
         list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]
             List of explanations corresponding to the input data.
+
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
 
@@ -276,7 +312,6 @@ class SHAPExplainerAdapter(
             SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
         ] = []
         for input_sample in X:
-
             input_sample = [input_sample]
 
             # get predictions

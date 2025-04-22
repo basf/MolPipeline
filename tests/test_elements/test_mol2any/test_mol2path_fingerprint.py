@@ -25,12 +25,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
     """Unittest for Mol2PathFP, which calculates the RDKit Path Fingerprint."""
 
     def test_clone(self) -> None:
-        """Test if the Mol2PathFP pipeline element can be cloned.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the Mol2PathFP pipeline element can be cloned."""
         mol_fp = Mol2PathFP()
         mol_fp_copy = clone(mol_fp)
         self.assertTrue(mol_fp_copy is not mol_fp)
@@ -42,7 +37,6 @@ class TestMol2PathFingerprint(unittest.TestCase):
 
     def test_output_types(self) -> None:
         """Test equality of different output_types."""
-
         smi2mol = SmilesToMol()
         sparse_path_fp = Mol2PathFP(n_bits=1024, return_as="sparse")
         dense_path_fp = Mol2PathFP(n_bits=1024, return_as="dense")
@@ -84,12 +78,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
         )
 
     def test_counted_bits(self) -> None:
-        """Test if the option counted bits works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the option counted bits works as expected."""
         mol_fp = Mol2PathFP(n_bits=1024, return_as="dense")
         smi2mol = SmilesToMol()
         pipeline = Pipeline(
@@ -134,7 +123,6 @@ class TestMol2PathFingerprint(unittest.TestCase):
 
     def test_setter_getter_error_handling(self) -> None:
         """Test if the setters and getters work as expected when errors are encountered."""
-
         mol_fp = Mol2PathFP()
         params: dict[str, Any] = {
             "min_path": 2,

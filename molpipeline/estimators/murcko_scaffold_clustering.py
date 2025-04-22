@@ -51,14 +51,17 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         Parameters
         ----------
         make_generic : bool (default=False)
-            Makes a Murcko scaffold generic (i.e. all atom types->C and all bonds->single).
+            Makes a Murcko scaffold generic.
+            (i.e. all atom types->C and all bonds->single).
         n_jobs : int, optional (default=1)
             Number of jobs to use for parallelization.
-        linear_molecules_strategy : Literal["ignore", "own_cluster"], optional (default="ignore")
-            Strategy for handling linear molecules. Can be "ignore" or "own_cluster". "ignore" will
-            ignore linear molecules, and they will be replaced with NaN in the resulting clustering.
-            "own_cluster" will instead cluster linear molecules in their own cluster and give them
-            a valid cluster label.
+        linear_molecules_strategy : Literal["ignore", "own_cluster"], default="ignore"
+            Strategy for handling linear molecules. Can be "ignore" or "own_cluster".
+            "ignore" will ignore linear molecules, and they will be replaced with NaN in
+            the resulting clustering.
+            "own_cluster" will instead cluster linear molecules in their own cluster
+            and give them a valid cluster label.
+
         """
         self.n_jobs = n_jobs
         self.linear_molecules_strategy = linear_molecules_strategy
@@ -67,10 +70,16 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     def _generate_pipeline(self) -> Pipeline:
         """Generate the pipeline for the Murcko scaffold clustering estimator.
 
+        Raises
+        ------
+        ValueError
+            If linear_molecules_strategy is not "ignore" or "own_cluster".
+
         Returns
         -------
         Pipeline
             Pipeline for the Murcko scaffold clustering estimator.
+
         """
         auto2mol = AutoToMol()
         empty_mol_filter1 = EmptyMoleculeFilter()
@@ -121,7 +130,8 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             pipeline_step_list.append(("no_scaffold_replacer", no_scaffold_replacer))
         else:
             raise ValueError(
-                f"Invalid value for linear_molecules_strategy: {self.linear_molecules_strategy}"
+                f"Invalid value for linear_molecules_strategy: "
+                f"{self.linear_molecules_strategy}"
             )
 
         error_replacer = FilterReinserter.from_error_filter(error_filter, np.nan)
@@ -181,10 +191,16 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         X : array-like of shape (n_samples,)
             Smiles or molecule list or array.
 
+        Raises
+        ------
+        AssertionError
+            If self.labels_ is None.
+
         Returns
         -------
         Self
             Fitted estimator.
+
         """
         cluster_pipeline = self._generate_pipeline()
         self.labels_ = cluster_pipeline.fit_transform(X, None)

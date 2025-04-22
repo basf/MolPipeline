@@ -9,7 +9,7 @@ from molpipeline.any2mol.smiles2mol import SmilesToMol
 __all__ = [
     "AutoToMol",
     "BinaryToMol",
-    "SmilesToMol",
     "InchiToMol",
     "SDFToMol",
+    "SmilesToMol",
 ]

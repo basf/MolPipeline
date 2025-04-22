@@ -1,6 +1,6 @@
 """Functions for comparing chemprop models."""
 
-from typing import Sequence
+from collections.abc import Sequence
 from unittest import TestCase
 
 import torch

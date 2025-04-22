@@ -1,6 +1,7 @@
 """Wrap Chemprop in a sklearn like transformer returning the neural fingerprint as a numpy array."""
 
-from typing import Any, Self, Sequence
+from collections.abc import Sequence
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -51,6 +52,7 @@ class ChempropNeuralFP(ABCChemprop):
             Parameters for components of the model.
         """
         # pylint: disable=duplicate-code
+        self.disable_fitting = disable_fitting
         super().__init__(
             model=model,
             lightning_trainer=lightning_trainer,
@@ -58,7 +60,6 @@ class ChempropNeuralFP(ABCChemprop):
             n_jobs=n_jobs,
             **kwargs,
         )
-        self.disable_fitting = disable_fitting
 
     def fit(
         self,
@@ -84,7 +85,8 @@ class ChempropNeuralFP(ABCChemprop):
         return super().fit(X, y)
 
     def transform(
-        self, X: MoleculeDataset  # pylint: disable=invalid-name
+        self,
+        X: MoleculeDataset,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Transform the input.
 

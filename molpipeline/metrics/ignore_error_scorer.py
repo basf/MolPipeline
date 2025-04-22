@@ -9,7 +9,7 @@ import numpy.typing as npt
 import pandas as pd
 from loguru import logger
 from sklearn import metrics
-from sklearn.metrics._scorer import _BaseScorer  # pylint: disable=protected-access
+from sklearn.metrics._scorer import _BaseScorer
 
 
 def ignored_value_scorer(
@@ -80,10 +80,10 @@ def ignored_value_scorer(
             )
         y_true_ = np.copy(np.array(y_true)[all_retained])
         y_pred_ = np.array(np.array(y_pred)[all_retained].tolist())
-        _kwargs = dict(kwargs)
-        if "sample_weight" in _kwargs and _kwargs["sample_weight"] is not None:
-            _kwargs["sample_weight"] = _kwargs["sample_weight"][all_retained]
-        return score_func(y_true_, y_pred_, **_kwargs)
+        kwargs_ = dict(kwargs)
+        if "sample_weight" in kwargs_ and kwargs_["sample_weight"] is not None:
+            kwargs_["sample_weight"] = kwargs_["sample_weight"][all_retained]
+        return score_func(y_true_, y_pred_, **kwargs_)
 
     return metrics.make_scorer(
         newscore, response_method=response_method, **scorer_kwargs

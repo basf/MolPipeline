@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Literal, Sequence, Union
+from collections.abc import Sequence
+from typing import Any, Callable, Literal, Union
 
 try:
     from typing import Self
@@ -150,6 +151,11 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
             Default: False
         n_neighbors : int, optional (default = None)
             Number of neighbors to get. If None, the value set at initialization is used.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted yet.
 
         Returns
         -------

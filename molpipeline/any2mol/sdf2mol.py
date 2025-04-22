@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -30,21 +30,20 @@ class SDFToMol(_StringToMolPipelineElement):
         identifier: str | None = "smiles",
         name: str = "SDF2Mol",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize SDFToMol.
 
         Parameters
         ----------
-        identifier: str | None, default="smiles"
+        identifier: str | None, default='enumerate'
             Method of assigning identifiers to molecules.
-            At the moment only "smiles" is supported.
-            If None, no identifier will be assigned.
-        name: str
+            At the moment molecules are counted.
+        name: str, default='SDF2Mol'
             Name of PipelineElement
-        n_jobs: int
+        n_jobs: int, default=1
             Number of cores used for processing.
-        uuid: Optional[str], optional
+        uuid: str | None, optional
             uuid of PipelineElement, by default None
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)

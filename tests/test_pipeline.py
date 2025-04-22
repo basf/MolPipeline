@@ -46,12 +46,7 @@ class PipelineTest(unittest.TestCase):
     """Unit test for the functionality of the pipeline class."""
 
     def test_fit_transform_single_core(self) -> None:
-        """Test if the generation of the fingerprint matrix works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the generation of the fingerprint matrix works as expected."""
         # Create pipeline
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
@@ -69,12 +64,7 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
     def test_sklearn_pipeline(self) -> None:
-        """Test if the pipeline can be used in a sklearn pipeline.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the pipeline can be used in a sklearn pipeline."""
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
@@ -91,12 +81,7 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(pred_val, true_val)
 
     def test_sklearn_pipeline_parallel(self) -> None:
-        """Test if the pipeline can be used in a sklearn pipeline.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the pipeline can be used in a sklearn pipeline."""
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
@@ -115,12 +100,7 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(pred_val, true_val)
 
     def test_salt_removal(self) -> None:
-        """Test if salts are correctly removed from molecules.
-
-        Returns
-        -------
-        None
-        """
+        """Test if salts are correctly removed from molecules."""
         smiles_with_salt_list = ["CCO-[Na]", "CCC(=O)[O-].[Li+]", "CCC(=O)-O-[K]"]
         smiles_without_salt_list = ["CCO", "CCC(=O)O", "CCC(=O)O"]
 
@@ -148,13 +128,7 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(generated_smiles, smiles_without_salt)
 
     def test_json_generation(self) -> None:
-        """Test that the json representation of a pipeline can be loaded back into a pipeline.
-
-        Returns
-        -------
-        None
-        """
-
+        """Test that the json representation of a pipeline can be loaded back into a pipeline."""
         # Create pipeline
         smi2mol = SmilesToMol()
         metal_disconnector = MetalDisconnector()
@@ -193,14 +167,10 @@ class PipelineTest(unittest.TestCase):
                 if isinstance(value, BaseEstimator):
                     self.assertEqual(type(value), type(original_params[key]))
                 else:
-                    self.assertEqual(loaded_params[key], original_params[key])
+                    self.assertEqual(value, original_params[key])
 
     def test_fit_transform_record_remove_nones(self) -> None:
-        """Test if the generation of the fingerprint matrix works as expected.
-        Returns
-        -------
-        None
-        """
+        """Test if the generation of the fingerprint matrix works as expected."""
         smi2mol = SmilesToMol()
         salt_remover = SaltRemover()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
@@ -226,7 +196,6 @@ class PipelineTest(unittest.TestCase):
 
     def test_caching(self) -> None:
         """Test if the caching gives the same results and is faster on the second run."""
-
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20
         )
@@ -234,7 +203,6 @@ class PipelineTest(unittest.TestCase):
         for cache_activated in [False, True]:
             pipeline = get_exec_counted_rf_regressor(_RANDOM_STATE)
             with tempfile.TemporaryDirectory() as temp_dir:
-
                 if cache_activated:
                     cache_dir = Path(temp_dir) / ".cache"
                     mem = Memory(location=cache_dir, verbose=0)
@@ -282,7 +250,6 @@ class PipelineCompatibilityTest(unittest.TestCase):
 
     def test_gridsearchcv(self) -> None:
         """Test if the MolPipeline can be used in sklearn's GridSearchCV."""
-
         descriptor_elements_to_test: list[dict[str, Any]] = [
             {
                 "name": "morgan",
@@ -302,7 +269,6 @@ class PipelineCompatibilityTest(unittest.TestCase):
         ]
 
         for test_data_dict in descriptor_elements_to_test:
-
             name = test_data_dict["name"]
             element = test_data_dict["element"]
             param_grid = test_data_dict["param_grid"]

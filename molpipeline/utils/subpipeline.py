@@ -344,6 +344,15 @@ class SubpipelineExtractor:
         second_offset : int
             The offset to apply to the second element.
 
+        Raises
+        ------
+        ValueError
+            If the first element is not found in the pipeline.
+        ValueError
+            If the second element is not found in the pipeline.
+        ValueError
+            If the second element is before the first element.
+
         Returns
         -------
         Pipeline | None

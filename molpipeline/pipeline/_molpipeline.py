@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Union
+from collections.abc import Iterable
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -53,9 +54,6 @@ class _MolPipeline:
         name: str
             Name of pipeline.
 
-        Returns
-        -------
-        None
         """
         self._element_list = element_list
         self.n_jobs = n_jobs
@@ -81,7 +79,7 @@ class _MolPipeline:
     @property
     def _transforming_elements(
         self,
-    ) -> list[Union[TransformingPipelineElement, _MolPipeline]]:
+    ) -> list[TransformingPipelineElement | _MolPipeline]:
         """Get the elements which transform the input."""
         return [
             element
@@ -104,9 +102,6 @@ class _MolPipeline:
             Number of cores requested for transformation steps.
             If fewer cores than requested are available, the number of cores is set to maximum available.
 
-        Returns
-        -------
-        None
         """
         self._n_jobs = check_available_cores(requested_jobs)
 
@@ -124,9 +119,6 @@ class _MolPipeline:
         parameter_dict: dict[str, Any]
             Dictionary containing the parameter names and corresponding values to be set.
 
-        Returns
-        -------
-        None
         """
         self.set_params(**parameter_dict)
 
@@ -188,15 +180,15 @@ class _MolPipeline:
 
     def _get_meta_element_list(
         self,
-    ) -> list[Union[ABCPipelineElement, _MolPipeline]]:
+    ) -> list[ABCPipelineElement | _MolPipeline]:
         """Merge elements which do not require fitting to a meta element which improves parallelization.
 
         Returns
         -------
-        list[Union[ABCPipelineElement, _MolPipeline]]
+        list[ABCPipelineElement | _MolPipeline]
             List of pipeline elements and meta elements.
         """
-        meta_element_list: list[Union[ABCPipelineElement, _MolPipeline]] = []
+        meta_element_list: list[ABCPipelineElement | _MolPipeline] = []
         no_fit_element_list: list[ABCPipelineElement] = []
         for element in self._element_list:
             if (
@@ -265,6 +257,12 @@ class _MolPipeline:
             Optional label of input. Only for SKlearn compatibility.
         fit_params: Any
             Parameters. Only for SKlearn compatibility.
+
+        Raises
+        ------
+        AssertionError
+            If a subpipeline requires fitting, which by definition should not be the
+            case.
 
         Returns
         -------
@@ -404,10 +402,11 @@ class _MolPipeline:
         x_input: Any
             Molecular representations which are subsequently transformed.
 
-        Returns
-        -------
+        Yields
+        ------
         Any
             Transformed molecular representations.
+
         """
         agg_filter = self._filter_elements_agg
         for filter_element in self._filter_elements:

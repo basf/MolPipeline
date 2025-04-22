@@ -114,22 +114,28 @@ DEFAULT_TRAINER = pl.Trainer(
 )
 
 
-def get_regression_pipeline() -> Pipeline:
+def get_regression_pipeline(n_tasks: int = 1) -> Pipeline:
     """Get the Chemprop model pipeline for regression.
+
+    Parameters
+    ----------
+    n_tasks : int
+        The number of tasks for model initialization, i.e. number of target variables.
 
     Returns
     -------
     Pipeline
         The Chemprop model pipeline for regression.
     """
-
     smiles2mol = SmilesToMol()
     mol2chemprop = MolToChemprop()
     error_filter = ErrorFilter(filter_everything=True)
     filter_reinserter = FilterReinserter.from_error_filter(
         error_filter, fill_value=np.nan
     )
-    chemprop_model = ChempropRegressor(lightning_trainer=DEFAULT_TRAINER)
+    chemprop_model = ChempropRegressor(
+        lightning_trainer=DEFAULT_TRAINER, n_tasks=n_tasks
+    )
     model_pipeline = Pipeline(
         steps=[
             ("smiles2mol", smiles2mol),
@@ -319,7 +325,6 @@ class TestRegressionPipeline(unittest.TestCase):
 
     def test_prediction(self) -> None:
         """Test the prediction of the regression model."""
-
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
         )
@@ -341,6 +346,47 @@ class TestRegressionPipeline(unittest.TestCase):
             [molecule_net_logd_df["smiles"].iloc[0]]
         )
         self.assertEqual(single_mol_pred.shape, (1,))
+
+
+class TestMultiRegressionPipeline(unittest.TestCase):
+    """Test the Chemprop model pipeline for multi-target/multiple regression."""
+
+    def test_prediction(self) -> None:
+        """Test the prediction of the multiple regression model."""
+        molecule_net_logd_df = pd.read_csv(
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
+        )
+
+        # add another target col with gaussian noise
+        rng = np.random.default_rng(seed=123)
+        molecule_net_logd_df["exp2"] = molecule_net_logd_df["exp"] + rng.normal(
+            loc=0.0, scale=1.0, size=molecule_net_logd_df.shape[0]
+        )
+        target_cols = ["exp", "exp2"]
+
+        regression_model = get_regression_pipeline(n_tasks=len(target_cols))
+        regression_model.fit(
+            molecule_net_logd_df["smiles"],
+            molecule_net_logd_df[target_cols].to_numpy(),
+        )
+        pred = regression_model.predict(molecule_net_logd_df["smiles"])
+        self.assertEqual(
+            pred.shape,
+            (
+                len(molecule_net_logd_df),
+                len(target_cols),
+            ),
+        )
+
+        model_copy = joblib_dump_load(regression_model)
+        pred_copy = model_copy.predict(molecule_net_logd_df["smiles"])
+        self.assertTrue(np.allclose(pred, pred_copy))
+
+        # Test single prediction, this was causing an error before
+        single_mol_pred = regression_model.predict(
+            [molecule_net_logd_df["smiles"].iloc[0]]
+        )
+        self.assertEqual(single_mol_pred.shape, (1, len(target_cols)))
 
 
 class TestClassificationPipeline(unittest.TestCase):
@@ -431,7 +477,6 @@ class TestMulticlassClassificationPipeline(unittest.TestCase):
 
     def test_prediction(self) -> None:
         """Test the prediction of the multiclass classification model."""
-
         test_data_df = pd.read_csv(
             TEST_DATA_DIR / "multiclass_mock.tsv", sep="\t", index_col=False
         )

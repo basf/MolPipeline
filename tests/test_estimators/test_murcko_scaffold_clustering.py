@@ -14,7 +14,7 @@ SCAFFOLD_SMILES: list[str] = [
     "c1ccccc1",
 ]
 
-SCAFFOLD_SMILES_TEST_GENERIC: list[str] = SCAFFOLD_SMILES + ["c1ncccc1"]
+SCAFFOLD_SMILES_TEST_GENERIC: list[str] = [*SCAFFOLD_SMILES, "c1ncccc1"]
 
 LINEAR_SMILES: list[str] = ["CC", "CCC", "CCCN"]
 
@@ -24,7 +24,6 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
 
     def test_murcko_scaffold_clustering_ignore(self) -> None:
         """Test Murcko scaffold clustering estimator."""
-
         for make_generic in [False, True]:
             estimator_ignore_linear: MurckoScaffoldClustering = (
                 MurckoScaffoldClustering(
@@ -57,7 +56,6 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
 
     def test_murcko_scaffold_clustering_own_cluster(self) -> None:
         """Test Murcko scaffold clustering estimator."""
-
         for make_generic in [False, True]:
             # create new estimator with "own_cluster" strategy
             estimator_cluster_linear: MurckoScaffoldClustering = (
@@ -77,7 +75,6 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
 
     def test_murcko_scaffold_clustering_generic(self) -> None:
         """Test Murcko scaffold clustering estimator with generic scaffold."""
-
         # test generic clustering makes a difference
         estimator: MurckoScaffoldClustering = MurckoScaffoldClustering(
             make_generic=True,

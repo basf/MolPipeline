@@ -5,7 +5,8 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 import abc
 import copy
 import inspect
-from typing import Any, Iterable, NamedTuple, Optional, Union
+from collections.abc import Iterable
+from typing import Any, NamedTuple, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -31,14 +32,14 @@ class InvalidInstance(NamedTuple):
         Id of the element which could not be processed.
     message: str
         Message why the element could not be processed.
-    element_name: Optional[str]
+    element_name: str | None
         Optional name of the element which could not be processed.
         The name of the pipeline element is often more descriptive than the id.
     """
 
     element_id: str
     message: str
-    element_name: Optional[str] = None
+    element_name: str | None = None
 
     def __repr__(self) -> str:
         """Return string representation of InvalidInstance.
@@ -59,19 +60,16 @@ OptionalMol = Union[RDKitMol, InvalidInstance]
 class RemovedInstance:  # pylint: disable=too-few-public-methods
     """Object which is returned by a ErrorFilter if an Invalid instance was removed."""
 
-    def __init__(self, filter_element_id: str, message: Optional[str] = None) -> None:
+    def __init__(self, filter_element_id: str, message: str | None = None) -> None:
         """Initialize RemovedInstance.
 
         Parameters
         ----------
         filter_element_id: str
             FilterElement which removed the molecule.
-        message: Optional[str]
+        message: str | None, optional
             Optional message why the molecule was removed.
 
-        Returns
-        -------
-        None
         """
         self.filter_element_id = filter_element_id
         self.message = message
@@ -96,19 +94,19 @@ class ABCPipelineElement(abc.ABC):
 
     def __init__(
         self,
-        name: Optional[str] = None,
+        name: str | None = None,
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize ABCPipelineElement.
 
         Parameters
         ----------
-        name: Optional[str], optional (default=None)
+        name: str | None, optional
             Name of PipelineElement
-        n_jobs: int
+        n_jobs: int, default=1
             Number of cores used for processing.
-        uuid: Optional[str]
+        uuid: str | None, optional
             Unique identifier of the PipelineElement.
         """
         if name is None:
@@ -162,7 +160,7 @@ class ABCPipelineElement(abc.ABC):
 
         Parameters
         ----------
-        deep: bool
+        deep: bool, default=True
             If True get a deep copy of the parameters.
 
         Returns
@@ -191,10 +189,16 @@ class ABCPipelineElement(abc.ABC):
         parameters: Any
             Parameters to be set.
 
+        Raises
+        ------
+        ValueError
+            If the parameter is not a valid parameter of the object.
+
         Returns
         -------
         Self
             Self with updated parameters.
+
         """
         for att_name, att_value in parameters.items():
             if not hasattr(self, att_name):
@@ -218,9 +222,6 @@ class ABCPipelineElement(abc.ABC):
         n_jobs: int
             Number of cores used for processing.
 
-        Returns
-        -------
-        None
         """
         self._n_jobs = check_available_cores(n_jobs)
 
@@ -328,19 +329,19 @@ class TransformingPipelineElement(ABCPipelineElement):
 
     def __init__(
         self,
-        name: Optional[str] = None,
+        name: str | None = None,
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize ABCPipelineElement.
 
         Parameters
         ----------
-        name: Optional[str], optional (default=None)
+        name: str | None, optional
             Name of PipelineElement
-        n_jobs: int
+        n_jobs: int, default=1
             Number of cores used for processing.
-        uuid: Optional[str]
+        uuid: str | None, optional
             Unique identifier of the PipelineElement.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
@@ -375,9 +376,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         parameters: Any
             Object parameters as a dictionary.
 
-        Returns
-        -------
-        None
         """
         self.set_params(**parameters)
 
