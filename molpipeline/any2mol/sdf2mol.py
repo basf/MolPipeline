@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -23,11 +23,11 @@ from molpipeline.utils.molpipeline_types import OptionalMol
 class SDFToMol(_StringToMolPipelineElement):
     """PipelineElement transforming a list of SDF strings to mol_objects."""
 
-    identifier: str | None
+    identifier: Literal["smiles"] | None
 
     def __init__(
         self,
-        identifier: str | None = "smiles",
+        identifier: Literal["smiles"] | None = "smiles",
         name: str = "SDF2Mol",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -36,7 +36,7 @@ class SDFToMol(_StringToMolPipelineElement):
 
         Parameters
         ----------
-        identifier: str | None, default='smiles'
+        identifier: Literal["smiles"] | None, default='smiles'
             Method of assigning identifiers to molecules.
             If None, no identifier is assigned.
         name: str, default='SDF2Mol'
