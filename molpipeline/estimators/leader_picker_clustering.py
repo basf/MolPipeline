@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from itertools import compress
 from numbers import Real
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -12,12 +14,6 @@ from rdkit.DataStructs import ExplicitBitVect
 from rdkit.SimDivFilters import rdSimDivPickers
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.utils._param_validation import Interval
-
-try:
-    from collections.abc import Sequence
-    from typing import Any, Self
-except ImportError:
-    from typing_extensions import Self
 
 
 class LeaderPickerClustering(ClusterMixin, BaseEstimator):

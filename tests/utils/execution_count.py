@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestRegressor

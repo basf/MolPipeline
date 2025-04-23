@@ -2,12 +2,7 @@
 
 import abc
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, Optional, TypeAlias, Union
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Literal, Optional, Self, TypeAlias, Union
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,

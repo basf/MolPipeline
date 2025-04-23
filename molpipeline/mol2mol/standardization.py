@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Union
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self, Union
 
 from rdkit import Chem
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover

@@ -5,12 +5,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 import abc
 import copy
 from collections.abc import Iterable
-from typing import Any, Literal, get_args, overload
-
-try:
-    from typing import Self, TypeAlias  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self, TypeAlias
+from typing import Any, Literal, Self, TypeAlias, get_args, overload
 
 import numpy as np
 import numpy.typing as npt

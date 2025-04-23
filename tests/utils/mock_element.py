@@ -4,14 +4,9 @@ from __future__ import annotations
 
 import copy
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,

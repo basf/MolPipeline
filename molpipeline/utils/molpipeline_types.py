@@ -4,20 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from numbers import Number
-from typing import (
-    Any,
-    Literal,
-    Optional,
-    Protocol,
-    TypeAlias,
-    TypeVar,
-    Union,
-)
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Literal, Optional, Protocol, Self, TypeAlias, TypeVar, Union
 
 import numpy as np
 import numpy.typing as npt

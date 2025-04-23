@@ -3,13 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, Callable, Literal, Union
-
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
-
+from typing import Any, Callable, Literal, Self, Union
 
 import numpy as np
 import numpy.typing as npt
