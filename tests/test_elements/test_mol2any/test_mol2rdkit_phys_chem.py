@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
@@ -248,50 +247,18 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         expected_df = pd.read_csv(data_path, sep="\t")
         descriptor_names = expected_df.drop(columns=["smiles"]).columns.tolist()
         smi2mol = SmilesToMol()
-        property_element = MolToRDKitPhysChem(
-            standardizer=None, descriptor_list=descriptor_names
-        )
+        property_element = MolToRDKitPhysChem(descriptor_list=descriptor_names)
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
                 ("property_element", property_element),
-            ]
+            ],
         )
         smiles = expected_df["smiles"].tolist()
-        property_vector = expected_df[descriptor_names].values
+        property_vector = expected_df[descriptor_names].to_numpy()
 
         output = pipeline.fit_transform(smiles)
         self.assertTrue(np.allclose(output, property_vector))  # add assertion here
-
-    def test_descriptor_normalization(self) -> None:
-        """Test if the normalization of RDKitPhysChem Descriptors works as expected."""
-        smi2mol = SmilesToMol()
-        property_element = MolToRDKitPhysChem(standardizer=StandardScaler())
-        pipeline = Pipeline(
-            [
-                ("smi2mol", smi2mol),
-                ("property_element", property_element),
-            ]
-        )
-        # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
-        smiles = [
-            "CC",
-            "CCC",
-            "CCCO",
-            "CCNCO",
-            "C(C)CCO",
-            "CCO",
-            "CCCN",
-            "CCCC",
-            "CCOC",
-            "COO",
-        ]
-        output = pipeline.fit_transform(smiles)
-        non_zero_descriptors = output[:, (np.abs(output).sum(axis=0) != 0)]
-        self.assertTrue(
-            np.allclose(non_zero_descriptors.mean(axis=0), 0.0)
-        )  # add assertion here
-        self.assertTrue(np.allclose(non_zero_descriptors.std(axis=0), 1.0))
 
     def test_optional_nan_value_handling(self) -> None:
         """Test the handling of partly failed descriptor calculations."""
@@ -304,45 +271,44 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         ]
 
         # test with return_with_errors=False
-        property_element = MolToRDKitPhysChem(
-            standardizer=None, return_with_errors=False
-        )
+        property_element = MolToRDKitPhysChem(return_with_errors=False)
 
         error_filter = ErrorFilter.from_element_list([property_element])
         error_replacer = FilterReinserter.from_error_filter(
-            error_filter, fill_value=np.nan
+            error_filter,
+            fill_value=np.nan,
         )
 
-        # note that we need the error filter and replacer here. Otherwise, the pipeline would fail on any error
-        # irrespective of the return_with_errors parameter
+        # note that we need the error filter and replacer here.
+        # Otherwise, the pipeline would fail on any error irrespective of the
+        # return_with_errors parameter
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
                 ("property_element", property_element),
                 ("error_filter", error_filter),
                 ("error_replacer", error_replacer),
-            ]
+            ],
         )
 
         output = pipeline.fit_transform(bad_smiles_list + ok_smiles_list)
         self.assertEqual(len(output), len(bad_smiles_list + ok_smiles_list))
         # check expect-to-fail rows are ALL nan values
         self.assertTrue(
-            np.equal(np.isnan(output).all(axis=1), [True, False, False]).all()
+            np.equal(np.isnan(output).all(axis=1), [True, False, False]).all(),
         )
         # check expected-not-to-fail rows contain zero nan values
         self.assertTrue(
-            np.equal(np.isnan(output).any(axis=1), [True, False, False]).all()
+            np.equal(np.isnan(output).any(axis=1), [True, False, False]).all(),
         )
 
         # test with return_with_errors=True
-        property_element2 = MolToRDKitPhysChem(
-            standardizer=None, return_with_errors=True
-        )
+        property_element2 = MolToRDKitPhysChem(return_with_errors=True)
 
         error_filter2 = ErrorFilter.from_element_list([property_element2])
         filter_reinserter = FilterReinserter.from_error_filter(
-            error_filter2, fill_value=np.nan
+            error_filter2,
+            fill_value=np.nan,
         )
         pipeline2 = Pipeline(
             [
@@ -350,18 +316,18 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
                 ("property_element", property_element2),
                 ("error_filter", error_filter2),
                 ("error_replacer", filter_reinserter),
-            ]
+            ],
         )
 
         output2 = pipeline2.fit_transform(bad_smiles_list + ok_smiles_list)
         self.assertEqual(len(output2), len(bad_smiles_list + ok_smiles_list))
         # check expect-to-fail rows are ALL nan values
         self.assertTrue(
-            np.equal(np.isnan(output2).all(axis=1), [False, False, False]).all()
+            np.equal(np.isnan(output2).all(axis=1), [False, False, False]).all(),
         )
         # check expected-not-to-fail rows contain zero nan values
         self.assertTrue(
-            np.equal(np.isnan(output2).any(axis=1), [True, False, False]).all()
+            np.equal(np.isnan(output2).any(axis=1), [True, False, False]).all(),
         )
 
     def test_unknown_descriptor_name(self) -> None:
@@ -369,7 +335,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         self.assertRaises(
             ValueError,
             MolToRDKitPhysChem,
-            **{"descriptor_list": ["__NotADescriptor11Name:)"]},
+            descriptor_list=["__NotADescriptor11Name:)"],
         )
 
     def test_exception_handling(self) -> None:
@@ -380,13 +346,15 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
                 (
                     "property_element",
                     MolToRDKitPhysChem(
-                        standardizer=None, return_with_errors=True, log_exceptions=False
+                        return_with_errors=True,
+                        log_exceptions=False,
                     ),
                 ),
-            ]
+            ],
         )
 
-        # Without exception handling [HH] would raise a division-by-zero exception because it has 0 heavy atoms
+        # Without exception handling [HH] would raise a division-by-zero exception
+        # because it has 0 heavy atoms
         output = pipeline.fit_transform(["[HH]"])
         self.assertTrue(output.shape == (1, len(DEFAULT_DESCRIPTORS)))
 
@@ -395,7 +363,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             MolToRDKitPhysChem(descriptor_list=[])
         self.assertTrue(
-            str(context.exception).startswith("Empty descriptor_list is not allowed")
+            str(context.exception).startswith("Empty descriptor_list is not allowed"),
         )
 
 

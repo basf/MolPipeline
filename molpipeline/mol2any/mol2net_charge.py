@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -13,17 +13,21 @@ except ImportError:
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
-from sklearn.preprocessing import StandardScaler
+from rdkit.Chem import rdPartialCharges
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
+
+if TYPE_CHECKING:
+    from molpipeline.utils.molpipeline_types import RDKitMol
 
 # Methods to compute the net charge of a molecule.
-# - "formal_charge" uses the formal charges of the atoms with rdkit.Chem.rdmolops.GetFormalCharge
-# - "gasteiger" uses the Gasteiger charges of the atoms with rdkit.Chem.rdPartialCharges.ComputeGasteigerCharges
+# - "formal_charge" uses the formal charges of the atoms
+#   - uses rdkit.Chem.rdmolops.GetFormalCharge
+# - "gasteiger" uses the Gasteiger charges of the atoms with
+#   - uses rdkit.Chem.rdPartialCharges.ComputeGasteigerCharges
 MolToNetChargeMethod: TypeAlias = Literal["formal_charge", "gasteiger"]
 
 
@@ -33,7 +37,6 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
     def __init__(
         self,
         charge_method: MolToNetChargeMethod = "formal_charge",
-        standardizer: AnyTransformer | None = StandardScaler(),
         name: str = "MolToNetCharge",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -43,24 +46,23 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         Parameters
         ----------
         charge_method: MolToNetChargeMethod, optional (default="formal_charge")
-            Policy how to compute the net charge of a molecule. Can be "formal_charge" which uses sum
-            of the formal charges assigned to each atom. "gasteiger" computes the Gasteiger partial
-            charges and returns the rounded sum over the atoms.
-        standardizer: AnyTransformer, optional
-            Standardizer to use, by default StandardScaler()
+            Policy how to compute the net charge of a molecule.
+            "formal_charge" uses sum of the formal charges assigned to each atom.
+            "gasteiger" computes the Gasteiger partial charges and returns the rounded
+            sum over the atoms.
         name: str, optional
             Name of the pipeline element, by default "MolToNetCharge"
         n_jobs: int, optional
             Number of jobs to run in parallel, by default 1
         uuid: str, optional
             UUID of the pipeline element, by default None
+
         """
         self._descriptor_list = ["NetCharge"]
         self._feature_names = self._descriptor_list
         self._charge_method = charge_method
         # pylint: disable=R0801
         super().__init__(
-            standardizer=standardizer,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
@@ -77,7 +79,8 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         return self._descriptor_list[:]
 
     def _get_net_charge_gasteiger(
-        self, value: RDKitMol
+        self,
+        value: RDKitMol,
     ) -> npt.NDArray[np.float64] | InvalidInstance:
         """Transform a single molecule to it's net charge using Gasteiger charges.
 
@@ -92,21 +95,22 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         -------
         Optional[npt.NDArray[np.float64]]
             Net charge of the given molecule.
+
         """
         # copy molecule since ComputeGasteigerCharges modifies the molecule inplace
         value_copy = Chem.Mol(value)
-        Chem.rdPartialCharges.ComputeGasteigerCharges(value_copy)
+        rdPartialCharges.ComputeGasteigerCharges(value_copy)
         atoms_contributions = np.array(
-            [atom.GetDoubleProp("_GasteigerCharge") for atom in value_copy.GetAtoms()]
+            [atom.GetDoubleProp("_GasteigerCharge") for atom in value_copy.GetAtoms()],
         )
         if np.any(np.isnan(atoms_contributions)):
             return InvalidInstance(self.uuid, "NaN in Gasteiger charges", self.name)
         # sum up the charges and round to the nearest integer.
-        net_charge = np.round(np.sum(atoms_contributions, keepdims=True))
-        return net_charge
+        return np.round(np.sum(atoms_contributions, keepdims=True))
 
     def pretransform_single(
-        self, value: RDKitMol
+        self,
+        value: RDKitMol,
     ) -> npt.NDArray[np.float64] | InvalidInstance:
         """Transform a single molecule to it's net charge.
 
@@ -144,6 +148,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         -------
         dict[str, Any]
             Parameter of the pipeline element.
+
         """
         parent_dict = dict(super().get_params(deep=deep))
         if deep:
@@ -164,6 +169,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         -------
         Self
             Self
+
         """
         parameters_shallow_copy = dict(parameters)
         charge_policy = parameters_shallow_copy.pop("charge_policy", None)
