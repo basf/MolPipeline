@@ -5,7 +5,6 @@ from __future__ import annotations
 import abc
 from collections.abc import Callable
 from typing import Any
-from typing_extensions import override
 
 import numpy as np
 import numpy.typing as npt
@@ -13,6 +12,7 @@ import pandas as pd
 import shap
 from scipy.sparse import issparse, spmatrix
 from sklearn.base import BaseEstimator
+from typing_extensions import override
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance, OptionalMol
