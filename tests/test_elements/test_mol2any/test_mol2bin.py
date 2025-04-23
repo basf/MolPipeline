@@ -56,7 +56,9 @@ class TestMol2Binary(unittest.TestCase):
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
                 for smiles_mol, original_mol in zip(
-                    actual_mols, expected_mols, strict=True,
+                    actual_mols,
+                    expected_mols,
+                    strict=True,
                 )
             ),
         )

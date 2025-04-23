@@ -152,7 +152,9 @@ class Pipeline(_Pipeline):
         _ = self._post_processing_steps()
 
     def _iter(
-        self, with_final: bool = True, filter_passthrough: bool = True,
+        self,
+        with_final: bool = True,
+        filter_passthrough: bool = True,
     ) -> Iterable[_AggregatedPipelineStep]:
         """Iterate over all non post-processing steps.
 
@@ -185,7 +187,9 @@ class Pipeline(_Pipeline):
             if last_element is None:
                 last_element = step
                 continue
-            if not filter_passthrough or (step[2] is not None and step[2] != "passthrough"):
+            if not filter_passthrough or (
+                step[2] is not None and step[2] != "passthrough"
+            ):
                 yield last_element
             last_element = step
 
@@ -381,7 +385,8 @@ class Pipeline(_Pipeline):
             if hasattr(transform, "transform"):
                 if do_routing:
                     iter_input = transform.transform(  # type: ignore[call-arg]
-                        iter_input, routed_params[name].transform,
+                        iter_input,
+                        routed_params[name].transform,
                     )
                 else:
                     iter_input = transform.transform(iter_input)
@@ -610,12 +615,15 @@ class Pipeline(_Pipeline):
                 ]
                 if hasattr(last_step, "fit_transform"):
                     iter_input = last_step.fit_transform(
-                        iter_input, iter_label, **last_step_params["fit_transform"],
+                        iter_input,
+                        iter_label,
+                        **last_step_params["fit_transform"],
                     )
                 elif hasattr(last_step, "transform") and hasattr(last_step, "fit"):
                     last_step.fit(iter_input, iter_label, **last_step_params["fit"])
                     iter_input = last_step.transform(
-                        iter_input, **last_step_params["transform"],
+                        iter_input,
+                        **last_step_params["transform"],
                     )
                 else:
                     raise TypeError(
@@ -743,7 +751,9 @@ class Pipeline(_Pipeline):
                 y_pred = []
             elif hasattr(self._final_estimator, "fit_predict"):
                 y_pred = self._final_estimator.fit_predict(
-                    iter_input, iter_label, **params_last_step.get("fit_predict", {}),
+                    iter_input,
+                    iter_label,
+                    **params_last_step.get("fit_predict", {}),
                 )
             else:
                 raise AssertionError(
@@ -824,7 +834,8 @@ class Pipeline(_Pipeline):
 
         """
         return self._final_estimator == "passthrough" or hasattr(
-            self._final_estimator, "transform",
+            self._final_estimator,
+            "transform",
         )
 
     @available_if(_can_transform)
@@ -872,7 +883,8 @@ class Pipeline(_Pipeline):
                 break
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(
-                    iter_input, **routed_params[name].transform,
+                    iter_input,
+                    **routed_params[name].transform,
                 )
             else:
                 raise AssertionError(
@@ -919,11 +931,13 @@ class Pipeline(_Pipeline):
         elif hasattr(self._final_estimator, "decision_function"):
             if _routing_enabled():
                 iter_input = self._final_estimator.decision_function(
-                    iter_input, **routed_params[self._final_estimator].predict,
+                    iter_input,
+                    **routed_params[self._final_estimator].predict,
                 )
             else:
                 iter_input = self._final_estimator.decision_function(
-                    iter_input, **params,
+                    iter_input,
+                    **params,
                 )
         else:
             raise AssertionError(
@@ -1080,7 +1094,8 @@ class Pipeline(_Pipeline):
             method_mapping.add(caller="fit_transform", callee="fit_transform")
         else:
             method_mapping.add(caller="fit", callee="fit").add(
-                caller="fit", callee="transform",
+                caller="fit",
+                callee="transform",
             )
         (
             method_mapping.add(caller="fit", callee="fit")

@@ -177,7 +177,8 @@ class NoneTest(unittest.TestCase):
             )
             error_filter = ErrorFilter.from_element_list([mock2mock])
             error_replacer = FilterReinserter.from_error_filter(
-                error_filter=error_filter, fill_value=fill_value,
+                error_filter=error_filter,
+                fill_value=fill_value,
             )
             pipeline = Pipeline(
                 [
@@ -232,7 +233,8 @@ class NoneTest(unittest.TestCase):
         error_filter = ErrorFilter.from_element_list([mock2mock])
         fill_value: list[Any] = []
         error_replacer = FilterReinserter.from_error_filter(
-            error_filter=error_filter, fill_value=fill_value,
+            error_filter=error_filter,
+            fill_value=fill_value,
         )
         pipeline = Pipeline(
             [

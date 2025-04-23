@@ -108,7 +108,9 @@ class TestAuto2Mol(unittest.TestCase):
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
                 for smiles_mol, original_mol in zip(
-                    actual_mols, expected_mols, strict=True,
+                    actual_mols,
+                    expected_mols,
+                    strict=True,
                 )
             ),
         )
@@ -176,7 +178,9 @@ class TestAuto2Mol(unittest.TestCase):
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
                 for smiles_mol, original_mol in zip(
-                    actual_mols, expected_mols, strict=True,
+                    actual_mols,
+                    expected_mols,
+                    strict=True,
                 )
             ),
         )
@@ -220,7 +224,9 @@ class TestAuto2Mol(unittest.TestCase):
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
                 for smiles_mol, original_mol in zip(
-                    actual_mols, expected_mols, strict=True,
+                    actual_mols,
+                    expected_mols,
+                    strict=True,
                 )
             ),
         )
@@ -298,7 +304,8 @@ class TestAuto2Mol(unittest.TestCase):
         self.assertEqual(len(test_inputs), len(actual_mols))
 
         self.assertEqual(
-            Chem.MolToInchi(actual_mols[0]), Chem.MolToInchi(MOL_P86_LIGAND),
+            Chem.MolToInchi(actual_mols[0]),
+            Chem.MolToInchi(MOL_P86_LIGAND),
         )
         self.assertTrue(isinstance(actual_mols[1], InvalidInstance))
         self.assertEqual(Chem.MolToInchi(actual_mols[2]), Chem.MolToInchi(MOL_BENZENE))
@@ -330,7 +337,8 @@ class TestAuto2Mol(unittest.TestCase):
         self.assertEqual(Chem.MolToInchi(actual_mols[1]), Chem.MolToInchi(MOL_BENZENE))
         self.assertTrue(isinstance(actual_mols[2], InvalidInstance))
         self.assertEqual(
-            Chem.MolToInchi(actual_mols[3]), Chem.MolToInchi(MOL_CHLOROBENZENE),
+            Chem.MolToInchi(actual_mols[3]),
+            Chem.MolToInchi(MOL_CHLOROBENZENE),
         )
         del log_block
 

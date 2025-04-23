@@ -91,7 +91,9 @@ class Grid2D(abc.ABC):
         return x_coord, y_coord
 
     def grid_field_lim(
-        self, x_idx: int, y_idx: int,
+        self,
+        x_idx: int,
+        y_idx: int,
     ) -> tuple[tuple[float, float], tuple[float, float]]:
         """Get x and y coordinates for the upper left and lower right position of specified pixel.
 
@@ -191,7 +193,8 @@ class ValueGrid(Grid2D):
         self.values = np.zeros((self.x_res, self.y_res))
 
     def add_function(
-        self, function: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],
+        self,
+        function: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],
     ) -> None:
         """Add a function to the grid which is evaluated for each cell.
 

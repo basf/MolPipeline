@@ -72,11 +72,13 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
     def __init__(
         self,
-        filter_elements: Mapping[
-            Any,
-            FloatCountRange | IntCountRange | IntOrIntCountRange,
-        ]
-        | Sequence[Any],
+        filter_elements: (
+            Mapping[
+                Any,
+                FloatCountRange | IntCountRange | IntOrIntCountRange,
+            ]
+            | Sequence[Any]
+        ),
         keep_matches: bool = True,
         mode: FilterModeType = "any",
         name: str | None = None,

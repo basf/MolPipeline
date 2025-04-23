@@ -39,7 +39,8 @@ class TestGroupShuffleSplit(unittest.TestCase):
             groups = range(10)
             for split_mode in get_args(SplitModeOption):
                 split_generator = GroupShuffleSplit(
-                    train_size=train_size, split_mode=split_mode,
+                    train_size=train_size,
+                    split_mode=split_mode,
                 ).split(X, y, groups)
                 X_train, X_test = next(split_generator)  # pylint: disable=invalid-name
                 self.assertEqual(len(X_train), exp_train)
@@ -78,7 +79,10 @@ class TestGroupShuffleSplit(unittest.TestCase):
             test_size = 1.0 / 3
             for split_mode in get_args(SplitModeOption):
                 gss = GroupShuffleSplit(
-                    n_splits, test_size=test_size, random_state=0, split_mode=split_mode,
+                    n_splits,
+                    test_size=test_size,
+                    random_state=0,
+                    split_mode=split_mode,
                 )
 
                 # Make sure the repr works
@@ -113,7 +117,8 @@ class TestGroupShuffleSplit(unittest.TestCase):
                     # Fourth test:
                     # unique train and test groups are correct, +- 1 for rounding error
                     self.assertLessEqual(
-                        abs(len(l_test_unique) - round(test_size * len(l_unique))), 1,
+                        abs(len(l_test_unique) - round(test_size * len(l_unique))),
+                        1,
                     )
                     self.assertLessEqual(
                         abs(

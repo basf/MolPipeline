@@ -43,7 +43,8 @@ def remove_irrelevant_params(params: _T) -> _T:
 
 
 def compare_recursive(  # pylint: disable=too-many-return-statements
-    value_a: Any, value_b: Any,
+    value_a: Any,
+    value_b: Any,
 ) -> bool:
     """Compare two values recursively.
 

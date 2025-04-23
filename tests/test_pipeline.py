@@ -123,7 +123,9 @@ class PipelineTest(unittest.TestCase):
         )
         generated_smiles = salt_remover_pipeline.transform(smiles_with_salt_list)
         for generated_smiles, smiles_without_salt in zip(
-            generated_smiles, smiles_without_salt_list, strict=True,
+            generated_smiles,
+            smiles_without_salt_list,
+            strict=True,
         ):
             self.assertEqual(generated_smiles, smiles_without_salt)
 
@@ -156,7 +158,9 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(isinstance(loaded_pipeline, Pipeline))
         # Compare pipeline elements
         for loaded_element, original_element in zip(
-            loaded_pipeline.steps, pipeline_element_list, strict=True,
+            loaded_pipeline.steps,
+            pipeline_element_list,
+            strict=True,
         ):
             if loaded_element[1] == "passthrough":
                 self.assertEqual(loaded_element[1], original_element)
@@ -197,7 +201,9 @@ class PipelineTest(unittest.TestCase):
     def test_caching(self) -> None:
         """Test if the caching gives the same results and is faster on the second run."""
         molecule_net_logd_df = pd.read_csv(
-            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20,
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz",
+            sep="\t",
+            nrows=20,
         )
         prediction_list = []
         for cache_activated in [False, True]:
@@ -313,7 +319,9 @@ class PipelineCompatibilityTest(unittest.TestCase):
         }
         # First without caching
         data_df = pd.read_csv(
-            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20,
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz",
+            sep="\t",
+            nrows=20,
         )
         best_param_dict = {}
         prediction_dict = {}
@@ -366,7 +374,10 @@ class PipelineCompatibilityTest(unittest.TestCase):
             ],
         )
         calibrated_pipeline = CalibratedClassifierCV(
-            s_pipeline, cv=2, ensemble=True, method="isotonic",
+            s_pipeline,
+            cv=2,
+            ensemble=True,
+            method="isotonic",
         )
         calibrated_pipeline.fit(TEST_SMILES, CONTAINS_OX)
         predicted_value_array = calibrated_pipeline.predict(TEST_SMILES)
