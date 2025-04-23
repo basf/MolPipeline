@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any, Callable, Literal, Self
+from collections.abc import Callable, Sequence
+from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt

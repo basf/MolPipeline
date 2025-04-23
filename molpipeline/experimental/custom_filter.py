@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Self
+from collections.abc import Callable
+from typing import Any, Self
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,

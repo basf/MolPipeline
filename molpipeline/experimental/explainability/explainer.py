@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Callable, override
+from collections.abc import Callable
+from typing import Any, override
 
 import numpy as np
 import numpy.typing as npt
