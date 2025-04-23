@@ -227,7 +227,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                             list,
                             zip(
                                 *[name.split("__") for name in relevant_names],
-                                strict=False,
+                                strict=True,
                             ),
                         )
                         # test feature names are the same
