@@ -88,7 +88,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
         Returns
         -------
-        Optional[npt.NDArray[np.float64]]
+        npt.NDArray[np.float64] | InvalidInstance
             Net charge of the given molecule.
 
         """
