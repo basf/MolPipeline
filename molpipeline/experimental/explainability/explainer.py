@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import abc
 from collections.abc import Callable
-from typing import Any, override
+from typing import Any
+from typing_extensions import override
 
 import numpy as np
 import numpy.typing as npt
