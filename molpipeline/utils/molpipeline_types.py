@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from numbers import Number
-from typing import Any, Literal, Protocol, Self, TypeAlias, TypeVar, Union
+from typing import Any, Literal, Protocol, Self, TypeAlias, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -183,10 +183,6 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         """
 
 
-AnyElement = Union[
-    AnyTransformer,
-    AnyPredictor,
-    ABCPipelineElement,
-    Literal["passthrough"],
-]
+AnyElement = AnyTransformer | AnyPredictor | ABCPipelineElement | Literal["passthrough"]
+
 AnyStep = tuple[str, AnyElement]
