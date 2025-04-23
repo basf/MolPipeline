@@ -13,6 +13,7 @@ except ImportError:
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
+from rdkit.Chem import rdPartialCharges
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
@@ -98,7 +99,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         """
         # copy molecule since ComputeGasteigerCharges modifies the molecule inplace
         value_copy = Chem.Mol(value)
-        Chem.rdPartialCharges.ComputeGasteigerCharges(value_copy)
+        rdPartialCharges.ComputeGasteigerCharges(value_copy)
         atoms_contributions = np.array(
             [atom.GetDoubleProp("_GasteigerCharge") for atom in value_copy.GetAtoms()],
         )
