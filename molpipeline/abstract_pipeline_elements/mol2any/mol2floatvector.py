@@ -5,13 +5,16 @@ from __future__ import annotations
 import abc
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
     MolToAnyPipelineElement,
 )
 
 if TYPE_CHECKING:
-    import numpy as np
+    from collections.abc import Iterable
+
     import numpy.typing as npt
 
     from molpipeline.utils.molpipeline_types import RDKitMol
@@ -54,6 +57,25 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     def feature_names(self) -> list[str]:
         """Return a copy of the feature names."""
         return self._feature_names[:]
+
+    def assemble_output(
+        self,
+        value_list: Iterable[npt.NDArray[np.float64]],
+    ) -> npt.NDArray[np.float64]:
+        """Transform output of all transform_single operations to matrix.
+
+        Parameters
+        ----------
+        value_list: Iterable[npt.NDArray[np.float64]]
+            List of numpy arrays with calculated descriptor values of each molecule.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Matrix with descriptor values of each molecule.
+
+        """
+        return np.vstack(list(value_list))
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.
