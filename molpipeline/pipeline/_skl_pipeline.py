@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Literal, Self, TypeVar, Union
+from typing import Any, Literal, Self, TypeVar
 
 import joblib
 import numpy as np

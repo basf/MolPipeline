@@ -6,7 +6,7 @@ import abc
 import copy
 import inspect
 from collections.abc import Iterable
-from typing import Any, NamedTuple, Self, Union
+from typing import Any, NamedTuple, Self
 from uuid import uuid4
 
 from joblib import Parallel, delayed

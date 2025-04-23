@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, Callable, Literal, Self, Union
+from typing import Any, Callable, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
