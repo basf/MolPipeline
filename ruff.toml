@@ -52,6 +52,7 @@ ignore = [
     "PLR0913", # too-many-arguments
     "PGH003",  # Blanket type ignore for types
     "PLW2901", # Redefined loop variable
+    "PLR6301", # could be a function, class method, or static method (does not respect inheritance)
     "S311",  #  suspicious-non-cryptographic-random-usage
 ]
  pylint = {max-positional-args=10 }
