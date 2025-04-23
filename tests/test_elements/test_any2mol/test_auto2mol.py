@@ -68,10 +68,10 @@ class TestAuto2Mol(unittest.TestCase):
                             SmilesToMol(),
                             BinaryToMol(),
                             SDFToMol(),
-                        )
+                        ),
                     ),
                 ),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_smiles)
@@ -79,8 +79,12 @@ class TestAuto2Mol(unittest.TestCase):
         self.assertTrue(
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
-                for smiles_mol, original_mol in zip(actual_mols, expected_mols)
-            )
+                for smiles_mol, original_mol in zip(
+                    actual_mols,
+                    expected_mols,
+                    strict=True,
+                )
+            ),
         )
         del log_block
 
@@ -95,7 +99,7 @@ class TestAuto2Mol(unittest.TestCase):
                     "Auto2Mol",
                     AutoToMol(),
                 ),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_inchis)
@@ -103,8 +107,10 @@ class TestAuto2Mol(unittest.TestCase):
         self.assertTrue(
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
-                for smiles_mol, original_mol in zip(actual_mols, expected_mols)
-            )
+                for smiles_mol, original_mol in zip(
+                    actual_mols, expected_mols, strict=True,
+                )
+            ),
         )
         del log_block
 
@@ -119,10 +125,10 @@ class TestAuto2Mol(unittest.TestCase):
                             SmilesToMol(),
                             BinaryToMol(),
                             SDFToMol(),
-                        )
+                        ),
                     ),
                 ),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform([SDF_P86_B_400])
@@ -158,10 +164,10 @@ class TestAuto2Mol(unittest.TestCase):
                             SmilesToMol(),
                             BinaryToMol(),
                             SDFToMol(),
-                        )
+                        ),
                     ),
                 ),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_bin_mols)
@@ -169,8 +175,10 @@ class TestAuto2Mol(unittest.TestCase):
         self.assertTrue(
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
-                for smiles_mol, original_mol in zip(actual_mols, expected_mols)
-            )
+                for smiles_mol, original_mol in zip(
+                    actual_mols, expected_mols, strict=True,
+                )
+            ),
         )
         del log_block
 
@@ -200,10 +208,10 @@ class TestAuto2Mol(unittest.TestCase):
                             SmilesToMol(),
                             BinaryToMol(),
                             SDFToMol(),
-                        )
+                        ),
                     ),
                 ),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_mols)
@@ -211,8 +219,10 @@ class TestAuto2Mol(unittest.TestCase):
         self.assertTrue(
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
-                for smiles_mol, original_mol in zip(actual_mols, expected_mols)
-            )
+                for smiles_mol, original_mol in zip(
+                    actual_mols, expected_mols, strict=True,
+                )
+            ),
         )
         del log_block
 
@@ -244,10 +254,10 @@ class TestAuto2Mol(unittest.TestCase):
                             SmilesToMol(),
                             BinaryToMol(),
                             SDFToMol(),
-                        )
+                        ),
                     ),
                 ),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_inputs)
@@ -255,8 +265,8 @@ class TestAuto2Mol(unittest.TestCase):
         self.assertTrue(
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
-                for smiles_mol, original_mol in zip(actual_mols, test_mols)
-            )
+                for smiles_mol, original_mol in zip(actual_mols, test_mols, strict=True)
+            ),
         )
         del log_block
 
@@ -278,17 +288,17 @@ class TestAuto2Mol(unittest.TestCase):
                             SmilesToMol(),
                             BinaryToMol(),
                             SDFToMol(),
-                        )
+                        ),
                     ),
                 ),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_inputs)
         self.assertEqual(len(test_inputs), len(actual_mols))
 
         self.assertEqual(
-            Chem.MolToInchi(actual_mols[0]), Chem.MolToInchi(MOL_P86_LIGAND)
+            Chem.MolToInchi(actual_mols[0]), Chem.MolToInchi(MOL_P86_LIGAND),
         )
         self.assertTrue(isinstance(actual_mols[1], InvalidInstance))
         self.assertEqual(Chem.MolToInchi(actual_mols[2]), Chem.MolToInchi(MOL_BENZENE))
@@ -310,7 +320,7 @@ class TestAuto2Mol(unittest.TestCase):
                     "Auto2Mol",
                     AutoToMol(elements=(SmilesToMol(),)),
                 ),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_inputs)
@@ -320,7 +330,7 @@ class TestAuto2Mol(unittest.TestCase):
         self.assertEqual(Chem.MolToInchi(actual_mols[1]), Chem.MolToInchi(MOL_BENZENE))
         self.assertTrue(isinstance(actual_mols[2], InvalidInstance))
         self.assertEqual(
-            Chem.MolToInchi(actual_mols[3]), Chem.MolToInchi(MOL_CHLOROBENZENE)
+            Chem.MolToInchi(actual_mols[3]), Chem.MolToInchi(MOL_CHLOROBENZENE),
         )
         del log_block
 
@@ -339,7 +349,7 @@ class TestAuto2Mol(unittest.TestCase):
                     "Auto2Mol",
                     AutoToMol(elements=()),
                 ),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_inputs)

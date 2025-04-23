@@ -6,8 +6,7 @@ Much of the visualization code in this file originates from projects of Christia
 """
 
 import abc
-from collections.abc import Sequence
-from typing import Callable
+from collections.abc import Callable, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -85,13 +84,14 @@ class Grid2D(abc.ABC):
         -------
         tuple[float, float]
             Coordinates of center of cell.
+
         """
         x_coord = min(self.x_lim) + self.dx * (x_idx + 0.5)
         y_coord = min(self.y_lim) + self.dy * (y_idx + 0.5)
         return x_coord, y_coord
 
     def grid_field_lim(
-        self, x_idx: int, y_idx: int
+        self, x_idx: int, y_idx: int,
     ) -> tuple[tuple[float, float], tuple[float, float]]:
         """Get x and y coordinates for the upper left and lower right position of specified pixel.
 
@@ -106,6 +106,7 @@ class Grid2D(abc.ABC):
         -------
         tuple[tuple[float, float], tuple[float, float]]
             Coordinates of upper left and lower right corner of cell.
+
         """
         upper_left = (
             min(self.x_lim) + self.dx * x_idx,
@@ -140,6 +141,7 @@ class ColorGrid(Grid2D):
             Resolution (number of cells) along x-axis.
         y_res: int
             Resolution (number of cells) along y-axis.
+
         """
         super().__init__(x_lim, y_lim, x_res, y_res)
         self.color_grid = np.ones((self.x_res, self.y_res, 4))
@@ -179,6 +181,7 @@ class ValueGrid(Grid2D):
             Resolution (number of cells) along y-axis.
         function_list: list[Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]], optional
             List of functions to be evaluated for each cell, by default None.
+
         """
         super().__init__(x_lim, y_lim, x_res, y_res)
         if function_list is not None:
@@ -188,7 +191,7 @@ class ValueGrid(Grid2D):
         self.values = np.zeros((self.x_res, self.y_res))
 
     def add_function(
-        self, function: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]
+        self, function: Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],
     ) -> None:
         """Add a function to the grid which is evaluated for each cell.
 
@@ -216,10 +219,10 @@ class ValueGrid(Grid2D):
         """
         self.values = np.zeros((self.x_res, self.y_res))
         x_y0_list = np.array(
-            [self.grid_field_center(x, 0)[0] for x in range(self.x_res)]
+            [self.grid_field_center(x, 0)[0] for x in range(self.x_res)],
         )
         x0_y_list = np.array(
-            [self.grid_field_center(0, y)[1] for y in range(self.y_res)]
+            [self.grid_field_center(0, y)[1] for y in range(self.y_res)],
         )
         xv, yv = np.meshgrid(x_y0_list, x0_y_list)
         xv = xv.ravel()
@@ -231,7 +234,7 @@ class ValueGrid(Grid2D):
             if values.shape != self.values.shape:
                 raise AssertionError(
                     f"Function does not return correct shape. "
-                    f"Shape was {(values.shape, self.values.shape)}"
+                    f"Shape was {(values.shape, self.values.shape)}",
                 )
             self.values += values
 
@@ -253,6 +256,7 @@ class ValueGrid(Grid2D):
         -------
         ColorGrid
             ColorGrid with colors corresponding to ValueGrid.
+
         """
         color_grid = ColorGrid(self.x_lim, self.y_lim, self.x_res, self.y_res)
         norm = normalizer(self.values)
@@ -275,6 +279,7 @@ def get_color_normalizer_from_data(
     -------
     colors.Normalize
         Normalizer for colors.
+
     """
     abs_max = np.max(np.abs(values))
     normalizer = colors.Normalize(vmin=-abs_max, vmax=abs_max)
@@ -292,12 +297,13 @@ def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
         RDKit Draw.MolDraw2D canvas.
     color_grid: ColorGrid
         ColorGrid object to be drawn on the canvas.
+
     """
     # draw only grid points whose color is not white.
     # we check for the exact values of white (1,1,1). np.isclose returns almost the same pixels but is slightly slower.
     mask = np.where(~np.all(color_grid.color_grid[:, :, :3] == [1, 1, 1], axis=2))
 
-    for x, y in zip(*mask):
+    for x, y in zip(*mask, strict=True):
         upper_left, lower_right = color_grid.grid_field_lim(x, y)
         upper_left, lower_right = Point2D(*upper_left), Point2D(*lower_right)
         canvas.SetColour(tuple(color_grid.color_grid[x, y]))

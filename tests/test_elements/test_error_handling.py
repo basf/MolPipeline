@@ -32,7 +32,7 @@ class NoneTest(unittest.TestCase):
         mol2smi = MolToSmiles()
         remove_error = ErrorFilter.from_element_list([smi2mol, mol2smi])
         replace_error = PostPredictionWrapper(
-            FilterReinserter.from_error_filter(remove_error, fill_value=None)
+            FilterReinserter.from_error_filter(remove_error, fill_value=None),
         )
 
         pipeline = Pipeline(
@@ -41,10 +41,10 @@ class NoneTest(unittest.TestCase):
                 ("mol2smi", mol2smi),
                 ("remove_error", remove_error),
                 ("replace_error", replace_error),
-            ]
+            ],
         )
         out = pipeline.fit_transform(TEST_SMILES)
-        for pred_val, true_val in zip(out, EXPECTED_OUTPUT):
+        for pred_val, true_val in zip(out, EXPECTED_OUTPUT, strict=True):
             self.assertEqual(pred_val, true_val)
 
     def test_error_dummy_remove_record_molpipeline(self) -> None:
@@ -57,7 +57,7 @@ class NoneTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("mol2smi", mol2smi),
                 ("error_filter", error_filter),
-            ]
+            ],
         )
         out = pipeline.transform(TEST_SMILES)
         self.assertEqual(len(out), 2)
@@ -123,7 +123,7 @@ class NoneTest(unittest.TestCase):
         mol2physchem = MolToRDKitPhysChem()
         remove_none = ErrorFilter.from_element_list([smi2mol, mol2physchem])
         fill_none = PostPredictionWrapper(
-            FilterReinserter.from_error_filter(remove_none, fill_value=10)
+            FilterReinserter.from_error_filter(remove_none, fill_value=10),
         )
 
         pipeline = Pipeline(
@@ -171,13 +171,13 @@ class NoneTest(unittest.TestCase):
 
             mock2mock = MockTransformingPipelineElement(
                 invalid_values={
-                    test_values[1]
+                    test_values[1],
                 },  # replaces element at index 1 with an invalid instance
                 return_as_numpy_array=as_numpy_array,
             )
             error_filter = ErrorFilter.from_element_list([mock2mock])
             error_replacer = FilterReinserter.from_error_filter(
-                error_filter=error_filter, fill_value=fill_value
+                error_filter=error_filter, fill_value=fill_value,
             )
             pipeline = Pipeline(
                 [
@@ -232,7 +232,7 @@ class NoneTest(unittest.TestCase):
         error_filter = ErrorFilter.from_element_list([mock2mock])
         fill_value: list[Any] = []
         error_replacer = FilterReinserter.from_error_filter(
-            error_filter=error_filter, fill_value=fill_value
+            error_filter=error_filter, fill_value=fill_value,
         )
         pipeline = Pipeline(
             [
