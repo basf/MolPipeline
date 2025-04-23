@@ -6,13 +6,7 @@ import abc
 import copy
 import inspect
 from collections.abc import Iterable
-from typing import Any, NamedTuple, Union
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
+from typing import Any, NamedTuple, Self
 from uuid import uuid4
 
 from joblib import Parallel, delayed
@@ -54,7 +48,7 @@ class InvalidInstance(NamedTuple):
         )
 
 
-OptionalMol = Union[RDKitMol, InvalidInstance]
+OptionalMol = RDKitMol | InvalidInstance
 
 
 class RemovedInstance:  # pylint: disable=too-few-public-methods

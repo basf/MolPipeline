@@ -1,6 +1,6 @@
 """Test the comparison functions."""
 
-from typing import Callable
+from collections.abc import Callable
 from unittest import TestCase
 
 from molpipeline import Pipeline

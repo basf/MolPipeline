@@ -5,12 +5,7 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 import abc
 import copy
 from collections.abc import Iterable
-from typing import Any, Literal, get_args, overload
-
-try:
-    from typing import Self, TypeAlias  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self, TypeAlias
+from typing import Any, Literal, Self, TypeAlias, get_args, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -56,10 +51,11 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             rdkit.DataStructs.cDataStructs.ExplicitBitVect.
         name: str
             Name of PipelineElement.
-        n_jobs:
+        n_jobs: int, default=1
             Number of jobs.
-        uuid: Optional[str]
+        uuid: str | None, optional
             Unique identifier.
+
         """
         super().__init__(
             name=name,
@@ -80,17 +76,20 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     @overload
     def assemble_output(  # type: ignore
-        self, value_list: Iterable[npt.NDArray[np.int_]]
+        self,
+        value_list: Iterable[npt.NDArray[np.int_]],
     ) -> npt.NDArray[np.int_]: ...
 
     @overload
     def assemble_output(
-        self, value_list: Iterable[dict[int, int]]
+        self,
+        value_list: Iterable[dict[int, int]],
     ) -> sparse.csr_matrix: ...
 
     @overload
     def assemble_output(
-        self, value_list: Iterable[ExplicitBitVect]
+        self,
+        value_list: Iterable[ExplicitBitVect],
     ) -> list[ExplicitBitVect]: ...
 
     def assemble_output(
@@ -115,6 +114,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         -------
         sparse.csr_matrix | npt.NDArray[np.int_] | list[ExplicitBitVect]
             Matrix of Morgan-fingerprint features.
+
         """
         if self._return_as == "explicit_bit_vect":
             # return as list of RDkit's ExplicitBitVect
@@ -138,6 +138,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         -------
         dict[str, Any]
             Dictionary of parameter names and values.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -172,7 +173,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             if return_as not in get_args(OutputDatatype):
                 raise ValueError(
                     f"return_as has to be one of {get_args(OutputDatatype)}! "
-                    f"(Received: {return_as})"
+                    f"(Received: {return_as})",
                 )
             self._return_as = return_as
         super().set_params(**parameter_dict_copy)
@@ -190,12 +191,14 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         -------
         sparse.csr_matrix
             Sparse matrix of Morgan-fingerprint features.
+
         """
         return super().transform(values)
 
     @abc.abstractmethod
     def pretransform_single(
-        self, value: RDKitMol
+        self,
+        value: RDKitMol,
     ) -> dict[int, int] | npt.NDArray[np.int_] | ExplicitBitVect:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
@@ -208,6 +211,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         -------
         dict[int, int]
             Dictionary to encode row in matrix. Keys: column index, values: column value.
+
         """
 
 
@@ -237,6 +241,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
             Number of jobs.
         uuid: str | None, optional
             Unique identifier.
+
         """
         super().__init__(
             return_as=return_as,
@@ -254,10 +259,12 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         -------
         rdFingerprintGenerator.FingerprintGenerator64
             Fingerprint generator.
+
         """
 
     def pretransform_single(
-        self, value: RDKitMol
+        self,
+        value: RDKitMol,
     ) -> ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]:
         """Transform a single compound to a dictionary.
 
@@ -274,6 +281,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
             If return_as is "explicit_bit_vect" return ExplicitBitVect.
             If return_as is "dense" return numpy array.
             If return_as is "sparse" return dictionary with feature-position as key and count as value.
+
         """
         fingerprint_generator = self._get_fp_generator()
         if self._return_as == "dense":
@@ -306,6 +314,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         -------
         dict[str, Any]
             Dictionary of parameter names and values.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -327,6 +336,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         -------
         Self
             Copied object with updated parameters.
+
         """
         parameter_dict_copy = dict(parameters)
         counted = parameter_dict_copy.pop("counted", None)
@@ -400,7 +410,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
             self._radius = radius
         else:
             raise ValueError(
-                f"Number of bits has to be a positive integer! (Received: {radius})"
+                f"Number of bits has to be a positive integer! (Received: {radius})",
             )
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
@@ -415,6 +425,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         -------
         dict[str, Any]
             Dictionary of parameter names and values.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -440,6 +451,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         -------
         Self
             PipelineElement with updated parameters.
+
         """
         parameter_copy = dict(parameters)
         radius = parameter_copy.pop("radius", None)
@@ -477,11 +489,13 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         -------
         dict[int, list[tuple[int, int]]]
             Dictionary with mapping from bit to atom index and radius.
+
         """
         raise NotImplementedError
 
     def bit2atom_mapping(
-        self, mol_obj: RDKitMol
+        self,
+        mol_obj: RDKitMol,
     ) -> dict[int, list[CircularAtomEnvironment]]:
         """Obtain set of atoms for all features.
 
@@ -494,6 +508,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         -------
         dict[int, list[CircularAtomEnvironment]]
             Dictionary with mapping from bit to encoded AtomEnvironments (which contain atom indices).
+
         """
         bit2atom_dict = self._explain_rdmol(mol_obj)
         result_dict: dict[int, list[CircularAtomEnvironment]] = {}
