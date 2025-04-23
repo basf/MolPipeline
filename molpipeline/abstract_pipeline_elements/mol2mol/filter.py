@@ -89,8 +89,9 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
         Parameters
         ----------
-        filter_elements: Union[Mapping[Any, Union[FloatCountRange, IntCountRange,
-            IntOrIntCountRange]], Sequence[Any]]
+        filter_elements: Mapping[
+                Any, FloatCountRange | IntCountRange | IntOrIntCountRange
+            ] | Sequence[Any]
             List of filter elements. Typically can be a list of patterns or a dictionary
             with patterns as keys and an int for exact count or a tuple of minimum and
             maximum.
@@ -132,7 +133,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
         Parameters
         ----------
-        filter_elements: Union[Mapping[Any, FloatCountRange], Sequence[Any]]
+        filter_elements: Mapping[Any, FloatCountRange] | Sequence[Any]
             List of filter elements.
 
         """
@@ -283,7 +284,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
 
     Attributes
     ----------
-    filter_elements: Union[Sequence[str], Mapping[str, IntOrIntCountRange]]
+    filter_elements: Mapping[str, IntCountRange]
         List of patterns to allow in molecules.
         Alternatively, a dictionary can be passed with patterns as keys
         and an int for exact count or a tuple of minimum and maximum.
@@ -315,7 +316,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
 
         Parameters
         ----------
-        patterns: Union[list[str], Mapping[str, IntOrIntCountRange]]
+        patterns: list[str] | Mapping[str, IntOrIntCountRange]
             List of patterns.
 
         """

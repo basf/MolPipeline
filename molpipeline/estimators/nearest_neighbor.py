@@ -30,10 +30,10 @@ SklearnNativeMetrics = Literal[
     "precomputed",
 ]
 
-AllMetrics = Union[
-    SklearnNativeMetrics,
-    Callable[[Any, Any], float | npt.NDArray[np.float64] | Sequence[float]],
-]
+AllMetrics = (
+    SklearnNativeMetrics
+    | Callable[[Any, Any], float | npt.NDArray[np.float64] | Sequence[float]]
+)
 
 
 class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ancestors
@@ -63,18 +63,23 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional (default = 'auto')
             Algorithm used to compute the nearest neighbors.
         leaf_size : int, optional (default = 30)
-            Leaf size passed to BallTree or KDTree. This can affect the speed of the construction and query,
-            as well as the memory required to store the tree. The optimal value depends on the nature of the problem.
-        metric : Union[str, Callable], optional (default = 'minkowski')
+            Leaf size passed to BallTree or KDTree.
+            This can affect the speed of the construction and query, as well as the
+            memory required to store the tree.
+            The optimal value depends on the nature of the problem.
+        metric : str | Callable, default='minkowski'
             The distance metric to use for the tree.
-            The default metric is minkowski, and with p=2 is equivalent to the standard Euclidean metric.
+            The default metric is minkowski, and with p=2 is equivalent to the standard
+            Euclidean metric.
         p : int, optional (default = 2)
             Power parameter for the Minkowski metric.
         metric_params : dict, optional (default = None)
             Additional keyword arguments for the metric function.
         n_jobs : int, optional (default = None)
-            The number of parallel jobs to run for neighbors search. None means 1 unless in a joblib.parallel_backend context.
+            The number of parallel jobs to run for neighbors search.
+            None means 1 unless in a joblib.parallel_backend context.
             -1 means using all processors.
+
         """
         super().__init__(
             n_neighbors=n_neighbors,

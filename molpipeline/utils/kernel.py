@@ -62,13 +62,13 @@ def tanimoto_distance_sparse(
 
 
 def self_tanimoto_similarity(
-    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]],
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.float64]:
     """Calculate a matrix of tanimoto similarity between feature matrix a and itself.
 
     Parameters
     ----------
-    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]]
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_]
         Feature matrix.
 
     Raises
@@ -92,13 +92,13 @@ def self_tanimoto_similarity(
 
 
 def self_tanimoto_distance(
-    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]],
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.float64]:
     """Calculate a matrix of tanimoto distance between feature matrix a and itself.
 
     Parameters
     ----------
-    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]]
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_]
         Feature matrix.
 
     Returns

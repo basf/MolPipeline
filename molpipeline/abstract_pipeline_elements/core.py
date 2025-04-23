@@ -48,7 +48,7 @@ class InvalidInstance(NamedTuple):
         )
 
 
-OptionalMol = Union[RDKitMol, InvalidInstance]
+OptionalMol = RDKitMol | InvalidInstance
 
 
 class RemovedInstance:  # pylint: disable=too-few-public-methods
