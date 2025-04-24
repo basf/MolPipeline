@@ -4,29 +4,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Literal, Self, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, Self
 
-import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from sklearn.base import _fit_context, clone
+from sklearn.base import _fit_context, clone  # noqa: PLC2701
 from sklearn.pipeline import Pipeline as _Pipeline
-from sklearn.pipeline import _final_estimator_has, _fit_transform_one
-from sklearn.utils import Bunch
-from sklearn.utils._tags import Tags, get_tags
+from sklearn.pipeline import _final_estimator_has, _fit_transform_one  # noqa: PLC2701
+from sklearn.utils._tags import Tags, get_tags  # noqa: PLC2701
 from sklearn.utils.metadata_routing import (
     MetadataRouter,
     MethodMapping,
-    _routing_enabled,
+    _routing_enabled,  # noqa: PLC2701
     process_routing,
 )
 from sklearn.utils.metaestimators import available_if
 from sklearn.utils.validation import check_memory
 
-from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
+from molpipeline.abstract_pipeline_elements.core import (
+    ABCPipelineElement,
+    SingleInstanceTransformerMixin,
+)
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
 from molpipeline.pipeline._molpipeline import _MolPipeline
 from molpipeline.post_prediction import (
@@ -42,11 +42,13 @@ from molpipeline.utils.molpipeline_types import (
 )
 from molpipeline.utils.value_checks import is_empty
 
-__all__ = ["Pipeline"]
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
-# Type definitions
-_T = TypeVar("_T")
-# Cannot be moved to utils.molpipeline_types due to circular imports
+    import joblib
+    from sklearn.utils import Bunch
+
+__all__ = ["Pipeline"]
 
 
 _IndexedStep = tuple[int, str, AnyElement]
@@ -97,7 +99,7 @@ class Pipeline(_Pipeline):
             n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
         ]
         for step in self.steps:
-            if isinstance(step[1], PostPredictionWrapper):
+            if isinstance(step[1], PostPredictionWrapper):  # noqa: SIM102
                 if isinstance(step[1].wrapped_estimator, FilterReinserter):
                     error_replacer_list.append(step[1].wrapped_estimator)
         for error_replacer in error_replacer_list:
@@ -158,7 +160,8 @@ class Pipeline(_Pipeline):
     ) -> Iterable[_AggregatedPipelineStep]:
         """Iterate over all non post-processing steps.
 
-        Steps which are children of a ABCPipelineElement were aggregated to a MolPipeline.
+        Steps which are children of a ABCPipelineElement were aggregated to a
+        MolPipeline.
 
         Parameters
         ----------
@@ -197,9 +200,8 @@ class Pipeline(_Pipeline):
         if last_element is None:
             raise AssertionError("Pipeline needs to have at least one step!")
 
-        if with_final and last_element[2] is not None:
-            if last_element[2] != "passthrough":
-                yield last_element
+        if with_final and last_element[2] not in {None, "passthrough"}:
+            yield last_element
 
     @property
     def _estimator_type(self) -> Any:
@@ -208,7 +210,7 @@ class Pipeline(_Pipeline):
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
             # pylint: disable=protected-access
-            return self._final_estimator._estimator_type
+            return self._final_estimator._estimator_type  # noqa: SLF001
         return None
 
     @property
@@ -227,9 +229,9 @@ class Pipeline(_Pipeline):
         return last_element[2]
 
     # pylint: disable=too-many-locals,too-many-branches
-    def _fit(
+    def _fit(  # noqa: PLR0912
         self,
-        X: Any,
+        X: Any,  # noqa: N803
         y: Any = None,
         routed_params: dict[str, Any] | None = None,
         raw_params: dict[str, Any] | None = None,
@@ -306,7 +308,7 @@ class Pipeline(_Pipeline):
                 )
 
             # Fit or load from cache the current transformer
-            X, fitted_transformer = fit_transform_one_cached(
+            X, fitted_transformer = fit_transform_one_cached(  # noqa: N806
                 cloned_transformer,
                 X,
                 y,
@@ -341,7 +343,7 @@ class Pipeline(_Pipeline):
 
     def _transform(
         self,
-        X: Any,  # pylint: disable=invalid-name
+        X: Any,  # pylint: disable=invalid-name  # noqa: N803
         routed_params: Bunch,
     ) -> Any:
         """Transform the data, and skip final estimator.
@@ -452,6 +454,11 @@ class Pipeline(_Pipeline):
         When filter_passthrough is True, 'passthrough' and None transformers
         are filtered out.
 
+        Raises
+        ------
+        AssertionError
+            If the step is not a PipelineElement.
+
         Yields
         ------
         _AggregatedPipelineStep
@@ -459,9 +466,14 @@ class Pipeline(_Pipeline):
             transformer.
 
         """
+        aggregated_transformer_list: list[tuple[int, str, ABCPipelineElement]]
         aggregated_transformer_list = []
         for i, (name_i, step_i) in enumerate(self._non_post_processing_steps()):
-            if isinstance(step_i, ABCPipelineElement):
+            if not isinstance(step_i, ABCPipelineElement):
+                raise AssertionError(
+                    "Step is not a PipelineElement, hence cannot be aggregated.",
+                )
+            if isinstance(step_i, SingleInstanceTransformerMixin):
                 aggregated_transformer_list.append((i, name_i, step_i))
             else:
                 if aggregated_transformer_list:
@@ -493,7 +505,12 @@ class Pipeline(_Pipeline):
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False,
     )
-    def fit(self, X: Any, y: Any = None, **fit_params: Any) -> Self:
+    def fit(
+        self,
+        X: Any,  # noqa: N803
+        y: Any = None,
+        **fit_params: Any,
+    ) -> Self:
         """Fit the model.
 
         Fit all the transformers one after the other and transform the
@@ -521,10 +538,10 @@ class Pipeline(_Pipeline):
 
         """
         routed_params = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, routed_params)  # pylint: disable=invalid-name
+        xt, yt = self._fit(X, y, routed_params)
         with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
-                if is_empty(Xt):
+                if is_empty(xt):
                     logger.warning(
                         "All input rows were filtered out! Model is not fitted!",
                     )
@@ -532,7 +549,7 @@ class Pipeline(_Pipeline):
                     fit_params_last_step = routed_params[
                         self._non_post_processing_steps()[-1][0]
                     ]
-                    self._final_estimator.fit(Xt, yt, **fit_params_last_step["fit"])
+                    self._final_estimator.fit(xt, yt, **fit_params_last_step["fit"])
 
         return self
 
@@ -567,7 +584,12 @@ class Pipeline(_Pipeline):
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False,
     )
-    def fit_transform(self, X: Any, y: Any = None, **params: Any) -> Any:
+    def fit_transform(
+        self,
+        X: Any,  # noqa: N803
+        y: Any = None,
+        **params: Any,
+    ) -> Any:
         """Fit the model and transform with the final estimator.
 
         Fits all the transformers one after the other and transform the
@@ -636,7 +658,11 @@ class Pipeline(_Pipeline):
         return iter_input
 
     @available_if(_final_estimator_has("predict"))
-    def predict(self, X: Any, **params: Any) -> Any:
+    def predict(
+        self,
+        X: Any,  # noqa: N803
+        **params: Any,
+    ) -> Any:
         """Transform the data, and apply `predict` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -692,7 +718,8 @@ class Pipeline(_Pipeline):
                 iter_input = self._final_estimator.predict(iter_input, **params)
         else:
             raise AssertionError(
-                "Final estimator does not implement predict, hence this function should not be available.",
+                "Final estimator does not implement predict, "
+                "hence this function should not be available.",
             )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)
@@ -703,7 +730,12 @@ class Pipeline(_Pipeline):
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False,
     )
-    def fit_predict(self, X: Any, y: Any = None, **params: Any) -> Any:
+    def fit_predict(
+        self,
+        X: Any,  # noqa: N803
+        y: Any = None,
+        **params: Any,
+    ) -> Any:
         """Transform the data, and apply `fit_predict` with the final estimator.
 
         Call `fit_transform` of each transformer in the pipeline. The
@@ -765,7 +797,11 @@ class Pipeline(_Pipeline):
         return y_pred
 
     @available_if(_final_estimator_has("predict_proba"))
-    def predict_proba(self, X: Any, **params: Any) -> Any:
+    def predict_proba(
+        self,
+        X: Any,  # noqa: N803
+        **params: Any,
+    ) -> Any:
         """Transform the data, and apply `predict_proba` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -839,7 +875,11 @@ class Pipeline(_Pipeline):
         )
 
     @available_if(_can_transform)
-    def transform(self, X: Any, **params: Any) -> Any:
+    def transform(
+        self,
+        X: Any,  # noqa: N803
+        **params: Any,
+    ) -> Any:
         """Transform the data, and apply `transform` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -896,7 +936,11 @@ class Pipeline(_Pipeline):
         return iter_input
 
     @available_if(_can_decision_function)
-    def decision_function(self, X: Any, **params: Any) -> Any:
+    def decision_function(
+        self,
+        X: Any,  # noqa: N803
+        **params: Any,
+    ) -> Any:
         """Transform the data, and apply `decision_function` with the final estimator.
 
         Parameters
@@ -972,7 +1016,7 @@ class Pipeline(_Pipeline):
             return last_step.classes_
         raise ValueError("Last step has no classes_ attribute.")
 
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
         """Return the sklearn tags.
 
         Notes
@@ -1011,7 +1055,8 @@ class Pipeline(_Pipeline):
             pass
 
         try:
-            # Only the _final_estimator is changed from the original implementation is changed in the following 2 lines
+            # Only the _final_estimator is changed from the original implementation is
+            # changed in the following 2 lines
             if (
                 self._final_estimator is not None
                 and self._final_estimator != "passthrough"
@@ -1083,7 +1128,8 @@ class Pipeline(_Pipeline):
 
             router.add(method_mapping=method_mapping, **{name: trans})
 
-        # Only the _non_post_processing_steps is changed from the original implementation is changed in the following line
+        # Only the _non_post_processing_steps is changed from the original
+        # implementation is changed in the following line
         final_name, final_est = self._non_post_processing_steps()[-1]
         if final_est is None or final_est == "passthrough":
             return router

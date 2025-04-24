@@ -13,6 +13,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
     InvalidInstance,
     RemovedInstance,
+    SingleInstanceTransformerMixin,
     TransformingPipelineElement,
 )
 from molpipeline.error_handling import (
@@ -23,7 +24,7 @@ from molpipeline.error_handling import (
 from molpipeline.utils.multi_proc import check_available_cores
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     from molpipeline.utils.molpipeline_types import TypeFixedVarSeq
 
@@ -32,11 +33,11 @@ class _MolPipeline:
     """Contains the PipeElements which describe the functionality of the pipeline."""
 
     _n_jobs: int
-    _element_list: list[ABCPipelineElement]
+    _element_list: Sequence[ABCPipelineElement]
 
     def __init__(
         self,
-        element_list: list[ABCPipelineElement],
+        element_list: Sequence[ABCPipelineElement],
         n_jobs: int = 1,
         name: str = "MolPipeline",
     ) -> None:
@@ -151,42 +152,7 @@ class _MolPipeline:
     @property
     def element_list(self) -> list[ABCPipelineElement]:
         """Get a shallow copy from the list of pipeline elements."""
-        return self._element_list[:]  # [:] to create shallow copy.
-
-    def _get_meta_element_list(
-        self,
-    ) -> list[ABCPipelineElement | _MolPipeline]:
-        """Merge elements which do not require fitting to a meta element.
-
-        This improves the parallelization of the pipeline.
-
-        Returns
-        -------
-        list[ABCPipelineElement | _MolPipeline]
-            List of pipeline elements and meta elements.
-
-        """
-        meta_element_list: list[ABCPipelineElement | _MolPipeline] = []
-        no_fit_element_list: list[ABCPipelineElement] = []
-        for element in self._element_list:
-            if isinstance(element, TransformingPipelineElement):
-                no_fit_element_list.append(element)
-            else:
-                if len(no_fit_element_list) == 1:
-                    meta_element_list.append(no_fit_element_list[0])
-                elif len(no_fit_element_list) > 1:
-                    meta_element_list.append(
-                        _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs),
-                    )
-                no_fit_element_list = []
-                meta_element_list.append(element)
-        if len(no_fit_element_list) == 1:
-            meta_element_list.append(no_fit_element_list[0])
-        elif len(no_fit_element_list) > 1:
-            meta_element_list.append(
-                _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs),
-            )
-        return meta_element_list
+        return list(self._element_list)  # to create shallow copy.
 
     def fit(
         self,
@@ -233,6 +199,11 @@ class _MolPipeline:
         fit_params: Any
             Parameters. Only for SKlearn compatibility.
 
+        Raises
+        ------
+        AssertionError
+            If the PipelineElement is not a TransformingPipelineElement.
+
         Returns
         -------
         Any
@@ -247,9 +218,18 @@ class _MolPipeline:
         iter_idx_array = np.arange(len(iter_input))
 
         # The meta elements merge steps which do not require fitting
-        for i_element in self._get_meta_element_list():
-            if not isinstance(i_element, (TransformingPipelineElement, _MolPipeline)):
+        for i_element in self._element_list:
+            if not isinstance(
+                i_element,
+                (SingleInstanceTransformerMixin, _MolPipeline),
+            ):
                 continue
+            if isinstance(i_element, ErrorFilter):
+                continue
+            if not isinstance(i_element, TransformingPipelineElement):
+                raise AssertionError(
+                    "PipelineElement is not a TransformingPipelineElement.",
+                )
             i_element.n_jobs = self.n_jobs
             iter_input = i_element.pretransform(iter_input)
             for error_filter in self._filter_elements:
@@ -287,6 +267,11 @@ class _MolPipeline:
         input_value: Any
             Molecular representation which is subsequently transformed.
 
+        Raises
+        ------
+        AssertionError
+            If the PipelineElement is not a SingleInstanceTransformerMixin.
+
         Returns
         -------
         Any
@@ -296,6 +281,13 @@ class _MolPipeline:
         log_block = BlockLogs()
         iter_value = input_value
         for p_element in self._element_list:
+            if not isinstance(
+                p_element,
+                (SingleInstanceTransformerMixin, _MolPipeline),
+            ):
+                raise AssertionError(
+                    "PipelineElement is not a SingleInstanceTransformerMixin.",
+                )
             try:
                 if not isinstance(iter_value, RemovedInstance) or isinstance(
                     p_element,

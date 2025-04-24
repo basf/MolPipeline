@@ -6,11 +6,13 @@ from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+from loguru import logger
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
     InvalidInstance,
     RemovedInstance,
+    SingleInstanceTransformerMixin,
     TransformingPipelineElement,
 )
 
@@ -25,7 +27,7 @@ _T = TypeVar("_T")
 _S = TypeVar("_S")
 
 
-class ErrorFilter(ABCPipelineElement):
+class ErrorFilter(SingleInstanceTransformerMixin, ABCPipelineElement):
     """Filter to remove InvalidInstances from a list of values."""
 
     element_ids: set[str]
@@ -257,6 +259,9 @@ class ErrorFilter(ABCPipelineElement):
 
         """
         if self.n_total != len(values):
+            logger.error(
+                f"Expected {self.n_total} values, but got {len(values)}",
+            )
             raise ValueError("Length of values does not match length of values in fit")
         if isinstance(values, list):
             out_list = []
@@ -292,6 +297,24 @@ class ErrorFilter(ABCPipelineElement):
         return self.co_transform(values)
 
     def transform_single(self, value: Any) -> Any:
+        """Transform a single value.
+
+        Overrides parent method to not skip InvalidInstances.
+
+        Parameters
+        ----------
+        value: Any
+            Value to be transformed.
+
+        Returns
+        -------
+        Any
+            The original value or a RemovedInstance.
+
+        """
+        return self.pretransform_single(value)
+
+    def pretransform_single(self, value: Any) -> Any:
         """Transform a single value.
 
         Parameters

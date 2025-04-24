@@ -248,7 +248,7 @@ class NoneTest(unittest.TestCase):
         )
         pipeline2 = clone(pipeline)
 
-        self.assertRaises(ValueError, pipeline.fit, test_values)
+        pipeline.fit(test_values)
         self.assertRaises(ValueError, pipeline.transform, test_values)
         self.assertRaises(ValueError, pipeline2.fit_transform, test_values)
 

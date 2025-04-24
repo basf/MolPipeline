@@ -287,25 +287,6 @@ class ABCPipelineElement(abc.ABC):
 
         """
 
-    @abc.abstractmethod
-    def transform_single(self, value: Any) -> Any:
-        """Transform a single molecule to the new representation.
-
-        RemovedMolecule objects are passed without change.
-
-        Parameters
-        ----------
-        value: Any
-            Current representation of the molecule. (Eg. SMILES, RDKit Mol, ...)
-
-        Returns
-        -------
-        Any
-            New representation of the molecule.
-            (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
-
-        """
-
 
 class TransformingPipelineElement(ABCPipelineElement):
     """Ancestor of all PipelineElements."""
@@ -385,6 +366,96 @@ class TransformingPipelineElement(ABCPipelineElement):
         self.fit(values, labels)
         return self.transform(values)
 
+    def assemble_output(self, value_list: Iterable[Any]) -> Any:
+        """Aggregate rows, which in most cases is just return the list.
+
+        Some representations might be better representd as a single object.
+        For example a list of vectors can be transformed to a matrix.
+
+        Parameters
+        ----------
+        value_list: Iterable[Any]
+            Iterable of transformed rows.
+
+        Returns
+        -------
+        Any
+            Aggregated output. This can also be the original input.
+
+        """
+        return list(value_list)
+
+    @abc.abstractmethod
+    def pretransform(self, value_list: Iterable[Any]) -> list[Any]:
+        """Transform input_values according to object rules.
+
+        Parameters
+        ----------
+        value_list: Iterable[Any]
+            Iterable of instances to be pretransformed.
+
+        Returns
+        -------
+        list[Any]
+            Transformed input_values.
+
+        """
+
+    def transform(self, values: Any) -> Any:
+        """Transform input_values according to object rules.
+
+        Parameters
+        ----------
+        values: Any
+            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules,
+            PhysChem vectors etc.).
+            Input depends on the concrete PipelineElement.
+
+        Returns
+        -------
+        Any
+            Transformed input_values.
+
+        """
+        output_values = self.pretransform(values)
+        return self.assemble_output(output_values)
+
+
+class SingleInstanceTransformerMixin(abc.ABC):
+    """Mixin for single instance processing."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize SingleInstanceTransformerMixin.
+
+        Parameters
+        ----------
+        args: Any
+            Arguments for the object.
+        kwargs: Any
+            Keyword arguments for the object.
+
+        """
+        super().__init__(*args, **kwargs)
+
+    def pretransform(self, value_list: Iterable[Any]) -> list[Any]:
+        """Transform input_values according to object rules.
+
+        Parameters
+        ----------
+        value_list: Iterable[Any]
+            Iterable of instances to be pretransformed.
+
+        Returns
+        -------
+        list[Any]
+            Transformed input_values.
+
+        """
+        parallel = Parallel(n_jobs=self.n_jobs)  # type: ignore[attr-defined]
+        return parallel(
+            delayed(self.pretransform_single)(value) for value in value_list
+        )
+
     def transform_single(self, value: Any) -> Any:
         """Transform a single molecule to the new representation.
 
@@ -405,25 +476,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         if isinstance(value, InvalidInstance):
             return value
         return self.pretransform_single(value)
-
-    def assemble_output(self, value_list: Iterable[Any]) -> Any:
-        """Aggregate rows, which in most cases is just return the list.
-
-        Some representations might be better representd as a single object.
-        For example a list of vectors can be transformed to a matrix.
-
-        Parameters
-        ----------
-        value_list: Iterable[Any]
-            Iterable of transformed rows.
-
-        Returns
-        -------
-        Any
-            Aggregated output. This can also be the original input.
-
-        """
-        return list(value_list)
 
     @abc.abstractmethod
     def pretransform_single(self, value: Any) -> Any:
@@ -446,46 +498,12 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
 
-    def pretransform(self, value_list: Iterable[Any]) -> list[Any]:
-        """Transform input_values according to object rules.
 
-        Parameters
-        ----------
-        value_list: Iterable[Any]
-            Iterable of instances to be pretransformed.
-
-        Returns
-        -------
-        list[Any]
-            Transformed input_values.
-
-        """
-        parallel = Parallel(n_jobs=self.n_jobs)
-        return parallel(
-            delayed(self.pretransform_single)(value) for value in value_list
-        )
-
-    def transform(self, values: Any) -> Any:
-        """Transform input_values according to object rules.
-
-        Parameters
-        ----------
-        values: Any
-            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules,
-            PhysChem vectors etc.).
-            Input depends on the concrete PipelineElement.
-
-        Returns
-        -------
-        Any
-            Transformed input_values.
-
-        """
-        output_values = self.pretransform(values)
-        return self.assemble_output(output_values)
-
-
-class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
+class MolToMolPipelineElement(
+    SingleInstanceTransformerMixin,
+    TransformingPipelineElement,
+    abc.ABC,
+):
     """Abstract PipelineElement where input and outputs are molecules."""
 
     _input_type = "RDKitMol"
@@ -558,7 +576,11 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         """
 
 
-class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
+class AnyToMolPipelineElement(
+    SingleInstanceTransformerMixin,
+    TransformingPipelineElement,
+    abc.ABC,
+):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
     _output_type = "RDKitMol"
@@ -597,7 +619,11 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         """
 
 
-class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
+class MolToAnyPipelineElement(
+    SingleInstanceTransformerMixin,
+    TransformingPipelineElement,
+    abc.ABC,
+):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
     _input_type = "RDKitMol"
