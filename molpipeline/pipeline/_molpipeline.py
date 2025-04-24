@@ -100,23 +100,6 @@ class _MolPipeline:
         """
         self._n_jobs = check_available_cores(requested_jobs)
 
-    @property
-    def parameters(self) -> dict[str, Any]:
-        """Get all parameters defining the object."""
-        return self.get_params()
-
-    @parameters.setter
-    def parameters(self, parameter_dict: dict[str, Any]) -> None:
-        """Set parameters of the pipeline and pipeline elements.
-
-        Parameters
-        ----------
-        parameter_dict: dict[str, Any]
-            Dictionary of parameter names and corresponding values to be set.
-
-        """
-        self.set_params(**parameter_dict)
-
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get all parameters defining the object.
 
