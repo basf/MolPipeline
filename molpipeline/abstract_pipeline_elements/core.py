@@ -287,6 +287,25 @@ class ABCPipelineElement(abc.ABC):
 
         """
 
+    @abc.abstractmethod
+    def transform_single(self, value: Any) -> Any:
+        """Transform a single molecule to the new representation.
+
+        RemovedMolecule objects are passed without change.
+
+        Parameters
+        ----------
+        value: Any
+            Current representation of the molecule. (Eg. SMILES, RDKit Mol, ...)
+
+        Returns
+        -------
+        Any
+            New representation of the molecule.
+            (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
+
+        """
+
 
 class TransformingPipelineElement(ABCPipelineElement):
     """Ancestor of all PipelineElements."""
