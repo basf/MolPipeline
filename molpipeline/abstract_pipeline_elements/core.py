@@ -227,8 +227,8 @@ class ABCPipelineElement(abc.ABC):
 
     def fit(
         self,
-        values: Any,  # noqa: ARG002
-        labels: Any = None,  # noqa: ARG002
+        values: Any,  # noqa: ARG002  # pylint: disable=unused-argument
+        labels: Any = None,  # noqa: ARG002  # pylint: disable=unused-argument
     ) -> Self:
         """Fit object to input_values.
 

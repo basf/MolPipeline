@@ -70,7 +70,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         self._use_feature_names_prefix = use_feature_names_prefix
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         # set element execution details
-        self._set_element_execution_details(self._element_list)
+        self._set_element_execution_details()
         # set feature names
         self._feature_names = self._create_feature_names(
             self._element_list,
@@ -160,18 +160,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             )
         return feature_names
 
-    def _set_element_execution_details(
-        self,
-        element_list: list[tuple[str, MolToAnyPipelineElement]],  # noqa: ARG002
-    ) -> None:
-        """Set output type and requires fitting for the concatenated vector.
-
-        Parameters
-        ----------
-        element_list: list[tuple[str, MolToAnyPipelineElement]]
-            List of pipeline elements.
-
-        """
+    def _set_element_execution_details(self) -> None:
+        """Set output type and requires fitting for the concatenated vector."""
         output_types = set()
         for _, element in self._element_list:
             element.n_jobs = self.n_jobs
@@ -243,7 +233,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             if len(element_list) == 0:
                 raise ValueError("element_list must contain at least one element.")
             # reset element execution details
-            self._set_element_execution_details(self._element_list)
+            self._set_element_execution_details()
         step_params: dict[str, dict[str, Any]] = {}
         step_dict = dict(self._element_list)
         to_delete_list = []
