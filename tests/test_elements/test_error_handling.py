@@ -22,6 +22,8 @@ rdlog.setLevel(RDLogger.CRITICAL)
 TEST_SMILES = ["NCCCO", "abc", "c1ccccc1"]
 EXPECTED_OUTPUT = ["NCCCO", None, "c1ccccc1"]
 
+TOLERANCE = 0.000001
+
 
 class NoneTest(unittest.TestCase):
     """Unittest for None Handling."""
@@ -95,7 +97,7 @@ class NoneTest(unittest.TestCase):
         out = pipeline.transform(TEST_SMILES)
         out2 = pipeline2.fit_transform(TEST_SMILES)
         self.assertEqual(out.shape, out2.shape)
-        self.assertTrue(np.max(np.abs(out - out2)) < 0.000001)
+        self.assertTrue(np.max(np.abs(out - out2)) < TOLERANCE)
 
     def test_dummy_remove_physchem_record_autodetect_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
@@ -108,14 +110,14 @@ class NoneTest(unittest.TestCase):
                 ("mol2physchem", mol2physchem),
                 ("remove_none", remove_none),
             ],
+            n_jobs=1,
         )
         pipeline2 = clone(pipeline)
         pipeline.fit(TEST_SMILES)
         out = pipeline.transform(TEST_SMILES)
-        print(pipeline2["remove_none"].filter_everything)
         out2 = pipeline2.fit_transform(TEST_SMILES)
         self.assertEqual(out.shape, out2.shape)
-        self.assertTrue(np.max(np.abs(out - out2)) < 0.000001)
+        self.assertTrue(np.max(np.abs(out - out2)) < TOLERANCE)
 
     def test_dummy_fill_physchem_record_molpipeline(self) -> None:
         """Assert that invalid smiles are transformed to None."""
@@ -141,7 +143,7 @@ class NoneTest(unittest.TestCase):
         out2 = pipeline2.fit_transform(TEST_SMILES)
         self.assertEqual(out.shape, out2.shape)
         self.assertEqual(out.shape, (3, 215))
-        self.assertTrue(np.nanmax(np.abs(out - out2)) < 0.000001)
+        self.assertTrue(np.nanmax(np.abs(out - out2)) < TOLERANCE)
 
     def test_replace_mixed_datatypes(self) -> None:
         """Assert that invalid values are replaced by fill value."""

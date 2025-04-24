@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -21,8 +20,12 @@ from molpipeline.error_handling import (
     FilterReinserter,
     _MultipleErrorFilter,
 )
-from molpipeline.utils.molpipeline_types import TypeFixedVarSeq
 from molpipeline.utils.multi_proc import check_available_cores
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from molpipeline.utils.molpipeline_types import TypeFixedVarSeq
 
 
 class _MolPipeline:
@@ -30,7 +33,6 @@ class _MolPipeline:
 
     _n_jobs: int
     _element_list: list[ABCPipelineElement]
-    _requires_fitting: bool
 
     def __init__(
         self,
@@ -53,9 +55,6 @@ class _MolPipeline:
         self._element_list = element_list
         self.n_jobs = n_jobs
         self.name = name
-        self._requires_fitting = any(
-            element.requires_fitting for element in self._element_list
-        )
 
     @property
     def _filter_elements(self) -> list[ErrorFilter]:
@@ -95,7 +94,8 @@ class _MolPipeline:
         ----------
         requested_jobs: int
             Number of cores requested for transformation steps.
-            If fewer cores than requested are available, the number of cores is set to maximum available.
+            If fewer cores than requested are available, the number of cores is set to
+            the maximum available.
 
         """
         self._n_jobs = check_available_cores(requested_jobs)
@@ -112,15 +112,10 @@ class _MolPipeline:
         Parameters
         ----------
         parameter_dict: dict[str, Any]
-            Dictionary containing the parameter names and corresponding values to be set.
+            Dictionary of parameter names and corresponding values to be set.
 
         """
         self.set_params(**parameter_dict)
-
-    @property
-    def requires_fitting(self) -> bool:
-        """Return whether the pipeline requires fitting."""
-        return self._requires_fitting
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get all parameters defining the object.
@@ -133,7 +128,8 @@ class _MolPipeline:
         Returns
         -------
         dict[str, Any]
-            Dictionary containing the parameter names and corresponding values.
+            Dictionary of parameter names and corresponding values.
+
         """
         if deep:
             return {
@@ -153,12 +149,13 @@ class _MolPipeline:
         Parameters
         ----------
         parameter_dict: Any
-            Dictionary containing the parameter names and corresponding values to be set.
+            Dictionary of parameter names and corresponding values to be set.
 
         Returns
         -------
         Self
             MolPipeline object with updated parameters.
+
         """
         if "element_list" in parameter_dict:
             self._element_list = parameter_dict["element_list"]
@@ -176,27 +173,27 @@ class _MolPipeline:
     def _get_meta_element_list(
         self,
     ) -> list[ABCPipelineElement | _MolPipeline]:
-        """Merge elements which do not require fitting to a meta element which improves parallelization.
+        """Merge elements which do not require fitting to a meta element.
+
+        This improves the parallelization of the pipeline.
 
         Returns
         -------
         list[ABCPipelineElement | _MolPipeline]
             List of pipeline elements and meta elements.
+
         """
         meta_element_list: list[ABCPipelineElement | _MolPipeline] = []
         no_fit_element_list: list[ABCPipelineElement] = []
         for element in self._element_list:
-            if (
-                isinstance(element, TransformingPipelineElement)
-                and not element.requires_fitting
-            ):
+            if isinstance(element, TransformingPipelineElement):
                 no_fit_element_list.append(element)
             else:
                 if len(no_fit_element_list) == 1:
                     meta_element_list.append(no_fit_element_list[0])
                 elif len(no_fit_element_list) > 1:
                     meta_element_list.append(
-                        _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs)
+                        _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs),
                     )
                 no_fit_element_list = []
                 meta_element_list.append(element)
@@ -204,7 +201,7 @@ class _MolPipeline:
             meta_element_list.append(no_fit_element_list[0])
         elif len(no_fit_element_list) > 1:
             meta_element_list.append(
-                _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs)
+                _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs),
             )
         return meta_element_list
 
@@ -229,20 +226,20 @@ class _MolPipeline:
         -------
         Self
             Fitted MolPipeline.
+
         """
         _ = y  # Making pylint happy
         _ = fit_params  # Making pylint happy
-        if self.requires_fitting:
-            self.fit_transform(x_input)
+        self.fit_transform(x_input)
         return self
 
     def fit_transform(  # pylint: disable=unused-argument
         self,
         x_input: Any,
-        y: Any = None,
-        **fit_params: dict[str, Any],
+        y: Any = None,  # noqa: ARG002
+        **fit_params: dict[str, Any],  # noqa: ARG002
     ) -> Any:
-        """Fit the MolPipeline according to x_input and return the transformed molecules.
+        """Fit to x_input and return the transformed molecules.
 
         Parameters
         ----------
@@ -253,16 +250,11 @@ class _MolPipeline:
         fit_params: Any
             Parameters. Only for SKlearn compatibility.
 
-        Raises
-        ------
-        AssertionError
-            If a subpipeline requires fitting, which by definition should not be the
-            case.
-
         Returns
         -------
         Any
             Transformed molecules.
+
         """
         iter_input = x_input
 
@@ -271,7 +263,7 @@ class _MolPipeline:
             removed_rows[error_filter] = []
         iter_idx_array = np.arange(len(iter_input))
 
-        # The meta elements merge steps which do not require fitting to improve parallelization
+        # The meta elements merge steps which do not require fitting
         for i_element in self._get_meta_element_list():
             if not isinstance(i_element, (TransformingPipelineElement, _MolPipeline)):
                 continue
@@ -283,12 +275,6 @@ class _MolPipeline:
                     idx = iter_idx_array[idx]
                     removed_rows[error_filter].append(idx)
                 iter_idx_array = error_filter.co_transform(iter_idx_array)
-            if i_element.requires_fitting:
-                if isinstance(i_element, _MolPipeline):
-                    raise AssertionError("No subpipline should require fitting!")
-                i_element.fit_to_result(iter_input)
-            if isinstance(i_element, TransformingPipelineElement):
-                iter_input = i_element.finalize_list(iter_input)
             iter_input = i_element.assemble_output(iter_input)
             i_element.n_jobs = 1
 
@@ -311,7 +297,7 @@ class _MolPipeline:
         return iter_input
 
     def transform_single(self, input_value: Any) -> Any:
-        """Transform a single input according to the sequence of provided PipelineElements.
+        """Transform a single input according to the sequence of PipelineElements.
 
         Parameters
         ----------
@@ -322,14 +308,16 @@ class _MolPipeline:
         -------
         Any
             Transformed molecular representation.
+
         """
         log_block = BlockLogs()
         iter_value = input_value
         for p_element in self._element_list:
             try:
-                if not isinstance(iter_value, RemovedInstance):
-                    iter_value = p_element.transform_single(iter_value)
-                elif isinstance(p_element, FilterReinserter):
+                if not isinstance(iter_value, RemovedInstance) or isinstance(
+                    p_element,
+                    FilterReinserter,
+                ):
                     iter_value = p_element.transform_single(iter_value)
             except MolSanitizeException as err:
                 iter_value = InvalidInstance(
@@ -341,7 +329,7 @@ class _MolPipeline:
         return iter_value
 
     def pretransform(self, x_input: Any) -> Any:
-        """Transform the input according to the sequence BUT skip the assemble output step.
+        """Transform the input according to the sequence without assemble_output step.
 
         Parameters
         ----------
@@ -352,6 +340,7 @@ class _MolPipeline:
         -------
         Any
             Transformed molecular representations.
+
         """
         return list(self._transform_iterator(x_input))
 
@@ -367,6 +356,7 @@ class _MolPipeline:
         -------
         Any
             Transformed molecular representations.
+
         """
         output_generator = self._transform_iterator(x_input)
         return self.assemble_output(output_generator)
@@ -383,6 +373,7 @@ class _MolPipeline:
         -------
         Any
             Assembled output.
+
         """
         last_element = self._transforming_elements[-1]
         if hasattr(last_element, "assemble_output"):
@@ -433,5 +424,6 @@ class _MolPipeline:
         -------
         Any
             Filtered molecular representations.
+
         """
         return self._filter_elements_agg.co_transform(x_input)
