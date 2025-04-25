@@ -19,7 +19,6 @@ class TestConnectedComponentClusteringAlgorithm(unittest.TestCase):
 
     def test_connected_components_iterative(self) -> None:
         """Test the iterative connected component clustering algorithm."""
-
         # test data: all possible fingerprints of len 3 but duplicated
         fingerprint_matrix = csr_matrix(
             [

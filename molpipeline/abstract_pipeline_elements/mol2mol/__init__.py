@@ -5,4 +5,4 @@ from molpipeline.abstract_pipeline_elements.mol2mol.filter import (
     BasePatternsFilter,
 )
 
-__all__ = ["BasePatternsFilter", "BaseKeepMatchesFilter"]
+__all__ = ["BaseKeepMatchesFilter", "BasePatternsFilter"]

@@ -7,7 +7,7 @@ Much of the visualization code in this file originates from projects of Christia
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -26,6 +26,7 @@ from molpipeline.experimental.explainability.explanation import (
 )
 from molpipeline.experimental.explainability.visualization.gauss import GaussFunctor2D
 from molpipeline.experimental.explainability.visualization.heatmaps import (
+    ColorGrid,
     ValueGrid,
     color_canvas,
     get_color_normalizer_from_data,
@@ -141,7 +142,7 @@ def _add_gaussians_for_bonds(
     bond_weights: npt.NDArray[np.float64],
     bond_width: float,
     bond_length: float,
-) -> ValueGrid:  # pylint: disable=too-many-locals
+) -> ValueGrid:
     """Add Gauss-functions centered at bonds to the grid.
 
     Parameters
@@ -196,7 +197,7 @@ def make_sum_of_gaussians_grid(
     atom_width: float = 0.3,
     bond_width: float = 0.25,
     bond_length: float = 0.5,
-) -> rdMolDraw2D:
+) -> ValueGrid:
     """Map weights of atoms and bonds to the drawing of a RDKit molecular depiction.
 
     For each atom and bond of depicted molecule a Gauss-function, centered at the respective object, is created and
@@ -225,10 +226,17 @@ def make_sum_of_gaussians_grid(
     bond_length: float
         Value for the length of displayed bond weights (along the bond-axis).
 
+    Raises
+    ------
+    ValueError
+        If the length of `atom_weights` or `bond_weights` does not match the number of
+        atoms or bonds in the molecule.
+
     Returns
     -------
-    rdMolDraw2D.MolDraw2D
-        Drawing of molecule and corresponding heatmap.
+    ValueGrid
+        ValueGrid object with added functions.
+
     """
     # assign default values and convert to numpy array
     if atom_weights is None:
@@ -287,6 +295,12 @@ def _add_shap_present_absent_features_text(
         The sum of the SHAP values for present features.
     sum_absent_shap: float
         The sum of the SHAP values for absent features.
+
+    Raises
+    ------
+    AssertionError
+        If the prediction or expected value is None.
+
     """
     if explanation.prediction is None:
         raise AssertionError("Prediction value is None.")
@@ -357,7 +371,7 @@ def _add_shap_present_absent_features_text(
     )
 
     delta = 0.05
-    offset = offset + 0.0165
+    offset += 0.0165
     fig.text(offset, 0.13, "prediction =", ha="center", fontsize=10)
     fig.text(
         offset + 2 * delta,
@@ -394,7 +408,9 @@ def _structure_heatmap(
     width: int = 600,
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
-) -> tuple[Draw.MolDraw2D, ValueGrid, ValueGrid, colors.Normalize, Colormap]:
+) -> tuple[
+    rdMolDraw2D.MolDraw2DCairo, ValueGrid, ColorGrid, colors.Normalize, Colormap
+]:
     """Create a heatmap of the molecular structure, highlighting atoms with weighted Gaussian's.
 
     Parameters
@@ -414,13 +430,13 @@ def _structure_heatmap(
 
     Returns
     -------
-    Draw.MolDraw2D, ValueGrid, ColorGrid, colors.Normalize, Colormap
+    rdMolDraw2D.MolDraw2DCairo, ValueGrid, ColorGrid, colors.Normalize, Colormap
         The configured drawer, the value grid, the color grid, the normalizer, and the
         color map.
     """
     drawer = Draw.MolDraw2DCairo(width, height)
     # Coloring atoms of element 0 to 100 black
-    drawer.drawOptions().updateAtomPalette({i: (0, 0, 0, 1) for i in range(100)})
+    drawer.drawOptions().updateAtomPalette(dict.fromkeys(range(100), (0, 0, 0, 1)))
     draw_opt = drawer.drawOptions()
     draw_opt.padding = 0.2
 
@@ -467,7 +483,9 @@ def structure_heatmap(
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
 ) -> Image.Image:
-    """Create a Gaussian plot on the molecular structure, highlight atoms with weighted Gaussians.
+    """Create a Gaussian plot on the molecular structure.
+
+    Atoms are highlighted with weighted Gaussians.
 
     Parameters
     ----------
@@ -497,14 +515,20 @@ def structure_heatmap(
     return image
 
 
-def structure_heatmap_shap(  # pylint: disable=too-many-branches, too-many-locals
+def structure_heatmap_shap(  # pylint: disable=too-many-locals
     explanation: SHAPFeatureAndAtomExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
 ) -> Image.Image:
-    """Create a heatmap of the molecular structure and display SHAP prediction composition.
+    """Create an image of the molecular structure with SHAP values.
+
+    The image is a heatmap of the molecular structure, where the colors represent the
+    SHAP values of the substructure features in which the atoms are contained. These
+    values are calculated based on the feature weights and the feature vector.
+    In addition, the expected value for the prediction, the contribution of the present
+    and absent features, and the prediction are displayed.
 
     Parameters
     ----------
@@ -519,10 +543,30 @@ def structure_heatmap_shap(  # pylint: disable=too-many-branches, too-many-local
     color_limits: tuple[float, float] | None
         The color limits.
 
+    Raises
+    ------
+    ValueError
+        If the explanation does not contain feature weights.
+    ValueError
+        If the explanation does not contain feature vector.
+    ValueError
+        If the explanation does not contain expected value.
+    ValueError
+        If the explanation does not contain prediction.
+    ValueError
+        If the explanation does not contain molecule.
+    ValueError
+        If the explanation does not contain atom weights.
+    ValueError
+        If the prediction has more than 2 dimensions.
+    ValueError
+        If the feature weights have an unsupported shape.
+
     Returns
     -------
     Image
         The image as PNG.
+
     """
     if explanation.feature_weights is None:
         raise ValueError("Explanation does not contain feature weights.")
@@ -555,7 +599,6 @@ def structure_heatmap_shap(  # pylint: disable=too-many-branches, too-many-local
     )
 
     with plt.ioff():
-
         drawer, _, _, normalizer, color_map = _structure_heatmap(
             explanation.molecule,
             explanation.atom_weights,

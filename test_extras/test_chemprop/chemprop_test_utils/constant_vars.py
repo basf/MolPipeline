@@ -1,5 +1,7 @@
 """Variables that are used in multiple tests."""
 
+from copy import deepcopy
+
 from chemprop.nn import BCELoss
 from torch import Tensor, nn
 
@@ -161,6 +163,8 @@ DEFAULT_SET_PARAMS = {
     "n_jobs": 1,
 }
 
+DEFAULT_REGRESSION_PARAMS = deepcopy(DEFAULT_BINARY_CLASSIFICATION_PARAMS)
+DEFAULT_REGRESSION_PARAMS.update({"n_tasks": 1})
 
 DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS = {
     "batch_size": 64,

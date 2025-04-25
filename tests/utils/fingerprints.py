@@ -5,8 +5,6 @@ from __future__ import annotations
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
-
-# pylint: disable=no-name-in-module
 from rdkit.Chem import rdFingerprintGenerator as rdkit_fp
 from rdkit.DataStructs import ExplicitBitVect, UIntSparseIntVect
 from scipy import sparse
@@ -36,7 +34,7 @@ def make_sparse_fp(
     vector_list = []
     morgan_fp = rdkit_fp.GetMorganGenerator(radius=radius, fpSize=n_bits)
     for smiles in smiles_list:
-        mol = Chem.MolFromSmiles(smiles)  # pylint: disable=no-member
+        mol = Chem.MolFromSmiles(smiles)
         vector = morgan_fp.GetFingerprintAsNumPy(mol)
         vector_list.append(sparse.csr_matrix(vector))
     return sparse.vstack(vector_list)
@@ -52,10 +50,16 @@ def fingerprints_to_numpy(
     fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_]
         Fingerprint matrix.
 
+    Raises
+    ------
+    ValueError
+        If the fingerprints are not in a supported format.
+
     Returns
     -------
     npt.NDArray
         Numpy fingerprint matrix.
+
     """
     if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):
         return np.array(fingerprints)

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Union
+from collections.abc import Iterable
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -41,7 +42,6 @@ class _MolPipeline:
         element_list: list[ABCPipelineElement],
         n_jobs: int = 1,
         name: str = "MolPipeline",
-        raise_nones: bool = False,
     ) -> None:
         """Initialize MolPipeline.
 
@@ -53,12 +53,7 @@ class _MolPipeline:
             Number of cores used.
         name: str
             Name of pipeline.
-        raise_nones: bool
-            If True, raise an error if a None is encountered in the pipeline.
 
-        Returns
-        -------
-        None
         """
         self._element_list = element_list
         self.n_jobs = n_jobs
@@ -66,7 +61,6 @@ class _MolPipeline:
         self._requires_fitting = any(
             element.requires_fitting for element in self._element_list
         )
-        self.raise_nones = raise_nones
 
     @property
     def _filter_elements(self) -> list[ErrorFilter]:
@@ -85,7 +79,7 @@ class _MolPipeline:
     @property
     def _transforming_elements(
         self,
-    ) -> list[Union[TransformingPipelineElement, _MolPipeline]]:
+    ) -> list[TransformingPipelineElement | _MolPipeline]:
         """Get the elements which transform the input."""
         return [
             element
@@ -108,9 +102,6 @@ class _MolPipeline:
             Number of cores requested for transformation steps.
             If fewer cores than requested are available, the number of cores is set to maximum available.
 
-        Returns
-        -------
-        None
         """
         self._n_jobs = check_available_cores(requested_jobs)
 
@@ -128,9 +119,6 @@ class _MolPipeline:
         parameter_dict: dict[str, Any]
             Dictionary containing the parameter names and corresponding values to be set.
 
-        Returns
-        -------
-        None
         """
         self.set_params(**parameter_dict)
 
@@ -157,13 +145,11 @@ class _MolPipeline:
                 "element_list": self.element_list,
                 "n_jobs": self.n_jobs,
                 "name": self.name,
-                "raise_nones": self.raise_nones,
             }
         return {
             "element_list": self._element_list,
             "n_jobs": self.n_jobs,
             "name": self.name,
-            "raise_nones": self.raise_nones,
         }
 
     def set_params(self, **parameter_dict: Any) -> Self:
@@ -185,8 +171,6 @@ class _MolPipeline:
             self.n_jobs = int(parameter_dict["n_jobs"])
         if "name" in parameter_dict:
             self.name = str(parameter_dict["name"])
-        if "raise_nones" in parameter_dict:
-            self.raise_nones = bool(parameter_dict["raise_nones"])
         return self
 
     @property
@@ -196,15 +180,15 @@ class _MolPipeline:
 
     def _get_meta_element_list(
         self,
-    ) -> list[Union[ABCPipelineElement, _MolPipeline]]:
+    ) -> list[ABCPipelineElement | _MolPipeline]:
         """Merge elements which do not require fitting to a meta element which improves parallelization.
 
         Returns
         -------
-        list[Union[ABCPipelineElement, _MolPipeline]]
+        list[ABCPipelineElement | _MolPipeline]
             List of pipeline elements and meta elements.
         """
-        meta_element_list: list[Union[ABCPipelineElement, _MolPipeline]] = []
+        meta_element_list: list[ABCPipelineElement | _MolPipeline] = []
         no_fit_element_list: list[ABCPipelineElement] = []
         for element in self._element_list:
             if (
@@ -232,7 +216,7 @@ class _MolPipeline:
     def fit(
         self,
         x_input: Any,
-        y: Any = None,  # pylint: disable=invalid-name
+        y: Any = None,
         **fit_params: dict[Any, Any],
     ) -> Self:
         """Fit the MolPipeline according to x_input.
@@ -257,7 +241,7 @@ class _MolPipeline:
             self.fit_transform(x_input)
         return self
 
-    def fit_transform(  # pylint: disable=invalid-name,unused-argument
+    def fit_transform(  # pylint: disable=unused-argument
         self,
         x_input: Any,
         y: Any = None,
@@ -273,6 +257,12 @@ class _MolPipeline:
             Optional label of input. Only for SKlearn compatibility.
         fit_params: Any
             Parameters. Only for SKlearn compatibility.
+
+        Raises
+        ------
+        AssertionError
+            If a subpipeline requires fitting, which by definition should not be the
+            case.
 
         Returns
         -------
@@ -417,10 +407,11 @@ class _MolPipeline:
         x_input: Any
             Molecular representations which are subsequently transformed.
 
-        Returns
-        -------
+        Yields
+        ------
         Any
             Transformed molecular representations.
+
         """
         agg_filter = self._filter_elements_agg
         for filter_element in self._filter_elements:

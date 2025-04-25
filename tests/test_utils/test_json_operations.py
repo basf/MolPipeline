@@ -19,34 +19,19 @@ class JsonConversionTest(unittest.TestCase):
     """Unittest for conversion of sklearn models to json and back."""
 
     def test_rf_reconstruction(self) -> None:
-        """Test if the sklearn-rf can be reconstructed from json.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the sklearn-rf can be reconstructed from json."""
         random_forest = RandomForestClassifier(n_estimators=200)
         recreated_rf = recursive_from_json(recursive_to_json(random_forest))
         self.assertEqual(random_forest.get_params(), recreated_rf.get_params())
 
     def test_svc_reconstruction(self) -> None:
-        """Test if the sklearn-svc can be reconstructed from json.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the sklearn-svc can be reconstructed from json."""
         svc = SVC()
         recreated_svc = recursive_from_json(recursive_to_json(svc))
         self.assertEqual(svc.get_params(), recreated_svc.get_params())
 
     def test_pipeline_reconstruction(self) -> None:
-        """Test if the sklearn-pipleine can be reconstructed from json.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the sklearn-pipleine can be reconstructed from json."""
         random_forest = RandomForestClassifier(n_estimators=200)
         svc = SVC()
         pipeline = Pipeline([("rf", random_forest), ("svc", svc)])
@@ -70,12 +55,7 @@ class JsonConversionTest(unittest.TestCase):
         self.assertEqual(original_params, recreated_params)
 
     def test_function_dict_json(self) -> None:
-        """Test if a dict with objects can be reconstructed from json.
-
-        Returns
-        -------
-        None
-        """
+        """Test if a dict with objects can be reconstructed from json."""
         function_dict = {
             "dummy1": {"check_available_cores": check_available_cores},
             "dummy2": str,
@@ -87,12 +67,7 @@ class JsonConversionTest(unittest.TestCase):
         self.assertEqual(function_dict, recreated_function_dict)
 
     def test_set_transformation(self) -> None:
-        """Test if a set can be reconstructed from json.
-
-        Returns
-        -------
-
-        """
+        """Test if a set can be reconstructed from json."""
         test_set = {1, "a", (1, "a")}
         test_set_json = recursive_to_json(test_set)
         recreated_set = recursive_from_json(test_set_json)

@@ -1,6 +1,7 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 try:
     from typing import Self
@@ -11,6 +12,11 @@ import numpy as np
 import numpy.typing as npt
 from loguru import logger
 from sklearn.base import clone
+from sklearn.utils._tags import (
+    ClassifierTags,
+    RegressorTags,
+    Tags,
+)
 from sklearn.utils.metaestimators import available_if
 
 try:
@@ -76,7 +82,16 @@ class ChempropModel(ABCChemprop):
 
     @property
     def classes_(self) -> npt.NDArray[np.int_]:
-        """Return the classes."""
+        """Return the classes.
+
+        Raises
+        ------
+        ValueError
+            If the model is not a classifier.
+        ValueError
+            If the classes are not set.
+
+        """
         if not self._is_classifier():
             raise ValueError("Model is not a classifier.")
         if self._classes_ is None:
@@ -124,8 +139,27 @@ class ChempropModel(ABCChemprop):
         """
         return self._is_binary_classifier() or self._is_multiclass_classifier()
 
+    def __sklearn_tags__(self) -> Tags:
+        """Return the sklearn tags.
+
+        Returns
+        -------
+        Tags
+            The sklearn tags for the model.
+        """
+        tags = super().__sklearn_tags__()
+        if self._is_classifier():
+            tags.estimator_type = "classifier"
+            tags.classifier_tags = ClassifierTags()
+        else:
+            tags.estimator_type = "regressor"
+            tags.regressor_tags = RegressorTags()
+        tags.target_tags.required = True
+        return tags
+
     def _predict(
-        self, X: MoleculeDataset  # pylint: disable=invalid-name
+        self,
+        X: MoleculeDataset,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Predict the labels.
 
@@ -133,6 +167,14 @@ class ChempropModel(ABCChemprop):
         ----------
         X : MoleculeDataset
             The input data.
+
+        Raises
+        ------
+        AssertionError
+            If the predictions do not have the same length as the input dataset.
+        ValueError
+            If the model is a binary classifier and the predictions do not have the
+            correct shape.
 
         Returns
         -------
@@ -143,7 +185,8 @@ class ChempropModel(ABCChemprop):
         test_data = build_dataloader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
         prediction_array = np.vstack(predictions)  # type: ignore
-        prediction_array = prediction_array.squeeze(axis=1)
+        if prediction_array.shape[1] == 1:
+            prediction_array = prediction_array.squeeze(axis=1)
         # Check if the predictions have the same length as the input dataset
         if prediction_array.shape[0] != len(X):
             raise AssertionError(
@@ -182,7 +225,8 @@ class ChempropModel(ABCChemprop):
         return super().fit(X, y)
 
     def predict(
-        self, X: MoleculeDataset  # pylint: disable=invalid-name
+        self,
+        X: MoleculeDataset,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Predict the output.
 
@@ -209,7 +253,8 @@ class ChempropModel(ABCChemprop):
 
     @available_if(_is_classifier)
     def predict_proba(
-        self, X: MoleculeDataset  # pylint: disable=invalid-name
+        self,
+        X: MoleculeDataset,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Predict the probabilities.
 
@@ -271,6 +316,12 @@ class ChempropClassifier(ChempropModel):
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
+
+        Raises
+        ------
+        ValueError
+            If the model's predictor is not a binary classifier.
+
         """
         if model is None:
             bond_encoder = BondMessagePassing()
@@ -295,10 +346,16 @@ class ChempropClassifier(ChempropModel):
         **params
             The parameters to set.
 
+        Raises
+        ------
+        ValueError
+            If the model's predictor is not a binary classifier.
+
         Returns
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         if not self._is_binary_classifier():
@@ -313,6 +370,7 @@ class ChempropRegressor(ChempropModel):
         self,
         model: MPNN | None = None,
         lightning_trainer: pl.Trainer | None = None,
+        n_tasks: int = 1,
         batch_size: int = 64,
         n_jobs: int = 1,
         **kwargs: Any,
@@ -325,6 +383,8 @@ class ChempropRegressor(ChempropModel):
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
             The lightning trainer to use, by default None
+        n_tasks : int
+            The number of tasks for the regressor, e.g. number of target variables.
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
@@ -336,7 +396,7 @@ class ChempropRegressor(ChempropModel):
         if model is None:
             bond_encoder = BondMessagePassing()
             agg = SumAggregation()
-            predictor = RegressionFFN()
+            predictor = RegressionFFN(n_tasks=n_tasks)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
         super().__init__(
             model=model,
@@ -345,6 +405,7 @@ class ChempropRegressor(ChempropModel):
             n_jobs=n_jobs,
             **kwargs,
         )
+        self.n_tasks = n_tasks
 
 
 class ChempropMulticlassClassifier(ChempropModel):
@@ -382,7 +443,9 @@ class ChempropMulticlassClassifier(ChempropModel):
         AttributeError
             If the passed model.predictor does not have an attribute n_classes.
         ValueError
-            If the number of classes in the predictor does not match the number of classes given as attribute.
+            If the number of classes in the predictor does not match the number of
+            classes given as attribute.
+
         """
         if model is None:
             bond_encoder = BondMessagePassing()
@@ -431,15 +494,22 @@ class ChempropMulticlassClassifier(ChempropModel):
         **params
             The parameters to set.
 
+        Raises
+        ------
+        ValueError
+            If the model's predictor or the number of classes are invalid.
+
         Returns
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         if not self._is_valid_multiclass_classifier():
             raise ValueError(
-                "The model's predictor or the number of classes are invalid. Use a multiclass predictor and more than 2 classes."
+                "The model's predictor or the number of classes are invalid. "
+                "Use a multiclass predictor and more than 2 classes."
             )
         return self
 
@@ -478,7 +548,9 @@ class ChempropMulticlassClassifier(ChempropModel):
         Raises
         ------
         ValueError
-            If the classes found in y are not matching n_classes or if the class labels do not start from 0 to n_classes-1.
+            If the classes found in y are not matching n_classes or if the class labels
+            do not start from 0 to n_classes-1.
+
         """
         unique_y = np.unique(y)
         log = []
@@ -487,18 +559,21 @@ class ChempropMulticlassClassifier(ChempropModel):
                 f"Given number of classes in init (n_classes) does not match the number of unique classes (found {unique_y}) in the target data."
             )
         if sorted(unique_y) != list(range(self.n_classes)):
-            err = f"Classes need to be in the range from 0 to {self.n_classes-1}. Found {unique_y}. Please correct the input data accordingly."
+            err = f"Classes need to be in the range from 0 to {self.n_classes - 1}. Found {unique_y}. Please correct the input data accordingly."
             log.append(err)
         if log:
             raise ValueError("\n".join(log))
 
     def _is_valid_multiclass_classifier(self) -> bool:
-        """Check if a multiclass classifier is valid. Model FFN needs to be of the correct class and model needs to have more than 2 classes.
+        """Check if a multiclass classifier is valid.
+
+        Model FFN needs to be of the correct class and model needs to have more than 2 classes.
 
         Returns
         -------
         bool
             True if is a valid multiclass classifier, False otherwise.
+
         """
         has_correct_model = isinstance(
             self.model.predictor, MulticlassClassificationFFN

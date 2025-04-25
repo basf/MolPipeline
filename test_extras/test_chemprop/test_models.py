@@ -2,7 +2,7 @@
 
 import logging
 import unittest
-from typing import Iterable
+from collections.abc import Iterable
 
 import torch
 from chemprop.nn.loss import MSELoss
@@ -24,12 +24,11 @@ from molpipeline.estimators.chemprop.models import (
 )
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
-
-# pylint: disable=relative-beyond-top-level
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
 from test_extras.test_chemprop.chemprop_test_utils.constant_vars import (
     DEFAULT_BINARY_CLASSIFICATION_PARAMS,
     DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS,
+    DEFAULT_REGRESSION_PARAMS,
     DEFAULT_SET_PARAMS,
     NO_IDENTITY_CHECK,
 )
@@ -44,7 +43,14 @@ class TestChempropModel(unittest.TestCase):
     """Test the Chemprop model."""
 
     def test_get_params(self) -> None:
-        """Test the get_params and set_params methods."""
+        """Test the get_params and set_params methods.
+
+        Raises
+        ------
+        ValueError
+            If the parameters from NO_IDENTITY_CHECK are not of the expected type.
+
+        """
         chemprop_model = get_chemprop_model_binary_classification_mpnn()
         orig_params = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_BINARY_CLASSIFICATION_PARAMS)  # Shallow copy
@@ -76,7 +82,7 @@ class TestChempropModel(unittest.TestCase):
         chemprop_model.set_params(**new_params)
         model_params = chemprop_model.get_params(deep=True)
         for param_name, param in new_params.items():
-            if param_name in ["model__agg"]:
+            if param_name in {"model__agg"}:
                 self.assertIsInstance(model_params[param_name], type(param))
                 continue
             self.assertEqual(param, model_params[param_name])
@@ -108,7 +114,14 @@ class TestChempropModel(unittest.TestCase):
         self.assertEqual(neural_fp.disable_fitting, True)
 
     def test_json_serialization(self) -> None:
-        """Test the to_json and from_json methods."""
+        """Test the to_json and from_json methods.
+
+        Raises
+        ------
+        ValueError
+            If the parameters from NO_IDENTITY_CHECK are not of the expected type.
+
+        """
         chemprop_model = get_chemprop_model_binary_classification_mpnn()
         chemprop_json = recursive_to_json(chemprop_model)
         chemprop_model_copy = recursive_from_json(chemprop_json)
@@ -139,7 +152,14 @@ class TestChempropClassifier(unittest.TestCase):
     """Test the Chemprop classifier model."""
 
     def test_get_params(self) -> None:
-        """Test the get_params and set_params methods."""
+        """Test the get_params and set_params methods.
+
+        Raises
+        ------
+        ValueError
+            If the parameters from NO_IDENTITY_CHECK are not of the expected type.
+
+        """
         chemprop_model = ChempropClassifier(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_BINARY_CLASSIFICATION_PARAMS)  # Shallow copy
@@ -172,10 +192,17 @@ class TestChempropRegressor(unittest.TestCase):
     """Test the Chemprop regressor model."""
 
     def test_get_params(self) -> None:
-        """Test the get_params and set_params methods."""
+        """Test the get_params and set_params methods.
+
+        Raises
+        ------
+        ValueError
+            If the parameters from NO_IDENTITY_CHECK are not of the expected type.
+
+        """
         chemprop_model = ChempropRegressor(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
-        expected_params = dict(DEFAULT_BINARY_CLASSIFICATION_PARAMS)
+        expected_params = dict(DEFAULT_REGRESSION_PARAMS)
         expected_params["model__predictor"] = RegressionFFN
         expected_params["model__predictor__criterion"] = MSELoss
         self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
@@ -199,7 +226,14 @@ class TestChempropMulticlassClassifier(unittest.TestCase):
     """Test the Chemprop classifier model."""
 
     def test_get_params(self) -> None:
-        """Test the get_params and set_params methods."""
+        """Test the get_params and set_params methods.
+
+        Raises
+        ------
+        ValueError
+            If the parameters from NO_IDENTITY_CHECK are not of the expected type.
+
+        """
         n_classes = 3
         chemprop_model = ChempropMulticlassClassifier(
             lightning_trainer__accelerator="cpu", n_classes=n_classes

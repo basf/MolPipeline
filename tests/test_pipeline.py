@@ -12,11 +12,12 @@ import numpy as np
 import pandas as pd
 from joblib import Memory
 from sklearn.base import BaseEstimator
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
-from molpipeline import ErrorFilter, Pipeline
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import AutoToMol, SmilesToMol
 from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from molpipeline.mol2mol import (
@@ -45,12 +46,7 @@ class PipelineTest(unittest.TestCase):
     """Unit test for the functionality of the pipeline class."""
 
     def test_fit_transform_single_core(self) -> None:
-        """Test if the generation of the fingerprint matrix works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the generation of the fingerprint matrix works as expected."""
         # Create pipeline
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
@@ -68,12 +64,7 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
     def test_sklearn_pipeline(self) -> None:
-        """Test if the pipeline can be used in a sklearn pipeline.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the pipeline can be used in a sklearn pipeline."""
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
@@ -90,12 +81,7 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(pred_val, true_val)
 
     def test_sklearn_pipeline_parallel(self) -> None:
-        """Test if the pipeline can be used in a sklearn pipeline.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the pipeline can be used in a sklearn pipeline."""
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         d_tree = DecisionTreeClassifier()
@@ -114,12 +100,7 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(pred_val, true_val)
 
     def test_salt_removal(self) -> None:
-        """Test if salts are correctly removed from molecules.
-
-        Returns
-        -------
-        None
-        """
+        """Test if salts are correctly removed from molecules."""
         smiles_with_salt_list = ["CCO-[Na]", "CCC(=O)[O-].[Li+]", "CCC(=O)-O-[K]"]
         smiles_without_salt_list = ["CCO", "CCC(=O)O", "CCC(=O)O"]
 
@@ -147,13 +128,7 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(generated_smiles, smiles_without_salt)
 
     def test_json_generation(self) -> None:
-        """Test that the json representation of a pipeline can be loaded back into a pipeline.
-
-        Returns
-        -------
-        None
-        """
-
+        """Test that the json representation of a pipeline can be loaded back into a pipeline."""
         # Create pipeline
         smi2mol = SmilesToMol()
         metal_disconnector = MetalDisconnector()
@@ -192,14 +167,10 @@ class PipelineTest(unittest.TestCase):
                 if isinstance(value, BaseEstimator):
                     self.assertEqual(type(value), type(original_params[key]))
                 else:
-                    self.assertEqual(loaded_params[key], original_params[key])
+                    self.assertEqual(value, original_params[key])
 
     def test_fit_transform_record_remove_nones(self) -> None:
-        """Test if the generation of the fingerprint matrix works as expected.
-        Returns
-        -------
-        None
-        """
+        """Test if the generation of the fingerprint matrix works as expected."""
         smi2mol = SmilesToMol()
         salt_remover = SaltRemover()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
@@ -223,69 +194,8 @@ class PipelineTest(unittest.TestCase):
         # Compare with expected output (Which is the same as the output without the faulty smiles)
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
-    def test_gridsearchcv(self) -> None:
-        """Test if the MolPipeline can be used in sklearn's GridSearchCV."""
-
-        descriptor_elements_to_test: list[dict[str, Any]] = [
-            {
-                "name": "morgan",
-                "element": MolToMorganFP(),
-                "param_grid": {"morgan__n_bits": [64, 128], "morgan__radius": [1, 2]},
-            },
-            {
-                "name": "physchem",
-                "element": MolToRDKitPhysChem(),
-                "param_grid": {
-                    "physchem__descriptor_list": [
-                        ["HeavyAtomMolWt"],
-                        ["HeavyAtomMolWt", "HeavyAtomCount"],
-                    ]
-                },
-            },
-        ]
-
-        for test_data_dict in descriptor_elements_to_test:
-
-            name = test_data_dict["name"]
-            element = test_data_dict["element"]
-            param_grid = test_data_dict["param_grid"]
-
-            # set up a pipeline that trains a random forest classifier on morgan fingerprints
-            pipeline = Pipeline(
-                [
-                    ("auto2mol", AutoToMol()),
-                    (name, element),
-                    ("estimator", RandomForestClassifier()),
-                ],
-                n_jobs=1,
-            )
-
-            # define the hyperparameter space to try out
-            grid_space = {
-                "estimator__n_estimators": [1, 5],
-                "estimator__random_state": [_RANDOM_STATE],
-            }
-            grid_space.update(param_grid)
-
-            grid_search_cv = GridSearchCV(
-                estimator=pipeline,
-                param_grid=grid_space,
-                cv=2,
-                scoring="roc_auc",
-                n_jobs=1,
-            )
-
-            grid_search_cv.fit(
-                X=TEST_SMILES,
-                y=CONTAINS_OX,
-            )
-
-            for k, value in param_grid.items():
-                self.assertIn(grid_search_cv.best_params_[k], value)
-
     def test_caching(self) -> None:
         """Test if the caching gives the same results and is faster on the second run."""
-
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20
         )
@@ -293,7 +203,6 @@ class PipelineTest(unittest.TestCase):
         for cache_activated in [False, True]:
             pipeline = get_exec_counted_rf_regressor(_RANDOM_STATE)
             with tempfile.TemporaryDirectory() as temp_dir:
-
                 if cache_activated:
                     cache_dir = Path(temp_dir) / ".cache"
                     mem = Memory(location=cache_dir, verbose=0)
@@ -335,6 +244,68 @@ class PipelineTest(unittest.TestCase):
             for pred1, pred2 in combinations(prediction_list, 2):
                 self.assertTrue(np.allclose(pred1, pred2))
 
+
+class PipelineCompatibilityTest(unittest.TestCase):
+    """Test if the pipeline is compatible with other sklearn functionalities."""
+
+    def test_gridsearchcv(self) -> None:
+        """Test if the MolPipeline can be used in sklearn's GridSearchCV."""
+        descriptor_elements_to_test: list[dict[str, Any]] = [
+            {
+                "name": "morgan",
+                "element": MolToMorganFP(),
+                "param_grid": {"morgan__n_bits": [64, 128], "morgan__radius": [1, 2]},
+            },
+            {
+                "name": "physchem",
+                "element": MolToRDKitPhysChem(),
+                "param_grid": {
+                    "physchem__descriptor_list": [
+                        ["HeavyAtomMolWt"],
+                        ["HeavyAtomMolWt", "HeavyAtomCount"],
+                    ]
+                },
+            },
+        ]
+
+        for test_data_dict in descriptor_elements_to_test:
+            name = test_data_dict["name"]
+            element = test_data_dict["element"]
+            param_grid = test_data_dict["param_grid"]
+
+            # set up a pipeline that trains a random forest classifier on morgan fingerprints
+            pipeline = Pipeline(
+                [
+                    ("auto2mol", AutoToMol()),
+                    (name, element),
+                    ("estimator", RandomForestClassifier()),
+                ],
+                n_jobs=1,
+            )
+
+            # define the hyperparameter space to try out
+            grid_space = {
+                "estimator__n_estimators": [1, 5],
+                "estimator__random_state": [_RANDOM_STATE],
+            }
+            grid_space.update(param_grid)
+
+            grid_search_cv = GridSearchCV(
+                estimator=pipeline,
+                param_grid=grid_space,
+                cv=2,
+                scoring="roc_auc",
+                n_jobs=1,
+            )
+
+            grid_search_cv.fit(
+                X=TEST_SMILES,
+                y=CONTAINS_OX,
+            )
+
+            for k, value in param_grid.items():
+                self.assertIn(grid_search_cv.best_params_[k], value)
+
     def test_gridsearch_cache(self) -> None:
         """Run a short GridSearchCV and check if the caching and not caching gives the same results."""
         h_params = {
@@ -373,6 +344,37 @@ class PipelineTest(unittest.TestCase):
                 mem.clear(warn=False)
         self.assertEqual(best_param_dict[True], best_param_dict[False])
         self.assertTrue(np.allclose(prediction_dict[True], prediction_dict[False]))
+
+    def test_calibrated_classifier(self) -> None:
+        """Test if the pipeline can be used with a CalibratedClassifierCV."""
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
+        d_tree = DecisionTreeClassifier()
+        error_filter = ErrorFilter(filter_everything=True)
+        s_pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("morgan", mol2morgan),
+                ("error_filter", error_filter),
+                ("decision_tree", d_tree),
+                (
+                    "error_replacer",
+                    PostPredictionWrapper(
+                        FilterReinserter.from_error_filter(error_filter, np.nan)
+                    ),
+                ),
+            ]
+        )
+        calibrated_pipeline = CalibratedClassifierCV(
+            s_pipeline, cv=2, ensemble=True, method="isotonic"
+        )
+        calibrated_pipeline.fit(TEST_SMILES, CONTAINS_OX)
+        predicted_value_array = calibrated_pipeline.predict(TEST_SMILES)
+        predicted_proba_array = calibrated_pipeline.predict_proba(TEST_SMILES)
+        self.assertIsInstance(predicted_value_array, np.ndarray)
+        self.assertIsInstance(predicted_proba_array, np.ndarray)
+        self.assertEqual(predicted_value_array.shape, (len(TEST_SMILES),))
+        self.assertEqual(predicted_proba_array.shape, (len(TEST_SMILES), 2))
 
 
 if __name__ == "__main__":

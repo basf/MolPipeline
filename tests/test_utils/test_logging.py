@@ -12,7 +12,6 @@ class LoggingUtilsTest(unittest.TestCase):
 
     def test__print_elapsed_time(self) -> None:
         """Test message logging with timings work as expected."""
-
         # when message is None nothing should be printed
         stream1 = io.StringIO()
         with redirect_stdout(stream1):

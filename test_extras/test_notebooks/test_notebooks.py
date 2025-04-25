@@ -52,7 +52,6 @@ def get_notebook_paths_from_dir(notebook_dir: Path) -> list[Path]:
     # Find all Jupyter notebook files in the directory
     notebooks_paths = []
     for notebook_path in notebook_dir.rglob("*.ipynb"):
-
         if ".ipynb_checkpoints" in str(notebook_path.resolve()):
             # skip jetbrains checkpoints
             continue
@@ -115,7 +114,6 @@ def run_notebooks(
     nof_errors = 0
     # Loop through each notebook
     for notebooks_path in notebooks_paths:
-
         # Execute the notebook and capture the error code
         cmd = [
             "jupyter",
@@ -153,9 +151,9 @@ def run_notebooks(
 
 
 def main() -> None:
-    """Main function to run the Jupyter notebooks."""
+    """Run the Jupyter notebooks and check if they execute without error."""
     parser = argparse.ArgumentParser(
-        description="Test if all Jupyter notebooks in a directory run through with error code 0"
+        description="Test if all Jupyter notebooks run through with error code 0"
     )
     parser.add_argument(
         "-c",
@@ -168,10 +166,13 @@ def main() -> None:
     args = parser.parse_args()
 
     skip_notebook_prefixes_paths = [Path(prefix) for prefix in SKIP_NOTEBOOKS_PREFIXES]
+    base_path = Path(__file__).parents[1].resolve()
 
     for notebook_dir in NOTEBOOK_DIRS:
         run_notebooks(
-            Path(notebook_dir), skip_notebook_prefixes_paths, args.continue_on_error
+            base_path / notebook_dir,
+            skip_notebook_prefixes_paths,
+            args.continue_on_error,
         )
 
 

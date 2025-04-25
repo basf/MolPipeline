@@ -7,8 +7,6 @@ from sklearn.base import clone
 
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
-
-# pylint: disable=relative-beyond-top-level
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_neural_fp_encoder,
@@ -33,3 +31,15 @@ class TestChempropNeuralFingerprint(unittest.TestCase):
         chemprop_json = recursive_to_json(chemprop_fp_encoder)
         chemprop_encoder_copy = recursive_from_json(chemprop_json)
         compare_params(self, chemprop_fp_encoder, chemprop_encoder_copy)
+
+    def test_output_type(self) -> None:
+        """Test the output type."""
+        chemprop_fp_encoder = get_neural_fp_encoder()
+        self.assertEqual(chemprop_fp_encoder.output_type, "float")
+
+    def test_init_with_kwargs(self) -> None:
+        """Test the __init__ method with kwargs."""
+        init_kwargs = {"model__message_passing__depth": 4}
+        chemprop_fp_encoder = get_neural_fp_encoder(init_kwargs=init_kwargs)
+        deep_params = chemprop_fp_encoder.get_params(deep=True)
+        self.assertEqual(deep_params["model__message_passing__depth"], 4)

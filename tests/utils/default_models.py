@@ -1,4 +1,4 @@
-"""This module contains the default models used for testing molpipeline functions and classes."""
+"""Module for default models used for testing molpipeline functions and classes."""
 
 from sklearn.ensemble import RandomForestClassifier
 
@@ -26,7 +26,7 @@ from molpipeline.post_prediction import PostPredictionWrapper
 
 
 def get_morgan_physchem_rf_pipeline(n_jobs: int = 1) -> Pipeline:
-    """Get a pipeline combining Morgan fingerprints and physicochemical properties with a RandomForestClassifier.
+    """Get a pipeline with Morgan FP, physicochem. properties, and a RandomForest.
 
     Parameters
     ----------
@@ -36,7 +36,9 @@ def get_morgan_physchem_rf_pipeline(n_jobs: int = 1) -> Pipeline:
     Returns
     -------
     Pipeline
-        A pipeline combining Morgan fingerprints and physicochemical properties with a RandomForestClassifier.
+        A pipeline combining Morgan fingerprints and physicochemical properties with a
+        RandomForestClassifier.
+
     """
     error_filter = ErrorFilter(filter_everything=True)
     pipeline = Pipeline(
@@ -78,6 +80,7 @@ def get_standardization_pipeline(n_jobs: int = 1) -> Pipeline:
     -------
     Pipeline
         The standardization pipeline.
+
     """
     error_filter = ErrorFilter(filter_everything=True)
     # Set up pipeline

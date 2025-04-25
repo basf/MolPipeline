@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from molpipeline.abstract_pipeline_elements.core import (
     AnyToMolPipelineElement,
@@ -27,30 +27,35 @@ class AutoToMol(AnyToMolPipelineElement):
         self,
         name: str = "auto2mol",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
-        elements: tuple[AnyToMolPipelineElement, ...] = (
-            SmilesToMol(),
-            InchiToMol(),
-            BinaryToMol(),
-            SDFToMol(),
-        ),
+        uuid: str | None = None,
+        elements: tuple[AnyToMolPipelineElement, ...] | None = None,
     ) -> None:
         """Initialize AutoToMol.
 
         Parameters
         ----------
-        name: str, optional (default="auto2mol")
+        name: str, default="auto2mol"
             Name of PipelineElement
-        n_jobs: int, optional (default=1")
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default=None)
+        uuid: str | None, optional
             Unique identifier of PipelineElement.
-        elements: tuple[AnyToMol, ...], optional (default=(SmilesToMol(),
-            InchiToMol(), BinaryToMol(), SDFToMol()))
-            Elements to try to transform the input to a molecule.
+        elements: tuple[AnyToMol, ...] | None, optional
+            If None, the default elements are used:
+            - SmilesToMol
+            - InchiToMol
+            - BinaryToMol
+            - SDFToMol
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         # pipeline elements for transforming the input to a molecule
+        if elements is None:
+            elements = (
+                SmilesToMol(),
+                InchiToMol(),
+                BinaryToMol(),
+                SDFToMol(),
+            )
         self.elements = elements
 
     def pretransform_single(self, value: Any) -> OptionalMol:

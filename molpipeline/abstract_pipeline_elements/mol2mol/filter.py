@@ -1,7 +1,8 @@
 """Abstract classes for filters."""
 
 import abc
-from typing import Any, Literal, Mapping, Optional, Sequence, TypeAlias, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal, Optional, TypeAlias, Union
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -186,10 +187,16 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         value: RDKitMol
             Molecule to check.
 
+        Raises
+        ------
+        ValueError
+            If the mode is not "any" or "all".
+
         Returns
         -------
         OptionalMol
             Molecule that matches defined filter elements, else InvalidInstance.
+
         """
         for filter_element, (lower_limit, upper_limit) in self.filter_elements.items():
             property_value = self._calculate_single_element_value(filter_element, value)
@@ -203,16 +210,15 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                             self.name,
                         )
                     return value
-            else:
-                # For "all" mode we can return early if a match is not found
-                if self.mode == "all":
-                    if self.keep_matches:
-                        return InvalidInstance(
-                            self.uuid,
-                            f"Molecule does not contain required filter element {filter_element}.",
-                            self.name,
-                        )
-                    return value
+            # For "all" mode we can return early if a match is not found
+            elif self.mode == "all":
+                if self.keep_matches:
+                    return InvalidInstance(
+                        self.uuid,
+                        f"Molecule does not contain required filter element {filter_element}.",
+                        self.name,
+                    )
+                return value
 
         # If this point is reached, no or all patterns were found
         # If mode is "any", finishing the loop means no match was found
@@ -298,7 +304,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             List of patterns.
         """
         if isinstance(patterns, (list, set)):
-            self._filter_elements = {pat: (1, None) for pat in patterns}
+            self._filter_elements = dict.fromkeys(patterns, (1, None))
         else:
             self._filter_elements = {
                 pat: count_value_to_tuple(count) for pat, count in patterns.items()
@@ -318,6 +324,12 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         ----------
         patterns: Sequence[str]
             List of patterns.
+
+        Raises
+        ------
+        ValueError
+            If the patterns are not valid SMILES or SMARTS.
+
         """
         self._patterns_mol_dict = {pat: self._pattern_to_mol(pat) for pat in patterns}
         failed_patterns = [

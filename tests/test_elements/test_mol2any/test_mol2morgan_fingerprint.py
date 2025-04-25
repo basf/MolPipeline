@@ -8,6 +8,7 @@ from typing import Any
 import numpy as np
 
 from molpipeline import Pipeline
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToMorganFP
 from tests.utils.fingerprints import fingerprints_to_numpy
@@ -23,12 +24,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
     """Unittest for MolToFoldedMorganFingerprint, which calculates folded Morgan Fingerprints."""
 
     def test_can_be_constructed(self) -> None:
-        """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed."""
         mol_fp = MolToMorganFP()
         mol_fp_copy = mol_fp.copy()
         self.assertTrue(mol_fp_copy is not mol_fp)
@@ -39,12 +35,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
             self.assertEqual(value, mol_fp_recreated.get_params()[key])
 
     def test_counted_bits(self) -> None:
-        """Test if the option counted bits works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the option counted bits works as expected."""
         mol_fp = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
         smi2mol = SmilesToMol()
         pipeline = Pipeline(
@@ -63,8 +54,14 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertTrue(np.any(output_counted > output_binary))
 
     def test_output_types(self) -> None:
-        """Test equality of different output_types."""
+        """Test if the output types are correct for counted and binary fingerprints."""
+        mol_fp = MolToMorganFP(counted=False)
+        self.assertEqual(mol_fp.output_type, "binary")
+        mol_fp = MolToMorganFP(counted=True)
+        self.assertEqual(mol_fp.output_type, "integer")
 
+    def test_return_value_types(self) -> None:
+        """Test equality of different output_types."""
         smi2mol = SmilesToMol()
         sparse_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="sparse")
         dense_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
@@ -120,7 +117,6 @@ class TestMol2MorganFingerprint(unittest.TestCase):
 
     def test_setter_getter_error_handling(self) -> None:
         """Test if the setters and getters work as expected when errors are encountered."""
-
         mol_fp = MolToMorganFP()
         params: dict[str, Any] = {
             "radius": 2,
@@ -130,7 +126,14 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertRaises(ValueError, mol_fp.set_params, **params)
 
     def test_bit2atom_mapping(self) -> None:
-        """Test that the mapping from bits to atom weights works as intended."""
+        """Test that the mapping from bits to atom weights works as intended.
+
+        Raises
+        ------
+        AssertionError
+            The SMILES provided by the unit test are invalid.
+
+        """
         n_bits = 2048
         sparse_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="sparse")
         dense_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="dense")
@@ -143,6 +146,8 @@ class TestMol2MorganFingerprint(unittest.TestCase):
             for fp_gen in [sparse_morgan, dense_morgan, explicit_bit_vect_morgan]:
                 for counted in [False, True]:
                     mol = smi2mol.transform([test_smi])[0]
+                    if isinstance(mol, InvalidInstance):
+                        raise AssertionError(f"Invalid molecule: {test_smi}")
                     fp_gen.set_params(counted=counted)
                     fp = fp_gen.transform([mol])
                     mapping = fp_gen.bit2atom_mapping(mol)

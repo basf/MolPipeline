@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -36,37 +36,45 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "MolToMorganFP",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToMorganFP.
 
         Parameters
         ----------
-        radius: int, optional (default=2)
-            radius of the circular fingerprint [1]. Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
+        radius: int, default=2
+            radius of the circular fingerprint [1].
+            Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
         use_features: bool, optional (default=False)
             Instead of atoms, features are encoded in the fingerprint. [2]
-        n_bits: int, optional (default=2048)
+        n_bits: int, default=2048
             Size of fingerprint.
-        counted: bool, optional (default=False)
+        counted: bool, default=False
             If True, the fingerprint will be counted.
             If False, the fingerprint will be binary.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
-            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
-            holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
-            rdkit.DataStructs.cDataStructs.ExplicitBitVect.
-        name: str, optional (default="MolToMorganFP")
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+            Type of output. When "sparse" the fingerprints will be returned as a
+            scipy.sparse.csr_matrix holding a sparse representation of the bit vectors.
+            With "dense" a numpy matrix will be returned.
+            With "explicit_bit_vect" the fingerprints will be returned as a list of
+            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+        name: str, default="MolToMorganFP"
             Name of PipelineElement
-        n_jobs: int, optional (default=1)
+        n_jobs: int, default=1
             Number of cores to use.
-        uuid: str | None, optional (default=None)
+        uuid: str | None, optional
             UUID of the PipelineElement.
 
         References
         ----------
             [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
+
+        Raises
+        ------
+        ValueError
+            If n_bits is not a positive integer.
+
         """
         # pylint: disable=R0801
         super().__init__(
@@ -80,7 +88,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         )
         if not isinstance(n_bits, int) or n_bits < 1:
             raise ValueError(
-                f"Number of bits has to be a positve integer, which is > 0! (Received: {n_bits})"
+                f"Number of bits has to be a integer > 0! (Received: {n_bits})"
             )
         self._n_bits = n_bits
         self._feature_names = [f"morgan_{i}" for i in range(self._n_bits)]

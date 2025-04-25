@@ -168,6 +168,7 @@ def builtin_to_json(
     -------
     tuple[Any]
         Tuple of transformed objects.
+
     """
 
 
@@ -177,12 +178,19 @@ def builtin_to_json(obj: Any) -> Any:
     Parameters
     ----------
     obj: PythonNative
-        Object to be transformed. Can be a string, int, float, bool, list, tuple, dict, callable or a set.
+        Object to be transformed.
+        Can be a string, int, float, bool, list, tuple, dict, callable or a set.
+
+    Raises
+    ------
+    TypeError
+        If the object is not a string, int, float, bool, list, tuple or dict.
 
     Returns
     -------
     Any
         Json file containing the dictionary.
+
     """
     if isinstance(obj, (str, int, float, bool)) or obj is None:
         return obj
@@ -228,6 +236,7 @@ def recursive_to_json(obj: Any) -> Any:
     -------
     dict[str, Any]
         Json file containing the dictionary.
+
     """
     if obj is None:
         return None
@@ -266,7 +275,9 @@ def recursive_to_json(obj: Any) -> Any:
         # If the object is not a sklearn model, a warning is raised
         # as it might not be possible to recreate the object.
         warnings.warn(
-            f"{type(obj)} has no get_params method. No parameters for initialization are retained."
+            f"{type(obj)} has no get_params method. "
+            f"No parameters for initialization are retained.",
+            stacklevel=2,
         )
 
     return object_dict
@@ -284,6 +295,7 @@ def decode_dict(obj: dict[str, Any]) -> Any:
     -------
     Any
         Object specified in the dictionary.
+
     """
     # Create copy
     object_params_copy = dict(obj)
@@ -322,10 +334,16 @@ def recursive_from_json(obj: Any) -> Any:
     obj: Any
         Object to be transformed
 
+    Raises
+    ------
+    TypeError
+        If the object is not a string, int, float, bool, list, tuple or dict.
+
     Returns
     -------
     Any
         Object specified in the json file.
+
     """
     if isinstance(obj, (str, int, float, bool)) or obj is None:
         return obj
