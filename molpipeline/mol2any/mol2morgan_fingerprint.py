@@ -4,13 +4,16 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 from typing import TYPE_CHECKING, Any, Literal, Self
 
-from rdkit.Chem import AllChem, rdFingerprintGenerator
+from rdkit.Chem import rdFingerprintGenerator
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToRDKitGenFPElement,
 )
+from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
     from molpipeline.utils.molpipeline_types import RDKitMol
 
 
@@ -236,7 +239,10 @@ class MolToMorganFP(MolToRDKitGenFPElement):
             fpSize=self._n_bits,
         )
 
-    def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
+    def bit2atom_mapping(
+        self,
+        mol_obj: RDKitMol,
+    ) -> Mapping[int, Sequence[CircularAtomEnvironment]]:
         """Get central atom and radius of all features in molecule.
 
         Parameters
@@ -246,14 +252,24 @@ class MolToMorganFP(MolToRDKitGenFPElement):
 
         Returns
         -------
-        dict[int, list[tuple[int, int]]]
+        Mapping[int, list[tuple[int, int]]]
             Dictionary with bit position as key and list of tuples with atom index and
             radius as value.
 
         """
         fp_generator = self._get_fp_generator()
-        additional_output = AllChem.AdditionalOutput()
+        additional_output = fp_generator.AdditionalOutput()
         additional_output.AllocateBitInfoMap()
         # using the dense fingerprint here, to get indices after folding
         _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
-        return additional_output.GetBitInfoMap()
+
+        bit2atom_dict = additional_output.GetBitInfoMap()
+        result_dict: dict[int, list[CircularAtomEnvironment]] = {}
+        # Iterating over all present bits and respective matches
+        for bit, matches in bit2atom_dict.items():
+            result_dict[bit] = []
+            for central_atom, radius in matches:
+                env = CircularAtomEnvironment.from_mol(mol_obj, central_atom, radius)
+                result_dict[bit].append(env)
+        # Transforming default dict to dict
+        return result_dict

@@ -4,23 +4,31 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, get_args, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Self,
+    TypeAlias,
+    get_args,
+    overload,
+)
 
 import numpy as np
 import numpy.typing as npt
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.utils.matrices import sparse_from_index_value_dicts
-from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping, Sequence
 
     from rdkit.Chem import rdFingerprintGenerator
     from rdkit.DataStructs.cDataStructs import ExplicitBitVect
     from scipy import sparse
 
     from molpipeline.utils.molpipeline_types import RDKitMol
+    from molpipeline.utils.substructure_handling import AtomEnvironment
 
 # possible output types for a fingerprint:
 # - "sparse" is a sparse csr_matrix
@@ -357,26 +365,10 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         return self
 
     @abc.abstractmethod
-    def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
-        """Get central atom and radius of all features in molecule.
-
-        Parameters
-        ----------
-        mol_obj: RDKitMol
-            RDKit molecule to be encoded.
-
-        Returns
-        -------
-        dict[int, list[tuple[int, int]]]
-            Dictionary with mapping from bit to atom index and radius.
-
-        """
-        raise NotImplementedError
-
     def bit2atom_mapping(
         self,
         mol_obj: RDKitMol,
-    ) -> dict[int, list[CircularAtomEnvironment]]:
+    ) -> Mapping[int, Sequence[AtomEnvironment]]:
         """Obtain set of atoms for all features.
 
         Parameters
@@ -386,18 +378,8 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
         Returns
         -------
-        dict[int, list[CircularAtomEnvironment]]
+        Mapping[int, Sequence[AtomEnvironment]]
             Dictionary with mapping from bit to encoded
             AtomEnvironments (which contain atom indices).
 
         """
-        bit2atom_dict = self._explain_rdmol(mol_obj)
-        result_dict: dict[int, list[CircularAtomEnvironment]] = {}
-        # Iterating over all present bits and respective matches
-        for bit, matches in bit2atom_dict.items():
-            result_dict[bit] = []
-            for central_atom, radius in matches:
-                env = CircularAtomEnvironment.from_mol(mol_obj, central_atom, radius)
-                result_dict[bit].append(env)
-        # Transforming default dict to dict
-        return result_dict

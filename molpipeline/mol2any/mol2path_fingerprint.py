@@ -3,17 +3,23 @@
 from __future__ import annotations  # for all the python 3.8 users out there.
 
 import copy
-from typing import Any, Literal, Self
+from typing import TYPE_CHECKING, Any, Literal, Self
 
 from rdkit.Chem import rdFingerprintGenerator
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToRDKitGenFPElement,
 )
+from molpipeline.utils.substructure_handling import AtomEnvironment
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
+    from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class Mol2PathFP(
-    MolToRDKitGenFPElement
+    MolToRDKitGenFPElement,
 ):  # pylint: disable=too-many-instance-attributes
     """Folded Path Fingerprint.
 
@@ -22,7 +28,7 @@ class Mol2PathFP(
     """
 
     # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         min_path: int = 1,
         max_path: int = 7,
@@ -88,6 +94,7 @@ class Mol2PathFP(
         ------
         ValueError
             If the number of bits is not a positive integer.
+
         """
         # pylint: disable=R0801
         super().__init__(
@@ -99,7 +106,7 @@ class Mol2PathFP(
         )
         if not isinstance(n_bits, int) or n_bits < 1:
             raise ValueError(
-                f"Number of bits has to be an integer > 0! (Received: {n_bits})"
+                f"Number of bits has to be an integer > 0! (Received: {n_bits})",
             )
         self._n_bits = n_bits
         self._feature_names = [f"path_{i}" for i in range(self._n_bits)]
@@ -125,6 +132,7 @@ class Mol2PathFP(
         -------
         dict[str, Any]
             Dictionary of parameters.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -137,7 +145,7 @@ class Mol2PathFP(
             parameters["count_bounds"] = copy.copy(self._count_bounds)
             parameters["num_bits_per_feature"] = int(self._num_bits_per_feature)
             parameters["atom_invariants_generator"] = copy.copy(
-                self._atom_invariants_generator
+                self._atom_invariants_generator,
             )
             parameters["n_bits"] = int(self._n_bits)
         else:
@@ -165,6 +173,7 @@ class Mol2PathFP(
         -------
         Self
             MolToMorganFP pipeline element with updated parameters.
+
         """
         parameter_copy = dict(parameters)
         min_path = parameter_copy.pop("min_path", None)
@@ -192,7 +201,8 @@ class Mol2PathFP(
         if num_bits_per_feature is not None:
             self._num_bits_per_feature = num_bits_per_feature
         atom_invariants_generator = parameter_copy.pop(
-            "atom_invariants_generator", None
+            "atom_invariants_generator",
+            None,
         )
         if atom_invariants_generator is not None:
             self._atom_invariants_generator = atom_invariants_generator
@@ -209,6 +219,7 @@ class Mol2PathFP(
         -------
         rdFingerprintGenerator.GetRDKitFPGenerator
             RDKit Path fingerprint generator.
+
         """
         return rdFingerprintGenerator.GetRDKitFPGenerator(
             minPath=self._min_path,
@@ -222,3 +233,37 @@ class Mol2PathFP(
             numBitsPerFeature=self._num_bits_per_feature,
             atomInvariantsGenerator=self._atom_invariants_generator,
         )
+
+    def bit2atom_mapping(
+        self,
+        mol_obj: RDKitMol,
+    ) -> Mapping[int, Sequence[AtomEnvironment]]:
+        """Get central atom and radius of all features in molecule.
+
+        Parameters
+        ----------
+        mol_obj: RDKitMol
+            RDKit molecule object
+
+        Returns
+        -------
+        Mapping[int, list[tuple[int, int]]]
+            Dictionary with bit position as key and list of tuples with atom index and
+            radius as value.
+
+        """
+        fp_generator = self._get_fp_generator()
+        additional_output = fp_generator.AdditionalOutput()
+        additional_output.AllocateBitInfoMap()
+        # using the dense fingerprint here, to get indices after folding
+        _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
+
+        bit2atom_dict = additional_output.GetBitInfoMap()
+        result_dict: dict[int, list[AtomEnvironment]] = {}
+        # Iterating over all present bits and respective matches
+        for bit, matches in bit2atom_dict.items():
+            result_dict[bit] = []
+            for atom_sequence in matches:
+                env = AtomEnvironment(atom_sequence)
+                result_dict[bit].append(env)
+        return result_dict
