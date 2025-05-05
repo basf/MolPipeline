@@ -257,13 +257,7 @@ class MolToMorganFP(MolToRDKitGenFPElement):
             radius as value.
 
         """
-        fp_generator = self._get_fp_generator()
-        additional_output = rdFingerprintGenerator.AdditionalOutput()
-        additional_output.AllocateBitInfoMap()
-        # using the dense fingerprint here, to get indices after folding
-        _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
-
-        bit2atom_dict = additional_output.GetBitInfoMap()
+        bit2atom_dict = self._get_bit_info_map(mol_obj)
         result_dict: dict[int, list[CircularAtomEnvironment]] = {}
         # Iterating over all present bits and respective matches
         for bit, matches in bit2atom_dict.items():
