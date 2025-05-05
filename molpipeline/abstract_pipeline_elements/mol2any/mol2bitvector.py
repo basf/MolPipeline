@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from rdkit.Chem import rdFingerprintGenerator
-    from rdkit.DataStructs import ExplicitBitVect
+    from rdkit.DataStructs.cDataStructs import ExplicitBitVect
     from scipy import sparse
 
     from molpipeline.utils.molpipeline_types import RDKitMol
@@ -394,9 +394,9 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         bit2atom_dict = self._explain_rdmol(mol_obj)
         result_dict: dict[int, list[CircularAtomEnvironment]] = {}
         # Iterating over all present bits and respective matches
-        for bit, matches in bit2atom_dict.items():  # type: int, list[tuple[int, int]]
+        for bit, matches in bit2atom_dict.items():
             result_dict[bit] = []
-            for central_atom, radius in matches:  # type: int, int
+            for central_atom, radius in matches:
                 env = CircularAtomEnvironment.from_mol(mol_obj, central_atom, radius)
                 result_dict[bit].append(env)
         # Transforming default dict to dict
