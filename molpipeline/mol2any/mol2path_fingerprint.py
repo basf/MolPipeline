@@ -253,7 +253,7 @@ class Mol2PathFP(
 
         """
         fp_generator = self._get_fp_generator()
-        additional_output = fp_generator.AdditionalOutput()
+        additional_output = rdFingerprintGenerator.AdditionalOutput()
         additional_output.AllocateBitInfoMap()
         # using the dense fingerprint here, to get indices after folding
         _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
