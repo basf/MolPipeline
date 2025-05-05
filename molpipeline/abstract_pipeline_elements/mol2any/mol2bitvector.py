@@ -4,19 +4,23 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from collections.abc import Iterable
-from typing import Any, Literal, Self, TypeAlias, get_args, overload
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, get_args, overload
 
 import numpy as np
 import numpy.typing as npt
-from rdkit.Chem import rdFingerprintGenerator
-from rdkit.DataStructs import ExplicitBitVect
-from scipy import sparse
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.utils.matrices import sparse_from_index_value_dicts
-from molpipeline.utils.molpipeline_types import RDKitMol
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from rdkit.Chem import rdFingerprintGenerator
+    from rdkit.DataStructs import ExplicitBitVect
+    from scipy import sparse
+
+    from molpipeline.utils.molpipeline_types import RDKitMol
 
 # possible output types for a fingerprint:
 # - "sparse" is a sparse csr_matrix
@@ -26,7 +30,7 @@ OutputDatatype: TypeAlias = Literal["sparse", "dense", "explicit_bit_vect"]
 
 
 class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
-    """Abstract class for PipelineElements which transform molecules to integer vectors."""
+    """Abstract PipelineElement which transform molecules to integer vectors."""
 
     _n_bits: int
     _feature_names: list[str]
@@ -45,10 +49,11 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         Parameters
         ----------
         return_as: Literal["sparse", "dense", "explicit_bit_vect"]
-            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
-            holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
-            rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+            Type of output. When "sparse" the fingerprints will be returned as a
+            scipy.sparse.csr_matrix holding a sparse representation of the bit vectors.
+            With "dense" a numpy matrix will be returned.
+            With "explicit_bit_vect" the fingerprints will be returned as a list of
+            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
         name: str
             Name of PipelineElement.
         n_jobs: int, default=1
@@ -104,11 +109,12 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
         Parameters
         ----------
-        value_list:  Iterable[dict[int, int]] | Iterable[npt.NDArray[np.int_]] | Iterable[ExplicitBitVect]
+        value_list:  Iterable[dict[int, int]] | Iterable[npt.NDArray[np.int_]] |
+            Iterable[ExplicitBitVect]
             Either Iterable of dicts which encode the rows of the feature matrix.
             Keys: column index, values: column value. Each dict represents one molecule.
-            Or an Iterable of RDKit's ExplicitBitVect or an Iterable of numpy arrays representing the
-            fingerprint list.
+            Or an Iterable of RDKit's ExplicitBitVect or an Iterable of numpy arrays
+            representing the fingerprint list.
 
         Returns
         -------
@@ -180,7 +186,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return self
 
     def transform(self, values: list[RDKitMol]) -> sparse.csr_matrix:
-        """Transform the list of molecules to sparse matrix of Morgan-fingerprint features.
+        """Transform the list of molecules to a sparse matrix.
 
         Parameters
         ----------
@@ -200,7 +206,9 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         self,
         value: RDKitMol,
     ) -> dict[int, int] | npt.NDArray[np.int_] | ExplicitBitVect:
-        """Transform mol to dict, where items encode columns indices and values, respectively.
+        """Transform mol to dict.
+
+         Items encode columns indices and values, respectively.
 
         Parameters
         ----------
@@ -210,7 +218,9 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         Returns
         -------
         dict[int, int]
-            Dictionary to encode row in matrix. Keys: column index, values: column value.
+            Dictionary to encode row in matrix.
+            Keys: column index
+            Values: column value
 
         """
 
@@ -280,7 +290,8 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]
             If return_as is "explicit_bit_vect" return ExplicitBitVect.
             If return_as is "dense" return numpy array.
-            If return_as is "sparse" return dictionary with feature-position as key and count as value.
+            If return_as is "sparse" return dictionary with feature-position as key and
+            count as value.
 
         """
         fingerprint_generator = self._get_fp_generator()
@@ -345,137 +356,6 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         super().set_params(**parameter_dict_copy)
         return self
 
-
-class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
-    """Abstract Class for Morgan fingerprints."""
-
-    @property
-    def output_type(self) -> str:
-        """Get output type."""
-        if self.counted:
-            return "integer"
-        return "binary"
-
-    # pylint: disable=R0913
-    def __init__(
-        self,
-        radius: int = 2,
-        use_features: bool = False,
-        counted: bool = False,
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
-        name: str = "AbstractMorgan",
-        n_jobs: int = 1,
-        uuid: str | None = None,
-    ):
-        """Initialize abstract class.
-
-        Parameters
-        ----------
-        radius: int, default=2
-            Radius of fingerprint.
-        use_features: bool, default=False
-            Whether to represent atoms by element or category (donor, acceptor. etc.)
-        counted: bool, default=False
-            Whether to count the bits or not.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
-            Type of output.
-            When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
-            holding a sparse representation of the bit vectors.
-            With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of
-            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
-        name: str, default="AbstractMorgan"
-            Name of PipelineElement.
-        n_jobs: int, default=1
-            Number of jobs.
-        uuid: str | None, optional
-            Unique identifier.
-
-        Raises
-        ------
-        ValueError
-            If radius is not a positive integer.
-
-        """
-        # pylint: disable=R0801
-        super().__init__(
-            return_as=return_as,
-            counted=counted,
-            name=name,
-            n_jobs=n_jobs,
-            uuid=uuid,
-        )
-        self._use_features = use_features
-        if isinstance(radius, int) and radius >= 0:
-            self._radius = radius
-        else:
-            raise ValueError(
-                f"Number of bits has to be a positive integer! (Received: {radius})",
-            )
-
-    def get_params(self, deep: bool = True) -> dict[str, Any]:
-        """Get object parameters relevant for copying the class.
-
-        Parameters
-        ----------
-        deep: bool
-            If True get a deep copy of the parameters.
-
-        Returns
-        -------
-        dict[str, Any]
-            Dictionary of parameter names and values.
-
-        """
-        parameters = super().get_params(deep)
-        if deep:
-            parameters["radius"] = copy.copy(self.radius)
-            parameters["use_features"] = copy.copy(self.use_features)
-        else:
-            parameters["radius"] = self.radius
-            parameters["use_features"] = self.use_features
-
-        # remove fill_value from parameters
-        parameters.pop("fill_value", None)
-        return parameters
-
-    def set_params(self, **parameters: Any) -> Self:
-        """Set parameters.
-
-        Parameters
-        ----------
-        parameters: Any
-            Dictionary of parameter names and values.
-
-        Returns
-        -------
-        Self
-            PipelineElement with updated parameters.
-
-        """
-        parameter_copy = dict(parameters)
-        radius = parameter_copy.pop("radius", None)
-        use_features = parameter_copy.pop("use_features", None)
-
-        # explicitly check for None, since 0 is a valid value
-        if radius is not None:
-            self._radius = radius
-        # explicitly check for None, since False is a valid value
-        if use_features is not None:
-            self._use_features = bool(use_features)
-        super().set_params(**parameter_copy)
-        return self
-
-    @property
-    def radius(self) -> int:
-        """Get radius of Morgan fingerprint."""
-        return self._radius
-
-    @property
-    def use_features(self) -> bool:
-        """Get whether to encode atoms by features or not."""
-        return self._use_features
-
     @abc.abstractmethod
     def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
         """Get central atom and radius of all features in molecule.
@@ -507,7 +387,8 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         Returns
         -------
         dict[int, list[CircularAtomEnvironment]]
-            Dictionary with mapping from bit to encoded AtomEnvironments (which contain atom indices).
+            Dictionary with mapping from bit to encoded
+            AtomEnvironments (which contain atom indices).
 
         """
         bit2atom_dict = self._explain_rdmol(mol_obj)
