@@ -164,7 +164,7 @@ class MolToMorganFP(MolToRDKitGenFPElement):
             n_jobs=n_jobs,
             uuid=uuid,
         )
-        self._use_features = use_features
+        self.use_features = use_features
         self.radius = radius
         self.n_bits = n_bits
         self._feature_names = [f"morgan_{i}" for i in range(self.n_bits)]
@@ -227,7 +227,7 @@ class MolToMorganFP(MolToRDKitGenFPElement):
         """
         return rdFingerprintGenerator.GetMorganGenerator(
             radius=self.radius,
-            fpSize=self._n_bits,
+            fpSize=self.n_bits,
         )
 
     def bit2atom_mapping(
