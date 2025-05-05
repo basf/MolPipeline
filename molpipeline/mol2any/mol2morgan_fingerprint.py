@@ -271,5 +271,4 @@ class MolToMorganFP(MolToRDKitGenFPElement):
             for central_atom, radius in matches:
                 env = CircularAtomEnvironment.from_mol(mol_obj, central_atom, radius)
                 result_dict[bit].append(env)
-        # Transforming default dict to dict
         return result_dict
