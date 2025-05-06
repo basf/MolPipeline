@@ -96,9 +96,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
     # pylint: disable=arguments-differ, signature-differs
     def fit(
         self,
-        X: (
-            npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any]
-        ),  # pylint: disable=invalid-name
+        X: (npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any]),  # pylint: disable=invalid-name
         y: Sequence[Any],  # pylint: disable=invalid-name
     ) -> Self:
         """Fit the model using X as training data.
@@ -121,6 +119,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         ------
         ValueError
             If the input arrays have different lengths or do not have a shape nor len attribute.
+
         """
         # Check if X and y have the same length
         n_x = get_length(X)  # Allowing for any sequence type
@@ -160,6 +159,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         -------
         tuple[npt.NDArray[Any], npt.NDArray[np.float64]] | npt.NDArray[Any]
             The indices of the nearest points in the population matrix and the distances to the points.
+
         """
         if self.learned_names_ is None:
             raise ValueError("The model has not been fitted yet.")
@@ -168,7 +168,9 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
 
         if return_distance:
             distances, indices = super().kneighbors(
-                X, n_neighbors=n_neighbors, return_distance=True
+                X,
+                n_neighbors=n_neighbors,
+                return_distance=True,
             )
             # stack in such a way that the shape is (n_input, n_neighbors, 2)
             # shape 2 as the neighbor idx and distance are returned
@@ -204,6 +206,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         -------
         Tuple[array, array]
             The indices of the nearest points in the population matrix and the distances to the points.
+
         """
         self.fit(X, y)
         return self.predict(X, return_distance=return_distance, n_neighbors=n_neighbors)
