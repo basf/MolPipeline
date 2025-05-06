@@ -16,7 +16,6 @@ from typing import (
 
 import numpy as np
 import numpy.typing as npt
-from rdkit.Chem import rdFingerprintGenerator
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.utils.matrices import sparse_from_index_value_dicts
@@ -24,6 +23,7 @@ from molpipeline.utils.matrices import sparse_from_index_value_dicts
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
+    from rdkit.Chem import rdFingerprintGenerator
     from rdkit.DataStructs.cDataStructs import ExplicitBitVect
     from scipy import sparse
 
@@ -400,30 +400,6 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
             self.counted = bool(counted)
         super().set_params(**parameter_dict_copy)
         return self
-
-    def _get_bit_info_map(
-        self,
-        mol_obj: RDKitMol,
-    ) -> Mapping[int, Sequence[tuple[int, ...]]]:
-        """Get bit info map.
-
-        Parameters
-        ----------
-        mol_obj: RDKitMol
-            RDKit molecule to be encoded.
-
-        Returns
-        -------
-        Mapping[int, Sequence[AtomEnvironment]]
-            Dictionary with mapping from bit to encoded
-            AtomEnvironments (which contain atom indices).
-
-        """
-        fp_generator = self._get_fp_generator()
-        additional_output = rdFingerprintGenerator.AdditionalOutput()
-        additional_output.AllocateBitInfoMap()
-        _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
-        return additional_output.GetBitInfoMap()
 
     @abc.abstractmethod
     def bit2atom_mapping(

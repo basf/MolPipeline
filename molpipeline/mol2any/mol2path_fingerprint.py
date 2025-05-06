@@ -253,10 +253,14 @@ class Mol2PathFP(
             radius as value.
 
         """
-        bit2atom_dict = self._get_bit_info_map(mol_obj)
+        fp_generator = self._get_fp_generator()
+        additional_output = rdFingerprintGenerator.AdditionalOutput()
+        additional_output.AllocateBitInfoMap()
+        additional_output.AllocateBitPaths()
+        _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
         result_dict: dict[int, list[AtomEnvironment]] = {}
         # Iterating over all present bits and respective matches
-        for bit, matches in bit2atom_dict.items():
+        for bit, matches in additional_output.GetBitPaths().items():
             result_dict[bit] = []
             for atom_sequence in matches:
                 env = AtomEnvironment(set(atom_sequence))
