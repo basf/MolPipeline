@@ -283,7 +283,7 @@ class SHAPExplainerAdapter(  # pylint: disable=too-few-public-methods
 
         # use pandas.isna function to check for invalid predictions, e.g. None, np.nan,
         # pd.NA. Note that fill values like 0 will be considered as valid predictions.
-        return pd.isna(prediction).any()
+        return not pd.isna(prediction).any()
 
     @override
     def explain(
