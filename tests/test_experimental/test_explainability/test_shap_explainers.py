@@ -1,6 +1,7 @@
 """Test SHAP's TreeExplainer wrapper."""
 
 import unittest
+from itertools import product
 
 import numpy as np
 import numpy.typing as npt
@@ -28,6 +29,7 @@ from molpipeline.experimental.explainability import (
 from molpipeline.experimental.explainability.explainer import SHAPExplainerAdapter
 from molpipeline.experimental.explainability.explanation import AtomExplanationMixin
 from molpipeline.mol2any import (
+    Mol2PathFP,
     MolToConcatenatedVector,
     MolToMorganFP,
     MolToRDKitPhysChem,
@@ -213,7 +215,7 @@ class TestSHAPExplainers(unittest.TestCase):
                 explanation,
                 pipeline.named_steps["model"],
                 mol_reader_subpipeline,  # type: ignore[arg-type]
-                pipeline.named_steps["morgan"].n_bits,
+                pipeline.named_steps["encoding"].n_bits,
                 test_smiles[i],
                 explainer=explainer,  # type: ignore[arg-type]
             )
@@ -241,6 +243,10 @@ class TestSHAPExplainers(unittest.TestCase):
             SHAPTreeExplainer,
         ]
         explainer_estimators = [tree_estimators + other_estimators, tree_estimators]
+        mol_encoder_list = [
+            MolToMorganFP(radius=1, n_bits=n_bits),
+            Mol2PathFP(n_bits=n_bits, min_path=1, max_path=2),
+        ]
 
         for estimators, explainer_type in zip(
             explainer_estimators,
@@ -248,22 +254,23 @@ class TestSHAPExplainers(unittest.TestCase):
             strict=True,
         ):
             # test explanations with different estimators
-            for estimator in estimators:
+            for estimator, encoding in product(estimators, mol_encoder_list):
                 pipeline = Pipeline(
                     [
                         ("smi2mol", SmilesToMol()),
-                        ("morgan", MolToMorganFP(radius=1, n_bits=n_bits)),
+                        ("encoding", encoding),
                         ("model", estimator),
                     ],
                 )
-                self.assertEqual(pipeline.named_steps["morgan"].n_bits, n_bits)
+                self.assertEqual(pipeline.named_steps["encoding"].n_bits, n_bits)
                 self.assertIs(pipeline.named_steps["model"], estimator)
-                self._test_pipeline_explanation(
-                    pipeline,
-                    explainer_type,
-                    TEST_SMILES,
-                    CONTAINS_OX,
-                )
+                with self.subTest(estimator=estimator, encoding=encoding):
+                    self._test_pipeline_explanation(
+                        pipeline,
+                        explainer_type,
+                        TEST_SMILES,
+                        CONTAINS_OX,
+                    )
 
     # pylint: disable=too-many-locals
     def test_explanations_pipeline_with_invalid_inputs(self) -> None:
