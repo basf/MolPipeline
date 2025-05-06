@@ -22,10 +22,10 @@ test_smiles = [
 
 
 class TestMol2MorganFingerprint(unittest.TestCase):
-    """Unittest for MolToFoldedMorganFingerprint, which calculates folded Morgan Fingerprints."""
+    """Unittest for MolToFoldedMorganFingerprint."""
 
     def test_clone(self) -> None:
-        """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed."""
+        """Test cloning MolToFoldedMorganFingerprint."""
         mol_fp = MolToMorganFP()
         mol_fp_copy = clone(mol_fp)
         self.assertTrue(mol_fp_copy is not mol_fp)
@@ -49,7 +49,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         pipeline.set_params(mol_fp__counted=True)
         output_counted = pipeline.fit_transform(test_smiles)
         self.assertTrue(
-            np.all(np.flatnonzero(output_counted) == np.flatnonzero(output_binary))
+            np.all(np.flatnonzero(output_counted) == np.flatnonzero(output_binary)),
         )
         self.assertTrue(np.all(output_counted >= output_binary))
         self.assertTrue(np.any(output_counted > output_binary))
@@ -67,7 +67,9 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         sparse_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="sparse")
         dense_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
         explicit_bit_vect_morgan = MolToMorganFP(
-            radius=2, n_bits=1024, return_as="explicit_bit_vect"
+            radius=2,
+            n_bits=1024,
+            return_as="explicit_bit_vect",
         )
         sparse_pipeline = Pipeline(
             [
@@ -91,7 +93,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         sparse_output = sparse_pipeline.fit_transform(test_smiles)
         dense_output = dense_pipeline.fit_transform(test_smiles)
         explicit_bit_vect_morgan_output = explicit_bit_vect_pipeline.fit_transform(
-            test_smiles
+            test_smiles,
         )
 
         self.assertTrue(np.all(sparse_output.toarray() == dense_output))
@@ -100,7 +102,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
             np.equal(
                 dense_output,
                 np.array(explicit_bit_vect_morgan_output),
-            ).all()
+            ).all(),
         )
 
     def test_setter_getter(self) -> None:
@@ -116,8 +118,8 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertEqual(mol_fp.get_params()["n_bits"], 1024)
         self.assertEqual(mol_fp.get_params()["return_as"], "dense")
 
-    def test_setter_getter_error_handling(self) -> None:
-        """Test if the setters and getters work as expected when errors are encountered."""
+    def test_setter_invalid_input(self) -> None:
+        """Test if the setters raise an error for invalid input."""
         mol_fp = MolToMorganFP()
         params: dict[str, Any] = {
             "radius": 2,
@@ -139,7 +141,9 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         sparse_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="sparse")
         dense_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="dense")
         explicit_bit_vect_morgan = MolToMorganFP(
-            radius=2, n_bits=n_bits, return_as="explicit_bit_vect"
+            radius=2,
+            n_bits=n_bits,
+            return_as="explicit_bit_vect",
         )
 
         smi2mol = SmilesToMol()
@@ -162,6 +166,26 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertEqual(len(feature_names), 1024)
         # feature names should be unique
         self.assertEqual(len(feature_names), len(set(feature_names)))
+
+    def test_bit_mapping(self) -> None:
+        """Test if the mapped bits are identical to the original bits.
+
+        Raises
+        ------
+        AssertionError
+            The SMILES provided by the unit test are invalid.
+
+        """
+        mol_fp = MolToMorganFP(n_bits=1024)
+
+        for smiles in test_smiles:
+            mol = SmilesToMol().transform([smiles])[0]
+            if isinstance(mol, InvalidInstance):
+                raise AssertionError(f"Invalid molecule: {smiles}")
+            fp = mol_fp.transform([mol])
+            explained_bits = mol_fp.bit2atom_mapping(mol)
+            self.assertEqual(fp[0].nonzero()[1].shape[0], len(explained_bits))
+            self.assertEqual(sorted(fp[0].nonzero()[1]), sorted(explained_bits.keys()))
 
 
 if __name__ == "__main__":
