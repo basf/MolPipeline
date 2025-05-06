@@ -102,7 +102,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             [
                 ("empty_mol_filter2", empty_mol_filter2),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
 
         if self.linear_molecules_strategy == "ignore":
@@ -122,7 +122,8 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             # Create and add separate error replacer for murcko_scaffold
             no_scaffold_filter = ErrorFilter.from_element_list([empty_mol_filter2])
             no_scaffold_replacer = FilterReinserter.from_error_filter(
-                no_scaffold_filter, "linear"
+                no_scaffold_filter,
+                "linear",
             )
 
             # Directly add the error filter and replacer to the pipeline
@@ -131,7 +132,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         else:
             raise ValueError(
                 f"Invalid value for linear_molecules_strategy: "
-                f"{self.linear_molecules_strategy}"
+                f"{self.linear_molecules_strategy}",
             )
 
         error_replacer = FilterReinserter.from_error_filter(error_filter, np.nan)
@@ -143,7 +144,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
                 ("scaffold_encoder", OrdinalEncoder()),
                 ("reshape1d", FunctionTransformer(func=np.ravel)),
                 ("error_replacer", error_replacer),
-            ]
+            ],
         )
 
         cluster_pipeline = Pipeline(
@@ -175,6 +176,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         -------
         Self
             Fitted estimator.
+
         """
         X = validate_data(self, X=X, ensure_min_samples=2, ensure_2d=False, dtype=None)
         return self._fit(X)
@@ -211,9 +213,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
 
     def fit_predict(
         self,
-        X: (
-            npt.NDArray[np.str_] | list[str] | list[OptionalMol]
-        ),  # pylint: disable=C0103
+        X: (npt.NDArray[np.str_] | list[str] | list[OptionalMol]),  # pylint: disable=C0103
         y: npt.NDArray[np.float64] | None = None,
         **params: Any,  # pylint: disable=unused-argument
     ) -> npt.NDArray[np.float64]:
@@ -232,6 +232,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         -------
         np.ndarray[int]
             Cluster labels.
+
         """
         # pylint: disable=W0246
         return super().fit_predict(X, y, **params)
