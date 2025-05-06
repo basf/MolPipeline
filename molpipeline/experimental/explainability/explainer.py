@@ -202,7 +202,10 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
         """
 
 
-class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=too-few-public-methods
+class SHAPExplainerAdapter(  # pylint: disable=too-few-public-methods
+    AbstractSHAPExplainer,
+    abc.ABC,
+):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
     # used for dynamically defining the return type of the explain method
@@ -449,7 +452,9 @@ class SHAPTreeExplainer(SHAPExplainerAdapter):  # pylint: disable=too-few-public
         )
 
 
-class SHAPKernelExplainer(SHAPExplainerAdapter):  # pylint: disable=too-few-public-methods
+class SHAPKernelExplainer(  # pylint: disable=too-few-public-methods
+    SHAPExplainerAdapter,
+):
     """Wrapper for SHAP's KernelExplainer that can handle pipelines and molecules."""
 
     def __init__(
