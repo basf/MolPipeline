@@ -2,23 +2,80 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-import copy
-from typing import Any, Literal, Self
+from typing import TYPE_CHECKING, Any, Literal, Self
 
-from rdkit.Chem import AllChem, rdFingerprintGenerator
+from rdkit.Chem import rdFingerprintGenerator
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
-    ABCMorganFingerprintPipelineElement,
+    MolToRDKitGenFPElement,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.substructure_handling import CircularAtomEnvironment
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
+    from molpipeline.utils.molpipeline_types import RDKitMol
 
 
-class MolToMorganFP(ABCMorganFingerprintPipelineElement):
+class MolToMorganFP(MolToRDKitGenFPElement):
     """Folded Morgan Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
 
     """
+
+    _radius: int
+    _use_features: bool
+
+    @property
+    def radius(self) -> int:
+        """Get radius of Morgan fingerprint."""
+        return self._radius
+
+    @radius.setter
+    def radius(self, value: int) -> None:
+        """Set radius of Morgan fingerprint.
+
+        Parameters
+        ----------
+        value: int
+            Radius of Morgan fingerprint.
+
+        Raises
+        ------
+        ValueError
+            If value is not a positive integer.
+
+        """
+        if not isinstance(value, int) or value < 0:
+            raise ValueError(
+                f"Radius has to be a positive integer! (Received: {value})",
+            )
+        self._radius = value
+
+    @property
+    def use_features(self) -> bool:
+        """Get whether to encode atoms by features or not."""
+        return self._use_features
+
+    @use_features.setter
+    def use_features(self, value: bool) -> None:
+        """Set whether to encode atoms by features or not.
+
+        Parameters
+        ----------
+        value: bool
+            Whether to encode atoms by features or not.
+
+        Raises
+        ------
+        ValueError
+            If value is not a boolean.
+
+        """
+        if not isinstance(value, bool):
+            raise ValueError(f"Use features has to be a boolean! (Received: {value})")
+        self._use_features = value
 
     # pylint: disable=R0913
     def __init__(
@@ -64,28 +121,19 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
 
-        Raises
-        ------
-        ValueError
-            If n_bits is not a positive integer.
-
         """
         # pylint: disable=R0801
         super().__init__(
-            radius=radius,
-            use_features=use_features,
+            n_bits=n_bits,
             counted=counted,
             return_as=return_as,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
         )
-        if not isinstance(n_bits, int) or n_bits < 1:
-            raise ValueError(
-                f"Number of bits has to be a integer > 0! (Received: {n_bits})"
-            )
-        self._n_bits = n_bits
-        self._feature_names = [f"morgan_{i}" for i in range(self._n_bits)]
+        self.use_features = use_features
+        self.radius = radius
+        self._feature_names = [f"morgan_{i}" for i in range(self.n_bits)]
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -99,12 +147,12 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         -------
         dict[str, Any]
             Dictionary of parameters.
+
         """
         parameters = super().get_params(deep)
-        if deep:
-            parameters["n_bits"] = copy.copy(self._n_bits)
-        else:
-            parameters["n_bits"] = self._n_bits
+        parameters["n_bits"] = self.n_bits
+        parameters["radius"] = self.radius
+        parameters["use_features"] = self.use_features
         return parameters
 
     def set_params(self, **parameters: Any) -> Self:
@@ -119,11 +167,15 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         -------
         Self
             MolToMorganFP pipeline element with updated parameters.
+
         """
         parameter_copy = dict(parameters)
-        n_bits = parameter_copy.pop("n_bits", None)
-        if n_bits is not None:
-            self._n_bits = n_bits
+        if "n_bits" in parameter_copy:
+            self.n_bits = parameter_copy.pop("n_bits")
+        if "radius" in parameter_copy:
+            self.radius = parameter_copy.pop("radius")
+        if "use_features" in parameter_copy:
+            self.use_features = parameter_copy.pop("use_features")
         super().set_params(**parameter_copy)
 
         return self
@@ -137,13 +189,17 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         -------
         rdFingerprintGenerator.FingerprintGenerator
             RDKit fingerprint generator.
+
         """
         return rdFingerprintGenerator.GetMorganGenerator(
             radius=self.radius,
-            fpSize=self._n_bits,
+            fpSize=self.n_bits,
         )
 
-    def _explain_rdmol(self, mol_obj: RDKitMol) -> dict[int, list[tuple[int, int]]]:
+    def bit2atom_mapping(
+        self,
+        mol_obj: RDKitMol,
+    ) -> Mapping[int, Sequence[CircularAtomEnvironment]]:
         """Get central atom and radius of all features in molecule.
 
         Parameters
@@ -153,13 +209,20 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
 
         Returns
         -------
-        dict[int, list[tuple[int, int]]]
-            Dictionary with bit position as key and list of tuples with atom index and radius as value.
+        Mapping[int, list[tuple[int, int]]]
+            Dictionary with bit position as key and list of tuples with atom index and
+            radius as value.
+
         """
         fp_generator = self._get_fp_generator()
-        additional_output = AllChem.AdditionalOutput()
+        additional_output = rdFingerprintGenerator.AdditionalOutput()
         additional_output.AllocateBitInfoMap()
-        # using the dense fingerprint here, to get indices after folding
         _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
-        bit_info = additional_output.GetBitInfoMap()
-        return bit_info
+        result_dict: dict[int, list[CircularAtomEnvironment]] = {}
+        # Iterating over all present bits and respective matches
+        for bit, matches in additional_output.GetBitInfoMap().items():
+            result_dict[bit] = []
+            for central_atom, radius in matches:
+                env = CircularAtomEnvironment.from_mol(mol_obj, central_atom, radius)
+                result_dict[bit].append(env)
+        return result_dict

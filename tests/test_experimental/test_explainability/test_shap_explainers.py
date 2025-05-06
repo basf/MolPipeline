@@ -1,8 +1,10 @@
 """Test SHAP's TreeExplainer wrapper."""
 
 import unittest
+from itertools import product
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from rdkit import Chem, rdBase
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
@@ -24,8 +26,10 @@ from molpipeline.experimental.explainability import (
     SHAPKernelExplainer,
     SHAPTreeExplainer,
 )
+from molpipeline.experimental.explainability.explainer import SHAPExplainerAdapter
 from molpipeline.experimental.explainability.explanation import AtomExplanationMixin
 from molpipeline.mol2any import (
+    Mol2PathFP,
     MolToConcatenatedVector,
     MolToMorganFP,
     MolToRDKitPhysChem,
@@ -102,7 +106,7 @@ class TestSHAPExplainers(unittest.TestCase):
             all(
                 isinstance(name, str) and len(name) > 0
                 for name in explanation.feature_names  # type: ignore[union-attr]
-            )
+            ),
         )
         self.assertEqual(
             len(explanation.feature_names),  # type: ignore
@@ -126,18 +130,20 @@ class TestSHAPExplainers(unittest.TestCase):
         elif is_classifier(estimator):
             self.assertTrue((2,), explanation.prediction.shape)  # type: ignore[union-attr]
             if isinstance(explainer, SHAPTreeExplainer) and isinstance(
-                estimator, GradientBoostingClassifier
+                estimator,
+                GradientBoostingClassifier,
             ):
-                # there is currently a bug in SHAP's TreeExplainer for GradientBoostingClassifier
-                # https://github.com/shap/shap/issues/3177 returning only one feature weight
-                # which is also based on log odds. This check is a workaround until the bug is fixed.
+                # there is currently a bug in SHAP's TreeExplainer for
+                # GradientBoostingClassifier https://github.com/shap/shap/issues/3177
+                # returning only one feature weight which is also based on log odds.
+                # This check is a workaround until the bug is fixed.
                 self.assertEqual(
                     (nof_features,),
                     explanation.feature_weights.shape,  # type: ignore[union-attr]
                 )
             elif isinstance(estimator, SVC):
-                # SVC seems to be handled differently by SHAP. It returns only a one dimensional
-                # feature array for binary classification.
+                # SVC seems to be handled differently by SHAP. It returns only a one
+                # dimensional feature array for binary classification.
                 self.assertTrue(
                     (1,),
                     explanation.prediction.shape,  # type: ignore[union-attr]
@@ -162,10 +168,62 @@ class TestSHAPExplainers(unittest.TestCase):
                 (explanation.molecule.GetNumAtoms(),),  # type: ignore[union-attr]
             )
 
+    def _test_pipeline_explanation(
+        self,
+        pipeline: Pipeline,
+        explainer_type: type[SHAPExplainerAdapter],
+        test_smiles: list[str],
+        labels: npt.ArrayLike,
+    ) -> None:
+        """Test SHAP's TreeExplainer wrapper on MolPipeline's pipelines.
+
+        Parameters
+        ----------
+        pipeline : Pipeline
+            The pipeline to be tested.
+        explainer_type : type[SHAPExplainerAdapter]
+            The explainer used to generate the explanation.
+        test_smiles : list[str]
+            The SMILES strings of the molecules.
+        labels : npt.ArrayLike
+            The labels of the molecules.
+
+        """
+        pipeline.fit(test_smiles, labels)
+
+        # some explainers require additional kwargs
+        explainer_kwargs = {}
+        if explainer_type == SHAPKernelExplainer:
+            explainer_kwargs = construct_kernel_shap_kwargs(pipeline, test_smiles)
+
+        explainer = explainer_type(pipeline, **explainer_kwargs)
+        explanations = explainer.explain(test_smiles)
+        self.assertEqual(len(explanations), len(test_smiles))
+
+        self.assertTrue(
+            issubclass(explainer.return_element_type_, AtomExplanationMixin),
+        )
+
+        # get the subpipeline that extracts the molecule from the input data
+        mol_reader_subpipeline = SubpipelineExtractor(
+            pipeline,
+        ).get_molecule_reader_subpipeline()
+        self.assertIsInstance(mol_reader_subpipeline, Pipeline)
+
+        for i, explanation in enumerate(explanations):
+            self._test_valid_explanation(
+                explanation,
+                pipeline.named_steps["model"],
+                mol_reader_subpipeline,  # type: ignore[arg-type]
+                pipeline.named_steps["encoding"].n_bits,
+                test_smiles[i],
+                explainer=explainer,  # type: ignore[arg-type]
+            )
+
     def test_explanations_fingerprint_pipeline(  # pylint: disable=too-many-locals
         self,
     ) -> None:
-        """Test SHAP's TreeExplainer wrapper on MolPipeline's pipelines with fingerprints."""
+        """Test SHAP's TreeExplainer wrapper on Pipelines with fingerprints."""
         tree_estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
@@ -185,50 +243,33 @@ class TestSHAPExplainers(unittest.TestCase):
             SHAPTreeExplainer,
         ]
         explainer_estimators = [tree_estimators + other_estimators, tree_estimators]
+        mol_encoder_list = [
+            MolToMorganFP(radius=1, n_bits=n_bits),
+            Mol2PathFP(n_bits=n_bits, min_path=1, max_path=2),
+        ]
 
         for estimators, explainer_type in zip(
-            explainer_estimators, explainer_types, strict=True
+            explainer_estimators,
+            explainer_types,
+            strict=True,
         ):
             # test explanations with different estimators
-            for estimator in estimators:
+            for estimator, encoding in product(estimators, mol_encoder_list):
                 pipeline = Pipeline(
                     [
                         ("smi2mol", SmilesToMol()),
-                        ("morgan", MolToMorganFP(radius=1, n_bits=n_bits)),
+                        ("encoding", encoding),
                         ("model", estimator),
-                    ]
+                    ],
                 )
-                pipeline.fit(TEST_SMILES, CONTAINS_OX)
-
-                # some explainers require additional kwargs
-                explainer_kwargs = {}
-                if explainer_type == SHAPKernelExplainer:
-                    explainer_kwargs = construct_kernel_shap_kwargs(
-                        pipeline, TEST_SMILES
-                    )
-
-                explainer = explainer_type(pipeline, **explainer_kwargs)
-                explanations = explainer.explain(TEST_SMILES)
-                self.assertEqual(len(explanations), len(TEST_SMILES))
-
-                self.assertTrue(
-                    issubclass(explainer.return_element_type_, AtomExplanationMixin)
-                )
-
-                # get the subpipeline that extracts the molecule from the input data
-                mol_reader_subpipeline = SubpipelineExtractor(
-                    pipeline
-                ).get_molecule_reader_subpipeline()
-                self.assertIsInstance(mol_reader_subpipeline, Pipeline)
-
-                for i, explanation in enumerate(explanations):
-                    self._test_valid_explanation(
-                        explanation,
-                        estimator,
-                        mol_reader_subpipeline,  # type: ignore[arg-type]
-                        n_bits,
-                        TEST_SMILES[i],
-                        explainer=explainer,  # type: ignore[arg-type]
+                self.assertEqual(pipeline.named_steps["encoding"].n_bits, n_bits)
+                self.assertIs(pipeline.named_steps["model"], estimator)
+                with self.subTest(estimator=estimator, encoding=encoding):
+                    self._test_pipeline_explanation(
+                        pipeline,
+                        explainer_type,
+                        TEST_SMILES,
+                        CONTAINS_OX,
                     )
 
     # pylint: disable=too-many-locals
@@ -262,13 +303,13 @@ class TestSHAPExplainers(unittest.TestCase):
                         ("error_filter", error_filter1),
                         ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                         ("model", estimator),
-                    ]
+                    ],
                 )
 
                 # pipeline with ErrorFilter and FilterReinserter
                 error_filter2 = ErrorFilter()
                 error_reinserter2 = PostPredictionWrapper(
-                    FilterReinserter.from_error_filter(error_filter2, fill_value)
+                    FilterReinserter.from_error_filter(error_filter2, fill_value),
                 )
                 pipeline2 = Pipeline(
                     [
@@ -278,7 +319,7 @@ class TestSHAPExplainers(unittest.TestCase):
                         ("morgan", MolToMorganFP(radius=1, n_bits=n_bits)),
                         ("model", estimator),
                         ("error_reinserter", error_reinserter2),
-                    ]
+                    ],
                 )
 
                 for pipeline in [pipeline1, pipeline2]:
@@ -289,12 +330,13 @@ class TestSHAPExplainers(unittest.TestCase):
                     explanations = explainer.explain(TEST_SMILES_WITH_BAD_SMILES)
                     del log_block
                     self.assertEqual(
-                        len(explanations), len(TEST_SMILES_WITH_BAD_SMILES)
+                        len(explanations),
+                        len(TEST_SMILES_WITH_BAD_SMILES),
                     )
 
                     # get the subpipeline that extracts the molecule from the input data
                     mol_reader_subpipeline = SubpipelineExtractor(
-                        pipeline
+                        pipeline,
                     ).get_molecule_reader_subpipeline()
                     self.assertIsNotNone(mol_reader_subpipeline)
 
@@ -328,7 +370,7 @@ class TestSHAPExplainers(unittest.TestCase):
                     ("smi2mol", SmilesToMol()),
                     ("physchem", MolToRDKitPhysChem()),
                     ("model", estimator),
-                ]
+                ],
             )
 
             pipeline.fit(TEST_SMILES, CONTAINS_OX)
@@ -339,7 +381,7 @@ class TestSHAPExplainers(unittest.TestCase):
 
             # get the subpipeline that extracts the molecule from the input data
             mol_reader_subpipeline = SubpipelineExtractor(
-                pipeline
+                pipeline,
             ).get_molecule_reader_subpipeline()
             self.assertIsNotNone(mol_reader_subpipeline)
 
@@ -386,11 +428,11 @@ class TestSHAPExplainers(unittest.TestCase):
                                     "MorganFP",
                                     MolToMorganFP(radius=1, n_bits=n_bits),
                                 ),
-                            ]
+                            ],
                         ),
                     ),
                     ("model", estimator),
-                ]
+                ],
             )
 
             pipeline.fit(TEST_SMILES, CONTAINS_OX)
@@ -401,7 +443,7 @@ class TestSHAPExplainers(unittest.TestCase):
 
             # get the subpipeline that extracts the molecule from the input data
             mol_reader_subpipeline = SubpipelineExtractor(
-                pipeline
+                pipeline,
             ).get_molecule_reader_subpipeline()
             self.assertIsNotNone(mol_reader_subpipeline)
 
