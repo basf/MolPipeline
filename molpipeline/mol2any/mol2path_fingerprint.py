@@ -18,9 +18,7 @@ if TYPE_CHECKING:
     from molpipeline.utils.molpipeline_types import RDKitMol
 
 
-class Mol2PathFP(
-    MolToRDKitGenFPElement,
-):  # pylint: disable=too-many-instance-attributes
+class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-attributes
     """Folded Path Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
