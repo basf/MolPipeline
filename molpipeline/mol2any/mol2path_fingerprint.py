@@ -199,7 +199,8 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
         if num_bits_per_feature is not None:
             self._num_bits_per_feature = num_bits_per_feature
         atom_invariants_generator = parameter_copy.pop(
-            "atom_invariants_generator", None,
+            "atom_invariants_generator",
+            None,
         )
         if atom_invariants_generator is not None:
             self._atom_invariants_generator = atom_invariants_generator

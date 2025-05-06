@@ -170,7 +170,9 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
 
         if return_distance:
             distances, indices = super().kneighbors(
-                X, n_neighbors=n_neighbors, return_distance=True,
+                X,
+                n_neighbors=n_neighbors,
+                return_distance=True,
             )
             # stack in such a way that the shape is (n_input, n_neighbors, 2)
             # shape 2 as the neighbor idx and distance are returned

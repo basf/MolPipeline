@@ -122,7 +122,8 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             # Create and add separate error replacer for murcko_scaffold
             no_scaffold_filter = ErrorFilter.from_element_list([empty_mol_filter2])
             no_scaffold_replacer = FilterReinserter.from_error_filter(
-                no_scaffold_filter, "linear",
+                no_scaffold_filter,
+                "linear",
             )
 
             # Directly add the error filter and replacer to the pipeline

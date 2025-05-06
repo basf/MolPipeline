@@ -89,7 +89,8 @@ def _get_prediction_function(
 
 # This function might also be put at a more central position in the lib.
 def _get_predictions(
-    pipeline: Pipeline, feature_matrix: npt.NDArray[Any] | spmatrix,
+    pipeline: Pipeline,
+    feature_matrix: npt.NDArray[Any] | spmatrix,
 ) -> npt.NDArray[np.float64]:
     """Get the predictions of a model.
 
@@ -284,7 +285,9 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
 
     @override
     def explain(
-        self, X: Any, **kwargs: Any,
+        self,
+        X: Any,
+        **kwargs: Any,
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
@@ -350,7 +353,8 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
             bond_weights = None
 
             if issubclass(
-                self.return_element_type_, AtomExplanationMixin,
+                self.return_element_type_,
+                AtomExplanationMixin,
             ) and isinstance(featurization_element, MolToMorganFP):
                 # for Morgan fingerprint, we can map the shap values to atom weights
                 atom_weights = _convert_shap_feature_weights_to_atom_weights(
