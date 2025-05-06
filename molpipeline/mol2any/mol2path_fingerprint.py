@@ -98,6 +98,7 @@ class Mol2PathFP(
         """
         # pylint: disable=R0801
         super().__init__(
+            n_bits=n_bits,
             counted=counted,
             return_as=return_as,
             name=name,

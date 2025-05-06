@@ -24,42 +24,8 @@ class MolToMorganFP(MolToRDKitGenFPElement):
 
     """
 
-    _n_bits: int
     _radius: int
     _use_features: bool
-
-    @property
-    def n_bits(self) -> int:
-        """Get number of bits in Morgan fingerprint."""
-        return self._n_bits
-
-    @n_bits.setter
-    def n_bits(self, value: int) -> None:
-        """Set number of bits in Morgan fingerprint.
-
-        Parameters
-        ----------
-        value: int
-            Number of bits in Morgan fingerprint.
-
-        Raises
-        ------
-        ValueError
-            If value is not a positive integer.
-
-        """
-        if not isinstance(value, int) or value < 1:
-            raise ValueError(
-                f"Number of bits has to be a integer > 0! (Received: {value})",
-            )
-        self._n_bits = value
-
-    @property
-    def output_type(self) -> str:
-        """Get output type."""
-        if self.counted:
-            return "integer"
-        return "binary"
 
     @property
     def radius(self) -> int:
@@ -158,6 +124,7 @@ class MolToMorganFP(MolToRDKitGenFPElement):
         """
         # pylint: disable=R0801
         super().__init__(
+            n_bits=n_bits,
             counted=counted,
             return_as=return_as,
             name=name,
@@ -166,7 +133,6 @@ class MolToMorganFP(MolToRDKitGenFPElement):
         )
         self.use_features = use_features
         self.radius = radius
-        self.n_bits = n_bits
         self._feature_names = [f"morgan_{i}" for i in range(self.n_bits)]
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:

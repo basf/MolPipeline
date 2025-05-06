@@ -236,8 +236,42 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
     """Abstract class for PipelineElements using the FingeprintGenerator64."""
 
+    @property
+    def n_bits(self) -> int:
+        """Get number of bits in (or size of) fingerprint."""
+        return self._n_bits
+
+    @n_bits.setter
+    def n_bits(self, value: int) -> None:
+        """Set number of bits in Morgan fingerprint.
+
+        Parameters
+        ----------
+        value: int
+            Number of bits in Morgan fingerprint.
+
+        Raises
+        ------
+        ValueError
+            If value is not a positive integer.
+
+        """
+        if not isinstance(value, int) or value < 1:
+            raise ValueError(
+                f"Number of bits has to be a integer > 0! (Received: {value})",
+            )
+        self._n_bits = value
+
+    @property
+    def output_type(self) -> str:
+        """Get output type."""
+        if self.counted:
+            return "integer"
+        return "binary"
+
     def __init__(
         self,
+        n_bits: int = 2048,
         counted: bool = False,
         return_as: OutputDatatype = "sparse",
         name: str = "MolToRDKitGenFin",
@@ -248,6 +282,8 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
         Parameters
         ----------
+        n_bits: int, default=2048
+            Number of bits in fingerprint.
         counted: bool, default=False
             Whether to count the bits or not.
         return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
@@ -267,6 +303,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
             n_jobs=n_jobs,
             uuid=uuid,
         )
+        self.n_bits = n_bits
         self.counted = counted
 
     @abc.abstractmethod
