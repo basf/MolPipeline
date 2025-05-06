@@ -146,7 +146,7 @@ jobs:
           python-version: "3.13"
       - name: Analysing the code with ruff
         run: |
-          uvx run ruff format --check
+          uvx ruff format --check
 
   test_basis:
     needs:
