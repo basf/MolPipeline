@@ -469,10 +469,6 @@ class Pipeline(_Pipeline):
         aggregated_transformer_list: list[tuple[int, str, ABCPipelineElement]]
         aggregated_transformer_list = []
         for i, (name_i, step_i) in enumerate(self._non_post_processing_steps()):
-            if not isinstance(step_i, ABCPipelineElement):
-                raise AssertionError(
-                    "Step is not a PipelineElement, hence cannot be aggregated.",
-                )
             if isinstance(step_i, SingleInstanceTransformerMixin):
                 aggregated_transformer_list.append((i, name_i, step_i))
             else:
