@@ -454,11 +454,6 @@ class Pipeline(_Pipeline):
         When filter_passthrough is True, 'passthrough' and None transformers
         are filtered out.
 
-        Raises
-        ------
-        AssertionError
-            If the step is not a PipelineElement.
-
         Yields
         ------
         _AggregatedPipelineStep
