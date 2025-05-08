@@ -127,7 +127,14 @@ $$$$
         self.assertEqual(sdf2mol.mol_counter, 0)
 
     def test_pretransform_valid_sdf(self) -> None:
-        """Test transformation of valid SDF string."""
+        """Test transformation of valid SDF string.
+
+        Raises
+        ------
+        AssertionError
+            If the transformation does not return a valid molecule.
+
+        """
         sdf2mol = SDFToMol()
         # test sdf string with single molecule: benzaldehyde
         mol = sdf2mol.pretransform_single(self.sdf_str_benzaldehyde)
@@ -160,7 +167,14 @@ $$$$
         self.assertIsInstance(result, InvalidInstance)
 
     def test_transform(self) -> None:
-        """Test transform function."""
+        """Test transform function.
+
+        Raises
+        ------
+        AssertionError
+            If the transformation does not return a valid molecule.
+
+        """
         # test list of sdf strings
         mols = SDFToMol().transform([self.sdf_str_benzaldehyde, self.sdf_str_aspirin])
         self.assertEqual(len(mols), 2)
@@ -203,7 +217,14 @@ $$$$
         self.assertEqual(mols[1].GetNumAtoms(), 8)
 
     def test_sdf_properties_transfer(self) -> None:
-        """Test that properties from SDF are transferred to molecule."""
+        """Test that properties from SDF are transferred to molecule.
+
+        Raises
+        ------
+        AssertionError
+            If the transformation does not return a valid molecule.
+
+        """
         mol = SDFToMol().pretransform_single(self.sdf_str_benzaldehyde)
         if not isinstance(mol, Chem.Mol):
             # necessary for mypy
