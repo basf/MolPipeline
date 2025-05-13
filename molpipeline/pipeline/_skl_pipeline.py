@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Literal, Self
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeIs
 
 import numpy as np
 import numpy.typing as npt
@@ -26,6 +26,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
     RemovedInstance,
     SingleInstanceTransformerMixin,
+    TransformingPipelineElement,
 )
 from molpipeline.error_handling import (
     ErrorFilter,
@@ -46,7 +47,7 @@ from molpipeline.utils.molpipeline_types import (
 from molpipeline.utils.value_checks import is_empty
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Iterable
+    from collections.abc import Generator, Iterable, Sequence
 
     import joblib
 
@@ -61,21 +62,21 @@ _AggregatedPipelineStep = _IndexedStep | _AggStep
 
 
 def _agg_transformers(
-    transformer_list: list[tuple[int, str, AnyTransformer]],
+    transformer_list: Sequence[tuple[int, str, AnyElement]],
     n_jobs: int = 1,
-) -> tuple[list[int], list[str], AnyElement] | tuple[int, str, AnyTransformer]:
+) -> tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]:
     """Aggregate transformers to a single step.
 
     Parameters
     ----------
-    transformer_list: list[tuple[int, str, AnyTransformer]]
+    transformer_list: list[tuple[int, str, AnyElement]]
         List of transformers to aggregate.
     n_jobs: int, optional
         Number of cores used for aggregated steps.
 
     Returns
     -------
-    tuple[list[int], list[str], AnyElement] | tuple[int, str, AnyTransformer]
+    tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]
         Aggregated transformer.
         If the list contains only one transformer, it is returned as is.
 
@@ -94,7 +95,28 @@ def _agg_transformers(
     )
 
 
-class Pipeline(AdapterPipeline, ABCPipelineElement):
+def check_single_instance_support(
+    estimator: Any,
+) -> TypeIs[SingleInstanceTransformerMixin | Pipeline]:
+    """Check if the estimator supports single instance processing.
+
+    Parameters
+    ----------
+    estimator: Any
+        Estimator to check.
+
+    Returns
+    -------
+    TypeIs[SingleInstanceTransformerMixin | Pipeline]
+        True if the estimator supports single instance processing.
+
+    """
+    if isinstance(estimator, SingleInstanceTransformerMixin):
+        return True
+    return isinstance(estimator, Pipeline) and estimator.supports_single_instance
+
+
+class Pipeline(AdapterPipeline, TransformingPipelineElement):
     """Defines the pipeline which handles pipeline elements."""
 
     steps: list[AnyStep]
@@ -196,7 +218,7 @@ class Pipeline(AdapterPipeline, ABCPipelineElement):
         with_final: bool = True,
         filter_passthrough: bool = True,
     ) -> Generator[
-        tuple[int, str, AnyElement] | tuple[list[int], list[str], Pipeline],
+        tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement],
         Any,
         None,
     ]:
@@ -219,16 +241,19 @@ class Pipeline(AdapterPipeline, ABCPipelineElement):
             transformer.
 
         """
+        if self.supports_single_instance:
+            yield from super()._iter(
+                with_final=with_final,
+                filter_passthrough=filter_passthrough,
+            )
+            return
         transformers_to_agg: list[tuple[int, str, AnyTransformer]]
         transformers_to_agg = []
         final_transformer_list: list[
-            tuple[int, str, AnyElement] | tuple[list[int], list[str], AnyElement]
+            tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]
         ] = []
         for i, (name_i, step_i) in enumerate(super()._modified_steps):
-            if (
-                isinstance(step_i, SingleInstanceTransformerMixin)
-                and not self.supports_single_instance
-            ):
+            if isinstance(step_i, SingleInstanceTransformerMixin):
                 transformers_to_agg.append((i, name_i, step_i))
             else:
                 if transformers_to_agg:
@@ -250,9 +275,11 @@ class Pipeline(AdapterPipeline, ABCPipelineElement):
         if not with_final:
             stop -= 1
 
-        for idx, name, trans in islice(final_transformer_list, 0, stop):
-            if not filter_passthrough or (trans is not None and trans != "passthrough"):
-                yield idx, name, trans
+        for step in islice(final_transformer_list, 0, stop):
+            if not filter_passthrough or (
+                step[2] is not None and step[2] != "passthrough"
+            ):
+                yield step
 
     @property
     def _estimator_type(self) -> Any:
@@ -387,6 +414,8 @@ class Pipeline(AdapterPipeline, ABCPipelineElement):
         ------
         AssertionError
             If PipelineElement is not a SingleInstanceTransformerMixin or Pipeline.
+        AssertionError
+            If PipelineElement is not a TransformingPipelineElement.
 
         Returns
         -------
@@ -397,31 +426,30 @@ class Pipeline(AdapterPipeline, ABCPipelineElement):
         if not self.supports_single_instance:
             return super().fit_transform(X, **params)
         iter_input = X
-        removed_rows: dict[ErrorFilter, list[int]] = {}
-        for error_filter in self._filter_elements:
-            removed_rows[error_filter] = []
+        removed_row_dict: dict[ErrorFilter, list[int]] = {
+            error_filter: [] for error_filter in self._filter_elements
+        }
         iter_idx_array = np.arange(len(iter_input))
 
         # The meta elements merge steps which do not require fitting
         for idx, _, i_element in self._iter(with_final=True):
-            if not isinstance(
-                i_element,
-                SingleInstanceTransformerMixin,
-            ) and (
-                isinstance(i_element, Pipeline)
-                and not i_element.supports_single_instance
-            ):
+            if not isinstance(i_element, TransformingPipelineElement):
                 raise AssertionError(
-                    "PipelineElement is not a SingleInstanceTransformerMixin.",
+                    "PipelineElement is not a TransformingPipelineElement.",
                 )
-            if isinstance(i_element, (ErrorFilter, FilterReinserter)):
+            if not check_single_instance_support(i_element):
+                raise AssertionError(
+                    "PipelineElement is not a SingleInstanceTransformerMixin or"
+                    " Pipeline with signle instance support.",
+                )
+            if isinstance(i_element, ErrorFilter):
                 continue
             i_element.n_jobs = self.n_jobs
             iter_input = i_element.pretransform(iter_input)
             for error_filter in self._filter_elements:
                 iter_input = error_filter.transform(iter_input)
                 for idx in error_filter.error_indices:
-                    removed_rows[error_filter].append(int(iter_idx_array[idx]))
+                    removed_row_dict[error_filter].append(int(iter_idx_array[idx]))
                 iter_idx_array = error_filter.co_transform(iter_idx_array)
             iter_input = i_element.assemble_output(iter_input)
             i_element.n_jobs = 1
@@ -429,7 +457,7 @@ class Pipeline(AdapterPipeline, ABCPipelineElement):
         # Set removed rows to filter elements to allow for correct co_transform
         iter_idx_array = np.arange(len(X))
         for error_filter in self._filter_elements:
-            removed_idx_list = removed_rows[error_filter]
+            removed_idx_list = removed_row_dict[error_filter]
             error_filter.error_indices = []
             for new_idx, _idx in enumerate(iter_idx_array):
                 if _idx in removed_idx_list:
@@ -873,7 +901,7 @@ class Pipeline(AdapterPipeline, ABCPipelineElement):
 
         """
         final_estimator = self._final_estimator
-        if hasattr(final_estimator, "assemble_output"):
+        if isinstance(final_estimator, TransformingPipelineElement):
             return final_estimator.assemble_output(value_list)
         return list(value_list)
 

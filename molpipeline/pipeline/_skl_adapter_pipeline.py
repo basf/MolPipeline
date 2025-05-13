@@ -227,7 +227,7 @@ class AdapterPipeline(_Pipeline):
         with_final: bool = True,
         filter_passthrough: bool = True,
     ) -> Generator[
-        tuple[int, str, AnyElement] | tuple[list[int], list[str], AnyElement],
+        tuple[int, str, AnyElement] | tuple[list[int], list[str], AdapterPipeline],
         Any,
         None,
     ]:
