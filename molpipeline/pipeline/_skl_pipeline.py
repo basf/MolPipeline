@@ -421,8 +421,7 @@ class Pipeline(AdapterPipeline, ABCPipelineElement):
             for error_filter in self._filter_elements:
                 iter_input = error_filter.transform(iter_input)
                 for idx in error_filter.error_indices:
-                    idx = iter_idx_array[idx]
-                    removed_rows[error_filter].append(idx)
+                    removed_rows[error_filter].append(int(iter_idx_array[idx]))
                 iter_idx_array = error_filter.co_transform(iter_idx_array)
             iter_input = i_element.assemble_output(iter_input)
             i_element.n_jobs = 1
