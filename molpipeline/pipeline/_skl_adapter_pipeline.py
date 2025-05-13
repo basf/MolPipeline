@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Literal, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -28,9 +28,7 @@ from molpipeline.post_prediction import (
 from molpipeline.utils.logging import print_elapsed_time
 from molpipeline.utils.molpipeline_types import (
     AnyElement,
-    AnyPredictor,
     AnyStep,
-    AnyTransformer,
 )
 from molpipeline.utils.value_checks import is_empty
 
@@ -39,10 +37,6 @@ if TYPE_CHECKING:
 
     import joblib
     from sklearn.utils import Bunch
-
-    from molpipeline.abstract_pipeline_elements.core import (
-        ABCPipelineElement,
-    )
 
 
 _IndexedStep = tuple[int, str, AnyElement]
@@ -62,13 +56,6 @@ class AdapterPipeline(_Pipeline):
         if hasattr(self._final_estimator, "_estimator_type"):
             return self._final_estimator._estimator_type  # noqa: SLF001
         return None
-
-    @property
-    def _final_estimator(
-        self,
-    ) -> Literal["passthrough"] | AnyTransformer | AnyPredictor | ABCPipelineElement:
-        """Return the lst estimator which is not a PostprocessingTransformer."""
-        return self._modified_steps[-1][1]
 
     @property
     def _modified_steps(
