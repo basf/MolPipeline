@@ -870,12 +870,12 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
         del log_block
         return iter_value
 
-    def pretransform(self, x_input: Any) -> Any:
+    def pretransform(self, value_list: Any) -> Any:
         """Transform the input according to the sequence without assemble_output step.
 
         Parameters
         ----------
-        x_input: Any
+        value_list: Any
             Molecular representations which are subsequently transformed.
 
         Returns
@@ -884,7 +884,7 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
             Transformed molecular representations.
 
         """
-        return list(self._transform_iterator(x_input))
+        return list(self._transform_iterator(value_list))
 
     def assemble_output(self, value_list: Iterable[Any]) -> Any:
         """Assemble the output of the pipeline.
