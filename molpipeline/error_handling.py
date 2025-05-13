@@ -695,27 +695,6 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         self.fit(values)
         return self.transform(values)
 
-    def transform_single(self, value: Any) -> Any:
-        """Transform a single value.
-
-        Parameters
-        ----------
-        value: Any
-            Value to be transformed.
-
-        Returns
-        -------
-        Any
-            Transformed value.
-
-        """
-        if (
-            isinstance(value, RemovedInstance)
-            and value.filter_element_id == self.error_filter.uuid
-        ):
-            return self.fill_value
-        return value
-
     def transform(
         self,
         values: TypeFixedVarSeq,
