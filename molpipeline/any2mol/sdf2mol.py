@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, Literal, Self
+from typing import TYPE_CHECKING, Any, Literal, Self
 
 from rdkit import Chem
 
@@ -11,7 +11,9 @@ from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
-from molpipeline.utils.molpipeline_types import OptionalMol
+
+if TYPE_CHECKING:
+    from molpipeline.utils.molpipeline_types import OptionalMol
 
 
 class SDFToMol(_StringToMolPipelineElement):
@@ -39,6 +41,7 @@ class SDFToMol(_StringToMolPipelineElement):
             Number of cores used for processing.
         uuid: str | None, optional
             uuid of PipelineElement, by default None
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.identifier = identifier
@@ -55,6 +58,7 @@ class SDFToMol(_StringToMolPipelineElement):
         -------
         dict[str, Any]
             Dictionary containing all parameters defining the object.
+
         """
         params = super().get_params(deep)
         if deep:
@@ -75,6 +79,7 @@ class SDFToMol(_StringToMolPipelineElement):
         -------
         Self
             SDFToMol with updated parameters.
+
         """
         super().set_params(**parameters)
         if "identifier" in parameters:
@@ -93,6 +98,7 @@ class SDFToMol(_StringToMolPipelineElement):
         -------
         OptionalMol
             Molecule if transformation was successful, else InvalidInstance.
+
         """
         if not isinstance(value, (str, bytes)):
             return InvalidInstance(
@@ -100,7 +106,9 @@ class SDFToMol(_StringToMolPipelineElement):
                 "Invalid SDF string!",
                 self.name,
             )
-        mol = Chem.MolFromMolBlock(value)
+        supplier = Chem.SDMolSupplier()
+        supplier.SetData(value)
+        mol = next(supplier, None)
         if mol is None:
             return InvalidInstance(
                 self.uuid,
