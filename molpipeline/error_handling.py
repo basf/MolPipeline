@@ -27,7 +27,7 @@ _T = TypeVar("_T")
 _S = TypeVar("_S")
 
 
-class ErrorFilter(SingleInstanceTransformerMixin, ABCPipelineElement):
+class ErrorFilter(SingleInstanceTransformerMixin, TransformingPipelineElement):
     """Filter to remove InvalidInstances from a list of values."""
 
     element_ids: set[str]
