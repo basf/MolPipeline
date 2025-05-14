@@ -1,6 +1,6 @@
-"""Unittest for MolFilter functionality.
+"""Unittest for MolFilters functionality.
 
-MolFilter set flag Molecules as invalid based on the criteria defined in the filter.
+MolFilters flag Molecules as invalid based on the criteria defined in the filter.
 
 """
 
