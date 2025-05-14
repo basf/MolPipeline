@@ -763,20 +763,6 @@ class AdapterPipeline(_Pipeline):
             iter_input = post_element.transform(iter_input)
         return iter_input
 
-    def _can_transform(self) -> bool:  # pylint: ignore[duplicate-code]
-        """Check if the final estimator can transform or is passthrough.
-
-        Returns
-        -------
-        bool
-            True if the final estimator can transform or is passthrough.
-
-        """
-        return self._final_estimator == "passthrough" or hasattr(
-            self._final_estimator,
-            "transform",
-        )
-
     @available_if(_can_decision_function)
     def decision_function(
         self,
