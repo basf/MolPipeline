@@ -642,12 +642,6 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
         **params : Any
             Parameters to the ``transform`` method of each estimator.
 
-        Raises
-        ------
-        AssertionError
-            If the final estimator does not implement `transform` or
-            `fit_transform` or is passthrough.
-
         Returns
         -------
         Xt : ndarray of shape (n_samples, n_transformed_features)
@@ -658,21 +652,7 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
             output_generator = self._transform_iterator(X)
             iter_input = self.assemble_output(output_generator)
         else:
-            routed_params = process_routing(self, "transform", **params)
-            iter_input = X
-            for _, name, transform in self._iter():
-                if transform == "passthrough":
-                    continue
-                if hasattr(transform, "transform"):
-                    iter_input = transform.transform(
-                        iter_input,
-                        **routed_params[name].transform,
-                    )
-                else:
-                    raise AssertionError(
-                        "Non transformer ocurred in transformation step."
-                        "This should have been caught in the validation step.",
-                    )
+            iter_input = super().transform(X, **params)
         for _, post_element in self._post_processing_steps:
             iter_input = post_element.transform(iter_input, **params)
         return iter_input

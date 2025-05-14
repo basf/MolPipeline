@@ -777,61 +777,6 @@ class AdapterPipeline(_Pipeline):
             "transform",
         )
 
-    @available_if(_can_transform)
-    def transform(
-        self,
-        X: Any,  # noqa: N803
-        **params: Any,
-    ) -> Any:
-        """Transform the data, and apply `transform` with the final estimator.
-
-        Call `transform` of each transformer in the pipeline. The transformed
-        data are finally passed to the final estimator that calls
-        `transform` method. Only valid if the final estimator
-        implements `transform`.
-
-        This also works where final estimator is `None` in which case all prior
-        transformations are applied.
-
-        Parameters
-        ----------
-        X : iterable
-            Data to transform. Must fulfill input requirements of first step
-            of the pipeline.
-        **params : Any
-            Parameters to the ``transform`` method of each estimator.
-
-        Raises
-        ------
-        AssertionError
-            If the final estimator does not implement `transform` or
-            `fit_transform` or is passthrough.
-
-        Returns
-        -------
-        Xt : ndarray of shape (n_samples, n_transformed_features)
-            Transformed data.
-
-        """
-        routed_params = process_routing(self, "transform", **params)
-        iter_input = X
-        for _, name, transform in self._iter():
-            if transform == "passthrough":
-                continue
-            if hasattr(transform, "transform"):
-                iter_input = transform.transform(
-                    iter_input,
-                    **routed_params[name].transform,
-                )
-            else:
-                raise AssertionError(
-                    "Non transformer ocurred in transformation step."
-                    "This should have been caught in the validation step.",
-                )
-        for _, post_element in self._post_processing_steps:
-            iter_input = post_element.transform(iter_input, **params)
-        return iter_input
-
     @available_if(_can_decision_function)
     def decision_function(
         self,
