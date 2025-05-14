@@ -282,15 +282,6 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
                 yield step
 
     @property
-    def _estimator_type(self) -> Any:
-        """Return the estimator type."""
-        if self._final_estimator is None or self._final_estimator == "passthrough":
-            return None
-        if hasattr(self._final_estimator, "_estimator_type"):
-            return self._final_estimator._estimator_type  # noqa: SLF001
-        return None
-
-    @property
     def _final_estimator(
         self,
     ) -> Literal["passthrough"] | AnyTransformer | AnyPredictor | ABCPipelineElement:
