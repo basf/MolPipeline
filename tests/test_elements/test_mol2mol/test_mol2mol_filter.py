@@ -1,6 +1,6 @@
-"""Unittest for MolFilter functionality.
+"""Unittest for MolFilters functionality.
 
-MolFilter set flag Molecules as invalid based on the criteria defined in the filter.
+MolFilters flag Molecules as invalid based on the criteria defined in the filter.
 
 """
 
@@ -33,7 +33,7 @@ SMILES_ANTIMONY = "[SbH6+3]"
 SMILES_BENZENE = "c1ccccc1"
 SMILES_CHLOROBENZENE = "Clc1ccccc1"
 SMILES_CL_BR = "NC(Cl)(Br)C(=O)O"
-SMILES_METAL_AU = "OC[C@H]1OC(S[Au])[C@H](O)[C@@H](O)[C@@H]1O"
+SMILES_METAL_AU = "OC[C@H]1OC([S][Au])[C@H](O)[C@@H](O)[C@@H]1O"
 
 SMILES_LIST = [
     SMILES_ANTIMONY,
