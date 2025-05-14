@@ -763,7 +763,7 @@ class AdapterPipeline(_Pipeline):
             iter_input = post_element.transform(iter_input)
         return iter_input
 
-    def _can_transform(self) -> bool:
+    def _can_transform(self) -> bool:  # pylint: ignore[duplicate-code]
         """Check if the final estimator can transform or is passthrough.
 
         Returns
