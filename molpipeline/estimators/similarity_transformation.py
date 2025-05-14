@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt

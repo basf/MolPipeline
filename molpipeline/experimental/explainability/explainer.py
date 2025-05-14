@@ -3,23 +3,19 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import shap
 from scipy.sparse import issparse, spmatrix
-from sklearn.base import BaseEstimator
+from typing_extensions import override
 
-try:
-    from typing import override  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import override
-
-from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance, OptionalMol
+from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
+    MolToRDKitGenFPElement,
+)
 from molpipeline.experimental.explainability.explanation import (
     AtomExplanationMixin,
     BondExplanationMixin,
@@ -32,8 +28,14 @@ from molpipeline.experimental.explainability.explanation import (
 from molpipeline.experimental.explainability.fingerprint_utils import (
     fingerprint_shap_to_atomweights,
 )
-from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import SubpipelineExtractor, get_model_from_pipeline
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from sklearn.base import BaseEstimator
+
+    from molpipeline import Pipeline
 
 
 def _to_dense(
@@ -117,7 +119,7 @@ def _get_predictions(
 def _convert_shap_feature_weights_to_atom_weights(
     feature_weights: npt.NDArray[np.float64],
     molecule: OptionalMol,
-    featurization_element: MolToMorganFP,
+    featurization_element: MolToRDKitGenFPElement,
     feature_vector: npt.NDArray[np.float64],
 ) -> npt.NDArray[np.float64]:
     """Convert SHAP feature weights to atom weights.
@@ -128,7 +130,7 @@ def _convert_shap_feature_weights_to_atom_weights(
         The feature weights.
     molecule : OptionalMol
         The molecule.
-    featurization_element : MolToMorganFP
+    featurization_element : MolToRDKitGenFPElement
         The featurization element.
     feature_vector : npt.NDArray[np.float64]
         The feature vector.
@@ -153,7 +155,7 @@ def _convert_shap_feature_weights_to_atom_weights(
     if feature_weights.ndim == 1:
         # regression case
         feature_weights_present_bits_only = feature_weights.copy()
-    elif feature_weights.ndim == 2:
+    elif feature_weights.ndim == 2:  # noqa: PLR2004
         # binary classification case. Take the weights for the positive class.
         feature_weights_present_bits_only = feature_weights[:, 1].copy()
     else:
@@ -164,7 +166,7 @@ def _convert_shap_feature_weights_to_atom_weights(
     # reset shap values for bits that are not present in the molecule
     feature_weights_present_bits_only[feature_vector == 0] = 0
 
-    atom_weights = np.array(
+    return np.array(
         fingerprint_shap_to_atomweights(
             molecule,
             featurization_element,
@@ -172,7 +174,6 @@ def _convert_shap_feature_weights_to_atom_weights(
         ),
         dtype=np.float64,
     )
-    return atom_weights
 
 
 class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
@@ -181,7 +182,7 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
     @abc.abstractmethod
     def explain(
         self,
-        X: Any,  # pylint: disable=invalid-name
+        X: Any,  # pylint: disable=invalid-name  # noqa: N803
         **kwargs: Any,
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
@@ -201,7 +202,10 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
         """
 
 
-class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=too-few-public-methods
+class SHAPExplainerAdapter(  # pylint: disable=too-few-public-methods
+    AbstractSHAPExplainer,
+    abc.ABC,
+):
     """Adapter for SHAP explainer wrappers for handling molecules and pipelines."""
 
     # used for dynamically defining the return type of the explain method
@@ -250,7 +254,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
 
         # determine type of returned explanation
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
-        if isinstance(featurization_element, MolToMorganFP):
+        if isinstance(featurization_element, MolToRDKitGenFPElement):
             self.return_element_type_ = SHAPFeatureAndAtomExplanation
         else:
             self.return_element_type_ = SHAPFeatureExplanation
@@ -272,16 +276,14 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
             Whether the prediction is valid.
 
         """
-        # if no prediction could be obtained (length is 0); the prediction guaranteed failed.
+        # if no prediction could be obtained (length is 0); the prediction guaranteed
+        # failed.
         if len(prediction) == 0:
             return False
 
         # use pandas.isna function to check for invalid predictions, e.g. None, np.nan,
         # pd.NA. Note that fill values like 0 will be considered as valid predictions.
-        if pd.isna(prediction).any():
-            return False
-
-        return True
+        return not pd.isna(prediction).any()
 
     @override
     def explain(
@@ -291,8 +293,8 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
 
-        If the calculation of the SHAP values for an input sample fails, the explanation will be invalid.
-        This can be checked with the Explanation.is_valid() method.
+        If the calculation of the SHAP values for an input sample fails, the explanation
+        will be invalid. This can be checked with the Explanation.is_valid() method.
 
         Parameters
         ----------
@@ -323,7 +325,8 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
             # get predictions
             prediction = _get_predictions(self.pipeline, input_sample)
             if not self._prediction_is_valid(prediction):
-                # we use the prediction to check if the input is valid. If not, we cannot explain it.
+                # we use the prediction to check if the input is valid.
+                # If not, we cannot explain it.
                 explanation_results.append(self.return_element_type_())
                 continue
 
@@ -355,7 +358,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
             if issubclass(
                 self.return_element_type_,
                 AtomExplanationMixin,
-            ) and isinstance(featurization_element, MolToMorganFP):
+            ) and isinstance(featurization_element, MolToRDKitGenFPElement):
                 # for Morgan fingerprint, we can map the shap values to atom weights
                 atom_weights = _convert_shap_feature_weights_to_atom_weights(
                     feature_weights,
@@ -373,7 +376,8 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
                 explanation_data["feature_vector"] = feature_vector
                 if not hasattr(featurization_element, "feature_names"):
                     raise ValueError(
-                        "Featurization element does not have a get_feature_names method.",
+                        "Featurization element does not have a get_feature_names "
+                        "method.",
                     )
                 explanation_data["feature_names"] = featurization_element.feature_names  # type: ignore[union-attr]
 
@@ -442,14 +446,15 @@ class SHAPTreeExplainer(SHAPExplainerAdapter):  # pylint: disable=too-few-public
 
         """
         model = get_model_from_pipeline(pipeline, raise_not_found=True)
-        explainer = shap.TreeExplainer(
+        return shap.TreeExplainer(
             model,
             **kwargs,
         )
-        return explainer
 
 
-class SHAPKernelExplainer(SHAPExplainerAdapter):  # pylint: disable=too-few-public-methods
+class SHAPKernelExplainer(  # pylint: disable=too-few-public-methods
+    SHAPExplainerAdapter,
+):
     """Wrapper for SHAP's KernelExplainer that can handle pipelines and molecules."""
 
     def __init__(
@@ -489,8 +494,7 @@ class SHAPKernelExplainer(SHAPExplainerAdapter):  # pylint: disable=too-few-publ
         """
         model = get_model_from_pipeline(pipeline, raise_not_found=True)
         prediction_function = _get_prediction_function(model)
-        explainer = shap.KernelExplainer(
+        return shap.KernelExplainer(
             prediction_function,
             **kwargs,
         )
-        return explainer
