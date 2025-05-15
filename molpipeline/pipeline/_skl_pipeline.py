@@ -7,7 +7,6 @@ from itertools import islice
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeIs
 
 import numpy as np
-import numpy.typing as npt
 from joblib import Parallel, delayed
 from loguru import logger
 from rdkit.Chem.rdchem import MolSanitizeException
@@ -29,9 +28,6 @@ from molpipeline.error_handling import (
     _MultipleErrorFilter,
 )
 from molpipeline.pipeline._skl_adapter_pipeline import AdapterPipeline
-from molpipeline.post_prediction import (
-    PostPredictionTransformation,
-)
 from molpipeline.utils.logging import print_elapsed_time
 from molpipeline.utils.molpipeline_types import (
     AnyElement,
@@ -539,30 +535,6 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
         for _, post_element in self._post_processing_steps:
             iter_input = post_element.transform(iter_input)
         return iter_input
-
-    @property
-    def classes_(self) -> list[Any] | npt.NDArray[Any]:
-        """Return the classes of the last element.
-
-        PostPredictionTransformation elements are not considered as last element.
-
-        Raises
-        ------
-        ValueError
-            If the last step is passthrough or has no classes_ attribute.
-
-        """
-        check_last = [
-            step
-            for step in self.steps
-            if not isinstance(step[1], PostPredictionTransformation)
-        ]
-        last_step = check_last[-1][1]
-        if last_step == "passthrough":
-            raise ValueError("Last step is passthrough.")
-        if hasattr(last_step, "classes_"):
-            return last_step.classes_
-        raise ValueError("Last step has no classes_ attribute.")
 
     def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
         """Return the sklearn tags.
