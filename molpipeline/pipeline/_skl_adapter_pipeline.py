@@ -464,7 +464,8 @@ class AdapterPipeline(_Pipeline):
 
         return self
 
-    def _can_fit_transform(self) -> bool:  # pylint: disable=duplicate-code
+    # pylint: disable=duplicate-code
+    def _can_fit_transform(self) -> bool:
         """Check if the final estimator can fit_transform or is passthrough.
 
         Returns
@@ -478,6 +479,8 @@ class AdapterPipeline(_Pipeline):
             or hasattr(self._final_estimator, "transform")
             or hasattr(self._final_estimator, "fit_transform")
         )
+
+    # pylint: enable=duplicate-code
 
     @available_if(_can_fit_transform)
     @_fit_context(

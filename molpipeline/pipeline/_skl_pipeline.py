@@ -104,7 +104,7 @@ def check_single_instance_support(
     return isinstance(estimator, Pipeline) and estimator.supports_single_instance
 
 
-class Pipeline(AdapterPipeline, TransformingPipelineElement):
+class Pipeline(AdapterPipeline, TransformingPipelineElement):  # pylint: disable=too-many-ancestors
     """Defines the pipeline which handles pipeline elements."""
 
     steps: list[AnyStep]
@@ -272,7 +272,8 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
         super().fit(X, y, **fit_params)
         return self
 
-    def _can_fit_transform(self) -> bool:  # pylint: disable=duplicate-code
+    # pylint: disable=duplicate-code
+    def _can_fit_transform(self) -> bool:
         """Check if the final estimator can fit_transform or is passthrough.
 
         Returns
@@ -286,6 +287,8 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
             or hasattr(self._final_estimator, "transform")
             or hasattr(self._final_estimator, "fit_transform")
         )
+
+    # pylint: enable=duplicate-code
 
     @available_if(_can_fit_transform)
     @_fit_context(
