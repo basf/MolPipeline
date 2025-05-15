@@ -640,9 +640,9 @@ class AdapterPipeline(_Pipeline):
     @available_if(_final_estimator_has("predict"))
     def predict(
         self,
-        X: npt.NDArray[Any],  # noqa: N803
+        X: npt.NDArray[Any] | list[Any],  # noqa: N803
         **params: Any,
-    ) -> npt.NDArray[Any]:
+    ) -> npt.NDArray[Any] | list[Any]:
         """Transform the data, and apply `predict` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -687,7 +687,7 @@ class AdapterPipeline(_Pipeline):
                         )
                     iter_input = transform.transform(iter_input)
                 if is_empty(iter_input):
-                    iter_input = np.array([])
+                    iter_input = []
                 else:
                     iter_input = self._final_estimator.predict(iter_input, **params)
             else:
@@ -706,7 +706,7 @@ class AdapterPipeline(_Pipeline):
                         **routed_params[name].transform,
                     )
                 if is_empty(iter_input):
-                    iter_input = np.array([])
+                    iter_input = []
                 else:
                     iter_input = self._final_estimator.predict(
                         iter_input,
@@ -714,7 +714,7 @@ class AdapterPipeline(_Pipeline):
                     )
         for _, post_element in self._post_processing_steps:
             iter_input = post_element.transform(iter_input, **params)
-        return np.array(iter_input)
+        return iter_input
 
     @available_if(_final_estimator_has("predict_proba"))
     def predict_proba(
