@@ -464,7 +464,7 @@ class AdapterPipeline(_Pipeline):
 
         return self
 
-    def _can_fit_transform(self) -> bool:
+    def _can_fit_transform(self) -> bool:  # pylint: disable=duplicate-code
         """Check if the final estimator can fit_transform or is passthrough.
 
         Returns
