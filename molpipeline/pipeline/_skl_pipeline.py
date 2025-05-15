@@ -156,54 +156,6 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
         self.n_jobs = n_jobs
         self._set_error_resinserter()
 
-    def _validate_steps(self) -> None:
-        """Validate the steps.
-
-        Raises
-        ------
-        TypeError
-            If the steps do not implement fit and transform or are not 'passthrough'.
-
-        """
-        names = [name for name, _ in self.steps]
-
-        # validate names
-        self._validate_names(names)
-
-        # validate estimators
-        non_post_processing_steps = [e for _, _, e in self._iter()]
-        transformer_list = non_post_processing_steps[:-1]
-        estimator = non_post_processing_steps[-1]
-
-        for transformer in transformer_list:
-            if transformer is None or transformer == "passthrough":
-                continue
-            if not (
-                hasattr(transformer, "fit") or hasattr(transformer, "fit_transform")
-            ) or not hasattr(transformer, "transform"):
-                raise TypeError(
-                    f"All intermediate steps should be "
-                    f"transformers and implement fit and transform "
-                    f"or be the string 'passthrough' "
-                    f"'{transformer}' (type {type(transformer)}) doesn't",
-                )
-
-        # We allow last estimator to be None as an identity transformation
-        if (
-            estimator is not None
-            and estimator != "passthrough"
-            and not hasattr(estimator, "fit")
-        ):
-            raise TypeError(
-                f"Last step of Pipeline should implement fit "
-                f"or be the string 'passthrough'. "
-                f"'{estimator}' (type {type(estimator)}) doesn't",
-            )
-
-        # validate post-processing steps
-        # Calling steps automatically validates them
-        _ = self._post_processing_steps
-
     def _iter(
         self,
         with_final: bool = True,
