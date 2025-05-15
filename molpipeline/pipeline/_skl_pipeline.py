@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Literal, Self, TypeIs
 
 import numpy as np
 from joblib import Parallel, delayed
-from loguru import logger
 from rdkit.Chem.rdchem import MolSanitizeException
 from rdkit.rdBase import BlockLogs
 from sklearn.base import _fit_context  # noqa: PLC2701
@@ -28,14 +27,12 @@ from molpipeline.error_handling import (
     _MultipleErrorFilter,
 )
 from molpipeline.pipeline._skl_adapter_pipeline import AdapterPipeline
-from molpipeline.utils.logging import print_elapsed_time
 from molpipeline.utils.molpipeline_types import (
     AnyElement,
     AnyPredictor,
     AnyStep,
     AnyTransformer,
 )
-from molpipeline.utils.value_checks import is_empty
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable, Sequence
@@ -272,18 +269,7 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
         """
         if self.supports_single_instance:
             return self
-        routed_params = self._check_method_params(method="fit", props=fit_params)
-        xt, yt = self._fit(X, y, routed_params)
-        with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
-            if self._final_estimator != "passthrough":
-                if is_empty(xt):
-                    logger.warning(
-                        "All input rows were filtered out! Model is not fitted!",
-                    )
-                else:
-                    fit_params_last_step = routed_params[self._modified_steps[-1][0]]
-                    self._final_estimator.fit(xt, yt, **fit_params_last_step["fit"])
-
+        super().fit(X, y, **fit_params)
         return self
 
     def _can_fit_transform(self) -> bool:
