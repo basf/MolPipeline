@@ -18,7 +18,7 @@ class TestGroupRandomOversampler(unittest.TestCase):
         x_resampled: npt.NDArray[np.float64],
         y_resampled: npt.NDArray[np.float64],
     ) -> None:
-        """Verify resampling results.
+        """Verify invariants of resampling results.
 
         Parameters
         ----------
@@ -68,7 +68,12 @@ class TestGroupRandomOversampler(unittest.TestCase):
         x_matrix = np.zeros((y.shape[0], 2))
         groups = np.array([1, 1, 1, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
 
-        x_resampled, y_resampled = sampler.transform(x_matrix, y, groups)
+        (  # pylint: disable=unbalanced-tuple-unpacking
+            x_resampled,
+            y_resampled,
+        ) = sampler.transform(  # type: ignore[misc]
+            x_matrix, y, groups,
+        )
         self._assert_resampling_results(x_matrix, y, x_resampled, y_resampled)
 
     def test_invalid_x_y_size(self) -> None:
@@ -132,7 +137,9 @@ class TestGroupRandomOversampler(unittest.TestCase):
         groups[n_minority + 30 : n_minority + 60] = 3
         groups[n_minority + 60 :] = 4
 
-        x_resampled, y_resampled = sampler.transform(x_matrix, y, groups)
+        x_resampled, y_resampled = (  # pylint: disable=unbalanced-tuple-unpacking
+            sampler.transform(x_matrix, y, groups)  # type: ignore[misc]
+        )
         self._assert_resampling_results(x_matrix, y, x_resampled, y_resampled)
 
     def test_only_one_group(self) -> None:
@@ -144,7 +151,9 @@ class TestGroupRandomOversampler(unittest.TestCase):
         x_matrix = np.zeros((n_samples, 2))
         groups = np.ones(n_samples)  # all samples belong to the same group
 
-        x_resampled, y_resampled = sampler.transform(x_matrix, y, groups)
+        x_resampled, y_resampled = (  # pylint: disable=unbalanced-tuple-unpacking
+            sampler.transform(x_matrix, y, groups)  # type: ignore[misc]
+        )
         self._assert_resampling_results(x_matrix, y, x_resampled, y_resampled)
 
     def test_already_balanced(self) -> None:
@@ -156,7 +165,9 @@ class TestGroupRandomOversampler(unittest.TestCase):
         x_matrix = np.zeros((n_samples, 2))
         groups = np.array([1, 1, 2, 2])
 
-        x_resampled, y_resampled = sampler.transform(x_matrix, y, groups)
+        x_resampled, y_resampled = (  # pylint: disable=unbalanced-tuple-unpacking
+            sampler.transform(x_matrix, y, groups)  # type: ignore[misc]
+        )
         self._assert_resampling_results(x_matrix, y, x_resampled, y_resampled)
 
     def test_deterministic_behavior(self) -> None:
@@ -169,8 +180,12 @@ class TestGroupRandomOversampler(unittest.TestCase):
         sampler1 = GroupRandomOversampler(random_state=1234)
         sampler2 = GroupRandomOversampler(random_state=1234)
 
-        x_resampled1, y_resampled1 = sampler1.transform(x_matrix, y, groups)
-        x_resampled2, y_resampled2 = sampler2.transform(x_matrix, y, groups)
+        x_resampled1, y_resampled1 = (  # pylint: disable=unbalanced-tuple-unpacking
+            sampler1.transform(x_matrix, y, groups)  # type: ignore[misc]
+        )
+        x_resampled2, y_resampled2 = (  # pylint: disable=unbalanced-tuple-unpacking
+            sampler2.transform(x_matrix, y, groups)  # type: ignore[misc]
+        )
 
         # Results should be identical
         self.assertTrue(np.array_equal(x_resampled1, x_resampled2))
@@ -188,7 +203,9 @@ class TestGroupRandomOversampler(unittest.TestCase):
         # Group 3 has no minority samples
         groups = np.array([1, 2, 3, 1, 2])
 
-        x_resampled, y_resampled = sampler.transform(x_matrix, y, groups)
+        x_resampled, y_resampled = (  # pylint: disable=unbalanced-tuple-unpacking
+            sampler.transform(x_matrix, y, groups)  # type: ignore[misc]
+        )
         self._assert_resampling_results(x_matrix, y, x_resampled, y_resampled)
 
         # check that there is only one sample with values of 99
@@ -239,9 +256,9 @@ class TestGroupRandomOversampler(unittest.TestCase):
 
         # Assign group labels
         groups = np.zeros(len(y))
-        groups[:n_group1] = 1
-        groups[n_group1 : n_group1 + n_group2] = 2
-        groups[n_group1 + n_group2 :] = 3
+        groups[:n_group1] = 0
+        groups[n_group1 : n_group1 + n_group2] = 1
+        groups[n_group1 + n_group2 :] = 2
 
         # Calculate expected sampling probabilities based on inverse group sizes
         group_sizes = np.array([n_group1, n_group2, n_group3])
@@ -250,24 +267,46 @@ class TestGroupRandomOversampler(unittest.TestCase):
 
         return x_matrix, y, groups, expected_probs
 
-    def test_inverse_probability_sampling(self) -> None:
-        """Test that samples are selected based on inverse group size probabilities."""
-        n_runs = 1000  # Large number of runs for statistical significance
+    @staticmethod
+    def _generate_observed_probs_inverse_probability_sampling(
+        n_runs: int,
+        x_matrix: npt.NDArray[np.float64],
+        y: npt.NDArray[np.float64],
+        groups: npt.NDArray[np.float64],
+    ) -> npt.NDArray[np.float64]:
+        """Generate expected probabilities for the inverse_probability_sampling test.
 
-        x_matrix, y, groups, expected_probs = (
-            self._construct_test_data_inverse_probability_sampling()
-        )
+        Parameters
+        ----------
+        n_runs : int
+            Number of runs to average the probabilities.
+        x_matrix : npt.NDArray[np.float64]
+            Feature matrix.
+        y : npt.NDArray[np.float64]
+            Target values.
+        groups : npt.NDArray[np.float64]
+            Group labels for the samples.
 
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Observed sampling probabilities for each group.
+
+        """
         # Track the sampled groups across multiple runs
         sampled_counts = np.zeros(3)
-
+        rng = np.random.default_rng(1234)
         for _ in range(n_runs):
-            sampler = GroupRandomOversampler(random_state=1234)
-            _, _, groups_resampled = sampler.transform(
-                x_matrix,
-                y,
-                groups,
-                return_groups=True,
+            sampler = GroupRandomOversampler(
+                random_state=rng.integers(0, np.iinfo(np.int32).max),
+            )
+            _, _, groups_resampled = (  # pylint: disable=unbalanced-tuple-unpacking
+                sampler.transform(  # type: ignore[misc]
+                    x_matrix,
+                    y,
+                    groups,
+                    return_groups=True,
+                )
             )
 
             # Count newly added samples by group
@@ -275,10 +314,24 @@ class TestGroupRandomOversampler(unittest.TestCase):
             unique_groups, counts = np.unique(new_samples, return_counts=True)
 
             for group, count in zip(unique_groups, counts, strict=True):
-                sampled_counts[int(group) - 1] += count
+                sampled_counts[int(group)] += count
 
-        # Calculate observed sampling probabilities
-        observed_probs = sampled_counts / sampled_counts.sum()
+        # Calculate and return observed sampling probabilities
+        return sampled_counts / sampled_counts.sum()
+
+    def test_inverse_probability_sampling(self) -> None:
+        """Test that samples are selected based on inverse group size probabilities."""
+        x_matrix, y, groups, expected_probs = (
+            self._construct_test_data_inverse_probability_sampling()
+        )
+
+        n_runs = 1000  # Large number of runs for statistical significance
+        observed_probs = self._generate_observed_probs_inverse_probability_sampling(
+            n_runs,
+            x_matrix,
+            y,
+            groups,
+        )
 
         # Check that observed probabilities are close to expected probabilities
         # Allow some tolerance for statistical variation

@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 
-class StochasticFilter(ABC):
+class StochasticFilter(ABC):  # pylint: disable=too-few-public-methods
     """Abstract base class for stochastic filter policies.
 
     A StochasticFilter assigns sampling probabilities to data points based on
@@ -17,7 +17,7 @@ class StochasticFilter(ABC):
     @abstractmethod
     def calculate_probabilities(
         self,
-        X: npt.NDArray[np.float64],  # noqa: N803
+        X: npt.NDArray[np.float64],  # noqa: N803  # pylint: disable=invalid-name
         y: npt.NDArray[np.float64],
     ) -> npt.NDArray[np.float64]:
         """Calculate probability for each sample.
@@ -37,7 +37,9 @@ class StochasticFilter(ABC):
         """
 
 
-class GlobalClassBalanceFilter(StochasticFilter):
+class GlobalClassBalanceFilter(
+    StochasticFilter,
+):  # pylint: disable=too-few-public-methods
     """Provides probabilities inversely proportional to global class frequencies.
 
     Samples from minority classes receive higher probability values.
@@ -82,14 +84,23 @@ class GlobalClassBalanceFilter(StochasticFilter):
         return normalized_inv_freqs[class_indices]
 
 
-class LocalGroupClassBalanceFilter(StochasticFilter):
+class LocalGroupClassBalanceFilter(
+    StochasticFilter,
+):  # pylint: disable=too-few-public-methods
     """Filter that returns probabilities based on class balance within groups.
 
     Samples from minority classes within their group receive higher probabilities.
     """
 
     def __init__(self, groups: npt.NDArray[np.float64]) -> None:
-        """Create a new LocalGroupClassBalanceFilter."""
+        """Create a new LocalGroupClassBalanceFilter.
+
+        Parameters
+        ----------
+        groups : npt.NDArray[np.float64]
+            Group labels for the samples of shape (n_samples,).
+
+        """
         self._n_samples = groups.shape[0]
         self._unique_groups, self._group_indices = np.unique(
             groups,
@@ -167,14 +178,21 @@ class LocalGroupClassBalanceFilter(StochasticFilter):
         return probabilities
 
 
-class GroupSizeFilter(StochasticFilter):
+class GroupSizeFilter(StochasticFilter):  # pylint: disable=too-few-public-methods
     """Filter that returns probabilities inversely proportional to group sizes.
 
     Samples from smaller groups receive higher probabilities.
     """
 
     def __init__(self, groups: npt.NDArray[np.float64]) -> None:
-        """Create a new GroupSizeFilter."""
+        """Create a new GroupSizeFilter.
+
+        Parameters
+        ----------
+        groups : npt.NDArray[np.float64]
+            Group labels for the samples of shape (n_samples,).
+
+        """
         self.probabilities = self._compute_group_probs(groups)
 
     @staticmethod

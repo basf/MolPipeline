@@ -1,3 +1,5 @@
+"""Stochastic Sampler."""
+
 from collections.abc import Sequence
 
 import numpy as np
@@ -5,32 +7,31 @@ import numpy.typing as npt
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_random_state, check_X_y
 
+from molpipeline.estimators.samplers.stochastic_filter import StochasticFilter
+
 
 class StochasticSampler(BaseEstimator, TransformerMixin):
-    """Sampler that uses multiple stochastic filters to determine sampling probabilities.
-
-    Parameters
-    ----------
-    filters : list of StochasticFilter
-        List of filter policies to apply.
-    n_samples : int or None, default=None
-        Number of samples to generate. If None, will match the size of X.
-    combination_method : {'product', 'mean', 'min', 'max'}, default='product'
-        Method to combine probabilities from multiple filters.
-    random_state : int, RandomState instance or None, default=None
-        Controls the randomization of the algorithm.
-
-    """
+    """Sampler that uses stochastic filters for sampling."""
 
     def __init__(
         self,
         filters: Sequence[StochasticFilter],
-        n_samples: int | None = None,
         combination_method: str = "product",
         random_state: int | None = None,
     ):
+        """Create a new StochasticSampler.
+
+        Parameters
+        ----------
+        filters : list of StochasticFilter
+            List of filter policies to apply.
+        combination_method : {'product', 'mean', 'min', 'max'}, default='product'
+            Method to combine probabilities from multiple filters.
+        random_state : int, RandomState instance or None, default=None
+            Controls the randomization of the algorithm.
+
+        """
         self.filters = filters
-        self.n_samples = n_samples
         self.combination_method = combination_method
         self.random_state = random_state
 
@@ -39,7 +40,10 @@ class StochasticSampler(BaseEstimator, TransformerMixin):
         if self.combination_method not in valid_methods:
             raise ValueError(f"combination_method must be one of {valid_methods}")
 
-    def _combine_probabilities(self, probabilities_list: npt.NDArray) -> npt.NDArray:
+    def _combine_probabilities(
+        self,
+        probabilities_list: npt.NDArray[np.float64],
+    ) -> npt.NDArray[np.float64]:
         """Combine probabilities from multiple filters.
 
         Parameters
@@ -84,9 +88,9 @@ class StochasticSampler(BaseEstimator, TransformerMixin):
 
     def transform(
         self,
-        X: npt.NDArray,
-        y: npt.NDArray,
-    ) -> tuple[npt.NDArray, npt.NDArray]:
+        X: npt.NDArray[np.float64],  # noqa: N803 # pylint: disable=invalid-name
+        y: npt.NDArray[np.float64],
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """Apply filters and sample from the input data.
 
         Parameters
