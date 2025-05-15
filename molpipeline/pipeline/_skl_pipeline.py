@@ -272,7 +272,7 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
         super().fit(X, y, **fit_params)
         return self
 
-    def _can_fit_transform(self) -> bool:
+    def _can_fit_transform(self) -> bool:  # pylint: disable=duplicate-code
         """Check if the final estimator can fit_transform or is passthrough.
 
         Returns
@@ -286,17 +286,6 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
             or hasattr(self._final_estimator, "transform")
             or hasattr(self._final_estimator, "fit_transform")
         )
-
-    def _can_decision_function(self) -> bool:
-        """Check if the final estimator implements decision_function.
-
-        Returns
-        -------
-        bool
-            True if the final estimator implements decision_function.
-
-        """
-        return hasattr(self._final_estimator, "decision_function")
 
     @available_if(_can_fit_transform)
     @_fit_context(
@@ -446,6 +435,17 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):
         for _, post_element in self._post_processing_steps:
             iter_input = post_element.transform(iter_input, **params)
         return iter_input
+
+    def _can_decision_function(self) -> bool:
+        """Check if the final estimator implements decision_function.
+
+        Returns
+        -------
+        bool
+            True if the final estimator implements decision_function.
+
+        """
+        return hasattr(self._final_estimator, "decision_function")
 
     @available_if(_can_decision_function)
     def decision_function(
