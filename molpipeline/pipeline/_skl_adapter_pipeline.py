@@ -479,17 +479,6 @@ class AdapterPipeline(_Pipeline):
             or hasattr(self._final_estimator, "fit_transform")
         )
 
-    def _can_decision_function(self) -> bool:
-        """Check if the final estimator implements decision_function.
-
-        Returns
-        -------
-        bool
-            True if the final estimator implements decision_function.
-
-        """
-        return hasattr(self._final_estimator, "decision_function")
-
     @available_if(_can_fit_transform)
     @_fit_context(
         # estimators in Pipeline.steps are not validated yet
