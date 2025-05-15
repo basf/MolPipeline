@@ -58,7 +58,7 @@ class AdapterPipeline(_Pipeline):
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
-            return self._final_estimator._estimator_type  # noqa: SLF001
+            return self._final_estimator._estimator_type  # noqa: SLF001  # pylint: disable=protected-access
         return None
 
     @property
