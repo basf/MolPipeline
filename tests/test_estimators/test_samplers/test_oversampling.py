@@ -72,7 +72,9 @@ class TestGroupRandomOversampler(unittest.TestCase):
             x_resampled,
             y_resampled,
         ) = sampler.transform(  # type: ignore[misc]
-            x_matrix, y, groups,
+            x_matrix,
+            y,
+            groups,
         )
         self._assert_resampling_results(x_matrix, y, x_resampled, y_resampled)
 

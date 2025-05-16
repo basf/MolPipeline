@@ -34,9 +34,9 @@ class _NoFilter(StochasticFilter):  # pylint: disable=too-few-public-methods
 
         Parameters
         ----------
-        X : npt.NDArray[np.float64]
+        _X : npt.NDArray[np.float64]
             Training data. Will be ignored, only present because of compatibility.
-        y : npt.NDArray[np.float64]
+        _y : npt.NDArray[np.float64]
             Target values. Will be ignored, only present because of compatibility.
 
         Returns
@@ -69,7 +69,8 @@ class TestStochasticSampler(unittest.TestCase):
         self.assertEqual(sampler.combination_method, "product")
         self.assertEqual(len(sampler.filters), 1)
         self.assertIsInstance(
-            sampler.rng, np.random.RandomState  # pylint: disable=no-member
+            sampler.rng,
+            np.random.RandomState,  # pylint: disable=no-member
         )
 
     def test_init_with_invalid_n_samples(self) -> None:

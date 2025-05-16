@@ -171,9 +171,9 @@ class StochasticSampler(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : npt.NDArray[np.float64]
+        _X : npt.NDArray[np.float64]
             The input samples of shape (n_samples, n_features).
-        y : npt.NDArray[np.float64]
+        _y : npt.NDArray[np.float64]
             The target values of shape (n_samples,).
 
         Returns
