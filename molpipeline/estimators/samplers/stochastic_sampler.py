@@ -1,6 +1,7 @@
 """Stochastic Sampler."""
 
 from collections.abc import Sequence
+from typing import Literal, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -11,12 +12,17 @@ from molpipeline.estimators.samplers.stochastic_filter import StochasticFilter
 
 
 class StochasticSampler(BaseEstimator, TransformerMixin):
-    """Sampler that uses stochastic filters for sampling."""
+    """Sampler that uses stochastic filters for sampling.
+
+    Note that combination_method "product" assumes independence of the filters.
+
+    """
 
     def __init__(
         self,
         filters: Sequence[StochasticFilter],
-        combination_method: str = "product",
+        n_samples: int,
+        combination_method: Literal["product", "mean"] = "product",
         random_state: int | None = None,
     ):
         """Create a new StochasticSampler.
@@ -25,66 +31,100 @@ class StochasticSampler(BaseEstimator, TransformerMixin):
         ----------
         filters : list of StochasticFilter
             List of filter policies to apply.
-        combination_method : {'product', 'mean', 'min', 'max'}, default='product'
+        n_samples : int
+            Number of samples to generate.
+        combination_method : str, default="product"
             Method to combine probabilities from multiple filters.
+            Options are "product" or "mean".
         random_state : int, RandomState instance or None, default=None
             Controls the randomization of the algorithm.
 
-        """
-        self.filters = filters
-        self.combination_method = combination_method
-        self.random_state = random_state
+        Raises
+        ------
+        ValueError
+            If n_samples is not positive or if combination_method is not recognized.
 
-        # Validate combination method
-        valid_methods = ["product", "mean", "min", "max"]
-        if self.combination_method not in valid_methods:
-            raise ValueError(f"combination_method must be one of {valid_methods}")
+        """
+        if n_samples <= 0:
+            raise ValueError("n_samples must be positive")
+        if combination_method not in {"product", "mean"}:
+            raise ValueError(
+                "combination_method must be either 'product' or 'mean'",
+            )
+        self.filters = filters
+        self.n_samples = n_samples
+        self.combination_method = combination_method
+        self.rng = check_random_state(random_state)
 
     def _combine_probabilities(
         self,
-        probabilities_list: npt.NDArray[np.float64],
+        filter_probabilities: npt.NDArray[np.float64],
     ) -> npt.NDArray[np.float64]:
         """Combine probabilities from multiple filters.
 
         Parameters
         ----------
-        probabilities_list : list of array-like
-            List of probability arrays from each filter.
+        filter_probabilities : npt.NDArray[np.float64]
+            Array of shape (n_samples, n_filters,).
 
         Returns
         -------
         combined_probs : array-like
             Combined probabilities for each sample.
 
+        Raises
+        ------
+        ValueError
+            If the combination method is not recognized.
+
         """
-        if not probabilities_list:
-            raise ValueError("No probabilities to combine")
-
-        if len(probabilities_list) == 1:
-            return probabilities_list[0]
-
         if self.combination_method == "product":
-            combined = np.prod(probabilities_list, axis=0)
-
+            combined = np.prod(filter_probabilities, axis=1)
         elif self.combination_method == "mean":
-            combined = np.mean(probabilities_list, axis=0)
-
-        elif self.combination_method == "min":
-            combined = np.min(probabilities_list, axis=0)
-
-        elif self.combination_method == "max":
-            combined = np.max(probabilities_list, axis=0)
+            combined = np.mean(filter_probabilities, axis=1)
         else:
-            raise AssertionError("Invalid combination method")
+            raise ValueError(f"Invalid combination method: {self.combination_method}")
 
-        # # Normalize to ensure probabilities sum to 1
-        # if combined.sum() > 0:
-        #     combined = combined / combined.sum()
-        # else:
-        #     # If all zeros, use uniform distribution
-        #     combined = np.ones_like(combined) / len(combined)
+        combined_sum = combined.sum()
+        if combined_sum > 0:
+            combined /= combined_sum
+        else:
+            # fall back to uniform distribution when all probabilities are 0
+            combined = np.ones_like(combined) / len(combined)
 
         return combined
+
+    def calculate_probabilities(
+        self,
+        X: npt.NDArray[np.float64],  # noqa: N803 # pylint: disable=invalid-name
+        y: npt.NDArray[np.float64],
+    ) -> npt.NDArray[np.float64]:
+        """Calculate probabilities for each filter.
+
+        Parameters
+        ----------
+        X : npt.NDArray[np.float64]
+            The input samples of shape (n_samples, n_features).
+        y : npt.NDArray[np.float64]
+            The target values of shape (n_samples,).
+
+        Returns
+        -------
+        probabilities : npt.NDArray[np.float64]
+            The calculated probabilities of shape (n_samples,).
+
+        """
+        x_matrix, y = check_X_y(X, y, accept_sparse=["csr", "csc"])
+
+        # get probabilities for each filter
+        filter_probabilities = np.zeros((len(x_matrix), len(self.filters)))
+        for filter_idx, filter_policy in enumerate(self.filters):
+            filter_probabilities[:, filter_idx] = filter_policy.calculate_probabilities(
+                x_matrix,
+                y,
+            )
+
+        return self._combine_probabilities(filter_probabilities)
 
     def transform(
         self,
@@ -95,53 +135,51 @@ class StochasticSampler(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        y : array-like of shape (n_samples,)
-            The target values.
+        X : npt.NDArray[np.float64]
+            The input samples of shape (n_samples, n_features).
+        y : npt.NDArray[np.float64]
+            The target values of shape (n_samples,).
 
         Returns
         -------
-        X_sampled : array-like of shape (n_samples_new, n_features)
-            The sampled input.
-        y_sampled : array-like of shape (n_samples_new,)
-            The sampled targets.
+        X_sampled : npt.NDArray[np.float64]
+            The sampled input of shape (n_samples_new, n_features).
+        y_sampled : npt.NDArray[np.float64]
+            The sampled targets of shape (n_samples_new,).
 
         """
-        X, y = check_X_y(X, y, accept_sparse=["csr", "csc"])
-        rng = check_random_state(self.random_state)
+        x_matrix, y = check_X_y(X, y, accept_sparse=["csr", "csc"])
+        combined_probabilities = self.calculate_probabilities(x_matrix, y)
 
-        # Determine the number of samples to generate
-        n_samples = self.n_samples if self.n_samples is not None else len(X)
-
-        # Apply each filter to get probabilities
-        filter_probabilities = np.zeros((len(X), len(self.filters)))
-        for filter_idx, filter_policy in enumerate(self.filters):
-            filter_probabilities[:, filter_idx] = filter_policy.calculate_probabilities(
-                X,
-                y,
-            )
-
-        # Combine probabilities
-        combined_probabilities = self._combine_probabilities(filter_probabilities)
-
-        # normalize combined probabilities because numpy's choices needs it
-        if combined_probabilities.sum() > 0:
-            combined_probabilities /= combined_probabilities.sum()
-        else:
-            # if all zeros, use uniform distribution
-            combined_probabilities = np.ones_like(combined_probabilities) / len(
-                combined_probabilities,
-            )
-
-        sample_probabilities = 1 - combined_probabilities
         # Sample indices based on combined probabilities
-        indices = rng.choice(
-            len(X),
-            size=n_samples,
+        indices = self.rng.choice(
+            len(x_matrix),
+            size=self.n_samples,
             replace=True,
-            p=sample_probabilities,
+            p=combined_probabilities,
         )
 
         # Return sampled data
-        return X[indices], y[indices]
+        return x_matrix[indices], y[indices]
+
+    def fit(
+        self,
+        _X: npt.NDArray[np.float64],  # noqa: N803 # pylint: disable=invalid-name
+        _y: npt.NDArray[np.float64],
+    ) -> Self:
+        """Maintain scikit-learn API compatibility.
+
+        Parameters
+        ----------
+        X : npt.NDArray[np.float64]
+            The input samples of shape (n_samples, n_features).
+        y : npt.NDArray[np.float64]
+            The target values of shape (n_samples,).
+
+        Returns
+        -------
+        self : object
+            Returns self.
+
+        """
+        return self

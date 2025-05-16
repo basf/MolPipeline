@@ -75,6 +75,8 @@ class GlobalClassBalanceFilter(
         )
 
         # calculate inverse class frequencies
+        # could also use power functions like inv_freqs = (1.0 / counts) ** p to
+        # control the penalization with the parameter p.
         inv_freqs = 1.0 / counts
 
         # normalize to probability distribution
