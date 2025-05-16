@@ -2,8 +2,8 @@
 
 __all__ = [
     "GlobalClassBalanceFilter",
-    "GroupSizeFilter",
     "GroupRandomOversampler",
+    "GroupSizeFilter",
     "LocalGroupClassBalanceFilter",
     "StochasticSampler",
 ]
