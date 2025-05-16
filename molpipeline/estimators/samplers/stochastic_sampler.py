@@ -54,7 +54,7 @@ class StochasticSampler(BaseEstimator, TransformerMixin):
         self.filters = filters
         self.n_samples = n_samples
         self.combination_method = combination_method
-        self.rng = check_random_state(random_state)
+        self.random_state = check_random_state(random_state)
 
     def _combine_probabilities(
         self,
@@ -152,7 +152,7 @@ class StochasticSampler(BaseEstimator, TransformerMixin):
         combined_probabilities = self.calculate_probabilities(x_matrix, y)
 
         # Sample indices based on combined probabilities
-        indices = self.rng.choice(
+        indices = self.random_state.choice(
             len(x_matrix),
             size=self.n_samples,
             replace=True,

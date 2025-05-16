@@ -69,7 +69,7 @@ class TestStochasticSampler(unittest.TestCase):
         self.assertEqual(sampler.combination_method, "product")
         self.assertEqual(len(sampler.filters), 1)
         self.assertIsInstance(
-            sampler.rng,
+            sampler.random_state,
             np.random.RandomState,  # pylint: disable=no-member
         )
 
