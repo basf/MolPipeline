@@ -10,7 +10,7 @@ def count_value_to_tuple(count: IntOrIntCountRange) -> IntCountRange:
 
     Parameters
     ----------
-    count: Union[int, IntCountRange]
+    count: IntOrIntCountRange
         Count value. Can be a single int or a tuple of two values.
 
     Raises
