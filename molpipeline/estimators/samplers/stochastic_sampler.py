@@ -52,7 +52,7 @@ class StochasticSampler(BaseEstimator, TransformerMixin):
                 "combination_method must be either 'product' or 'mean'",
             )
         self.filters = filters
-        self.n_samples = n_samples
+        self.n_samples = int(n_samples)
         self.combination_method = combination_method
         self.random_state = check_random_state(random_state)
 

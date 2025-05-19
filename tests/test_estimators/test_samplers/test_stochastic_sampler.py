@@ -7,7 +7,12 @@ from unittest import mock
 import numpy as np
 import numpy.typing as npt
 
-from molpipeline.estimators.samplers.stochastic_filter import StochasticFilter
+from molpipeline.estimators.samplers.stochastic_filter import (
+    GlobalClassBalanceFilter,
+    GroupSizeFilter,
+    LocalGroupClassBalanceFilter,
+    StochasticFilter,
+)
 from molpipeline.estimators.samplers.stochastic_sampler import StochasticSampler
 
 
@@ -48,8 +53,8 @@ class _NoFilter(StochasticFilter):  # pylint: disable=too-few-public-methods
         return self.probabilities
 
 
-class TestStochasticSampler(unittest.TestCase):
-    """Test the StochasticSampler class."""
+class TestStochasticSamplerGeneral(unittest.TestCase):
+    """Run general tests for the StochasticSampler class."""
 
     def setUp(self) -> None:
         """Set up test data."""
@@ -95,6 +100,99 @@ class TestStochasticSampler(unittest.TestCase):
         sampler = StochasticSampler(filters=[self.simple_filter], n_samples=2)
         result = sampler.fit(self.x_matrix, self.y)
         self.assertIs(result, sampler)
+
+    def test_reproducibility_with_fixed_seed(self) -> None:
+        """Test that results are reproducible with fixed random state."""
+        sampler1 = StochasticSampler(
+            filters=[self.simple_filter],
+            n_samples=5,
+            random_state=42,
+        )
+        sampler2 = StochasticSampler(
+            filters=[self.simple_filter],
+            n_samples=5,
+            random_state=42,
+        )
+
+        x_sampled1, y_sampled1 = sampler1.transform(self.x_matrix, self.y)
+        x_sampled2, y_sampled2 = sampler2.transform(self.x_matrix, self.y)
+
+        self.assertTrue(np.array_equal(x_sampled1, x_sampled2))
+        self.assertTrue(np.array_equal(y_sampled1, y_sampled2))
+
+    def test_n_samples_is_1(self) -> None:
+        """Test that correct behaviour when n_samples is 1."""
+        # Create a sampler with n_samples=1
+        sampler = StochasticSampler(
+            filters=[self.simple_filter],
+            n_samples=1,
+            random_state=42,
+        )
+
+        # Transform the data
+        x_sampled, y_sampled = sampler.transform(self.x_matrix, self.y)
+
+        # Check that the output shape is correct (should be a single sample)
+        self.assertEqual(x_sampled.shape, (1, 2))
+        self.assertEqual(y_sampled.shape, (1,))
+
+    def test_n_samples_is_float(self) -> None:
+        """Test that correct behaviour when n_samples is 1.
+
+        This test addresses a bug when a user ignores the type hint and passes a
+        float value for n_samples.
+        """
+        # test when n_samples is a float
+        sampler = StochasticSampler(
+            filters=[self.simple_filter],
+            n_samples=1.0,  # type: ignore[arg-type]
+            random_state=42,
+        )
+
+        # Transform the data
+        x_sampled, y_sampled = sampler.transform(self.x_matrix, self.y)
+
+        # Check that the output shape is correct (should be a single sample)
+        self.assertEqual(x_sampled.shape, (1, 2))
+        self.assertEqual(y_sampled.shape, (1,))
+
+    def test_integration_with_filters(self) -> None:
+        """Simple test to check integration with a filters."""
+        # global balance: class 0: 7, class 1: 12
+        # group sizes: group 1: 3, group 2: 1, group 3: 1, group 4: 14
+        y = np.array([0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+        x_matrix = np.zeros((len(y), 2))
+        groups = np.array([1, 1, 1, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
+
+        group_size_filter = GroupSizeFilter(groups=groups)
+        global_class_balance_filter = GlobalClassBalanceFilter()
+        local_group_class_balance_filter = LocalGroupClassBalanceFilter(groups=groups)
+
+        sampler = StochasticSampler(
+            filters=[
+                group_size_filter,
+                global_class_balance_filter,
+                local_group_class_balance_filter,
+            ],
+            n_samples=5,
+            random_state=42,
+        )
+
+        x_sampled, y_sampled = sampler.transform(x_matrix, y)
+
+        self.assertEqual(x_sampled.shape, (5, 2))
+        self.assertEqual(y_sampled.shape, (5,))
+
+
+class TestStochasticSamplerCalculateProbabilities(unittest.TestCase):
+    """Test the calculate_probabilities method of StochasticSampler."""
+
+    def setUp(self) -> None:
+        """Set up test data."""
+        self.x_matrix = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
+        self.y = np.array([0, 1, 0, 1])
+        self.simple_filter = _NoFilter(np.array([0.1, 0.2, 0.3, 0.4]))
+        self.uniform_filter = _NoFilter(np.array([0.25, 0.25, 0.25, 0.25]))
 
     def test_calculate_probabilities_single_filter(self) -> None:
         """Test calculate_probabilities with a single filter."""
@@ -203,6 +301,44 @@ class TestStochasticSampler(unittest.TestCase):
         self.assertTrue(np.allclose(probs, expected))
         self.assertAlmostEqual(probs.sum(), 1.0)
 
+    def test_calculate_probabilities_calls_filters(self) -> None:
+        """Test that each filter's calculate_probabilities method is called."""
+        mock_filter1 = mock.MagicMock(spec=StochasticFilter)
+        mock_filter1.calculate_probabilities.return_value = np.array(
+            [0.1, 0.2, 0.3, 0.4],
+        )
+
+        mock_filter2 = mock.MagicMock(spec=StochasticFilter)
+        mock_filter2.calculate_probabilities.return_value = np.array(
+            [0.4, 0.3, 0.2, 0.1],
+        )
+
+        sampler = StochasticSampler(filters=[mock_filter1, mock_filter2], n_samples=2)
+
+        sampler.calculate_probabilities(self.x_matrix, self.y)
+
+        mock_filter1.calculate_probabilities.assert_called_once()
+        mock_filter2.calculate_probabilities.assert_called_once()
+
+        # Check that args passed to filter were correct
+        args1, _ = mock_filter1.calculate_probabilities.call_args
+        args2, _ = mock_filter2.calculate_probabilities.call_args
+        self.assertTrue(np.array_equal(args1[0], self.x_matrix))
+        self.assertTrue(np.array_equal(args1[1], self.y))
+        self.assertTrue(np.array_equal(args2[0], self.x_matrix))
+        self.assertTrue(np.array_equal(args2[1], self.y))
+
+
+class TestStochasticSamplerTransform(unittest.TestCase):
+    """Test the transform method of StochasticSampler."""
+
+    def setUp(self) -> None:
+        """Set up test data."""
+        self.x_matrix = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
+        self.y = np.array([0, 1, 0, 1])
+        self.simple_filter = _NoFilter(np.array([0.1, 0.2, 0.3, 0.4]))
+        self.uniform_filter = _NoFilter(np.array([0.25, 0.25, 0.25, 0.25]))
+
     def test_transform_small_probabilities_product(self) -> None:
         """Test numerical stability with very small probabilities."""
         # Create a filter with very small probabilities
@@ -248,33 +384,6 @@ class TestStochasticSampler(unittest.TestCase):
         expected = expected_unnormalized / expected_unnormalized.sum()
         self.assertTrue(np.allclose(probs, expected))
         self.assertAlmostEqual(probs.sum(), 1.0)
-
-    def test_calculate_probabilities_calls_filters(self) -> None:
-        """Test that each filter's calculate_probabilities method is called."""
-        mock_filter1 = mock.MagicMock(spec=StochasticFilter)
-        mock_filter1.calculate_probabilities.return_value = np.array(
-            [0.1, 0.2, 0.3, 0.4],
-        )
-
-        mock_filter2 = mock.MagicMock(spec=StochasticFilter)
-        mock_filter2.calculate_probabilities.return_value = np.array(
-            [0.4, 0.3, 0.2, 0.1],
-        )
-
-        sampler = StochasticSampler(filters=[mock_filter1, mock_filter2], n_samples=2)
-
-        sampler.calculate_probabilities(self.x_matrix, self.y)
-
-        mock_filter1.calculate_probabilities.assert_called_once()
-        mock_filter2.calculate_probabilities.assert_called_once()
-
-        # Check that args passed to filter were correct
-        args1, _ = mock_filter1.calculate_probabilities.call_args
-        args2, _ = mock_filter2.calculate_probabilities.call_args
-        self.assertTrue(np.array_equal(args1[0], self.x_matrix))
-        self.assertTrue(np.array_equal(args1[1], self.y))
-        self.assertTrue(np.array_equal(args2[0], self.x_matrix))
-        self.assertTrue(np.array_equal(args2[1], self.y))
 
     @staticmethod
     def _generate_observed_probs(
@@ -440,22 +549,3 @@ class TestStochasticSampler(unittest.TestCase):
         # the first element of the expected probs is biased by 2
         expected_probs = np.ones(4) / 4
         self.assertTrue(np.allclose(expected_probs, observed_probs, rtol=0, atol=1e-2))
-
-    def test_reproducibility_with_fixed_seed(self) -> None:
-        """Test that results are reproducible with fixed random state."""
-        sampler1 = StochasticSampler(
-            filters=[self.simple_filter],
-            n_samples=5,
-            random_state=42,
-        )
-        sampler2 = StochasticSampler(
-            filters=[self.simple_filter],
-            n_samples=5,
-            random_state=42,
-        )
-
-        x_sampled1, y_sampled1 = sampler1.transform(self.x_matrix, self.y)
-        x_sampled2, y_sampled2 = sampler2.transform(self.x_matrix, self.y)
-
-        self.assertTrue(np.array_equal(x_sampled1, x_sampled2))
-        self.assertTrue(np.array_equal(y_sampled1, y_sampled2))

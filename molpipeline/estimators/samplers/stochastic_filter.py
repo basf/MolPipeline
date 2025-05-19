@@ -1,7 +1,11 @@
 """Stochastic filters for providing filter probabilities for sampling."""
 
 from abc import ABC, abstractmethod
-from typing import override
+
+try:
+    from typing import override  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import override
 
 import numpy as np
 import numpy.typing as npt
