@@ -149,7 +149,8 @@ class ElementFilter(_MolToMolPipelineElement):
             allowed_element_numbers = self.DEFAULT_ALLOWED_ELEMENT_NUMBERS
         if isinstance(allowed_element_numbers, (list, set)):
             self._allowed_element_numbers = dict.fromkeys(
-                allowed_element_numbers, (0, None),
+                allowed_element_numbers,
+                (0, None),
             )
         else:
             self._allowed_element_numbers = {
@@ -225,7 +226,9 @@ class ElementFilter(_MolToMolPipelineElement):
             element not in self.allowed_element_numbers for element in elements_counter
         ):
             return InvalidInstance(
-                self.uuid, "Molecule contains forbidden chemical element.", self.name,
+                self.uuid,
+                "Molecule contains forbidden chemical element.",
+                self.name,
             )
         for element, (lower_limit, upper_limit) in self.allowed_element_numbers.items():
             count = elements_counter[element]
@@ -451,7 +454,9 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         }
 
     def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol,
+        self,
+        filter_element: Any,
+        value: RDKitMol,
     ) -> int:
         """Calculate a single filter match for a molecule.
 
@@ -521,7 +526,9 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         self._filter_elements = descriptors
 
     def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol,
+        self,
+        filter_element: Any,
+        value: RDKitMol,
     ) -> float:
         """Calculate a single descriptor value for a molecule.
 
@@ -613,7 +620,9 @@ class InorganicsFilter(_MolToMolPipelineElement):
         """
         if not any(atom.GetAtomicNum() == 6 for atom in value.GetAtoms()):
             return InvalidInstance(
-                self.uuid, "Molecule contains no organic atoms.", self.name,
+                self.uuid,
+                "Molecule contains no organic atoms.",
+                self.name,
             )
 
         # Only check for inorganic molecules if the molecule is small enough

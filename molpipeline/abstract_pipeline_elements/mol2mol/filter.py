@@ -29,7 +29,9 @@ FilterModeType: TypeAlias = Literal["any", "all"]
 
 
 def _within_boundaries(
-    lower_bound: float | None, upper_bound: float | None, property_value: float,
+    lower_bound: float | None,
+    upper_bound: float | None,
+    property_value: float,
 ) -> bool:
     """Check if a value is within the specified boundaries.
 
@@ -75,7 +77,11 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
     def __init__(
         self,
-        filter_elements: Mapping[Any, FloatCountRange | IntCountRange | IntOrIntCountRange] | Sequence[Any],
+        filter_elements: Mapping[
+            Any,
+            FloatCountRange | IntCountRange | IntOrIntCountRange,
+        ]
+        | Sequence[Any],
         keep_matches: bool = True,
         mode: FilterModeType = "any",
         name: str | None = None,
@@ -175,7 +181,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         return params
 
     def pretransform_single(  # pylint: disable=too-many-return-statements
-        self, value: RDKitMol,
+        self,
+        value: RDKitMol,
     ) -> OptionalMol:
         """Invalidate or validate molecule based on specified filter.
 
@@ -249,7 +256,9 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
     @abc.abstractmethod
     def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol,
+        self,
+        filter_element: Any,
+        value: RDKitMol,
     ) -> float:
         """Calculate the value of a single match.
 
@@ -361,7 +370,9 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         """
 
     def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol,
+        self,
+        filter_element: Any,
+        value: RDKitMol,
     ) -> int:
         """Calculate a single match count for a molecule.
 
