@@ -1,15 +1,14 @@
 """Module for utilities converting values."""
 
-from typing import TypeVar
 from collections.abc import Sequence
+from typing import TypeVar
 
 VarNumber = TypeVar("VarNumber", float | None, int | None)
 
 
-
 def assure_range(value: VarNumber | Sequence[VarNumber]) -> tuple[VarNumber, VarNumber]:
     """Assure that the value is defining a range.
-    
+
     Integers or floats are converted to a range with the same value for both
 
     Parameters
@@ -34,7 +33,7 @@ def assure_range(value: VarNumber | Sequence[VarNumber]) -> tuple[VarNumber, Var
         return value, value
     if isinstance(value, Sequence):
         range_tuple = tuple(value)
-        if len(range_tuple) != 2:
+        if len(range_tuple) != 2:  # noqa: PLR2004
             raise ValueError(f"Expected a sequence of length 2, got: {range_tuple}")
         return range_tuple
     raise TypeError(f"Got unexpected type: {type(value)}")
