@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from numbers import Real
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -12,11 +12,6 @@ from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.utils._param_validation import Interval
 from sklearn.utils.validation import validate_data
-
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
 
 from molpipeline.estimators.algorithm.connected_component_clustering import (
     calc_chunk_size_from_memory_requirement,

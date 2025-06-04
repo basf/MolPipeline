@@ -3,12 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -394,11 +389,6 @@ class _MolPipeline:
             return last_element.assemble_output(value_list)
         return list(value_list)
 
-    def _finish(self) -> None:
-        """Inform each pipeline element that the iterations have finished."""
-        for p_element in self._element_list:
-            p_element.finish()
-
     def _transform_iterator(self, x_input: Any) -> Any:
         """Transform the input according to the sequence of provided PipelineElements.
 
@@ -430,7 +420,6 @@ class _MolPipeline:
             else:
                 yield transformed_value
         agg_filter.set_total(len(x_input))
-        self._finish()
 
     def co_transform(self, x_input: TypeFixedVarSeq) -> TypeFixedVarSeq:
         """Filter flagged rows from the input.
