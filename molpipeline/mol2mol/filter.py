@@ -33,7 +33,7 @@ from molpipeline.utils.molpipeline_types import (
     OptionalMol,
     RDKitMol,
 )
-from molpipeline.utils.value_conversions import count_value_to_tuple
+from molpipeline.utils.value_conversions import assure_range
 
 
 class ElementFilter(_MolToMolPipelineElement):
@@ -89,6 +89,7 @@ class ElementFilter(_MolToMolPipelineElement):
             Number of parallel jobs to use.
         uuid: str, optional
             Unique identifier of the pipeline element.
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.allowed_element_numbers = allowed_element_numbers  # type: ignore
@@ -107,6 +108,7 @@ class ElementFilter(_MolToMolPipelineElement):
         ----------
         add_hydrogens: bool
             If True, in case Hydrogens are in allowed_element_list, add hydrogens to the molecule before filtering.
+
         """
         self._add_hydrogens = add_hydrogens
         if self.add_hydrogens and 1 in self.allowed_element_numbers:
@@ -115,7 +117,7 @@ class ElementFilter(_MolToMolPipelineElement):
             if 1 in self.allowed_element_numbers:
                 logger.warning(
                     "Hydrogens are included in allowed_element_numbers, but add_hydrogens is set to False. "
-                    "Thus hydrogens are NOT added before filtering. You might receive unexpected results."
+                    "Thus hydrogens are NOT added before filtering. You might receive unexpected results.",
                 )
             self.process_hydrogens = False
 
@@ -135,17 +137,19 @@ class ElementFilter(_MolToMolPipelineElement):
         ----------
         allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None
             List of atomic numbers of elements to allowed in molecules.
+
         """
         self._allowed_element_numbers: dict[int, IntCountRange]
         if allowed_element_numbers is None:
             allowed_element_numbers = self.DEFAULT_ALLOWED_ELEMENT_NUMBERS
         if isinstance(allowed_element_numbers, (list, set)):
             self._allowed_element_numbers = dict.fromkeys(
-                allowed_element_numbers, (0, None)
+                allowed_element_numbers,
+                (0, None),
             )
         else:
             self._allowed_element_numbers = {
-                int(atom_number): count_value_to_tuple(count)
+                int(atom_number): assure_range(count)
                 for atom_number, count in allowed_element_numbers.items()
             }
 
@@ -161,6 +165,7 @@ class ElementFilter(_MolToMolPipelineElement):
         -------
         dict[str, Any]
             Parameters of ElementFilter.
+
         """
         params = super().get_params(deep=deep)
         if deep:
@@ -185,6 +190,7 @@ class ElementFilter(_MolToMolPipelineElement):
         -------
         Self
             Self.
+
         """
         parameter_copy = dict(parameters)
         if "allowed_element_numbers" in parameter_copy:
@@ -206,6 +212,7 @@ class ElementFilter(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule if it contains only allowed elements, else InvalidInstance.
+
         """
         to_process_value = Chem.AddHs(value) if self.process_hydrogens else value
         elements_list = [atom.GetAtomicNum() for atom in to_process_value.GetAtoms()]
@@ -214,7 +221,9 @@ class ElementFilter(_MolToMolPipelineElement):
             element not in self.allowed_element_numbers for element in elements_counter
         ):
             return InvalidInstance(
-                self.uuid, "Molecule contains forbidden chemical element.", self.name
+                self.uuid,
+                "Molecule contains forbidden chemical element.",
+                self.name,
             )
         for element, (lower_limit, upper_limit) in self.allowed_element_numbers.items():
             count = elements_counter[element]
@@ -237,6 +246,7 @@ class SmartsFilter(_BasePatternsFilter):
         - mode = "any" & keep_matches = False: Must not match any filter element.
         - mode = "all" & keep_matches = True: Needs to match all filter elements.
         - mode = "all" & keep_matches = False: Must not match all filter elements.
+
     """
 
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
@@ -251,6 +261,7 @@ class SmartsFilter(_BasePatternsFilter):
         -------
         RDKitMol
             RDKit molecule.
+
         """
         return Chem.MolFromSmarts(pattern)
 
@@ -270,6 +281,7 @@ class SmilesFilter(_BasePatternsFilter):
         - mode = "any" & keep_matches = False: Must not match any filter element.
         - mode = "all" & keep_matches = True: Needs to match all filter elements.
         - mode = "all" & keep_matches = False: Must not match all filter elements.
+
     """
 
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
@@ -284,6 +296,7 @@ class SmilesFilter(_BasePatternsFilter):
         -------
         RDKitMol
             RDKit molecule.
+
         """
         return Chem.MolFromSmiles(pattern)
 
@@ -304,6 +317,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         - mode = "any" & keep_matches = False: Must not match any filter element.
         - mode = "all" & keep_matches = True: Needs to match all filter elements.
         - mode = "all" & keep_matches = False: Must not match all filter elements.
+
     """
 
     _filter_elements: Mapping[str, tuple[int, int | None]]
@@ -333,6 +347,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
             Number of parallel jobs to use.
         uuid: str, optional (default: None)
             Unique identifier of the pipeline element.
+
         """
         self.pipeline_filter_elements = pipeline_filter_elements
         super().__init__(
@@ -356,6 +371,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         -------
         dict[str, Any]
             Parameters of ComplexFilter.
+
         """
         params = super().get_params(deep)
         params.pop("filter_elements")
@@ -381,11 +397,12 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         -------
         Self
             Self.
+
         """
         parameter_copy = dict(parameters)
         if "pipeline_filter_elements" in parameter_copy:
             self.pipeline_filter_elements = parameter_copy.pop(
-                "pipeline_filter_elements"
+                "pipeline_filter_elements",
             )
             self.filter_elements = self.pipeline_filter_elements  # type: ignore
         for key in parameters:
@@ -408,7 +425,8 @@ class ComplexFilter(_BaseKeepMatchesFilter):
     @filter_elements.setter
     def filter_elements(
         self,
-        filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]],
+        filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
+        | Mapping[Any, FloatCountRange],
     ) -> None:
         """Set filter elements.
 
@@ -431,7 +449,9 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         }
 
     def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol
+        self,
+        filter_element: Any,
+        value: RDKitMol,
     ) -> int:
         """Calculate a single filter match for a molecule.
 
@@ -446,6 +466,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         -------
         int
             Filter match.
+
         """
         mol = self.filter_elements_dict[filter_element].pretransform_single(value)
         if isinstance(mol, InvalidInstance):
@@ -470,15 +491,16 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         - mode = "any" & keep_matches = False: Must not match any filter element.
         - mode = "all" & keep_matches = True: Needs to match all filter elements.
         - mode = "all" & keep_matches = False: Must not match all filter elements.
+
     """
 
     @property
-    def filter_elements(self) -> dict[str, FloatCountRange]:
+    def filter_elements(self) -> Mapping[str, FloatCountRange]:
         """Get allowed descriptors as dict."""
         return self._filter_elements
 
     @filter_elements.setter
-    def filter_elements(self, descriptors: dict[str, FloatCountRange]) -> None:
+    def filter_elements(self, descriptors: Mapping[str, FloatCountRange]) -> None:
         """Set allowed descriptors as dict.
 
         Parameters
@@ -494,12 +516,14 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         """
         if not all(hasattr(Descriptors, descriptor) for descriptor in descriptors):
             raise ValueError(
-                "You are trying to use an invalid descriptor. Use RDKit Descriptors module."
+                "You are trying to use an invalid descriptor. Use RDKit Descriptors module.",
             )
         self._filter_elements = descriptors
 
     def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol
+        self,
+        filter_element: Any,
+        value: RDKitMol,
     ) -> float:
         """Calculate a single descriptor value for a molecule.
 
@@ -514,6 +538,7 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         -------
         float
             Descriptor value.
+
         """
         return getattr(Descriptors, filter_element)(value)
 
@@ -533,6 +558,7 @@ class MixtureFilter(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule if it contains only one fragment, else InvalidInstance.
+
         """
         fragments = Chem.GetMolFrags(value, asMols=True)
         if len(fragments) > 1:
@@ -560,6 +586,7 @@ class EmptyMoleculeFilter(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule if it is not empty, else InvalidInstance.
+
         """
         if value.GetNumAtoms() == 0:
             return InvalidInstance(self.uuid, "Molecule contains no atoms.", self.name)
@@ -584,10 +611,13 @@ class InorganicsFilter(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule if it contains carbon, else InvalidInstance.
+
         """
         if not any(atom.GetAtomicNum() == 6 for atom in value.GetAtoms()):
             return InvalidInstance(
-                self.uuid, "Molecule contains no organic atoms.", self.name
+                self.uuid,
+                "Molecule contains no organic atoms.",
+                self.name,
             )
 
         # Only check for inorganic molecules if the molecule is small enough

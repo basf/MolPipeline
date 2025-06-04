@@ -362,7 +362,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         return self.get_params()
 
     @parameters.setter
-    def parameters(self, **parameters: Any) -> None:
+    def parameters(self, parameters: Any) -> None:
         """Set the parameters of the object.
 
         Parameters
