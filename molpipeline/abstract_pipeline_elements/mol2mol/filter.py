@@ -15,7 +15,7 @@ from molpipeline.utils.molpipeline_types import (
     IntCountRange,
     IntOrIntCountRange,
 )
-from molpipeline.utils.value_conversions import count_value_to_tuple
+from molpipeline.utils.value_conversions import assure_range
 
 # possible mode types for a KeepMatchesFilter:
 # - "any" means one match is enough
@@ -72,13 +72,11 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
     def __init__(
         self,
-        filter_elements: (
-            Mapping[
-                Any,
-                FloatCountRange | IntCountRange | IntOrIntCountRange,
-            ]
-            | Sequence[Any]
-        ),
+        filter_elements: Mapping[
+            Any,
+            FloatCountRange | IntCountRange | IntOrIntCountRange,
+        ]
+        | Sequence[Any],
         keep_matches: bool = True,
         mode: FilterModeType = "any",
         name: str | None = None,
@@ -127,13 +125,13 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     @abc.abstractmethod
     def filter_elements(
         self,
-        filter_elements: Mapping[Any, FloatCountRange] | Sequence[Any],
+        filter_elements: Mapping[Any, FloatCountRange],
     ) -> None:
         """Set filter elements as dict.
 
         Parameters
         ----------
-        filter_elements: Mapping[Any, FloatCountRange] | Sequence[Any]
+        filter_elements: Union[Mapping[Any, FloatCountRange]
             List of filter elements.
 
         """
@@ -300,23 +298,23 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
 
     """
 
-    _filter_elements: Mapping[str, IntCountRange]
+    _filter_elements: Mapping[str, FloatCountRange]
 
     @property
-    def filter_elements(self) -> Mapping[str, IntCountRange]:
+    def filter_elements(self) -> Mapping[str, FloatCountRange]:
         """Get allowed filter elements (patterns) as dict."""
         return self._filter_elements
 
     @filter_elements.setter
     def filter_elements(
         self,
-        patterns: list[str] | Mapping[str, IntOrIntCountRange],
+        patterns: list[str] | Mapping[str, FloatCountRange],
     ) -> None:
         """Set allowed filter elements (patterns) as dict.
 
         Parameters
         ----------
-        patterns: list[str] | Mapping[str, IntOrIntCountRange]
+        patterns: list[str] | Mapping[str, FloatCountRange]
             List of patterns.
 
         """
@@ -324,7 +322,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
             self._filter_elements = dict.fromkeys(patterns, (1, None))
         else:
             self._filter_elements = {
-                pat: count_value_to_tuple(count) for pat, count in patterns.items()
+                pat: assure_range(count) for pat, count in patterns.items()
             }
         self.patterns_mol_dict = list(self._filter_elements.keys())  # type: ignore
 
