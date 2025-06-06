@@ -1,9 +1,8 @@
-"""Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
+"""Classes for descriptors from multiple descriptors or fingerprints."""
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -17,11 +16,15 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToConcatenatedVector(MolToAnyPipelineElement):
-    """Creates a concatenated descriptor vectored from multiple MolToAny PipelineElements."""
+    """A concatenated descriptor vector from multiple MolToAny PipelineElements."""
 
     _element_list: list[tuple[str, MolToAnyPipelineElement]]
 
@@ -52,7 +55,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         uuid: str | None, optional (default=None)
             UUID of the pipeline element. If None, a random UUID is generated.
         kwargs: Any
-            Additional keyword arguments. Can be used to set parameters of the pipeline elements.
+            Additional keyword arguments.
+            Can be used to set parameters of the pipeline elements.
 
         Raises
         ------
@@ -66,7 +70,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         self._use_feature_names_prefix = use_feature_names_prefix
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         # set element execution details
-        self._set_element_execution_details(self._element_list)
+        self._set_element_execution_details()
         # set feature names
         self._feature_names = self._create_feature_names(
             self._element_list,
@@ -156,18 +160,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             )
         return feature_names
 
-    def _set_element_execution_details(
-        self,
-        element_list: list[tuple[str, MolToAnyPipelineElement]],
-    ) -> None:
-        """Set output type and requires fitting for the concatenated vector.
-
-        Parameters
-        ----------
-        element_list: list[tuple[str, MolToAnyPipelineElement]]
-            List of pipeline elements.
-
-        """
+    def _set_element_execution_details(self) -> None:
+        """Set output type and requires fitting for the concatenated vector."""
         output_types = set()
         for _, element in self._element_list:
             element.n_jobs = self.n_jobs
@@ -176,10 +170,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             self._output_type = output_types.pop()
         else:
             self._output_type = "mixed"
-        self._requires_fitting = any(
-            element[1]._requires_fitting  # pylint: disable=protected-access
-            for element in element_list
-        )
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -243,7 +233,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             if len(element_list) == 0:
                 raise ValueError("element_list must contain at least one element.")
             # reset element execution details
-            self._set_element_execution_details(self._element_list)
+            self._set_element_execution_details()
         step_params: dict[str, dict[str, Any]] = {}
         step_dict = dict(self._element_list)
         to_delete_list = []
@@ -311,12 +301,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Parameters
         ----------
         value_list: Iterable[npt.NDArray[np.float64]]
-            List of molecular descriptors or fingerprints which are concatenated to a single matrix.
+            List of molecular descriptors or fingerprints which are concatenated to a
+            single matrix.
 
         Returns
         -------
         npt.NDArray[np.float64]
-            Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+            Matrix of shape (n_molecules, n_features) with concatenated features
+            specified during init.
 
         """
         return np.vstack(list(value_list))
@@ -332,7 +324,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Returns
         -------
         npt.NDArray[np.float64]
-            Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+            Matrix of shape (n_molecules, n_features) with concatenated features
+            specified during init.
 
         """
         output: npt.NDArray[np.float64] = super().transform(values)
@@ -341,14 +334,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     def fit(
         self,
         values: list[RDKitMol],
-        labels: Any = None,
+        labels: Any = None,  # noqa: ARG002
     ) -> Self:
         """Fit each pipeline element.
 
         Parameters
         ----------
         values: list[RDKitMol]
-            List of molecules used to fit the pipeline elements creating the concatenated vector.
+            List of molecules used to fit the pipeline elements.
         labels: Any
             Labels for the molecules. Not used.
 
@@ -365,7 +358,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
     def pretransform_single(
         self,
         value: RDKitMol,
-    ) -> list[npt.NDArray[np.float64] | dict[int, int]] | InvalidInstance:
+    ) -> npt.NDArray[np.float64] | InvalidInstance:
         """Get pretransform of each element and concatenate for output.
 
         Parameters
@@ -380,64 +373,29 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             If any element returns None, InvalidInstance is returned.
 
         """
-        final_vector = []
+        transfored_list = []
         error_message = ""
         for name, pipeline_element in self._element_list:
-            vector = pipeline_element.pretransform_single(value)
-            if isinstance(vector, InvalidInstance):
+            transformed_value = pipeline_element.pretransform_single(value)
+            if isinstance(transformed_value, InvalidInstance):
                 error_message += f"{self.name}__{name} returned an InvalidInstance."
                 break
-
-            final_vector.append(vector)
-        else:  # no break
-            return final_vector
-        return InvalidInstance(self.uuid, error_message, self.name)
-
-    def finalize_single(self, value: Any) -> Any:
-        """Finalize the output of transform_single.
-
-        Parameters
-        ----------
-        value: Any
-            Output of transform_single.
-
-        Returns
-        -------
-        Any
-            Finalized output.
-
-        """
-        final_vector_list = []
-        for (_, element), sub_value in zip(self._element_list, value, strict=True):
-            final_value = element.finalize_single(sub_value)
-            if isinstance(element, MolToFingerprintPipelineElement) and isinstance(
-                final_value,
+            if isinstance(
+                pipeline_element,
+                MolToFingerprintPipelineElement,
+            ) and isinstance(
+                transformed_value,
                 dict,
             ):
-                vector = np.zeros(element.n_bits)
-                vector[list(final_value.keys())] = np.array(list(final_value.values()))
+                vector = np.zeros(pipeline_element.n_bits)
+                vector[list(transformed_value.keys())] = np.array(
+                    list(transformed_value.values()),
+                )
                 final_value = vector
-            if not isinstance(final_value, np.ndarray):
-                final_value = np.array(final_value)
-            final_vector_list.append(final_value)
-        return np.hstack(final_vector_list)
+            else:
+                final_value = np.array(transformed_value)
 
-    def fit_to_result(self, values: Any) -> Self:
-        """Fit the pipeline element to the result of transform_single.
-
-        Parameters
-        ----------
-        values: Any
-            Output of transform_single.
-
-        Returns
-        -------
-        Self
-            Fitted pipeline element.
-
-        """
-        for element, value in zip(
-            self._element_list, zip(*values, strict=True), strict=True
-        ):
-            element[1].fit_to_result(value)
-        return self
+            transfored_list.append(final_value)
+        else:  # no break
+            return np.hstack(transfored_list)
+        return InvalidInstance(self.uuid, error_message, self.name)
