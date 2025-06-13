@@ -3,8 +3,6 @@
 from pathlib import Path
 from typing import Any
 
-from torch import Type
-
 try:
     import lightning as pl
     import torch
@@ -53,8 +51,6 @@ def get_device(trainer: pl.Trainer) -> str:
         If the accelerator type is not supported. Currently only GOU and CPU is supported.
     ValueError
         If pytorch_lightning is used instead of lightning. Please use from lightning import pytorch as pl, instead of import pytorch_lightning as pl.
-    TypeError
-        If the accelerator type is not supported.
 
     """
     if isinstance(trainer.accelerator, str):
@@ -67,10 +63,10 @@ def get_device(trainer: pl.Trainer) -> str:
         raise NotImplementedError(
             "The accelerator type is not supported. Currently only gpu and cpu accelerators are supported."
         )
-    else:
-        raise ValueError(
-            "Unsupported accelerator type, please use from lightning import pytorch as pl, instead of import pytorch_lightning as pl."
-        )
+    raise ValueError(
+        "Unsupported accelerator type, please use from lightning import pytorch as pl, instead of import pytorch_lightning as pl."
+    )
+
 
 TRAINER_DEFAULT_PARAMS = {
     "strategy": "auto",
