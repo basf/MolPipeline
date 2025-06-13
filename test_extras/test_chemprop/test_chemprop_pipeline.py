@@ -546,7 +546,7 @@ class TestChempropModelTrainerInit(unittest.TestCase):
 
     def test_wrong_import_init(self) -> None:
         """Test the Che mprop model initialization with wrong import."""
-        import pytorch_lightning as pl # noqa
+        import pytorch_lightning as pl # noqa # pylint: disable=redefined-outer-name, import-outside-toplevel
         trainer = pl.Trainer(
             accelerator="cpu",
         )
