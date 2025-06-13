@@ -44,6 +44,16 @@ def get_device(trainer: pl.Trainer) -> str:
     -------
     str
         The device used by the lightning trainer.
+
+    Raises
+    ------
+    NotImplementedError
+        If the accelerator type is not supported. Currently only GOU and CPU is supported.
+    ValueError
+        If pytorch_lightning is used instead of lightning. Please use from lightning import pytorch as pl, instead of import pytorch_lightning as pl.
+    TypeError
+        If the accelerator type is not supported.
+
     """
     if isinstance(trainer.accelerator, str):
         return trainer.accelerator
@@ -57,8 +67,12 @@ def get_device(trainer: pl.Trainer) -> str:
         )
     if not isinstance(trainer.accelerator, Accelerator):
         raise ValueError(
-            f"Unsupported accelerator type, please use from lightning import pytorch as pl, instead of import pytorch_lightning as pl."
+            "Unsupported accelerator type, please use from lightning import pytorch as pl, instead of import pytorch_lightning as pl."
         )
+
+    raise TypeError(
+        f"Unsupported accelerator type: {type(trainer.accelerator)}."
+    )
 
 
 TRAINER_DEFAULT_PARAMS = {

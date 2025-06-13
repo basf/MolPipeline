@@ -8,7 +8,6 @@ import joblib
 import numpy as np
 import pandas as pd
 from lightning import pytorch as pl
-
 from sklearn.base import clone
 from sklearn.calibration import CalibratedClassifierCV
 
@@ -547,7 +546,7 @@ class TestChempropModelTrainerInit(unittest.TestCase):
 
     def test_wrong_import_init(self) -> None:
         """Test the Che mprop model initialization with wrong import."""
-        import pytorch_lightning as pl
+        import pytorch_lightning as pl # noqa
         trainer = pl.Trainer(
             accelerator="cpu",
         )
