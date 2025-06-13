@@ -525,3 +525,36 @@ class TestMulticlassClassificationPipeline(unittest.TestCase):
                 mols,
                 test_data_df["Label"].to_numpy(),
             )
+
+
+class TestChempropModelTrainerInit(unittest.TestCase):
+    """Test the Chemprop model initialization."""
+
+    def test_chemprop_model_init(self) -> None:
+        """Test the Chemprop model initialization."""
+        trainer = pl.Trainer(
+            accelerator="cpu",
+        )
+        mpnn = MPNN(
+            message_passing=BondMessagePassing(),
+            agg=SumAggregation(),
+            predictor=BinaryClassificationFFN(),
+        )
+        chemprop_model = ChempropModel(model=mpnn, lightning_trainer=trainer)
+        self.assertIsInstance(chemprop_model, ChempropModel)
+        self.assertIsInstance(chemprop_model.lightning_trainer.accelerator, pl.accelerators.cpu.CPUAccelerator)
+
+    def test_wrong_import_init(self) -> None:
+        """Test the Che mprop model initialization with wrong import."""
+        import pytorch_lightning as pl # noqa # pylint: disable=redefined-outer-name, import-outside-toplevel
+        trainer = pl.Trainer(
+            accelerator="cpu",
+        )
+        mpnn = MPNN(
+            message_passing=BondMessagePassing(),
+            agg=SumAggregation(),
+            predictor=BinaryClassificationFFN(),
+        )
+        with self.assertRaises(ValueError):
+            # This should raise a ValueError because ChempropModel expects lightning.pytorch and not pytorch_lightning.
+            ChempropModel(model=mpnn, lightning_trainer=trainer)

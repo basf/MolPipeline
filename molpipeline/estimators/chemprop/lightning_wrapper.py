@@ -32,7 +32,7 @@ def get_enable_progress_bar(trainer: pl.Trainer) -> bool:
     return False
 
 
-def get_device(trainer: pl.Trainer) -> str | Accelerator:
+def get_device(trainer: pl.Trainer) -> str:
     """Get the device used by the lightning trainer.
 
     Parameters
@@ -44,15 +44,28 @@ def get_device(trainer: pl.Trainer) -> str | Accelerator:
     -------
     str
         The device used by the lightning trainer.
+
+    Raises
+    ------
+    NotImplementedError
+        If the accelerator type is not supported. Currently only GOU and CPU is supported.
+    ValueError
+        If pytorch_lightning is used instead of lightning. Please use from lightning import pytorch as pl, instead of import pytorch_lightning as pl.
+
     """
-    devices: str | Accelerator
+    if isinstance(trainer.accelerator, str):
+        return trainer.accelerator
     if isinstance(trainer.accelerator, CPUAccelerator):
-        devices = "cpu"
-    elif isinstance(trainer.accelerator, CUDAAccelerator):
-        devices = "gpu"
-    else:
-        devices = trainer.accelerator
-    return devices
+        return "cpu"
+    if isinstance(trainer.accelerator, CUDAAccelerator):
+        return "gpu"
+    if isinstance(trainer.accelerator, Accelerator):
+        raise NotImplementedError(
+            "The accelerator type is not supported. Currently only gpu and cpu accelerators are supported."
+        )
+    raise ValueError(
+        "Unsupported accelerator type, please use from lightning import pytorch as pl, instead of import pytorch_lightning as pl."
+    )
 
 
 TRAINER_DEFAULT_PARAMS = {
