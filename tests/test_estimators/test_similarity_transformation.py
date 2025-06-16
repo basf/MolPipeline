@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator
-from rdkit.DataStructs import BulkTanimotoSimilarity
+from rdkit.DataStructs import BulkTanimotoSimilarity  # type: ignore[attr-defined]
 from scipy import sparse
 from sklearn.neighbors import KNeighborsClassifier
 

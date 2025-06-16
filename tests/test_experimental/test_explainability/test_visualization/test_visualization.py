@@ -198,11 +198,11 @@ class TestExplainabilityVisualization(unittest.TestCase):
         """
         mol_implicit_hydrogens = Chem.MolFromSmiles("C")
         explanations1 = self.test_tree_explainer_clf.explain(
-            [Chem.MolToSmiles(mol_implicit_hydrogens)]
+            [Chem.MolToSmiles(mol_implicit_hydrogens)]  # type: ignore[arg-type]
         )
-        mol_added_hydrogens = Chem.AddHs(mol_implicit_hydrogens)
+        mol_added_hydrogens = Chem.AddHs(mol_implicit_hydrogens)  # type: ignore[arg-type]
         explanations2 = self.test_tree_explainer_clf.explain(
-            [Chem.MolToSmiles(mol_added_hydrogens)]
+            [Chem.MolToSmiles(mol_added_hydrogens)]  # type: ignore[arg-type]
         )
         mol_explicit_hydrogens = Chem.MolFromSmiles("[H]C([H])([H])[H]")
         explanations3 = self.test_tree_explainer_clf.explain(

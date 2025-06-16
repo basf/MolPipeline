@@ -20,7 +20,7 @@ class TestLeaderPickerEstimator(unittest.TestCase):
     def test_leader_picker_clustering_estimator(self) -> None:
         """Test LeaderPicker clustering estimator."""
         fingerprint_matrix = [
-            DataStructs.CreateFromBitString(x)
+            DataStructs.CreateFromBitString(x)  # type: ignore[attr-defined]
             for x in [
                 "000",  # 0
                 "100",  # 1
