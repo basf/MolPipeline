@@ -206,7 +206,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
         )
         mol_explicit_hydrogens = Chem.MolFromSmiles("[H]C([H])([H])[H]")
         explanations3 = self.test_tree_explainer_clf.explain(
-            [Chem.MolToSmiles(mol_explicit_hydrogens)]
+            [Chem.MolToSmiles(mol_explicit_hydrogens)]  # type: ignore[arg-type]
         )
 
         # test explanations' atom weights
