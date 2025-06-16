@@ -32,6 +32,7 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
+        uv sync --dev
         uv run mypy . || exit_code=$?
         uv run mypy --install-types --non-interactive
     - name: Analysing the code with mypy
