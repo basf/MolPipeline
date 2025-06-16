@@ -43,9 +43,7 @@ class PostPredictionTransformation(BaseEstimator, TransformerMixin, abc.ABC):
         """
 
 
-class PostPredictionWrapper(
-    PostPredictionTransformation
-):  # pylint: disable=too-many-ancestors
+class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=too-many-ancestors
     """Wrapper for post prediction transformations.
 
     This class is used to wrap a PipelineElement in a PostPredictionTransformation.
