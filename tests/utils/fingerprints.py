@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator as rdkit_fp
-from rdkit.DataStructs import ExplicitBitVect, UIntSparseIntVect # type: ignore[attr-defined]
+from rdkit.DataStructs import ExplicitBitVect, UIntSparseIntVect  # type: ignore[attr-defined]
 from scipy import sparse
 
 
