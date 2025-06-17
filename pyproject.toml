@@ -193,6 +193,16 @@ venvPath = "."
 venv = ".venv"
 pythonVersion = "3.11"
 
+
+[tool.mypy]
+# Your existing mypy settings
+
+[[tool.mypy.overrides]]
+# ignore call-arg errors on rdkit.
+module = "rdkit.*"
+disallow_untyped_calls = false
+#warn_return_any = false
+
 [tool.setuptools.dynamic]
 version = {attr = "molpipeline.__version__"}
 
