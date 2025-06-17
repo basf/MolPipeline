@@ -299,6 +299,6 @@ def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
 
     for x, y in zip(*mask):
         upper_left, lower_right = color_grid.grid_field_lim(x, y)
-        upper_left, lower_right = Point2D(*upper_left), Point2D(*lower_right)
-        canvas.SetColour(tuple(color_grid.color_grid[x, y]))
+        upper_left, lower_right = Point2D(*upper_left), Point2D(*lower_right)  # type: ignore[assignment]
+        canvas.SetColour(tuple(color_grid.color_grid[x, y]))  # type: ignore[call-arg]
         canvas.DrawRect(upper_left, lower_right)

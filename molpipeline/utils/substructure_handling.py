@@ -70,6 +70,6 @@ class CircularAtomEnvironment(AtomEnvironment):
 
         env = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, central_atom_index)
         amap: dict[int, int] = {}
-        _ = Chem.PathToSubmol(mol, env, atomMap=amap)
+        _ = Chem.PathToSubmol(mol, env, atomMap=amap) # type: ignore[call-arg]
         env_atoms = amap.keys()
         return CircularAtomEnvironment(central_atom_index, radius, set(env_atoms))

@@ -21,4 +21,4 @@ class MolToBinary(MolToAnyPipelineElement):
         str
             Binary representation of molecule.
         """
-        return value.ToBinary()
+        return value.ToBinary()  # type: ignore[call-overload]

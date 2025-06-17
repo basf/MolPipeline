@@ -36,7 +36,6 @@ jobs:
         uv run mypy --install-types --non-interactive
     - name: Analysing the code with mypy
       run: |
-        uv run mypy --version
         uv run mypy --ignore-missing-imports --disallow-any-generics --disallow-untyped-defs --no-implicit-optional --disallow-incomplete-defs .
   pydocstyle:
     runs-on: ubuntu-latest
