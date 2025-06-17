@@ -42,6 +42,17 @@ class PostPredictionTransformation(BaseEstimator, TransformerMixin, abc.ABC):
             Transformed data.
         """
 
+    def prepare_input(
+        self, X, y, final_estimator: AnyPredictor
+    ) -> tuple[npt.NDArray[Any], npt.NDArray[Any]]:
+        """Placeholder method for additional functionality.
+
+        Use this function to prepare the input data for fitting.
+
+        This method can be overridden in subclasses to implement specific behavior.
+        """
+        return X, y
+
 
 class PostPredictionWrapper(PostPredictionTransformation):
     """Wrapper for post prediction transformations.
