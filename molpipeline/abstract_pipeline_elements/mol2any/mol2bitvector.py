@@ -15,7 +15,7 @@ except ImportError:
 import numpy as np
 import numpy.typing as npt
 from rdkit.Chem import rdFingerprintGenerator
-from rdkit.DataStructs import ExplicitBitVect
+from rdkit.DataStructs import ExplicitBitVect  # type: ignore[attr-defined]
 from scipy import sparse
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement

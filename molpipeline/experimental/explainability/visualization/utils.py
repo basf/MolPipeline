@@ -34,7 +34,7 @@ def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float
     coords_list = []
     conf = mol.GetConformer(0)
     for i, _ in enumerate(mol.GetAtoms()):
-        pos = conf.GetAtomPosition(i)
+        pos = conf.GetAtomPosition(i)  # type: ignore[call-arg]
         coords_list.append((pos.x, pos.y))
     coords: npt.NDArray[np.float64] = np.array(coords_list)
     min_p = np.min(coords, axis=0)

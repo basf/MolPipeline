@@ -27,7 +27,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
 from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 
 RDKIT_DESCRIPTOR_DICT: dict[str, Callable[[Chem.Mol], float]]
-RDKIT_DESCRIPTOR_DICT = dict(Descriptors.descList)
+RDKIT_DESCRIPTOR_DICT = dict(Descriptors.descList)  # type: ignore[attr-defined]
 
 # MolWt is removed as ExactMolWt is already included.
 # Ipc is removed because it causes trouble with numpy.

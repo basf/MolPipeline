@@ -8,7 +8,7 @@ from numbers import Real
 import numpy as np
 import numpy.typing as npt
 from rdkit import DataStructs
-from rdkit.DataStructs import ExplicitBitVect
+from rdkit.DataStructs import ExplicitBitVect  # type: ignore[attr-defined]
 from rdkit.SimDivFilters import rdSimDivPickers
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.utils._param_validation import Interval
@@ -92,7 +92,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         max_similarities = np.full(len(fps), -np.inf, dtype=np.float64)
 
         for i, pick_idx in enumerate(picks):
-            similarities = DataStructs.BulkTanimotoSimilarity(fps[pick_idx], fps)
+            similarities = DataStructs.BulkTanimotoSimilarity(fps[pick_idx], fps)  # type: ignore[attr-defined]
             max_mask = similarities > max_similarities
             labels[max_mask] = i
             max_similarities[max_mask] = list(compress(similarities, max_mask))
