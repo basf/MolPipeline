@@ -119,7 +119,7 @@ class SDFToMol(_StringToMolPipelineElement):
                 "Invalid SDF string!",
                 self.name,
             )
-        supplier = Chem.SDMolSupplier()
+        supplier = Chem.SDMolSupplier()  # type: ignore[call-arg]
         supplier.SetData(value)
         mol = next(supplier, None)
         if mol is None:

@@ -163,7 +163,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             Dictionary with bit position as key and list of tuples with atom index and radius as value.
         """
         fp_generator = self._get_fp_generator()
-        additional_output = AllChem.AdditionalOutput()
+        additional_output = AllChem.AdditionalOutput()  # type: ignore[attr-defined]
         additional_output.AllocateBitInfoMap()
         # using the dense fingerprint here, to get indices after folding
         _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)

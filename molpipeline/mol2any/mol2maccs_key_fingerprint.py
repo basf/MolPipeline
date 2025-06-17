@@ -3,7 +3,7 @@
 import numpy as np
 from numpy import typing as npt
 from rdkit.Chem import MACCSkeys
-from rdkit.DataStructs import ExplicitBitVect
+from rdkit.DataStructs import ExplicitBitVect  # type: ignore[attr-defined]
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
