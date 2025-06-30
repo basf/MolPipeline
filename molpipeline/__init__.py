@@ -12,8 +12,11 @@ from molpipeline.post_prediction import PostPredictionWrapper
 SetDefaultPickleProperties(PropertyPickleOptions.AllProps)
 
 __all__ = [
-    "Pipeline",
     "ErrorFilter",
     "FilterReinserter",
+    "Pipeline",
     "PostPredictionWrapper",
+    "__version__",
 ]
+
+__version__ = "0.10.2"

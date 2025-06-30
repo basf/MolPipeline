@@ -1,11 +1,10 @@
 """Abstract classes for transforming rdkit molecules to float vectors."""
 
-# pylint: disable=too-many-arguments
-
 from __future__ import annotations
 
 import abc
-from typing import Any, Iterable, Optional, Union
+from collections.abc import Iterable
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -27,33 +26,30 @@ from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
 
-    _standardizer: Optional[AnyTransformer]
+    _standardizer: AnyTransformer | None
     _output_type = "float"
     _feature_names: list[str]
 
     def __init__(
         self,
-        standardizer: Optional[AnyTransformer] = StandardScaler(),
+        standardizer: AnyTransformer | None = StandardScaler(),
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToDescriptorPipelineElement.
 
         Parameters
         ----------
-        standardizer: Optional[AnyTransformer], default=StandardScaler()
+        standardizer: AnyTransformer | None default=StandardScaler()
             The output is post_processed according to the standardizer if not None.
-        name: str:
+        name: str, default='MolToDescriptorPipelineElement'
             Name of the PipelineElement.
-        n_jobs: int:
+        n_jobs: int, default=1
             Number of jobs to use for parallelization.
-        uuid: Optional[str]
+        uuid: str | None, optional
             UUID of the PipelineElement.
 
-        Returns
-        -------
-        None
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self._standardizer = standardizer
@@ -209,7 +205,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
     @abc.abstractmethod
     def pretransform_single(
         self, value: RDKitMol
-    ) -> Union[npt.NDArray[np.float64], InvalidInstance]:
+    ) -> npt.NDArray[np.float64] | InvalidInstance:
         """Transform mol to dict, where items encode columns indices and values, respectively.
 
         Parameters
@@ -219,6 +215,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Returns
         -------
-        npt.NDArray[np.float64]
+        npt.NDArray[np.float64] | InvalidInstance
             Vector with descriptor values of molecule.
+
         """

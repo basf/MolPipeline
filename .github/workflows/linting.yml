@@ -12,34 +12,31 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: astral-sh/setup-uv@v5
       with:
-        python-version: "3.11"
+        python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install $(find . -name "requirement*" -type f -printf ' -r %p')
-        pip install pylint
+        uv sync --all-extras
+        uv pip install torch --index-url https://download.pytorch.org/whl/cpu
     - name: Analysing the code with pylint
       run: |
-        pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
+        uv run pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
   mypy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: astral-sh/setup-uv@v5
       with:
-        python-version: "3.11"
+        python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install mypy
-        mypy . || exit_code=$?
-        mypy --install-types --non-interactive
+        uv run mypy . || exit_code=$?
+        uv run mypy --install-types --non-interactive
     - name: Analysing the code with mypy
       run: |
-        mypy --ignore-missing-imports --disallow-any-generics --disallow-untyped-defs --no-implicit-optional --disallow-incomplete-defs . 
+        uv run mypy --ignore-missing-imports --disallow-any-generics --disallow-untyped-defs --no-implicit-optional --disallow-incomplete-defs .
   pydocstyle:
     runs-on: ubuntu-latest
     steps:
@@ -47,11 +44,10 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: "3.11"
+        python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install pydocstyle
+        python -m pip install pydocstyle
     - name: Analysing the code with pydocstyle
       run: |
         pydocstyle .
@@ -63,30 +59,13 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: "3.11"
+        python-version: "3.13"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install docsig
+        python -m pip install docsig
     - name: Analysing the code with docsig
       run: |
         docsig --check-class-constructor --check-dunders --check-protected-class-methods --check-nested --check-overridden --check-protected .
-
-  black:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.11"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install black[jupyter]
-    - name: Analysing the code with black
-      run: |
-        black --check .
 
   flake8:
     runs-on: ubuntu-latest
@@ -95,14 +74,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.11"
+          python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install flake8
+          python -m pip install flake8
       - name: Analysing the code with flake8
         run: |
-          flake8 --extend-ignore=D203,E203,E501,W503 .
+          flake8 --extend-ignore=D203,E203,E501,W503 --extend-exclude .venv .
 
   interrogate:
     runs-on: ubuntu-latest
@@ -111,11 +89,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.11"
+          python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install interrogate
+          python -m pip install interrogate
       - name: Analysing the code with interrogate
         run: |
          interrogate --ignore-overloaded-functions -vv .
@@ -127,30 +104,49 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.11"
+          python-version: "3.13"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install bandit
+          python -m pip install bandit
       - name: Analysing the code with bandit
         run: |
-         bandit -r --skip=B404,B603,B602 .
+         bandit -r --skip=B404,B603,B602 -c pyproject.toml .
 
-  isort:
+  pyright:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.11"
-      - name: Install dependencies
+          python-version: "3.13"
+      - name: Analysing the code with pyright
         run: |
-          python -m pip install --upgrade pip
-          pip install isort
-      - name: Analysing the code with isort
+          uv run --all-extras pyright .
+
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - name: Analysing the code with ruff
         run: |
-          isort --profile black --check-only .
+          uv run ruff check --config pyproject.toml
+
+  ruff-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - name: Analysing the code with ruff
+        run: |
+          uvx ruff format --check
 
   test_basis:
     needs:
@@ -158,15 +154,16 @@ jobs:
         - mypy
         - pydocstyle
         - docsig
-        - black
         - flake8
         - interrogate
         - bandit
-        - isort
+        - ruff
+        - ruff-format
+        - pyright
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
@@ -189,24 +186,25 @@ jobs:
     needs:
       - test_basis
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
       - name: Install package
         run: |
-          python -m pip install --upgrade pip
-          pip install coverage
-          pip install torch
-          pip install .[chemprop]
+          uv sync --all-extras
+          uv pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Run unit-tests for chemprop
         run: |
           # Run only the chemprop test suite.
-          coverage run --source=molpipeline,tests -m unittest discover test_extras/test_chemprop
+          uv run coverage run --source=molpipeline,tests -m unittest discover test_extras/test_chemprop
           # Create a coverage report. Fail if the coverage is below 85%. Include only chemprop files in the report.
-          coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*"
+          uv run coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*"
 
   test_notebooks:
     needs:
@@ -214,14 +212,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.11"
+      - name: Set up Python 3.13
+        uses: astral-sh/setup-uv@v5
       - name: Install package
         run: |
-          python -m pip install --upgrade pip
-          pip install .[notebooks]
+          uv sync --all-extras
       - name: Run unit-tests for notebooks
         run: |
-          python test_extras/test_notebooks/test_notebooks.py  --continue-on-failure
+          uv run python test_extras/test_notebooks/test_notebooks.py --continue-on-failure

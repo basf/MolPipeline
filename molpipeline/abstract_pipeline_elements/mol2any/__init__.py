@@ -11,7 +11,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
 )
 
 __all__ = (
-    "MolToFingerprintPipelineElement",
     "MolToDescriptorPipelineElement",
+    "MolToFingerprintPipelineElement",
     "MolToStringPipelineElement",
 )

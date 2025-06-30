@@ -33,6 +33,11 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
         value : RDKitMol
             RDKit molecule.
 
+        Raises
+        ------
+        ValueError
+            If the variable `return_as` is not one of the allowed values.
+
         Returns
         -------
         dict[int, int] | npt.NDArray[np.int_] | ExplicitBitVect
@@ -45,5 +50,5 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
         if self._return_as == "dense":
             return np.array(fingerprint)
         if self._return_as == "sparse":
-            return {idx: 1 for idx in fingerprint.GetOnBits()}
+            return dict.fromkeys(fingerprint.GetOnBits(), 1)
         raise ValueError(f"Unknown return_as value: {self._return_as}")

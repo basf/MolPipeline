@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 try:
-    from typing import Self  # pylint: disable=no-name-in-module
+    from typing import Self
 except ImportError:
     from typing_extensions import Self
 
@@ -92,7 +92,8 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         return self
 
     def transform(
-        self, X: npt.NDArray[np.float64] | csr_matrix  # pylint: disable=invalid-name
+        self,
+        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Transform the data.
 
@@ -101,10 +102,16 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         X : npt.NDArray[np.float64] | csr_matrix
             Feature matrix to which the similarity matrix is computed.
 
+        Raises
+        ------
+        ValueError
+            If the transformer has not been fitted yet.
+
         Returns
         -------
         npt.NDArray[np.float64]
             Similarity matrix of X to the training matrix.
+
         """
         if self.training_matrix is None:
             raise ValueError("Please fit the transformer before transforming!")
@@ -112,7 +119,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
 
     def fit_transform(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
+        X: npt.NDArray[np.float64] | csr_matrix,
         y: npt.NDArray[np.float64] | None = None,
         **fit_params: Any,
     ) -> npt.NDArray[np.float64]:

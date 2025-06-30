@@ -19,12 +19,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
     """Unittest for MolToRDKitPhysChem, which calculates RDKitPhysChem Descriptors."""
 
     def test_descriptor_list(self) -> None:
-        """Test if the descriptor list is as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the descriptor list is as expected."""
         expected_descriptors = {
             "MaxAbsEStateIndex",
             "MaxEStateIndex",
@@ -249,9 +244,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
         Compared to precalculated values.
 
-        Returns
-        -------
-        None
         """
         expected_df = pd.read_csv(data_path, sep="\t")
         descriptor_names = expected_df.drop(columns=["smiles"]).columns.tolist()
@@ -272,12 +264,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         self.assertTrue(np.allclose(output, property_vector))  # add assertion here
 
     def test_descriptor_normalization(self) -> None:
-        """Test if the normalization of RDKitPhysChem Descriptors works as expected.
-
-        Returns
-        -------
-        None
-        """
+        """Test if the normalization of RDKitPhysChem Descriptors works as expected."""
         smi2mol = SmilesToMol()
         property_element = MolToRDKitPhysChem(standardizer=StandardScaler())
         pipeline = Pipeline(
@@ -308,7 +295,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
     def test_optional_nan_value_handling(self) -> None:
         """Test the handling of partly failed descriptor calculations."""
-
         ok_smiles_list = [
             "CC",
             "C(C)CCO",
@@ -380,7 +366,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
     def test_unknown_descriptor_name(self) -> None:
         """Test the handling of unknown descriptor names."""
-
         self.assertRaises(
             ValueError,
             MolToRDKitPhysChem,
@@ -389,7 +374,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
     def test_exception_handling(self) -> None:
         """Test exception handling during descriptor calculation."""
-
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
@@ -405,6 +389,14 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         # Without exception handling [HH] would raise a division-by-zero exception because it has 0 heavy atoms
         output = pipeline.fit_transform(["[HH]"])
         self.assertTrue(output.shape == (1, len(DEFAULT_DESCRIPTORS)))
+
+    def test_empty_descriptor_list(self) -> None:
+        """Test that an empty descriptor list raises ValueError."""
+        with self.assertRaises(ValueError) as context:
+            MolToRDKitPhysChem(descriptor_list=[])
+        self.assertTrue(
+            str(context.exception).startswith("Empty descriptor_list is not allowed")
+        )
 
 
 if __name__ == "__main__":

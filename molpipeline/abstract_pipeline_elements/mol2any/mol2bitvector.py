@@ -4,7 +4,8 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import Any, Iterable, Literal, Optional, get_args, overload
+from collections.abc import Iterable
+from typing import Any, Literal, get_args, overload
 
 try:
     from typing import Self, TypeAlias  # type: ignore[attr-defined]
@@ -42,7 +43,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return_as: OutputDatatype = "sparse",
         name: str = "MolToFingerprintPipelineElement",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ):
         """Initialize abstract class.
 
@@ -154,17 +155,24 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         parameters: Any
             Dictionary of parameter names and values.
 
+        Raises
+        ------
+        ValueError
+            If return_as is not one of the allowed values.
+
         Returns
         -------
         Self
             Copied object with updated parameters.
+
         """
         parameter_dict_copy = dict(parameters)
         return_as = parameter_dict_copy.pop("return_as", None)
         if return_as is not None:
             if return_as not in get_args(OutputDatatype):
                 raise ValueError(
-                    f"return_as has to be one of {get_args(OutputDatatype)}! (Received: {return_as})"
+                    f"return_as has to be one of {get_args(OutputDatatype)}! "
+                    f"(Received: {return_as})"
                 )
             self._return_as = return_as
         super().set_params(**parameter_dict_copy)
@@ -212,21 +220,22 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         return_as: OutputDatatype = "sparse",
         name: str = "MolToRDKitGenFin",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ):
         """Initialize abstract class.
 
         Parameters
         ----------
-        counted: bool
+        counted: bool, default=False
             Whether to count the bits or not.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
-            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
-        name: str
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+            Type of output.
+            When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
+        name: str, default="MolToRDKitGenFin"
             Name of PipelineElement.
-        n_jobs:
+        n_jobs: int, default=1
             Number of jobs.
-        uuid: Optional[str]
+        uuid: str | None, optional
             Unique identifier.
         """
         super().__init__(
@@ -283,7 +292,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         if self.counted:
             return fingerprint.GetNonzeroElements()
 
-        return {pos: 1 for pos in fingerprint.GetOnBits()}
+        return dict.fromkeys(fingerprint.GetOnBits(), 1)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get object parameters relevant for copying the class.
@@ -330,6 +339,13 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
     """Abstract Class for Morgan fingerprints."""
 
+    @property
+    def output_type(self) -> str:
+        """Get output type."""
+        if self.counted:
+            return "integer"
+        return "binary"
+
     # pylint: disable=R0913
     def __init__(
         self,
@@ -339,29 +355,37 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ):
         """Initialize abstract class.
 
         Parameters
         ----------
-        radius: int
+        radius: int, default=2
             Radius of fingerprint.
-        use_features: bool
+        use_features: bool, default=False
             Whether to represent atoms by element or category (donor, acceptor. etc.)
-        counted: bool
+        counted: bool, default=False
             Whether to count the bits or not.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
-            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
-            holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
-            rdkit.DataStructs.cDataStructs.ExplicitBitVect.
-        name: str
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+            Type of output.
+            When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
+            holding a sparse representation of the bit vectors.
+            With "dense" a numpy matrix will be returned.
+            With "explicit_bit_vect" the fingerprints will be returned as a list of
+            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+        name: str, default="AbstractMorgan"
             Name of PipelineElement.
-        n_jobs:
+        n_jobs: int, default=1
             Number of jobs.
-        uuid: Optional[str]
+        uuid: str | None, optional
             Unique identifier.
+
+        Raises
+        ------
+        ValueError
+            If radius is not a positive integer.
+
         """
         # pylint: disable=R0801
         super().__init__(

@@ -5,7 +5,8 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -21,6 +22,7 @@ except ImportError:
     warnings.warn(
         "chemprop not installed. MolToChemprop will not work.",
         ImportWarning,
+        stacklevel=2,
     )
 
 
@@ -48,22 +50,24 @@ class MolToChemprop(MolToAnyPipelineElement):
         mol_featurizer: VectorFeaturizer[RDKitMol] | None = None,
         name: str = "Mol2Chemprop",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize MolToChemprop.
 
         Parameters
         ----------
-        graph_featurizer: GraphFeaturizer[RDKitMol] | None, optional (default=None)
+        graph_featurizer: GraphFeaturizer[RDKitMol] | None, optional
             Defines how the graph is featurized. Defaults to None.
-        mol_featurizer: MoleculeFeaturizer | None, optional (default=None)
-            In contrast to graph_featurizer, features from the mol_featurizer are not used during the message passing.
-            These features are concatenated to the neural fingerprints before the feedforward layers.
+        mol_featurizer: MoleculeFeaturizer | None, optional
+            In contrast to graph_featurizer, features from the mol_featurizer are not
+            used during the message passing.
+            These features are concatenated to the neural fingerprints before the
+            feedforward layers.
         name: str, optional (default="Mol2Chemprop")
             Name of the pipeline element. Defaults to "Mol2Chemprop".
         n_jobs: int
             Number of parallel jobs to use. Defaults to 1.
-        uuid: str | None, optional (default=None)
+        uuid: str | None, optional
             UUID of the pipeline element.
         """
         self.graph_featurizer = graph_featurizer or SimpleMoleculeMolGraphFeaturizer()
@@ -86,7 +90,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         Returns
         -------
         MoleculeDatapoint
-            Molecular representation used as input for ChemProp. None if transformation failed.
+            Molecular representation used as input for ChemProp.
         """
         mol_features: npt.NDArray[np.float64] | None = None
         if self.mol_featurizer is not None:
@@ -115,7 +119,7 @@ class MolToChemprop(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        deep: bool, optional (default=True)
+        deep: bool, default=True
             If True, will return the parameters for this pipeline element and its subobjects.
 
         Returns

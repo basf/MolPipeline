@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -18,9 +18,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
 )
 
 
-class Mol2PathFP(
-    MolToRDKitGenFPElement
-):  # pylint: disable=too-many-instance-attributes
+class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-attributes
     """Folded Path Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
@@ -44,50 +42,57 @@ class Mol2PathFP(
         return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
         name: str = "Mol2PathFP",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize Mol2PathFP.
 
         Parameters
         ----------
-        min_path: int, optional (default=1)
+        min_path: int, default=1
             Minimum path length.
-        max_path: int, optional (default=7)
+        max_path: int, default=7
             Maximum path length.
-        use_hs: bool, optional (default=True)
+        use_hs: bool, default=True
             Include hydrogens (If explicit hydrogens are present in the molecule).
-        branched_paths: bool, optional (default=True)
+        branched_paths: bool, default=True
             Include branched paths.
-        use_bond_order: bool, optional (default=True)
+        use_bond_order: bool, default=True
             Include bond order in path.
-        count_simulation: bool, optional (default=False)
+        count_simulation: bool, default=False
             Count simulation.
-        count_bounds: Any, optional (default=None)
+        count_bounds: Any, optional
             Set the bins for the bond count.
-        n_bits: int, optional (default=2048)
+        n_bits: int, default=2048
             Size of fingerprint.
-        num_bits_per_feature: int, optional (default=2)
+        num_bits_per_feature: int, default=2
             Number of bits per feature.
-        atom_invariants_generator: Any, optional (default=None)
+        atom_invariants_generator: Any, default=None
             Atom invariants generator.
-        counted: bool, optional (default=False)
+        counted: bool, default=False
             If True, the fingerprint will be counted.
             If False, the fingerprint will be binary.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
-            Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
-            holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
-            rdkit.DataStructs.cDataStructs.ExplicitBitVect.
-        name: str, optional (default="MolToMorganFP")
+        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+            Type of output. When "sparse" the fingerprints will be returned as a
+            scipy.sparse.csr_matrix holding a sparse representation of the bit vectors.
+            With "dense" a numpy matrix will be returned.
+            With "explicit_bit_vect" the fingerprints will be returned as a list of
+            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+        name: str, default="MolToMorganFP"
             Name of PipelineElement
-        n_jobs: int, optional (default=1)
+        n_jobs: int, default=1
             Number of cores to use.
-        uuid: str | None, optional (default=None)
+        uuid: str | None, optional
             UUID of the PipelineElement.
 
         References
         ----------
         [1] https://www.rdkit.org/docs/source/rdkit.Chem.rdFingerprintGenerator.html#rdkit.Chem.rdFingerprintGenerator.GetRDKitFPGenerator
+
+        Raises
+        ------
+        ValueError
+            If the number of bits is not a positive integer.
+
         """
         # pylint: disable=R0801
         super().__init__(
@@ -99,7 +104,7 @@ class Mol2PathFP(
         )
         if not isinstance(n_bits, int) or n_bits < 1:
             raise ValueError(
-                f"Number of bits has to be a positive integer, which is > 0! (Received: {n_bits})"
+                f"Number of bits has to be an integer > 0! (Received: {n_bits})",
             )
         self._n_bits = n_bits
         self._feature_names = [f"path_{i}" for i in range(self._n_bits)]
@@ -125,6 +130,7 @@ class Mol2PathFP(
         -------
         dict[str, Any]
             Dictionary of parameters.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -137,7 +143,7 @@ class Mol2PathFP(
             parameters["count_bounds"] = copy.copy(self._count_bounds)
             parameters["num_bits_per_feature"] = int(self._num_bits_per_feature)
             parameters["atom_invariants_generator"] = copy.copy(
-                self._atom_invariants_generator
+                self._atom_invariants_generator,
             )
             parameters["n_bits"] = int(self._n_bits)
         else:
@@ -165,6 +171,7 @@ class Mol2PathFP(
         -------
         Self
             MolToMorganFP pipeline element with updated parameters.
+
         """
         parameter_copy = dict(parameters)
         min_path = parameter_copy.pop("min_path", None)
@@ -192,7 +199,8 @@ class Mol2PathFP(
         if num_bits_per_feature is not None:
             self._num_bits_per_feature = num_bits_per_feature
         atom_invariants_generator = parameter_copy.pop(
-            "atom_invariants_generator", None
+            "atom_invariants_generator",
+            None,
         )
         if atom_invariants_generator is not None:
             self._atom_invariants_generator = atom_invariants_generator
@@ -209,6 +217,7 @@ class Mol2PathFP(
         -------
         rdFingerprintGenerator.GetRDKitFPGenerator
             RDKit Path fingerprint generator.
+
         """
         return rdFingerprintGenerator.GetRDKitFPGenerator(
             minPath=self._min_path,

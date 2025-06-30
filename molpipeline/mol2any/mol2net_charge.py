@@ -115,10 +115,16 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         value: RDKitMol
             RDKit molecule to transform.
 
+        Raises
+        ------
+        ValueError
+            If the charge method is not supported.
+
         Returns
         -------
-        Optional[npt.NDArray[np.float64]]
+        npt.NDArray[np.float64] | InvalidInstance
             Net charge of the given molecule.
+
         """
         if self._charge_method == "formal_charge":
             return np.array([Chem.GetFormalCharge(value)], dtype=np.float64)

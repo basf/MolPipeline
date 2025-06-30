@@ -344,6 +344,15 @@ class SubpipelineExtractor:
         second_offset : int
             The offset to apply to the second element.
 
+        Raises
+        ------
+        ValueError
+            If the first element is not found in the pipeline.
+        ValueError
+            If the second element is not found in the pipeline.
+        ValueError
+            If the second element is before the first element.
+
         Returns
         -------
         Pipeline | None
@@ -385,3 +394,61 @@ class SubpipelineExtractor:
             ):
                 fill_values.add(step.wrapped_estimator.fill_value)
         return list(fill_values)
+
+
+def get_featurization_subpipeline(
+    pipeline: Pipeline, raise_not_found: bool = False
+) -> Pipeline | None:
+    """Get the featurization subpipeline from a pipeline.
+
+    Parameters
+    ----------
+    pipeline : Pipeline
+        The pipeline to extract the featurization subpipeline from.
+    raise_not_found : bool
+        If True, raise a ValueError if the model was not found.
+
+    Raises
+    ------
+    ValueError
+        If the model was not found and raise_not_found is True.
+
+    Returns
+    -------
+    Pipeline | None
+        The extracted featurization subpipeline or None if the featurization element was not found.
+    """
+    pipeline_extractor = SubpipelineExtractor(pipeline)
+    featurization_subpipeline = pipeline_extractor.get_featurization_subpipeline()
+    if raise_not_found and featurization_subpipeline is None:
+        raise ValueError("Could not determine the featurization subpipeline.")
+    return featurization_subpipeline
+
+
+def get_model_from_pipeline(
+    pipeline: Pipeline, raise_not_found: bool = False
+) -> BaseEstimator | None:
+    """Get the model from a pipeline.
+
+    Parameters
+    ----------
+    pipeline : Pipeline
+        The pipeline to extract the model from.
+    raise_not_found : bool
+        If True, raise a ValueError if the model was not found.
+
+    Raises
+    ------
+    ValueError
+        If the model was not found and raise_not_found is True.
+
+    Returns
+    -------
+    BaseEstimator | None
+        The extracted model or None if the model was not found.
+    """
+    pipeline_extractor = SubpipelineExtractor(pipeline)
+    model = pipeline_extractor.get_model_element()
+    if raise_not_found and model is None:
+        raise ValueError("Could not determine the model to explain.")
+    return model

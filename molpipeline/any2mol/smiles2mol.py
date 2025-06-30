@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -25,19 +25,19 @@ class SmilesToMol(SimpleStringToMolElement):
         remove_hydrogens: bool = True,
         name: str = "smiles2mol",
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize SmilesToMol object.
 
         Parameters
         ----------
-        remove_hydrogens: bool
+        remove_hydrogens: bool, default=True
             Whether to remove hydrogens from the molecule.
-        name: str
+        name: str, default='smiles2mol'
             Name of the object.
-        n_jobs: int
+        n_jobs: int, default=1
             Number of jobs to run in parallel.
-        uuid: Optional[str]
+        uuid: str | None, optional
             UUID of the object.
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
@@ -53,7 +53,7 @@ class SmilesToMol(SimpleStringToMolElement):
         """
         # set up rdkit smiles parser parameters
         parser_params = Chem.SmilesParserParams()
-        parser_params.removeHs = self._remove_hydrogens
+        parser_params.removeHs = self._remove_hydrogens  # type: ignore[assignment]
         return parser_params
 
     def string_to_mol(self, value: str) -> RDKitMol:

@@ -35,6 +35,21 @@ fingerprint-based models, 2024](https://doi.org/10.1039/D4FD00095A)
 \
 Further links: [repository](https://github.com/basf/neural-fingerprint-uncertainty)
 
+# Table of Contents
+
+- [MolPipeline](#molpipeline)
+  - [Background](#background)
+  - [Publications](#publications)
+- [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Documentation](#documentation)
+  - [Quick start](#quick-start)
+    - [Model building](#model-building)
+    - [Feature calculation](#feature-calculation)
+    - [Clustering](#clustering)
+    - [Explainability](#explainability)
+  - [License](#license)
+
 ## Installation
 ```commandline
 pip install molpipeline
@@ -107,7 +122,7 @@ physchem_matrix
 #                [88.065, 20.23 ,  1.   ]])
 ```
 
-MolPipeline provides further features and descriptors from RDKit, 
+MolPipeline provides further features and descriptors from RDKit,
 for example Morgan (binary/count) fingerprints and MACCS keys.
 See the [04_feature_calculation notebook](notebooks/04_feature_calculation.ipynb) for more examples.
 
@@ -134,6 +149,55 @@ scaffold_clustering.fit_predict(scaffold_smiles + linear_smiles)
 # output: array([1., 0., 1., 2., 2., 2.])
 ```
 
+
+### Explainability
+
+Machine learning model pipelines can be explained using the `explainability` module. MolPipeline uses the
+[SHAP](https://github.com/shap/shap) library to compute Shapley values for explanations. The Shapley Values can be
+mapped to the molecular structure to visualize the importance of atoms for the prediction.
+
+<p align="center"><img src=".github/xai_example.png" height="500"/></p>
+
+[advanced_03_introduction_to_explainable_ai notebook](notebooks/advanced_03_introduction_to_explainable_ai.ipynb)
+<a target="_blank" href="https://colab.research.google.com/github/basf/MolPipeline/blob/main/notebooks/advanced_03_introduction_to_explainable_ai.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
+gives a detailed introduction to explainability. The notebook also compares explanations of Tree-based models to Neural Networks
+using the structure-activity relationship (SAR) data from [Harren et al. 2022](https://pubs.acs.org/doi/10.1021/acs.jcim.1c01263).
+
+Use the following example code to explain a model's predictions and visualize the explanation as heatmaps.
+
+```python
+from molpipeline import Pipeline
+from molpipeline.any2mol import AutoToMol
+from molpipeline.mol2any import MolToMorganFP
+from molpipeline.experimental.explainability import SHAPTreeExplainer
+from molpipeline.experimental.explainability import (
+    structure_heatmap_shap,
+)
+from sklearn.ensemble import RandomForestRegressor
+
+X = ["CCCCCC", "c1ccccc1"]
+y = [0.2, 0.4]
+
+pipeline = Pipeline([
+    ("auto2mol", AutoToMol()),
+    ("morgan2_2048", MolToMorganFP(n_bits=2048, radius=2)),
+    ("RandomForest", RandomForestRegressor())
+],
+    n_jobs=4)
+pipeline.fit(X, y)
+
+# explain the model
+explainer = SHAPTreeExplainer(pipeline)
+explanations = explainer.explain(X)
+
+# visualize the explanation
+image = structure_heatmap_shap(explanation=explanations[0])
+image.save("explanation.png")
+
+```
+Note that the explainability module is fully-functional but in the 'experimental' directory because we might make changes to the API.
 
 ## License
 

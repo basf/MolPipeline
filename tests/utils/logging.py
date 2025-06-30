@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
 import loguru
 from loguru import logger
@@ -26,14 +26,10 @@ def capture_logs(
         Log format, by default "{level}:{name}:{message}"
 
     Yields
-    -------
+    ------
     list[loguru.Message]
         List of log messages
 
-    Returns
-    -------
-    Generator[list[loguru.Message], None, None]
-        List of log messages
     """
     output: list[loguru.Message] = []
     handler_id = logger.add(output.append, level=level, format=log_format)

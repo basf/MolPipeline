@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from numbers import Number
 from typing import (
     Any,
     Literal,
     Optional,
     Protocol,
-    Sequence,
-    Tuple,
     TypeAlias,
     TypeVar,
     Union,
@@ -34,9 +33,9 @@ __all__ = [
     "AnyNumpyElement",
     "AnyPredictor",
     "AnySklearnEstimator",
-    "AnyTransformer",
     "AnySklearnEstimator",
     "AnyStep",
+    "AnyTransformer",
     "Number",
     "OptionalMol",
     "RDKitMol",
@@ -94,7 +93,7 @@ class AnySklearnEstimator(Protocol):
     def fit(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: Optional[npt.NDArray[Any]],  # pylint: disable=invalid-name
+        y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> Self:
         """Fit the model with X.
@@ -103,7 +102,7 @@ class AnySklearnEstimator(Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: Optional[npt.NDArray[Any]]
+        y: npt.NDArray[Any] | None
             Target values.
         fit_params: Any
             Additional parameters for fitting.
@@ -122,7 +121,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
     def fit_predict(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: Optional[npt.NDArray[Any]],  # pylint: disable=invalid-name
+        y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return predictions.
@@ -131,7 +130,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: Optional[npt.NDArray[Any]]
+        y: npt.NDArray[Any] | None
             Target values.
         fit_params: Any
             Additional parameters for fitting.
@@ -149,7 +148,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
     def fit_transform(
         self,
         X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: Optional[npt.NDArray[Any]],  # pylint: disable=invalid-name
+        y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return the transformed array.
@@ -158,7 +157,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: Optional[npt.NDArray[Any]]
+        y: npt.NDArray[Any] | None
             Target values.
         fit_params: Any
             Additional parameters for fitting.
@@ -194,4 +193,4 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
 AnyElement = Union[
     AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]
 ]
-AnyStep = Tuple[str, AnyElement]
+AnyStep = tuple[str, AnyElement]

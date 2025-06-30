@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from lightning import pytorch as pl
 from sklearn.base import clone
+from sklearn.calibration import CalibratedClassifierCV
 
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
@@ -25,11 +26,39 @@ from molpipeline.estimators.chemprop.models import (
     ChempropMulticlassClassifier,
     ChempropRegressor,
 )
+from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
 from tests import TEST_DATA_DIR
+
+
+def get_smiles_checker_pipeline() -> Pipeline:
+    """Get a pipeline that reads and writes the SMILES string.
+
+    Invalid SMILES strings are replaced with NaN.
+
+    Returns
+    -------
+    Pipeline
+        The pipeline that reads and writes the SMILES string.
+    """
+    smiles2mol = SmilesToMol()
+    mol2smiles = MolToSmiles()
+    error_filter = ErrorFilter(filter_everything=True)
+    filter_reinserter = FilterReinserter.from_error_filter(
+        error_filter, fill_value=np.nan
+    )
+    smiles_pipeline = Pipeline(
+        [
+            ("smiles2mol", smiles2mol),
+            ("error_filter", error_filter),
+            ("mol2smiles", mol2smiles),
+            ("filter_reinserter", filter_reinserter),
+        ],
+    )
+    return smiles_pipeline
 
 
 # pylint: disable=duplicate-code
@@ -85,22 +114,28 @@ DEFAULT_TRAINER = pl.Trainer(
 )
 
 
-def get_regression_pipeline() -> Pipeline:
+def get_regression_pipeline(n_tasks: int = 1) -> Pipeline:
     """Get the Chemprop model pipeline for regression.
+
+    Parameters
+    ----------
+    n_tasks : int
+        The number of tasks for model initialization, i.e. number of target variables.
 
     Returns
     -------
     Pipeline
         The Chemprop model pipeline for regression.
     """
-
     smiles2mol = SmilesToMol()
     mol2chemprop = MolToChemprop()
     error_filter = ErrorFilter(filter_everything=True)
     filter_reinserter = FilterReinserter.from_error_filter(
         error_filter, fill_value=np.nan
     )
-    chemprop_model = ChempropRegressor(lightning_trainer=DEFAULT_TRAINER)
+    chemprop_model = ChempropRegressor(
+        lightning_trainer=DEFAULT_TRAINER, n_tasks=n_tasks
+    )
     model_pipeline = Pipeline(
         steps=[
             ("smiles2mol", smiles2mol),
@@ -290,7 +325,6 @@ class TestRegressionPipeline(unittest.TestCase):
 
     def test_prediction(self) -> None:
         """Test the prediction of the regression model."""
-
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
         )
@@ -314,31 +348,85 @@ class TestRegressionPipeline(unittest.TestCase):
         self.assertEqual(single_mol_pred.shape, (1,))
 
 
+class TestMultiRegressionPipeline(unittest.TestCase):
+    """Test the Chemprop model pipeline for multi-target/multiple regression."""
+
+    def test_prediction(self) -> None:
+        """Test the prediction of the multiple regression model."""
+        molecule_net_logd_df = pd.read_csv(
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=100
+        )
+
+        # add another target col with gaussian noise
+        rng = np.random.default_rng(seed=123)
+        molecule_net_logd_df["exp2"] = molecule_net_logd_df["exp"] + rng.normal(
+            loc=0.0, scale=1.0, size=molecule_net_logd_df.shape[0]
+        )
+        target_cols = ["exp", "exp2"]
+
+        regression_model = get_regression_pipeline(n_tasks=len(target_cols))
+        regression_model.fit(
+            molecule_net_logd_df["smiles"],
+            molecule_net_logd_df[target_cols].to_numpy(),
+        )
+        pred = regression_model.predict(molecule_net_logd_df["smiles"])
+        self.assertEqual(
+            pred.shape,
+            (
+                len(molecule_net_logd_df),
+                len(target_cols),
+            ),
+        )
+
+        model_copy = joblib_dump_load(regression_model)
+        pred_copy = model_copy.predict(molecule_net_logd_df["smiles"])
+        self.assertTrue(np.allclose(pred, pred_copy))
+
+        # Test single prediction, this was causing an error before
+        single_mol_pred = regression_model.predict(
+            [molecule_net_logd_df["smiles"].iloc[0]]
+        )
+        self.assertEqual(single_mol_pred.shape, (1, len(target_cols)))
+
+
 class TestClassificationPipeline(unittest.TestCase):
     """Test the Chemprop model pipeline for classification."""
 
-    def test_prediction(self) -> None:
-        """Test the prediction of the classification model."""
-
+    def setUp(self) -> None:
+        """Set up repeated variables."""
         molecule_net_bbbp_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz", sep="\t", nrows=100
         )
+        smiles_pipeline = get_smiles_checker_pipeline()
+        molecule_net_bbbp_df["smiles"] = smiles_pipeline.transform(
+            molecule_net_bbbp_df["smiles"]
+        )
+        molecule_net_bbbp_df = molecule_net_bbbp_df.dropna(subset=["smiles", "p_np"])
+
+        self.molecule_net_bbbp_df = molecule_net_bbbp_df
+
+    def test_prediction(self) -> None:
+        """Test the prediction of the classification model."""
         classification_model = get_classification_pipeline()
         classification_model.fit(
-            molecule_net_bbbp_df["smiles"].tolist(),
-            molecule_net_bbbp_df["p_np"].to_numpy(),
+            self.molecule_net_bbbp_df["smiles"].tolist(),
+            self.molecule_net_bbbp_df["p_np"].to_numpy(),
         )
-        pred = classification_model.predict(molecule_net_bbbp_df["smiles"].tolist())
+        pred = classification_model.predict(
+            self.molecule_net_bbbp_df["smiles"].tolist()
+        )
         proba = classification_model.predict_proba(
-            molecule_net_bbbp_df["smiles"].tolist()
+            self.molecule_net_bbbp_df["smiles"].tolist()
         )
-        self.assertEqual(len(pred), len(molecule_net_bbbp_df))
+        self.assertEqual(len(pred), len(self.molecule_net_bbbp_df))
         self.assertEqual(proba.shape[1], 2)
-        self.assertEqual(proba.shape[0], len(molecule_net_bbbp_df))
+        self.assertEqual(proba.shape[0], len(self.molecule_net_bbbp_df))
 
         model_copy = joblib_dump_load(classification_model)
-        pred_copy = model_copy.predict(molecule_net_bbbp_df["smiles"].tolist())
-        proba_copy = model_copy.predict_proba(molecule_net_bbbp_df["smiles"].tolist())
+        pred_copy = model_copy.predict(self.molecule_net_bbbp_df["smiles"].tolist())
+        proba_copy = model_copy.predict_proba(
+            self.molecule_net_bbbp_df["smiles"].tolist()
+        )
 
         nan_indices = np.isnan(pred)
         self.assertListEqual(nan_indices.tolist(), np.isnan(pred_copy).tolist())
@@ -349,13 +437,39 @@ class TestClassificationPipeline(unittest.TestCase):
 
         # Test single prediction, this was causing an error before
         single_mol_pred = classification_model.predict(
-            [molecule_net_bbbp_df["smiles"].iloc[0]]
+            [self.molecule_net_bbbp_df["smiles"].iloc[0]]
         )
         self.assertEqual(single_mol_pred.shape, (1,))
         single_mol_proba = classification_model.predict_proba(
-            [molecule_net_bbbp_df["smiles"].iloc[0]]
+            [self.molecule_net_bbbp_df["smiles"].iloc[0]]
         )
         self.assertEqual(single_mol_proba.shape, (1, 2))
+
+    def test_calibrated_classifier(self) -> None:
+        """Test if the pipeline can be used with a CalibratedClassifierCV."""
+        calibrated_pipeline = CalibratedClassifierCV(
+            get_classification_pipeline(), cv=2, ensemble=True, method="isotonic"
+        )
+        calibrated_pipeline.fit(
+            self.molecule_net_bbbp_df["smiles"].tolist(),
+            self.molecule_net_bbbp_df["p_np"].to_numpy(),
+        )
+        predicted_value_array = calibrated_pipeline.predict(
+            self.molecule_net_bbbp_df["smiles"].tolist()
+        )
+        predicted_proba_array = calibrated_pipeline.predict_proba(
+            self.molecule_net_bbbp_df["smiles"].tolist()
+        )
+        self.assertIsInstance(predicted_value_array, np.ndarray)
+        self.assertIsInstance(predicted_proba_array, np.ndarray)
+        self.assertEqual(
+            predicted_value_array.shape,
+            (len(self.molecule_net_bbbp_df["smiles"].tolist()),),
+        )
+        self.assertEqual(
+            predicted_proba_array.shape,
+            (len(self.molecule_net_bbbp_df["smiles"].tolist()), 2),
+        )
 
 
 class TestMulticlassClassificationPipeline(unittest.TestCase):
@@ -363,7 +477,6 @@ class TestMulticlassClassificationPipeline(unittest.TestCase):
 
     def test_prediction(self) -> None:
         """Test the prediction of the multiclass classification model."""
-
         test_data_df = pd.read_csv(
             TEST_DATA_DIR / "multiclass_mock.tsv", sep="\t", index_col=False
         )

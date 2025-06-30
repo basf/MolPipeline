@@ -11,6 +11,7 @@ from scipy import sparse
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.utils._param_validation import Interval
+from sklearn.utils.validation import validate_data
 
 try:
     from typing import Self
@@ -72,7 +73,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
         Self
             Fitted estimator.
         """
-        X = self._validate_data(X, ensure_min_samples=2, accept_sparse=True)
+        X = validate_data(self, X=X, ensure_min_samples=2, accept_sparse=True)
         return self._fit(X)
 
     # pylint: disable=C0103,W0613

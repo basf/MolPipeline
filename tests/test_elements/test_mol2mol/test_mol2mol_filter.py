@@ -1,6 +1,14 @@
-"""Test MolFilter, which invalidate molecules based on criteria defined in the respective filter."""
+"""Unittest for MolFilters functionality.
 
+MolFilters flag Molecules as invalid based on the criteria defined in the filter.
+
+"""
+
+import json
+import tempfile
 import unittest
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
@@ -14,15 +22,18 @@ from molpipeline.mol2mol import (
     SmartsFilter,
     SmilesFilter,
 )
+from molpipeline.utils.comparison import compare_recursive
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
-from molpipeline.utils.molpipeline_types import FloatCountRange, IntOrIntCountRange
+
+if TYPE_CHECKING:
+    from molpipeline.utils.molpipeline_types import FloatCountRange, IntOrIntCountRange
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
 SMILES_BENZENE = "c1ccccc1"
 SMILES_CHLOROBENZENE = "Clc1ccccc1"
 SMILES_CL_BR = "NC(Cl)(Br)C(=O)O"
-SMILES_METAL_AU = "OC[C@H]1OC(S[Au])[C@H](O)[C@@H](O)[C@@H]1O"
+SMILES_METAL_AU = "OC[C@H]1OC([S][Au])[C@H](O)[C@@H](O)[C@@H]1O"
 
 SMILES_LIST = [
     SMILES_ANTIMONY,
@@ -76,7 +87,7 @@ class ElementFilterTest(unittest.TestCase):
                         6: 6,
                         1: (5, 6),
                         17: (0, 1),
-                    }
+                    },
                 },
                 "result": [SMILES_BENZENE, SMILES_CHLOROBENZENE],
             },
@@ -87,6 +98,36 @@ class ElementFilterTest(unittest.TestCase):
             pipeline.set_params(**test_params["params"])
             filtered_smiles = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles, test_params["result"])
+
+    def test_json_roundtrip(self) -> None:
+        """Test if ElementFilter can be serialized and deserialized.
+
+        Notes
+        -----
+        It is important to save the ElementFilter as a JSON file and then load it back.
+        This is because json.dumps() sets the keys of the dictionary to strings.
+
+        """
+        element_filter = ElementFilter()
+        json_object = recursive_to_json(element_filter)
+        with tempfile.TemporaryDirectory() as temp_folder:
+            temp_file_path = Path(temp_folder) / "test.json"
+            with temp_file_path.open("w", encoding="UTF-8") as out_file:
+                json.dump(json_object, out_file)
+            with temp_file_path.open(encoding="UTF-8") as in_file:
+                loaded_json_object = json.load(in_file)
+        recreated_element_filter = recursive_from_json(loaded_json_object)
+
+        original_params = element_filter.get_params()
+        recreated_params = recreated_element_filter.get_params()
+        self.assertEqual(original_params.keys(), recreated_params.keys())
+        for param_name, original_value in original_params.items():
+            with self.subTest(param_name=param_name):
+                self.assertTrue(
+                    compare_recursive(original_value, recreated_params[param_name]),
+                    f"Original: {original_value}, "
+                    f"Recreated: {recreated_params[param_name]}",
+                )
 
 
 class ComplexFilterTest(unittest.TestCase):
@@ -100,6 +141,7 @@ class ComplexFilterTest(unittest.TestCase):
         -------
         Pipeline
             Pipeline with a complex filter.
+
         """
         element_filter_1 = ElementFilter({6: 6, 1: 6})
         element_filter_2 = ElementFilter({6: 6, 1: 5, 17: 1})
@@ -108,10 +150,10 @@ class ComplexFilterTest(unittest.TestCase):
             (
                 ("element_filter_1", element_filter_1),
                 ("element_filter_2", element_filter_2),
-            )
+            ),
         )
 
-        pipeline = Pipeline(
+        return Pipeline(
             [
                 ("Smiles2Mol", SmilesToMol()),
                 ("MultiElementFilter", multi_element_filter),
@@ -119,7 +161,6 @@ class ComplexFilterTest(unittest.TestCase):
                 ("ErrorFilter", ErrorFilter()),
             ],
         )
-        return pipeline
 
     def test_complex_filter(self) -> None:
         """Test if molecules are filtered correctly by allowed chemical elements."""
@@ -137,7 +178,7 @@ class ComplexFilterTest(unittest.TestCase):
             {
                 "params": {
                     "MultiElementFilter__mode": "any",
-                    "MultiElementFilter__pipeline_filter_elements__element_filter_1__add_hydrogens": False,
+                    "MultiElementFilter__pipeline_filter_elements__element_filter_1__add_hydrogens": False,  # noqa: E501
                 },
                 "result": [SMILES_CHLOROBENZENE],
             },
@@ -166,7 +207,7 @@ class ComplexFilterTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             ComplexFilter(
-                (("filter_1", element_filter_1), ("filter_1", element_filter_2))
+                (("filter_1", element_filter_1), ("filter_1", element_filter_2)),
             )
 
 
@@ -253,7 +294,11 @@ class SmartsSmilesFilterTest(unittest.TestCase):
             SmilesFilter(smiles_pats)
 
     def test_smarts_filter_parallel(self) -> None:
-        """Test if molecules are filtered correctly by allowed SMARTS patterns in parallel."""
+        """Test if molecules are filtered correctly.
+
+        This test runs the SmartsFilter in parallel.
+
+        """
         smarts_pats: dict[str, IntOrIntCountRange] = {
             "c": (4, None),
             "Cl": 1,
@@ -320,31 +365,31 @@ class RDKitDescriptorsFilterTest(unittest.TestCase):
             },
             {
                 "params": {
-                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1.99, 4)}
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1.99, 4)},
                 },
                 "result": [SMILES_CL_BR],
             },
             {
                 "params": {
-                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (2.01, 4)}
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (2.01, 4)},
                 },
                 "result": [],
             },
             {
                 "params": {
-                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1, 2.00)}
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1, 2.00)},
                 },
                 "result": [SMILES_CL_BR],
             },
             {
                 "params": {
-                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1, 2.01)}
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1, 2.01)},
                 },
                 "result": [SMILES_CL_BR],
             },
             {
                 "params": {
-                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1, 1.99)}
+                    "DescriptorsFilter__filter_elements": {"NumHAcceptors": (1, 1.99)},
                 },
                 "result": [],
             },
@@ -377,7 +422,7 @@ class MixtureFilterTest(unittest.TestCase):
                 ("mol2smi", mol2smi),
                 ("error_filter", error_filter),
                 ("error_replacer", error_replacer),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_invalidated_mol_list, mols_processed)
@@ -392,7 +437,7 @@ class InorganicsFilterTest(unittest.TestCase):
         inorganics_filter = InorganicsFilter()
         mol2smiles = MolToSmiles()
         error_filter = ErrorFilter.from_element_list(
-            [smiles2mol, inorganics_filter, mol2smiles]
+            [smiles2mol, inorganics_filter, mol2smiles],
         )
         pipeline = Pipeline(
             [

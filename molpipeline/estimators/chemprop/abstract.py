@@ -1,7 +1,8 @@
 """Parent class of wrapper for Chemprop to make it compatible with scikit-learn."""
 
 import abc
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 # pylint: disable=duplicate-code
 try:
@@ -100,9 +101,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.trainer_params = get_params_trainer(self.lightning_trainer)
         self.set_params(**kwargs)
 
-    def _update_trainer(
-        self,
-    ) -> None:
+    def _update_trainer(self) -> None:
         """Update the trainer for the model."""
         trainer_params = dict(self.trainer_params)
         if self.model_ckpoint_params:
@@ -139,6 +138,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             X, batch_size=self.batch_size, num_workers=self.n_jobs
         )
         self.lightning_trainer.fit(self.model, training_data)
+        # The trainer is reinitalized to avoid storing the training data
+        self._update_trainer()
         return self
 
     def set_params(self, **params: Any) -> Self:

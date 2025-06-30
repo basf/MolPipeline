@@ -1,7 +1,8 @@
 """Wrapper classes for the chemprop components to make them compatible with scikit-learn."""
 
 import abc
-from typing import Any, Iterable, Self
+from collections.abc import Iterable
+from typing import Any, Self
 
 import torch
 from chemprop.conf import DEFAULT_ATOM_FDIM, DEFAULT_BOND_FDIM, DEFAULT_HIDDEN_DIM
@@ -30,9 +31,7 @@ from chemprop.nn.predictors import MulticlassDirichletFFN as _MulticlassDirichle
 from chemprop.nn.predictors import MveFFN as _MveFFN
 from chemprop.nn.predictors import RegressionFFN as _RegressionFFN
 from chemprop.nn.predictors import SpectralFFN as _SpectralFFN
-from chemprop.nn.predictors import (
-    _FFNPredictorBase as _Predictor,  # pylint: disable=protected-access
-)
+from chemprop.nn.predictors import _FFNPredictorBase as _Predictor
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
@@ -476,7 +475,7 @@ class MPNN(_MPNN, BaseEstimator):
             # pylint: disable=protected-access
             self.metrics = [self.predictor._T_default_metric, self.criterion]
         else:
-            self.metrics = list(self.metric_list) + [self.criterion]
+            self.metrics = [*list(self.metric_list), self.criterion]
 
         return self
 
