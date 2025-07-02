@@ -37,8 +37,7 @@ def bin_targets(y: np.ndarray, n_bins: int = 10) -> np.ndarray:
 
 
 class UnifiedConformalCV(BaseEstimator):
-    """One wrapper to rule them all: conformal prediction for both classifiers and
-    regressors.
+    """One wrapper to rule them all: conformal prediction for both classifiers and regressors.
 
     Uses crepes under the hood, so you know it's sweet.
 
@@ -78,7 +77,29 @@ class UnifiedConformalCV(BaseEstimator):
         n_jobs: int = 1,
         **kwargs: Any,
     ) -> None:
-        """Initialize UnifiedConformalCV."""
+        """Initialize UnifiedConformalCV.
+
+        Parameters
+        ----------
+        estimator : Any
+            The base estimator or pipeline to wrap.
+        mondrian : Any, optional
+            Mondrian calibration/grouping (default: False).
+        confidence_level : float, optional
+            Confidence level for prediction sets/intervals (default: 0.9).
+        estimator_type : str, optional
+            Type of estimator: 'classifier' or 'regressor' (default: 'classifier').
+        nonconformity : Any, optional
+            Nonconformity function for classification.
+        difficulty_estimator : Any, optional
+            Difficulty estimator for normalized conformal prediction (regression).
+        binning : Any, optional
+            Number of bins or binning function for Mondrian calibration (regression).
+        n_jobs : int, optional
+            Number of parallel jobs (default: 1).
+        **kwargs : Any
+            Additional keyword arguments for crepes.
+        """
         self.estimator = estimator
         self.mondrian = mondrian
         self.confidence_level = confidence_level
@@ -284,8 +305,7 @@ class UnifiedConformalCV(BaseEstimator):
 
 
 class CrossConformalCV(BaseEstimator):
-    """Cross-conformal prediction for both classifiers and regressors using
-    WrapClassifier/WrapRegressor.
+    """Cross-conformal prediction for both classifiers and regressors using WrapClassifier/WrapRegressor.
 
     Handles Mondrian (class_cond) logic as described.
 
@@ -315,7 +335,7 @@ class CrossConformalCV(BaseEstimator):
         Extra toppings for crepes.
 
     """
-    
+
     def __init__(
         self,
         estimator: Any,
@@ -328,7 +348,29 @@ class CrossConformalCV(BaseEstimator):
         n_bins: int = 10,
         **kwargs: Any,
     ) -> None:
-        """Initialize CrossConformalCV."""
+        """Initialize CrossConformalCV.
+
+        Parameters
+        ----------
+        estimator : Any
+            The base estimator or pipeline to wrap.
+        n_folds : int, optional
+            Number of cross-validation folds (default: 5).
+        confidence_level : float, optional
+            Confidence level for prediction sets/intervals (default: 0.9).
+        mondrian : Any, optional
+            Mondrian calibration/grouping (default: False).
+        nonconformity : Any, optional
+            Nonconformity function for classification.
+        binning : Any, optional
+            Number of bins or binning function for Mondrian calibration (regression).
+        estimator_type : str, optional
+            Type of estimator: 'classifier' or 'regressor' (default: 'classifier').
+        n_bins : int, optional
+            Number of bins for stratified splitting in regression (default: 10).
+        **kwargs : Any
+            Additional keyword arguments for crepes.
+        """
         self.estimator = estimator
         self.n_folds = n_folds
         self.confidence_level = confidence_level

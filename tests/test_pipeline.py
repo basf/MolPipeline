@@ -376,48 +376,51 @@ class PipelineCompatibilityTest(unittest.TestCase):
         self.assertEqual(predicted_value_array.shape, (len(TEST_SMILES),))
         self.assertEqual(predicted_proba_array.shape, (len(TEST_SMILES), 2))
 
-def test_conformal_pipeline_classifier(self):
-    """Test conformal prediction with a pipeline on SMILES data."""
-    from molpipeline.experimental.uncertainty.conformal import UnifiedConformalCV, CrossConformalCV
+    def test_conformal_pipeline_classifier(self) -> None:
+        """Test conformal prediction with a pipeline on SMILES data.
 
-    # Use the global test data
-    smiles = TEST_SMILES
-    y = np.array(CONTAINS_OX)
+        This test does not take any parameters and does not return a value.
+        """
+        from molpipeline.experimental.uncertainty.conformal import UnifiedConformalCV, CrossConformalCV
 
-    # Build a pipeline: SMILES -> Mol -> MorganFP -> RF
-    smi2mol = SmilesToMol()
-    mol2morgan = MolToMorganFP(radius=2, n_bits=128)
-    rf = RandomForestClassifier(n_estimators=10, random_state=42)
-    pipeline = Pipeline([
-        ("smi2mol", smi2mol),
-        ("morgan", mol2morgan),
-        ("rf", rf)
-    ])
+        # Use the global test data
+        smiles = TEST_SMILES
+        y = np.array(CONTAINS_OX)
 
-    # Split data
-    from sklearn.model_selection import train_test_split
-    X_train, X_calib, y_train, y_calib = train_test_split(smiles, y, test_size=0.3, random_state=42)
+        # Build a pipeline: SMILES -> Mol -> MorganFP -> RF
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=2, n_bits=128)
+        rf = RandomForestClassifier(n_estimators=10, random_state=42)
+        pipeline = Pipeline([
+            ("smi2mol", smi2mol),
+            ("morgan", mol2morgan),
+            ("rf", rf)
+        ])
 
-    # UnifiedConformalCV
-    cp = UnifiedConformalCV(pipeline, estimator_type="classifier")
-    cp.fit(X_train, y_train)
-    cp.calibrate(X_calib, y_calib)
-    preds = cp.predict(X_calib)
-    probs = cp.predict_proba(X_calib)
-    sets = cp.predict_conformal_set(X_calib)
-    self.assertEqual(len(preds), len(y_calib))
-    self.assertEqual(probs.shape[0], len(y_calib))
-    self.assertEqual(len(sets), len(y_calib))
+        # Split data
+        from sklearn.model_selection import train_test_split
+        X_train, X_calib, y_train, y_calib = train_test_split(smiles, y, test_size=0.3, random_state=42)
 
-    # CrossConformalCV
-    ccp = CrossConformalCV(pipeline, estimator_type="classifier", n_folds=3)
-    ccp.fit(smiles, y)
-    preds_ccp = ccp.predict(smiles)
-    probs_ccp = ccp.predict_proba(smiles)
-    sets_ccp = ccp.predict_conformal_set(smiles)
-    self.assertEqual(len(preds_ccp), len(y))
-    self.assertEqual(probs_ccp.shape[0], len(y))
-    self.assertEqual(len(sets_ccp), len(y))
+        # UnifiedConformalCV
+        cp = UnifiedConformalCV(pipeline, estimator_type="classifier")
+        cp.fit(X_train, y_train)
+        cp.calibrate(X_calib, y_calib)
+        preds = cp.predict(X_calib)
+        probs = cp.predict_proba(X_calib)
+        sets = cp.predict_conformal_set(X_calib)
+        self.assertEqual(len(preds), len(y_calib))
+        self.assertEqual(probs.shape[0], len(y_calib))
+        self.assertEqual(len(sets), len(y_calib))
+
+        # CrossConformalCV
+        ccp = CrossConformalCV(pipeline, estimator_type="classifier", n_folds=3)
+        ccp.fit(smiles, y)
+        preds_ccp = ccp.predict(smiles)
+        probs_ccp = ccp.predict_proba(smiles)
+        sets_ccp = ccp.predict_conformal_set(smiles)
+        self.assertEqual(len(preds_ccp), len(y))
+        self.assertEqual(probs_ccp.shape[0], len(y))
+        self.assertEqual(len(sets_ccp), len(y))
 
 
 if __name__ == "__main__":
