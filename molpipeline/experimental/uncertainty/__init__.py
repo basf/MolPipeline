@@ -1,3 +1,6 @@
-from molpipeline.experimental.uncertainty.conformal import UnifiedConformalCV, CrossConformalCV
+from molpipeline.experimental.uncertainty.conformal import (
+    CrossConformalCV,
+    UnifiedConformalCV,
+)
 
-__all__ = ["UnifiedConformalCV", "CrossConformalCV"]
+__all__ = ["CrossConformalCV", "UnifiedConformalCV"]
