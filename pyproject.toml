@@ -217,6 +217,7 @@ dev = [
     "pydocstyle>=6.3.0",
     "pylint>=3.3.6",
     "pyright>=1.1.399",
+    "rdkit<2025.3.3",
     "rdkit-stubs>=0.8",
     "ruff>=0.11.4",
 ]
