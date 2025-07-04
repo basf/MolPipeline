@@ -218,9 +218,11 @@ dev = [
     "isort>=6.0.1",
     "molpipeline[chemprop]",
     "mypy>=1.15.0",
+    "pre-commit>=4.2.0",
     "pydocstyle>=6.3.0",
     "pylint>=3.3.6",
     "pyright>=1.1.399",
+    "rdkit<2025.3.3",  # only temporarily, see https://github.com/kuelumbus/rdkit-pypi/issues/132
     "rdkit-stubs>=0.8",
     "ruff>=0.11.4",
 ]
