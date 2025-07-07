@@ -17,7 +17,7 @@ from sklearn.svm import SVC, SVR
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
-from molpipeline.any2mol import SmilesToMol, AutoToMol
+from molpipeline.any2mol import SmilesToMol
 from molpipeline.experimental.explainability import (
     SHAPFeatureAndAtomExplanation,
     SHAPFeatureExplanation,
