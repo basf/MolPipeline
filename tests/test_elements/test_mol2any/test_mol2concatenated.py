@@ -349,7 +349,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                 "C1=NC(N)=[Se]=C1",  # fails PhysChem calculation
             ],
         )
-        self.assertEqual(output.shape, (0, 0))
+        self.assertEqual(output.shape, (0, concat_elem.n_features))
 
 
 if __name__ == "__main__":
