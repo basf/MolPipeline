@@ -37,7 +37,9 @@ class TestConformalCV(unittest.TestCase):
 
     def test_unified_conformal_regressor(self) -> None:
         """Test UnifiedConformalCV with a regressor."""
-        x, y, _ = make_regression(n_samples=100, n_features=10, random_state=42,coef=True)
+        x, y, _ = make_regression(
+            n_samples=100, n_features=10, random_state=42, coef=True,
+        )
         x_train, x_calib, y_train, y_calib = train_test_split(
             x,
             y,
@@ -67,7 +69,9 @@ class TestConformalCV(unittest.TestCase):
 
     def test_cross_conformal_regressor(self) -> None:
         """Test CrossConformalCV with a regressor."""
-        x, y, _ = make_regression(n_samples=100, n_features=10, random_state=42, coef=True)
+        x, y, _ = make_regression(
+            n_samples=100, n_features=10, random_state=42, coef=True,
+        )
         reg = RandomForestRegressor(random_state=42)
         ccp = CrossConformalCV(reg, estimator_type="regressor", n_folds=3)
         ccp.fit(x, y)
