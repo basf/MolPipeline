@@ -16,11 +16,15 @@ from joblib import Memory
 from sklearn.base import BaseEstimator
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import AutoToMol, SmilesToMol
+from molpipeline.experimental.uncertainty.conformal import (
+    CrossConformalCV,
+    UnifiedConformalCV,
+)
 from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from molpipeline.mol2mol import (
     ChargeParentExtractor,
@@ -383,10 +387,7 @@ class PipelineCompatibilityTest(unittest.TestCase):
 
         This test does not take any parameters and does not return a value.
         """
-        from molpipeline.experimental.uncertainty.conformal import (
-            CrossConformalCV,
-            UnifiedConformalCV,
-        )
+
 
         # Use the global test data
         smiles = np.array(TEST_SMILES)
@@ -396,14 +397,14 @@ class PipelineCompatibilityTest(unittest.TestCase):
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=2, n_bits=128)
         rf = RandomForestClassifier(n_estimators=10, random_state=42)
-        pipeline = Pipeline([("smi2mol", smi2mol), ("morgan", mol2morgan), ("rf", rf)])
+        pipeline = Pipeline([
+            ("smi2mol", smi2mol),
+            ("morgan", mol2morgan),
+            ("rf", rf)
+        ])
 
         # Split data
-        from sklearn.model_selection import train_test_split
-
-        X_train, X_calib, y_train, y_calib = train_test_split(
-            smiles, y, test_size=0.3, random_state=42
-        )
+        X_train, X_calib, y_train, y_calib = train_test_split(smiles, y, test_size=0.3, random_state=42)
 
         # UnifiedConformalCV
         cp = UnifiedConformalCV(pipeline, estimator_type="classifier")
