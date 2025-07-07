@@ -11,9 +11,6 @@ from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
 
 from molpipeline import ErrorFilter, Pipeline
-
-if TYPE_CHECKING:
-    from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import (
     Mol2PathFP,
@@ -25,6 +22,9 @@ from molpipeline.mol2any import (
 )
 from tests.utils.fingerprints import fingerprints_to_numpy
 from tests.utils.logging import capture_logs
+
+if TYPE_CHECKING:
+    from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 
 
 class TestConcatenatedFingerprint(unittest.TestCase):

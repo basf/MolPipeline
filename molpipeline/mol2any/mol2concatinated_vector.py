@@ -315,7 +315,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """
         values = list(value_list)
         if len(values) == 0:
-            return np.empty((0, 0), dtype=np.float64)
+            return np.empty((0, self.n_features), dtype=np.float64)
         return np.vstack(values)
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:

@@ -417,7 +417,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
                 "C1=NC(N)=[Se]=C1",  # fails PhysChem calculation
             ],
         )
-        self.assertIsNotNone(pipeline)
+        self.assertIsNotNone(pipeline)  # test for ruff to not have a staticmethod
 
         # test with a molecule that fails the PhysChem calculation and with standardizer
         pipeline = Pipeline(
@@ -439,7 +439,7 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
                 "C1=NC(N)=[Se]=C1",  # fails PhysChem calculation
             ],
         )
-        self.assertIsNotNone(pipeline)
+        self.assertIsNotNone(pipeline)  # test for ruff to not have a staticmethod
 
     def test_empty_descriptor_list(self) -> None:
         """Test that an empty descriptor list raises ValueError."""
