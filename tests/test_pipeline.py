@@ -1,3 +1,5 @@
+# pylint: disable=too-many-locals, import-outside-toplevel, invalid-name
+
 """Test functionality of the pipeline class."""
 
 from __future__ import annotations
@@ -381,10 +383,13 @@ class PipelineCompatibilityTest(unittest.TestCase):
 
         This test does not take any parameters and does not return a value.
         """
-        from molpipeline.experimental.uncertainty.conformal import UnifiedConformalCV, CrossConformalCV
+        from molpipeline.experimental.uncertainty.conformal import (
+            CrossConformalCV,
+            UnifiedConformalCV,
+        )
 
         # Use the global test data
-        smiles = TEST_SMILES
+        smiles = np.array(TEST_SMILES)
         y = np.array(CONTAINS_OX)
 
         # Build a pipeline: SMILES -> Mol -> MorganFP -> RF

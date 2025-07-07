@@ -3,18 +3,22 @@
 Provides unified and cross-conformal prediction with Mondrian and nonconformity options.
 """
 
+# pylint: disable=too-many-instance-attributes, attribute-defined-outside-init
+
 from typing import Any, cast
 
 import numpy as np
 from crepes import WrapClassifier, WrapRegressor
 from crepes.extras import MondrianCategorizer
+from numpy.typing import NDArray
 from scipy.stats import mode
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import KFold, StratifiedKFold
 
 
-def bin_targets(y: np.ndarray, n_bins: int = 10) -> np.ndarray:
-    """Bin continuous targets for stratified splitting in regression.
+def bin_targets(y: NDArray[Any], n_bins: int = 10) -> NDArray[np.int_]:
+    """
+    Bin continuous targets for stratified splitting in regression.
 
     Parameters
     ----------
@@ -27,7 +31,6 @@ def bin_targets(y: np.ndarray, n_bins: int = 10) -> np.ndarray:
     -------
     np.ndarray
         Binned targets.
-
     """
     y = np.asarray(y)
     bins = np.linspace(np.min(y), np.max(y), n_bins + 1)
@@ -99,6 +102,7 @@ class UnifiedConformalCV(BaseEstimator):
             Number of parallel jobs (default: 1).
         **kwargs : Any
             Additional keyword arguments for crepes.
+
         """
         self.estimator = estimator
         self.mondrian = mondrian
@@ -110,7 +114,7 @@ class UnifiedConformalCV(BaseEstimator):
         self.n_jobs = n_jobs
         self.kwargs = kwargs
 
-    def fit(self, x: np.ndarray, y: np.ndarray) -> "UnifiedConformalCV":
+    def fit(self, x: NDArray[Any], y: NDArray[Any]) -> "UnifiedConformalCV":
         """Fit the conformal predictor.
 
         Parameters
@@ -142,7 +146,7 @@ class UnifiedConformalCV(BaseEstimator):
         return self
 
     def calibrate(
-        self, x_calib: np.ndarray, y_calib: np.ndarray, **calib_params: Any,
+        self, x_calib: NDArray[Any], y_calib: NDArray[Any], **calib_params: Any,
     ) -> None:
         """Calibrate the conformal predictor.
 
@@ -180,7 +184,7 @@ class UnifiedConformalCV(BaseEstimator):
         else:
             raise ValueError("estimator_type must be 'classifier' or 'regressor'")
 
-    def predict(self, x: np.ndarray) -> np.ndarray:
+    def predict(self, x: NDArray[Any]) -> NDArray[Any]:
         """Predict using the conformal predictor.
 
         Parameters
@@ -196,7 +200,7 @@ class UnifiedConformalCV(BaseEstimator):
         """
         return self._conformal.predict(x)
 
-    def predict_proba(self, x: np.ndarray) -> np.ndarray:
+    def predict_proba(self, x: NDArray[Any]) -> NDArray[Any]:
         """Predict probabilities using the conformal predictor.
 
         Parameters
@@ -221,7 +225,7 @@ class UnifiedConformalCV(BaseEstimator):
         return conformal.predict_proba(x)
 
     def predict_conformal_set(
-        self, x: np.ndarray, confidence: float | None = None,
+        self, x: NDArray[Any], confidence: float | None = None,
     ) -> Any:
         """Predict conformal sets.
 
@@ -251,7 +255,7 @@ class UnifiedConformalCV(BaseEstimator):
         conformal = cast("WrapClassifier", self._conformal)
         return conformal.predict_set(x, confidence=conf)
 
-    def predict_p(self, x: np.ndarray, **kwargs: Any) -> Any:
+    def predict_p(self, x: NDArray[Any], **kwargs: Any) -> Any:
         """Predict p-values.
 
         Parameters
@@ -276,7 +280,7 @@ class UnifiedConformalCV(BaseEstimator):
             raise NotImplementedError("predict_p is only for classification.")
         return self._conformal.predict_p(x, **kwargs)
 
-    def predict_int(self, x: np.ndarray, confidence: float | None = None) -> Any:
+    def predict_int(self, x: NDArray[Any], confidence: float | None = None) -> Any:
         """Predict intervals.
 
         Parameters
@@ -370,6 +374,7 @@ class CrossConformalCV(BaseEstimator):
             Number of bins for stratified splitting in regression (default: 10).
         **kwargs : Any
             Additional keyword arguments for crepes.
+
         """
         self.estimator = estimator
         self.n_folds = n_folds
@@ -383,8 +388,8 @@ class CrossConformalCV(BaseEstimator):
 
     def fit(
         self,
-        x: np.ndarray,
-        y: np.ndarray,
+        x: NDArray[Any],
+        y: NDArray[Any],
     ) -> "CrossConformalCV":
         """Fit the cross-conformal predictor.
 
@@ -453,7 +458,7 @@ class CrossConformalCV(BaseEstimator):
             self.models_.append(model)
         return self
 
-    def predict(self, x: np.ndarray) -> np.ndarray:
+    def predict(self, x: NDArray[Any]) -> NDArray[Any]:
         """Predict using the cross-conformal predictor.
 
         Parameters
@@ -476,7 +481,7 @@ class CrossConformalCV(BaseEstimator):
         pred_mode = mode(result, axis=0, keepdims=False)
         return np.ravel(pred_mode.mode)
 
-    def predict_proba(self, x: np.ndarray) -> np.ndarray:
+    def predict_proba(self, x: NDArray[Any]) -> NDArray[Any]:
         """Predict probabilities using the cross-conformal predictor.
 
         Parameters
@@ -511,7 +516,7 @@ class CrossConformalCV(BaseEstimator):
         return proba
 
     def predict_conformal_set(
-        self, x: np.ndarray, confidence: float | None = None,
+        self, x: NDArray[Any], confidence: float | None = None,
     ) -> list[list[Any]]:
         """Predict conformal sets using the cross-conformal predictor.
 

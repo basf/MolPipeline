@@ -204,9 +204,6 @@ exclude = ["tests", "docs"]
 [tool.setuptools.package-data]
 "molpipeline" = ["py.typed"]
 
-[tool.uv.sources]
-molpipeline = { workspace = true }
-
 [dependency-groups]
 dev = [
     "bandit>=1.8.3",
@@ -216,7 +213,6 @@ dev = [
     "flake8>=7.2.0",
     "interrogate>=1.7.0",
     "isort>=6.0.1",
-    "molpipeline[chemprop]",
     "mypy>=1.15.0",
     "pre-commit>=4.2.0",
     "pydocstyle>=6.3.0",
