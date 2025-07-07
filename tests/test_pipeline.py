@@ -416,7 +416,10 @@ class PipelineCompatibilityTest(unittest.TestCase):
 
         # Split data
         X_train, X_calib, y_train, y_calib = train_test_split(
-            smiles, y, test_size=0.3, random_state=42,
+            smiles,
+            y,
+            test_size=0.3,
+            random_state=42,
         )
 
         # UnifiedConformalCV
