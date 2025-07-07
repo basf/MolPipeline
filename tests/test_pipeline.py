@@ -396,15 +396,14 @@ class PipelineCompatibilityTest(unittest.TestCase):
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=2, n_bits=128)
         rf = RandomForestClassifier(n_estimators=10, random_state=42)
-        pipeline = Pipeline([
-            ("smi2mol", smi2mol),
-            ("morgan", mol2morgan),
-            ("rf", rf)
-        ])
+        pipeline = Pipeline([("smi2mol", smi2mol), ("morgan", mol2morgan), ("rf", rf)])
 
         # Split data
         from sklearn.model_selection import train_test_split
-        X_train, X_calib, y_train, y_calib = train_test_split(smiles, y, test_size=0.3, random_state=42)
+
+        X_train, X_calib, y_train, y_calib = train_test_split(
+            smiles, y, test_size=0.3, random_state=42
+        )
 
         # UnifiedConformalCV
         cp = UnifiedConformalCV(pipeline, estimator_type="classifier")

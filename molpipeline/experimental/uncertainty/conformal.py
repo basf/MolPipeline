@@ -17,8 +17,7 @@ from sklearn.model_selection import KFold, StratifiedKFold
 
 
 def bin_targets(y: NDArray[Any], n_bins: int = 10) -> NDArray[np.int_]:
-    """
-    Bin continuous targets for stratified splitting in regression.
+    """Bin continuous targets for stratified splitting in regression.
 
     Parameters
     ----------
@@ -31,6 +30,7 @@ def bin_targets(y: NDArray[Any], n_bins: int = 10) -> NDArray[np.int_]:
     -------
     np.ndarray
         Binned targets.
+
     """
     y = np.asarray(y)
     bins = np.linspace(np.min(y), np.max(y), n_bins + 1)
@@ -40,9 +40,9 @@ def bin_targets(y: NDArray[Any], n_bins: int = 10) -> NDArray[np.int_]:
 
 
 class UnifiedConformalCV(BaseEstimator):
-    """One wrapper to rule them all: conformal prediction for both classifiers and regressors.
+    """Conformal prediction wrapper for both classifiers and regressors.
 
-    Uses crepes under the hood, so you know it's sweet.
+    Uses crepes under the hood.
 
     Parameters
     ----------
@@ -146,7 +146,10 @@ class UnifiedConformalCV(BaseEstimator):
         return self
 
     def calibrate(
-        self, x_calib: NDArray[Any], y_calib: NDArray[Any], **calib_params: Any,
+        self,
+        x_calib: NDArray[Any],
+        y_calib: NDArray[Any],
+        **calib_params: Any,
     ) -> None:
         """Calibrate the conformal predictor.
 
@@ -225,7 +228,9 @@ class UnifiedConformalCV(BaseEstimator):
         return conformal.predict_proba(x)
 
     def predict_conformal_set(
-        self, x: NDArray[Any], confidence: float | None = None,
+        self,
+        x: NDArray[Any],
+        confidence: float | None = None,
     ) -> Any:
         """Predict conformal sets.
 
@@ -309,7 +314,7 @@ class UnifiedConformalCV(BaseEstimator):
 
 
 class CrossConformalCV(BaseEstimator):
-    """Cross-conformal prediction for both classifiers and regressors using WrapClassifier/WrapRegressor.
+    """Cross-conformal prediction using WrapClassifier/WrapRegressor.
 
     Handles Mondrian (class_cond) logic as described.
 
@@ -416,7 +421,9 @@ class CrossConformalCV(BaseEstimator):
         self.models_ = []
         if self.estimator_type == "classifier":
             splitter = StratifiedKFold(
-                n_splits=self.n_folds, shuffle=True, random_state=42,
+                n_splits=self.n_folds,
+                shuffle=True,
+                random_state=42,
             )
             y_split = y
         elif self.estimator_type == "regressor":
@@ -448,7 +455,8 @@ class CrossConformalCV(BaseEstimator):
                     calib_idx_val = calib_idx
 
                     def _bin_func(
-                        _: Any, calib_idx_val: Any = calib_idx_val,
+                        _: Any,
+                        calib_idx_val: Any = calib_idx_val,
                     ) -> Any:
                         return y[calib_idx_val]
 
@@ -516,7 +524,9 @@ class CrossConformalCV(BaseEstimator):
         return proba
 
     def predict_conformal_set(
-        self, x: NDArray[Any], confidence: float | None = None,
+        self,
+        x: NDArray[Any],
+        confidence: float | None = None,
     ) -> list[list[Any]]:
         """Predict conformal sets using the cross-conformal predictor.
 

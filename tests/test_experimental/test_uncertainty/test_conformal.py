@@ -1,6 +1,7 @@
 """Unit tests for conformal prediction wrappers in
 molpipeline.experimental.uncertainty.conformal.
 """
+
 import unittest
 
 from sklearn.datasets import make_classification, make_regression
@@ -20,7 +21,10 @@ class TestConformalCV(unittest.TestCase):
         """Test UnifiedConformalCV with a classifier."""
         x, y = make_classification(n_samples=100, n_features=10, random_state=42)
         x_train, x_calib, y_train, y_calib = train_test_split(
-            x, y, test_size=0.2, random_state=42,
+            x,
+            y,
+            test_size=0.2,
+            random_state=42,
         )
         clf = RandomForestClassifier(random_state=42)
         cp = UnifiedConformalCV(clf, estimator_type="classifier")
@@ -37,7 +41,10 @@ class TestConformalCV(unittest.TestCase):
         """Test UnifiedConformalCV with a regressor."""
         x, y, _ = make_regression(n_samples=100, n_features=10, random_state=42)
         x_train, x_calib, y_train, y_calib = train_test_split(
-            x, y, test_size=0.2, random_state=42,
+            x,
+            y,
+            test_size=0.2,
+            random_state=42,
         )
         reg = RandomForestRegressor(random_state=42)
         cp = UnifiedConformalCV(reg, estimator_type="regressor")
