@@ -313,7 +313,10 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         npt.NDArray[np.float64]
             Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
         """
-        return np.vstack(list(value_list))
+        values = list(value_list)
+        if len(values) == 0:
+            return np.empty((0, 0), dtype=np.float64)
+        return np.vstack(values)
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.

@@ -390,6 +390,47 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         output = pipeline.fit_transform(["[HH]"])
         self.assertTrue(output.shape == (1, len(DEFAULT_DESCRIPTORS)))
 
+    def test_empty_result(self) -> None:
+        """Test that an empty result does not crash the pipeline."""
+
+        # test with a molecule that fails the PhysChem calculation and without
+        # standardizer
+        pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                (
+                    "property_element",
+                    MolToRDKitPhysChem(standardizer=None),  # no standardizer
+                ),
+            ]
+        )
+        pipeline.fit_transform(
+            [
+                "C1=NC(N)=[Se]=C1",  # fails PhysChem calculation
+            ]
+        )
+
+        # test with a molecule that fails the PhysChem calculation and with standardizer
+        pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                (
+                    "property_element",
+                    MolToRDKitPhysChem(
+                        standardizer=StandardScaler()
+                    ),  # with standardizer
+                ),
+                # error filter is needed here, because the MolToRDKitPhysChem doesn't
+                # check if the input to the standardizer contains InvalidInstances
+                ("error_filter", ErrorFilter(filter_everything=True)),
+            ]
+        )
+        pipeline.fit_transform(
+            [
+                "C1=NC(N)=[Se]=C1",  # fails PhysChem calculation
+            ]
+        )
+
     def test_empty_descriptor_list(self) -> None:
         """Test that an empty descriptor list raises ValueError."""
         with self.assertRaises(ValueError) as context:
