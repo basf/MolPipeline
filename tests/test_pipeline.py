@@ -1,3 +1,5 @@
+# pylint: disable=too-many-locals, import-outside-toplevel, invalid-name
+
 """Test functionality of the pipeline class."""
 
 from __future__ import annotations
@@ -14,11 +16,15 @@ from joblib import Memory
 from sklearn.base import BaseEstimator
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import AutoToMol, SmilesToMol
+from molpipeline.experimental.uncertainty.conformal import (
+    CrossConformalCV,
+    UnifiedConformalCV,
+)
 from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from molpipeline.mol2mol import (
     ChargeParentExtractor,
@@ -54,7 +60,7 @@ class PipelineTest(unittest.TestCase):
             [
                 ("smi2mol", smi2mol),
                 ("morgan", mol2morgan),
-            ]
+            ],
         )
 
         # Run pipeline
@@ -73,11 +79,11 @@ class PipelineTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("morgan", mol2morgan),
                 ("decision_tree", d_tree),
-            ]
+            ],
         )
         s_pipeline.fit(TEST_SMILES, CONTAINS_OX)
         predicted_value_array = s_pipeline.predict(TEST_SMILES)
-        for pred_val, true_val in zip(predicted_value_array, CONTAINS_OX):
+        for pred_val, true_val in zip(predicted_value_array, CONTAINS_OX, strict=False):
             self.assertEqual(pred_val, true_val)
 
     def test_sklearn_pipeline_parallel(self) -> None:
@@ -96,7 +102,7 @@ class PipelineTest(unittest.TestCase):
         s_pipeline.fit(TEST_SMILES, CONTAINS_OX)
         out = s_pipeline.predict(TEST_SMILES)
         self.assertEqual(len(out), len(CONTAINS_OX))
-        for pred_val, true_val in zip(out, CONTAINS_OX):
+        for pred_val, true_val in zip(out, CONTAINS_OX, strict=False):
             self.assertEqual(pred_val, true_val)
 
     def test_salt_removal(self) -> None:
@@ -119,11 +125,13 @@ class PipelineTest(unittest.TestCase):
                 ("empty_mol_filter", empty_mol_filter),
                 ("remove_charge", remove_charge),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         generated_smiles = salt_remover_pipeline.transform(smiles_with_salt_list)
         for generated_smiles, smiles_without_salt in zip(
-            generated_smiles, smiles_without_salt_list
+            generated_smiles,
+            smiles_without_salt_list,
+            strict=False,
         ):
             self.assertEqual(generated_smiles, smiles_without_salt)
 
@@ -146,7 +154,7 @@ class PipelineTest(unittest.TestCase):
                 ("metal_disconnector", metal_disconnector),
                 ("salt_remover", salt_remover),
                 ("physchem", physchem),
-            ]
+            ],
         )
 
         # Convert pipeline to json
@@ -156,7 +164,9 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(isinstance(loaded_pipeline, Pipeline))
         # Compare pipeline elements
         for loaded_element, original_element in zip(
-            loaded_pipeline.steps, pipeline_element_list
+            loaded_pipeline.steps,
+            pipeline_element_list,
+            strict=False,
         ):
             if loaded_element[1] == "passthrough":
                 self.assertEqual(loaded_element[1], original_element)
@@ -176,7 +186,7 @@ class PipelineTest(unittest.TestCase):
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         empty_mol_filter = EmptyMoleculeFilter()
         remove_none = ErrorFilter.from_element_list(
-            [smi2mol, salt_remover, mol2morgan, empty_mol_filter]
+            [smi2mol, salt_remover, mol2morgan, empty_mol_filter],
         )
         # Create pipeline
         pipeline = Pipeline(
@@ -197,7 +207,9 @@ class PipelineTest(unittest.TestCase):
     def test_caching(self) -> None:
         """Test if the caching gives the same results and is faster on the second run."""
         molecule_net_logd_df = pd.read_csv(
-            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz",
+            sep="\t",
+            nrows=20,
         )
         prediction_list = []
         for cache_activated in [False, True]:
@@ -263,7 +275,7 @@ class PipelineCompatibilityTest(unittest.TestCase):
                     "physchem__descriptor_list": [
                         ["HeavyAtomMolWt"],
                         ["HeavyAtomMolWt", "HeavyAtomCount"],
-                    ]
+                    ],
                 },
             },
         ]
@@ -313,7 +325,9 @@ class PipelineCompatibilityTest(unittest.TestCase):
         }
         # First without caching
         data_df = pd.read_csv(
-            TEST_DATA_DIR / "molecule_net_logd.tsv.gz", sep="\t", nrows=20
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz",
+            sep="\t",
+            nrows=20,
         )
         best_param_dict = {}
         prediction_dict = {}
@@ -339,7 +353,7 @@ class PipelineCompatibilityTest(unittest.TestCase):
                 grid_search_cv.fit(data_df["smiles"].tolist(), data_df["exp"].tolist())
                 best_param_dict[cache_activated] = grid_search_cv.best_params_
                 prediction_dict[cache_activated] = grid_search_cv.predict(
-                    data_df["smiles"].tolist()
+                    data_df["smiles"].tolist(),
                 )
                 mem.clear(warn=False)
         self.assertEqual(best_param_dict[True], best_param_dict[False])
@@ -360,13 +374,16 @@ class PipelineCompatibilityTest(unittest.TestCase):
                 (
                     "error_replacer",
                     PostPredictionWrapper(
-                        FilterReinserter.from_error_filter(error_filter, np.nan)
+                        FilterReinserter.from_error_filter(error_filter, np.nan),
                     ),
                 ),
-            ]
+            ],
         )
         calibrated_pipeline = CalibratedClassifierCV(
-            s_pipeline, cv=2, ensemble=True, method="isotonic"
+            s_pipeline,
+            cv=2,
+            ensemble=True,
+            method="isotonic",
         )
         calibrated_pipeline.fit(TEST_SMILES, CONTAINS_OX)
         predicted_value_array = calibrated_pipeline.predict(TEST_SMILES)
@@ -375,6 +392,56 @@ class PipelineCompatibilityTest(unittest.TestCase):
         self.assertIsInstance(predicted_proba_array, np.ndarray)
         self.assertEqual(predicted_value_array.shape, (len(TEST_SMILES),))
         self.assertEqual(predicted_proba_array.shape, (len(TEST_SMILES), 2))
+
+    def test_conformal_pipeline_classifier(self) -> None:
+        """Test conformal prediction with a pipeline on SMILES data.
+
+        This test does not take any parameters and does not return a value.
+        """
+        # Use the global test data
+        smiles = np.array(TEST_SMILES)
+        y = np.array(CONTAINS_OX)
+
+        # Build a pipeline: SMILES -> Mol -> MorganFP -> RF
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=2, n_bits=128)
+        rf = RandomForestClassifier(n_estimators=10, random_state=42)
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("morgan", mol2morgan),
+                ("rf", rf),
+            ],
+        )
+
+        # Split data
+        X_train, X_calib, y_train, y_calib = train_test_split(
+            smiles,
+            y,
+            test_size=0.3,
+            random_state=42,
+        )
+
+        # UnifiedConformalCV
+        cp = UnifiedConformalCV(pipeline, estimator_type="classifier")
+        cp.fit(X_train, y_train)
+        cp.calibrate(X_calib, y_calib)
+        preds = cp.predict(X_calib)
+        probs = cp.predict_proba(X_calib)
+        sets = cp.predict_conformal_set(X_calib)
+        self.assertEqual(len(preds), len(y_calib))
+        self.assertEqual(probs.shape[0], len(y_calib))
+        self.assertEqual(len(sets), len(y_calib))
+
+        # CrossConformalCV
+        ccp = CrossConformalCV(pipeline, estimator_type="classifier", n_folds=3)
+        ccp.fit(smiles, y)
+        preds_ccp = ccp.predict(smiles)
+        probs_ccp = ccp.predict_proba(smiles)
+        sets_ccp = ccp.predict_conformal_set(smiles)
+        self.assertEqual(len(preds_ccp), len(y))
+        self.assertEqual(probs_ccp.shape[0], len(y))
+        self.assertEqual(len(sets_ccp), len(y))
 
 
 if __name__ == "__main__":
