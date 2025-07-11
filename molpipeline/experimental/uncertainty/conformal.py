@@ -1,36 +1,37 @@
-"""Conformal prediction wrappers for classification and regression using crepes.
+"""
+Conformal prediction wrappers for classification and regression models.
 
-Provides unified and cross-conformal prediction with Mondrian and nonconformity options.
+This module provides unified implementations of conformal prediction for
+uncertainty quantification with both classification and regression models.
 """
 
-# pylint: disable=too-many-instance-attributes, attribute-defined-outside-init
-
-from typing import Any, cast
-
-import numpy as np
 from crepes import WrapClassifier, WrapRegressor
-from crepes.extras import MondrianCategorizer
-from numpy.typing import NDArray
-from scipy.stats import mode
+from sklearn.base import is_classifier, is_regressor
+from sklearn.model_selection import StratifiedKFold, KFold
+from crepes.extras import hinge, margin, MondrianCategorizer, DifficultyEstimator
+import numpy as np
+import numpy.typing as npt
+from typing import Any, Callable, Optional, Literal, List, Union
 from sklearn.base import BaseEstimator, clone
-from sklearn.model_selection import KFold, StratifiedKFold
+from sklearn.utils import check_random_state
+from scipy.stats import mode
 
 
-def bin_targets(y: NDArray[Any], n_bins: int = 10) -> NDArray[np.int_]:
-    """Bin continuous targets for stratified splitting in regression.
+def _bin_targets(y: npt.NDArray[Any], n_bins: int = 10) -> npt.NDArray[np.int_]:
+    """
+    Bin continuous targets for stratified splitting in regression.
 
     Parameters
     ----------
-    y : np.ndarray
+    y : npt.NDArray[Any]
         Target values.
     n_bins : int, optional
         Number of bins (default: 10).
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.int_]
         Binned targets.
-
     """
     y = np.asarray(y)
     bins = np.linspace(np.min(y), np.max(y), n_bins + 1)
@@ -40,69 +41,44 @@ def bin_targets(y: NDArray[Any], n_bins: int = 10) -> NDArray[np.int_]:
 
 
 class UnifiedConformalCV(BaseEstimator):
-    """Conformal prediction wrapper for both classifiers and regressors.
-
-    Uses crepes under the hood.
-
-    Parameters
-    ----------
-    estimator : sklearn-like estimator
-        Your favorite model (or pipeline).
-    mondrian : bool/callable/MondrianCategorizer, optional
-        If True, use class-conditional (Mondrian) calibration. If callable or
-        MondrianCategorizer, use as custom group function/categorizer.
-    confidence_level : float, optional
-        How confident should we be? (default: 0.9)
-    estimator_type : {'classifier', 'regressor'}, optional
-        What kind of model are we wrapping?
-    nonconformity : callable, optional
-        Nonconformity function for classification (e.g., hinge, margin, or custom).
-    difficulty_estimator : callable or DifficultyEstimator, optional
-        For regression: difficulty estimator for normalized conformal prediction.
-    binning : int or callable, optional
-        For regression: number of bins or binning function for Mondrian calibration.
-    n_jobs : int, optional
-        Parallelize all the things.
-    kwargs : dict
-        Extra toppings for crepes.
-
-    """
-
     def __init__(
         self,
-        estimator: Any,
-        mondrian: Any = False,
+        estimator: BaseEstimator,
+        mondrian: bool | Callable | MondrianCategorizer = False,
         confidence_level: float = 0.9,
-        estimator_type: str = "classifier",
-        nonconformity: Any | None = None,
-        difficulty_estimator: Any | None = None,
-        binning: Any | None = None,
+        estimator_type: Literal["auto", "classifier", "regressor"] = "auto",
+        nonconformity: Optional[Callable] = None,
+        difficulty_estimator: Optional[Callable] = None,
+        binning: Optional[int | Callable] = None,
         n_jobs: int = 1,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize UnifiedConformalCV.
+        random_state: Optional[int] = None,
+        **kwargs: Any
+    ):
+        """
+        Unified conformal prediction wrapper for both classifiers and regressors.
 
         Parameters
         ----------
-        estimator : Any
-            The base estimator or pipeline to wrap.
-        mondrian : Any, optional
-            Mondrian calibration/grouping (default: False).
+        estimator : BaseEstimator
+            The underlying model or pipeline to wrap.
+        mondrian : bool, callable, or MondrianCategorizer, optional
+            If True, use class-conditional (Mondrian) calibration. If callable or MondrianCategorizer, use as custom group function/categorizer.
         confidence_level : float, optional
             Confidence level for prediction sets/intervals (default: 0.9).
-        estimator_type : str, optional
-            Type of estimator: 'classifier' or 'regressor' (default: 'classifier').
-        nonconformity : Any, optional
-            Nonconformity function for classification.
-        difficulty_estimator : Any, optional
-            Difficulty estimator for normalized conformal prediction (regression).
-        binning : Any, optional
-            Number of bins or binning function for Mondrian calibration (regression).
+        estimator_type : Literal["auto", "classifier", "regressor"], optional
+            Type of estimator. If "auto", will infer using sklearn's is_classifier/is_regressor.
+        nonconformity : callable, optional
+            Nonconformity function for classification (e.g., hinge, margin, or custom).
+        difficulty_estimator : callable, optional
+            For regression: difficulty estimator for normalized conformal prediction.
+        binning : int or callable, optional
+            For regression: number of bins or binning function for Mondrian calibration.
         n_jobs : int, optional
-            Number of parallel jobs (default: 1).
-        **kwargs : Any
+            Number of parallel jobs to use.
+        random_state : int or None, optional
+            Random state for reproducibility.
+        **kwargs : dict
             Additional keyword arguments for crepes.
-
         """
         self.estimator = estimator
         self.mondrian = mondrian
@@ -113,273 +89,203 @@ class UnifiedConformalCV(BaseEstimator):
         self.binning = binning
         self.n_jobs = n_jobs
         self.kwargs = kwargs
+        self.random_state = check_random_state(random_state) if random_state is not None else None
+        self.fitted_ = False
+        self.calibrated_ = False
+        self._conformal = None
+        
+        # Determine estimator_type if auto
+        if estimator_type == "auto":
+            if is_classifier(estimator):
+                self._resolved_estimator_type = "classifier"
+            elif is_regressor(estimator):
+                self._resolved_estimator_type = "regressor"
+            else:
+                raise ValueError(
+                    "Could not automatically determine estimator_type. "
+                    "Please specify 'classifier' or 'regressor'."
+                )
+        else:
+            self._resolved_estimator_type = estimator_type
 
-    def fit(self, x: NDArray[Any], y: NDArray[Any]) -> "UnifiedConformalCV":
-        """Fit the conformal predictor.
+    def _get_mondrian_param_classification(self, mondrian, y_calib):
+        if isinstance(mondrian, MondrianCategorizer) or callable(mondrian):
+            return mondrian
+        elif mondrian is True:
+            return y_calib
+        else:
+            return None
 
-        Parameters
-        ----------
-        x : np.ndarray
-            Training features.
-        y : np.ndarray
-            Training targets.
+    def _get_mondrian_param_regression(self, mondrian, y_calib):
+        if isinstance(mondrian, MondrianCategorizer) or callable(mondrian):
+            return mondrian
+        elif mondrian is True:
+            return y_calib
+        else:
+            return None
+            
+    def get_params(self, deep=True):
+        return {
+            "estimator": self.estimator,
+            "mondrian": self.mondrian,
+            "confidence_level": self.confidence_level,
+            "estimator_type": self.estimator_type,
+            "nonconformity": self.nonconformity,
+            "difficulty_estimator": self.difficulty_estimator,
+            "binning": self.binning,
+            "n_jobs": self.n_jobs,
+            "random_state": self.random_state,
+            **self.kwargs,
+        }
 
-        Returns
-        -------
-        UnifiedConformalCV
-            Self.
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
 
-        Raises
-        ------
-        ValueError
-            If estimator_type is not 'classifier' or 'regressor'.
-
-        """
-        if self.estimator_type == "classifier":
+    def fit(self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any) -> "UnifiedConformalCV":
+        if self._resolved_estimator_type == "classifier":
             self._conformal = WrapClassifier(clone(self.estimator))
-        elif self.estimator_type == "regressor":
+        elif self._resolved_estimator_type == "regressor":
             self._conformal = WrapRegressor(clone(self.estimator))
         else:
             raise ValueError("estimator_type must be 'classifier' or 'regressor'")
-        self._conformal.fit(x, y)
+        self._conformal.fit(X, y, **fit_params)
         self.fitted_ = True
+        self.models_ = [self._conformal]
+
         return self
 
     def calibrate(
         self,
-        x_calib: NDArray[Any],
-        y_calib: NDArray[Any],
+        X_calib: npt.NDArray[Any],
+        y_calib: npt.NDArray[Any],
         **calib_params: Any,
     ) -> None:
-        """Calibrate the conformal predictor.
+        if self._resolved_estimator_type == "classifier":
+            nc = self.nonconformity if self.nonconformity is not None else hinge
+            mc = self._get_mondrian_param_classification(self.mondrian, y_calib)
+            self._conformal.calibrate(X_calib, y_calib, nc=nc, mc=mc, **calib_params)
+            self.calibrated_ = True
 
-        Parameters
-        ----------
-        x_calib : np.ndarray
-            Calibration features.
-        y_calib : np.ndarray
-            Calibration targets.
-        calib_params : dict
-            Additional calibration parameters.
-
-        Raises
-        ------
-        ValueError
-            If estimator_type is not 'classifier' or 'regressor'.
-
-        """
-        if self.estimator_type == "classifier":
-            mondrian = self.mondrian
-            if isinstance(mondrian, MondrianCategorizer) or callable(mondrian):
-                self._conformal.calibrate(x_calib, y_calib, mc=mondrian, **calib_params)
-            elif mondrian is True:
-                # Use class labels as Mondrian categories
-                self._conformal.calibrate(x_calib, y_calib, mc=y_calib, **calib_params)
-            else:
-                self._conformal.calibrate(x_calib, y_calib, **calib_params)
-        elif self.estimator_type == "regressor":
-            mondrian = self.mondrian
-            if isinstance(mondrian, MondrianCategorizer) or callable(mondrian):
-                mc = mondrian
-            else:
-                mc = None
-            self._conformal.calibrate(x_calib, y_calib, mc=mc, **calib_params)
+        elif self._resolved_estimator_type == "regressor":
+            de = self.difficulty_estimator
+            mc = self._get_mondrian_param_regression(self.mondrian, y_calib)
+            self._conformal.calibrate(X_calib, y_calib, de=de, mc=mc, **calib_params)
+            self.calibrated_ = True
         else:
             raise ValueError("estimator_type must be 'classifier' or 'regressor'")
 
-    def predict(self, x: NDArray[Any]) -> NDArray[Any]:
-        """Predict using the conformal predictor.
+    def predict(self, X: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        return self._conformal.predict(X)
 
-        Parameters
-        ----------
-        x : np.ndarray
-            Features to predict.
-
-        Returns
-        -------
-        np.ndarray
-            Predictions.
-
-        """
-        return self._conformal.predict(x)
-
-    def predict_proba(self, x: NDArray[Any]) -> NDArray[Any]:
-        """Predict probabilities using the conformal predictor.
-
-        Parameters
-        ----------
-        x : np.ndarray
-            Features to predict.
-
-        Returns
-        -------
-        np.ndarray
-            Predicted probabilities.
-
-        Raises
-        ------
-        NotImplementedError
-            If called for a regressor.
-
-        """
-        if self.estimator_type != "classifier":
+    def predict_proba(self, X: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        if self._resolved_estimator_type != "classifier":
             raise NotImplementedError("predict_proba is for classifiers only.")
-        conformal = cast("WrapClassifier", self._conformal)
-        return conformal.predict_proba(x)
+        return self._conformal.predict_proba(X)
 
     def predict_conformal_set(
         self,
-        x: NDArray[Any],
+        X: npt.NDArray[Any],
         confidence: float | None = None,
-    ) -> Any:
-        """Predict conformal sets.
+    ) -> list[list[Any]]:
+        """
+        Predict conformal sets for classification.
 
         Parameters
         ----------
-        x : np.ndarray
-            Features to predict.
-        confidence : float, optional
-            Confidence level.
+        X : npt.NDArray[Any]
+            Input features.
+        confidence : float or None, optional
+            Confidence level for prediction set (default: self.confidence_level).
 
         Returns
         -------
-        Any
-            Conformal prediction sets.
-
-        Raises
-        ------
-        NotImplementedError
-            If called for a regressor.
-
+        list[list[Any]]
+            List of conformal sets (per sample), each a list of class labels.
         """
-        if self.estimator_type != "classifier":
-            raise NotImplementedError(
-                "predict_conformal_set is only for classification.",
-            )
-        conf = confidence if confidence is not None else self.confidence_level
-        conformal = cast("WrapClassifier", self._conformal)
-        return conformal.predict_set(x, confidence=conf)
+        if self._resolved_estimator_type != "classifier":
+            raise NotImplementedError("predict_conformal_set is only for classification.")
+        if not self.fitted_:
+            raise RuntimeError("You must fit the model before calling predict_conformal_set.")
+        
+        # Default confidence to self.confidence_level if not provided
+        confidence = confidence if confidence is not None else self.confidence_level
+        
+        pred_set_bin = self._conformal.predict_set(X, confidence=confidence)
+        classes = self._conformal.learner.classes_
+        return [list(np.array(classes)[row.astype(bool)]) for row in pred_set_bin]
 
-    def predict_p(self, x: NDArray[Any], **kwargs: Any) -> Any:
-        """Predict p-values.
-
-        Parameters
-        ----------
-        x : np.ndarray
-            Features to predict.
-        kwargs : dict
-            Additional parameters.
-
-        Returns
-        -------
-        Any
-            p-values.
-
-        Raises
-        ------
-        NotImplementedError
-            If called for a regressor.
-
-        """
-        if self.estimator_type != "classifier":
+    def predict_p(self, X: npt.NDArray[Any], **kwargs: Any) -> npt.NDArray[Any]:
+        if self._resolved_estimator_type != "classifier":
             raise NotImplementedError("predict_p is only for classification.")
-        return self._conformal.predict_p(x, **kwargs)
+        return self._conformal.predict_p(X, **kwargs)
 
-    def predict_int(self, x: NDArray[Any], confidence: float | None = None) -> Any:
-        """Predict intervals.
-
+    def predict_int(self, X: npt.NDArray[Any], confidence: float | None = None) -> npt.NDArray[Any]:
+        """
+        Predict confidence intervals for regression.
+        
         Parameters
         ----------
-        x : np.ndarray
-            Features to predict.
-        confidence : float, optional
-            Confidence level.
-
+        X : npt.NDArray[Any]
+            Input features.
+        confidence : float or None, optional
+            Confidence level for intervals (default: self.confidence_level).
+            
         Returns
         -------
-        Any
-            Prediction intervals.
-
-        Raises
-        ------
-        NotImplementedError
-            If called for a classifier.
-
+        npt.NDArray[Any]
+            Array of prediction intervals, shape (n_samples, 2).
         """
-        if self.estimator_type != "regressor":
-            raise NotImplementedError("predict_interval is only for regression.")
+        if self._resolved_estimator_type != "regressor":
+            raise NotImplementedError("predict_int is only for regression.")
         conf = confidence if confidence is not None else self.confidence_level
-        conformal = cast("WrapRegressor", self._conformal)
-        return conformal.predict_int(x, confidence=conf)
+        return self._conformal.predict_int(X, confidence=conf)
+    
 
 
 class CrossConformalCV(BaseEstimator):
-    """Cross-conformal prediction using WrapClassifier/WrapRegressor.
-
-    Handles Mondrian (class_cond) logic as described.
-
-    Parameters
-    ----------
-    estimator : sklearn-like estimator
-        Your favorite model (or pipeline).
-    n_folds : int, optional
-        Number of cross-validation folds.
-    confidence_level : float, optional
-        Confidence level for prediction sets/intervals.
-    mondrian : bool/callable/MondrianCategorizer, optional
-        Mondrian calibration/grouping.
-    nonconformity : callable, optional
-        Nonconformity function for classification (e.g., hinge, margin, or custom).
-    difficulty_estimator : callable or DifficultyEstimator, optional
-        For regression: difficulty estimator for normalized conformal prediction.
-    binning : int or callable, optional
-        For regression: number of bins or binning function for Mondrian calibration.
-    estimator_type : {'classifier', 'regressor'}, optional
-        What kind of model are we wrapping?
-    n_bins : int, optional
-        Number of bins for stratified splitting in regression.
-    n_jobs : int, optional
-        Parallelize all the things.
-    kwargs : dict
-        Extra toppings for crepes.
-
-    """
-
     def __init__(
         self,
-        estimator: Any,
+        estimator: BaseEstimator,
         n_folds: int = 5,
         confidence_level: float = 0.9,
-        mondrian: Any = False,
-        nonconformity: Any | None = None,
-        binning: Any | None = None,
-        estimator_type: str = "classifier",
+        mondrian: bool | Callable | MondrianCategorizer = False,
+        nonconformity: Optional[Callable] = None,
+        binning: Optional[int | Callable] = None,
+        estimator_type: Literal["auto", "classifier", "regressor"] = "auto",
         n_bins: int = 10,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize CrossConformalCV.
+        difficulty_estimator: Optional[Callable] = None,
+        random_state: Optional[int] = None,
+        **kwargs: Any
+    ):
+        """
+        Cross-conformal prediction for both classifiers and regressors using WrapClassifier/WrapRegressor.
 
         Parameters
         ----------
-        estimator : Any
-            The base estimator or pipeline to wrap.
+        estimator : BaseEstimator
+            The underlying model or pipeline to wrap.
         n_folds : int, optional
             Number of cross-validation folds (default: 5).
         confidence_level : float, optional
             Confidence level for prediction sets/intervals (default: 0.9).
-        mondrian : Any, optional
-            Mondrian calibration/grouping (default: False).
-        nonconformity : Any, optional
-            Nonconformity function for classification.
-        binning : Any, optional
-            Number of bins or binning function for Mondrian calibration (regression).
-        estimator_type : str, optional
-            Type of estimator: 'classifier' or 'regressor' (default: 'classifier').
+        mondrian : bool, callable, or MondrianCategorizer, optional
+            Mondrian calibration/grouping.
+        nonconformity : callable, optional
+            Nonconformity function for classification (e.g., hinge, margin, or custom).
+        binning : int or callable, optional
+            For regression: number of bins or binning function for Mondrian calibration.
+        estimator_type : Literal["auto", "classifier", "regressor"], optional
+            Type of estimator. If "auto", will infer using sklearn's is_classifier/is_regressor.
         n_bins : int, optional
             Number of bins for stratified splitting in regression (default: 10).
-        **kwargs : Any
+        difficulty_estimator : callable, optional
+            For regression: difficulty estimator for normalized conformal prediction.
+        random_state : int or None, optional
+            Random state for reproducibility.
+        **kwargs : dict
             Additional keyword arguments for crepes.
-
         """
         self.estimator = estimator
         self.n_folds = n_folds
@@ -389,176 +295,193 @@ class CrossConformalCV(BaseEstimator):
         self.binning = binning
         self.estimator_type = estimator_type
         self.n_bins = n_bins
+        self.difficulty_estimator = difficulty_estimator
         self.kwargs = kwargs
-
-    def fit(
-        self,
-        x: NDArray[Any],
-        y: NDArray[Any],
-    ) -> "CrossConformalCV":
-        """Fit the cross-conformal predictor.
-
-        Parameters
-        ----------
-        x : np.ndarray
-            Training features.
-        y : np.ndarray
-            Training targets.
-
-        Returns
-        -------
-        CrossConformalCV
-            Self.
-
-        Raises
-        ------
-        ValueError
-            If estimator_type is not 'classifier' or 'regressor'.
-
-        """
-        x = np.array(x)
-        y = np.array(y)
-        self.models_ = []
-        if self.estimator_type == "classifier":
-            splitter = StratifiedKFold(
-                n_splits=self.n_folds,
-                shuffle=True,
-                random_state=42,
-            )
-            y_split = y
-        elif self.estimator_type == "regressor":
-            splitter = KFold(n_splits=self.n_folds, shuffle=True, random_state=42)
-            y_split = bin_targets(y, n_bins=self.n_bins)
-        else:
-            raise ValueError("estimator_type must be 'classifier' or 'regressor'")
-        for train_idx, calib_idx in splitter.split(x, y_split):
-            if self.estimator_type == "classifier":
-                model = WrapClassifier(clone(self.estimator))
-                model.fit(x[train_idx], y[train_idx])
-                mondrian = self.mondrian
-                if isinstance(mondrian, MondrianCategorizer) or callable(mondrian):
-                    model.calibrate(x[calib_idx], y[calib_idx], mc=mondrian)
-                elif mondrian is True:
-                    model.calibrate(x[calib_idx], y[calib_idx], mc=y[calib_idx])
-                else:
-                    model.calibrate(x[calib_idx], y[calib_idx])
+        self.random_state = check_random_state(random_state) if random_state is not None else None
+        self.fitted_ = False
+        self.calibrated_ = False
+        
+        # Determine estimator_type if auto
+        if estimator_type == "auto":
+            if is_classifier(estimator):
+                self._resolved_estimator_type = "classifier"
+            elif is_regressor(estimator):
+                self._resolved_estimator_type = "regressor"
             else:
-                model = WrapRegressor(clone(self.estimator))
-                model.fit(x[train_idx], y[train_idx])
-                mondrian = self.mondrian
-                if isinstance(mondrian, MondrianCategorizer) or callable(mondrian):
-                    mc = mondrian
-                else:
-                    mc = None
-                if self.binning is not None:
-                    mc_obj = MondrianCategorizer()
-                    calib_idx_val = calib_idx
+                raise ValueError(
+                    "Could not automatically determine estimator_type. "
+                    "Please specify 'classifier' or 'regressor'."
+                )
+        else:
+            self._resolved_estimator_type = estimator_type
 
-                    def _bin_func(
-                        _: Any,
-                        calib_idx_val: Any = calib_idx_val,
-                    ) -> Any:
-                        return y[calib_idx_val]
+    def get_params(self, deep=True):
+        return {
+            "estimator": self.estimator,
+            "n_folds": self.n_folds,
+            "confidence_level": self.confidence_level,
+            "mondrian": self.mondrian,
+            "nonconformity": self.nonconformity,
+            "binning": self.binning,
+            "estimator_type": self.estimator_type,
+            "n_bins": self.n_bins,
+            "difficulty_estimator": self.difficulty_estimator,
+            "random_state": self.random_state,
+            **self.kwargs,
+        }
 
-                    mc_obj.fit(x[calib_idx], f=_bin_func, no_bins=self.binning)
-                    mc = mc_obj
-                model.calibrate(x[calib_idx], y[calib_idx], mc=mc)
-            self.models_.append(model)
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
         return self
 
-    def predict(self, x: NDArray[Any]) -> NDArray[Any]:
-        """Predict using the cross-conformal predictor.
+    def fit(self, X: npt.NDArray[Any], y: npt.NDArray[Any], **fit_params: Any) -> "CrossConformalCV":
+        X = np.asarray(X)
+        y = np.asarray(y)
+        self.models_ = []
+        self.mondrian_categorizers_ = []  # Store categorizers for each fold
+        self.calib_bins_ = []  # Store calibration bins for each fold
+        
+        if self._resolved_estimator_type == "classifier":
+            splitter = StratifiedKFold(n_splits=self.n_folds, shuffle=True, random_state=self.random_state)
+            y_split = y
+        elif self._resolved_estimator_type == "regressor":
+            splitter = KFold(n_splits=self.n_folds, shuffle=True, random_state=self.random_state)
+            y_split = _bin_targets(y, n_bins=self.n_bins)
+        else:
+            raise ValueError("estimator_type must be 'classifier' or 'regressor'")
+            
+        for train_idx, calib_idx in splitter.split(X, y_split):
+            if self._resolved_estimator_type == "classifier":
+                model = WrapClassifier(clone(self.estimator))
+                model.fit(X[train_idx], y[train_idx])
+                if self.mondrian:
+                    model.calibrate(X[calib_idx], y[calib_idx], nc=self.nonconformity or hinge, class_cond=True)
+                else:
+                    model.calibrate(X[calib_idx], y[calib_idx], nc=self.nonconformity or hinge, class_cond=False)
+                self.mondrian_categorizers_.append(None)
+                self.calib_bins_.append(None)
+            else:
+                model = WrapRegressor(clone(self.estimator))
+                model.fit(X[train_idx], y[train_idx])
+                de = None
+                if self.difficulty_estimator is not None:
+                    de = DifficultyEstimator()
+                    de.fit(X[calib_idx], y=y[calib_idx])
+                if self.mondrian:
+                    if self.binning is not None:
+                        mc = MondrianCategorizer()
+                        mc.fit(X[calib_idx], f=lambda X: y[calib_idx], no_bins=self.binning)
+                    else:
+                        mc = MondrianCategorizer()
+                        mc.fit(X[calib_idx], f=lambda X: y[calib_idx])
+                    model.calibrate(X[calib_idx], y[calib_idx], de=de, mc=mc)
+                    self.mondrian_categorizers_.append(mc)
+                    self.calib_bins_.append(None)
+                else:
+                    model.calibrate(X[calib_idx], y[calib_idx], de=de)
+                    self.mondrian_categorizers_.append(None)
+                    self.calib_bins_.append(None)
+            self.models_.append(model)
+        self.calibrated_ = True
+        self.fitted_ = True
 
-        Parameters
-        ----------
-        x : np.ndarray
-            Features to predict.
+        return self
 
-        Returns
-        -------
-        np.ndarray
-            Predictions (majority vote).
-
-        """
-        result = np.array([m.predict(x) for m in self.models_])
-        result = np.asarray(result)
-        if result.shape == ():
-            result = np.full((len(self.models_), len(x)), result)
-        if result.ndim == 1 and len(x) == 1:
-            result = result[:, np.newaxis]
+    def predict(self, X: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        result = np.array([m.predict(X) for m in self.models_])
+        if self._resolved_estimator_type == "regressor":
+            return np.mean(result, axis=0)
         pred_mode = mode(result, axis=0, keepdims=False)
         return np.ravel(pred_mode.mode)
 
-    def predict_proba(self, x: NDArray[Any]) -> NDArray[Any]:
-        """Predict probabilities using the cross-conformal predictor.
-
-        Parameters
-        ----------
-        x : np.ndarray
-            Features to predict.
-
-        Returns
-        -------
-        np.ndarray
-            Predicted probabilities (averaged).
-
-        Raises
-        ------
-        NotImplementedError
-            If called for a regressor.
-
-        """
-        if self.estimator_type != "classifier":
-            raise NotImplementedError("predict_proba is for classifiers only.")
-        binary_class_dim = 2
-        result = np.array([m.predict_proba(x) for m in self.models_])
-        if (
-            result.ndim == binary_class_dim
-            and result.shape[1] == binary_class_dim
-            and len(x) == 1
-        ):
-            result = result[:, np.newaxis, :]
+    def predict_proba(self, X: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        result = np.array([m.predict_proba(X) for m in self.models_])
         proba = np.atleast_2d(np.mean(result, axis=0))
-        if proba.shape[0] != len(x):
-            proba = np.full((len(x), proba.shape[1]), np.nan)
         return proba
 
     def predict_conformal_set(
         self,
-        x: NDArray[Any],
+        X: npt.NDArray[Any],
         confidence: float | None = None,
-    ) -> list[list[Any]]:
-        """Predict conformal sets using the cross-conformal predictor.
+    ) -> List[List[Union[int]]]:
+        """
+        Predict conformal sets for classification by union across folds.
 
         Parameters
         ----------
-        x : np.ndarray
-            Features to predict.
-        confidence : float, optional
-            Confidence level.
+        X : npt.NDArray[Any]
+            Input features.
+        confidence : float or None, optional
+            Confidence level for prediction set (default: self.confidence_level).
 
         Returns
         -------
-        list[list[Any]]
-            Union of conformal sets from all folds.
-
-        Raises
-        ------
-        NotImplementedError
-            If called for a regressor.
-
+        List[List[Union[int]]]
+            List of conformal sets (per sample), each containing the class labels
+            that might be the true class with the specified confidence level.
+            For example, for a binary classifier with classes [0, 1], might return
+            [[0, 1], [1], [0, 1]] for three samples.
         """
-        if self.estimator_type != "classifier":
-            raise NotImplementedError(
-                "predict_conformal_set is only for classification.",
-            )
-        conf = confidence if confidence is not None else self.confidence_level
-        sets = [m.predict_set(x, confidence=conf) for m in self.models_]
-        n = len(x)
-        union_sets = []
+        if self._resolved_estimator_type != "classifier":
+            raise NotImplementedError("predict_conformal_set is only for classification.")
+        if not self.fitted_:
+            raise RuntimeError("You must fit the model before calling predict_conformal_set.")
+        
+        # Default confidence to self.confidence_level if not provided
+        confidence = confidence if confidence is not None else self.confidence_level
+
+        sets = []
+        for m in self.models_:
+            pred_set_bin = m.predict_set(X, confidence=confidence)
+            classes = getattr(m.learner, "classes_", None)
+            if classes is None:
+                raise AttributeError("Underlying estimator does not expose 'classes_'.")
+            sets.append([list(np.array(classes)[row.astype(bool)]) for row in pred_set_bin])
+        
+        n = len(X)
+        union_sets: list[list[Any]] = []
         for i in range(n):
             union = set()
             for s in sets:
                 union.update(s[i])
             union_sets.append(list(union))
         return union_sets
+
+    def predict_int(self, X: npt.NDArray[Any], confidence: float | None = None) -> npt.NDArray[Any]:
+        """
+        Predict confidence intervals for regression.
+        
+        Parameters
+        ----------
+        X : npt.NDArray[Any]
+            Input features.
+        confidence : float or None, optional
+            Confidence level for intervals (default: self.confidence_level).
+            
+        Returns
+        -------
+        npt.NDArray[Any]
+            Array of prediction intervals, shape (n_samples, 2).
+        """
+        if self._resolved_estimator_type != "regressor":
+            raise NotImplementedError("predict_int is only for regression.")
+        conf = confidence if confidence is not None else self.confidence_level
+        intervals = []
+        for i, model in enumerate(self.models_):
+            interval = model.predict_int(X, confidence=conf)
+            intervals.append(np.array(interval))
+        # Return average lower/upper bounds across folds
+        intervals = np.array(intervals)  # shape: (n_folds, n_samples, 2)
+        avg_intervals = np.nanmean(intervals, axis=0)
+        return avg_intervals
+
+
+    def predict_p(self, X: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        """Return averaged conformal p-values across folds (classification only)."""
+        if self._resolved_estimator_type != "classifier":
+            raise NotImplementedError("predict_p is only for classification.")
+        # Each model in self.models_ has predict_p
+        pvals = np.array([m.predict_p(X) for m in self.models_])  # shape: (n_folds, n_samples, n_classes)
+        avg_pvals = np.mean(pvals, axis=0)  # shape: (n_samples, n_classes)
+        return avg_pvals

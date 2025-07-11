@@ -1,4 +1,4 @@
-"""Experimental uncertainty wrappers for conformal prediction in MolPipeline.
+"""Wrappers for conformal prediction in MolPipeline.
 
 Provides CrossConformalCV and UnifiedConformalCV for robust uncertainty quantification.
 """
