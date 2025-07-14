@@ -22,8 +22,8 @@ from sklearn.tree import DecisionTreeClassifier
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import AutoToMol, SmilesToMol
 from molpipeline.experimental.uncertainty.conformal import (
-    CrossConformalCV,
-    UnifiedConformalCV,
+    ConformalPredictor,
+    CrossConformalPredictor
 )
 from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from molpipeline.mol2mol import (
@@ -405,7 +405,7 @@ class PipelineCompatibilityTest(unittest.TestCase):
         # Build a pipeline: SMILES -> Mol -> MorganFP -> RF
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=2, n_bits=128)
-        rf = RandomForestClassifier(n_estimators=10, random_state=42)
+        rf = RandomForestClassifier(n_estimators=5, random_state=42)
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -422,8 +422,8 @@ class PipelineCompatibilityTest(unittest.TestCase):
             random_state=42,
         )
 
-        # UnifiedConformalCV
-        cp = UnifiedConformalCV(pipeline, estimator_type="classifier")
+        # ConformalPredictor
+        cp = ConformalPredictor(pipeline, estimator_type="classifier")
         cp.fit(X_train, y_train)
         cp.calibrate(X_calib, y_calib)
         preds = cp.predict(X_calib)
@@ -433,8 +433,8 @@ class PipelineCompatibilityTest(unittest.TestCase):
         self.assertEqual(probs.shape[0], len(y_calib))
         self.assertEqual(len(sets), len(y_calib))
 
-        # CrossConformalCV
-        ccp = CrossConformalCV(pipeline, estimator_type="classifier", n_folds=3)
+        # CrossConformalPredictor
+        ccp = CrossConformalPredictor(pipeline, estimator_type="classifier", n_folds=3)
         ccp.fit(smiles, y)
         preds_ccp = ccp.predict(smiles)
         probs_ccp = ccp.predict_proba(smiles)

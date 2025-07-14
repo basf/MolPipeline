@@ -1,11 +1,11 @@
 """Wrappers for conformal prediction in MolPipeline.
 
-Provides CrossConformalCV and UnifiedConformalCV for robust uncertainty quantification.
+Provides ConformalPredictor and CrossConformalPredictor for robust uncertainty quantification.
 """
 
 from molpipeline.experimental.uncertainty.conformal import (
-    CrossConformalCV,
-    UnifiedConformalCV,
+    ConformalPredictor,
+    CrossConformalPredictor,
 )
 
-__all__ = ["CrossConformalCV", "UnifiedConformalCV"]
+__all__ = ["ConformalPredictor", "CrossConformalPredictor"]
