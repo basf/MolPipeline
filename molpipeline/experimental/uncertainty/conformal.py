@@ -8,50 +8,14 @@ import numpy.typing as npt
 from crepes import WrapClassifier, WrapRegressor
 from crepes.extras import DifficultyEstimator, MondrianCategorizer
 from scipy.stats import mode
-from sklearn.base import BaseEstimator, clone, is_classifier, is_regressor
+from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.utils import check_random_state
 
-
-def _bin_targets(y: npt.NDArray[Any], n_bins: int = 10) -> npt.NDArray[np.int_]:
-    """Bin continuous targets for stratified splitting in regression.
-
-    Returns
-    -------
-        Binned targets.
-
-    """
-    y = np.asarray(y)
-    bins = np.linspace(np.min(y), np.max(y), n_bins + 1)
-    y_binned = np.digitize(y, bins) - 1
-    y_binned[y_binned == n_bins] = n_bins - 1
-    return y_binned
-
-
-def _detect_estimator_type(
-    estimator: BaseEstimator,
-) -> Literal["classifier", "regressor"]:
-    """Automatically detect whether an estimator is a classifier or regressor.
-
-    Returns
-    -------
-    Literal["classifier", "regressor"]
-        The detected estimator type.
-
-    Raises
-    ------
-    ValueError
-        If type cannot be determined.
-
-    """
-    if is_classifier(estimator):
-        return "classifier"
-    if is_regressor(estimator):
-        return "regressor"
-    raise ValueError(
-        f"Could not determine if {type(estimator).__name__} is a "
-        "classifier or regressor. Please specify estimator_type explicitly.",
-    )
+from molpipeline.experimental.uncertainty.utils import (
+    _bin_targets,
+    _detect_estimator_type,
+)
 
 
 class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-attributes
@@ -447,8 +411,7 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         Parameters
         ----------
         deep : bool, optional
-            If True, will return the parameters for this estimator and
-            contained subobjects that are estimators.
+            If True, will return the parameters for this estimator.
 
         Returns
         -------
@@ -498,15 +461,13 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
 
         for key, value in params.items():
             if key.startswith("estimator__"):
-                # Handle nested estimator parameters
                 nested_key = key[len("estimator__") :]
                 estimator_params[nested_key] = value
             elif key in valid_params:
                 setattr(self, key, value)
             else:
                 raise ValueError(
-                    f"Invalid parameter {key} for estimator {type(self).__name__}. "
-                    f"Valid parameters: {list(valid_params.keys())}",
+                    f"Invalid parameter {key} for estimator {type(self).__name__}. ",
                 )
 
         if estimator_params and hasattr(self.estimator, "set_params"):
@@ -516,10 +477,7 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
 
 
 class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-instance-attributes
-    """Cross-conformal prediction using WrapClassifier/WrapRegressor.
-
-    Inherits from ConformalPredictor and extends it with cross-validation functionality.
-    """
+    """Cross-conformal prediction using WrapClassifier/WrapRegressor."""
 
     def __init__(
         self,
@@ -569,20 +527,7 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
         **kwargs : Any
             Additional keyword arguments for crepes.
 
-        Raises
-        ------
-        ValueError
-            If parameter validation fails.
-
         """
-        # Additional validation for cross-conformal specific parameters
-        if n_folds <= 1:
-            raise ValueError(f"n_folds must be > 1, got {n_folds}")
-
-        if n_bins <= 0:
-            raise ValueError(f"n_bins must be positive, got {n_bins}")
-
-        # Initialize parent class
         super().__init__(
             estimator=estimator,
             mondrian=mondrian,
@@ -595,7 +540,6 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
             **kwargs,
         )
 
-        # Cross-conformal specific attributes
         self.n_folds = n_folds
         self.n_bins = n_bins
         self.random_state = random_state
@@ -781,27 +725,6 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
         self.fitted_ = True
         self.calibrated_ = True  # Models are calibrated during fit
         return self
-
-    def calibrate(
-        self,
-        x_calib: npt.NDArray[Any],
-        y_calib: npt.NDArray[Any],
-        **calib_params: Any,
-    ) -> None:
-        """Calibrate method for cross-conformal predictor.
-
-        Note: For CrossConformalPredictor, calibration happens automatically
-        during the fit() method.
-
-        Raises
-        ------
-        NotImplementedError
-            Cross-conformal calibration happens during fit().
-
-        """
-        raise NotImplementedError(
-            "CrossConformalPredictor performs calibration automatically during fit(). ",
-        )
 
     def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Predict using the cross-conformal predictor.
@@ -1043,8 +966,7 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
                 setattr(self, key, value)
             else:
                 raise ValueError(
-                    f"Invalid parameter {key} for estimator {type(self).__name__}. "
-                    f"Valid parameters: {list(valid_params.keys())}",
+                    f"Invalid parameter {key} for estimator {type(self).__name__}. ",
                 )
 
         if estimator_params and hasattr(self.estimator, "set_params"):
