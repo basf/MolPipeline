@@ -11,7 +11,6 @@ from crepes.extras import MondrianCategorizer, hinge, margin
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
-from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.experimental.uncertainty.conformal import (
     ConformalPredictor,
@@ -48,46 +47,50 @@ class TestConformalCV(unittest.TestCase):
         # Set up pipeline stages separately to handle invalid molecules
         smi2mol = SmilesToMol(n_jobs=1)
         morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE, n_jobs=1)
-        
+
         # Process classification data
         bbbp_clean = bbbp_df.dropna(subset=["smiles", "p_np"])
         smiles_list = bbbp_clean["smiles"].tolist()
         labels_list = bbbp_clean["p_np"].tolist()
-        
+
         # Convert SMILES to molecules first, filter out invalid ones
         molecules = smi2mol.fit_transform(smiles_list)
         valid_clf_data = []
-        
+
         for mol, label in zip(molecules, labels_list, strict=False):
             # Skip InvalidInstance objects
             if mol is None or hasattr(mol, "_fields"):  # InvalidInstance is a NamedTuple
                 continue
             # Generate fingerprint for valid molecule
-            fp = morgan.transform([mol])[0]
-            if fp is not None and hasattr(fp, "toarray"):
-                valid_clf_data.append((fp.toarray().flatten(), label))
+            try:
+                fp = morgan.transform([mol])[0]  # type: ignore[list-item]
+                if fp is not None and hasattr(fp, "toarray"):
+                    valid_clf_data.append((fp.toarray().flatten(), label))
+            except (AttributeError, TypeError):
+                # Skip molecules that can't be processed
+                continue
 
         if not valid_clf_data:
             raise ValueError("No valid classification data found")
-            
+
         cls.x_clf, cls.y_clf = map(np.array, zip(*valid_clf_data, strict=False))
 
         # Process regression data
         logd_clean = logd_df.dropna(subset=["smiles", "exp"])
         smiles_list_reg = logd_clean["smiles"].tolist()
         labels_list_reg = logd_clean["exp"].tolist()
-        
+
         # Convert SMILES to molecules first, filter out invalid ones
         molecules_reg = smi2mol.transform(smiles_list_reg)
         valid_reg_data = []
-        
+
         for mol, label in zip(molecules_reg, labels_list_reg, strict=False):
             # Skip InvalidInstance objects
             if mol is None or hasattr(mol, "_fields"):  # InvalidInstance is a NamedTuple
                 continue
             # Generate fingerprint for valid molecule - ensure mol is valid
             try:
-                fp = morgan.transform([mol])[0]
+                fp = morgan.transform([mol])[0]  # type: ignore[list-item]
                 if fp is not None and hasattr(fp, "toarray"):
                     valid_reg_data.append((fp.toarray().flatten(), label))
             except (AttributeError, TypeError):
@@ -96,7 +99,7 @@ class TestConformalCV(unittest.TestCase):
 
         if not valid_reg_data:
             raise ValueError("No valid regression data found")
-            
+
         cls.x_reg, cls.y_reg = map(np.array, zip(*valid_reg_data, strict=False))
 
     def test_conformal_prediction_classifier(self) -> None:
@@ -285,7 +288,7 @@ class TestConformalCV(unittest.TestCase):
 
         # Test with hinge nonconformity
         cp_hinge = ConformalPredictor(clf, estimator_type="classifier",
-                                     nonconformity=hinge)
+                                      nonconformity=hinge)
         cp_hinge.fit(x_train, y_train)
         cp_hinge.calibrate(x_calib, y_calib)
         sets_hinge = cp_hinge.predict_conformal_set(x_calib)
@@ -293,7 +296,7 @@ class TestConformalCV(unittest.TestCase):
 
         # Test with margin nonconformity
         cp_margin = ConformalPredictor(clf, estimator_type="classifier",
-                                      nonconformity=margin)
+                                       nonconformity=margin)
         cp_margin.fit(x_train, y_train)
         cp_margin.calibrate(x_calib, y_calib)
         sets_margin = cp_margin.predict_conformal_set(x_calib)
@@ -324,7 +327,7 @@ class TestConformalCV(unittest.TestCase):
                no_bins=2)
 
         cp_mondrian_custom = ConformalPredictor(clf, estimator_type="classifier",
-                                               mondrian=mc)
+                                                mondrian=mc)
         cp_mondrian_custom.fit(x_train, y_train)
         cp_mondrian_custom.calibrate(x_calib, y_calib)
         sets_custom = cp_mondrian_custom.predict_conformal_set(x_calib)
@@ -332,7 +335,7 @@ class TestConformalCV(unittest.TestCase):
 
         # Test without Mondrian (baseline)
         cp_baseline = ConformalPredictor(clf, estimator_type="classifier",
-                                        mondrian=False)
+                                         mondrian=False)
         cp_baseline.fit(x_train, y_train)
         cp_baseline.calibrate(x_calib, y_calib)
         sets_baseline = cp_baseline.predict_conformal_set(x_calib)
@@ -347,7 +350,7 @@ class TestConformalCV(unittest.TestCase):
             for class_idx in pred_set:
                 self.assertIsInstance(class_idx, (int, np.integer))
                 self.assertGreaterEqual(class_idx, 0)
-        
+
         self.assertTrue(np.all(p_values_custom >= 0))
         self.assertTrue(np.all(p_values_custom <= 1))
 
@@ -367,14 +370,14 @@ class TestConformalCV(unittest.TestCase):
                no_bins=2)
 
         cp_mondrian = ConformalPredictor(reg, estimator_type="regressor",
-                                        mondrian=mc)
+                                         mondrian=mc)
         cp_mondrian.fit(x_train, y_train)
         cp_mondrian.calibrate(x_calib, y_calib)
         intervals_mondrian = cp_mondrian.predict_int(x_calib)
 
         # Test without Mondrian (baseline)
         cp_baseline = ConformalPredictor(reg, estimator_type="regressor",
-                                        mondrian=False)
+                                         mondrian=False)
         cp_baseline.fit(x_train, y_train)
         cp_baseline.calibrate(x_calib, y_calib)
         intervals_baseline = cp_baseline.predict_int(x_calib)
@@ -398,15 +401,15 @@ class TestConformalCV(unittest.TestCase):
                    no_bins=2)
 
         ccp_clf = CrossConformalPredictor(clf, estimator_type="classifier",
-                                         n_folds=3, mondrian=mc_clf, random_state=42)
+                                          n_folds=3, mondrian=mc_clf, random_state=42)
         ccp_clf.fit(self.x_clf, self.y_clf)
         sets_mondrian = ccp_clf.predict_conformal_set(self.x_clf[:10])
         p_values_mondrian = ccp_clf.predict_p(self.x_clf[:10])
 
         # Test without Mondrian for comparison
         ccp_clf_baseline = CrossConformalPredictor(clf, estimator_type="classifier",
-                                                  n_folds=3, mondrian=False,
-                                                  random_state=42)
+                                                   n_folds=3, mondrian=False,
+                                                   random_state=42)
         ccp_clf_baseline.fit(self.x_clf, self.y_clf)
         sets_baseline = ccp_clf_baseline.predict_conformal_set(self.x_clf[:10])
 
@@ -417,14 +420,14 @@ class TestConformalCV(unittest.TestCase):
         # Test regression with binning (Mondrian-style for regression)
         reg = RandomForestRegressor(random_state=42, n_estimators=5)
         ccp_reg = CrossConformalPredictor(reg, estimator_type="regressor",
-                                         n_folds=3, binning=3, random_state=42)
+                                          n_folds=3, binning=3, random_state=42)
         ccp_reg.fit(self.x_reg, self.y_reg)
         intervals_binned = ccp_reg.predict_int(self.x_reg[:10])
 
         # Test without binning for comparison
         ccp_reg_baseline = CrossConformalPredictor(reg, estimator_type="regressor",
-                                                  n_folds=3, binning=None,
-                                                  random_state=42)
+                                                   n_folds=3, binning=None,
+                                                   random_state=42)
         ccp_reg_baseline.fit(self.x_reg, self.y_reg)
         intervals_baseline_reg = ccp_reg_baseline.predict_int(self.x_reg[:10])
 

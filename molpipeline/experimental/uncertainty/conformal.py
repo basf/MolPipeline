@@ -1,7 +1,4 @@
-"""Conformal prediction wrappers for classification and regression using crepes.
-
-Provides unified and cross-conformal prediction with Mondrian and nonconformity options.
-"""
+"""Conformal prediction wrappers for classification and regression using crepes."""
 
 from collections.abc import Callable
 from typing import Any, Literal
@@ -19,23 +16,15 @@ from sklearn.utils import check_random_state
 def _bin_targets(y: npt.NDArray[Any], n_bins: int = 10) -> npt.NDArray[np.int_]:
     """Bin continuous targets for stratified splitting in regression.
 
-    Parameters
-    ----------
-    y : npt.NDArray[Any]
-        Target values.
-    n_bins : int, optional
-        Number of bins (default: 10).
-
     Returns
     -------
-    npt.NDArray[np.int_]
         Binned targets.
 
     """
     y = np.asarray(y)
     bins = np.linspace(np.min(y), np.max(y), n_bins + 1)
-    y_binned = np.digitize(y, bins) - 1  # bins start at 1
-    y_binned[y_binned == n_bins] = n_bins - 1  # edge case
+    y_binned = np.digitize(y, bins) - 1
+    y_binned[y_binned == n_bins] = n_bins - 1
     return y_binned
 
 
@@ -43,11 +32,6 @@ def _detect_estimator_type(
     estimator: BaseEstimator,
 ) -> Literal["classifier", "regressor"]:
     """Automatically detect whether an estimator is a classifier or regressor.
-
-    Parameters
-    ----------
-    estimator : BaseEstimator
-        The estimator to check.
 
     Returns
     -------
@@ -57,7 +41,7 @@ def _detect_estimator_type(
     Raises
     ------
     ValueError
-        If the estimator type cannot be determined.
+        If type cannot be determined.
 
     """
     if is_classifier(estimator):
@@ -68,41 +52,6 @@ def _detect_estimator_type(
         f"Could not determine if {type(estimator).__name__} is a "
         "classifier or regressor. Please specify estimator_type explicitly.",
     )
-
-
-def _get_mondrian_param_classification(
-    mondrian: MondrianCategorizer | Callable[..., Any] | bool,
-    y_calib: npt.NDArray[Any],
-) -> MondrianCategorizer | Callable[..., Any] | npt.NDArray[Any] | None:
-    """Get mondrian parameter for classification calibration.
-
-    Returns
-    -------
-    MondrianCategorizer | Callable[..., Any] | npt.NDArray[Any] | None
-        Mondrian parameter for classification calibration.
-
-    """
-    if isinstance(mondrian, MondrianCategorizer) or callable(mondrian):
-        return mondrian
-    if mondrian is True:
-        return y_calib
-    return None
-
-
-def _get_mondrian_param_regression(
-    mondrian: MondrianCategorizer | Callable[..., Any] | bool,
-) -> MondrianCategorizer | None:
-    """Get mondrian parameter for regression calibration.
-
-    Returns
-    -------
-    MondrianCategorizer | None
-        Mondrian parameter for regression calibration.
-
-    """
-    if isinstance(mondrian, MondrianCategorizer) or callable(mondrian):
-        return mondrian
-    return None
 
 
 class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-attributes
@@ -141,15 +90,11 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         confidence_level : float, optional
             Confidence level for prediction sets/intervals (default: 0.9).
         estimator_type : Literal["classifier", "regressor", "auto"], optional
-            Type of estimator: 'classifier', 'regressor', or 'auto' to
-            detect automatically (default: 'auto').
+            Type of estimator (default: "auto").
         nonconformity : Callable, optional
-            Nonconformity function for classification that takes (X_prob, classes, y)
-            and returns non-conformity scores. Examples: hinge, margin from
-            crepes.extras.
+            Nonconformity function for classification.
         difficulty_estimator : DifficultyEstimator | None, optional
             Difficulty estimator for normalized conformal prediction (regression).
-            Should be a fitted DifficultyEstimator from crepes.extras.
         binning : int | MondrianCategorizer | None, optional
             Number of bins or MondrianCategorizer for Mondrian calibration (regression).
         n_jobs : int, optional
@@ -157,14 +102,42 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         **kwargs : Any
             Additional keyword arguments for crepes.
 
+        Raises
+        ------
+        ValueError
+            For invalid parameters.
+
         """
+        if not 0 < confidence_level < 1:
+            raise ValueError(
+                f"confidence_level must be in (0, 1), got {confidence_level}",
+            )
+
+        if estimator_type == "auto":
+            estimator_type = _detect_estimator_type(estimator)
+        elif estimator_type not in {"classifier", "regressor"}:
+            raise ValueError(
+                f"estimator_type must be 'classifier', 'regressor', "
+                f"or 'auto', got {estimator_type}",
+            )
+
+        if estimator_type == "regressor" and mondrian is True:
+            raise ValueError(
+                "mondrian=True is supported for classification.",
+            )
+
+        if binning is not None and estimator_type == "classifier":
+            raise ValueError(
+                "binning parameter is only supported for regression.",
+            )
+
+        if isinstance(binning, int) and binning <= 0:
+            raise ValueError(f"binning must be positive integer, got {binning}")
+
         self.estimator = estimator
         self.mondrian = mondrian
         self.confidence_level = confidence_level
-        if estimator_type == "auto":
-            self.estimator_type = _detect_estimator_type(estimator)
-        else:
-            self.estimator_type = estimator_type
+        self.estimator_type = estimator_type
         self.nonconformity = nonconformity
         self.difficulty_estimator = difficulty_estimator
         self.binning = binning
@@ -192,7 +165,9 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         Raises
         ------
         ValueError
-            If estimator_type is not 'classifier' or 'regressor'.
+            For invalid types and uninitialized.
+        RuntimeError
+            For initialization failures.
 
         """
         if self.estimator_type == "classifier":
@@ -202,6 +177,8 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         else:
             raise ValueError("estimator_type must be 'classifier' or 'regressor'")
 
+        if self._conformal is None:  # Type narrowing
+            raise RuntimeError("Failed to initialize conformal wrapper")
         self._conformal.fit(x, y)
         self.fitted_ = True
         return self
@@ -225,39 +202,38 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
 
         Raises
         ------
-        ValueError
-            If estimator_type is not 'classifier' or 'regressor'.
         RuntimeError
-            If the estimator must be fitted before calling calibrate.
+            If not fitted before calibrating.
+        ValueError
+            For validation errors.
 
         """
         if not self.fitted_ or self._conformal is None:
             raise RuntimeError("Estimator must be fitted before calling calibrate")
-        if self.estimator_type == "classifier":
-            if self.mondrian is True:
-                self._conformal.calibrate(
-                    x_calib,
-                    y_calib,
-                    class_cond=True,
-                    **calib_params,
-                )
-            elif isinstance(
-                self.mondrian,
-                (MondrianCategorizer, type(lambda: None)),
-            ) and callable(self.mondrian):
-                self._conformal.calibrate(
-                    x_calib,
-                    y_calib,
-                    mc=self.mondrian,
-                    **calib_params,
-                )
-            else:
-                self._conformal.calibrate(x_calib, y_calib, **calib_params)
-        elif self.estimator_type == "regressor":
-            mc = _get_mondrian_param_regression(self.mondrian)
-            self._conformal.calibrate(x_calib, y_calib, mc=mc, **calib_params)
-        else:
+
+        if self.estimator_type not in {"classifier", "regressor"}:
             raise ValueError("estimator_type must be 'classifier' or 'regressor'")
+        kwargs: dict[str, Any] = calib_params.copy()
+        if self.estimator_type == "classifier":
+            if self.nonconformity is not None:
+                kwargs["nc"] = self.nonconformity
+            if self.mondrian is True:
+                kwargs["class_cond"] = True
+            elif isinstance(self.mondrian, MondrianCategorizer) or callable(
+                self.mondrian,
+            ):
+                kwargs["mc"] = self.mondrian
+            self._conformal.calibrate(x_calib, y_calib, **kwargs)
+        else:  # regressor
+            if isinstance(self.mondrian, MondrianCategorizer) or callable(
+                self.mondrian,
+            ):
+                kwargs["mc"] = self.mondrian
+            if self.difficulty_estimator is not None:
+                kwargs["de"] = self.difficulty_estimator
+            if isinstance(self.binning, MondrianCategorizer):
+                kwargs["mc"] = self.binning
+            self._conformal.calibrate(x_calib, y_calib, **kwargs)
         self.calibrated_ = True
 
     def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
@@ -276,7 +252,7 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         Raises
         ------
         ValueError
-            If estimator must be fitted before calling predict.
+            If not fitted.
 
         """
         if not self.fitted_ or self._conformal is None:
@@ -299,11 +275,11 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         Raises
         ------
         ValueError
-            If estimator must be fitted before calling predict_proba.
-        NotImplementedError
-            If called for a regressor.
+            If not fitted.
         RuntimeError
-            If the internal conformal wrapper is not of the expected type.
+            If wrapper type is incorrect.
+        NotImplementedError
+            If called for regressor.
 
         """
         if not self.fitted_ or self._conformal is None:
@@ -326,7 +302,7 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         x : npt.NDArray[Any]
             Features to predict.
         confidence : float, optional
-            Confidence level.
+            Confidence level. Must be in (0, 1).
 
         Returns
         -------
@@ -336,34 +312,38 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         Raises
         ------
         ValueError
-            If estimator must be fitted before calling predict_conformal_set.
-        NotImplementedError
-            If called for a regressor.
+            If not fitted or invalid confidence.
         RuntimeError
-            If the internal conformal wrapper is not of the expected type.
+            If wrapper not initialized.
+        NotImplementedError
+            If called for regressor.
 
         """
         if not self.fitted_:
             raise ValueError(
-                "Estimator must be fitted before calling predict_conformal_set",
+                "Estimator must be fitted and calibrated before calling predict",
             )
         if self._conformal is None:
             raise RuntimeError("Conformal wrapper is not initialized")
+        if not self.calibrated_:
+            raise ValueError(
+                "Conformal predictor must be calibrated before making predictions",
+            )
         if self.estimator_type != "classifier":
             raise NotImplementedError(
                 "predict_conformal_set is only for classification.",
             )
+
         conf = confidence if confidence is not None else self.confidence_level
+        if not 0 < conf < 1:
+            raise ValueError(f"confidence must be in (0, 1), got {conf}")
+
         if isinstance(self._conformal, WrapClassifier):
             prediction_sets_binary = self._conformal.predict_set(x, confidence=conf)
 
             prediction_sets = []
             for i in range(prediction_sets_binary.shape[0]):
-                class_indices = [
-                    j
-                    for j in range(prediction_sets_binary.shape[1])
-                    if prediction_sets_binary[i, j] == 1
-                ]
+                class_indices = np.where(prediction_sets_binary[i, :])[0].tolist()
                 prediction_sets.append(class_indices)
 
             return prediction_sets
@@ -387,17 +367,23 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         Raises
         ------
         ValueError
-            If estimator must be fitted before calling predict_p.
-        NotImplementedError
-            If called for a regressor.
+            If not fitted or not calibrated.
         RuntimeError
-            If the internal conformal wrapper is not of the expected type.
+            If wrapper not initialized.
+        NotImplementedError
+            If called for regressor.
 
         """
         if not self.fitted_:
-            raise ValueError("Estimator must be fitted before calling predict_p")
+            raise ValueError(
+                "Estimator must be fitted and calibrated before calling predict_p",
+            )
         if self._conformal is None:
             raise RuntimeError("Conformal wrapper is not initialized")
+        if not self.calibrated_:
+            raise ValueError(
+                "Conformal predictor must be calibrated before making predictions",
+            )
         if self.estimator_type != "classifier":
             raise NotImplementedError("predict_p is only for classification.")
         if isinstance(self._conformal, WrapClassifier):
@@ -416,7 +402,7 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         x : npt.NDArray[Any]
             Features to predict.
         confidence : float, optional
-            Confidence level.
+            Confidence level. Must be in (0, 1).
 
         Returns
         -------
@@ -426,20 +412,31 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         Raises
         ------
         ValueError
-            If estimator must be fitted before calling predict_int.
-        NotImplementedError
-            If called for a classifier.
+            If not fitted or invalid confidence.
         RuntimeError
-            If the internal conformal wrapper is not of the expected type.
+            If wrapper not initialized.
+        NotImplementedError
+            If called for classifier.
 
         """
-        if not self.fitted_:
-            raise ValueError("Estimator must be fitted before calling predict_int")
-        if self._conformal is None:
-            raise RuntimeError("Conformal wrapper is not initialized")
         if self.estimator_type != "regressor":
             raise NotImplementedError("predict_int is only for regression.")
+
+        if not self.fitted_:
+            raise ValueError(
+                "Estimator must be fitted and calibrated before calling predict_int",
+            )
+        if self._conformal is None:
+            raise RuntimeError("Conformal wrapper is not initialized")
+        if not self.calibrated_:
+            raise ValueError(
+                "Conformal predictor must be calibrated before making predictions",
+            )
+
         conf = confidence if confidence is not None else self.confidence_level
+        if not 0 < conf < 1:
+            raise ValueError(f"confidence must be in (0, 1), got {conf}")
+
         if isinstance(self._conformal, WrapRegressor):
             return self._conformal.predict_int(x, confidence=conf)
         raise RuntimeError("Expected WrapRegressor but got different type")
@@ -493,17 +490,23 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         Raises
         ------
         ValueError
+            If invalid parameter provided.
 
         """
         valid_params = self.get_params(deep=False)
         estimator_params: dict[str, Any] = {}
 
         for key, value in params.items():
-            if key in valid_params:
+            if key.startswith("estimator__"):
+                # Handle nested estimator parameters
+                nested_key = key[len("estimator__") :]
+                estimator_params[nested_key] = value
+            elif key in valid_params:
                 setattr(self, key, value)
             else:
                 raise ValueError(
-                    f"Invalid parameter {key} for estimator {type(self).__name__}",
+                    f"Invalid parameter {key} for estimator {type(self).__name__}. "
+                    f"Valid parameters: {list(valid_params.keys())}",
                 )
 
         if estimator_params and hasattr(self.estimator, "set_params"):
@@ -512,8 +515,11 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         return self
 
 
-class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-attributes
-    """Cross-conformal prediction using WrapClassifier/WrapRegressor."""
+class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-instance-attributes
+    """Cross-conformal prediction using WrapClassifier/WrapRegressor.
+
+    Inherits from ConformalPredictor and extends it with cross-validation functionality.
+    """
 
     def __init__(
         self,
@@ -547,6 +553,7 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
             Confidence level for prediction sets/intervals (default: 0.9).
         mondrian : MondrianCategorizer | Callable[..., Any] | bool, optional
             Mondrian calibration/grouping (default: False).
+            - True: Use class-conditional calibration for classification
         nonconformity : Callable, optional
             Nonconformity function for classification that takes (X_prob, classes, y)
             and returns non-conformity scores. Examples: hinge, margin from
@@ -554,7 +561,7 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
         binning : int | MondrianCategorizer | None, optional
             Number of bins or MondrianCategorizer for Mondrian calibration (regression).
         estimator_type : Literal["classifier", "regressor", "auto"], optional
-            Auto detects it automatically (default: 'auto').
+            Type of estimator (default: 'auto').
         n_bins : int, optional
             Number of bins for stratified splitting in regression (default: 10).
         random_state : int | None, optional
@@ -562,22 +569,37 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
         **kwargs : Any
             Additional keyword arguments for crepes.
 
+        Raises
+        ------
+        ValueError
+            If parameter validation fails.
+
         """
-        self.estimator = estimator
+        # Additional validation for cross-conformal specific parameters
+        if n_folds <= 1:
+            raise ValueError(f"n_folds must be > 1, got {n_folds}")
+
+        if n_bins <= 0:
+            raise ValueError(f"n_bins must be positive, got {n_bins}")
+
+        # Initialize parent class
+        super().__init__(
+            estimator=estimator,
+            mondrian=mondrian,
+            confidence_level=confidence_level,
+            estimator_type=estimator_type,
+            nonconformity=nonconformity,
+            difficulty_estimator=None,  # Not used in cross-conformal
+            binning=binning,
+            n_jobs=1,  # Not used in cross-conformal
+            **kwargs,
+        )
+
+        # Cross-conformal specific attributes
         self.n_folds = n_folds
-        self.confidence_level = confidence_level
-        self.mondrian = mondrian
-        self.nonconformity = nonconformity
-        self.binning = binning
-        if estimator_type == "auto":
-            self.estimator_type = _detect_estimator_type(estimator)
-        else:
-            self.estimator_type = estimator_type
         self.n_bins = n_bins
-        self.random_state = random_state  # Store the original seed/state
-        self.kwargs = kwargs
+        self.random_state = random_state
         self.models_: list[WrapClassifier | WrapRegressor] = []
-        self.fitted_ = False
 
     def _create_splitter(
         self,
@@ -686,37 +708,43 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
             Fitted and calibrated model.
 
         """
+        kwargs: dict[str, Any] = {}
         if self.estimator_type == "classifier":
             model = WrapClassifier(clone(self.estimator))
             model.fit(x_array[train_idx], y_array[train_idx])
 
+            if self.nonconformity is not None:
+                kwargs["nc"] = self.nonconformity
             if self.mondrian is True:
-                model.calibrate(x_array[calib_idx], y_array[calib_idx], class_cond=True)
-            elif isinstance(
+                kwargs["class_cond"] = True
+            elif isinstance(self.mondrian, MondrianCategorizer) or callable(
                 self.mondrian,
-                (MondrianCategorizer, type(lambda: None)),
-            ) and callable(self.mondrian):
-                model.calibrate(
-                    x_array[calib_idx],
-                    y_array[calib_idx],
-                    mc=self.mondrian,
-                )
-            else:
-                model.calibrate(x_array[calib_idx], y_array[calib_idx])
-        else:
+            ):
+                kwargs["mc"] = self.mondrian
+
+            model.calibrate(x_array[calib_idx], y_array[calib_idx], **kwargs)
+
+        else:  # regressor
             model = WrapRegressor(clone(self.estimator))
             model.fit(x_array[train_idx], y_array[train_idx])
-            mc = _get_mondrian_param_regression(self.mondrian)
+
+            if isinstance(self.mondrian, MondrianCategorizer) or callable(
+                self.mondrian,
+            ):
+                kwargs["mc"] = self.mondrian
+
             if self.binning is not None and isinstance(self.binning, int):
                 mc_obj, bin_func = self._create_mondrian_categorizer(
                     model,
                     y_array[calib_idx],
                 )
                 mc_obj.fit(x_array[calib_idx], f=bin_func, no_bins=self.binning)
-                mc = mc_obj
-            elif self.binning is not None:
-                mc = self.binning
-            model.calibrate(x_array[calib_idx], y_array[calib_idx], mc=mc)
+                kwargs["mc"] = mc_obj
+            elif isinstance(self.binning, MondrianCategorizer):
+                kwargs["mc"] = self.binning
+
+            model.calibrate(x_array[calib_idx], y_array[calib_idx], **kwargs)
+
         return model
 
     def fit(
@@ -751,7 +779,29 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
             self.models_.append(model)
 
         self.fitted_ = True
+        self.calibrated_ = True  # Models are calibrated during fit
         return self
+
+    def calibrate(
+        self,
+        x_calib: npt.NDArray[Any],
+        y_calib: npt.NDArray[Any],
+        **calib_params: Any,
+    ) -> None:
+        """Calibrate method for cross-conformal predictor.
+
+        Note: For CrossConformalPredictor, calibration happens automatically
+        during the fit() method.
+
+        Raises
+        ------
+        NotImplementedError
+            Cross-conformal calibration happens during fit().
+
+        """
+        raise NotImplementedError(
+            "CrossConformalPredictor performs calibration automatically during fit(). ",
+        )
 
     def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Predict using the cross-conformal predictor.
@@ -764,7 +814,7 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
         Returns
         -------
         npt.NDArray[Any]
-            Predictions (majority vote).
+            Predictions (majority vote for classification, mean for regression).
 
         Raises
         ------
@@ -774,9 +824,13 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
         """
         if not self.fitted_:
             raise ValueError("Estimator must be fitted before calling predict")
+
+        if self.estimator_type == "classifier":
+            result = np.array([m.predict(x) for m in self.models_])
+            pred_mode = mode(result, axis=0, keepdims=False)
+            return np.ravel(pred_mode.mode)
         result = np.array([m.predict(x) for m in self.models_])
-        pred_mode = mode(result, axis=0, keepdims=False)
-        return np.ravel(pred_mode.mode)
+        return np.mean(result, axis=0)
 
     def predict_proba(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Predict probabilities using the cross-conformal predictor.
@@ -818,7 +872,7 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
         x : npt.NDArray[Any]
             Features to predict.
         confidence : float, optional
-            Confidence level.
+            Confidence level. Must be in (0, 1).
 
         Returns
         -------
@@ -841,7 +895,10 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
             raise NotImplementedError(
                 "predict_conformal_set is only for classification.",
             )
+
         conf = confidence if confidence is not None else self.confidence_level
+        if not 0 < conf < 1:
+            raise ValueError(f"confidence must be in (0, 1), got {conf}")
 
         p_values_list = [m.predict_p(x) for m in self.models_]
         aggregated_p_values = np.mean(p_values_list, axis=0)
@@ -850,11 +907,7 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
 
         prediction_sets = []
         for i in range(prediction_sets_binary.shape[0]):
-            class_indices = [
-                j
-                for j in range(prediction_sets_binary.shape[1])
-                if prediction_sets_binary[i, j] == 1
-            ]
+            class_indices = np.where(prediction_sets_binary[i, :])[0].tolist()
             prediction_sets.append(class_indices)
 
         return prediction_sets
@@ -902,7 +955,7 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
         x : npt.NDArray[Any]
             Features to predict.
         confidence : float, optional
-            Confidence level.
+            Confidence level. Must be in (0, 1).
 
         Returns
         -------
@@ -912,7 +965,8 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
         Raises
         ------
         ValueError
-            If estimator must be fitted before calling predict_int.
+            If estimator must be fitted before calling predict_int
+            or if confidence is not in valid range.
         NotImplementedError
             If called for a classifier.
 
@@ -923,12 +977,14 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
             raise NotImplementedError("predict_int is only for regression.")
 
         conf = confidence if confidence is not None else self.confidence_level
+        if not 0 < conf < 1:
+            raise ValueError(f"confidence must be in (0, 1), got {conf}")
 
         intervals_list = [m.predict_int(x, confidence=conf) for m in self.models_]
 
         intervals_array = np.array(intervals_list)  # shape: (n_folds, n_samples, 2)
-        lower_bounds = np.nanmean(intervals_array[:, :, 0], axis=0)
-        upper_bounds = np.nanmean(intervals_array[:, :, 1], axis=0)
+        lower_bounds = np.mean(intervals_array[:, :, 0], axis=0)
+        upper_bounds = np.mean(intervals_array[:, :, 1], axis=0)
 
         return np.column_stack([lower_bounds, upper_bounds])
 
@@ -938,8 +994,7 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
         Parameters
         ----------
         deep : bool, optional
-            If True, will return the parameters for this estimator and
-            contained subobjects that are estimators.
+            If True, will return the parameters for this estimator.
 
         Returns
         -------
@@ -947,22 +1002,14 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
             Parameter names mapped to their values.
 
         """
-        params = {
-            "estimator": self.estimator,
+        params = super().get_params(deep=deep)
+
+        cross_params = {
             "n_folds": self.n_folds,
-            "confidence_level": self.confidence_level,
-            "mondrian": self.mondrian,
-            "nonconformity": self.nonconformity,
-            "binning": self.binning,
-            "estimator_type": self.estimator_type,
             "n_bins": self.n_bins,
             "random_state": self.random_state,
         }
-        params.update(self.kwargs)
-
-        if deep and hasattr(self.estimator, "get_params"):
-            estimator_params = self.estimator.get_params(deep=True)
-            params.update({f"estimator__{k}": v for k, v in estimator_params.items()})
+        params.update(cross_params)
 
         return params
 
@@ -982,17 +1029,22 @@ class CrossConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instan
         Raises
         ------
         ValueError
+            If invalid parameter provided.
 
         """
         valid_params = self.get_params(deep=False)
         estimator_params: dict[str, Any] = {}
 
         for key, value in params.items():
-            if key in valid_params:
+            if key.startswith("estimator__"):
+                nested_key = key[len("estimator__") :]
+                estimator_params[nested_key] = value
+            elif key in valid_params:
                 setattr(self, key, value)
             else:
                 raise ValueError(
-                    f"Invalid parameter {key} for estimator {type(self).__name__}",
+                    f"Invalid parameter {key} for estimator {type(self).__name__}. "
+                    f"Valid parameters: {list(valid_params.keys())}",
                 )
 
         if estimator_params and hasattr(self.estimator, "set_params"):
