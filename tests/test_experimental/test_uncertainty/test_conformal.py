@@ -36,7 +36,7 @@ class TestConformalCV(unittest.TestCase):
     y_reg: npt.NDArray[Any]
 
     @classmethod
-    def setUpClass(cls) -> None:
+    def setUpClass(cls) -> None: # pylint: disable=too-many-locals
         """Set up test data once for all tests.
 
         Raises
@@ -78,7 +78,7 @@ class TestConformalCV(unittest.TestCase):
                 continue
             # Generate fingerprint for valid molecule
             try:
-                fp = morgan.transform([mol])[0]  # type: ignore[list-item]
+                fp = morgan.transform([mol])
                 if fp is not None and hasattr(fp, "toarray"):
                     valid_clf_data.append((fp.toarray().flatten(), label))
             except (AttributeError, TypeError):
