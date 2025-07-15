@@ -36,7 +36,7 @@ class TestConformalCV(unittest.TestCase):
     y_reg: npt.NDArray[Any]
 
     @classmethod
-    def setUpClass(cls) -> None: # pylint: disable=too-many-locals
+    def setUpClass(cls) -> None:  # pylint: disable=too-many-locals
         """Set up test data once for all tests.
 
         Raises
