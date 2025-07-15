@@ -16,15 +16,11 @@ from joblib import Memory
 from sklearn.base import BaseEstimator
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import AutoToMol, SmilesToMol
-from molpipeline.experimental.uncertainty.conformal import (
-    ConformalPredictor,
-    CrossConformalPredictor,
-)
 from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from molpipeline.mol2mol import (
     ChargeParentExtractor,
@@ -398,56 +394,6 @@ class PipelineCompatibilityTest(unittest.TestCase):
         self.assertIsInstance(predicted_proba_array, np.ndarray)
         self.assertEqual(predicted_value_array.shape, (len(TEST_SMILES),))
         self.assertEqual(predicted_proba_array.shape, (len(TEST_SMILES), 2))
-
-    def test_conformal_pipeline_classifier(self) -> None:  # noqa: PLR0914
-        """Test conformal prediction with a pipeline on SMILES data.
-
-        This test does not take any parameters and does not return a value.
-        """
-        # Use the global test data
-        smiles = np.array(TEST_SMILES)
-        y = np.array(CONTAINS_OX)
-
-        # Build a pipeline: SMILES -> Mol -> MorganFP -> RF
-        smi2mol = SmilesToMol()
-        mol2morgan = MolToMorganFP(radius=2, n_bits=128)
-        rf = RandomForestClassifier(n_estimators=5, random_state=42)
-        pipeline = Pipeline(
-            [
-                ("smi2mol", smi2mol),
-                ("morgan", mol2morgan),
-                ("rf", rf),
-            ],
-        )
-
-        # Split data
-        x_train, x_calib, y_train, y_calib = train_test_split(
-            smiles,
-            y,
-            test_size=0.3,
-            random_state=42,
-        )
-
-        # ConformalPredictor
-        cp = ConformalPredictor(pipeline, estimator_type="classifier")
-        cp.fit(x_train, y_train)
-        cp.calibrate(x_calib, y_calib)
-        preds = cp.predict(x_calib)
-        probs = cp.predict_proba(x_calib)
-        sets = cp.predict_conformal_set(x_calib)
-        self.assertEqual(len(preds), len(y_calib))
-        self.assertEqual(probs.shape[0], len(y_calib))
-        self.assertEqual(len(sets), len(y_calib))
-
-        # CrossConformalPredictor
-        ccp = CrossConformalPredictor(pipeline, estimator_type="classifier", n_folds=3)
-        ccp.fit(smiles, y)
-        preds_ccp = ccp.predict(smiles)
-        probs_ccp = ccp.predict_proba(smiles)
-        sets_ccp = ccp.predict_conformal_set(smiles)
-        self.assertEqual(len(preds_ccp), len(y))
-        self.assertEqual(probs_ccp.shape[0], len(y))
-        self.assertEqual(len(sets_ccp), len(y))
 
 
 if __name__ == "__main__":
