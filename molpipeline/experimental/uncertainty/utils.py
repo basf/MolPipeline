@@ -1,4 +1,4 @@
-"""Conformal prediction utils"""
+"""Conformal prediction utils."""
 
 from typing import Any, Literal
 
@@ -10,9 +10,17 @@ from sklearn.base import BaseEstimator, is_classifier, is_regressor
 def _bin_targets(y: npt.NDArray[Any], n_bins: int = 10) -> npt.NDArray[np.int_]:
     """Bin continuous targets for stratified splitting in regression.
 
+    Parameters
+    ----------
+    y : npt.NDArray[Any]
+        Continuous target values to bin.
+    n_bins : int, default=10
+        Number of bins to create.
+
     Returns
     -------
-        Binned targets.
+    npt.NDArray[np.int_]
+        Binned targets as integer indices.
 
     """
     y = np.asarray(y)
@@ -26,6 +34,11 @@ def _detect_estimator_type(
     estimator: BaseEstimator,
 ) -> Literal["classifier", "regressor"]:
     """Automatically detect whether an estimator is a classifier or regressor.
+
+    Parameters
+    ----------
+    estimator : BaseEstimator
+        The sklearn estimator to check.
 
     Returns
     -------

@@ -37,12 +37,24 @@ class TestConformalCV(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        """Set up test data once for all tests."""
+        """Set up test data once for all tests.
+
+        Raises
+        ------
+        ValueError: If no valid data is found after processing.
+
+        """
         # Load data
-        bbbp_df = pd.read_csv(TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz",
-                              sep="\t", compression="gzip")
-        logd_df = pd.read_csv(TEST_DATA_DIR / "molecule_net_logd.tsv.gz",
-                              sep="\t", compression="gzip")
+        bbbp_df = pd.read_csv(
+            TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz",
+            sep="\t",
+            compression="gzip",
+        )
+        logd_df = pd.read_csv(
+            TEST_DATA_DIR / "molecule_net_logd.tsv.gz",
+            sep="\t",
+            compression="gzip",
+        )
 
         # Set up pipeline stages separately to handle invalid molecules
         smi2mol = SmilesToMol(n_jobs=1)
@@ -59,7 +71,10 @@ class TestConformalCV(unittest.TestCase):
 
         for mol, label in zip(molecules, labels_list, strict=False):
             # Skip InvalidInstance objects
-            if mol is None or hasattr(mol, "_fields"):  # InvalidInstance is a NamedTuple
+            if mol is None or hasattr(
+                mol,
+                "_fields",
+            ):  # InvalidInstance is a NamedTuple
                 continue
             # Generate fingerprint for valid molecule
             try:
@@ -86,7 +101,10 @@ class TestConformalCV(unittest.TestCase):
 
         for mol, label in zip(molecules_reg, labels_list_reg, strict=False):
             # Skip InvalidInstance objects
-            if mol is None or hasattr(mol, "_fields"):  # InvalidInstance is a NamedTuple
+            if mol is None or hasattr(
+                mol,
+                "_fields",
+            ):  # InvalidInstance is a NamedTuple
                 continue
             # Generate fingerprint for valid molecule - ensure mol is valid
             try:
@@ -281,22 +299,31 @@ class TestConformalCV(unittest.TestCase):
     def test_nonconformity_functions(self) -> None:
         """Test nonconformity functions for classification."""
         x_train, x_calib, y_train, y_calib = train_test_split(
-            self.x_clf, self.y_clf, test_size=0.2, random_state=42,
+            self.x_clf,
+            self.y_clf,
+            test_size=0.2,
+            random_state=42,
         )
 
         clf = RandomForestClassifier(random_state=42, n_estimators=5)
 
         # Test with hinge nonconformity
-        cp_hinge = ConformalPredictor(clf, estimator_type="classifier",
-                                      nonconformity=hinge)
+        cp_hinge = ConformalPredictor(
+            clf,
+            estimator_type="classifier",
+            nonconformity=hinge,
+        )
         cp_hinge.fit(x_train, y_train)
         cp_hinge.calibrate(x_calib, y_calib)
         sets_hinge = cp_hinge.predict_conformal_set(x_calib)
         p_values_hinge = cp_hinge.predict_p(x_calib)
 
         # Test with margin nonconformity
-        cp_margin = ConformalPredictor(clf, estimator_type="classifier",
-                                       nonconformity=margin)
+        cp_margin = ConformalPredictor(
+            clf,
+            estimator_type="classifier",
+            nonconformity=margin,
+        )
         cp_margin.fit(x_train, y_train)
         cp_margin.calibrate(x_calib, y_calib)
         sets_margin = cp_margin.predict_conformal_set(x_calib)
@@ -314,7 +341,10 @@ class TestConformalCV(unittest.TestCase):
     def test_mondrian_conformal_classification(self) -> None:
         """Test Mondrian conformal prediction for classification."""
         x_train, x_calib, y_train, y_calib = train_test_split(
-            self.x_clf, self.y_clf, test_size=0.2, random_state=42,
+            self.x_clf,
+            self.y_clf,
+            test_size=0.2,
+            random_state=42,
         )
 
         clf = RandomForestClassifier(random_state=42, n_estimators=5)
@@ -322,20 +352,28 @@ class TestConformalCV(unittest.TestCase):
         # Test with custom MondrianCategorizer (skip mondrian=True for now)
         mc = MondrianCategorizer()
         # Simple categorizer based on first feature
-        mc.fit(x_calib,
-               f=lambda x: (x[:, 0] > np.median(x[:, 0])).astype(int),
-               no_bins=2)
+        mc.fit(
+            x_calib,
+            f=lambda x: (x[:, 0] > np.median(x[:, 0])).astype(int),
+            no_bins=2,
+        )
 
-        cp_mondrian_custom = ConformalPredictor(clf, estimator_type="classifier",
-                                                mondrian=mc)
+        cp_mondrian_custom = ConformalPredictor(
+            clf,
+            estimator_type="classifier",
+            mondrian=mc,
+        )
         cp_mondrian_custom.fit(x_train, y_train)
         cp_mondrian_custom.calibrate(x_calib, y_calib)
         sets_custom = cp_mondrian_custom.predict_conformal_set(x_calib)
         p_values_custom = cp_mondrian_custom.predict_p(x_calib)
 
         # Test without Mondrian (baseline)
-        cp_baseline = ConformalPredictor(clf, estimator_type="classifier",
-                                         mondrian=False)
+        cp_baseline = ConformalPredictor(
+            clf,
+            estimator_type="classifier",
+            mondrian=False,
+        )
         cp_baseline.fit(x_train, y_train)
         cp_baseline.calibrate(x_calib, y_calib)
         sets_baseline = cp_baseline.predict_conformal_set(x_calib)
@@ -357,7 +395,10 @@ class TestConformalCV(unittest.TestCase):
     def test_mondrian_conformal_regression(self) -> None:
         """Test Mondrian conformal prediction for regression."""
         x_train, x_calib, y_train, y_calib = train_test_split(
-            self.x_reg, self.y_reg, test_size=0.2, random_state=42,
+            self.x_reg,
+            self.y_reg,
+            test_size=0.2,
+            random_state=42,
         )
 
         reg = RandomForestRegressor(random_state=42, n_estimators=5)
@@ -365,19 +406,23 @@ class TestConformalCV(unittest.TestCase):
         # Test with custom MondrianCategorizer for regression
         mc = MondrianCategorizer()
         # Categorize based on median of first feature
-        mc.fit(x_calib,
-               f=lambda x: (x[:, 0] > np.median(x[:, 0])).astype(int),
-               no_bins=2)
+        mc.fit(
+            x_calib,
+            f=lambda x: (x[:, 0] > np.median(x[:, 0])).astype(int),
+            no_bins=2,
+        )
 
-        cp_mondrian = ConformalPredictor(reg, estimator_type="regressor",
-                                         mondrian=mc)
+        cp_mondrian = ConformalPredictor(reg, estimator_type="regressor", mondrian=mc)
         cp_mondrian.fit(x_train, y_train)
         cp_mondrian.calibrate(x_calib, y_calib)
         intervals_mondrian = cp_mondrian.predict_int(x_calib)
 
         # Test without Mondrian (baseline)
-        cp_baseline = ConformalPredictor(reg, estimator_type="regressor",
-                                         mondrian=False)
+        cp_baseline = ConformalPredictor(
+            reg,
+            estimator_type="regressor",
+            mondrian=False,
+        )
         cp_baseline.fit(x_train, y_train)
         cp_baseline.calibrate(x_calib, y_calib)
         intervals_baseline = cp_baseline.predict_int(x_calib)
@@ -396,20 +441,31 @@ class TestConformalCV(unittest.TestCase):
 
         # Create a simple Mondrian categorizer for classification
         mc_clf = MondrianCategorizer()
-        mc_clf.fit(self.x_clf,
-                   f=lambda x: (x[:, 0] > np.median(x[:, 0])).astype(int),
-                   no_bins=2)
+        mc_clf.fit(
+            self.x_clf,
+            f=lambda x: (x[:, 0] > np.median(x[:, 0])).astype(int),
+            no_bins=2,
+        )
 
-        ccp_clf = CrossConformalPredictor(clf, estimator_type="classifier",
-                                          n_folds=3, mondrian=mc_clf, random_state=42)
+        ccp_clf = CrossConformalPredictor(
+            clf,
+            estimator_type="classifier",
+            n_folds=3,
+            mondrian=mc_clf,
+            random_state=42,
+        )
         ccp_clf.fit(self.x_clf, self.y_clf)
         sets_mondrian = ccp_clf.predict_conformal_set(self.x_clf[:10])
         p_values_mondrian = ccp_clf.predict_p(self.x_clf[:10])
 
         # Test without Mondrian for comparison
-        ccp_clf_baseline = CrossConformalPredictor(clf, estimator_type="classifier",
-                                                   n_folds=3, mondrian=False,
-                                                   random_state=42)
+        ccp_clf_baseline = CrossConformalPredictor(
+            clf,
+            estimator_type="classifier",
+            n_folds=3,
+            mondrian=False,
+            random_state=42,
+        )
         ccp_clf_baseline.fit(self.x_clf, self.y_clf)
         sets_baseline = ccp_clf_baseline.predict_conformal_set(self.x_clf[:10])
 
@@ -419,15 +475,24 @@ class TestConformalCV(unittest.TestCase):
 
         # Test regression with binning (Mondrian-style for regression)
         reg = RandomForestRegressor(random_state=42, n_estimators=5)
-        ccp_reg = CrossConformalPredictor(reg, estimator_type="regressor",
-                                          n_folds=3, binning=3, random_state=42)
+        ccp_reg = CrossConformalPredictor(
+            reg,
+            estimator_type="regressor",
+            n_folds=3,
+            binning=3,
+            random_state=42,
+        )
         ccp_reg.fit(self.x_reg, self.y_reg)
         intervals_binned = ccp_reg.predict_int(self.x_reg[:10])
 
         # Test without binning for comparison
-        ccp_reg_baseline = CrossConformalPredictor(reg, estimator_type="regressor",
-                                                   n_folds=3, binning=None,
-                                                   random_state=42)
+        ccp_reg_baseline = CrossConformalPredictor(
+            reg,
+            estimator_type="regressor",
+            n_folds=3,
+            binning=None,
+            random_state=42,
+        )
         ccp_reg_baseline.fit(self.x_reg, self.y_reg)
         intervals_baseline_reg = ccp_reg_baseline.predict_int(self.x_reg[:10])
 

@@ -23,7 +23,7 @@ from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionW
 from molpipeline.any2mol import AutoToMol, SmilesToMol
 from molpipeline.experimental.uncertainty.conformal import (
     ConformalPredictor,
-    CrossConformalPredictor
+    CrossConformalPredictor,
 )
 from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
 from molpipeline.mol2mol import (
@@ -127,16 +127,19 @@ class PipelineTest(unittest.TestCase):
                 ("mol2smi", mol2smi),
             ],
         )
-        generated_smiles = salt_remover_pipeline.transform(smiles_with_salt_list)
-        for generated_smiles, smiles_without_salt in zip(
-            generated_smiles,
+        generated_smiles_list = salt_remover_pipeline.transform(smiles_with_salt_list)
+        for generated_smi, smiles_without_salt in zip(
+            generated_smiles_list,
             smiles_without_salt_list,
             strict=False,
         ):
-            self.assertEqual(generated_smiles, smiles_without_salt)
+            self.assertEqual(generated_smi, smiles_without_salt)
 
     def test_json_generation(self) -> None:
-        """Test that the json representation of a pipeline can be loaded back into a pipeline."""
+        """Test that the json representation of a pipeline can be loaded back.
+
+        This test verifies that a pipeline can be loaded back into a pipeline.
+        """
         # Create pipeline
         smi2mol = SmilesToMol()
         metal_disconnector = MetalDisconnector()
@@ -201,11 +204,12 @@ class PipelineTest(unittest.TestCase):
 
         # Run pipeline
         matrix = pipeline.fit_transform(TEST_SMILES + FAULTY_TEST_SMILES)
-        # Compare with expected output (Which is the same as the output without the faulty smiles)
+        # Compare with expected output
+        # (Which is the same as the output without the faulty smiles)
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
     def test_caching(self) -> None:
-        """Test if the caching gives the same results and is faster on the second run."""
+        """Test if the caching gives the same results & is faster on the second run."""
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz",
             sep="\t",
@@ -247,7 +251,8 @@ class PipelineTest(unittest.TestCase):
 
                 n_transformations = pipeline.named_steps["mol2concat"].n_transformations
                 if cache_activated:
-                    # Fit is called twice, but the transform is only called once, since the second run is cached
+                    # Fit is called twice, but the transform is only called once,
+                    # since the second run is cached
                     self.assertEqual(n_transformations, 1)
                 else:
                     self.assertEqual(n_transformations, 2)
@@ -285,7 +290,8 @@ class PipelineCompatibilityTest(unittest.TestCase):
             element = test_data_dict["element"]
             param_grid = test_data_dict["param_grid"]
 
-            # set up a pipeline that trains a random forest classifier on morgan fingerprints
+            # set up a pipeline that trains
+            # a random forest classifier on morgan fingerprints
             pipeline = Pipeline(
                 [
                     ("auto2mol", AutoToMol()),
@@ -319,7 +325,7 @@ class PipelineCompatibilityTest(unittest.TestCase):
                 self.assertIn(grid_search_cv.best_params_[k], value)
 
     def test_gridsearch_cache(self) -> None:
-        """Run a short GridSearchCV and check if the caching and not caching gives the same results."""
+        """Run GridSearchCV and check caching vs not caching gives same results."""
         h_params = {
             "rf__n_estimators": [1, 2],
         }
@@ -393,7 +399,7 @@ class PipelineCompatibilityTest(unittest.TestCase):
         self.assertEqual(predicted_value_array.shape, (len(TEST_SMILES),))
         self.assertEqual(predicted_proba_array.shape, (len(TEST_SMILES), 2))
 
-    def test_conformal_pipeline_classifier(self) -> None:
+    def test_conformal_pipeline_classifier(self) -> None:  # noqa: PLR0914
         """Test conformal prediction with a pipeline on SMILES data.
 
         This test does not take any parameters and does not return a value.
@@ -415,7 +421,7 @@ class PipelineCompatibilityTest(unittest.TestCase):
         )
 
         # Split data
-        X_train, X_calib, y_train, y_calib = train_test_split(
+        x_train, x_calib, y_train, y_calib = train_test_split(
             smiles,
             y,
             test_size=0.3,
@@ -424,11 +430,11 @@ class PipelineCompatibilityTest(unittest.TestCase):
 
         # ConformalPredictor
         cp = ConformalPredictor(pipeline, estimator_type="classifier")
-        cp.fit(X_train, y_train)
-        cp.calibrate(X_calib, y_calib)
-        preds = cp.predict(X_calib)
-        probs = cp.predict_proba(X_calib)
-        sets = cp.predict_conformal_set(X_calib)
+        cp.fit(x_train, y_train)
+        cp.calibrate(x_calib, y_calib)
+        preds = cp.predict(x_calib)
+        probs = cp.predict_proba(x_calib)
+        sets = cp.predict_conformal_set(x_calib)
         self.assertEqual(len(preds), len(y_calib))
         self.assertEqual(probs.shape[0], len(y_calib))
         self.assertEqual(len(sets), len(y_calib))

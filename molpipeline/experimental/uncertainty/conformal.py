@@ -619,6 +619,27 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
             y_max: Any = y_max,
             n_bins: Any = n_bins,
         ) -> Any:
+            """Binning function for Mondrian categorization.
+
+            Parameters
+            ----------
+            x_test : Any
+                Test features.
+            model : Any, optional
+                Fitted model.
+            y_min : Any, optional
+                Minimum target value.
+            y_max : Any, optional
+                Maximum target value.
+            n_bins : Any, optional
+                Number of bins.
+
+            Returns
+            -------
+            Any
+                Binned predictions.
+
+            """
             y_pred = model.predict(x_test)
             bins = np.linspace(y_min, y_max, n_bins + 1)
             binned = np.digitize(y_pred, bins) - 1
