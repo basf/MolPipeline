@@ -229,4 +229,5 @@ jobs:
         uses: astral-sh/setup-uv@v5
       - name: Install package
         run: |
+          uv venv
           uv pip install molpipeline
