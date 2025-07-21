@@ -220,3 +220,13 @@ jobs:
       - name: Run unit-tests for notebooks
         run: |
           uv run python test_extras/test_notebooks/test_notebooks.py --continue-on-failure
+
+  test_uv_installation_numba_bug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.13
+        uses: astral-sh/setup-uv@v5
+      - name: Install package
+        run: |
+          uv pip install molpipeline
