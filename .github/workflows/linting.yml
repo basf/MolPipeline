@@ -223,11 +223,28 @@ jobs:
 
   test_uv_installation_numba_bug:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.13
-        uses: astral-sh/setup-uv@v5
-      - name: Install package
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+      - uses: astral-sh/setup-uv@v5
+      - name: Install build dependencies
         run: |
-          uv venv
-          uv pip install .
+          python -m pip install --upgrade pip
+          pip install build
+      - name: Build package
+        run: python -m build
+      - name: Test local installation with uv
+        run: |
+          # Create a temporary virtual environment
+          uv venv test-env
+          source test-env/bin/activate
+
+          # Install the locally built package
+          uv pip install dist/*.whl
+
+          # Optional: Test that the package can be imported
+          python -c "import $(basename $(pwd) | tr '-' '_'); print('Package installed successfully')"
