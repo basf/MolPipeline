@@ -230,4 +230,4 @@ jobs:
       - name: Install package
         run: |
           uv venv
-          uv pip install molpipeline
+          uv pip install .
