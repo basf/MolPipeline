@@ -230,6 +230,6 @@ jobs:
       - name: Install package
         run: |
           uv venv
-          # add pandas first
-          uv add pandas
+          # add scikit-learn first
+          uv add scikit-learn
           uv pip install .
