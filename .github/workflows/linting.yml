@@ -230,6 +230,4 @@ jobs:
       - name: Install package
         run: |
           uv venv
-#          # add scikit-learn first
-#          uv add scikit-learn
           uv pip install molpipeline
