@@ -145,11 +145,20 @@ class BaseConformalTestData(unittest.TestCase):
         npt.NDArray[Any],
         npt.NDArray[Any],
     ]:
-        """Split data to get train, calibration, and test splits.
+        """Split data into train, calibration, and test sets.
+
+        Parameters
+        ----------
+        x_data : npt.NDArray[Any]
+            Input features array.
+        y_data : npt.NDArray[Any]
+            Target values array.
 
         Returns
         -------
-        Split data as tuples of numpy arrays.
+        tuple[npt.NDArray[Any], npt.NDArray[Any], npt.NDArray[Any], npt.NDArray[Any], npt.NDArray[Any], npt.NDArray[Any]]
+            Tuple containing training features, calibration features, test features,
+            training targets, calibration targets, and test targets.
         """
         x_train_all, x_test, y_train_all, y_test = train_test_split(
             x_data, y_data, test_size=0.2, random_state=42
@@ -760,20 +769,15 @@ class TestConformalSerialization(BaseConformalTestData):
         )
 
         ccp.fit(self.x_reg, self.y_reg)
-
         json_str = recursive_to_json(ccp)
-
         loaded_ccp = recursive_from_json(json_str)
-
         self.assertIsInstance(loaded_ccp, CrossConformalPredictor)
         self.assertEqual(loaded_ccp.estimator_type, "regressor")
         self.assertEqual(loaded_ccp.n_folds, 2)
         self.assertEqual(loaded_ccp.confidence_level, 0.9)
         self.assertEqual(loaded_ccp.random_state, 42)
-
         self.assertEqual(loaded_ccp.difficulty_estimator, None)
         self.assertEqual(loaded_ccp.n_jobs, 1)
-
         self.assertIsInstance(loaded_ccp.estimator, RandomForestRegressor)
         self.assertEqual(loaded_ccp.estimator.n_estimators, 5)
         self.assertEqual(loaded_ccp.estimator.random_state, 42)
@@ -804,7 +808,6 @@ class TestConformalSerialization(BaseConformalTestData):
 
         conformal_wrapper.fit(train_smiles, train_labels)
         conformal_wrapper.calibrate(calib_smiles, calib_labels)
-
         test_preds = conformal_wrapper.predict(test_smiles)
         json_str = recursive_to_json(conformal_wrapper)
         loaded_wrapper = recursive_from_json(json_str)
@@ -892,13 +895,11 @@ class TestConformalSerialization(BaseConformalTestData):
         x_train, x_test, y_train, _y_test = train_test_split(
             self.x_reg, self.y_reg, test_size=0.3, random_state=42
         )
-
         reg = RandomForestRegressor(n_estimators=5, random_state=42)
         ccp = CrossConformalPredictor(
             reg, estimator_type="regressor", n_folds=2, random_state=42
         )
         ccp.fit(x_train, y_train)
-
         original_preds = ccp.predict(x_test)
         original_intervals = ccp.predict_int(x_test)
 
@@ -985,7 +986,6 @@ class TestConformalSerialization(BaseConformalTestData):
             ]
         ).fit_transform(calib_smiles)
         pipeline.named_steps["conformal"].calibrate(calib_fps, calib_labels)
-
         original_preds = pipeline.predict(test_smiles)
 
         with tempfile.TemporaryDirectory() as temp_dir:
