@@ -1,5 +1,3 @@
-# pylint: disable=too-many-locals, import-outside-toplevel, invalid-name
-
 """Test functionality of the pipeline class."""
 
 from __future__ import annotations
@@ -79,7 +77,7 @@ class PipelineTest(unittest.TestCase):
         )
         s_pipeline.fit(TEST_SMILES, CONTAINS_OX)
         predicted_value_array = s_pipeline.predict(TEST_SMILES)
-        for pred_val, true_val in zip(predicted_value_array, CONTAINS_OX, strict=False):
+        for pred_val, true_val in zip(predicted_value_array, CONTAINS_OX, strict=True):
             self.assertEqual(pred_val, true_val)
 
     def test_sklearn_pipeline_parallel(self) -> None:
@@ -98,7 +96,7 @@ class PipelineTest(unittest.TestCase):
         s_pipeline.fit(TEST_SMILES, CONTAINS_OX)
         out = s_pipeline.predict(TEST_SMILES)
         self.assertEqual(len(out), len(CONTAINS_OX))
-        for pred_val, true_val in zip(out, CONTAINS_OX, strict=False):
+        for pred_val, true_val in zip(out, CONTAINS_OX, strict=True):
             self.assertEqual(pred_val, true_val)
 
     def test_salt_removal(self) -> None:
@@ -127,7 +125,7 @@ class PipelineTest(unittest.TestCase):
         for generated_smi, smiles_without_salt in zip(
             generated_smiles_list,
             smiles_without_salt_list,
-            strict=False,
+            strict=True,
         ):
             self.assertEqual(generated_smi, smiles_without_salt)
 
@@ -165,7 +163,7 @@ class PipelineTest(unittest.TestCase):
         for loaded_element, original_element in zip(
             loaded_pipeline.steps,
             pipeline_element_list,
-            strict=False,
+            strict=True,
         ):
             if loaded_element[1] == "passthrough":
                 self.assertEqual(loaded_element[1], original_element)

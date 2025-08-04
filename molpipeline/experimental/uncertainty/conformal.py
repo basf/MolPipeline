@@ -129,7 +129,7 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         Raises
         ------
         ValueError
-            For invalid types and uninitialized.
+            For invalid types and uninitialized estimators.
         RuntimeError
             For initialization failures.
 
@@ -168,15 +168,10 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         ------
         RuntimeError
             If not fitted before calibrating.
-        ValueError
-            For validation errors.
 
         """
         if not self.fitted_ or self._conformal is None:
             raise RuntimeError("Estimator must be fitted before calling calibrate")
-
-        if self.estimator_type not in {"classifier", "regressor"}:
-            raise ValueError("estimator_type must be 'classifier' or 'regressor'")
         kwargs: dict[str, Any] = calib_params.copy()
         if self.estimator_type == "classifier":
             if self.nonconformity is not None:
@@ -258,7 +253,7 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
         self,
         x: npt.NDArray[Any],
         confidence: float | None = None,
-    ) -> list[list[int]]:
+    ) -> list[npt.NDArray[np.int_]]:
         """Predict conformal sets.
 
         Parameters
@@ -307,8 +302,8 @@ class ConformalPredictor(BaseEstimator):  # pylint: disable=too-many-instance-at
 
             prediction_sets = []
             for i in range(prediction_sets_binary.shape[0]):
-                class_indices = np.where(prediction_sets_binary[i, :])[0].tolist()
-                prediction_sets.append(class_indices)
+                class_indices = np.where(prediction_sets_binary[i, :])[0]
+                prediction_sets.append(np.array(class_indices, dtype=np.int_))
 
             return prediction_sets
         raise RuntimeError("Expected WrapClassifier but got different type")
@@ -534,11 +529,13 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
             confidence_level=confidence_level,
             estimator_type=estimator_type,
             nonconformity=nonconformity,
-            difficulty_estimator=None,  # Not used in cross-conformal
             binning=binning,
-            n_jobs=1,  # Not used in cross-conformal
             **kwargs,
         )
+
+        # Override parameters that are not applicable to cross-conformal prediction
+        self.difficulty_estimator = None
+        self.n_jobs = 1
 
         self.n_folds = n_folds
         self.n_bins = n_bins
@@ -613,8 +610,8 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
         n_bins = self.binning
 
         def bin_func(
-            x_test: Any,
-            model: Any = model,
+            x_test: npt.NDArray[Any],
+            model: BaseEstimator = model,
             y_min: Any = y_min,
             y_max: Any = y_max,
             n_bins: Any = n_bins,
@@ -647,7 +644,7 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
 
         return mc_obj, bin_func
 
-    def _fit_single_model(
+    def _fit_and_calibrate_single_model(
         self,
         x_array: npt.NDArray[Any],
         y_array: npt.NDArray[Any],
@@ -740,7 +737,9 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
         y_array = np.asarray(y)
 
         for train_idx, calib_idx in splitter.split(x_array, y_split):
-            model = self._fit_single_model(x_array, y_array, train_idx, calib_idx)
+            model = self._fit_and_calibrate_single_model(
+                x_array, y_array, train_idx, calib_idx
+            )
             self.models_.append(model)
 
         self.fitted_ = True
@@ -808,7 +807,7 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
         self,
         x: npt.NDArray[Any],
         confidence: float | None = None,
-    ) -> list[list[int]]:
+    ) -> list[npt.NDArray[np.int_]]:
         """Predict conformal sets using the cross-conformal predictor.
 
         Parameters
@@ -844,15 +843,13 @@ class CrossConformalPredictor(ConformalPredictor):  # pylint: disable=too-many-i
         if not 0 < conf < 1:
             raise ValueError(f"confidence must be in (0, 1), got {conf}")
 
-        p_values_list = [m.predict_p(x) for m in self.models_]
-        aggregated_p_values = np.mean(p_values_list, axis=0)
-
+        aggregated_p_values = self.predict_p(x)
         prediction_sets_binary = (aggregated_p_values >= 1 - conf).astype(int)
 
         prediction_sets = []
         for i in range(prediction_sets_binary.shape[0]):
-            class_indices = np.where(prediction_sets_binary[i, :])[0].tolist()
-            prediction_sets.append(class_indices)
+            class_indices = np.where(prediction_sets_binary[i, :])[0]
+            prediction_sets.append(np.array(class_indices, dtype=np.int_))
 
         return prediction_sets
 
