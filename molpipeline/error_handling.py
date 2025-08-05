@@ -4,20 +4,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
-
-    from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
-
-import pandas as pd
-
 try:
     from typing import Self  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import Self
 
+
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
@@ -25,6 +20,11 @@ from molpipeline.abstract_pipeline_elements.core import (
     RemovedInstance,
     TransformingPipelineElement,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
 
 __all__ = ["ErrorFilter", "FilterReinserter", "_MultipleErrorFilter"]
 
