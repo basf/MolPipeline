@@ -758,12 +758,12 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         if len(values) != self.error_filter.n_total - len(
             self.error_filter.error_indices,
         ):
+            expected_length = self.error_filter.n_total - len(
+                self.error_filter.error_indices,
+            )
             raise ValueError(
-                f"Length of values does not match length of values in fit. "
-                f"Expected: {
-                    self.error_filter.n_total - len(self.error_filter.error_indices)
-                }"
-                f"- Received :{len(values)}",
+                "Length of values does not match length of values in fit. "
+                f"Expected: {expected_length} - Received :{len(values)}",
             )
         return self.fill_with_dummy(values)
 
