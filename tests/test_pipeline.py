@@ -33,8 +33,10 @@ from tests.utils.execution_count import get_exec_counted_rf_regressor
 from tests.utils.fingerprints import make_sparse_fp
 
 TEST_SMILES = ["CC", "CCO", "COC", "CCCCC", "CCC(-O)O", "CCCN"]
-FAULTY_TEST_SMILES = ["CCCXAS", "", "O=C(O)C(F)(F)F"]
 CONTAINS_OX = [0, 1, 1, 0, 1, 0]
+FAULTY_TEST_SMILES = ["CCCXAS", "", "O=C(O)C(F)(F)F"]
+FAULTY_CONTAINS_OX = [0, 0, 1]
+
 FP_RADIUS = 2
 FP_SIZE = 2048
 EXPECTED_OUTPUT = make_sparse_fp(TEST_SMILES, FP_RADIUS, FP_SIZE)
@@ -255,8 +257,8 @@ class PipelineTest(unittest.TestCase):
             for pred1, pred2 in combinations(prediction_list, 2):
                 self.assertTrue(np.allclose(pred1, pred2))
 
-    def test_input_data_types(self) -> None:
-        """Test if the pipeline can handle different input data types."""
+    def test_input_data_types_fit_transform(self) -> None:
+        """Test the pipeline's fit_transform can handle different input data types."""
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
         pipeline = Pipeline(
@@ -266,19 +268,142 @@ class PipelineTest(unittest.TestCase):
             ],
         )
 
-        # Test with list of SMILES
+        # Test fit_transform with list of SMILES
         matrix_list = pipeline.fit_transform(TEST_SMILES)
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix_list))
 
-        # Test with numpy array of SMILES
+        # Test fit_transform with numpy array of SMILES
         matrix_array = pipeline.fit_transform(np.array(TEST_SMILES))
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix_array))
 
-        # Test with pandas Series of SMILES
+        # Test fit_transform with pandas Series of SMILES
         matrix_series = pipeline.fit_transform(pd.Series(TEST_SMILES))
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix_series))
 
-    def test_input_data_types_error_handling_issue_193(self) -> None:
+    def test_input_data_types_fit_transform_error_handling(self) -> None:
+        """Test pipeline's fit_transform can handles input data types with errors."""
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE, return_as="dense")
+        error_filter = ErrorFilter(filter_everything=True)
+        filter_reinserter = PostPredictionWrapper(
+            FilterReinserter.from_error_filter(error_filter, np.nan),
+        )
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("error_filter", error_filter),
+                ("morgan", mol2morgan),
+                ("filter_reinserter", filter_reinserter),
+            ],
+        )
+
+        # Test fit_transform with list of SMILES
+        fp_matrix = pipeline.fit_transform(FAULTY_TEST_SMILES)
+        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
+        self.assertTrue(
+            np.array_equal(
+                np.isnan(fp_matrix).sum(axis=1),
+                [FP_SIZE, 0, 0],
+            ),
+        )
+
+        # Test fit_transform with np.ndarray of SMILES
+        fp_matrix = pipeline.fit_transform(np.array(FAULTY_TEST_SMILES))
+        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
+        self.assertTrue(
+            np.array_equal(
+                np.isnan(fp_matrix).sum(axis=1),
+                [FP_SIZE, 0, 0],
+            ),
+        )
+
+        # Test fit_transform with pd.Series of SMILES
+        fp_matrix = pipeline.fit_transform(pd.Series(FAULTY_TEST_SMILES))
+        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
+        self.assertTrue(
+            np.array_equal(
+                np.isnan(fp_matrix).sum(axis=1),
+                [FP_SIZE, 0, 0],
+            ),
+        )
+
+    def test_input_data_types_transform(self) -> None:
+        """Test the pipeline's transform can handle different input data types."""
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("morgan", mol2morgan),
+            ],
+        )
+
+        # Test transform with list of SMILES
+        matrix_list = pipeline.transform(TEST_SMILES)
+        self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix_list))
+
+        # Test transform with numpy array of SMILES
+        matrix_array = pipeline.transform(np.array(TEST_SMILES))
+        self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix_array))
+
+        # Test transform with pandas Series of SMILES
+        matrix_series = pipeline.transform(pd.Series(TEST_SMILES))
+        self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix_series))
+
+    def test_input_data_types_transform_error_handling(self) -> None:
+        """Test pipeline's transform can handles input data types with errors."""
+        smi2mol = SmilesToMol()
+        mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE, return_as="dense")
+        error_filter = ErrorFilter(filter_everything=True)
+        filter_reinserter = PostPredictionWrapper(
+            FilterReinserter.from_error_filter(error_filter, np.nan),
+        )
+        pipeline = Pipeline(
+            [
+                ("smi2mol", smi2mol),
+                ("error_filter", error_filter),
+                ("morgan", mol2morgan),
+                ("filter_reinserter", filter_reinserter),
+            ],
+        )
+
+        # Test transform with list of SMILES
+        fp_matrix = pipeline.transform(FAULTY_TEST_SMILES)
+        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
+        self.assertTrue(
+            np.array_equal(
+                np.isnan(fp_matrix).sum(axis=1),
+                [FP_SIZE, 0, 0],
+            ),
+        )
+
+        # Test transform with np.ndarray of SMILES
+        fp_matrix = pipeline.transform(np.array(FAULTY_TEST_SMILES))
+        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
+        self.assertTrue(
+            np.array_equal(
+                np.isnan(fp_matrix).sum(axis=1),
+                [FP_SIZE, 0, 0],
+            ),
+        )
+
+        # Test transform with pd.Series of SMILES
+        fp_matrix = pipeline.transform(pd.Series(FAULTY_TEST_SMILES))
+        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
+        self.assertTrue(
+            np.array_equal(
+                np.isnan(fp_matrix).sum(axis=1),
+                [FP_SIZE, 0, 0],
+            ),
+        )
+
+    def test_input_data_types_error_handling_issue_193_valid_smiles(self) -> None:
         """Test if the pipeline works with error handling for expected data types."""
         error_filter = ErrorFilter(filter_everything=True)
         filter_reinserter = PostPredictionWrapper(
@@ -298,14 +423,14 @@ class PipelineTest(unittest.TestCase):
             ],
         )
 
-        # test with a type list
+        # test with a type list: valid SMILES
         pipeline = clone(pipeline_base)
         pipeline.fit(TEST_SMILES, CONTAINS_OX)
         predictions_list = pipeline.predict(TEST_SMILES)
         self.assertIsInstance(predictions_list, np.ndarray)
         self.assertEqual(predictions_list.shape, (len(TEST_SMILES),))
 
-        # test with a type np.ndarray
+        # test with type np.ndarray: valid SMILES
         pipeline = clone(pipeline_base)
         pipeline.fit(np.array(TEST_SMILES), np.array(CONTAINS_OX))
         predictions_array = pipeline.predict(np.array(TEST_SMILES))
@@ -313,13 +438,132 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(predictions_array.shape, (len(TEST_SMILES),))
         self.assertTrue(np.allclose(predictions_array, predictions_list))
 
-        # test with a type pd.Series
+        # test with a type pd.Series: valid SMILES
         pipeline = clone(pipeline_base)
         pipeline.fit(pd.Series(TEST_SMILES), pd.Series(CONTAINS_OX))
         predictions_series = pipeline.predict(pd.Series(TEST_SMILES))
         self.assertIsInstance(predictions_series, np.ndarray)
         self.assertEqual(predictions_series.shape, (len(TEST_SMILES),))
         self.assertTrue(np.allclose(predictions_series, predictions_list))
+
+    def test_input_data_types_error_handling_issue_193_invalid_smiles(self) -> None:
+        """Test if the pipeline works with error handling for expected data types."""
+        error_filter = ErrorFilter(filter_everything=True)
+        filter_reinserter = PostPredictionWrapper(
+            FilterReinserter.from_error_filter(error_filter, np.nan),
+        )
+
+        pipeline_base = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                ("descriptor", MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE)),
+                ("error_filter", error_filter),
+                ("model", RandomForestRegressor(n_estimators=2, random_state=42)),
+                (
+                    "reinserter",
+                    filter_reinserter,
+                ),
+            ],
+        )
+
+        test_smiles_only_faulty = ["CCXSA", "NO_VALID_smiles:)"]
+        test_smiles_only_faulty_y = [0, 1]
+
+        # test with type list: invalid SMILES
+        pipeline = clone(pipeline_base)
+        pipeline.fit(FAULTY_TEST_SMILES, FAULTY_CONTAINS_OX)
+        predictions_list_faulty = pipeline.predict(FAULTY_TEST_SMILES)
+        self.assertIsInstance(predictions_list_faulty, np.ndarray)
+        self.assertEqual(predictions_list_faulty.shape, (len(FAULTY_TEST_SMILES),))
+
+        # test with type list: only invalid SMILES
+        pipeline = clone(pipeline_base)
+        pipeline.fit(
+            test_smiles_only_faulty,
+            test_smiles_only_faulty_y,
+        )
+        predictions_list_only_faulty = pipeline.predict(test_smiles_only_faulty)
+        # note that for all nan values, the output is a list and not np.array
+        self.assertIsInstance(predictions_list_only_faulty, list)
+        self.assertEqual(
+            len(predictions_list_only_faulty),
+            (len(test_smiles_only_faulty)),
+        )
+        self.assertTrue(np.isnan(predictions_list_only_faulty).all())
+
+        # test with type np.ndarray: invalid SMILES
+        pipeline = clone(pipeline_base)
+        pipeline.fit(
+            np.array(FAULTY_TEST_SMILES),
+            np.array(FAULTY_CONTAINS_OX),
+        )
+        predictions_array_faulty = pipeline.predict(np.array(FAULTY_TEST_SMILES))
+        self.assertIsInstance(predictions_array_faulty, np.ndarray)
+        self.assertEqual(
+            predictions_array_faulty.shape,
+            (len(FAULTY_TEST_SMILES),),
+        )
+        self.assertTrue(
+            np.allclose(
+                predictions_array_faulty,
+                predictions_list_faulty,
+                equal_nan=True,
+            ),
+        )
+
+        # test with type np.ndarray: only invalid SMILES
+        pipeline = clone(pipeline_base)
+        pipeline.fit(
+            np.array(test_smiles_only_faulty),
+            np.array(test_smiles_only_faulty_y),
+        )
+        predictions_array_only_faulty = pipeline.predict(
+            np.array(test_smiles_only_faulty),
+        )
+        # note that for all nan values, the output is a list and not np.array
+        self.assertIsInstance(predictions_array_only_faulty, list)
+        self.assertEqual(
+            len(predictions_array_only_faulty),
+            (len(test_smiles_only_faulty)),
+        )
+        self.assertTrue(np.isnan(predictions_array_only_faulty).all())
+
+        # test with a type pd.Series: invalid SMILES
+        pipeline = clone(pipeline_base)
+        pipeline.fit(
+            pd.Series(FAULTY_TEST_SMILES),
+            pd.Series(FAULTY_CONTAINS_OX),
+        )
+        predictions_series_faulty = pipeline.predict(pd.Series(FAULTY_TEST_SMILES))
+        self.assertIsInstance(predictions_series_faulty, np.ndarray)
+        self.assertEqual(
+            predictions_series_faulty.shape,
+            (len(FAULTY_TEST_SMILES),),
+        )
+        self.assertTrue(
+            np.allclose(
+                predictions_series_faulty,
+                predictions_list_faulty,
+                equal_nan=True,
+            ),
+        )
+
+        # test with a type pd.Series: only invalid SMILES
+        pipeline = clone(pipeline_base)
+        pipeline.fit(
+            pd.Series(test_smiles_only_faulty),
+            pd.Series(test_smiles_only_faulty_y),
+        )
+        predictions_series_only_faulty = pipeline.predict(
+            pd.Series(test_smiles_only_faulty),
+        )
+        # note that for all nan values, the output is a list and not np.array
+        self.assertIsInstance(predictions_series_only_faulty, list)
+        self.assertEqual(
+            len(predictions_series_only_faulty),
+            (len(test_smiles_only_faulty)),
+        )
+        self.assertTrue(np.isnan(predictions_series_only_faulty).all())
 
 
 class PipelineCompatibilityTest(unittest.TestCase):

@@ -634,10 +634,31 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             raise ValueError(f"ErrorFilter with id {self.error_filter_id} not found")
         return self
 
+    @staticmethod
+    def _validate_input_values(values: TypeFixedVarSeq) -> None:
+        """Validate the input values.
+
+        Parameters
+        ----------
+        values: TypeFixedVarSeq
+            Values to be checked.
+
+        Raises
+        ------
+        TypeError
+            If values is not a list, numpy array or pandas Series.
+
+        """
+        if not isinstance(values, (list, np.ndarray, pd.Series)):
+            raise TypeError(
+                "Values must be a list, numpy array or pandas Series. "
+                f"Received: {type(values)}",
+            )
+
     # pylint: disable=unused-argument
     def fit(
         self,
-        values: TypeFixedVarSeq,  # noqa: ARG002
+        values: TypeFixedVarSeq,
         labels: Any = None,  # noqa: ARG002
         **params: Any,  # noqa: ARG002
     ) -> Self:
@@ -660,6 +681,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             Fitted FilterReinserter.
 
         """
+        self._validate_input_values(values)
         return self
 
     # pylint: disable=unused-argument
@@ -755,6 +777,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             Iterable where invalid instances were removed.
 
         """
+        self._validate_input_values(values)
         if len(values) != self.error_filter.n_total - len(
             self.error_filter.error_indices,
         ):
