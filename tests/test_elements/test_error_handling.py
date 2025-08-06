@@ -44,7 +44,7 @@ class NoneTest(unittest.TestCase):
             ],
         )
         out = pipeline.fit_transform(TEST_SMILES)
-        for pred_val, true_val in zip(out, EXPECTED_OUTPUT, strict=False):
+        for pred_val, true_val in zip(out, EXPECTED_OUTPUT, strict=True):
             self.assertEqual(pred_val, true_val)
 
     def test_error_dummy_remove_record_molpipeline(self) -> None:
@@ -304,6 +304,7 @@ class TestFilterReinserter(unittest.TestCase):
 
     def test_bad_input_data_types(self) -> None:
         """Test bad input data types."""
+        # pylint: disable=R0801
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=1, n_bits=32, return_as="sparse")
         error_filter = ErrorFilter(filter_everything=True)
