@@ -321,6 +321,7 @@ class TestFilterReinserter(unittest.TestCase):
         )
 
         with self.assertRaises(TypeError):
-            # the MolToMorganFP element expects with return a sparse matrix with
-            # return_as="sparse" which is not supported by FilterReinserter
+            # the MolToMorganFP element returns a sparse matrix with
+            # `return_as="sparse"` which is not supported by FilterReinserter.
+            # Therefore, an error should be raised.
             pipeline.transform(["C", "CC", "NOT_A_SMILES"])
