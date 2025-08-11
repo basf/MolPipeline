@@ -6,7 +6,12 @@ import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator as rdkit_fp
-from rdkit.DataStructs import ExplicitBitVect, UIntSparseIntVect
+from rdkit.DataStructs import (
+    ExplicitBitVect,
+    UIntSparseIntVect,
+    SparseBitVect,
+    IntSparseIntVect,
+)
 from scipy import sparse
 
 
@@ -41,7 +46,12 @@ def make_sparse_fp(
 
 
 def fingerprints_to_numpy(
-    fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_],
+    fingerprints: list[ExplicitBitVect]
+    | list[UIntSparseIntVect]
+    | list[IntSparseIntVect]
+    | list[SparseBitVect]
+    | sparse.csr_matrix
+    | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.int_]:
     """Convert fingerprints in various types to numpy.
 
@@ -63,7 +73,11 @@ def fingerprints_to_numpy(
     """
     if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):
         return np.array(fingerprints)
-    if all(isinstance(fp, UIntSparseIntVect) for fp in fingerprints):
+    if (
+        all(isinstance(fp, UIntSparseIntVect) for fp in fingerprints)
+        or all(isinstance(fp, IntSparseIntVect) for fp in fingerprints)
+        or all(isinstance(fp, SparseBitVect) for fp in fingerprints)
+    ):
         return np.array([fp.ToList() for fp in fingerprints])
     if isinstance(fingerprints, sparse.csr_matrix):
         return fingerprints.toarray()

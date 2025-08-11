@@ -15,7 +15,12 @@ except ImportError:
 import numpy as np
 import numpy.typing as npt
 from rdkit.Chem import rdFingerprintGenerator
-from rdkit.DataStructs import ExplicitBitVect
+from rdkit.DataStructs import (
+    ExplicitBitVect,
+    UIntSparseIntVect,
+    IntSparseIntVect,
+    SparseBitVect,
+)
 from scipy import sparse
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
@@ -26,8 +31,14 @@ from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 # possible output types for a fingerprint:
 # - "sparse" is a sparse csr_matrix
 # - "dense" is a numpy array
-# - "explicit_bit_vect" is a list of RDKit's ExplicitBitVect
-OutputDatatype: TypeAlias = Literal["sparse", "dense", "explicit_bit_vect"]
+# - "rdkit" will return RDKit's native datastructure for the respective fingerprint
+#           and it's parameters, for example ExplicitBitVect, IntSparseBitVect,
+#           UIntSparseBitVect.
+OutputDatatype: TypeAlias = Literal[
+    "sparse",
+    "dense",
+    "rdkit",
+]
 
 
 class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
@@ -49,11 +60,11 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
         Parameters
         ----------
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
+        return_as: Literal["sparse", "dense", "rdkit"]
             Type of output. When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
             holding a sparse representation of the bit vectors. With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of RDKit's
-            rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+            With "rdkit" the fingerprints will be returned as a list of one of RDKit's
+            ExplicitBitVect, IntSparseBitVect, UIntSparseBitVect, etc.
         name: str
             Name of PipelineElement.
         n_jobs:
@@ -93,19 +104,44 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         self, value_list: Iterable[ExplicitBitVect]
     ) -> list[ExplicitBitVect]: ...
 
+    @overload
+    def assemble_output(
+        self, value_list: Iterable[UIntSparseIntVect]
+    ) -> list[UIntSparseIntVect]: ...
+
+    @overload
+    def assemble_output(
+        self, value_list: Iterable[IntSparseIntVect]
+    ) -> list[IntSparseIntVect]: ...
+
+    @overload
+    def assemble_output(
+        self, value_list: Iterable[SparseBitVect]
+    ) -> list[SparseBitVect]: ...
+
     def assemble_output(
         self,
         value_list: (
             Iterable[dict[int, int]]
             | Iterable[npt.NDArray[np.int_]]
             | Iterable[ExplicitBitVect]
+            | Iterable[UIntSparseIntVect]
+            | Iterable[IntSparseIntVect]
+            | Iterable[SparseBitVect]
         ),
-    ) -> sparse.csr_matrix | npt.NDArray[np.int_] | list[ExplicitBitVect]:
+    ) -> (
+        sparse.csr_matrix
+        | npt.NDArray[np.int_]
+        | list[ExplicitBitVect]
+        | list[UIntSparseIntVect]
+        | list[IntSparseIntVect]
+        | list[SparseBitVect]
+    ):
         """Transform output of all transform_single operations to matrix.
 
         Parameters
         ----------
-        value_list:  Iterable[dict[int, int]] | Iterable[npt.NDArray[np.int_]] | Iterable[ExplicitBitVect]
+        value_list:  Iterable[dict[int, int]] | Iterable[npt.NDArray[np.int_]] | Iterable[ExplicitBitVect] | Iterable[UIntSparseIntVect] | Iterable[IntSparseIntVect] | Iterable[SparseBitVect]
             Either Iterable of dicts which encode the rows of the feature matrix.
             Keys: column index, values: column value. Each dict represents one molecule.
             Or an Iterable of RDKit's ExplicitBitVect or an Iterable of numpy arrays representing the
@@ -113,11 +149,14 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
         Returns
         -------
-        sparse.csr_matrix | npt.NDArray[np.int_] | list[ExplicitBitVect]
-            Matrix of Morgan-fingerprint features.
+        sparse.csr_matrix | npt.NDArray[np.int_] | list[ExplicitBitVect] | list[SparseBitVect] | list[UIntSparseIntVect] | list[IntSparseIntVect]
+            Matrix of fingerprint features.
         """
-        if self._return_as == "explicit_bit_vect":
-            # return as list of RDkit's ExplicitBitVect
+        # if self._return_as in ["explicit_bit_vect", "sparse_bit_vect"]:
+        if self._return_as in ["rdkit"]:
+            # return as list of RDkit's native data structures, depending on the
+            # fingerprint method and whether counted=True or not, this can be
+            # ExplicitBitVect, IntSparseBitVect or UIntSparseBitVect, etc.
             return list(value_list)  # type: ignore
         if self._return_as == "dense":
             # return dense numpy matrix
@@ -179,7 +218,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return self
 
     def transform(self, values: list[RDKitMol]) -> sparse.csr_matrix:
-        """Transform the list of molecules to sparse matrix of Morgan-fingerprint features.
+        """Transform the list of molecules to sparse matrix of fingerprint features.
 
         Parameters
         ----------
@@ -189,7 +228,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         Returns
         -------
         sparse.csr_matrix
-            Sparse matrix of Morgan-fingerprint features.
+            Sparse matrix of fingerprint features.
         """
         return super().transform(values)
 
