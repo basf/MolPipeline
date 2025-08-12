@@ -8,7 +8,7 @@ from molpipeline.mol2any.mol2maccs_key_fingerprint import MolToMACCSFP
 from molpipeline.mol2any.mol2morgan_fingerprint import MolToMorganFP
 from molpipeline.mol2any.mol2net_charge import MolToNetCharge
 from molpipeline.mol2any.mol2path_fingerprint import Mol2PathFP
-from molpipeline.mol2any.mol2pharmacophor2d_fingerprint import MolToPharmacophore2DFP
+from molpipeline.mol2any.mol2pharmacophore2d_fingerprint import MolToPharmacophore2DFP
 from molpipeline.mol2any.mol2rdkit_phys_chem import MolToRDKitPhysChem
 from molpipeline.mol2any.mol2smiles import MolToSmiles
 

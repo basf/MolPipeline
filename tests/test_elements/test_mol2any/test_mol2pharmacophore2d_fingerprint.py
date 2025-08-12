@@ -11,7 +11,7 @@ from scipy import sparse
 
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.mol2any.mol2pharmacophor2d_fingerprint import MolToPharmacophore2DFP
+from molpipeline.mol2any.mol2pharmacophore2d_fingerprint import MolToPharmacophore2DFP
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from tests.utils.fingerprints import fingerprints_to_numpy
 
