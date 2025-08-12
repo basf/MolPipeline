@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 from importlib import resources
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -14,12 +14,12 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
-from rdkit.Chem.ChemicalFeatures import (
-    BuildFeatureFactory,
-    BuildFeatureFactoryFromString,
-)
+from rdkit.Chem.Pharm2D import Gobbi_Pharm2D
 from rdkit.Chem.Pharm2D.Generate import Gen2DFingerprint
 from rdkit.Chem.Pharm2D.SigFactory import SigFactory
+from rdkit.Chem.rdMolChemicalFeatures import (
+    BuildFeatureFactoryFromString,
+)
 from rdkit.DataStructs import ConvertToExplicit, ExplicitBitVect, IntSparseIntVect
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
@@ -33,12 +33,15 @@ if TYPE_CHECKING:
 _MIN_POINT_COUNT = 2
 
 
-class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
+class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
+    MolToFingerprintPipelineElement,
+):
     """2D Pharmacophore Fingerprint.
 
     Computes RDKit's 2D pharmacophore fingerprints based on pharmacophore features
     and their 2D distances. The fingerprint encodes the presence of pharmacophore
-    feature pairs at specific distance ranges.
+    feature pairs at specific distance ranges. Distances are determined on the
+    molecular graph, not in 3D space.
 
     This implementation uses RDKit's Pharm2D module which generates fingerprints
     based on:
@@ -56,6 +59,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
 
     def __init__(
         self,
+        *,
         feature_definition: Path | str | None = None,
         min_point_count: int = 2,
         max_point_count: int = 3,
@@ -75,8 +79,8 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         Parameters
         ----------
         feature_definition : Path, str, or None, optional
-            Path or content of a feature definition file (.fdef). If None, uses the
-            default MinimalFeatures.fdef from the resources directory.
+            Path or content of a feature definition file (.fdef). If None, uses RDKit's
+            default MinimalFeatures.fdef.
         min_point_count : int, default=2
             Minimum number of pharmacophore points in a signature.
         max_point_count : int, default=3
@@ -134,7 +138,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         # Set default distance bins if not provided
         if distance_bins is None:
             distance_bins = [(1, 2), (2, 5), (5, 8)]
-
+        self._validate_distance_bins(distance_bins)
         self._distance_bins = distance_bins
 
         # Initialize factories and calculate fingerprint size
@@ -143,7 +147,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
     @staticmethod
     def _read_feature_factory_content(
         feature_definition: Path | str | None,
-    ) -> BuildFeatureFactory:
+    ) -> str:
         """Read the feature definition block from a file.
 
         Parameters
@@ -172,11 +176,16 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
             # If feature_definition is a Path, use it directly
             feat_def_path = feature_definition
         elif isinstance(feature_definition, str):
-            if Path(feature_definition).exists():
-                # If feature_definition is a string and points to a file, use it
-                feat_def_path = Path(feature_definition)
-            else:
-                # assume the string is the content of the feature definition
+            try:
+                if Path(feature_definition).exists():
+                    # If feature_definition is a string and points to a file, use it
+                    feat_def_path = Path(feature_definition)
+                else:
+                    # assume the string is the content of the feature definition
+                    return feature_definition
+            except OSError:
+                # If Path creation or exists() fails (e.g., string too long),
+                # assume its feature definition content
                 return feature_definition
         else:
             raise TypeError(
@@ -227,8 +236,10 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
             )
 
         # Generate feature names
-        # TODO oder sigFactory.GetBitDescription als Name nehmen?
-        self._feature_names = [f"pharm2d_{i}" for i in range(self._n_bits)]
+        self._feature_names = [
+            f"pharm2d_{self._sig_factory.GetBitDescription(i)}"
+            for i in range(self._n_bits)
+        ]
 
     def __getstate__(self) -> dict[str, Any]:
         """Get the state of the object for pickling.
@@ -286,6 +297,40 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
             raise ValueError(
                 "Minimum point count cannot be greater than maximum point count.",
             )
+
+    @staticmethod
+    def _validate_distance_bins(
+        distance_bins: list[tuple[float, float]] | None,
+    ) -> None:
+        """Validate distance bins format and values.
+
+        Parameters
+        ----------
+        distance_bins : list[tuple[float, float]] | None
+            List of distance bins as (min_distance, max_distance) tuples.
+
+        Raises
+        ------
+        ValueError
+            If any distance bin does not contain numeric values,
+            if min_distance is not less than max_distance,
+            or if min_distance is negative.
+
+        """
+        if distance_bins is None:
+            return
+        for i, (min_dist, max_dist) in enumerate(distance_bins):
+            if not isinstance(min_dist, (int, float)) or not isinstance(
+                max_dist,
+                (int, float),
+            ):
+                raise ValueError(f"Distance bin {i} must contain numeric values")
+            if min_dist >= max_dist:
+                raise ValueError(
+                    f"Distance bin {i}: min_dist must be less than max_dist",
+                )
+            if min_dist < 0:
+                raise ValueError(f"Distance bin {i}: distances must be non-negative")
 
     @property
     def min_point_count(self) -> int:
@@ -440,6 +485,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
             needs_reinit = True
 
         if distance_bins is not None:
+            self._validate_distance_bins(distance_bins)
             self._distance_bins = distance_bins
             needs_reinit = True
 
@@ -492,3 +538,46 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         if self.counted:
             return fp.GetNonzeroElements()
         return dict.fromkeys(fp.GetOnBits(), 1)
+
+    @staticmethod
+    def from_preconfiguration(
+        config_name: Literal["gobbi"],
+        **kwargs: Any,
+    ) -> MolToPharmacophore2DFP:
+        """Create a preconfigured MolToPharmacophore2DFP instance.
+
+        Preconfigurations:
+        - "gobbi": Uses Gobbi's pharmacophore features as defined in:
+           Gobbi, A. & Poppinger, D. Genetic optimization of combinatorial libraries.
+           Biotechnology and Bioengineering 61, 47-54 (1998).
+
+        Parameters
+        ----------
+        config_name : Literal["gobbi"]
+            Name of the preconfiguration to use.
+        **kwargs : Any
+            Additional parameters to the MolToPharmacophore2DFP constructor.
+
+        Returns
+        -------
+        MolToPharmacophore2DFP
+            Preconfigured MolToPharmacophore2DFP instance.
+
+        Raises
+        ------
+        ValueError
+            If the configuration name is unknown.
+
+        """
+        if config_name == "gobbi":
+            # gobbi pharmacophore features are also implemented in RDKit. We just
+            # borrow the definition here from the Gobbi_Pharm2D module.
+            return MolToPharmacophore2DFP(
+                feature_definition=Gobbi_Pharm2D.fdef,
+                min_point_count=2,
+                max_point_count=3,
+                distance_bins=Gobbi_Pharm2D.defaultBins,
+                **kwargs,
+            )
+
+        raise ValueError(f"Unknown configuration name: {config_name}")

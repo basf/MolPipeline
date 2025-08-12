@@ -136,7 +136,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         explicit_bit_vect_morgan = MolToMorganFP(
             radius=2,
             n_bits=n_bits,
-            return_as="explicit_bit_vect",
+            return_as="rdkit",
         )
 
         smi2mol = SmilesToMol()

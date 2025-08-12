@@ -6,6 +6,8 @@ import unittest
 import joblib
 import numpy as np
 from rdkit import Chem
+from rdkit.Chem.Pharm2D import Gobbi_Pharm2D
+from rdkit.Chem.Pharm2D.Generate import Gen2DFingerprint
 from rdkit.DataStructs import ExplicitBitVect, IntSparseIntVect
 from scipy import sparse
 
@@ -40,7 +42,7 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
 
     def test_init_custom_parameters(self) -> None:
         """Test initialization with custom parameters."""
-        custom_bins = [(0, 3), (3, 6), (6, 10)]
+        custom_bins = [(0.0, 3.0), (3.0, 6.0), (6.0, 10.0)]
         fp_element = MolToPharmacophore2DFP(
             min_point_count=3,
             max_point_count=4,
@@ -70,6 +72,10 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
         with self.assertRaises(ValueError):
             MolToPharmacophore2DFP(feature_definition="bad definition")
 
+        # Test invalid distance_bins
+        with self.assertRaises(ValueError):
+            MolToPharmacophore2DFP(distance_bins=[(0, 1), (1, 0)])
+
     def test_feature_names(self) -> None:
         """Test feature names generation."""
         fp_element = MolToPharmacophore2DFP()
@@ -79,7 +85,7 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
         self.assertTrue(all(name.startswith("pharm2d_") for name in feature_names))
 
     def test_get_params(self) -> None:
-        """Test parameter retrieval."""
+        """Test get_params method."""
         fp_element = MolToPharmacophore2DFP()
         params = fp_element.get_params()
 
@@ -109,7 +115,7 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
         )
 
     def test_set_params(self) -> None:
-        """Test parameter setting."""
+        """Test set_params method."""
         fp_element = MolToPharmacophore2DFP()
         new_bins = [(0, 4), (4, 8)]
         new_element = fp_element.set_params(
@@ -161,6 +167,8 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
         original_fp = fp_element.transform(self.test_molecules)
         loaded_fp = loaded_element.transform(self.test_molecules)
 
+        self.assertIsInstance(original_fp, np.ndarray)
+        self.assertIsInstance(loaded_fp, np.ndarray)
         self.assertTrue(np.array_equal(original_fp, loaded_fp))
 
     def test_json_serialization(self) -> None:
@@ -187,9 +195,9 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
         self.assertIsInstance(fp_loaded, np.ndarray)
         self.assertTrue(np.array_equal(fp, fp_loaded))
 
-    def test_custom_feature_definition_with_valid_file(self) -> None:
-        """Test using a custom feature factory file."""
-        # Create a temporary minimal feature definition file
+    def test_custom_feature_definition(self) -> None:
+        """Test using a custom feature definition."""
+        # Create a temporary minimal feature definition
         minimal_fdef = """
 AtomType Donor [N,O;H1,H2]
 DefineFeature TestDonor [{Donor}]
@@ -204,6 +212,13 @@ DefineFeature TestAcceptor [{Acceptor}]
 EndFeature
 """
 
+        # test as string input
+        fp_element = MolToPharmacophore2DFP(feature_definition=minimal_fdef)
+        fingerprints1 = fp_element.transform(self.test_molecules)
+        self.assertIsInstance(fingerprints1, sparse.csr_matrix)
+        self.assertTrue(fingerprints1.nnz >= 1)  # May be 0 for simple features
+
+        # test as file input
         with tempfile.NamedTemporaryFile(
             mode="w",
             suffix=".fdef",
@@ -214,10 +229,44 @@ EndFeature
 
             # Should work with custom feature factory
             fp_element = MolToPharmacophore2DFP(feature_definition=tmp_file.name)
-            fingerprint = fp_element.transform(self.test_molecules)
+        fingerprints2 = fp_element.transform(self.test_molecules)
 
-            self.assertIsInstance(fingerprint, sparse.csr_matrix)
-            self.assertTrue(fingerprint.nnz >= 1)  # May be 0 for simple features
+        self.assertIsInstance(fingerprints2, sparse.csr_matrix)
+        self.assertTrue(fingerprints2.nnz >= 1)  # May be 0 for simple features
+
+        # assert that both fingerprints are equal
+        self.assertTrue(
+            np.array_equal(fingerprints1.toarray(), fingerprints2.toarray()),
+        )
+
+    def test_preconfigured_fingerprint_gobbi(self) -> None:
+        """Test preconfigured Gobbi pharmacophore fingerprint.
+
+        Raises
+        ------
+        AssertionError
+            If the generated fingerprint does not match the RDKit Gobbi_Pharm2D factory.
+
+        """
+        fp_element = MolToPharmacophore2DFP.from_preconfiguration(
+            "gobbi",
+            return_as="dense",
+        )
+        gobbi_fps = fp_element.transform(self.test_molecules)
+
+        # compare to RDKit's Gobbi_Pharm2D fingerprint factory
+        gobbi_fp_rdkit_list = [
+            Gen2DFingerprint(m, Gobbi_Pharm2D.factory) for m in self.test_molecules
+        ]
+        gobbi_fp_rdkit = fingerprints_to_numpy(gobbi_fp_rdkit_list)
+        if not isinstance(gobbi_fps, np.ndarray):
+            raise AssertionError("Expected gobbi_fps to be a numpy array.")
+        self.assertTrue(np.array_equal(gobbi_fps, gobbi_fp_rdkit))
+
+    def test_preconfigured_fingerprint_unknown_name(self) -> None:
+        """Test preconfigured fingerprint with an unknown name."""
+        with self.assertRaises(ValueError):
+            MolToPharmacophore2DFP.from_preconfiguration("unknown_fingerprint")  # type: ignore[arg-type]
 
 
 class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
@@ -302,7 +351,14 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
             self.assertEqual(fp.GetLength(), fp_element.n_bits)
 
     def test_pretransform_single_binary(self) -> None:
-        """Test molecule pretransformation for all return_as variants with binary."""
+        """Test molecule pretransformation for all return_as variants with binary.
+
+        Raises
+        ------
+        AssertionError
+            If the results are not consistent across formats.
+
+        """
         mol = self.test_molecules[0]
 
         # Test sparse format
@@ -322,12 +378,21 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         sparse_as_dense = np.zeros(fp_element_sparse.n_bits)
         for idx in result_sparse:
             sparse_as_dense[idx] = 1
-        explicit_as_dense = fingerprints_to_numpy([result_rdkit])[0]
+        rdkit_as_dense = fingerprints_to_numpy([result_rdkit])[0]
+        if not isinstance(result_dense, np.ndarray):
+            raise AssertionError("Expected result_dense to be a numpy array.")
         self.assertTrue(np.array_equal(result_dense, sparse_as_dense))
-        self.assertTrue(np.array_equal(result_dense, explicit_as_dense))
+        self.assertTrue(np.array_equal(result_dense, rdkit_as_dense))
 
     def test_pretransform_single_counted(self) -> None:
-        """Test molecule pretransformation for all return_as variants with counted."""
+        """Test molecule pretransformation for all return_as variants with counted.
+
+        Raises
+        ------
+        AssertionError
+            If the results are not consistent across formats.
+
+        """
         mol = self.test_molecules[0]
 
         # Test sparse format (default)
@@ -345,9 +410,13 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         # Verify consistency across formats
         # Convert all to same format for comparison
         sparse_as_dense = np.zeros(fp_element_sparse.n_bits)
+        if not isinstance(result_sparse, dict):
+            raise AssertionError("Expected result_sparse to be a dict.")
         for idx, count in result_sparse.items():
             sparse_as_dense[idx] = count
         explicit_as_dense = fingerprints_to_numpy([result_rdkit])[0]
+        if not isinstance(result_dense, np.ndarray):
+            raise AssertionError("Expected result_dense to be a numpy array.")
         self.assertTrue(np.array_equal(result_dense, sparse_as_dense))
         self.assertTrue(np.array_equal(result_dense, explicit_as_dense))
 

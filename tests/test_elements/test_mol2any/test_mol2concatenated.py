@@ -36,7 +36,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             Literal[
                 "sparse",
                 "dense",
-                "explicit_bit_vect",
+                "rdkit",
             ],
         )
 

@@ -125,6 +125,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             n_jobs=n_jobs,
             uuid=uuid,
         )
+        self._validate_return_as(return_as)
         self._return_as = return_as
 
     @property
@@ -136,6 +137,27 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     def feature_names(self) -> list[str]:
         """Get feature names."""
         return self._feature_names[:]
+
+    @staticmethod
+    def _validate_return_as(return_as: str) -> None:
+        """Validate return_as parameter.
+
+        Parameters
+        ----------
+        return_as: str
+            Type of output. Has to be one of "sparse", "dense" or "rdkit".
+
+        Raises
+        ------
+        ValueError
+            If return_as is not one of the allowed options.
+
+        """
+        if return_as not in get_args(FPReturnAsOption):
+            raise ValueError(
+                f"return_as has to be one of {get_args(FPReturnAsOption)}! "
+                f"(Received: {return_as})",
+            )
 
     @overload
     def assemble_output(  # type: ignore
@@ -233,11 +255,6 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         parameters: Any
             Dictionary of parameter names and values.
 
-        Raises
-        ------
-        ValueError
-            If return_as is not one of the allowed values.
-
         Returns
         -------
         Self
@@ -247,11 +264,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         parameter_dict_copy = dict(parameters)
         return_as = parameter_dict_copy.pop("return_as", None)
         if return_as is not None:
-            if return_as not in get_args(FPReturnAsOption):
-                raise ValueError(
-                    f"return_as has to be one of {get_args(FPReturnAsOption)}! "
-                    f"(Received: {return_as})",
-                )
+            self._validate_return_as(return_as)
             self._return_as = return_as
         super().set_params(**parameter_dict_copy)
         return self
