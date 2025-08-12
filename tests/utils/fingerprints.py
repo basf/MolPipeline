@@ -5,18 +5,20 @@ from __future__ import annotations
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
-from rdkit.Chem import rdFingerprintGenerator as rdkit_fp
+from rdkit.Chem import rdFingerprintGenerator
 from rdkit.DataStructs import (
     ExplicitBitVect,
-    UIntSparseIntVect,
-    SparseBitVect,
     IntSparseIntVect,
+    SparseBitVect,
+    UIntSparseIntVect,
 )
 from scipy import sparse
 
 
 def make_sparse_fp(
-    smiles_list: list[str], radius: int, n_bits: int
+    smiles_list: list[str],
+    radius: int,
+    n_bits: int,
 ) -> sparse.csr_matrix:
     """Create a sparse Morgan fingerprint matrix from a list of SMILES.
 
@@ -35,9 +37,10 @@ def make_sparse_fp(
     -------
     sparse.csr_matrix
         Feature matrix.
+
     """
     vector_list = []
-    morgan_fp = rdkit_fp.GetMorganGenerator(radius=radius, fpSize=n_bits)
+    morgan_fp = rdFingerprintGenerator.GetMorganGenerator(radius=radius, fpSize=n_bits)
     for smiles in smiles_list:
         mol = Chem.MolFromSmiles(smiles)
         vector = morgan_fp.GetFingerprintAsNumPy(mol)

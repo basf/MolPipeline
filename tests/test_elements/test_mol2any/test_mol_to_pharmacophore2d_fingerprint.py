@@ -12,7 +12,7 @@ from scipy import sparse
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any.mol2pharmacophor2d_fingerprint import MolToPharmacophore2DFP
-from molpipeline.utils.json_operations import recursive_to_json, recursive_from_json
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from tests.utils.fingerprints import fingerprints_to_numpy
 
 
@@ -104,7 +104,8 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
         # Modify the shallow copy and ensure deep copy is unaffected
         params_shallow["distance_bins"].append((10, 15))
         self.assertNotEqual(
-            len(params_deep["distance_bins"]), len(params_shallow["distance_bins"])
+            len(params_deep["distance_bins"]),
+            len(params_shallow["distance_bins"]),
         )
 
     def test_set_params(self) -> None:
@@ -204,7 +205,9 @@ EndFeature
 """
 
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".fdef", delete=False
+            mode="w",
+            suffix=".fdef",
+            encoding="utf-8",
         ) as tmp_file:
             tmp_file.write(minimal_fdef)
             tmp_file.flush()
@@ -238,7 +241,7 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         self.assertEqual(fingerprints.shape[0], len(self.test_molecules))
         self.assertEqual(fingerprints.shape[1], fp_element.n_bits)
         self.assertTrue(
-            np.array_equal(np.unique(np.asarray(fingerprints.todense())), [0, 1])
+            np.array_equal(np.unique(np.asarray(fingerprints.todense())), [0, 1]),
         )
 
     def test_fingerprint_generation_sparse_counted(self) -> None:

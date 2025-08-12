@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import copy
+from importlib import resources
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-
-from importlib import resources
-
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -22,15 +20,15 @@ from rdkit.Chem.ChemicalFeatures import (
 )
 from rdkit.Chem.Pharm2D.Generate import Gen2DFingerprint
 from rdkit.Chem.Pharm2D.SigFactory import SigFactory
-from rdkit.DataStructs import ExplicitBitVect, ConvertToExplicit, IntSparseIntVect
+from rdkit.DataStructs import ConvertToExplicit, ExplicitBitVect, IntSparseIntVect
+
+from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
+    FPReturnAsOption,
+    MolToFingerprintPipelineElement,
+)
 
 if TYPE_CHECKING:
     from molpipeline.utils.molpipeline_types import RDKitMol
-
-from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
-    MolToFingerprintPipelineElement,
-    OutputDatatype,
-)
 
 _MIN_POINT_COUNT = 2
 
@@ -67,7 +65,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         skip_feats: list[str] | None = None,
         distance_bins: list[tuple[float, float]] | None = None,
         counted: bool = False,
-        return_as: OutputDatatype = "sparse",
+        return_as: FPReturnAsOption = "sparse",
         name: str = "MolToPharmacophore2DFP",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -95,7 +93,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
             List of distance bins as (min_distance, max_distance) tuples.
             If None, uses default bins: [(1, 2), (2, 5), (5, 8)].
         counted : bool, default=False
-            If True, the fingerprint will be counted (values represent occurrence counts).
+            If True, the fingerprint will be counted (values represent occurrence).
             If False, the fingerprint will be binary (values are 0 or 1).
         return_as : Literal["sparse", "dense", "rdkit"], default="sparse"
             Type of output. When "sparse" the fingerprints will be returned as a
@@ -111,15 +109,8 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         uuid : str, optional
             UUID of the PipelineElement.
 
-        Raises
-        ------
-        ValueError
-            If min_point_count or max_point_count are invalid.
-        FileNotFoundError
-            If the specified feature factory file does not exist.
-
         """
-        super().__init__(
+        super().__init__(  # pylint: disable=R0801
             return_as=return_as,
             name=name,
             n_jobs=n_jobs,
@@ -137,7 +128,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         self._counted = counted
 
         self._feature_definition_str = self._read_feature_factory_content(
-            feature_definition
+            feature_definition,
         )
 
         # Set default distance bins if not provided
@@ -169,6 +160,9 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         ------
         FileNotFoundError
             If the specified feature factory file does not exist.
+        TypeError
+            If feature_definition is not a Path, str, or None.
+
         """
         if feature_definition is None:
             # Set default feature factory path if not provided
@@ -184,17 +178,27 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
             else:
                 # assume the string is the content of the feature definition
                 return feature_definition
-
-        if not feat_def_path.exists():
-            raise FileNotFoundError(
-                f"Feature factory file {feat_def_path} does not exist."
+        else:
+            raise TypeError(
+                "feature_definition must be a Path, str, or None. "
+                f"Got {type(feature_definition)} instead.",
             )
-        with open(feat_def_path, "r", encoding="utf-8") as f:
-            return f.read()
+
+        if isinstance(feat_def_path, Path) and not feat_def_path.exists():
+            raise FileNotFoundError(
+                f"Feature factory file {feat_def_path} does not exist.",
+            )
+        return feat_def_path.read_text(encoding="utf-8")
 
     def _initialize_factories(self) -> None:
-        """Initialize the feature factory and signature factory."""
+        """Initialize the feature factory and signature factory.
 
+        Raises
+        ------
+        ValueError
+            If the signature factory does not produce any bits.
+
+        """
         feature_factory = BuildFeatureFactoryFromString(self._feature_definition_str)
 
         # Create signature factory
@@ -219,7 +223,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         if self._n_bits == 0:
             raise ValueError(
                 "The signature factory did not produce any bits. "
-                "Check the feature definition and parameters."
+                "Check the feature definition and parameters.",
             )
 
         # Generate feature names
@@ -233,6 +237,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         -------
         dict[str, Any]
             Dictionary containing the state of the object.
+
         """
         state = self.__dict__.copy()
         # Remove the SigFactory from the state to avoid pickling issues
@@ -246,6 +251,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         ----------
         state : dict[str, Any]
             Dictionary containing the state of the object.
+
         """
         self.__dict__.update(state)
         # Reinitialize the signature factory after unpickling
@@ -253,7 +259,8 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
 
     @staticmethod
     def _validate_min_max_point_count(
-        min_point_count: int, max_point_count: int
+        min_point_count: int,
+        max_point_count: int,
     ) -> None:
         """Validate the minimum and maximum point count.
 
@@ -269,6 +276,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         ValueError
             If min_point_count is less than 2 or greater than max_point_count.
             If max_point_count is less than 2.
+
         """
         if min_point_count < _MIN_POINT_COUNT:
             raise ValueError(
@@ -336,6 +344,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         -------
         dict[str, Any]
             Dictionary of parameters.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -350,7 +359,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
                     "skip_feats": copy.deepcopy(self._skip_feats),
                     "distance_bins": copy.deepcopy(self._distance_bins),
                     "counted": copy.copy(self._counted),
-                }
+                },
             )
         else:
             parameters.update(
@@ -364,7 +373,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
                     "skip_feats": self._skip_feats,
                     "distance_bins": self._distance_bins,
                     "counted": self._counted,
-                }
+                },
             )
         return parameters
 
@@ -380,13 +389,6 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         -------
         Self
             MolToPharmacophore2DFP pipeline element with updated parameters.
-
-        Raises
-        ------
-        ValueError
-            If min_point_count or max_point_count are invalid.
-        FileNotFoundError
-            If the specified feature factory file does not exist.
 
         """
         parameter_copy = dict(parameters)
@@ -407,7 +409,7 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
 
         if feature_definition is not None:
             self._feature_definition_str = self._read_feature_factory_content(
-                feature_definition
+                feature_definition,
             )
             needs_reinit = True
 
@@ -483,11 +485,10 @@ class MolToPharmacophore2DFP(MolToFingerprintPipelineElement):
         if self._return_as == "rdkit":
             if self.counted:
                 return fp  # return IntSparseIntVect
-            else:
-                # Convert SparseBitVect to ExplicitBitVect
-                return ConvertToExplicit(fp)
+            # Convert SparseBitVect to ExplicitBitVect
+            return ConvertToExplicit(fp)
 
-        # return sparse
+        # return sparse representation as dictionary
         if self.counted:
             return fp.GetNonzeroElements()
         return dict.fromkeys(fp.GetOnBits(), 1)

@@ -21,10 +21,10 @@ test_smiles = [
 
 
 class TestMol2MorganFingerprint(unittest.TestCase):
-    """Unittest for MolToFoldedMorganFingerprint, which calculates folded Morgan Fingerprints."""
+    """Unittest for MolToFoldedMorganFingerprint."""
 
     def test_can_be_constructed(self) -> None:
-        """Test if the MolToFoldedMorganFingerprint pipeline element can be constructed."""
+        """Test the pipeline element can be constructed."""
         mol_fp = MolToMorganFP()
         mol_fp_copy = mol_fp.copy()
         self.assertTrue(mol_fp_copy is not mol_fp)
@@ -48,7 +48,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         pipeline.set_params(mol_fp__counted=True)
         output_counted = pipeline.fit_transform(test_smiles)
         self.assertTrue(
-            np.all(np.flatnonzero(output_counted) == np.flatnonzero(output_binary))
+            np.all(np.flatnonzero(output_counted) == np.flatnonzero(output_binary)),
         )
         self.assertTrue(np.all(output_counted >= output_binary))
         self.assertTrue(np.any(output_counted > output_binary))
@@ -65,9 +65,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         smi2mol = SmilesToMol()
         sparse_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="sparse")
         dense_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="dense")
-        explicit_bit_vect_morgan = MolToMorganFP(
-            radius=2, n_bits=1024, return_as="explicit_bit_vect"
-        )
+        rdkit_vect_morgan = MolToMorganFP(radius=2, n_bits=1024, return_as="rdkit")
         sparse_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -80,26 +78,24 @@ class TestMol2MorganFingerprint(unittest.TestCase):
                 ("dense_morgan", dense_morgan),
             ],
         )
-        explicit_bit_vect_pipeline = Pipeline(
+        rdkit_vect_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
-                ("explicit_bit_vect_morgan", explicit_bit_vect_morgan),
+                ("rdkit_vect_morgan", rdkit_vect_morgan),
             ],
         )
 
         sparse_output = sparse_pipeline.fit_transform(test_smiles)
         dense_output = dense_pipeline.fit_transform(test_smiles)
-        explicit_bit_vect_morgan_output = explicit_bit_vect_pipeline.fit_transform(
-            test_smiles
-        )
+        rdkit_vect_morgan_output = rdkit_vect_pipeline.fit_transform(test_smiles)
 
         self.assertTrue(np.all(sparse_output.toarray() == dense_output))
 
         self.assertTrue(
             np.equal(
                 dense_output,
-                np.array(explicit_bit_vect_morgan_output),
-            ).all()
+                np.array(rdkit_vect_morgan_output),
+            ).all(),
         )
 
     def test_setter_getter(self) -> None:
@@ -116,7 +112,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertEqual(mol_fp.get_params()["return_as"], "dense")
 
     def test_setter_getter_error_handling(self) -> None:
-        """Test if the setters and getters work as expected when errors are encountered."""
+        """Test if the setters and getters work as expected for errors."""
         mol_fp = MolToMorganFP()
         params: dict[str, Any] = {
             "radius": 2,
@@ -138,7 +134,9 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         sparse_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="sparse")
         dense_morgan = MolToMorganFP(radius=2, n_bits=n_bits, return_as="dense")
         explicit_bit_vect_morgan = MolToMorganFP(
-            radius=2, n_bits=n_bits, return_as="explicit_bit_vect"
+            radius=2,
+            n_bits=n_bits,
+            return_as="explicit_bit_vect",
         )
 
         smi2mol = SmilesToMol()
