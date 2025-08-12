@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import copy
-from importlib import resources
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -49,11 +48,10 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
     - Distance bins for feature pairs
     - Configurable parameters for feature factory and signature factory
 
-    References
-    ----------
-    [1] RDKit Documentation on 2D Pharmacophore Fingerprints
-    [2] Gobbi, A. & Poppinger, D. Genetic optimization of combinatorial libraries.
-        Biotechnology and Bioengineering 61, 47-54 (1998).
+    Per default, the 2d pharmacophore fingerprint described by Gobbi et al. is used.
+    See:
+      Gobbi, A. & Poppinger, D. Genetic optimization of combinatorial libraries.
+      Biotechnology and Bioengineering 61, 47-54 (1998).
 
     """
 
@@ -79,8 +77,8 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         Parameters
         ----------
         feature_definition : Path, str, or None, optional
-            Path or content of a feature definition file (.fdef). If None, uses RDKit's
-            default MinimalFeatures.fdef.
+            Path or content of a feature definition file (.fdef). If None, uses
+            configuration by Gobbi et al.
         min_point_count : int, default=2
             Minimum number of pharmacophore points in a signature.
         max_point_count : int, default=3
@@ -95,7 +93,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
             List of feature types to skip. If None, no features are skipped.
         distance_bins : list[tuple[float, float]], optional
             List of distance bins as (min_distance, max_distance) tuples.
-            If None, uses default bins: [(1, 2), (2, 5), (5, 8)].
+            If None, uses default bins by Gobbi et al.
         counted : bool, default=False
             If True, the fingerprint will be counted (values represent occurrence).
             If False, the fingerprint will be binary (values are 0 or 1).
@@ -137,7 +135,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
 
         # Set default distance bins if not provided
         if distance_bins is None:
-            distance_bins = [(1, 2), (2, 5), (5, 8)]
+            distance_bins = Gobbi_Pharm2D.defaultBins
         self._validate_distance_bins(distance_bins)
         self._distance_bins = distance_bins
 
@@ -170,9 +168,8 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         """
         if feature_definition is None:
             # Set default feature factory path if not provided
-            resource_files = resources.files("molpipeline.resources")
-            feat_def_path = resource_files / "MinimalFeatures.fdef"
-        elif isinstance(feature_definition, Path):
+            return Gobbi_Pharm2D.fdef
+        if isinstance(feature_definition, Path):
             # If feature_definition is a Path, use it directly
             feat_def_path = feature_definition
         elif isinstance(feature_definition, str):
@@ -538,46 +535,3 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         if self.counted:
             return fp.GetNonzeroElements()
         return dict.fromkeys(fp.GetOnBits(), 1)
-
-    @staticmethod
-    def from_preconfiguration(
-        config_name: Literal["gobbi"],
-        **kwargs: Any,
-    ) -> MolToPharmacophore2DFP:
-        """Create a preconfigured MolToPharmacophore2DFP instance.
-
-        Preconfigurations:
-        - "gobbi": Uses Gobbi's pharmacophore features as defined in:
-           Gobbi, A. & Poppinger, D. Genetic optimization of combinatorial libraries.
-           Biotechnology and Bioengineering 61, 47-54 (1998).
-
-        Parameters
-        ----------
-        config_name : Literal["gobbi"]
-            Name of the preconfiguration to use.
-        **kwargs : Any
-            Additional parameters to the MolToPharmacophore2DFP constructor.
-
-        Returns
-        -------
-        MolToPharmacophore2DFP
-            Preconfigured MolToPharmacophore2DFP instance.
-
-        Raises
-        ------
-        ValueError
-            If the configuration name is unknown.
-
-        """
-        if config_name == "gobbi":
-            # gobbi pharmacophore features are also implemented in RDKit. We just
-            # borrow the definition here from the Gobbi_Pharm2D module.
-            return MolToPharmacophore2DFP(
-                feature_definition=Gobbi_Pharm2D.fdef,
-                min_point_count=2,
-                max_point_count=3,
-                distance_bins=Gobbi_Pharm2D.defaultBins,
-                **kwargs,
-            )
-
-        raise ValueError(f"Unknown configuration name: {config_name}")

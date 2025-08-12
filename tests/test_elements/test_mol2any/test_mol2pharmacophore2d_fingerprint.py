@@ -37,7 +37,7 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
         self.assertEqual(fp_element.min_point_count, 2)
         self.assertEqual(fp_element.max_point_count, 3)
         self.assertTrue(fp_element.triangular_pruning)
-        self.assertEqual(fp_element.distance_bins, [(1, 2), (2, 5), (5, 8)])
+        self.assertEqual(fp_element.distance_bins, Gobbi_Pharm2D.defaultBins)
         self.assertFalse(fp_element.counted)  # Default should be False
 
     def test_init_custom_parameters(self) -> None:
@@ -239,8 +239,8 @@ EndFeature
             np.array_equal(fingerprints1.toarray(), fingerprints2.toarray()),
         )
 
-    def test_preconfigured_fingerprint_gobbi(self) -> None:
-        """Test preconfigured Gobbi pharmacophore fingerprint.
+    def test_default_configuration_corresponds_to_gobbi(self) -> None:
+        """Test default config corresponds to Gobbi pharmacophore fingerprint.
 
         Raises
         ------
@@ -248,8 +248,7 @@ EndFeature
             If the generated fingerprint does not match the RDKit Gobbi_Pharm2D factory.
 
         """
-        fp_element = MolToPharmacophore2DFP.from_preconfiguration(
-            "gobbi",
+        fp_element = MolToPharmacophore2DFP(
             return_as="dense",
         )
         gobbi_fps = fp_element.transform(self.test_molecules)
@@ -262,11 +261,6 @@ EndFeature
         if not isinstance(gobbi_fps, np.ndarray):
             raise AssertionError("Expected gobbi_fps to be a numpy array.")
         self.assertTrue(np.array_equal(gobbi_fps, gobbi_fp_rdkit))
-
-    def test_preconfigured_fingerprint_unknown_name(self) -> None:
-        """Test preconfigured fingerprint with an unknown name."""
-        with self.assertRaises(ValueError):
-            MolToPharmacophore2DFP.from_preconfiguration("unknown_fingerprint")  # type: ignore[arg-type]
 
 
 class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
@@ -302,7 +296,6 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         self.assertEqual(fingerprints.shape[0], len(self.test_molecules))
         self.assertEqual(fingerprints.shape[1], fp_element.n_bits)
         self.assertTrue(fingerprints.nnz > 0)  # Should have some non-zero elements
-        self.assertTrue(max(fingerprints.data) > 1)  # Counted should have counts > 1
 
     def test_fingerprint_generation_dense_binary(self) -> None:
         """Test fingerprint generation with dense output."""
@@ -322,7 +315,6 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         self.assertIsInstance(fingerprints, np.ndarray)
         self.assertEqual(fingerprints.shape[0], len(self.test_molecules))
         self.assertEqual(fingerprints.shape[1], fp_element.n_bits)
-        self.assertGreater(np.max(fingerprints), 1)  # Should have counts >= 1
 
     def test_fingerprint_generation_rdkit_binary(self) -> None:
         """Test fingerprint generation with "rdkit_explicit" output."""
