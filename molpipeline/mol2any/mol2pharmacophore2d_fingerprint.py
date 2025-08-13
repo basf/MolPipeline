@@ -551,7 +551,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
            Biotechnology and Bioengineering 61, 47-54 (1998).
         - "base": Base configuration defined in RDKit.
            Warning: While this configuration is directly available in RDKit, it is
-           unclear how well it was evaluated.
+           unclear how stable it is and how well it was evaluated.
            See Greg's talk from RDKIT UGM 2012 slide 17
            https://www.rdkit.org/UGM/2012/Landrum_RDKit_UGM.Fingerprints.Final.pptx.pdf
 
