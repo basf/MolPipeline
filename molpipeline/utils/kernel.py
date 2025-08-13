@@ -26,8 +26,12 @@ def tanimoto_similarity_sparse(
 
     """
     intersection = matrix_a.dot(matrix_b.transpose()).toarray()
-    norm_1 = np.array(matrix_a.multiply(matrix_a).sum(axis=1))
-    norm_2 = np.array(matrix_b.multiply(matrix_b).sum(axis=1))
+    norm_1 = np.array(matrix_a.sum(axis=1))
+    if matrix_a is matrix_b:
+        # avoid calculating the same norm twice
+        norm_2 = norm_1
+    else:
+        norm_2 = np.array(matrix_b.sum(axis=1))
     union = norm_1 + norm_2.T - intersection
     # avoid division by zero https://stackoverflow.com/a/37977222
     return np.divide(

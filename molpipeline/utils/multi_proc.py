@@ -43,6 +43,6 @@ def check_available_cores(n_requested_cores: int) -> int:
         )
         return n_available_cores
     if n_requested_cores < 0:
-        return n_available_cores
+        return n_available_cores + 1 + n_requested_cores
 
     return n_requested_cores
