@@ -262,6 +262,68 @@ EndFeature
             raise AssertionError("Expected gobbi_fps to be a numpy array.")
         self.assertTrue(np.array_equal(gobbi_fps, gobbi_fp_rdkit))
 
+    def test_from_preconfiguration_gobbi(self) -> None:
+        """Test from_preconfiguration works with 'gobbi'.
+
+        Raises
+        ------
+        AssertionError
+            If the generated fingerprint does not match the RDKit Gobbi_Pharm2D factory.
+
+        """
+        fp_element = MolToPharmacophore2DFP.from_preconfiguration(
+            "gobbi",
+            return_as="dense",
+        )
+
+        self.assertEqual(fp_element.min_point_count, 2)
+        self.assertEqual(fp_element.max_point_count, 3)
+        self.assertTrue(fp_element.triangular_pruning)
+        self.assertEqual(fp_element.distance_bins, Gobbi_Pharm2D.defaultBins)
+
+        fps = fp_element.transform(self.test_molecules)
+
+        # compare to RDKit's Gobbi_Pharm2D fingerprint factory
+        gobbi_fp_rdkit_list = [
+            Gen2DFingerprint(m, Gobbi_Pharm2D.factory) for m in self.test_molecules
+        ]
+        gobbi_fp_rdkit = fingerprints_to_numpy(gobbi_fp_rdkit_list)
+        if not isinstance(fps, np.ndarray):
+            raise AssertionError("Expected fps to be a numpy array.")
+        self.assertTrue(np.array_equal(fps, gobbi_fp_rdkit))
+
+    def test_from_preconfiguration_base(self) -> None:
+        """Test from_preconfiguration works with 'base'."""
+        fp_element = MolToPharmacophore2DFP.from_preconfiguration(
+            "base",
+            return_as="dense",
+        )
+
+        self.assertEqual(fp_element.min_point_count, 2)
+        self.assertEqual(fp_element.max_point_count, 3)
+        self.assertTrue(fp_element.triangular_pruning)
+        self.assertEqual(
+            fp_element.distance_bins,
+            [  # pylint: disable=R0801
+                (2, 3),
+                (3, 4),
+                (4, 5),
+                (5, 6),
+                (6, 7),
+                (7, 8),
+                (8, 100),
+            ],
+        )
+
+        fps = fp_element.transform(self.test_molecules)
+        self.assertIsInstance(fps, np.ndarray)
+        self.assertEqual(fps.shape[0], len(self.test_molecules))
+
+    def test_from_preconfiguration_unknown_name(self) -> None:
+        """Test preconfigured fingerprint with an unknown name."""
+        with self.assertRaises(ValueError):
+            MolToPharmacophore2DFP.from_preconfiguration("unknown_fingerprint")  # type: ignore[arg-type]
+
 
 class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
     """Test fingerprint calculation with MolToPharmacophore2DFP."""

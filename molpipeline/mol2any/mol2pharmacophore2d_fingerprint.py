@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -20,6 +20,7 @@ from rdkit.Chem.rdMolChemicalFeatures import (
     BuildFeatureFactoryFromString,
 )
 from rdkit.DataStructs import ConvertToExplicit, ExplicitBitVect, IntSparseIntVect
+from rdkit.RDPaths import RDDataDir
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     FPReturnAsOption,
@@ -535,3 +536,71 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         if self.counted:
             return fp.GetNonzeroElements()
         return dict.fromkeys(fp.GetOnBits(), 1)
+
+    @classmethod
+    def from_preconfiguration(
+        cls,
+        config_name: Literal["base", "gobbi"],
+        **kwargs: Any,
+    ) -> Self:
+        """Create a preconfigured MolToPharmacophore2DFP instance.
+
+        Preconfigurations:
+        - "gobbi": Uses Gobbi's pharmacophore features as defined in:
+           Gobbi, A. & Poppinger, D. Genetic optimization of combinatorial libraries.
+           Biotechnology and Bioengineering 61, 47-54 (1998).
+        - "base": Base configuration defined in RDKit.
+           Warning: While this configuration is directly available in RDKit, it is
+           unclear how well it was evaluated.
+           See Greg's talk from RDKIT UGM 2012 slide 17
+           https://www.rdkit.org/UGM/2012/Landrum_RDKit_UGM.Fingerprints.Final.pptx.pdf
+
+
+        Parameters
+        ----------
+        config_name : Literal["gobbi"]
+            Name of the preconfiguration to use.
+        **kwargs : Any
+            Additional parameters to the MolToPharmacophore2DFP constructor.
+
+        Returns
+        -------
+        MolToPharmacophore2DFP
+            Preconfigured MolToPharmacophore2DFP instance.
+
+        Raises
+        ------
+        ValueError
+            If the configuration name is unknown.
+
+        """
+        if config_name == "gobbi":
+            # gobbi pharmacophore features are also implemented in RDKit. We just
+            # borrow the definition here from the Gobbi_Pharm2D module.
+            return cls(
+                feature_definition=Gobbi_Pharm2D.fdef,
+                min_point_count=2,
+                max_point_count=3,
+                distance_bins=Gobbi_Pharm2D.defaultBins,
+                **kwargs,
+            )
+        if config_name == "base":
+            # RDKit's "base" configuration
+            # Feature definitions are taken from RDKit's BaseFeatures.fdef file.
+            # Bins are taken from:
+            # https://www.rdkit.org/UGM/2012/Landrum_RDKit_UGM.Fingerprints.Final.pptx.pdf
+            return cls(
+                feature_definition=Path(RDDataDir) / "BaseFeatures.fdef",
+                distance_bins=[
+                    (2, 3),
+                    (3, 4),
+                    (4, 5),
+                    (5, 6),
+                    (6, 7),
+                    (7, 8),
+                    (8, 100),
+                ],
+                **kwargs,
+            )
+
+        raise ValueError(f"Unknown configuration name: {config_name}")
