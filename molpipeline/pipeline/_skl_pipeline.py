@@ -531,6 +531,13 @@ class Pipeline(_Pipeline):
                     ]
                     self._final_estimator.fit(Xt, yt, **fit_params_last_step["fit"])
 
+            # fit post-processing steps
+            for _, post_element in self._post_processing_steps():
+                X_post_pred, y_post_pred = post_element.prepare_input(
+                    Xt, yt, self._final_estimator
+                )
+                post_element.fit(X_post_pred, y_post_pred)
+
         return self
 
     def _can_fit_transform(self) -> bool:
@@ -624,6 +631,9 @@ class Pipeline(_Pipeline):
                         f"match fit_transform of Pipeline {self.__class__.__name__}"
                     )
             for _, post_element in self._post_processing_steps():
+                iter_input, iter_label = post_element.prepare_input(
+                    iter_input, iter_label, self._final_estimator
+                )
                 iter_input = post_element.fit_transform(iter_input, iter_label)
         return iter_input
 
