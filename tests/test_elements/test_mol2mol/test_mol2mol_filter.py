@@ -8,9 +8,12 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+import pandas as pd
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2mol import (
@@ -292,6 +295,40 @@ class SmartsSmilesFilterTest(unittest.TestCase):
         }
         with self.assertRaises(ValueError):
             SmilesFilter(smiles_pats)
+
+    def _test_smarts_filter_input_types_helper(
+        self,
+        smarts_input: Any,
+    ) -> None:
+        """Test different input types for SmartsFilter.
+
+        Parameters
+        ----------
+        smarts_input : Any
+            The input to the SmartsFilter, can be a list, set, Series or dict of
+            patterns.
+
+        """
+        pipeline = Pipeline(
+            [
+                ("Smiles2Mol", SmilesToMol()),
+                ("SmartsFilter", SmartsFilter(smarts_input)),
+            ],
+        )
+        filtered_list = pipeline.transform(SMILES_LIST)
+        self.assertEqual(len(filtered_list), len(SMILES_LIST))
+        self.assertIsInstance(filtered_list[0], InvalidInstance)
+        self.assertFalse(isinstance(filtered_list[1], InvalidInstance))
+        self.assertFalse(isinstance(filtered_list[2], InvalidInstance))
+        self.assertIsInstance(filtered_list[3], InvalidInstance)
+        self.assertFalse(isinstance(filtered_list[4], InvalidInstance))
+
+    def test_smarts_filter_input_types(self) -> None:
+        """Test different input types for SmartsFilter."""
+        self._test_smarts_filter_input_types_helper(["c", "Cl"])
+        self._test_smarts_filter_input_types_helper({"c", "Cl"})
+        self._test_smarts_filter_input_types_helper(pd.Series(["c", "Cl"]))
+        self._test_smarts_filter_input_types_helper({"c": (1, None), "Cl": (1, None)})
 
     def test_smarts_filter_parallel(self) -> None:
         """Test if molecules are filtered correctly.
