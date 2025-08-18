@@ -1,4 +1,5 @@
 """Comprehensive tests for conformal prediction wrappers and pipeline integration."""
+# pylint: disable=too-many-lines
 
 import tempfile
 import unittest
@@ -21,8 +22,8 @@ from molpipeline.experimental.uncertainty.conformal import (
 )
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
+from tests import TEST_DATA_DIR
 
-TEST_DATA_DIR = Path(__file__).parent.parent.parent / "test_data"
 FP_RADIUS = 2
 FP_SIZE = 1024
 
@@ -544,6 +545,18 @@ class TestConformalPipelineIntegration(BaseConformalTestData):
         predicted_with_invalid = conformal_pipeline.predict(test_smiles_with_invalid)
 
         self.assertEqual(len(predicted_with_invalid), len(test_smiles_with_invalid))
+        # Check that invalid SMILES produce nan values at correct positions
+        n_valid = len(test_smiles)
+        n_invalid = len(invalid_smiles)
+
+        # Valid predictions should not be nan
+        valid_predictions = predicted_with_invalid[:n_valid]
+        self.assertFalse(np.isnan(valid_predictions).any())
+
+        # Invalid predictions should be nan
+        invalid_predictions = predicted_with_invalid[n_valid:]
+        self.assertTrue(np.isnan(invalid_predictions).all())
+        self.assertEqual(len(invalid_predictions), n_invalid)
 
     def test_pipeline_wrapped_by_conformal_regressor(self) -> None:  # pylint: disable=too-many-locals
         """Test a MolPipeline wrapped by ConformalPredictor for regression."""
@@ -583,6 +596,38 @@ class TestConformalPipelineIntegration(BaseConformalTestData):
         intervals = conformal_pipeline.predict_int(test_smiles)
         self.assertEqual(len(preds), len(y_test))
         self.assertEqual(intervals.shape, (len(y_test), 2))
+
+        # Test with invalid SMILES
+        invalid_smiles = ["C1CC", "X", ""]
+        test_smiles_with_invalid = test_smiles + invalid_smiles
+
+        # Test predictions with invalid SMILES
+        predicted_with_invalid = conformal_pipeline.predict(test_smiles_with_invalid)
+        intervals_with_invalid = conformal_pipeline.predict_int(
+            test_smiles_with_invalid
+        )
+
+        self.assertEqual(len(predicted_with_invalid), len(test_smiles_with_invalid))
+        self.assertEqual(intervals_with_invalid.shape[0], len(test_smiles_with_invalid))
+        self.assertEqual(intervals_with_invalid.shape[1], 2)
+
+        # Check that invalid SMILES produce nan values at correct positions
+        n_valid = len(test_smiles)
+        n_invalid = len(invalid_smiles)
+
+        # Valid predictions should not be nan
+        valid_predictions = predicted_with_invalid[:n_valid]
+        valid_intervals = intervals_with_invalid[:n_valid]
+        self.assertFalse(np.isnan(valid_predictions).any())
+        self.assertFalse(np.isnan(valid_intervals).any())
+
+        # Invalid predictions should be nan
+        invalid_predictions = predicted_with_invalid[n_valid:]
+        invalid_intervals = intervals_with_invalid[n_valid:]
+        self.assertTrue(np.isnan(invalid_predictions).all())
+        self.assertTrue(np.isnan(invalid_intervals).all())
+        self.assertEqual(len(invalid_predictions), n_invalid)
+        self.assertEqual(invalid_intervals.shape[0], n_invalid)
 
     def test_cross_conformal_wrapping_pipeline(self) -> None:
         """Test CrossConformalPredictor wrapping a complete pipeline."""
@@ -711,50 +756,46 @@ class TestConformalSerialization(BaseConformalTestData):
         )
 
         clf = RandomForestClassifier(n_estimators=5, random_state=42)
-        cp = ConformalPredictor(clf, estimator_type="classifier")
+        cp = ConformalPredictor(clf, estimator_type="classifier", confidence_level=0.85)
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
 
-        test_preds = cp.predict(x_test)
+        # Store original parameters for comparison
+        original_params = cp.get_params()
+
         json_str = recursive_to_json(cp)
         loaded_cp = recursive_from_json(json_str)
-        self.assertIsInstance(loaded_cp, ConformalPredictor)
-        self.assertEqual(loaded_cp.estimator_type, "classifier")
-        self.assertEqual(loaded_cp.confidence_level, 0.9)
 
+        # Comprehensive parameter validation using get_params()
+        self.assertEqual(original_params, loaded_cp.get_params())
+
+        self.assertIsInstance(loaded_cp, ConformalPredictor)
+        test_preds = cp.predict(x_test)
         self.assertEqual(len(test_preds), len(y_test))
 
     def test_json_serialization_cross_conformal_predictor(self) -> None:
-        """Test JSON serialization of CrossConformalPredictor.
-
-        Note: JSON serialization preserves configuration only, not fitted state.
-        Use joblib for fitted model persistence.
-        """
+        """Test JSON serialization of CrossConformalPredictor."""
         clf = RandomForestClassifier(n_estimators=5, random_state=42)
 
         ccp = CrossConformalPredictor(
             estimator=clf,
             estimator_type="classifier",
-            n_folds=2,
+            n_folds=3,
             random_state=42,
             confidence_level=0.8,
         )
         ccp.fit(self.x_clf, self.y_clf)
+
+        # Store original parameters for comparison
+        original_params = ccp.get_params()
+
         json_str = recursive_to_json(ccp)
         loaded_ccp = recursive_from_json(json_str)
 
+        # Comprehensive parameter validation using get_params()
+        self.assertEqual(original_params, loaded_ccp.get_params())
+
         self.assertIsInstance(loaded_ccp, CrossConformalPredictor)
-        self.assertEqual(loaded_ccp.estimator_type, "classifier")
-        self.assertEqual(loaded_ccp.n_folds, 2)
-        self.assertEqual(loaded_ccp.confidence_level, 0.8)
-        self.assertEqual(loaded_ccp.random_state, 42)
-
-        self.assertEqual(loaded_ccp.difficulty_estimator, None)
-        self.assertEqual(loaded_ccp.n_jobs, 1)
-
-        self.assertIsInstance(loaded_ccp.estimator, RandomForestClassifier)
-        self.assertEqual(loaded_ccp.estimator.n_estimators, 5)
-        self.assertEqual(loaded_ccp.estimator.random_state, 42)
 
     def test_json_serialization_cross_conformal_predictor_regression(self) -> None:
         """Test JSON serialization of CrossConformalPredictor for regression."""
@@ -763,24 +804,23 @@ class TestConformalSerialization(BaseConformalTestData):
         ccp = CrossConformalPredictor(
             estimator=reg,
             estimator_type="regressor",
-            n_folds=2,
+            n_folds=3,
             random_state=42,
             confidence_level=0.9,
+            binning=2,
         )
-
         ccp.fit(self.x_reg, self.y_reg)
+
+        # Store original parameters for comparison
+        original_params = ccp.get_params()
+
         json_str = recursive_to_json(ccp)
         loaded_ccp = recursive_from_json(json_str)
+
+        # Comprehensive parameter validation using get_params()
+        self.assertEqual(original_params, loaded_ccp.get_params())
+
         self.assertIsInstance(loaded_ccp, CrossConformalPredictor)
-        self.assertEqual(loaded_ccp.estimator_type, "regressor")
-        self.assertEqual(loaded_ccp.n_folds, 2)
-        self.assertEqual(loaded_ccp.confidence_level, 0.9)
-        self.assertEqual(loaded_ccp.random_state, 42)
-        self.assertEqual(loaded_ccp.difficulty_estimator, None)
-        self.assertEqual(loaded_ccp.n_jobs, 1)
-        self.assertIsInstance(loaded_ccp.estimator, RandomForestRegressor)
-        self.assertEqual(loaded_ccp.estimator.n_estimators, 5)
-        self.assertEqual(loaded_ccp.estimator.random_state, 42)
 
     def test_json_serialization_pipeline_wrapped_by_conformal(self) -> None:
         """Test JSON serialization of Pipeline wrapped by ConformalPredictor."""
@@ -808,11 +848,13 @@ class TestConformalSerialization(BaseConformalTestData):
 
         conformal_wrapper.fit(train_smiles, train_labels)
         conformal_wrapper.calibrate(calib_smiles, calib_labels)
+
         test_preds = conformal_wrapper.predict(test_smiles)
         json_str = recursive_to_json(conformal_wrapper)
         loaded_wrapper = recursive_from_json(json_str)
         self.assertIsInstance(loaded_wrapper, ConformalPredictor)
-        self.assertEqual(len(test_preds), len(test_smiles))
+        test_preds_loaded = loaded_wrapper.predict(test_smiles)
+        self.assertTrue(np.array_equal(test_preds, test_preds_loaded))
 
     def test_json_serialization_conformal_in_pipeline(self) -> None:
         """Test JSON serialization of Pipeline containing ConformalPredictor."""
@@ -856,8 +898,8 @@ class TestConformalSerialization(BaseConformalTestData):
         test_preds = pipeline.predict(test_smiles)
         json_str = recursive_to_json(pipeline)
         loaded_pipeline = recursive_from_json(json_str)
-        self.assertIsInstance(loaded_pipeline, Pipeline)
-        self.assertEqual(len(test_preds), len(test_smiles))
+        test_preds_loaded = loaded_pipeline.predict(test_smiles)
+        self.assertTrue(np.allclose(test_preds, test_preds_loaded))
 
     def test_joblib_serialization_conformal_predictor(self) -> None:  # pylint: disable=too-many-locals
         """Test joblib serialization of ConformalPredictor."""
@@ -868,38 +910,48 @@ class TestConformalSerialization(BaseConformalTestData):
         cp = ConformalPredictor(clf, estimator_type="classifier")
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
+
+        # Store original parameters and predictions
+        original_params = cp.get_params()
         original_preds = cp.predict(x_test)
         original_sets = cp.predict_conformal_set(x_test)
+        original_p_values = cp.predict_p(x_test)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             model_path = Path(temp_dir) / "conformal_model.joblib"
             joblib.dump(cp, model_path)
             loaded_cp = joblib.load(model_path)
+
+            # Validate parameters are preserved
+            self.assertEqual(original_params, loaded_cp.get_params())
+
             self.assertIsInstance(loaded_cp, ConformalPredictor)
+
+            # Validate all prediction methods work identically
             loaded_preds = loaded_cp.predict(x_test)
             loaded_sets = loaded_cp.predict_conformal_set(x_test)
+            loaded_p_values = loaded_cp.predict_p(x_test)
+
             self.assertTrue(np.array_equal(original_preds, loaded_preds))
+            self.assertTrue(np.allclose(original_p_values, loaded_p_values))
+
+            # Simple conformal sets comparison
             self.assertEqual(len(original_sets), len(loaded_sets))
             for orig_set, loaded_set in zip(original_sets, loaded_sets):
-                orig_set_items = set(orig_set.tolist())
-                loaded_set_items = set(loaded_set.tolist())
-                if len(orig_set_items) > 0 or len(loaded_set_items) > 0:
-                    all_items = orig_set_items.union(loaded_set_items)
-                    self.assertTrue(
-                        all(isinstance(item, (int, np.integer)) for item in all_items)
-                    )
-                    self.assertTrue(all(0 <= item <= 1 for item in all_items))
+                self.assertTrue(np.array_equal(np.sort(orig_set), np.sort(loaded_set)))
 
     def test_joblib_serialization_cross_conformal_predictor(self) -> None:
         """Test joblib serialization of CrossConformalPredictor."""
         x_train, x_test, y_train, _y_test = train_test_split(
             self.x_reg, self.y_reg, test_size=0.3, random_state=42
         )
+
         reg = RandomForestRegressor(n_estimators=5, random_state=42)
         ccp = CrossConformalPredictor(
             reg, estimator_type="regressor", n_folds=2, random_state=42
         )
         ccp.fit(x_train, y_train)
+
         original_preds = ccp.predict(x_test)
         original_intervals = ccp.predict_int(x_test)
 
@@ -986,6 +1038,7 @@ class TestConformalSerialization(BaseConformalTestData):
             ]
         ).fit_transform(calib_smiles)
         pipeline.named_steps["conformal"].calibrate(calib_fps, calib_labels)
+
         original_preds = pipeline.predict(test_smiles)
 
         with tempfile.TemporaryDirectory() as temp_dir:
