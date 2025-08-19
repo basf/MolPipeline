@@ -7,6 +7,7 @@ from sklearn.base import clone
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 
+from molpipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
 
 
@@ -88,3 +89,21 @@ class TestPostPredictionWrapper(unittest.TestCase):
         self.assertEqual(pca_inverse.shape, ppw_inverse.shape)
 
         self.assertTrue(np.allclose(pca_inverse, ppw_inverse))
+
+    # def test_pipeline_integration(self) -> None:
+    #     """Test integration with a pipeline."""
+    #
+    #     rng = np.random.default_rng(20240918)
+    #     features = rng.random((10, 5))
+    #     y = rng.integers(0, 2, size=(10,))
+    #
+    #     pipeline = Pipeline(
+    #         [
+    #             ("rf", RandomForestClassifier(n_estimators=10)),
+    #             ("pca", PostPredictionWrapper(PCA(n_components=1))),
+    #         ]
+    #     )
+    #
+    #     pipeline.fit(features, y)
+    #     ppw_transformed = pipeline.predict(features)
+    #     self.assertEqual(ppw_transformed.shape, (10, 3))
