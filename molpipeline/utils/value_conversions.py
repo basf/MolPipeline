@@ -1,17 +1,20 @@
 """Module for utilities converting values."""
 
 from collections.abc import Sequence
+from typing import TypeVar
 
-from molpipeline.utils.molpipeline_types import IntCountRange, IntOrIntCountRange
+VarNumber = TypeVar("VarNumber", float | None, int | None)
 
 
-def count_value_to_tuple(count: IntOrIntCountRange) -> IntCountRange:
-    """Convert a count value to a tuple.
+def assure_range(value: VarNumber | Sequence[VarNumber]) -> tuple[VarNumber, VarNumber]:
+    """Assure that the value is defining a range.
+
+    Integers or floats are converted to a range with the same value for both
 
     Parameters
     ----------
-    count: Union[int, IntCountRange]
-        Count value. Can be a single int or a tuple of two values.
+    value: VarNumber | Sequence[VarNumber]
+        Count value. Can be a single int | float or a Sequence of two values.
 
     Raises
     ------
@@ -26,11 +29,11 @@ def count_value_to_tuple(count: IntOrIntCountRange) -> IntCountRange:
         Tuple of count values.
 
     """
-    if isinstance(count, int):
-        return count, count
-    if isinstance(count, Sequence):
-        count_tuple = tuple(count)
-        if len(count_tuple) != 2:
-            raise ValueError(f"Expected a sequence of length 2, got: {count_tuple}")
-        return count_tuple
-    raise TypeError(f"Got unexpected type: {type(count)}")
+    if isinstance(value, (float, int)):
+        return value, value
+    if isinstance(value, Sequence):
+        range_tuple = tuple(value)
+        if len(range_tuple) != 2:  # noqa: PLR2004
+            raise ValueError(f"Expected a sequence of length 2, got: {range_tuple}")
+        return range_tuple
+    raise TypeError(f"Got unexpected type: {type(value)}")

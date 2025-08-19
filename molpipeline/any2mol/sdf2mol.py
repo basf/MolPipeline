@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -17,7 +17,9 @@ from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
-from molpipeline.utils.molpipeline_types import OptionalMol
+
+if TYPE_CHECKING:
+    from molpipeline.utils.molpipeline_types import OptionalMol
 
 
 class SDFToMol(_StringToMolPipelineElement):
@@ -38,13 +40,16 @@ class SDFToMol(_StringToMolPipelineElement):
         Parameters
         ----------
         identifier: str, default='enumerate'
-            Method of assigning identifiers to molecules. At the moment molecules are counted.
+            Method of assigning identifiers to molecules. Per default, an increasing
+            integer count is assigned to each molecule. If 'smiles' is chosen, the
+            identifier is the SMILES representation of the molecule.
         name: str, default='SDF2Mol'
             Name of PipelineElement
         n_jobs: int, default=1
             Number of cores used for processing.
         uuid: str | None, optional
             uuid of PipelineElement, by default None
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.identifier = identifier
@@ -62,6 +67,7 @@ class SDFToMol(_StringToMolPipelineElement):
         -------
         dict[str, Any]
             Dictionary containing all parameters defining the object.
+
         """
         params = super().get_params(deep)
         if deep:
@@ -82,6 +88,7 @@ class SDFToMol(_StringToMolPipelineElement):
         -------
         Self
             SDFToMol with updated parameters.
+
         """
         super().set_params(**parameters)
         if "identifier" in parameters:
@@ -104,6 +111,7 @@ class SDFToMol(_StringToMolPipelineElement):
         -------
         OptionalMol
             Molecule if transformation was successful, else InvalidInstance.
+
         """
         if not isinstance(value, (str, bytes)):
             return InvalidInstance(
@@ -111,7 +119,9 @@ class SDFToMol(_StringToMolPipelineElement):
                 "Invalid SDF string!",
                 self.name,
             )
-        mol = Chem.MolFromMolBlock(value)
+        supplier = Chem.SDMolSupplier()
+        supplier.SetData(value)
+        mol = next(supplier, None)
         if mol is None:
             return InvalidInstance(
                 self.uuid,

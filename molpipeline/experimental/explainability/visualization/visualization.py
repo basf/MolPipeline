@@ -438,7 +438,7 @@ def _structure_heatmap(
     # Coloring atoms of element 0 to 100 black
     drawer.drawOptions().updateAtomPalette(dict.fromkeys(range(100), (0, 0, 0, 1)))
     draw_opt = drawer.drawOptions()
-    draw_opt.padding = 0.2
+    draw_opt.padding = 0.2  # type: ignore[assignment]
 
     color_map = get_color_map_from_input(color)
 

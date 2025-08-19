@@ -18,9 +18,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
 )
 
 
-class Mol2PathFP(
-    MolToRDKitGenFPElement
-):  # pylint: disable=too-many-instance-attributes
+class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-attributes
     """Folded Path Fingerprint.
 
     Feature-mapping to vector-positions is arbitrary.
@@ -94,6 +92,7 @@ class Mol2PathFP(
         ------
         ValueError
             If the number of bits is not a positive integer.
+
         """
         # pylint: disable=R0801
         super().__init__(
@@ -105,7 +104,7 @@ class Mol2PathFP(
         )
         if not isinstance(n_bits, int) or n_bits < 1:
             raise ValueError(
-                f"Number of bits has to be an integer > 0! (Received: {n_bits})"
+                f"Number of bits has to be an integer > 0! (Received: {n_bits})",
             )
         self._n_bits = n_bits
         self._feature_names = [f"path_{i}" for i in range(self._n_bits)]
@@ -131,6 +130,7 @@ class Mol2PathFP(
         -------
         dict[str, Any]
             Dictionary of parameters.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -143,7 +143,7 @@ class Mol2PathFP(
             parameters["count_bounds"] = copy.copy(self._count_bounds)
             parameters["num_bits_per_feature"] = int(self._num_bits_per_feature)
             parameters["atom_invariants_generator"] = copy.copy(
-                self._atom_invariants_generator
+                self._atom_invariants_generator,
             )
             parameters["n_bits"] = int(self._n_bits)
         else:
@@ -171,6 +171,7 @@ class Mol2PathFP(
         -------
         Self
             MolToMorganFP pipeline element with updated parameters.
+
         """
         parameter_copy = dict(parameters)
         min_path = parameter_copy.pop("min_path", None)
@@ -198,7 +199,8 @@ class Mol2PathFP(
         if num_bits_per_feature is not None:
             self._num_bits_per_feature = num_bits_per_feature
         atom_invariants_generator = parameter_copy.pop(
-            "atom_invariants_generator", None
+            "atom_invariants_generator",
+            None,
         )
         if atom_invariants_generator is not None:
             self._atom_invariants_generator = atom_invariants_generator
@@ -215,6 +217,7 @@ class Mol2PathFP(
         -------
         rdFingerprintGenerator.GetRDKitFPGenerator
             RDKit Path fingerprint generator.
+
         """
         return rdFingerprintGenerator.GetRDKitFPGenerator(
             minPath=self._min_path,
