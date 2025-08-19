@@ -1,4 +1,5 @@
 """Comprehensive tests for conformal prediction wrappers and pipeline integration."""
+# pylint: disable=too-many-lines
 
 import tempfile
 import unittest
@@ -21,8 +22,8 @@ from molpipeline.experimental.uncertainty.conformal import (
 )
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
+from tests import TEST_DATA_DIR
 
-TEST_DATA_DIR = Path(__file__).parent.parent.parent / "test_data"
 FP_RADIUS = 2
 FP_SIZE = 1024
 
@@ -47,13 +48,13 @@ class BaseConformalTestData(unittest.TestCase):
             TEST_DATA_DIR / "molecule_net_bbbp.tsv.gz",
             sep="\t",
             compression="gzip",
-            nrows=100,
+            nrows=200,
         )
         logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz",
             sep="\t",
             compression="gzip",
-            nrows=100,
+            nrows=200,
         )
 
         error_filter_clf = ErrorFilter()
@@ -539,11 +540,23 @@ class TestConformalPipelineIntegration(BaseConformalTestData):
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
 
-        invalid_smiles = ["C1CC", "X", ""]
+        invalid_smiles = ["C1CC", "X", "."]
         test_smiles_with_invalid = test_smiles + invalid_smiles
         predicted_with_invalid = conformal_pipeline.predict(test_smiles_with_invalid)
 
         self.assertEqual(len(predicted_with_invalid), len(test_smiles_with_invalid))
+        # Check that invalid SMILES produce nan values at correct positions
+        n_valid = len(test_smiles)
+        n_invalid = len(invalid_smiles)
+
+        # Valid predictions should not be nan
+        valid_predictions = predicted_with_invalid[:n_valid]
+        self.assertFalse(np.isnan(valid_predictions).any())
+
+        # Invalid predictions should be nan
+        invalid_predictions = predicted_with_invalid[n_valid:]
+        self.assertTrue(np.isnan(invalid_predictions).all())
+        self.assertEqual(len(invalid_predictions), n_invalid)
 
     def test_pipeline_wrapped_by_conformal_regressor(self) -> None:  # pylint: disable=too-many-locals
         """Test a MolPipeline wrapped by ConformalPredictor for regression."""
@@ -583,6 +596,38 @@ class TestConformalPipelineIntegration(BaseConformalTestData):
         intervals = conformal_pipeline.predict_int(test_smiles)
         self.assertEqual(len(preds), len(y_test))
         self.assertEqual(intervals.shape, (len(y_test), 2))
+
+        # Test with invalid SMILES
+        invalid_smiles = ["C1CC", "X", "."]
+        test_smiles_with_invalid = test_smiles + invalid_smiles
+
+        # Test predictions with invalid SMILES
+        predicted_with_invalid = conformal_pipeline.predict(test_smiles_with_invalid)
+        intervals_with_invalid = conformal_pipeline.predict_int(
+            test_smiles_with_invalid
+        )
+
+        self.assertEqual(len(predicted_with_invalid), len(test_smiles_with_invalid))
+        self.assertEqual(intervals_with_invalid.shape[0], len(test_smiles_with_invalid))
+        self.assertEqual(intervals_with_invalid.shape[1], 2)
+
+        # Check that invalid SMILES produce nan values at correct positions
+        n_valid = len(test_smiles)
+        n_invalid = len(invalid_smiles)
+
+        # Valid predictions should not be nan
+        valid_predictions = predicted_with_invalid[:n_valid]
+        valid_intervals = intervals_with_invalid[:n_valid]
+        self.assertFalse(np.isnan(valid_predictions).any())
+        self.assertFalse(np.isnan(valid_intervals).any())
+
+        # Invalid predictions should be nan
+        invalid_predictions = predicted_with_invalid[n_valid:]
+        invalid_intervals = intervals_with_invalid[n_valid:]
+        self.assertTrue(np.isnan(invalid_predictions).all())
+        self.assertTrue(np.isnan(invalid_intervals).all())
+        self.assertEqual(len(invalid_predictions), n_invalid)
+        self.assertEqual(invalid_intervals.shape[0], n_invalid)
 
     def test_cross_conformal_wrapping_pipeline(self) -> None:
         """Test CrossConformalPredictor wrapping a complete pipeline."""
@@ -704,7 +749,7 @@ class TestConformalPipelineIntegration(BaseConformalTestData):
 class TestConformalSerialization(BaseConformalTestData):
     """Serialization tests for conformal prediction (JSON and joblib)."""
 
-    def test_json_serialization_conformal_predictor(self) -> None:
+    def test_json_serialization_conformal_predictor(self) -> None:  # pylint: disable=too-many-locals
         """Test JSON serialization of ConformalPredictor."""
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
@@ -719,8 +764,33 @@ class TestConformalSerialization(BaseConformalTestData):
         json_str = recursive_to_json(cp)
         loaded_cp = recursive_from_json(json_str)
         self.assertIsInstance(loaded_cp, ConformalPredictor)
-        self.assertEqual(loaded_cp.estimator_type, "classifier")
-        self.assertEqual(loaded_cp.confidence_level, 0.9)
+        # Compare get_params() output - this is what JSON serialization preserves
+        original_params = cp.get_params()
+        loaded_params = loaded_cp.get_params()
+        # Compare parameters using key-value iteration
+        for key, original_value in original_params.items():
+            self.assertIn(
+                key, loaded_params, f"Key '{key}' missing in loaded parameters"
+            )
+            loaded_value = loaded_params[key]
+
+            # Handle estimator comparison specially (different object instances but same parameters)
+            if key == "estimator":
+                self.assertEqual(
+                    type(original_value), type(loaded_value), "Estimator types differ"
+                )
+                if hasattr(original_value, "get_params") and hasattr(
+                    loaded_value, "get_params"
+                ):
+                    self.assertEqual(
+                        original_value.get_params(),
+                        loaded_value.get_params(),
+                        "Estimator parameters differ",
+                    )
+            else:
+                self.assertEqual(
+                    original_value, loaded_value, f"Mismatch for parameter '{key}'"
+                )
 
         self.assertEqual(len(test_preds), len(y_test))
 
@@ -730,7 +800,7 @@ class TestConformalSerialization(BaseConformalTestData):
         Note: JSON serialization preserves configuration only, not fitted state.
         Use joblib for fitted model persistence.
         """
-        clf = RandomForestClassifier(n_estimators=5, random_state=42)
+        clf = RandomForestClassifier(n_estimators=100, random_state=42)
 
         ccp = CrossConformalPredictor(
             estimator=clf,
@@ -744,17 +814,35 @@ class TestConformalSerialization(BaseConformalTestData):
         loaded_ccp = recursive_from_json(json_str)
 
         self.assertIsInstance(loaded_ccp, CrossConformalPredictor)
-        self.assertEqual(loaded_ccp.estimator_type, "classifier")
-        self.assertEqual(loaded_ccp.n_folds, 2)
-        self.assertEqual(loaded_ccp.confidence_level, 0.8)
-        self.assertEqual(loaded_ccp.random_state, 42)
 
-        self.assertEqual(loaded_ccp.difficulty_estimator, None)
-        self.assertEqual(loaded_ccp.n_jobs, 1)
+        # Compare get_params() output - this is what JSON serialization preserves
+        original_params = ccp.get_params()
+        loaded_params = loaded_ccp.get_params()
 
-        self.assertIsInstance(loaded_ccp.estimator, RandomForestClassifier)
-        self.assertEqual(loaded_ccp.estimator.n_estimators, 5)
-        self.assertEqual(loaded_ccp.estimator.random_state, 42)
+        # Compare parameters using key-value iteration
+        for key, original_value in original_params.items():
+            self.assertIn(
+                key, loaded_params, f"Key '{key}' missing in loaded parameters"
+            )
+            loaded_value = loaded_params[key]
+
+            # Handle estimator comparison specially (different object instances but same parameters)
+            if key == "estimator":
+                self.assertEqual(
+                    type(original_value), type(loaded_value), "Estimator types differ"
+                )
+                if hasattr(original_value, "get_params") and hasattr(
+                    loaded_value, "get_params"
+                ):
+                    self.assertEqual(
+                        original_value.get_params(),
+                        loaded_value.get_params(),
+                        "Estimator parameters differ",
+                    )
+            else:
+                self.assertEqual(
+                    original_value, loaded_value, f"Mismatch for parameter '{key}'"
+                )
 
     def test_json_serialization_cross_conformal_predictor_regression(self) -> None:
         """Test JSON serialization of CrossConformalPredictor for regression."""
@@ -772,15 +860,36 @@ class TestConformalSerialization(BaseConformalTestData):
         json_str = recursive_to_json(ccp)
         loaded_ccp = recursive_from_json(json_str)
         self.assertIsInstance(loaded_ccp, CrossConformalPredictor)
-        self.assertEqual(loaded_ccp.estimator_type, "regressor")
-        self.assertEqual(loaded_ccp.n_folds, 2)
-        self.assertEqual(loaded_ccp.confidence_level, 0.9)
-        self.assertEqual(loaded_ccp.random_state, 42)
-        self.assertEqual(loaded_ccp.difficulty_estimator, None)
-        self.assertEqual(loaded_ccp.n_jobs, 1)
         self.assertIsInstance(loaded_ccp.estimator, RandomForestRegressor)
-        self.assertEqual(loaded_ccp.estimator.n_estimators, 5)
-        self.assertEqual(loaded_ccp.estimator.random_state, 42)
+
+        # Compare get_params() output - this is what JSON serialization preserves
+        original_params = ccp.get_params()
+        loaded_params = loaded_ccp.get_params()
+
+        # Compare parameters using key-value iteration
+        for key, original_value in original_params.items():
+            self.assertIn(
+                key, loaded_params, f"Key '{key}' missing in loaded parameters"
+            )
+            loaded_value = loaded_params[key]
+
+            # Handle estimator comparison specially (different object instances but same parameters)
+            if key == "estimator":
+                self.assertEqual(
+                    type(original_value), type(loaded_value), "Estimator types differ"
+                )
+                if hasattr(original_value, "get_params") and hasattr(
+                    loaded_value, "get_params"
+                ):
+                    self.assertEqual(
+                        original_value.get_params(),
+                        loaded_value.get_params(),
+                        "Estimator parameters differ",
+                    )
+            else:
+                self.assertEqual(
+                    original_value, loaded_value, f"Mismatch for parameter '{key}'"
+                )
 
     def test_json_serialization_pipeline_wrapped_by_conformal(self) -> None:
         """Test JSON serialization of Pipeline wrapped by ConformalPredictor."""
@@ -802,17 +911,23 @@ class TestConformalSerialization(BaseConformalTestData):
         train_smiles, temp_smiles, train_labels, temp_labels = train_test_split(
             self.smiles_clf, self.y_clf, test_size=0.4, random_state=42
         )
-        calib_smiles, test_smiles, calib_labels, _test_labels = train_test_split(
+        calib_smiles, _test_smiles, calib_labels, _test_labels = train_test_split(
             temp_smiles, temp_labels, test_size=0.5, random_state=42
         )
 
         conformal_wrapper.fit(train_smiles, train_labels)
         conformal_wrapper.calibrate(calib_smiles, calib_labels)
-        test_preds = conformal_wrapper.predict(test_smiles)
         json_str = recursive_to_json(conformal_wrapper)
         loaded_wrapper = recursive_from_json(json_str)
         self.assertIsInstance(loaded_wrapper, ConformalPredictor)
-        self.assertEqual(len(test_preds), len(test_smiles))
+
+        self.assertEqual(
+            conformal_wrapper.estimator_type, loaded_wrapper.estimator_type
+        )
+        self.assertEqual(
+            conformal_wrapper.confidence_level, loaded_wrapper.confidence_level
+        )
+        self.assertIsInstance(loaded_wrapper.estimator, Pipeline)
 
     def test_json_serialization_conformal_in_pipeline(self) -> None:
         """Test JSON serialization of Pipeline containing ConformalPredictor."""
@@ -864,7 +979,9 @@ class TestConformalSerialization(BaseConformalTestData):
         x_train, x_calib, x_test, y_train, y_calib, _y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
-        clf = RandomForestClassifier(n_estimators=5, random_state=42)
+        clf = RandomForestClassifier(
+            n_estimators=200, random_state=42
+        )  # Increased for stability
         cp = ConformalPredictor(clf, estimator_type="classifier")
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
@@ -881,14 +998,10 @@ class TestConformalSerialization(BaseConformalTestData):
             self.assertTrue(np.array_equal(original_preds, loaded_preds))
             self.assertEqual(len(original_sets), len(loaded_sets))
             for orig_set, loaded_set in zip(original_sets, loaded_sets):
-                orig_set_items = set(orig_set.tolist())
-                loaded_set_items = set(loaded_set.tolist())
-                if len(orig_set_items) > 0 or len(loaded_set_items) > 0:
-                    all_items = orig_set_items.union(loaded_set_items)
-                    self.assertTrue(
-                        all(isinstance(item, (int, np.integer)) for item in all_items)
-                    )
-                    self.assertTrue(all(0 <= item <= 1 for item in all_items))
+                # Convert to sorted lists for comparison - simpler than set operations
+                orig_sorted = sorted(orig_set.tolist())
+                loaded_sorted = sorted(loaded_set.tolist())
+                self.assertEqual(orig_sorted, loaded_sorted)
 
     def test_joblib_serialization_cross_conformal_predictor(self) -> None:
         """Test joblib serialization of CrossConformalPredictor."""
