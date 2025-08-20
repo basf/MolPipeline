@@ -88,7 +88,7 @@ class TestLeaderPickerEstimator(unittest.TestCase):
             distances,
             expected_labels,
             expected_centroids,
-            strict=False,
+            strict=True,
         ):
             leader_picker = LeaderPickerClustering(distance_threshold=dist)
             pipeline = Pipeline(

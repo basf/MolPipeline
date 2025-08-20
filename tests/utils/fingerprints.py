@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
@@ -13,6 +15,11 @@ from rdkit.DataStructs import (
     UIntSparseIntVect,
 )
 from scipy import sparse
+
+if TYPE_CHECKING:
+    from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
+        FPAssembleOutputOutputType,
+    )
 
 
 def make_sparse_fp(
@@ -49,18 +56,13 @@ def make_sparse_fp(
 
 
 def fingerprints_to_numpy(
-    fingerprints: list[ExplicitBitVect]
-    | list[UIntSparseIntVect]
-    | list[IntSparseIntVect]
-    | list[SparseBitVect]
-    | sparse.csr_matrix
-    | npt.NDArray[np.int_],
+    fingerprints: FPAssembleOutputOutputType,
 ) -> npt.NDArray[np.int_]:
     """Convert fingerprints in various types to numpy.
 
     Parameters
     ----------
-    fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_]
+    fingerprints: FPAssembleOutputOutputType
         Fingerprint matrix.
 
     Raises

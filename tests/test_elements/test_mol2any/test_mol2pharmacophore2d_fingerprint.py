@@ -10,6 +10,7 @@ from rdkit.Chem.Pharm2D import Gobbi_Pharm2D
 from rdkit.Chem.Pharm2D.Generate import Gen2DFingerprint
 from rdkit.DataStructs import ExplicitBitVect, IntSparseIntVect
 from scipy import sparse
+from sklearn import clone
 
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
@@ -29,6 +30,20 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
             Chem.MolFromSmiles("c1ccccc1"),  # benzene
             Chem.MolFromSmiles("CCN"),  # ethylamine
         ]
+        # Create a minimal feature definition
+        self.minimal_fdef = """
+AtomType Donor [N,O;H1,H2]
+DefineFeature TestDonor [{Donor}]
+  Family Donor
+  Weights 1
+EndFeature
+
+AtomType Acceptor [N,O]
+DefineFeature TestAcceptor [{Acceptor}]
+  Family Acceptor
+  Weights 1
+EndFeature
+        """
 
     def test_init_default_parameters(self) -> None:
         """Test initialization with default parameters."""
@@ -197,39 +212,27 @@ class TestMolToPharmacophore2DFP(unittest.TestCase):
 
     def test_custom_feature_definition(self) -> None:
         """Test using a custom feature definition."""
-        # Create a temporary minimal feature definition
-        minimal_fdef = """
-AtomType Donor [N,O;H1,H2]
-DefineFeature TestDonor [{Donor}]
-  Family Donor
-  Weights 1
-EndFeature
-
-AtomType Acceptor [N,O]
-DefineFeature TestAcceptor [{Acceptor}]
-  Family Acceptor
-  Weights 1
-EndFeature
-"""
-
-        # test as string input
-        fp_element = MolToPharmacophore2DFP(feature_definition=minimal_fdef)
+        fp_element = MolToPharmacophore2DFP(feature_definition=self.minimal_fdef)
         fingerprints1 = fp_element.transform(self.test_molecules)
         self.assertIsInstance(fingerprints1, sparse.csr_matrix)
         self.assertTrue(fingerprints1.nnz >= 1)  # May be 0 for simple features
 
-        # test as file input
+    def test_from_file(self) -> None:
+        """Test using a feature definition from a file."""
+        fp_element1 = MolToPharmacophore2DFP(feature_definition=self.minimal_fdef)
+        fingerprints1 = fp_element1.transform(self.test_molecules)
+
         with tempfile.NamedTemporaryFile(
             mode="w",
             suffix=".fdef",
             encoding="utf-8",
         ) as tmp_file:
-            tmp_file.write(minimal_fdef)
+            tmp_file.write(self.minimal_fdef)
             tmp_file.flush()
 
             # Should work with custom feature factory
-            fp_element = MolToPharmacophore2DFP(feature_definition=tmp_file.name)
-        fingerprints2 = fp_element.transform(self.test_molecules)
+            fp_element2 = MolToPharmacophore2DFP.from_file(tmp_file.name)
+        fingerprints2 = fp_element2.transform(self.test_molecules)
 
         self.assertIsInstance(fingerprints2, sparse.csr_matrix)
         self.assertTrue(fingerprints2.nnz >= 1)  # May be 0 for simple features
@@ -323,6 +326,18 @@ EndFeature
         """Test preconfigured fingerprint with an unknown name."""
         with self.assertRaises(ValueError):
             MolToPharmacophore2DFP.from_preconfiguration("unknown_fingerprint")  # type: ignore[arg-type]
+
+    def test_sklearn_clone(self) -> None:
+        """Test sklearn clone functionality."""
+        fp_element = MolToPharmacophore2DFP(
+            min_point_count=2,
+            max_point_count=3,
+            triangular_pruning=True,
+            counted=False,
+        )
+        cloned_fp_element = clone(fp_element)
+
+        self.assertEqual(fp_element.get_params(), cloned_fp_element.get_params())
 
 
 class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):

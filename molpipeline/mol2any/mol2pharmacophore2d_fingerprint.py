@@ -4,12 +4,7 @@ from __future__ import annotations
 
 import copy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import TYPE_CHECKING, Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -50,16 +45,18 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
     - Configurable parameters for feature factory and signature factory
 
     Per default, the 2d pharmacophore fingerprint described by Gobbi et al. is used.
-    See:
-      Gobbi, A. & Poppinger, D. Genetic optimization of combinatorial libraries.
-      Biotechnology and Bioengineering 61, 47-54 (1998).
+
+    References
+    ----------
+    Gobbi, A. & Poppinger, D. Genetic optimization of combinatorial libraries.
+        Biotechnology and Bioengineering 61, 47-54 (1998).
 
     """
 
     def __init__(
         self,
         *,
-        feature_definition: Path | str | None = None,
+        feature_definition: str | None = None,
         min_point_count: int = 2,
         max_point_count: int = 3,
         triangular_pruning: bool = True,
@@ -77,7 +74,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
 
         Parameters
         ----------
-        feature_definition : Path, str, or None, optional
+        feature_definition : str | None, optional
             Path or content of a feature definition file (.fdef). If None, uses
             configuration by Gobbi et al.
         min_point_count : int, default=2
@@ -129,73 +126,58 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         self._include_bond_order = include_bond_order
         self._skip_feats = skip_feats if skip_feats is not None else []
         self._counted = counted
-
-        self._feature_definition_str = self._read_feature_factory_content(
+        self._feature_definition = self._handle_feature_definition_input(
             feature_definition,
         )
-
-        # Set default distance bins if not provided
-        if distance_bins is None:
-            distance_bins = Gobbi_Pharm2D.defaultBins
-        self._validate_distance_bins(distance_bins)
-        self._distance_bins = distance_bins
+        self._distance_bins = self._handle_distance_bins_input(distance_bins)
 
         # Initialize factories and calculate fingerprint size
         self._initialize_factories()
 
     @staticmethod
-    def _read_feature_factory_content(
-        feature_definition: Path | str | None,
+    def _handle_feature_definition_input(
+        feature_definition: str | None,
     ) -> str:
-        """Read the feature definition block from a file.
+        """Handle feature definition input.
 
         Parameters
         ----------
-        feature_definition : Path, str
-            Path or content of a feature definition file (.fdef).
+        feature_definition : str | None
+            Content of a feature definition file (.fdef).
 
         Returns
         -------
         str
             Content of the feature definition file.
 
-        Raises
-        ------
-        FileNotFoundError
-            If the specified feature factory file does not exist.
-        TypeError
-            If feature_definition is not a Path, str, or None.
-
         """
         if feature_definition is None:
             # Set default feature factory path if not provided
             return Gobbi_Pharm2D.fdef
-        if isinstance(feature_definition, Path):
-            # If feature_definition is a Path, use it directly
-            feat_def_path = feature_definition
-        elif isinstance(feature_definition, str):
-            try:
-                if Path(feature_definition).exists():
-                    # If feature_definition is a string and points to a file, use it
-                    feat_def_path = Path(feature_definition)
-                else:
-                    # assume the string is the content of the feature definition
-                    return feature_definition
-            except OSError:
-                # If Path creation or exists() fails (e.g., string too long),
-                # assume its feature definition content
-                return feature_definition
-        else:
-            raise TypeError(
-                "feature_definition must be a Path, str, or None. "
-                f"Got {type(feature_definition)} instead.",
-            )
+        return feature_definition
 
-        if isinstance(feat_def_path, Path) and not feat_def_path.exists():
-            raise FileNotFoundError(
-                f"Feature factory file {feat_def_path} does not exist.",
-            )
-        return feat_def_path.read_text(encoding="utf-8")
+    def _handle_distance_bins_input(
+        self,
+        distance_bins: list[tuple[float, float]] | None,
+    ) -> list[tuple[float, float]]:
+        """Handle distance bins input.
+
+        Parameters
+        ----------
+        distance_bins : list[tuple[float, float]] | None
+            List of distance bins as (min_distance, max_distance) tuples.
+
+        Returns
+        -------
+        list[tuple[float, float]]
+            Validated list of distance bins.
+
+        """
+        if distance_bins is None:
+            # Set default distance bins if not provided
+            distance_bins = Gobbi_Pharm2D.defaultBins
+        self._validate_distance_bins(distance_bins)
+        return distance_bins
 
     def _initialize_factories(self) -> None:
         """Initialize the feature factory and signature factory.
@@ -206,7 +188,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
             If the signature factory does not produce any bits.
 
         """
-        feature_factory = BuildFeatureFactoryFromString(self._feature_definition_str)
+        feature_factory = BuildFeatureFactoryFromString(self._feature_definition)
 
         # Create signature factory
         self._sig_factory = SigFactory(
@@ -361,9 +343,9 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         return self._skip_feats[:]
 
     @property
-    def feature_definition_str(self) -> str:
+    def feature_definition(self) -> str:
         """Get feature factory file path."""
-        return self._feature_definition_str
+        return self._feature_definition
 
     @property
     def distance_bins(self) -> list[tuple[float, float]]:
@@ -393,7 +375,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         if deep:
             parameters.update(
                 {
-                    "feature_definition": copy.copy(self._feature_definition_str),
+                    "feature_definition": copy.copy(self._feature_definition),
                     "min_point_count": copy.copy(self._min_point_count),
                     "max_point_count": copy.copy(self._max_point_count),
                     "triangular_pruning": copy.copy(self._triangular_pruning),
@@ -407,7 +389,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         else:
             parameters.update(
                 {
-                    "feature_definition": self._feature_definition_str,
+                    "feature_definition": self._feature_definition,
                     "min_point_count": self._min_point_count,
                     "max_point_count": self._max_point_count,
                     "triangular_pruning": self._triangular_pruning,
@@ -451,7 +433,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         needs_reinit = False
 
         if feature_definition is not None:
-            self._feature_definition_str = self._read_feature_factory_content(
+            self._feature_definition = self._handle_feature_definition_input(
                 feature_definition,
             )
             needs_reinit = True
@@ -483,8 +465,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
             needs_reinit = True
 
         if distance_bins is not None:
-            self._validate_distance_bins(distance_bins)
-            self._distance_bins = distance_bins
+            self._distance_bins = self._handle_distance_bins_input(distance_bins)
             needs_reinit = True
 
         if counted is not None:
@@ -538,6 +519,32 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         return dict.fromkeys(fp.GetOnBits(), 1)
 
     @classmethod
+    def from_file(cls, path: Path | str, **kwargs: Any) -> Self:
+        """Create a MolToPharmacophore2DFP instance from a feature definition file.
+
+        Parameters
+        ----------
+        path : Path | str
+            Path to the feature definition file (.fdef).
+        **kwargs : Any
+            Additional parameters to the MolToPharmacophore2DFP constructor.
+
+        Returns
+        -------
+        MolToPharmacophore2DFP
+            Instance of MolToPharmacophore2DFP with the specified feature definition.
+
+        Raises
+        ------
+        TypeError
+            If the path is not a Path or str.
+
+        """
+        if not isinstance(path, (Path, str)):
+            raise TypeError("path must be a Path or str.")
+        return cls(feature_definition=Path(path).read_text(encoding="utf-8"), **kwargs)
+
+    @classmethod
     def from_preconfiguration(
         cls,
         config_name: Literal["base", "gobbi"],
@@ -589,8 +596,8 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
             # Feature definitions are taken from RDKit's BaseFeatures.fdef file.
             # Bins are taken from:
             # https://www.rdkit.org/UGM/2012/Landrum_RDKit_UGM.Fingerprints.Final.pptx.pdf
-            return cls(
-                feature_definition=Path(RDDataDir) / "BaseFeatures.fdef",
+            return cls.from_file(
+                Path(RDDataDir) / "BaseFeatures.fdef",
                 distance_bins=[
                     (2, 3),
                     (3, 4),
