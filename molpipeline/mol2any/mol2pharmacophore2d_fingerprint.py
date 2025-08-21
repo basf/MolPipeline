@@ -126,58 +126,13 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         self._include_bond_order = include_bond_order
         self._skip_feats = skip_feats if skip_feats is not None else []
         self._counted = counted
-        self._feature_definition = self._handle_feature_definition_input(
-            feature_definition,
-        )
-        self._distance_bins = self._handle_distance_bins_input(distance_bins)
+        self._feature_definition = feature_definition or Gobbi_Pharm2D.fdef
+        self._distance_bins = distance_bins or Gobbi_Pharm2D.defaultBins
+
+        self._validate_distance_bins(self._distance_bins)
 
         # Initialize factories and calculate fingerprint size
         self._initialize_factories()
-
-    @staticmethod
-    def _handle_feature_definition_input(
-        feature_definition: str | None,
-    ) -> str:
-        """Handle feature definition input.
-
-        Parameters
-        ----------
-        feature_definition : str | None
-            Content of a feature definition file (.fdef).
-
-        Returns
-        -------
-        str
-            Content of the feature definition file.
-
-        """
-        if feature_definition is None:
-            # Set default feature factory path if not provided
-            return Gobbi_Pharm2D.fdef
-        return feature_definition
-
-    def _handle_distance_bins_input(
-        self,
-        distance_bins: list[tuple[float, float]] | None,
-    ) -> list[tuple[float, float]]:
-        """Handle distance bins input.
-
-        Parameters
-        ----------
-        distance_bins : list[tuple[float, float]] | None
-            List of distance bins as (min_distance, max_distance) tuples.
-
-        Returns
-        -------
-        list[tuple[float, float]]
-            Validated list of distance bins.
-
-        """
-        if distance_bins is None:
-            # Set default distance bins if not provided
-            distance_bins = Gobbi_Pharm2D.defaultBins
-        self._validate_distance_bins(distance_bins)
-        return distance_bins
 
     def _initialize_factories(self) -> None:
         """Initialize the feature factory and signature factory.
@@ -418,58 +373,49 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
         """
         parameter_copy = dict(parameters)
 
-        # Extract pharmacophore-specific parameters
-        feature_definition = parameter_copy.pop("feature_definition", None)
-        min_point_count = parameter_copy.pop("min_point_count", None)
-        max_point_count = parameter_copy.pop("max_point_count", None)
-        triangular_pruning = parameter_copy.pop("triangular_pruning", None)
-        shortest_paths_only = parameter_copy.pop("shortest_paths_only", None)
-        include_bond_order = parameter_copy.pop("include_bond_order", None)
-        skip_feats = parameter_copy.pop("skip_feats", None)
-        distance_bins = parameter_copy.pop("distance_bins", None)
-        counted = parameter_copy.pop("counted", None)
-
         # Set parameters that require reinitialization
         needs_reinit = False
 
-        if feature_definition is not None:
-            self._feature_definition = self._handle_feature_definition_input(
-                feature_definition,
-            )
+        if "feature_definition" in parameter_copy:
+            self._feature_definition = parameter_copy.pop("feature_definition")
             needs_reinit = True
 
-        if min_point_count is not None:
+        if "min_point_count" in parameter_copy:
+            min_point_count = parameter_copy.pop("min_point_count")
             self._validate_min_max_point_count(min_point_count, self._max_point_count)
             self._min_point_count = min_point_count
             needs_reinit = True
 
-        if max_point_count is not None:
+        if "max_point_count" in parameter_copy:
+            max_point_count = parameter_copy.pop("max_point_count")
             self._validate_min_max_point_count(self._min_point_count, max_point_count)
             self._max_point_count = max_point_count
             needs_reinit = True
 
-        if triangular_pruning is not None:
-            self._triangular_pruning = triangular_pruning
+        if "triangular_pruning" in parameter_copy:
+            self._triangular_pruning = parameter_copy.pop("triangular_pruning")
             needs_reinit = True
 
-        if shortest_paths_only is not None:
-            self._shortest_paths_only = shortest_paths_only
+        if "shortest_paths_only" in parameter_copy:
+            self._shortest_paths_only = parameter_copy.pop("shortest_paths_only")
             needs_reinit = True
 
-        if include_bond_order is not None:
-            self._include_bond_order = include_bond_order
+        if "include_bond_order" in parameter_copy:
+            self._include_bond_order = parameter_copy.pop("include_bond_order")
             needs_reinit = True
 
-        if skip_feats is not None:
-            self._skip_feats = skip_feats if skip_feats is not None else []
+        if "skip_feats" in parameter_copy:
+            self._skip_feats = parameter_copy.pop("skip_feats")
             needs_reinit = True
 
-        if distance_bins is not None:
-            self._distance_bins = self._handle_distance_bins_input(distance_bins)
+        if "distance_bins" in parameter_copy:
+            distance_bins = parameter_copy.pop("distance_bins")
+            self._validate_distance_bins(distance_bins)
+            self._distance_bins = distance_bins
             needs_reinit = True
 
-        if counted is not None:
-            self._counted = counted
+        if "counted" in parameter_copy:
+            self._counted = parameter_copy.pop("counted")
             needs_reinit = True
 
         # Reinitialize factories if needed
