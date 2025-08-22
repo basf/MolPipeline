@@ -67,8 +67,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
             The number of neighbors to get.
         radius : float, optional (default = 1.0)
             Range of parameter space to use by default for radius_neighbors queries.
-        algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional
-                    (default = 'auto')
+        algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, (default = 'auto')
             Algorithm used to compute the nearest neighbors.
         leaf_size : int, optional (default = 30)
             Leaf size passed to BallTree or KDTree. This can affect the speed of the
@@ -190,7 +189,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
 
     def fit_predict(
         self,
-        X: npt.NDArray[Any] | sparse.csr_matrix,  # pylint: disable=invalid-name # noqa: N803
+        X: (npt.NDArray[Any] | sparse.csr_matrix),  # pylint: disable=invalid-name # noqa: N803
         y: Sequence[Any],
         return_distance: bool = False,
         n_neighbors: int | None = None,
@@ -253,9 +252,9 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
         ----------
         k: int | None
             Number of nearest neighbors to find. If None, all neighbors are returned.
-        batch_size: int, optional (default=1000)
+        batch_size: int, default=1000
             Size of the batches for parallel processing.
-        n_jobs: int, optional (default=1)
+        n_jobs: int, default=1
             Number of parallel jobs to run for neighbors search.
 
         """
@@ -263,13 +262,6 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
         self.k = k
         self.batch_size = batch_size
         self.n_jobs = check_available_cores(n_jobs)
-        self.knn_reduce_function: (
-            Callable[
-                [npt.NDArray[np.float64]],
-                tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]],
-            ]
-            | None
-        ) = None
 
     def fit(
         self,
@@ -308,14 +300,6 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
         if self.k is None:
             # set k to the number of target fingerprints if k is None
             self.k = X.shape[0]
-
-        # determine the recude function dependent on the value of k
-        if self.k == 1:
-            self.knn_reduce_function = self._reduce_k_equals_1
-        elif self.k < X.shape[0]:
-            self.knn_reduce_function = self._reduce_k_greater_1_less_n
-        else:
-            self.knn_reduce_function = self._reduce_k_equals_n
 
         self.target_indices_mapping_ = np.array(y)
         self.target_fingerprints = X
@@ -440,23 +424,24 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
         Raises
         ------
         AssertionError
-            If the knn_reduce_function has not been set. This should happen in the
-            fit function.
+            If the target fingerprints are not set.
 
         """
+        if self.target_fingerprints is None:
+            raise AssertionError("Target fingerprints are not set.")
+
         # compute full similarity matrix for the query batch
         similarity_mat_chunk = tanimoto_similarity_sparse(
             query_batch,
             self.target_fingerprints,
         )
 
-        if self.knn_reduce_function is None:
-            raise AssertionError(
-                "The knn_reduce_function has not been set. This should happen in the"
-                " fit function.",
-            )
         # reduce the similarity matrix to the k nearest neighbors
-        return self.knn_reduce_function(similarity_mat_chunk)
+        if self.k == 1:
+            return self._reduce_k_equals_1(similarity_mat_chunk)
+        if self.k < self.target_fingerprints.shape[0]:
+            return self._reduce_k_greater_1_less_n(similarity_mat_chunk)
+        return self._reduce_k_equals_n(similarity_mat_chunk)
 
     def predict(
         self,
