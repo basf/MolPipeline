@@ -121,9 +121,9 @@ class PipelineTest(unittest.TestCase):
                 ("mol2smi", mol2smi),
             ],
         )
-        generated_smiles_list = salt_remover_pipeline.transform(smiles_with_salt_list)
+        generated_smiles = salt_remover_pipeline.transform(smiles_with_salt_list)
         for generated_smi, smiles_without_salt in zip(
-            generated_smiles_list,
+            generated_smiles,
             smiles_without_salt_list,
             strict=True,
         ):
@@ -203,7 +203,7 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(are_equal(EXPECTED_OUTPUT, matrix))
 
     def test_caching(self) -> None:
-        """Test if the caching gives the same results & is faster on the second run."""
+        """Test if the caching gives the same results is faster on the second run."""
         molecule_net_logd_df = pd.read_csv(
             TEST_DATA_DIR / "molecule_net_logd.tsv.gz",
             sep="\t",
