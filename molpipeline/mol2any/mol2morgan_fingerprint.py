@@ -2,7 +2,7 @@
 
 from __future__ import annotations  # for all the python 3.8 users out there.
 
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any
 
 try:
     from typing import Self  # type: ignore[attr-defined]
@@ -15,8 +15,11 @@ from rdkit.Chem import AllChem, rdFingerprintGenerator
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     ABCMorganFingerprintPipelineElement,
+    FPReturnAsOption,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol
+
+if TYPE_CHECKING:
+    from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToMorganFP(ABCMorganFingerprintPipelineElement):
@@ -33,7 +36,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         use_features: bool = False,
         n_bits: int = 2048,
         counted: bool = False,
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
+        return_as: FPReturnAsOption = "sparse",
         name: str = "MolToMorganFP",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -52,12 +55,13 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         counted: bool, default=False
             If True, the fingerprint will be counted.
             If False, the fingerprint will be binary.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+        return_as: FPReturnAsOption, default="sparse"
             Type of output. When "sparse" the fingerprints will be returned as a
             scipy.sparse.csr_matrix holding a sparse representation of the bit vectors.
-            With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of
-            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+            With "dense" a numpy matrix will be returned. With "rdkit" the fingerprints
+            will be returned as a list of one of RDKit's ExplicitBitVect,
+            IntSparseBitVect, UIntSparseBitVect, etc. depending on the fingerprint
+            and parameters.
         name: str, default="MolToMorganFP"
             Name of PipelineElement
         n_jobs: int, default=1
@@ -88,7 +92,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         )
         if not isinstance(n_bits, int) or n_bits < 1:
             raise ValueError(
-                f"Number of bits has to be a integer > 0! (Received: {n_bits})"
+                f"Number of bits has to be a integer > 0! (Received: {n_bits})",
             )
         self._n_bits = n_bits
         self._feature_names = [f"morgan_{i}" for i in range(self._n_bits)]
@@ -105,6 +109,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         -------
         dict[str, Any]
             Dictionary of parameters.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -125,6 +130,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         -------
         Self
             MolToMorganFP pipeline element with updated parameters.
+
         """
         parameter_copy = dict(parameters)
         n_bits = parameter_copy.pop("n_bits", None)
@@ -143,6 +149,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         -------
         rdFingerprintGenerator.FingerprintGenerator
             RDKit fingerprint generator.
+
         """
         return rdFingerprintGenerator.GetMorganGenerator(
             radius=self.radius,
@@ -160,12 +167,13 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         Returns
         -------
         dict[int, list[tuple[int, int]]]
-            Dictionary with bit position as key and list of tuples with atom index and radius as value.
+            Dictionary with bit position as key and list of tuples with atom index
+            and radius as value.
+
         """
         fp_generator = self._get_fp_generator()
         additional_output = AllChem.AdditionalOutput()
         additional_output.AllocateBitInfoMap()
         # using the dense fingerprint here, to get indices after folding
         _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
-        bit_info = additional_output.GetBitInfoMap()
-        return bit_info
+        return additional_output.GetBitInfoMap()
