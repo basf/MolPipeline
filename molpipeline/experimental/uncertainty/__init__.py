@@ -1,11 +1,40 @@
-"""Wrappers for conformal prediction in MolPipeline.
+"""Conformal prediction wrappers for classification and regression using crepes.
 
-Provides ConformalPredictor and CrossConformalPredictor for robust uncertainty quantification.
+This module provides a unified interface for conformal prediction with four main classes:
+- ConformalClassifier: Single-model conformal classification
+- CrossConformalClassifier: Cross-validation conformal classification
+- ConformalRegressor: Single-model conformal regression
+- CrossConformalRegressor: Cross-validation conformal regression
+
+All classes use composition with crepes and provide full sklearn compatibility.
 """
 
+# Import the four main conformal prediction classes
 from molpipeline.experimental.uncertainty.conformal import (
-    ConformalPredictor,
-    CrossConformalPredictor,
+    ConformalClassifier,
+    ConformalRegressor,
+    CrossConformalClassifier,
+    CrossConformalRegressor,
 )
 
-__all__ = ["ConformalPredictor", "CrossConformalPredictor"]
+# Import nonconformity functions from utils
+from molpipeline.experimental.uncertainty.utils import (
+    CustomNonconformity,
+    HingeNonconformity,
+    MarginNonconformity,
+    NonconformityFunction,
+    create_nonconformity_function,
+)
+
+# Export all the important classes
+__all__ = [
+    "ConformalClassifier",
+    "ConformalRegressor",
+    "CrossConformalClassifier",
+    "CrossConformalRegressor",
+    "CustomNonconformity",
+    "HingeNonconformity",
+    "MarginNonconformity",
+    "NonconformityFunction",
+    "create_nonconformity_function",
+]
