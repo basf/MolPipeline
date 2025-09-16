@@ -1,6 +1,7 @@
 """Conformal prediction wrappers for classification and regression using crepes."""
 # pylint: disable=too-many-lines
 
+import warnings
 from typing import Any
 
 import numpy as np
@@ -41,8 +42,47 @@ class BaseConformalPredictor(BaseEstimator):
 
         """
         self.estimator = estimator
-        self.confidence_level = confidence_level
+        self.confidence_level = self._validate_confidence_level(confidence_level)
         self.kwargs = kwargs
+
+    @staticmethod
+    def _validate_confidence_level(confidence_level: float) -> float:
+        """Validate confidence level parameter.
+
+        Parameters
+        ----------
+        confidence_level : float
+            Confidence level to validate.
+
+        Returns
+        -------
+        float
+            Validated confidence level.
+
+        Raises
+        ------
+        ValueError
+            If confidence level is not between 0 (exclusive) and 1 (inclusive).
+        """
+        if not isinstance(confidence_level, (int, float)):
+            raise ValueError(
+                f"confidence_level must be a number, got {type(confidence_level).__name__}"
+            )
+
+        if not 0 < confidence_level <= 1:
+            raise ValueError(
+                f"confidence_level must be between 0 (exclusive) and 1 (inclusive), got {confidence_level}"
+            )
+
+        if confidence_level < 0.5:
+            warnings.warn(
+                f"Confidence level {confidence_level} is less than 0.5 (50%). "
+                "This represents weak confidence and may produce unreliable prediction sets/intervals.",
+                UserWarning,
+                stacklevel=3,
+            )
+
+        return confidence_level
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters for this estimator.
@@ -107,6 +147,8 @@ class BaseConformalPredictor(BaseEstimator):
                 estimator_params[key[11:]] = value
             elif key == "nonconformity":
                 our_params["nonconformity_func"] = create_nonconformity_function(value)
+            elif key == "confidence_level":
+                our_params[key] = self._validate_confidence_level(value)
             elif hasattr(self, key):
                 our_params[key] = value
             else:
@@ -311,7 +353,7 @@ class ConformalClassifier(BaseConformalPredictor):
         Raises
         ------
         ValueError
-            If the model has not been fitted.
+            If the model has not been fitted or confidence level is invalid.
 
         Returns
         -------
@@ -323,6 +365,9 @@ class ConformalClassifier(BaseConformalPredictor):
             raise ValueError("Must fit and calibrate before predicting")
 
         conf = confidence if confidence is not None else self.confidence_level
+        if confidence is not None:
+            conf = self._validate_confidence_level(confidence)
+
         return self._crepes_wrapper.predict_set(x, confidence=conf, **kwargs)
 
     def predict_p(self, x: npt.NDArray[Any], **kwargs: Any) -> npt.NDArray[Any]:
@@ -383,13 +428,16 @@ class ConformalClassifier(BaseConformalPredictor):
         Raises
         ------
         ValueError
-            If the model has not been fitted and calibrated.
+            If the model has not been fitted and calibrated or confidence level is invalid.
 
         """
         if self._crepes_wrapper is None:
             raise ValueError("Must fit and calibrate before evaluating")
 
         conf = confidence if confidence is not None else self.confidence_level
+        if confidence is not None:
+            conf = self._validate_confidence_level(confidence)
+
         if metrics is None:
             metrics = ["error", "avg_c", "one_c", "empty", "ks_test"]
 
@@ -580,7 +628,7 @@ class CrossConformalClassifier(BaseConformalPredictor):
         Raises
         ------
         ValueError
-            If the model has not been fitted.
+            If the model has not been fitted or confidence level is invalid.
 
         Returns
         -------
@@ -592,6 +640,8 @@ class CrossConformalClassifier(BaseConformalPredictor):
             raise ValueError("Must fit before predicting")
 
         conf = confidence if confidence is not None else self.confidence_level
+        if confidence is not None:
+            conf = self._validate_confidence_level(confidence)
 
         p_values_list = [model.predict_p(x, **kwargs) for model in self.models_]
         aggregated_p_values = np.median(p_values_list, axis=0)
@@ -658,13 +708,16 @@ class CrossConformalClassifier(BaseConformalPredictor):
         Raises
         ------
         ValueError
-            If the model has not been fitted.
+            If the model has not been fitted or confidence level is invalid.
 
         """
         if not self.models_:
             raise ValueError("Must fit before evaluating")
 
         conf = confidence if confidence is not None else self.confidence_level
+        if confidence is not None:
+            conf = self._validate_confidence_level(confidence)
+
         if metrics is None:
             metrics = ["error", "avg_c", "one_c", "empty", "ks_test"]
 
@@ -859,7 +912,7 @@ class ConformalRegressor(BaseConformalPredictor):
         Raises
         ------
         ValueError
-            If the model has not been fitted.
+            If the model has not been fitted or confidence level is invalid.
 
         Returns
         -------
@@ -871,6 +924,9 @@ class ConformalRegressor(BaseConformalPredictor):
             raise ValueError("Must fit and calibrate before predicting")
 
         conf = confidence if confidence is not None else self.confidence_level
+        if confidence is not None:
+            conf = self._validate_confidence_level(confidence)
+
         return self._crepes_wrapper.predict_int(x, confidence=conf, **kwargs)
 
     def evaluate(
@@ -906,13 +962,16 @@ class ConformalRegressor(BaseConformalPredictor):
         Raises
         ------
         ValueError
-            If the model has not been fitted and calibrated.
+            If the model has not been fitted and calibrated or confidence level is invalid.
 
         """
         if self._crepes_wrapper is None:
             raise ValueError("Must fit and calibrate before evaluating")
 
         conf = confidence if confidence is not None else self.confidence_level
+        if confidence is not None:
+            conf = self._validate_confidence_level(confidence)
+
         if metrics is None:
             metrics = ["error", "eff_mean", "eff_med", "ks_test"]
 
@@ -1139,7 +1198,7 @@ class CrossConformalRegressor(BaseConformalPredictor):
         Raises
         ------
         ValueError
-            If the model has not been fitted.
+            If the model has not been fitted or confidence level is invalid.
 
         Returns
         -------
@@ -1151,6 +1210,8 @@ class CrossConformalRegressor(BaseConformalPredictor):
             raise ValueError("Must fit before predicting")
 
         conf = confidence if confidence is not None else self.confidence_level
+        if confidence is not None:
+            conf = self._validate_confidence_level(confidence)
 
         intervals_list = [
             model.predict_int(x, confidence=conf, **kwargs) for model in self.models_
@@ -1190,13 +1251,16 @@ class CrossConformalRegressor(BaseConformalPredictor):
         Raises
         ------
         ValueError
-            If the model has not been fitted.
+            If the model has not been fitted or confidence level is invalid.
 
         """
         if not self.models_:
             raise ValueError("Must fit before evaluating")
 
         conf = confidence if confidence is not None else self.confidence_level
+        if confidence is not None:
+            conf = self._validate_confidence_level(confidence)
+
         if metrics is None:
             metrics = ["error", "eff_mean", "eff_med", "ks_test"]
 
