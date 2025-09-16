@@ -139,8 +139,8 @@ class BaseConformalPredictor(BaseEstimator):
             Self.
 
         """
-        estimator_params = {}
-        our_params = {}
+        estimator_params: dict[str, Any] = {}
+        our_params: dict[str, Any] = {}
 
         for key, value in params.items():
             if key.startswith("estimator__"):
