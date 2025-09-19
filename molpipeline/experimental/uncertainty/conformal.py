@@ -7,14 +7,17 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 from crepes import WrapClassifier, WrapRegressor
-from crepes.extras import DifficultyEstimator, MondrianCategorizer, binning
+from crepes.extras import DifficultyEstimator, MondrianCategorizer
 from scipy.stats import mode
 from sklearn.base import BaseEstimator, clone
-from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
+from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import check_random_state
 
+from molpipeline.experimental.model_selection.splitter import (
+    create_continuous_stratified_folds,
+)
 from molpipeline.experimental.uncertainty.utils import (
-    NonconformityFunction,
+    NonconformityFunctor,
     create_nonconformity_function,
 )
 
@@ -178,7 +181,7 @@ class ConformalClassifier(BaseConformalPredictor):
         *,
         confidence_level: float = 0.9,
         mondrian: bool = False,
-        nonconformity: (str | NonconformityFunction | None) = None,
+        nonconformity: (str | NonconformityFunctor | None) = None,
         **kwargs: Any,
     ) -> None:
         """Initialize ConformalClassifier.
@@ -192,10 +195,10 @@ class ConformalClassifier(BaseConformalPredictor):
         mondrian : bool, optional
             Whether to use Mondrian (class-conditional) conformal prediction
             (default: False).
-        nonconformity : str | NonconformityFunction | None, optional
+        nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use. Can be:
             - String: 'hinge', 'margin' (built-in functions)
-            - NonconformityFunction instance
+            - NonconformityFunctor instance
             - None: Use crepes default
         **kwargs : Any
             Additional keyword arguments passed to crepes calibration.
@@ -464,7 +467,7 @@ class CrossConformalClassifier(BaseConformalPredictor):
         n_folds: int = 5,
         confidence_level: float = 0.9,
         mondrian: bool = False,
-        nonconformity: (str | NonconformityFunction | None) = None,
+        nonconformity: (str | NonconformityFunctor | None) = None,
         random_state: int | None = None,
         **kwargs: Any,
     ) -> None:
@@ -480,7 +483,7 @@ class CrossConformalClassifier(BaseConformalPredictor):
             Default confidence level for prediction sets (default: 0.9).
         mondrian : bool, optional
             Whether to use Mondrian conformal prediction (default: False).
-        nonconformity : str | NonconformityFunction | None, optional
+        nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use for all individual classifiers.
         random_state : int | None, optional
             Random state for reproducibility (default: None).
@@ -530,20 +533,15 @@ class CrossConformalClassifier(BaseConformalPredictor):
         self.models_ = []
         rng = check_random_state(self.random_state)
 
-        splitter = StratifiedGroupKFold(
+        splitter = StratifiedKFold(
             n_splits=self.n_folds,
             shuffle=True,
             random_state=rng,
         )
 
-        x_array = np.asarray(x)
-        y_array = np.asarray(y)
-
-        groups = np.arange(len(x_array))
-
-        for train_idx, calib_idx in splitter.split(x_array, y_array, groups):
-            x_train, x_calib = x_array[train_idx], x_array[calib_idx]
-            y_train, y_calib = y_array[train_idx], y_array[calib_idx]
+        for train_idx, calib_idx in splitter.split(x, y):
+            x_train, x_calib = x[train_idx], x[calib_idx]
+            y_train, y_calib = y[train_idx], y[calib_idx]
 
             model = ConformalClassifier(
                 clone(self.estimator),
@@ -752,7 +750,7 @@ class ConformalRegressor(BaseConformalPredictor):
         mondrian: bool = False,
         difficulty_estimator: DifficultyEstimator | None = None,
         binning_bins: int = 10,
-        nonconformity: (str | NonconformityFunction | None) = None,
+        nonconformity: (str | NonconformityFunctor | None) = None,
         **kwargs: Any,
     ) -> None:
         """Initialize ConformalRegressor.
@@ -769,7 +767,7 @@ class ConformalRegressor(BaseConformalPredictor):
             Difficulty estimator for normalized conformal prediction.
         binning_bins : int, optional
             Number of bins for Mondrian categorization (default: 10).
-        nonconformity : str | NonconformityFunction | None, optional
+        nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use. For regression, this is typically
             a callable that computes residual-based nonconformity scores.
         **kwargs : Any
@@ -1000,7 +998,7 @@ class CrossConformalRegressor(BaseConformalPredictor):
         mondrian: bool = False,
         difficulty_estimator: DifficultyEstimator | None = None,
         binning_bins: int = 10,
-        nonconformity: (str | NonconformityFunction | None) = None,
+        nonconformity: (str | NonconformityFunctor | None) = None,
         random_state: int | None = None,
         **kwargs: Any,
     ) -> None:
@@ -1020,7 +1018,7 @@ class CrossConformalRegressor(BaseConformalPredictor):
             Difficulty estimator for normalized conformal prediction.
         binning_bins : int, optional
             Number of bins for Mondrian categorization (default: 10).
-        nonconformity : str | NonconformityFunction | None, optional
+        nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use for all individual regressors.
         random_state : int | None, optional
             Random state for reproducibility (default: None).
@@ -1049,60 +1047,6 @@ class CrossConformalRegressor(BaseConformalPredictor):
         """
         return {"estimator_type": "regressor"}
 
-    @staticmethod
-    def _create_continuous_stratified_folds(
-        y: npt.NDArray[Any],
-        n_splits: int,
-        n_groups: int = 10,
-        random_state: int | None = None,
-    ) -> list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]:
-        """Create stratified folds for continuous targets using quantile-based binning.
-
-        This method creates stratified cross-validation folds for regression by:
-        1. Binning continuous targets into quantile-based groups
-        2. Using stratified sampling to ensure balanced target distribution
-        3. Returning train/validation index pairs
-
-        Parameters
-        ----------
-        y : npt.NDArray[Any]
-            Continuous target values to stratify.
-        n_splits : int
-            Number of cross-validation folds.
-        n_groups : int, optional
-            Number of quantile groups to create for stratification (default: 10).
-        random_state : int | None, optional
-            Random state for reproducibility.
-
-        Returns
-        -------
-        list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]
-            List of (train_indices, validation_indices) tuples for each fold.
-
-        """
-        rng = check_random_state(random_state)
-
-        n_effective_groups = min(n_groups, len(np.unique(y)))
-        y_binned, _ = binning(y, bins=n_effective_groups)
-
-        splitter = StratifiedKFold(
-            n_splits=n_splits,
-            shuffle=True,
-            random_state=rng,
-        )
-
-        fold_assignments = np.zeros(len(y), dtype=int)
-        for fold_idx, (_, val_indices) in enumerate(splitter.split(y, y_binned)):
-            fold_assignments[val_indices] = fold_idx
-
-        cv_splits = []
-        for fold_idx in range(n_splits):
-            val_indices = np.where(fold_assignments == fold_idx)[0]
-            train_indices = np.where(fold_assignments != fold_idx)[0]
-            cv_splits.append((train_indices, val_indices))
-
-        return cv_splits
-
     def fit_and_calibrate(  # pylint: disable=too-many-locals
         self,
         x: npt.NDArray[Any],
@@ -1125,9 +1069,10 @@ class CrossConformalRegressor(BaseConformalPredictor):
         """
         self.models_ = []
 
-        splits = self._create_continuous_stratified_folds(
+        splits = create_continuous_stratified_folds(
             y,
             n_splits=self.n_folds,
+            n_groups=self.binning_bins,
             random_state=self.random_state,
         )
 
