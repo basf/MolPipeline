@@ -4,7 +4,6 @@
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Any
 
 import joblib
 import numpy as np
@@ -34,10 +33,10 @@ FP_SIZE = 1024
 class BaseConformalTestData(unittest.TestCase):
     """Base class for conformal prediction tests with unified data setup."""
 
-    x_clf: npt.NDArray[Any]
-    y_clf: npt.NDArray[Any]
-    x_reg: npt.NDArray[Any]
-    y_reg: npt.NDArray[Any]
+    x_clf: npt.NDArray[np.int_]
+    y_clf: npt.NDArray[np.float64]
+    x_reg: npt.NDArray[np.int_]
+    y_reg: npt.NDArray[np.float64]
     smiles_clf: list[str]
     smiles_reg: list[str]
 
@@ -83,8 +82,8 @@ class BaseConformalTestData(unittest.TestCase):
         labels_clf = bbbp_df["p_np"].to_numpy()
         fingerprint_matrix_clf = pipeline_clf.fit_transform(smiles_list_clf)
         valid_mask_clf = ~np.isnan(fingerprint_matrix_clf).any(axis=1)
-        cls.x_clf = fingerprint_matrix_clf[valid_mask_clf]
-        cls.y_clf = labels_clf[valid_mask_clf]
+        cls.x_clf = fingerprint_matrix_clf[valid_mask_clf].astype(np.int_)
+        cls.y_clf = labels_clf[valid_mask_clf].astype(np.float64)
         cls.smiles_clf = [
             smiles_list_clf.iloc[i]
             for i in range(len(smiles_list_clf))
@@ -114,8 +113,8 @@ class BaseConformalTestData(unittest.TestCase):
         labels_reg = logd_df["exp"].to_numpy()
         fingerprint_matrix_reg = pipeline_reg.fit_transform(smiles_list_reg)
         valid_mask_reg = ~np.isnan(fingerprint_matrix_reg).any(axis=1)
-        cls.x_reg = fingerprint_matrix_reg[valid_mask_reg]
-        cls.y_reg = labels_reg[valid_mask_reg]
+        cls.x_reg = fingerprint_matrix_reg[valid_mask_reg].astype(np.int_)
+        cls.y_reg = labels_reg[valid_mask_reg].astype(np.float64)
         cls.smiles_reg = [
             smiles_list_reg.iloc[i]
             for i in range(len(smiles_list_reg))
@@ -143,17 +142,17 @@ class BaseConformalTestData(unittest.TestCase):
         # Check all values are binary (0 or 1)
         self.assertTrue(np.all(np.isin(prediction_sets, [0, 1])))
 
-    def _get_train_calib_test_splits(  # noqa: PLR6301
+    def _get_train_calib_test_splits(
         self,
-        x_data: npt.NDArray[Any],
-        y_data: npt.NDArray[Any],
+        x_data: npt.NDArray[np.int_],
+        y_data: npt.NDArray[np.float64],
     ) -> tuple[
-        npt.NDArray[Any],
-        npt.NDArray[Any],
-        npt.NDArray[Any],
-        npt.NDArray[Any],
-        npt.NDArray[Any],
-        npt.NDArray[Any],
+        npt.NDArray[np.int_],
+        npt.NDArray[np.int_],
+        npt.NDArray[np.int_],
+        npt.NDArray[np.float64],
+        npt.NDArray[np.float64],
+        npt.NDArray[np.float64],
     ]:
         """Split data into train, calibration, and test sets.
 

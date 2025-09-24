@@ -2,6 +2,7 @@
 # pylint: disable=too-many-lines
 
 import warnings
+from abc import ABC, abstractmethod
 from typing import Any
 
 import numpy as np
@@ -9,7 +10,7 @@ import numpy.typing as npt
 from crepes import WrapClassifier, WrapRegressor
 from crepes.extras import DifficultyEstimator, MondrianCategorizer
 from scipy.stats import mode
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import check_random_state
 
@@ -22,7 +23,7 @@ from molpipeline.experimental.uncertainty.utils import (
 )
 
 
-class BaseConformalPredictor(BaseEstimator):
+class BaseConformalPredictor(BaseEstimator, ABC):
     """Base class for conformal predictors providing common functionality."""
 
     def __init__(
@@ -47,6 +48,30 @@ class BaseConformalPredictor(BaseEstimator):
         self.estimator = estimator
         self.confidence_level = self._validate_confidence_level(confidence_level)
         self.kwargs = kwargs
+
+    @abstractmethod
+    def evaluate(
+        self,
+        x: npt.NDArray[Any],
+        y: npt.NDArray[Any],
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Evaluate the conformal predictor. Must be implemented by subclasses.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            Features to evaluate.
+        y : np.ndarray
+            True labels/targets.
+        **kwargs : Any
+            Additional parameters for evaluation.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary of evaluation metrics.
+        """
 
     @staticmethod
     def _validate_confidence_level(confidence_level: float) -> float:
@@ -106,18 +131,13 @@ class BaseConformalPredictor(BaseEstimator):
             "confidence_level": self.confidence_level,
         }
 
-        for attr_name in dir(self):
-            if not attr_name.startswith("_") and attr_name not in {
-                "estimator",
-                "confidence_level",
-                "kwargs",
-            }:
-                attr_value = getattr(self, attr_name)
+        for attr_name, attr_value in super().get_params(deep=deep).items():
+            if attr_name not in {"estimator", "confidence_level", "kwargs"}:
                 if attr_name == "nonconformity_func":
                     params["nonconformity"] = (
                         attr_value.get_name() if attr_value is not None else None
                     )
-                elif not callable(attr_value):
+                else:
                     params[attr_name] = attr_value
 
         params.update(self.kwargs)
@@ -142,34 +162,22 @@ class BaseConformalPredictor(BaseEstimator):
             Self.
 
         """
-        estimator_params: dict[str, Any] = {}
-        our_params: dict[str, Any] = {}
-
+        updated_params: dict[str, Any] = {}
         for key, value in params.items():
-            if key.startswith("estimator__"):
-                estimator_params[key[11:]] = value
-            elif key == "nonconformity":
-                our_params["nonconformity_func"] = create_nonconformity_function(value)
+            if key == "nonconformity":
+                updated_params["nonconformity_func"] = create_nonconformity_function(
+                    value
+                )
             elif key == "confidence_level":
-                our_params[key] = self._validate_confidence_level(value)
-            elif hasattr(self, key):
-                our_params[key] = value
-            else:
-                our_params[key] = value
-
-        for key, value in our_params.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
-            else:
-                self.kwargs[key] = value
-
-        if estimator_params and hasattr(self.estimator, "set_params"):
-            self.estimator.set_params(**estimator_params)
-
+                updated_params["confidence_level"] = self._validate_confidence_level(
+                    value
+                )
+        params.update(updated_params)
+        super().set_params(**params)
         return self
 
 
-class ConformalClassifier(BaseConformalPredictor):
+class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
     """Conformal prediction wrapper for classifiers.
 
     This class uses composition with crepes to provide sklearn compatibility.
@@ -203,23 +211,20 @@ class ConformalClassifier(BaseConformalPredictor):
         **kwargs : Any
             Additional keyword arguments passed to crepes calibration.
 
+        Raises
+        ------
+        TypeError
+            If nonconformity_func is not a NonconformityFunctor or None.
         """
         super().__init__(estimator, confidence_level=confidence_level, **kwargs)
         self.mondrian = mondrian
-        self.nonconformity_func = create_nonconformity_function(nonconformity)
+        nc_func = create_nonconformity_function(nonconformity)
+        if not (nc_func is None or callable(nc_func)):
+            raise TypeError(
+                f"nonconformity_func must be a NonconformityFunctor or None, got {type(nc_func).__name__}"
+            )
+        self.nonconformity_func = nc_func
         self._crepes_wrapper: WrapClassifier | None = None
-
-    @staticmethod
-    def _more_tags() -> dict[str, str]:
-        """Return tags for sklearn compatibility.
-
-        Returns
-        -------
-        dict[str, str]
-            Dictionary with estimator type tag.
-
-        """
-        return {"estimator_type": "classifier"}
 
     def fit(
         self,
@@ -243,8 +248,16 @@ class ConformalClassifier(BaseConformalPredictor):
         ConformalClassifier
             Self.
 
+        Raises
+        ------
+        RuntimeError
+            If internal crepes wrapper initialization fails.
         """
         self._crepes_wrapper = WrapClassifier(clone(self.estimator))
+        if self._crepes_wrapper is None:
+            raise RuntimeError(
+                "Internal error: _crepes_wrapper is None after initialization."
+            )
         self._crepes_wrapper.fit(x, y, **fit_params)
         return self
 
@@ -453,7 +466,7 @@ class ConformalClassifier(BaseConformalPredictor):
         )
 
 
-class CrossConformalClassifier(BaseConformalPredictor):
+class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
     """Cross-conformal prediction wrapper for classifiers.
 
     This class manages multiple ConformalClassifier instances using cross-validation
@@ -497,18 +510,6 @@ class CrossConformalClassifier(BaseConformalPredictor):
         self.nonconformity_func = create_nonconformity_function(nonconformity)
         self.random_state = random_state
         self.models_: list[ConformalClassifier] = []
-
-    @staticmethod
-    def _more_tags() -> dict[str, str]:
-        """Return tags for sklearn compatibility.
-
-        Returns
-        -------
-        dict[str, str]
-            Dictionary with estimator type classification.
-
-        """
-        return {"estimator_type": "classifier"}
 
     def fit_and_calibrate(
         self,
@@ -736,7 +737,7 @@ class CrossConformalClassifier(BaseConformalPredictor):
         return aggregated_results
 
 
-class ConformalRegressor(BaseConformalPredictor):
+class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
     """Conformal prediction wrapper for regressors.
 
     This class uses composition with crepes to provide full sklearn compatibility.
@@ -781,18 +782,6 @@ class ConformalRegressor(BaseConformalPredictor):
         self.nonconformity_func = create_nonconformity_function(nonconformity)
         self._crepes_wrapper: WrapRegressor | None = None
 
-    @staticmethod
-    def _more_tags() -> dict[str, str]:
-        """Return tags for sklearn compatibility.
-
-        Returns
-        -------
-        dict[str, str]
-            Dictionary with estimator type classification.
-
-        """
-        return {"estimator_type": "regressor"}
-
     def fit(
         self,
         x: npt.NDArray[Any],
@@ -815,8 +804,16 @@ class ConformalRegressor(BaseConformalPredictor):
         ConformalRegressor
             Self.
 
+        Raises
+        ------
+        RuntimeError
+            If internal crepes wrapper initialization fails.
         """
         self._crepes_wrapper = WrapRegressor(clone(self.estimator))
+        if self._crepes_wrapper is None:
+            raise RuntimeError(
+                "Internal error: _crepes_wrapper is None after initialization."
+            )
         self._crepes_wrapper.fit(x, y, **fit_params)
         return self
 
@@ -982,7 +979,7 @@ class ConformalRegressor(BaseConformalPredictor):
         )
 
 
-class CrossConformalRegressor(BaseConformalPredictor):
+class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
     """Cross-conformal prediction wrapper for regressors.
 
     This class manages multiple ConformalRegressor instances using cross-validation
@@ -1034,18 +1031,6 @@ class CrossConformalRegressor(BaseConformalPredictor):
         self.nonconformity_func = create_nonconformity_function(nonconformity)
         self.random_state = random_state
         self.models_: list[ConformalRegressor] = []
-
-    @staticmethod
-    def _more_tags() -> dict[str, str]:
-        """Return tags for sklearn compatibility.
-
-        Returns
-        -------
-        dict[str, str]
-            Dictionary with estimator type classification.
-
-        """
-        return {"estimator_type": "regressor"}
 
     def fit_and_calibrate(  # pylint: disable=too-many-locals
         self,
