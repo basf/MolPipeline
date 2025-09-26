@@ -36,7 +36,7 @@ from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_chemprop_model_binary_classification_mpnn,
 )
 
-logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
+logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)  # pylint: disable=no-member
 
 
 class TestChempropModel(unittest.TestCase):
