@@ -3,15 +3,14 @@
 from typing import Any
 
 import torch
-from chemprop.nn.loss import BCELoss as _BCELoss
-from chemprop.nn.loss import BinaryDirichletLoss as _BinaryDirichletLoss
-from chemprop.nn.loss import CrossEntropyLoss as _CrossEntropyLoss
-from chemprop.nn.loss import EvidentialLoss as _EvidentialLoss
-from chemprop.nn.loss import LossFunction as _LossFunction
-from chemprop.nn.loss import MSELoss as _MSELoss
-from chemprop.nn.loss import MulticlassDirichletLoss as _MulticlassDirichletLoss
-from chemprop.nn.loss import MVELoss as _MVELoss
-from chemprop.nn.loss import SIDLoss as _SIDLoss
+from chemprop.nn.metrics import BCELoss as _BCELoss
+from chemprop.nn.metrics import DirichletLoss as _BinaryDirichletLoss
+from chemprop.nn.metrics import CrossEntropyLoss as _CrossEntropyLoss
+from chemprop.nn.metrics import EvidentialLoss as _EvidentialLoss
+from chemprop.nn.metrics import LossFunction as _LossFunction
+from chemprop.nn.metrics import MSELoss as _MSELoss
+from chemprop.nn.metrics import MVELoss as _MVELoss
+from chemprop.nn.metrics import SIDLoss as _SIDLoss
 from numpy.typing import ArrayLike
 
 
@@ -90,10 +89,6 @@ class EvidentialLoss(LossFunctionParamMixin, _EvidentialLoss):
 
 class MSELoss(LossFunctionParamMixin, _MSELoss):
     """Mean squared error loss function."""
-
-
-class MulticlassDirichletLoss(LossFunctionParamMixin, _MulticlassDirichletLoss):
-    """Multiclass Dirichlet loss function."""
 
 
 class MVELoss(LossFunctionParamMixin, _MVELoss):
