@@ -39,11 +39,10 @@ from torch import Tensor, nn
 
 from molpipeline.estimators.chemprop.loss_wrapper import (
     BCELoss,
-    BinaryDirichletLoss,
+    DirichletLoss,
     CrossEntropyLoss,
     EvidentialLoss,
     MSELoss,
-    MulticlassDirichletLoss,
     MVELoss,
     SIDLoss,
 )
@@ -315,7 +314,7 @@ class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):  # type: ignore
     """A wrapper for the BinaryDirichletFFN class."""
 
     n_targets: int = 2
-    _T_default_criterion = BinaryDirichletLoss
+    _T_default_criterion = DirichletLoss
     _T_default_metric = BinaryAUROCMetric
 
 

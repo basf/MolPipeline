@@ -4,7 +4,7 @@ from typing import Any
 
 import torch
 from chemprop.nn.metrics import BCELoss as _BCELoss
-from chemprop.nn.metrics import DirichletLoss as _BinaryDirichletLoss
+from chemprop.nn.metrics import DirichletLoss as _DirichletLoss
 from chemprop.nn.metrics import CrossEntropyLoss as _CrossEntropyLoss
 from chemprop.nn.metrics import EvidentialLoss as _EvidentialLoss
 from chemprop.nn.metrics import LossFunction as _LossFunction
@@ -75,8 +75,8 @@ class BCELoss(LossFunctionParamMixin, _BCELoss):
     """Binary cross-entropy loss function."""
 
 
-class BinaryDirichletLoss(LossFunctionParamMixin, _BinaryDirichletLoss):
-    """Binary Dirichlet loss function."""
+class DirichletLoss(LossFunctionParamMixin, _DirichletLoss):
+    """Dirichlet loss function."""
 
 
 class CrossEntropyLoss(LossFunctionParamMixin, _CrossEntropyLoss):
