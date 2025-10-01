@@ -11,6 +11,7 @@ import torch
 from chemprop.nn.metrics import MSE as _MSE
 from chemprop.nn.metrics import SID as _SID
 from chemprop.nn.metrics import BCELoss as _BCELoss
+from chemprop.nn.metrics import BinaryAUROC as _BinaryAUROC
 from chemprop.nn.metrics import ChempropMetric as _ChempropMetric
 from chemprop.nn.metrics import CrossEntropyLoss as _CrossEntropyLoss
 from chemprop.nn.metrics import DirichletLoss as _DirichletLoss
@@ -111,3 +112,7 @@ class MVELoss(LossFunctionParamMixin, _MVELoss):
 
 class SID(LossFunctionParamMixin, _SID):
     """SID score function."""
+
+
+class BinaryAUROC(LossFunctionParamMixin, _BinaryAUROC):
+    """Binary area under the receiver operating characteristic curve metric."""
