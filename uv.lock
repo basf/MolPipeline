@@ -506,22 +506,24 @@ wheels = [
 
 [[package]]
 name = "chemprop"
-version = "2.0.4"
+version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astartes", extra = ["molecules"] },
     { name = "configargparse" },
+    { name = "descriptastorus" },
     { name = "lightning" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "rdkit" },
+    { name = "rich" },
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "torch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/58/19/b34a4a70515ae73edb5349c0f2eacc352feb3f9ecf406379daab8c20396f/chemprop-2.0.4.tar.gz", hash = "sha256:701bf0e8202c9d4c1e4b15f0c50535d276872f2c5959a9abb51d6c3907809dc1", size = 30420796 }
+sdist = { url = "https://files.pythonhosted.org/packages/81/61/257e7d444a5c11f4651764260444f894383e8c85087961cdf9321932f699/chemprop-2.2.1.tar.gz", hash = "sha256:d33a680917b67c779939b5a1e346709ecc3c4ece6003de3fb98472a23c1c7021", size = 139025 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/b5/49781be83dffcd2210f24e93c184c20ce6829aa408ff4e4330ada419519c/chemprop-2.0.4-py3-none-any.whl", hash = "sha256:a1c9bcf3ff1a84dae6693751f72be8bf0898e344dcec074e397e5a6aee9cf37f", size = 92323 },
+    { url = "https://files.pythonhosted.org/packages/0e/62/8c3f40a0dcdad1b40aad421db67dabc9b00aab8e6d2a9c85d4c115933199/chemprop-2.2.1-py3-none-any.whl", hash = "sha256:90ce9bd38aef1d0d6015b342cd2b034677147d60850b3f67bfb28818237cba01", size = 144148 },
 ]
 
 [[package]]
@@ -730,6 +732,20 @@ wheels = [
 ]
 
 [[package]]
+name = "crepes"
+version = "0.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/54/02/cd1460a4d9432fdf32a9f781613277d579b99f49b5756c9c630adf0f95c5/crepes-0.8.0.tar.gz", hash = "sha256:ce11cc2befe824db146b06e0de0b1d491cf74fe86832815e9a63bc2bec324410", size = 44996 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c5/cc/66e152ce1b40227ed011f2fb1b10640cdf30a41df4913721ab9cc86418dd/crepes-0.8.0-py3-none-any.whl", hash = "sha256:879b8eac4fe80de628a6f418ac710e323e537233e477ca0e745faaa205f05872", size = 38700 },
+]
+
+[[package]]
 name = "cycler"
 version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
@@ -775,6 +791,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/0f/d5/c66da9b79e5bdb124974bfe172b4daf3c984ebd9c2a06e2b8a4dc7331c72/defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69", size = 75520 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61", size = 25604 },
+]
+
+[[package]]
+name = "descriptastorus"
+version = "2.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pandas-flavor" },
+    { name = "rdkit" },
+    { name = "scipy" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/3c/67bfc03db3f6527a54a0f9b696809bca55eb6de27928829218ab7e6c40e7/descriptastorus-2.8.0-py3-none-any.whl", hash = "sha256:cc0c8201d6d9d8534dc8a45ce629aeaf4cf1e62ba848b9b1e392b2600ca834dc", size = 2127218 },
 ]
 
 [[package]]
@@ -1760,6 +1790,7 @@ wheels = [
 name = "molpipeline"
 source = { editable = "." }
 dependencies = [
+    { name = "crepes" },
     { name = "joblib" },
     { name = "loguru" },
     { name = "matplotlib" },
@@ -1801,7 +1832,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "chemprop", marker = "extra == 'chemprop'", specifier = ">=2.0.3,<=2.0.4" },
+    { name = "chemprop", marker = "extra == 'chemprop'", specifier = ">=2.2.0,<=2.3.0" },
+    { name = "crepes", specifier = ">=0.8.0" },
     { name = "joblib", specifier = ">=1.3.0" },
     { name = "jupyterlab", marker = "extra == 'notebooks'", specifier = ">=4.4.0" },
     { name = "lightning", marker = "extra == 'chemprop'", specifier = ">=2.5.1" },
@@ -2345,6 +2377,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/85/86/1fa345fc17caf5d7780d2699985c03dbe186c68fee00b526813939062bb0/pandas-2.3.1-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2f4d6feeba91744872a600e6edbbd5b033005b431d5ae8379abee5bcfa479fab", size = 11883998 },
     { url = "https://files.pythonhosted.org/packages/81/aa/e58541a49b5e6310d89474333e994ee57fea97c8aaa8fc7f00b873059bbf/pandas-2.3.1-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:fe37e757f462d31a9cd7580236a82f353f5713a80e059a29753cf938c6775d96", size = 12704705 },
     { url = "https://files.pythonhosted.org/packages/d5/f9/07086f5b0f2a19872554abeea7658200824f5835c58a106fa8f2ae96a46c/pandas-2.3.1-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:5db9637dbc24b631ff3707269ae4559bce4b7fd75c1c4d7e13f40edc42df4444", size = 13189044 },
+]
+
+[[package]]
+name = "pandas-flavor"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pandas" },
+    { name = "xarray" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f4/f3/be418c6244854bf66e3ec08c996a4b2b666536f2d09c1b9f2de8dd0eff73/pandas_flavor-0.7.0.tar.gz", hash = "sha256:617bf9f96902017afc9bd284f611592bce91806d3c7ae34ad64f6edab3edaf7e", size = 11057 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5d/e6/71ed4d95676098159b533c4a4c424cf453fec9614edaff1a0633fe228eef/pandas_flavor-0.7.0-py3-none-any.whl", hash = "sha256:7ee81e834b111e424679776f49c51abcffec88203b3ff0df2c9cb75550e06b1a", size = 8375 },
 ]
 
 [[package]]
@@ -3808,6 +3853,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b3/8f/705086c9d734d3b663af0e9bb3d4de6578d08f46b1b101c2442fd9aecaa2/win32_setctime-1.2.0.tar.gz", hash = "sha256:ae1fdf948f5640aae05c511ade119313fb6a30d7eabe25fef9764dca5873c4c0", size = 4867 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/07/c6fe3ad3e685340704d314d765b7912993bcb8dc198f0e7a89382d37974b/win32_setctime-1.2.0-py3-none-any.whl", hash = "sha256:95d644c4e708aba81dc3704a116d8cbc974d70b3bdb8be1d150e36be6e9d1390", size = 4083 },
+]
+
+[[package]]
+name = "xarray"
+version = "2025.9.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "pandas" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d0/5d/e139112a463336c636d4455494f3227b7f47a2e06ca7571e6b88158ffc06/xarray-2025.9.1.tar.gz", hash = "sha256:f34a27a52c13d1f3cceb7b27276aeec47021558363617dd7ef4f4c8b379011c0", size = 3057322 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/a7/6eeb32e705d510a672f74135f538ad27f87f3d600845bfd3834ea3a77c7e/xarray-2025.9.1-py3-none-any.whl", hash = "sha256:3e9708db0d7915c784ed6c227d81b398dca4957afe68d119481f8a448fc88c44", size = 1364411 },
 ]
 
 [[package]]
