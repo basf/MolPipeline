@@ -1,4 +1,4 @@
-"""Wrapper classes for the chemprop components to make them compatible with scikit-learn."""
+"""Wrapper classes for the chemprop components for compatibility with scikit-learn."""
 
 import abc
 from collections.abc import Iterable
@@ -31,7 +31,7 @@ from chemprop.nn.predictors import MulticlassDirichletFFN as _MulticlassDirichle
 from chemprop.nn.predictors import MveFFN as _MveFFN
 from chemprop.nn.predictors import RegressionFFN as _RegressionFFN
 from chemprop.nn.predictors import SpectralFFN as _SpectralFFN
-from chemprop.nn.predictors import _FFNPredictorBase as _Predictor
+from chemprop.nn.predictors import _FFNPredictorBase as _Predictor  # noqa: PLC2701
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
@@ -39,8 +39,8 @@ from torch import Tensor, nn
 
 from molpipeline.estimators.chemprop.loss_wrapper import (
     BCELoss,
-    DirichletLoss,
     CrossEntropyLoss,
+    DirichletLoss,
     EvidentialLoss,
     MSELoss,
     MVELoss,
@@ -85,7 +85,9 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         undirected : bool, optional (default=False)
             Whether to use undirected edges.
         d_vd : int or None, optional (default=None)
-            Dimension of additional vertex descriptors that will be concatenated to the hidden features before readout
+            Dimension of additional vertex descriptors that will be concatenated to the
+            hidden features before readout
+
         """
         super().__init__(
             d_v,
@@ -113,9 +115,14 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         -------
         Self
             The reinitialized network.
+
         """
         self.W_i, self.W_h, self.W_o, self.W_d = self.setup(
-            self.d_v, self.d_e, self.d_h, self.d_vd, self.bias
+            self.d_v,
+            self.d_e,
+            self.d_h,
+            self.d_vd,
+            self.bias,
         )
         self.dropout = nn.Dropout(self.dropout_rate)
         if isinstance(self.activation, str):
@@ -136,6 +143,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         self.reinitialize_network()
@@ -189,6 +197,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             Transformations to apply to the output. None defaults to UnscaleTransform.
         kwargs : Any
             Additional keyword arguments.
+
         """
         if task_weights is None:
             task_weights = torch.ones(n_tasks)
@@ -225,6 +234,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         ----------
         value : int
             The dimension of input.
+
         """
         self._input_dim = value
 
@@ -241,6 +251,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         ----------
         value : int
             The number of tasks.
+
         """
         self._n_tasks = value
 
@@ -251,6 +262,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         -------
         Self
             The reinitialized feedforward network.
+
         """
         self.ffn = MLP.build(
             input_dim=self.input_dim,
@@ -274,6 +286,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         self.reinitialize_fnn()
@@ -325,7 +338,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
     _T_default_criterion = CrossEntropyLoss
     _T_default_metric = CrossEntropyMetric
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(  # pylint: disable=too-many-positional-arguments #noqa: PLR0917
         self,
         n_classes: int,
         n_tasks: int = 1,
@@ -365,6 +378,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
             Threshold for binary classification.
         output_transform : UnscaleTransform or None, optional (default=None)
             Transformations to apply to the output. None defaults to UnscaleTransform.
+
         """
         super().__init__(
             n_tasks,
@@ -387,7 +401,7 @@ class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type
     """A wrapper for the MulticlassDirichletFFN class."""
 
     n_targets: int = 1
-    _T_default_criterion = MulticlassDirichletLoss
+    _T_default_criterion = DirichletLoss
     _T_default_metric = CrossEntropyMetric
 
 
@@ -402,8 +416,9 @@ class SpectralFFN(PredictorWrapper, _SpectralFFN):  # type: ignore
 class MPNN(_MPNN, BaseEstimator):
     """A wrapper for the MPNN class.
 
-    The MPNN is the main model class in chemprop. It consists of a message passing network, an aggregation function,
-    and a feedforward network for prediction.
+    The MPNN is the main model class in chemprop. It consists of a message passing
+    network, an aggregation function, and a feedforward network for prediction.
+
     """
 
     bn: nn.BatchNorm1d | nn.Identity
@@ -442,6 +457,7 @@ class MPNN(_MPNN, BaseEstimator):
             The maximum learning rate.
         final_lr : float, optional (default=1e-4)
             The final learning rate.
+
         """
         super().__init__(
             message_passing=message_passing,
@@ -464,6 +480,7 @@ class MPNN(_MPNN, BaseEstimator):
         -------
         Self
             The reinitialized network.
+
         """
         if self.batch_norm:
             self.bn = nn.BatchNorm1d(self.message_passing.output_dim)
@@ -472,7 +489,7 @@ class MPNN(_MPNN, BaseEstimator):
 
         if self.metric_list is None:
             # pylint: disable=protected-access
-            self.metrics = [self.predictor._T_default_metric, self.criterion]
+            self.metrics = [self.predictor._T_default_metric, self.criterion]  # noqa: SLF001
         else:
             self.metrics = [*list(self.metric_list), self.criterion]
 
@@ -490,6 +507,7 @@ class MPNN(_MPNN, BaseEstimator):
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         self.reinitialize_network()
@@ -498,7 +516,7 @@ class MPNN(_MPNN, BaseEstimator):
 
 # pylint: disable=too-many-ancestors
 class MeanAggregation(_MeanAggregation, BaseEstimator):
-    """Aggregate the graph-level representation by averaging the node representations."""
+    """Aggregate the graph-level representation by averaging node representations."""
 
     def __init__(self, dim: int = 0):
         """Initialize the MeanAggregation class.
@@ -507,6 +525,7 @@ class MeanAggregation(_MeanAggregation, BaseEstimator):
         ----------
         dim : int, optional (default=0)
             The dimension to aggregate over. See torch_scater.scatter for more details.
+
         """
         super().__init__(dim)
 
@@ -522,5 +541,6 @@ class SumAggregation(_SumAggregation, BaseEstimator):
         ----------
         dim : int, optional (default=0)
             The dimension to aggregate over. See torch_scater.scatter for more details.
+
         """
         super().__init__(dim)
