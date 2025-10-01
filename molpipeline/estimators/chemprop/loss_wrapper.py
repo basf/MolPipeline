@@ -108,5 +108,5 @@ class SID(LossFunctionParamMixin, _SID):
     """SID score function."""
 
 
-class BinaryAUROC(LossFunctionParamMixin, _BinaryAUROC):
+class BinaryAUROC(LossFunctionParamMixin, _BinaryAUROC):  # pylint: disable=too-many-ancestors
     """Binary area under the receiver operating characteristic curve metric."""
