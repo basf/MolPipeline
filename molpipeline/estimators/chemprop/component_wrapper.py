@@ -484,9 +484,11 @@ class MPNN(_MPNN, BaseEstimator):
 
         if self.metric_list is None:
             # pylint: disable=protected-access
-            self.metrics = [self.predictor._T_default_metric, self.criterion]  # noqa: SLF001
+            self.metrics = nn.ModuleList(
+                [self.predictor._T_default_metric(), self.criterion],  # noqa: SLF001
+            )
         else:
-            self.metrics = [*list(self.metric_list), self.criterion]
+            self.metrics = nn.ModuleList([*list(self.metric_list), self.criterion])
 
         return self
 
