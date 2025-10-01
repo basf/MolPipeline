@@ -2,11 +2,6 @@
 
 from typing import Any
 
-try:  # required for Python < 3.12
-    from typing import override
-except ImportError:
-    from typing_extensions import override
-
 import torch
 from chemprop.nn.metrics import MSE as _MSE
 from chemprop.nn.metrics import SID as _SID
@@ -39,8 +34,7 @@ class LossFunctionParamMixin:
         self._original_task_weights = task_weights
 
     # pylint: disable=unused-argument
-    @override
-    def get_params(self: _ChempropMetric, deep: bool = True) -> dict[str, Any]:
+    def get_params(self: _ChempropMetric, deep: bool = True) -> dict[str, Any]:  # noqa: ARG002
         """Get the parameters of the loss function.
 
         Parameters
