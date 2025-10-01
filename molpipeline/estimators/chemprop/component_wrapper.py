@@ -11,16 +11,9 @@ from chemprop.nn.agg import Aggregation
 from chemprop.nn.agg import MeanAggregation as _MeanAggregation
 from chemprop.nn.agg import SumAggregation as _SumAggregation
 from chemprop.nn.ffn import MLP
-from chemprop.nn.loss import LossFunction
 from chemprop.nn.message_passing import BondMessagePassing as _BondMessagePassing
 from chemprop.nn.message_passing import MessagePassing
-from chemprop.nn.metrics import (
-    BinaryAUROCMetric,
-    CrossEntropyMetric,
-    Metric,
-    MSEMetric,
-    SIDMetric,
-)
+from chemprop.nn.metrics import ChempropMetric
 from chemprop.nn.predictors import BinaryClassificationFFN as _BinaryClassificationFFN
 from chemprop.nn.predictors import BinaryDirichletFFN as _BinaryDirichletFFN
 from chemprop.nn.predictors import EvidentialFFN as _EvidentialFFN
@@ -38,13 +31,15 @@ from sklearn.base import BaseEstimator
 from torch import Tensor, nn
 
 from molpipeline.estimators.chemprop.loss_wrapper import (
+    MSE,
+    SID,
     BCELoss,
+    BinaryAUROC,
     CrossEntropyLoss,
     DirichletLoss,
     EvidentialLoss,
-    MSELoss,
+    MulticlassMCCMetric,
     MVELoss,
-    SIDLoss,
 )
 
 
@@ -154,8 +149,8 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
     """Abstract wrapper for the Predictor class."""
 
-    _T_default_criterion: LossFunction
-    _T_default_metric: Metric
+    _T_default_criterion: ChempropMetric
+    _T_default_metric: ChempropMetric
 
     def __init__(  # pylint: disable=too-many-positional-arguments
         self,
@@ -165,7 +160,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         n_layers: int = 1,
         dropout: float = 0,
         activation: str = "relu",
-        criterion: LossFunction | None = None,
+        criterion: ChempropMetric | None = None,
         task_weights: Tensor | None = None,
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
@@ -297,8 +292,8 @@ class RegressionFFN(PredictorWrapper, _RegressionFFN):  # type: ignore
     """A wrapper for the RegressionFFN class."""
 
     n_targets: int = 1
-    _T_default_criterion = MSELoss
-    _T_default_metric = MSEMetric
+    _T_default_criterion = MSE
+    _T_default_metric = MSE
 
 
 class MveFFN(PredictorWrapper, _MveFFN):  # type: ignore
@@ -320,7 +315,7 @@ class BinaryClassificationFFN(PredictorWrapper, _BinaryClassificationFFN):  # ty
 
     n_targets: int = 1
     _T_default_criterion = BCELoss
-    _T_default_metric = BinaryAUROCMetric
+    _T_default_metric = BinaryAUROC
 
 
 class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):  # type: ignore
@@ -328,7 +323,7 @@ class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):  # type: ignore
 
     n_targets: int = 2
     _T_default_criterion = DirichletLoss
-    _T_default_metric = BinaryAUROCMetric
+    _T_default_metric = BinaryAUROC
 
 
 class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN):  # type: ignore
@@ -336,7 +331,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
 
     n_targets: int = 1
     _T_default_criterion = CrossEntropyLoss
-    _T_default_metric = CrossEntropyMetric
+    _T_default_metric = MulticlassMCCMetric
 
     def __init__(  # pylint: disable=too-many-positional-arguments #noqa: PLR0917
         self,
@@ -347,7 +342,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         n_layers: int = 1,
         dropout: float = 0.0,
         activation: str = "relu",
-        criterion: LossFunction | None = None,
+        criterion: ChempropMetric | None = None,
         task_weights: Tensor | None = None,
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
@@ -402,15 +397,15 @@ class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type
 
     n_targets: int = 1
     _T_default_criterion = DirichletLoss
-    _T_default_metric = CrossEntropyMetric
+    _T_default_metric = MulticlassMCCMetric
 
 
 class SpectralFFN(PredictorWrapper, _SpectralFFN):  # type: ignore
     """A wrapper for the SpectralFFN class."""
 
     n_targets: int = 1
-    _T_default_criterion = SIDLoss
-    _T_default_metric = SIDMetric
+    _T_default_criterion = SID
+    _T_default_metric = SID
 
 
 class MPNN(_MPNN, BaseEstimator):
@@ -429,7 +424,7 @@ class MPNN(_MPNN, BaseEstimator):
         agg: Aggregation,
         predictor: PredictorWrapper,
         batch_norm: bool = True,
-        metric_list: Iterable[Metric] | None = None,
+        metric_list: Iterable[ChempropMetric] | None = None,
         warmup_epochs: int = 2,
         init_lr: float = 1e-4,
         max_lr: float = 1e-3,
