@@ -30,7 +30,7 @@ from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
 
-from molpipeline.estimators.chemprop.loss_wrapper import (
+from molpipeline.estimators.chemprop.metric_wrapper import (
     MSE,
     SID,
     BCELoss,

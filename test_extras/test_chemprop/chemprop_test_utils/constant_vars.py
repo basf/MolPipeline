@@ -12,10 +12,10 @@ from molpipeline.estimators.chemprop.component_wrapper import (
     MulticlassClassificationFFN,
     SumAggregation,
 )
-from molpipeline.estimators.chemprop.loss_wrapper import CrossEntropyLoss
+from molpipeline.estimators.chemprop.metric_wrapper import CrossEntropyLoss
 
-# These are model parameters which are copied by value, but are too complex to check for equality.
-# Thus, for these model parameters, only the type is checked.
+# These are model parameters which are copied by value, but are too complex to check
+# for equality. Thus, for these model parameters, only the type is checked.
 NO_IDENTITY_CHECK = [
     "model__agg",
     "model__message_passing",
