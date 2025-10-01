@@ -26,12 +26,12 @@ class LossFunctionParamMixin:
 
     _original_task_weights: ArrayLike
 
-    def __init__(self: _ChempropMetric, task_weights: ArrayLike) -> None:
+    def __init__(self: _ChempropMetric, task_weights: ArrayLike | float = 1.0) -> None:
         """Initialize the loss function.
 
         Parameters
         ----------
-        task_weights : ArrayLike
+        task_weights : ArrayLike | float, optional
             The weights for each task.
 
         """
