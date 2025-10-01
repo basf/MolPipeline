@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from unittest import TestCase
 
 import torch
-from chemprop.nn.loss import LossFunction
+from chemprop.nn.metrics import ChempropMetric
 from lightning.pytorch.accelerators import Accelerator
 from lightning.pytorch.profilers.base import PassThroughProfiler
 from sklearn.base import BaseEstimator
@@ -12,7 +12,9 @@ from torch import nn
 
 
 def compare_params(
-    test_case: TestCase, model_a: BaseEstimator, model_b: BaseEstimator
+    test_case: TestCase,
+    model_a: BaseEstimator,
+    model_b: BaseEstimator,
 ) -> None:
     """Compare the parameters of two models.
 
@@ -24,6 +26,7 @@ def compare_params(
         The first model.
     model_b : BaseEstimator
         The second model.
+
     """
     model_a_params = model_a.get_params(deep=True)
     model_b_params = model_b.get_params(deep=True)
@@ -34,7 +37,7 @@ def compare_params(
         if hasattr(param_a, "get_params"):
             test_case.assertTrue(hasattr(param_b, "get_params"))
             test_case.assertNotEqual(id(param_a), id(param_b))
-        elif isinstance(param_a, LossFunction):
+        elif isinstance(param_a, ChempropMetric):
             test_case.assertEqual(
                 param_a.state_dict()["task_weights"],
                 param_b.state_dict()["task_weights"],
@@ -44,7 +47,8 @@ def compare_params(
             test_case.assertEqual(type(param_a), type(param_b))
         elif isinstance(param_a, torch.Tensor):
             test_case.assertTrue(
-                torch.equal(param_a, param_b), f"Test failed for {param_name}"
+                torch.equal(param_a, param_b),
+                f"Test failed for {param_name}",
             )
         elif param_name == "lightning_trainer__callbacks":
             test_case.assertIsInstance(param_b, Sequence)
