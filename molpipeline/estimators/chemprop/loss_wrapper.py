@@ -101,7 +101,7 @@ class EvidentialLoss(LossFunctionParamMixin, _EvidentialLoss):
     """Evidential loss function."""
 
 
-class MSELoss(LossFunctionParamMixin, _MSE):
+class MSE(LossFunctionParamMixin, _MSE):
     """Mean squared error loss function."""
 
 
