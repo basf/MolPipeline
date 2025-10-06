@@ -1,14 +1,13 @@
 """Contains functions for molecular similarity."""
 
-from typing import Union
-
 import numpy as np
-import numpy.typing as npt
+from numpy import typing as npt
 from scipy import sparse
 
 
 def tanimoto_similarity_sparse(
-    matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
+    matrix_b: sparse.csr_matrix | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.float64]:
     """Calculate a matrix of tanimoto similarities between feature matrix a and b.
 
@@ -22,16 +21,17 @@ def tanimoto_similarity_sparse(
     Returns
     -------
     npt.NDArray[np.float64]
-        Matrix of similarity values between instances of A (rows/first dim) , and instances of B (columns/second dim).
+        Matrix of similarity values between instances of A (rows/first dim) ,
+        and instances of B (columns/second dim).
 
     """
+    if isinstance(matrix_a, np.ndarray):
+        matrix_a = sparse.csr_matrix(matrix_a)
+    if isinstance(matrix_b, np.ndarray):
+        matrix_b = sparse.csr_matrix(matrix_b)
     intersection = matrix_a.dot(matrix_b.transpose()).toarray()
     norm_1 = np.array(matrix_a.sum(axis=1))
-    if matrix_a is matrix_b:
-        # avoid calculating the same norm twice
-        norm_2 = norm_1
-    else:
-        norm_2 = np.array(matrix_b.sum(axis=1))
+    norm_2 = norm_1 if matrix_a is matrix_b else np.array(matrix_b.sum(axis=1))
     union = norm_1 + norm_2.T - intersection
     # avoid division by zero https://stackoverflow.com/a/37977222
     return np.divide(
@@ -43,7 +43,8 @@ def tanimoto_similarity_sparse(
 
 
 def tanimoto_distance_sparse(
-    matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
+    matrix_b: sparse.csr_matrix | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.float64]:
     """Calculate a matrix of tanimoto distance between feature matrix a and b.
 
@@ -51,22 +52,23 @@ def tanimoto_distance_sparse(
 
     Parameters
     ----------
-    matrix_a: sparse.csr_matrix
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_]
         Feature matrix A.
-    matrix_b: sparse.csr_matrix
+    matrix_b: sparse.csr_matrix | npt.NDArray[np.int_]
         Feature matrix B.
 
     Returns
     -------
     npt.NDArray[np.float64]
-        Matrix of similarity values between instances of A (rows/first dim) , and instances of B (columns/second dim).
+        Matrix of similarity values between instances of A (rows/first dim)
+        and instances of B (columns/second dim).
 
     """
     return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
 
 
 def self_tanimoto_similarity(
-    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]],
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.float64]:
     """Calculate a matrix of tanimoto similarity between feature matrix a and itself.
 
@@ -96,7 +98,7 @@ def self_tanimoto_similarity(
 
 
 def self_tanimoto_distance(
-    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]],
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.float64]:
     """Calculate a matrix of tanimoto distance between feature matrix a and itself.
 
