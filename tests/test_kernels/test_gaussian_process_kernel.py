@@ -6,6 +6,7 @@ import abc
 import unittest
 
 import numpy as np
+import numpy.typing as npt
 from sklearn.gaussian_process import GaussianProcessClassifier, GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, Kernel, Sum
 
@@ -23,6 +24,10 @@ class GPKernelTestMixin(abc.ABC):
     """Test case for Gaussian process kernels using Tanimoto similarity."""
 
     kernel: Kernel
+    feature_matrix_a: npt.NDArray[np.int_]
+    feature_matrix_b: npt.NDArray[np.int_]
+    smiles_list: list[str]
+    label: list[int]
 
     def setUp(self) -> None:  # pylint: disable=invalid-name
         """Create small integer fingerprint matrices."""
