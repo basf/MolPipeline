@@ -163,7 +163,14 @@ EndFeature
             MolToPharmacophore2DFP().set_params(feature_definition="bad definition")
 
     def test_joblib_serialization(self) -> None:
-        """Test serialization with joblib."""
+        """Test serialization with joblib.
+
+        Raises
+        ------
+        AssertionError
+            If the prior test does not raise an error. Primarily for type checking.
+
+        """
         fp_element = MolToPharmacophore2DFP(
             counted=True,
             return_as="dense",
@@ -184,10 +191,21 @@ EndFeature
 
         self.assertIsInstance(original_fp, np.ndarray)
         self.assertIsInstance(loaded_fp, np.ndarray)
+        if not isinstance(original_fp, np.ndarray):
+            raise AssertionError("Expected original_fp to be a numpy array.")
+        if not isinstance(loaded_fp, np.ndarray):
+            raise AssertionError("Expected loaded_fp to be a numpy array.")
         self.assertTrue(np.array_equal(original_fp, loaded_fp))
 
     def test_json_serialization(self) -> None:
-        """Test JSON serialization of element."""
+        """Test JSON serialization of element.
+
+        Raises
+        ------
+        AssertionError
+            If the prior test does not raise an error. Primarily for type checking.
+
+        """
         fp_element = MolToPharmacophore2DFP(
             min_point_count=3,
             max_point_count=3,
@@ -208,6 +226,10 @@ EndFeature
         fp_loaded = fp_element_loaded.transform(self.test_molecules)
         self.assertIsInstance(fp, np.ndarray)
         self.assertIsInstance(fp_loaded, np.ndarray)
+        if not isinstance(fp, np.ndarray):
+            raise AssertionError("Expected fp to be a numpy array.")
+        if not isinstance(fp_loaded, np.ndarray):
+            raise AssertionError("Expected fp_loaded to be a numpy array.")
         self.assertTrue(np.array_equal(fp, fp_loaded))
 
     def test_custom_feature_definition(self) -> None:
@@ -375,11 +397,20 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         self.assertTrue(fingerprints.nnz > 0)  # Should have some non-zero elements
 
     def test_fingerprint_generation_dense_binary(self) -> None:
-        """Test fingerprint generation with dense output."""
+        """Test fingerprint generation with dense output.
+
+        Raises
+        ------
+        AssertionError
+            If the prior does not raise an error. Primarily for type checking.
+
+        """
         fp_element = MolToPharmacophore2DFP(return_as="dense", counted=False)
         fingerprints = fp_element.transform(self.test_molecules)
 
         self.assertIsInstance(fingerprints, np.ndarray)
+        if not isinstance(fingerprints, np.ndarray):
+            raise AssertionError("Expected fingerprints to be a numpy array.")
         self.assertEqual(fingerprints.shape[0], len(self.test_molecules))
         self.assertEqual(fingerprints.shape[1], fp_element.n_bits)
         self.assertTrue(np.array_equal(np.unique(fingerprints), [0, 1]))
@@ -394,7 +425,14 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         self.assertEqual(fingerprints.shape[1], fp_element.n_bits)
 
     def test_fingerprint_generation_rdkit_binary(self) -> None:
-        """Test fingerprint generation with "rdkit_explicit" output."""
+        """Test fingerprint generation with "rdkit_explicit" output.
+
+        Raises
+        ------
+        AssertionError
+            If the prior does not raise an error. Primarily for type checking.
+
+        """
         fp_element = MolToPharmacophore2DFP(return_as="rdkit", counted=False)
         fingerprints = fp_element.transform(self.test_molecules)
 
@@ -403,20 +441,31 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
 
         # Check that each element is an ExplicitBitVect
         for fp in fingerprints:
-            self.assertTrue(isinstance(fp, ExplicitBitVect))
+            self.assertIsInstance(fp, ExplicitBitVect)
+            if not isinstance(fp, ExplicitBitVect):
+                raise AssertionError("Expected fp to be an ExplicitBitVect.")
             self.assertEqual(fp.GetNumBits(), fp_element.n_bits)
 
     def test_fingerprint_generation_rdkit_counted(self) -> None:
-        """Test fingerprint generation with ExplicitBitVect output."""
+        """Test fingerprint generation with ExplicitBitVect output.
+
+        Raises
+        ------
+        AssertionError
+            If the prior does not raise an error. Primarily for type checking.
+
+        """
         fp_element = MolToPharmacophore2DFP(return_as="rdkit", counted=True)
         fingerprints = fp_element.transform(self.test_molecules)
 
         self.assertIsInstance(fingerprints, list)
+        if not isinstance(fingerprints, list):
+            raise AssertionError("Expected fingerprints to be a list.")
         self.assertEqual(len(fingerprints), len(self.test_molecules))
 
         # Check that each element is an IntSparseIntVect
         for fp in fingerprints:
-            self.assertTrue(isinstance(fp, IntSparseIntVect))
+            self.assertIsInstance(fp, IntSparseIntVect)
             self.assertEqual(fp.GetLength(), fp_element.n_bits)
 
     def test_pretransform_single_binary(self) -> None:
@@ -425,7 +474,7 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         Raises
         ------
         AssertionError
-            If the results are not consistent across formats.
+            If the prior test does not raise an error. Primarily for type checking.
 
         """
         mol = self.test_molecules[0]
@@ -441,6 +490,9 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         # Test rdkit format
         fp_element_rdkit = MolToPharmacophore2DFP(return_as="rdkit", counted=False)
         result_rdkit = fp_element_rdkit.pretransform_single(mol)
+        self.assertIsInstance(result_rdkit, ExplicitBitVect)
+        if not isinstance(result_rdkit, ExplicitBitVect):
+            raise AssertionError("Expected result_rdkit to be an ExplicitBitVect.")
 
         # Verify consistency across formats
         # Convert all to same format for comparison
@@ -475,6 +527,9 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         # Test explicit_bit_vect format
         fp_element_rdkit = MolToPharmacophore2DFP(return_as="rdkit", counted=True)
         result_rdkit = fp_element_rdkit.pretransform_single(mol)
+        self.assertIsInstance(result_rdkit, ExplicitBitVect)
+        if not isinstance(result_rdkit, ExplicitBitVect):
+            raise AssertionError("Expected result_rdkit to be an ExplicitBitVect.")
 
         # Verify consistency across formats
         # Convert all to same format for comparison
