@@ -76,14 +76,14 @@ class TestAuto2Mol(unittest.TestCase):
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_smiles)
         self.assertEqual(len(test_smiles), len(actual_mols))
-        for smiles_mol, original_mol in zip(actual_mols, expected_mols, strict=True):
+        for actual_mol, original_mol in zip(actual_mols, expected_mols, strict=True):
             with self.subTest(smiles=Chem.MolToSmiles(original_mol)):
-                smiles_inchi = Chem.MolToInchi(smiles_mol)
+                actual_inchi = Chem.MolToInchi(actual_mol)
                 expected_inchi = Chem.MolToInchi(original_mol)
                 self.assertEqual(
-                    smiles_inchi,
+                    actual_inchi,
                     expected_inchi,
-                    msg=f"SMILES mol InChI {smiles_inchi} does not match"
+                    msg=f"Actual mol InChI {actual_inchi} does not match"
                     f"expected InChI {expected_inchi}",
                 )
         del log_block
@@ -104,16 +104,16 @@ class TestAuto2Mol(unittest.TestCase):
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_inchis)
         self.assertEqual(len(test_inchis), len(actual_mols))
-        self.assertTrue(
-            all(
-                Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
-                for smiles_mol, original_mol in zip(
-                    actual_mols,
-                    expected_mols,
-                    strict=True,
+        for actual_mol, original_mol in zip(actual_mols, expected_mols, strict=True):
+            with self.subTest(smiles=Chem.MolToSmiles(original_mol)):
+                actual_inchi = Chem.MolToInchi(actual_mol)
+                expected_inchi = Chem.MolToInchi(original_mol)
+                self.assertEqual(
+                    actual_inchi,
+                    expected_inchi,
+                    msg=f"Actual mol InChI {actual_inchi} does not match"
+                    f"expected InChI {expected_inchi}",
                 )
-            ),
-        )
         del log_block
 
     def test_auto2mol_for_sdf(self) -> None:
@@ -175,16 +175,16 @@ class TestAuto2Mol(unittest.TestCase):
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_bin_mols)
         self.assertEqual(len(test_bin_mols), len(actual_mols))
-        self.assertTrue(
-            all(
-                Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
-                for smiles_mol, original_mol in zip(
-                    actual_mols,
-                    expected_mols,
-                    strict=True,
+        for actual_mol, original_mol in zip(actual_mols, expected_mols, strict=True):
+            with self.subTest(smiles=Chem.MolToSmiles(original_mol)):
+                actual_inchi = Chem.MolToInchi(actual_mol)
+                expected_inchi = Chem.MolToInchi(original_mol)
+                self.assertEqual(
+                    actual_inchi,
+                    expected_inchi,
+                    msg=f"Actual mol InChI {actual_inchi} does not match"
+                    f"expected InChI {expected_inchi}",
                 )
-            ),
-        )
         del log_block
 
     def test_auto2mol_for_molecule(self) -> None:
@@ -221,16 +221,16 @@ class TestAuto2Mol(unittest.TestCase):
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_mols)
         self.assertEqual(len(test_mols), len(actual_mols))
-        self.assertTrue(
-            all(
-                Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
-                for smiles_mol, original_mol in zip(
-                    actual_mols,
-                    expected_mols,
-                    strict=True,
+        for actual_mol, original_mol in zip(actual_mols, expected_mols, strict=True):
+            with self.subTest(smiles=Chem.MolToSmiles(original_mol)):
+                actual_inchi = Chem.MolToInchi(actual_mol)
+                expected_inchi = Chem.MolToInchi(original_mol)
+                self.assertEqual(
+                    actual_inchi,
+                    expected_inchi,
+                    msg=f"Actual mol InChI {actual_inchi} does not match"
+                    f"expected InChI {expected_inchi}",
                 )
-            ),
-        )
         del log_block
 
     def test_auto2mol_mixed_inputs(self) -> None:
@@ -269,14 +269,14 @@ class TestAuto2Mol(unittest.TestCase):
         log_block = rdBase.BlockLogs()
         actual_mols = pipeline.fit_transform(test_inputs)
         self.assertEqual(len(test_inputs), len(actual_mols))
-        for smiles_mol, original_mol in zip(actual_mols, test_mols, strict=True):
+        for actual_mol, original_mol in zip(actual_mols, test_mols, strict=True):
             with self.subTest(smiles=Chem.MolToSmiles(original_mol)):
-                smiles_inchi = Chem.MolToInchi(smiles_mol)
+                actual_inchi = Chem.MolToInchi(actual_mol)
                 expected_inchi = Chem.MolToInchi(original_mol)
                 self.assertEqual(
-                    smiles_inchi,
+                    actual_inchi,
                     expected_inchi,
-                    msg=f"SMILES mol InChI {smiles_inchi} does not match"
+                    msg=f"Actual mol InChI {actual_inchi} does not match"
                     f"expected InChI {expected_inchi}",
                 )
         del log_block
