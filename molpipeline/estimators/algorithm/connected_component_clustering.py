@@ -42,7 +42,7 @@ def calc_chunk_size_from_memory_requirement(
 
 
 def connected_components_iterative_algorithm(
-    feature_mat: csr_matrix,
+    feature_mat: csr_matrix | npt.NDArray[np.int_],
     similarity_threshold: float,
     chunk_size: int = 5000,
 ) -> tuple[int, npt.NDArray[np.int32]]:
