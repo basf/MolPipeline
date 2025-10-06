@@ -119,7 +119,7 @@ def _get_predictions(
     """
     prediction_function = _get_prediction_function(pipeline)
     prediction = prediction_function(feature_matrix)
-    return np.array(prediction, dtype=np.float64)
+    return np.array(prediction)
 
 
 def _convert_shap_feature_weights_to_atom_weights(
