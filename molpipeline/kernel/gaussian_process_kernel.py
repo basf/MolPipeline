@@ -51,7 +51,7 @@ class TanimotoKernel(StationaryKernelMixin, Kernel):
         sim = tanimoto_similarity_sparse(X, Y)
         if not eval_gradient:
             return sim
-        return sim, np.empty((X.shape[0], X.shape[0], 0))
+        return sim, np.empty((X.shape[0], Y.shape[0], 0))
 
     def diag(  # noqa: PLR6301  # type: ignore
         self,
