@@ -24,9 +24,9 @@ class GPKernelTestMixin(abc.ABC):
 
     kernel: Kernel
 
-    def setUp(self) -> None:
+    def setUp(self) -> None:  # pylint: disable=invalid-name
         """Create small integer fingerprint matrices."""
-        self.X = np.array(
+        self.feature_matrix_a = np.array(
             [
                 [1, 0, 1, 0],
                 [1, 1, 0, 0],
@@ -34,7 +34,7 @@ class GPKernelTestMixin(abc.ABC):
             ],
             dtype=int,
         )
-        self.Y = np.array(
+        self.feature_matrix_b = np.array(
             [
                 [1, 0, 1, 1],
                 [1, 1, 0, 0],
@@ -127,21 +127,31 @@ class TestTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
 
     def test_call_self_no_gradient(self) -> None:
         """Test similarity matrix when Y is None (self-similarity)."""
-        kernel_matrix = self.kernel(self.X)
-        expected = tanimoto_similarity_sparse(self.X, self.X)
+        kernel_matrix = self.kernel(self.feature_matrix_a)
+        expected = tanimoto_similarity_sparse(
+            self.feature_matrix_a,
+            self.feature_matrix_a,
+        )
         np.testing.assert_allclose(kernel_matrix, expected, rtol=1e-8)
 
     def test_call_with_y_and_gradient(self) -> None:
         """Test call with external Y and gradient path."""
-        kernel_matrix, grad = self.kernel(self.X, self.Y, eval_gradient=True)
-        kernel_matrix_expected = tanimoto_similarity_sparse(self.X, self.Y)
+        kernel_matrix, grad = self.kernel(
+            self.feature_matrix_a,
+            self.feature_matrix_b,
+            eval_gradient=True,
+        )
+        kernel_matrix_expected = tanimoto_similarity_sparse(
+            self.feature_matrix_a,
+            self.feature_matrix_b,
+        )
         np.testing.assert_allclose(kernel_matrix, kernel_matrix_expected, rtol=1e-8)
         self.assertEqual(grad.shape, (*kernel_matrix.shape, 0))
 
     def test_diag(self) -> None:
         """Test diag returns vector of ones."""
-        d = self.kernel.diag(self.X)
-        np.testing.assert_array_equal(d, np.ones(self.X.shape[0]))
+        d = self.kernel.diag(self.feature_matrix_a)
+        np.testing.assert_array_equal(d, np.ones(self.feature_matrix_a.shape[0]))
 
     def test_addition_with_rbf(self) -> None:
         """Test addition of TanimotoKernel with RBF kernel."""
@@ -172,9 +182,12 @@ class TestExponentialTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
 
     def test_call_no_gradient(self) -> None:
         """Test kernel matrix without gradient equals powered similarity."""
-        kernel_matrix = self.kernel(self.X)
+        kernel_matrix = self.kernel(self.feature_matrix_a)
 
-        tanimoto = tanimoto_similarity_sparse(self.X, self.X)
+        tanimoto = tanimoto_similarity_sparse(
+            self.feature_matrix_a,
+            self.feature_matrix_a,
+        )
         kernel_matrix_expected = tanimoto**self.kernel.exponent
 
         np.testing.assert_allclose(kernel_matrix, kernel_matrix_expected, rtol=1e-8)
@@ -188,19 +201,28 @@ class TestExponentialTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
 
     def test_call_with_gradient(self) -> None:
         """Test kernel matrix and gradient computation."""
-        tanimoto = tanimoto_similarity_sparse(self.X, self.X)
-        kernel_matrix, grad = self.kernel(self.X, eval_gradient=True)
+        tanimoto = tanimoto_similarity_sparse(
+            self.feature_matrix_a,
+            self.feature_matrix_a,
+        )
+        kernel_matrix, grad = self.kernel(self.feature_matrix_a, eval_gradient=True)
         # Expected sim includes small diagonal epsilon (1e-9)
-        expected_sim = tanimoto**self.kernel.exponent + np.eye(self.X.shape[0]) * 1e-9
+        expected_sim = (
+            tanimoto**self.kernel.exponent
+            + np.eye(self.feature_matrix_a.shape[0]) * 1e-9
+        )
         np.testing.assert_allclose(kernel_matrix, expected_sim, rtol=1e-8)
         # Gradient shape
-        self.assertEqual(grad.shape, (self.X.shape[0], self.X.shape[0], 1))
+        self.assertEqual(
+            grad.shape,
+            (self.feature_matrix_a.shape[0], self.feature_matrix_a.shape[0], 1),
+        )
         base_grad = (tanimoto**self.kernel.exponent) * np.log10(tanimoto)
-        expected_grad = base_grad + np.eye(self.X.shape[0]) * 1e-9
+        expected_grad = base_grad + np.eye(self.feature_matrix_a.shape[0]) * 1e-9
         np.testing.assert_allclose(grad[:, :, 0], expected_grad, rtol=1e-8)
         self.assertFalse(np.isnan(grad).any(), "Gradient contains NaN values.")
 
     def test_diag(self) -> None:
         """Test diag returns ones."""
-        d = self.kernel.diag(self.X)
-        np.testing.assert_array_equal(d, np.ones(self.X.shape[0]))
+        d = self.kernel.diag(self.feature_matrix_a)
+        np.testing.assert_array_equal(d, np.ones(self.feature_matrix_a.shape[0]))
