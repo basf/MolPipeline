@@ -351,6 +351,12 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
         similarity_matrix: npt.NDArray[np.float64]
             Similarity matrix of Tanimoto scores between query and target fingerprints.
 
+        Raises
+        ------
+        AssertionError
+            If the number of neighbors k has not been set. This should happen in the
+            fit function.
+
         Returns
         -------
         tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]
@@ -360,13 +366,14 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
         """
         # Get the indices of the k-nearest neighbors.
         # argpartition returns them unsorted.
-        topk_indices = np.argpartition(
-            similarity_matrix,
-            kth=-self.k,  # type: ignore[operator]
-            axis=1,
-        )[
-            :,  # type: ignore[index]
-            -self.k :,  # type: ignore[operator]
+        if self.k is None:
+            raise AssertionError(
+                "The number of neighbors k has not been set. This should happen in the"
+                " fit function.",
+            )
+        topk_indices = np.argpartition(similarity_matrix, kth=-self.k, axis=1)[
+            :,
+            -self.k :,
         ]
         topk_similarities = np.take_along_axis(similarity_matrix, topk_indices, axis=1)
         # sort the topk_indices descending by similarity
@@ -437,6 +444,11 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
         )
 
         # reduce the similarity matrix to the k nearest neighbors
+        if self.k is None:
+            raise AssertionError(
+                "The number of neighbors k has not been set. This should happen in the"
+                " fit function.",
+            )
         if self.k == 1:
             return self._reduce_k_equals_1(similarity_mat_chunk)
         if self.k < self.target_fingerprints.shape[0]:
@@ -507,7 +519,7 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
             result_indices = np.full(result_shape, -1, dtype=np.int64)
             result_similarities = np.full(result_shape, np.nan, dtype=np.float64)
             for i in range(0, query_fingerprints.shape[0], self.batch_size):
-                query_batch = query_fingerprints[i : i + self.batch_size, :]
+                query_batch = query_fingerprints[i : i + self.batch_size]
                 (
                     result_indices[i : i + self.batch_size],
                     result_similarities[i : i + self.batch_size],

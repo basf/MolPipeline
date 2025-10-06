@@ -3,6 +3,7 @@
 import unittest
 
 import numpy as np
+import numpy.typing as npt
 from scipy import sparse
 
 from molpipeline.kernel.tanimoto_functions import (
@@ -18,11 +19,11 @@ class ABCTanimotoTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up common test data."""
-        self.matrix_a_np: np.ndarray = np.array(
+        self.matrix_a_np: npt.NDArray[np.int_] = np.array(
             [[1, 0, 1, 0], [1, 1, 0, 0]],
             dtype=int,
         )
-        self.matrix_b_np: np.ndarray = np.array(
+        self.matrix_b_np: npt.NDArray[np.int_] = np.array(
             [[1, 0, 1, 1], [0, 1, 0, 1]],
             dtype=int,
         )
