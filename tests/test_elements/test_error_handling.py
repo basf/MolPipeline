@@ -193,11 +193,11 @@ class NoneTest(unittest.TestCase):
             out2 = pipeline2.fit_transform(this_test_values)
 
             if as_numpy_array:
-                self.assertTrue(isinstance(out, np.ndarray))
-                self.assertTrue(isinstance(out2, np.ndarray))
+                self.assertIsInstance(out, np.ndarray)
+                self.assertIsInstance(out2, np.ndarray)
             else:
-                self.assertTrue(isinstance(out, list))
-                self.assertTrue(isinstance(out2, list))
+                self.assertIsInstance(out, list)
+                self.assertIsInstance(out2, list)
 
             self.assertEqual(len(out), len(out2))
             self.assertEqual(len(this_test_values), len(out))
