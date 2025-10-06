@@ -527,9 +527,9 @@ class TestMolToPharmacophore2DFPFingerprintCalculation(unittest.TestCase):
         # Test explicit_bit_vect format
         fp_element_rdkit = MolToPharmacophore2DFP(return_as="rdkit", counted=True)
         result_rdkit = fp_element_rdkit.pretransform_single(mol)
-        self.assertIsInstance(result_rdkit, ExplicitBitVect)
-        if not isinstance(result_rdkit, ExplicitBitVect):
-            raise AssertionError("Expected result_rdkit to be an ExplicitBitVect.")
+        self.assertIsInstance(result_rdkit, IntSparseIntVect)
+        if not isinstance(result_rdkit, IntSparseIntVect):
+            raise AssertionError("Expected result_rdkit to be an IntSparseIntVect.")
 
         # Verify consistency across formats
         # Convert all to same format for comparison
