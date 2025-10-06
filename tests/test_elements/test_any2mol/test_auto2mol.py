@@ -110,7 +110,7 @@ class TestAuto2Mol(unittest.TestCase):
                 for smiles_mol, original_mol in zip(
                     actual_mols,
                     expected_mols,
-                    strict=False,
+                    strict=True,
                 )
             ),
         )
@@ -181,7 +181,7 @@ class TestAuto2Mol(unittest.TestCase):
                 for smiles_mol, original_mol in zip(
                     actual_mols,
                     expected_mols,
-                    strict=False,
+                    strict=True,
                 )
             ),
         )
@@ -227,7 +227,7 @@ class TestAuto2Mol(unittest.TestCase):
                 for smiles_mol, original_mol in zip(
                     actual_mols,
                     expected_mols,
-                    strict=False,
+                    strict=True,
                 )
             ),
         )

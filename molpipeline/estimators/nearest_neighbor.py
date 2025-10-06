@@ -506,7 +506,7 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
                     )
                     for i in range(0, query_fingerprints.shape[0], self.batch_size)
                 )
-                result_indices_tmp, result_similarities_tmp = zip(*res, strict=False)
+                result_indices_tmp, result_similarities_tmp = zip(*res, strict=True)
                 result_indices = np.concatenate(result_indices_tmp)
                 result_similarities = np.concatenate(result_similarities_tmp)
         else:
