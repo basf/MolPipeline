@@ -43,8 +43,8 @@ def tanimoto_similarity_sparse(
 
 
 def tanimoto_distance_sparse(
-    matrix_a: sparse.csr_matrix,
-    matrix_b: sparse.csr_matrix,
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
+    matrix_b: sparse.csr_matrix | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.float64]:
     """Calculate a matrix of tanimoto distance between feature matrix a and b.
 
@@ -52,9 +52,9 @@ def tanimoto_distance_sparse(
 
     Parameters
     ----------
-    matrix_a: sparse.csr_matrix
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_]
         Feature matrix A.
-    matrix_b: sparse.csr_matrix
+    matrix_b: sparse.csr_matrix | npt.NDArray[np.int_]
         Feature matrix B.
 
     Returns
