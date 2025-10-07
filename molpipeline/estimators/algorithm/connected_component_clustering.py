@@ -1,17 +1,11 @@
 """Connected component clustering algorithm."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import numpy as np
 import numpy.typing as npt
+from scipy.sparse import csr_matrix
 
 from molpipeline.estimators.algorithm.union_find import UnionFindNode
-from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
-
-if TYPE_CHECKING:
-    from scipy.sparse import csr_matrix
+from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 
 def calc_chunk_size_from_memory_requirement(
@@ -48,7 +42,7 @@ def calc_chunk_size_from_memory_requirement(
 
 
 def connected_components_iterative_algorithm(
-    feature_mat: csr_matrix,
+    feature_mat: csr_matrix | npt.NDArray[np.int_],
     similarity_threshold: float,
     chunk_size: int = 5000,
 ) -> tuple[int, npt.NDArray[np.int32]]:
@@ -77,7 +71,7 @@ def connected_components_iterative_algorithm(
     uf_nodes = [UnionFindNode() for _ in range(nof_samples)]
 
     for i in range(0, nof_samples, chunk_size):
-        mat_chunk = feature_mat[i : i + chunk_size, :]
+        mat_chunk = feature_mat[i : i + chunk_size]
 
         similarity_mat_chunk = tanimoto_similarity_sparse(mat_chunk, feature_mat)
 

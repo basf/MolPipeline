@@ -16,7 +16,7 @@ from molpipeline.estimators.algorithm.connected_component_clustering import (
     calc_chunk_size_from_memory_requirement,
     connected_components_iterative_algorithm,
 )
-from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
+from molpipeline.utils.kernel import tanimoto_similarity_sparse
 
 if TYPE_CHECKING:
     from scipy.sparse import csr_matrix
@@ -54,7 +54,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # noqa: N803
+        X: npt.NDArray[np.int_] | csr_matrix,  # noqa: N803
         y: npt.NDArray[np.float64] | None = None,  # noqa: ARG002
     ) -> Self:
         """Fit connected component clustering estimator.
@@ -72,14 +72,11 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
             Fitted estimator.
 
         """
-        X = validate_data(self, X=X, ensure_min_samples=2, accept_sparse=True)  # noqa: N806
-        return self._fit(X)
+        features = validate_data(self, X=X, ensure_min_samples=2, accept_sparse=True)
+        return self._fit(features)
 
     # pylint: disable=C0103,W0613
-    def _fit(
-        self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # noqa: N803
-    ) -> Self:
+    def _fit(self, X: npt.NDArray[np.int_] | csr_matrix) -> Self:  # noqa: N803
         """Fit connected component clustering estimator.
 
         Parameters
@@ -98,8 +95,8 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
 
         # get row chunk size based on 2D dense distance matrix that will be generated
         row_chunk_size = calc_chunk_size_from_memory_requirement(
-            # the self_tanimoto_distance needs two matrices of X.shape and
-            # two additional rows.
+            # the self_tanimoto_distance needs two matrices of X.shape and two
+            # additional rows.
             X.shape[0] * 2 + 2,
             X.shape[0],
             np.dtype("float64").itemsize,
@@ -126,8 +123,8 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
 
     def fit_predict(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=C0103  # noqa: N803
-        y: npt.NDArray[np.float64] | None = None,
+        X: npt.NDArray[np.int_] | csr_matrix,  # pylint: disable=C0103  # noqa: N803
+        y: npt.NDArray[np.int_] | None = None,
         **kwargs: Any,
     ) -> npt.NDArray[np.int32]:
         """Fit and predict connected component clustering estimator.
