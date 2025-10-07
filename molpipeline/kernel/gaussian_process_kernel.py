@@ -1,5 +1,10 @@
 """Kernel objects for use with sklearn GaussianProcess models."""
 
+try:
+    from typing import override  # type: ignore
+except ImportError:
+    from typing_extensions import override
+
 import numpy as np
 from numpy import typing as npt
 from sklearn.gaussian_process.kernels import (
@@ -17,10 +22,11 @@ class TanimotoKernel(StationaryKernelMixin, Kernel):
     def __init__(self) -> None:
         """Initialize the Tanimoto kernel."""
 
+    @override
     def __call__(  # type: ignore
         self,
-        X: npt.NDArray[np.int_],  # noqa: N803
-        Y: npt.NDArray[np.int_] | None = None,  # noqa: N803
+        X: npt.NDArray[np.int_],
+        Y: npt.NDArray[np.int_] | None = None,
         eval_gradient: bool = False,
     ) -> (
         npt.NDArray[np.float64]
@@ -53,9 +59,10 @@ class TanimotoKernel(StationaryKernelMixin, Kernel):
             return sim
         return sim, np.empty((X.shape[0], Y.shape[0], 0))
 
-    def diag(  # noqa: PLR6301  # type: ignore
+    @override
+    def diag(
         self,
-        X: npt.NDArray[np.int_],  # noqa: N803
+        X: npt.NDArray[np.int_],
     ) -> npt.NDArray[np.float64]:
         """Return the diagonal of the kernel k(X, X).
 
@@ -118,10 +125,11 @@ class ExponentialTanimotoKernel(StationaryKernelMixin, Kernel):
         """
         return f"{self.__class__.__name__}(exponent={self.exponent:.3g})"
 
-    def __call__(  # type: ignore
+    @override
+    def __call__(
         self,
-        X: npt.NDArray[np.int_],  # noqa: N803
-        Y: npt.NDArray[np.int_] | None = None,  # noqa: N803
+        X: npt.NDArray[np.int_],
+        Y: npt.NDArray[np.int_] | None = None,
         eval_gradient: bool = False,
     ) -> (
         npt.NDArray[np.float64]
@@ -158,9 +166,10 @@ class ExponentialTanimotoKernel(StationaryKernelMixin, Kernel):
         sim += np.eye(X.shape[0]) * 1e-9
         return sim, grad[:, :, np.newaxis]
 
-    def diag(  # noqa: PLR6301  # type: ignore
+    @override
+    def diag(
         self,
-        X: npt.NDArray[np.int_],  # noqa: N803
+        X: npt.NDArray[np.int_],
     ) -> npt.NDArray[np.float64]:
         """Return the diagonal of the kernel k(X, X).
 
