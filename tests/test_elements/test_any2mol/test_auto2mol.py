@@ -9,6 +9,7 @@ from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.any2mol import AutoToMol, BinaryToMol, SDFToMol, SmilesToMol
 from tests import TEST_DATA_DIR
+from tests.utils.mol_identity_checks import inchi_str_to_regex
 
 # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
 SMILES_ANTIMONY = "[SbH6+3]"
@@ -136,9 +137,7 @@ class TestAuto2Mol(unittest.TestCase):
         actual_mols = pipeline.fit_transform([SDF_P86_B_400])
         self.assertEqual(len(actual_mols), 1)
         inchi = Chem.MolToInchi(actual_mols[0])
-        inchi_regex = f"^{INCHI_P86_LIGAND}"
-        inchi_regex = inchi_regex.replace("(", r"\(").replace(")", r"\)")
-        self.assertRegex(inchi, inchi_regex)
+        self.assertRegex(inchi, inchi_str_to_regex(INCHI_P86_LIGAND))
         del log_block
 
     def test_auto2mol_for_binary(self) -> None:
