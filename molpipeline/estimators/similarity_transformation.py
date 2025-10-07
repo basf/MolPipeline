@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 try:
-    from typing import Self
+    from typing import override  # type: ignore
 except ImportError:
-    from typing_extensions import Self
+    from typing_extensions import override
 
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -75,10 +75,11 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
             return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
         return tanimoto_similarity_sparse(matrix_a, matrix_b)
 
+    @override
     def fit(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name  # noqa: N803
-        y: npt.NDArray[np.float64] | None = None,  # pylint: disable=unused-argument  # noqa: ARG002
+        X: npt.NDArray[np.float64] | csr_matrix,
+        y: npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model.
 
@@ -98,9 +99,10 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         self.training_matrix = X
         return self
 
+    @override
     def transform(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name   # noqa: N803
+        X: npt.NDArray[np.float64] | csr_matrix,
     ) -> npt.NDArray[np.float64]:
         """Transform the data.
 
@@ -124,11 +126,12 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
             raise ValueError("Please fit the transformer before transforming!")
         return self._sim(X, self.training_matrix)
 
+    @override
     def fit_transform(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # noqa: N803
+        X: npt.NDArray[np.float64] | csr_matrix,
         y: npt.NDArray[np.float64] | None = None,
-        **fit_params: Any,  # noqa: ARG002
+        **fit_params: Any,
     ) -> npt.NDArray[np.float64]:
         """Fit the model and transform the data.
 
