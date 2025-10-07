@@ -55,7 +55,7 @@ def make_sparse_fp(
     return sparse.vstack(vector_list)
 
 
-def _is_sparse_fp_list(
+def _is_sparse_rdkit_fp_list(
     fingerprints: FPAssembleOutputOutputType,
 ) -> TypeGuard[list[UIntSparseIntVect] | list[IntSparseIntVect] | list[SparseBitVect]]:
     """Check if fingerprints are a list of sparse fingerprints.
@@ -101,7 +101,7 @@ def fingerprints_to_numpy(
     """
     if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):
         return np.array(fingerprints)
-    if _is_sparse_fp_list(fingerprints):
+    if _is_sparse_rdkit_fp_list(fingerprints):
         return np.array([fp.ToList() for fp in fingerprints])
     if isinstance(fingerprints, sparse.csr_matrix):
         return fingerprints.toarray()
