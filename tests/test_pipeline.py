@@ -160,7 +160,7 @@ class PipelineTest(unittest.TestCase):
         json_str = recursive_to_json(m_pipeline)
         # Recreate pipeline from json
         loaded_pipeline: Pipeline = recursive_from_json(json_str)
-        self.assertTrue(isinstance(loaded_pipeline, Pipeline))
+        self.assertIsInstance(loaded_pipeline, Pipeline)
         # Compare pipeline elements
         for loaded_element, original_element in zip(
             loaded_pipeline.steps,
@@ -299,7 +299,7 @@ class PipelineTest(unittest.TestCase):
 
         # Test fit_transform with list of SMILES
         fp_matrix = pipeline.fit_transform(FAULTY_TEST_SMILES)
-        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertIsInstance(fp_matrix, np.ndarray)
         self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
         self.assertTrue(
             np.array_equal(
@@ -310,7 +310,7 @@ class PipelineTest(unittest.TestCase):
 
         # Test fit_transform with np.ndarray of SMILES
         fp_matrix = pipeline.fit_transform(np.array(FAULTY_TEST_SMILES))
-        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertIsInstance(fp_matrix, np.ndarray)
         self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
         self.assertTrue(
             np.array_equal(
@@ -321,7 +321,7 @@ class PipelineTest(unittest.TestCase):
 
         # Test fit_transform with pd.Series of SMILES
         fp_matrix = pipeline.fit_transform(pd.Series(FAULTY_TEST_SMILES))
-        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertIsInstance(fp_matrix, np.ndarray)
         self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
         self.assertTrue(
             np.array_equal(
@@ -372,7 +372,7 @@ class PipelineTest(unittest.TestCase):
 
         # Test transform with list of SMILES
         fp_matrix = pipeline.transform(FAULTY_TEST_SMILES)
-        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertIsInstance(fp_matrix, np.ndarray)
         self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
         self.assertTrue(
             np.array_equal(
@@ -383,7 +383,7 @@ class PipelineTest(unittest.TestCase):
 
         # Test transform with np.ndarray of SMILES
         fp_matrix = pipeline.transform(np.array(FAULTY_TEST_SMILES))
-        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertIsInstance(fp_matrix, np.ndarray)
         self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
         self.assertTrue(
             np.array_equal(
@@ -394,7 +394,7 @@ class PipelineTest(unittest.TestCase):
 
         # Test transform with pd.Series of SMILES
         fp_matrix = pipeline.transform(pd.Series(FAULTY_TEST_SMILES))
-        self.assertTrue(isinstance(fp_matrix, np.ndarray))
+        self.assertIsInstance(fp_matrix, np.ndarray)
         self.assertEqual(fp_matrix.shape, (len(FAULTY_TEST_SMILES), FP_SIZE))
         self.assertTrue(
             np.array_equal(

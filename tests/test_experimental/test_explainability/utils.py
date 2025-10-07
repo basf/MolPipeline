@@ -2,10 +2,11 @@
 
 from typing import Any
 
-import scipy
+import numpy as np
 
 from molpipeline import Pipeline
 from molpipeline.utils.subpipeline import get_featurization_subpipeline
+from molpipeline.utils.type_guards import sparse_type_guard
 
 
 def construct_kernel_shap_kwargs(pipeline: Pipeline, data: list[str]) -> dict[str, Any]:
@@ -26,11 +27,13 @@ def construct_kernel_shap_kwargs(pipeline: Pipeline, data: list[str]) -> dict[st
     -------
     dict[str, Any]
         The kwargs for SHAPKernelExplainer
+
     """
     featurization_subpipeline = get_featurization_subpipeline(
-        pipeline, raise_not_found=True
+        pipeline,
+        raise_not_found=True,
     )
     data_transformed = featurization_subpipeline.transform(data)  # type: ignore[union-attr]
-    if scipy.sparse.issparse(data_transformed):
-        data_transformed = data_transformed.toarray()
+    if sparse_type_guard(data_transformed):
+        data_transformed = np.array(data_transformed.todense())
     return {"data": data_transformed}
