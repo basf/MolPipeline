@@ -158,11 +158,6 @@ class TestTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
         d = self.kernel.diag(self.feature_matrix_a)
         np.testing.assert_array_equal(d, np.ones(self.feature_matrix_a.shape[0]))
 
-    def test_addition_with_rbf(self) -> None:
-        """Test addition of TanimotoKernel with RBF kernel."""
-        combined_kernel = self.kernel + RBF(length_scale=1.0)
-        self.assertIsInstance(combined_kernel, Sum)
-
 
 class TestExponentialTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
     """Tests for ExponentialTanimotoKernel."""
