@@ -1,7 +1,7 @@
 """Contains functions for molecular similarity."""
 
 import numpy as np
-from numpy import typing as npt
+import numpy.typing as npt
 from scipy import sparse
 
 
