@@ -16,7 +16,7 @@ from molpipeline.estimators.algorithm.connected_component_clustering import (
     calc_chunk_size_from_memory_requirement,
     connected_components_iterative_algorithm,
 )
-from molpipeline.utils.kernel import tanimoto_similarity_sparse
+from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
 
 if TYPE_CHECKING:
     from scipy.sparse import csr_matrix

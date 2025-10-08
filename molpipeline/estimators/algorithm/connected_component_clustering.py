@@ -5,7 +5,7 @@ import numpy.typing as npt
 from scipy.sparse import csr_matrix
 
 from molpipeline.estimators.algorithm.union_find import UnionFindNode
-from molpipeline.utils.kernel import tanimoto_similarity_sparse
+from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
 
 
 def calc_chunk_size_from_memory_requirement(
