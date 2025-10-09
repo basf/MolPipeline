@@ -137,7 +137,7 @@ class TestTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
             self.feature_matrix_a,
             self.feature_matrix_a,
         )
-        np.testing.assert_allclose(kernel_matrix, expected, rtol=1e-8)
+        self.assertTrue(np.allclose(kernel_matrix, expected))
 
     def test_call_with_y_and_gradient(self) -> None:
         """Test call with external Y and gradient path."""
@@ -150,7 +150,7 @@ class TestTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
             self.feature_matrix_a,
             self.feature_matrix_b,
         )
-        np.testing.assert_allclose(kernel_matrix, kernel_matrix_expected, rtol=1e-8)
+        self.assertTrue(np.allclose(kernel_matrix, kernel_matrix_expected))
         self.assertEqual(grad.shape, (*kernel_matrix.shape, 0))
 
     def test_diag(self) -> None:
@@ -178,7 +178,7 @@ class TestExponentialTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
         """Test hyperparameter_exponent exposes correct bounds."""
         hp = self.kernel.hyperparameter_exponent
         self.assertEqual(hp.name, "exponent")
-        np.testing.assert_allclose(hp.bounds, [[1e-3, 5]])
+        self.assertTrue(np.allclose(hp.bounds, [[1e-3, 5]]))
 
     def test_call_no_gradient(self) -> None:
         """Test kernel matrix without gradient equals powered similarity."""
@@ -190,7 +190,7 @@ class TestExponentialTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
         )
         kernel_matrix_expected = tanimoto**self.kernel.exponent
 
-        np.testing.assert_allclose(kernel_matrix, kernel_matrix_expected, rtol=1e-8)
+        self.assertTrue(np.allclose(kernel_matrix, kernel_matrix_expected))
         # Exponent effect: off-diagonal value decreases (since exponent>1)
         self.assertTrue(
             np.all(
@@ -211,7 +211,7 @@ class TestExponentialTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
             tanimoto**self.kernel.exponent
             + np.eye(self.feature_matrix_a.shape[0]) * 1e-9
         )
-        np.testing.assert_allclose(kernel_matrix, expected_sim, rtol=1e-8)
+        self.assertTrue(np.allclose(kernel_matrix, expected_sim))
         # Gradient shape
         self.assertEqual(
             grad.shape,
@@ -219,7 +219,7 @@ class TestExponentialTanimotoKernel(GPKernelTestMixin, unittest.TestCase):
         )
         base_grad = (tanimoto**self.kernel.exponent) * np.log10(tanimoto)
         expected_grad = base_grad + np.eye(self.feature_matrix_a.shape[0]) * 1e-9
-        np.testing.assert_allclose(grad[:, :, 0], expected_grad, rtol=1e-8)
+        self.assertTrue(np.allclose(grad[:, :, 0], expected_grad))
         self.assertFalse(np.isnan(grad).any(), "Gradient contains NaN values.")
 
     def test_diag(self) -> None:
