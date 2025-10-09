@@ -83,11 +83,11 @@ class TanimotoKernel(StationaryKernelMixin, Kernel):
 class ExponentialTanimotoKernel(StationaryKernelMixin, Kernel):
     """Kernel which can be used with sklearn GaussianProcess models.
 
-    In contrast to the TanimotoKernel, this the similarity is raised to the power of
-    the exponent hyperparameter `exponent`. Exponents greater than 1 lead to more
-    broadly distributed similarity values, which are generally lower than the original
-    similarity. Exponents smaller than 1 lead to similarity values which are closer to
-    1.
+    In contrast to the TanimotoKernel, for this kernel the similarity is raised to the
+    power of the hyperparameter `exponent`. Exponents greater than 1 decrease small
+    similarities stronger than large ones. Thus lead to more broadly distributed
+    similarity values. Exponents smaller than 1 lead to similarity values which are
+    closer to 1 with a more narrow distribution.
 
     """
 
