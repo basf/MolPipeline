@@ -78,8 +78,8 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
     @override
     def fit(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,
-        y: npt.NDArray[np.float64] | None = None,
+        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
+        y: npt.NDArray[np.float64] | None = None,  # pylint: disable=unused-argument
     ) -> Self:
         """Fit the model.
 
@@ -102,7 +102,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
     @override
     def transform(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,
+        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Transform the data.
 
