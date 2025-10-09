@@ -11,7 +11,7 @@ from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import NearestNeighbors
 
-from molpipeline.utils.kernel import tanimoto_similarity_sparse
+from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
 from molpipeline.utils.multi_proc import check_available_cores
 from molpipeline.utils.value_checks import get_length
 

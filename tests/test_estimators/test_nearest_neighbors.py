@@ -10,8 +10,8 @@ from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionW
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators import NamedNearestNeighbors, TanimotoToTraining
 from molpipeline.estimators.nearest_neighbor import TanimotoKNN
+from molpipeline.kernel.tanimoto_functions import tanimoto_distance_sparse
 from molpipeline.mol2any import MolToMorganFP
-from molpipeline.utils.kernel import tanimoto_distance_sparse
 
 TEST_SMILES = [
     "c1ccccc1",

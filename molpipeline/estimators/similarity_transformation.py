@@ -2,23 +2,25 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, Self
 
 try:
-    from typing import Self
+    from typing import override  # type: ignore
 except ImportError:
-    from typing_extensions import Self
+    from typing_extensions import override
 
-import numpy as np
-import numpy.typing as npt
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from molpipeline.utils.kernel import tanimoto_similarity_sparse
+from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
+
+if TYPE_CHECKING:
+    import numpy as np
+    import numpy.typing as npt
 
 
 class TanimotoToTraining(BaseEstimator, TransformerMixin):
-    """Transformer for computing tanimoto similarity matrices to data seen during training.
+    """Transformer for tanimoto similarity matrices to data seen during training.
 
     Can also be used to compute distance matrices.
 
@@ -26,6 +28,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
     ----------
     training_matrix: npt.NDArray[np.float64] | csr_matrix | None
         Features seen during fit.
+
     """
 
     training_matrix: npt.NDArray[np.float64] | csr_matrix | None
@@ -38,6 +41,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         distance: bool, optional
             If True, the distance matrix is computed, by default False
             The distance matrix is computed as 1 - similarity_matrix.
+
         """
         self.training_matrix = None
         self.distance = distance
@@ -59,7 +63,9 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         Returns
         -------
         npt.NDArray[np.float64]
-            Similarity matrix. If distance is True, the distance matrix is computed instead.
+            Similarity matrix.
+            If distance is True, the distance matrix is computed instead.
+
         """
         if not isinstance(matrix_a, csr_matrix):
             matrix_a = csr_matrix(matrix_a)
@@ -69,6 +75,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
             return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
         return tanimoto_similarity_sparse(matrix_a, matrix_b)
 
+    @override
     def fit(
         self,
         X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
@@ -87,10 +94,12 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         -------
         Self
             Fitted model.
+
         """
         self.training_matrix = X
         return self
 
+    @override
     def transform(
         self,
         X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
@@ -117,6 +126,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
             raise ValueError("Please fit the transformer before transforming!")
         return self._sim(X, self.training_matrix)
 
+    @override
     def fit_transform(
         self,
         X: npt.NDArray[np.float64] | csr_matrix,
@@ -138,6 +148,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         -------
         npt.NDArray[np.float64]
             Similarity matrix of X to itself.
+
         """
         self.fit(X, y)
         return self.transform(X)
