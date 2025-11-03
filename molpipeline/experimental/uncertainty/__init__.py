@@ -21,6 +21,7 @@ from molpipeline.experimental.uncertainty.conformal import (
 from molpipeline.experimental.uncertainty.utils import (
     HingeNonconformity,
     MarginNonconformity,
+    LogNonconformity,
     NonconformityFunctor,
     create_nonconformity_function,
 )
@@ -33,6 +34,8 @@ __all__ = [
     "CrossConformalRegressor",
     "HingeNonconformity",
     "MarginNonconformity",
+    "LogNonconformity",
+    "SVMMarginNonconformity",
     "NonconformityFunctor",
     "create_nonconformity_function",
 ]

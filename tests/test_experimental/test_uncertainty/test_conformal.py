@@ -468,8 +468,8 @@ class TestConformalClassifier(BaseConformalTestData):
 class TestConformalRegressor(BaseConformalTestData):
     """Core functionality tests for ConformalRegressor."""
 
-    def test_confidence_level_effect_regression(self) -> None:
-        """Test effect of confidence level on prediction intervals in ConformalRegressor."""
+    def test_confidence_effect_regression(self) -> None:
+        """Test effect of confidence parameter on prediction intervals in ConformalRegressor."""
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_reg, self.y_reg)
         )
