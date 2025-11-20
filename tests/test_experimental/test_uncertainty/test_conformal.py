@@ -371,19 +371,17 @@ class TestConformalClassifier(BaseConformalTestData):
 
     def test_nonconformity_registry_create(self) -> None:
         """Test nonconformity function registry and creation utility."""
-        assert isinstance(create_nonconformity_function("log"), LogNonconformity)
-        assert isinstance(
+        self.assertIsInstance(create_nonconformity_function("log"), LogNonconformity)
+        self.assertIsInstance(
             create_nonconformity_function("svm_margin"), SVMMarginNonconformity
         )
 
-    def test_svm_margin_with_svc(self) -> None:
+    def test_svm_margin_with_svc(self) -> None:  # pylint: disable=too-many-locals
         """Instantiate a linear SVM and validate SVMMarginNonconformity on real decision values."""
-        # Use same data splits as RF tests
         x_train, x_calib, x_test, y_train, y_calib, _y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
 
-        # Ensure binary labels (dataset already binary from BBBP)
         classes = np.array(sorted(np.unique(y_train)))
         self.assertEqual(len(classes), 2)
 
