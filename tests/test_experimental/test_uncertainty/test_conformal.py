@@ -10,8 +10,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.any2mol import SmilesToMol
@@ -23,11 +23,10 @@ from molpipeline.experimental.uncertainty import (
     ConformalRegressor,
     CrossConformalClassifier,
     CrossConformalRegressor,
-    create_nonconformity_function,
     LogNonconformity,
     SVMMarginNonconformity,
+    create_nonconformity_function,
 )
-    
 from molpipeline.mol2any import MolToMorganFP
 from tests import TEST_DATA_DIR
 
@@ -370,14 +369,17 @@ class TestConformalClassifier(BaseConformalTestData):
         self._check_prediction_sets_content(sets_margin, n_classes)
         self._check_prediction_sets_content(sets_log, n_classes)
 
-    def test_nonconformity_registry_create(self):
-        assert isinstance(create_nonconformity_function('log'), LogNonconformity)
-        assert isinstance(create_nonconformity_function('svm_margin'), SVMMarginNonconformity)
+    def test_nonconformity_registry_create(self) -> None:
+        """Test nonconformity function registry and creation utility."""
+        assert isinstance(create_nonconformity_function("log"), LogNonconformity)
+        assert isinstance(
+            create_nonconformity_function("svm_margin"), SVMMarginNonconformity
+        )
 
-    def test_svm_margin_with_svc(self):
+    def test_svm_margin_with_svc(self) -> None:
         """Instantiate a linear SVM and validate SVMMarginNonconformity on real decision values."""
         # Use same data splits as RF tests
-        x_train, x_calib, x_test, y_train, y_calib, y_test = (
+        x_train, x_calib, x_test, y_train, y_calib, _y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
 
@@ -385,12 +387,12 @@ class TestConformalClassifier(BaseConformalTestData):
         classes = np.array(sorted(np.unique(y_train)))
         self.assertEqual(len(classes), 2)
 
-        svc = SVC(kernel='linear', probability=False, random_state=42)
+        svc = SVC(kernel="linear", probability=False, random_state=42)
         svc.fit(x_train, y_train)
 
         # Decision function values (signed distances to hyperplane)
         dec_calib = svc.decision_function(x_calib)  # shape (n_calib,)
-        dec_test = svc.decision_function(x_test)    # shape (n_test,)
+        dec_test = svc.decision_function(x_test)  # shape (n_test,)
         self.assertEqual(dec_calib.ndim, 1)
         self.assertEqual(dec_test.ndim, 1)
 
@@ -417,10 +419,14 @@ class TestConformalClassifier(BaseConformalTestData):
         pos_confident = confident_mask & (preds == classes[1])
         neg_confident = confident_mask & (preds == classes[0])
         if np.any(pos_confident):
-            self.assertTrue(np.all(nc_test_all[pos_confident, 1] < nc_test_all[pos_confident, 0]))
+            self.assertTrue(
+                np.all(nc_test_all[pos_confident, 1] < nc_test_all[pos_confident, 0])
+            )
         if np.any(neg_confident):
-            self.assertTrue(np.all(nc_test_all[neg_confident, 0] < nc_test_all[neg_confident, 1]))
-    
+            self.assertTrue(
+                np.all(nc_test_all[neg_confident, 0] < nc_test_all[neg_confident, 1])
+            )
+
     def test_cross_conformal_classifier(self) -> None:
         """Test CrossConformalClassifier."""
         x_train, x_test, y_train, y_test = train_test_split(
