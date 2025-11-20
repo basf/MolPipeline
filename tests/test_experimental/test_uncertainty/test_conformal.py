@@ -10,6 +10,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
@@ -17,12 +18,16 @@ from molpipeline.any2mol import SmilesToMol
 from molpipeline.experimental.model_selection.splitter import (
     create_continuous_stratified_folds,
 )
-from molpipeline.experimental.uncertainty.conformal import (
+from molpipeline.experimental.uncertainty import (
     ConformalClassifier,
     ConformalRegressor,
     CrossConformalClassifier,
     CrossConformalRegressor,
+    create_nonconformity_function,
+    LogNonconformity,
+    SVMMarginNonconformity,
 )
+    
 from molpipeline.mol2any import MolToMorganFP
 from tests import TEST_DATA_DIR
 
@@ -345,16 +350,77 @@ class TestConformalClassifier(BaseConformalTestData):
         cp_margin.calibrate(x_calib, y_calib)
         sets_margin = cp_margin.predict_set(x_test)
         p_values_margin = cp_margin.predict_p(x_test)
+        # Added: full end-to-end test for log nonconformity (same style as hinge & margin)
+        cp_log = ConformalClassifier(clf, nonconformity="log")
+        cp_log.fit(x_train, y_train)
+        cp_log.calibrate(x_calib, y_calib)
+        sets_log = cp_log.predict_set(x_test)
+        p_values_log = cp_log.predict_p(x_test)
         self.assertEqual(len(sets_hinge), len(y_test))
         self.assertEqual(len(sets_margin), len(y_test))
+        self.assertEqual(len(sets_log), len(y_test))
         self.assertEqual(len(p_values_hinge), len(y_test))
         self.assertEqual(len(p_values_margin), len(y_test))
+        self.assertEqual(len(p_values_log), len(y_test))
         self.assertTrue(np.all((p_values_hinge >= 0) & (p_values_hinge <= 1)))
         self.assertTrue(np.all((p_values_margin >= 0) & (p_values_margin <= 1)))
+        self.assertTrue(np.all((p_values_log >= 0) & (p_values_log <= 1)))
         n_classes = len(np.unique(y_train))
         self._check_prediction_sets_content(sets_hinge, n_classes)
         self._check_prediction_sets_content(sets_margin, n_classes)
+        self._check_prediction_sets_content(sets_log, n_classes)
 
+    def test_nonconformity_registry_create(self):
+        assert isinstance(create_nonconformity_function('log'), LogNonconformity)
+        assert isinstance(create_nonconformity_function('svm_margin'), SVMMarginNonconformity)
+
+    def test_svm_margin_with_svc(self):
+        """Instantiate a linear SVM and validate SVMMarginNonconformity on real decision values."""
+        # Use same data splits as RF tests
+        x_train, x_calib, x_test, y_train, y_calib, y_test = (
+            self._get_train_calib_test_splits(self.x_clf, self.y_clf)
+        )
+
+        # Ensure binary labels (dataset already binary from BBBP)
+        classes = np.array(sorted(np.unique(y_train)))
+        self.assertEqual(len(classes), 2)
+
+        svc = SVC(kernel='linear', probability=False, random_state=42)
+        svc.fit(x_train, y_train)
+
+        # Decision function values (signed distances to hyperplane)
+        dec_calib = svc.decision_function(x_calib)  # shape (n_calib,)
+        dec_test = svc.decision_function(x_test)    # shape (n_test,)
+        self.assertEqual(dec_calib.ndim, 1)
+        self.assertEqual(dec_test.ndim, 1)
+
+        # Nonconformity for true labels on calibration set
+        nc_calib_true = SVMMarginNonconformity()(dec_calib, classes, y_calib)
+        self.assertEqual(nc_calib_true.shape, (len(dec_calib),))
+
+        # Expected per formula: NC = 1 - d for positive class, d + 1 for negative class
+        y_mapped = np.where(y_calib == classes[1], 1, -1)
+        expected_nc = np.where(y_mapped == 1, 1 - dec_calib, dec_calib + 1)
+        self.assertTrue(np.allclose(nc_calib_true, expected_nc))
+
+        # All-class nonconformity matrix for test set
+        nc_test_all = SVMMarginNonconformity()(dec_test, classes, None)
+        self.assertEqual(nc_test_all.shape, (len(dec_test), 2))
+        # Expected columns: [d + 1, 1 - d]
+        expected_all = np.column_stack((dec_test + 1, 1 - dec_test))
+        self.assertTrue(np.allclose(nc_test_all, expected_all))
+
+        # Basic sanity: lower nonconformity for correctly and confidently classified samples
+        preds = svc.predict(x_test)
+        confident_mask = np.abs(dec_test) > 1.5
+        # For confident correct positives, 1 - d should be small; for confident correct negatives, d + 1 should be small
+        pos_confident = confident_mask & (preds == classes[1])
+        neg_confident = confident_mask & (preds == classes[0])
+        if np.any(pos_confident):
+            self.assertTrue(np.all(nc_test_all[pos_confident, 1] < nc_test_all[pos_confident, 0]))
+        if np.any(neg_confident):
+            self.assertTrue(np.all(nc_test_all[neg_confident, 0] < nc_test_all[neg_confident, 1]))
+    
     def test_cross_conformal_classifier(self) -> None:
         """Test CrossConformalClassifier."""
         x_train, x_test, y_train, y_test = train_test_split(
