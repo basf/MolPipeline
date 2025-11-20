@@ -29,6 +29,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):
     def __init__(
         self,
         estimator: BaseEstimator,
+        nonconformity: str | NonconformityFunctor | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize BaseConformalPredictor.
@@ -37,12 +38,56 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         ----------
         estimator : BaseEstimator
             The base estimator to wrap.
+        nonconformity : str | NonconformityFunctor | None, optional
+            Nonconformity function to use.
         **kwargs : Any
             Additional keyword arguments for configuration.
 
         """
         self.estimator = estimator
+        self.nonconformity_func = create_nonconformity_function(nonconformity)
         self.kwargs = kwargs
+
+    @property
+    def nonconformity(self) -> str | NonconformityFunctor | None:
+        """Get the nonconformity parameter value.
+
+        This property is needed for sklearn's get_params/set_params compatibility.
+        """
+        if self.nonconformity_func is None:
+            return None
+        if hasattr(self.nonconformity_func, "get_name"):
+            return self.nonconformity_func.get_name()
+        return self.nonconformity_func
+
+    @nonconformity.setter
+    def nonconformity(self, value: str | NonconformityFunctor | None) -> None:
+        """Set the nonconformity function.
+
+        Parameters
+        ----------
+        value : str | NonconformityFunctor | None
+            The nonconformity function to set.
+        """
+        self.nonconformity_func = create_nonconformity_function(value)
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+        """
+        # Handle old models that might have 'nonconformity' instead of 'nonconformity_func'
+        if "nonconformity" in state and "nonconformity_func" not in state:
+            state["nonconformity_func"] = create_nonconformity_function(
+                state.pop("nonconformity")
+            )
+        # If neither exists, set to None
+        if "nonconformity_func" not in state:
+            state["nonconformity_func"] = None
+        self.__dict__.update(state)
 
     @abstractmethod
     def evaluate(
@@ -125,14 +170,20 @@ class BaseConformalPredictor(BaseEstimator, ABC):
             "estimator": self.estimator,
         }
 
-        for attr_name, attr_value in super().get_params(deep=deep).items():
-            if attr_name not in {"estimator", "kwargs"}:
-                if attr_name == "nonconformity_func":
-                    params["nonconformity"] = (
-                        attr_value.get_name() if attr_value is not None else None
-                    )
-                else:
-                    params[attr_name] = attr_value
+        # Handle nonconformity_func special case
+        if hasattr(self, "nonconformity_func"):
+            nc_func = self.nonconformity_func
+            params["nonconformity"] = (
+                nc_func.get_name() if nc_func is not None else None
+            )
+
+        # Get other parameters from parent class (exclude handled keys)
+        parent_params = {
+            k: v
+            for k, v in super().get_params(deep=deep).items()
+            if k not in {"estimator", "kwargs", "nonconformity_func"}
+        }
+        params.update(parent_params)
 
         params.update(self.kwargs)
 
@@ -156,13 +207,11 @@ class BaseConformalPredictor(BaseEstimator, ABC):
             Self.
 
         """
-        updated_params: dict[str, Any] = {}
-        for key, value in params.items():
-            if key == "nonconformity":
-                updated_params["nonconformity_func"] = create_nonconformity_function(
-                    value
-                )
-        params.update(updated_params)
+        # Convert nonconformity parameter to nonconformity_func attribute
+        if "nonconformity" in params:
+            params["nonconformity_func"] = create_nonconformity_function(
+                params.pop("nonconformity")  # Remove original key
+            )
         super().set_params(**params)
         return self
 
@@ -197,19 +246,18 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             - None: Use crepes default
         **kwargs : Any
             Additional keyword arguments passed to crepes calibration.
+
         Raises
         ------
         TypeError
             If nonconformity_func is not a NonconformityFunctor or None.
         """
-        super().__init__(estimator, **kwargs)
+        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.mondrian = mondrian
-        nc_func = create_nonconformity_function(nonconformity)
-        if not (nc_func is None or callable(nc_func)):
+        if not (self.nonconformity_func is None or callable(self.nonconformity_func)):
             raise TypeError(
-                f"nonconformity_func must be a NonconformityFunctor or None, got {type(nc_func).__name__}"
+                f"nonconformity_func must be a NonconformityFunctor or None, got {type(self.nonconformity_func).__name__}"
             )
-        self.nonconformity_func = nc_func
         self._crepes_wrapper: WrapClassifier | None = None
 
     def fit(
@@ -483,10 +531,9 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Additional keyword arguments.
 
         """
-        super().__init__(estimator, **kwargs)
+        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.n_folds = n_folds
         self.mondrian = mondrian
-        self.nonconformity_func = create_nonconformity_function(nonconformity)
         self.random_state = random_state
         self.models_: list[ConformalClassifier] = []
 
@@ -746,11 +793,10 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
             Additional keyword arguments passed to crepes calibration.
 
         """
-        super().__init__(estimator, **kwargs)
+        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.mondrian = mondrian
         self.difficulty_estimator = difficulty_estimator
         self.binning_bins = binning_bins
-        self.nonconformity_func = create_nonconformity_function(nonconformity)
         self._crepes_wrapper: WrapRegressor | None = None
 
     def fit(
@@ -986,12 +1032,11 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         **kwargs : Any
             Additional keyword arguments.
         """
-        super().__init__(estimator, **kwargs)
+        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.n_folds = n_folds
         self.mondrian = mondrian
         self.difficulty_estimator = difficulty_estimator
         self.binning_bins = binning_bins
-        self.nonconformity_func = create_nonconformity_function(nonconformity)
         self.random_state = random_state
         self.models_: list[ConformalRegressor] = []
 
