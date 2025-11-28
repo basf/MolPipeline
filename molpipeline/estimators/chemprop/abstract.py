@@ -2,13 +2,7 @@
 
 import abc
 from collections.abc import Sequence
-from typing import Any
-
-# pylint: disable=duplicate-code
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt

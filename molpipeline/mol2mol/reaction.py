@@ -4,15 +4,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
 import copy
 import warnings
+from typing import Any, Literal, Self
 
 from rdkit.Chem import AllChem
 
