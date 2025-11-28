@@ -144,6 +144,21 @@ class TestChempropPipeline(unittest.TestCase):
         self.assertEqual(len(proba), 4)
         self.assertTrue(np.isnan(proba[-1]).all())
 
+    def test_state_dict_forwarding(self) -> None:
+        """Test that the state_dict is properly forwarded to the model."""
+        chemprop_classifier = get_classification_pipeline()
+        chemprop_classifier.fit(["CCO", "CCN"], [0, 1])
+        chemprop_model = chemprop_classifier.named_steps["model"]
+        state_dict = chemprop_model.model.state_dict()
+
+        new_chemprop_classifier = get_classification_pipeline()
+        new_chemprop_classifier.set_params(model__state_dict=state_dict)
+
+        orig_pred = chemprop_classifier.predict(["CCO", "CCN"])
+        new_pred = new_chemprop_classifier.predict(["CCO", "CCN"])
+
+        self.assertTrue(np.allclose(orig_pred, new_pred))
+
 
 class TestRegressionPipeline(unittest.TestCase):
     """Test the Chemprop model pipeline for regression."""

@@ -1,10 +1,11 @@
 """Test Chemprop component wrapper."""
 
 import logging
+import tempfile
 import unittest
 from collections.abc import Iterable
+from pathlib import Path
 
-import numpy as np
 import torch
 from chemprop.nn.metrics import MSE
 from sklearn.base import clone
@@ -35,7 +36,6 @@ from test_extras.test_chemprop.chemprop_test_utils.constant_vars import (
 )
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_chemprop_model_binary_classification_mpnn,
-    get_classification_pipeline,
 )
 
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)  # pylint: disable=no-member
@@ -155,19 +155,45 @@ class TestChempropModel(unittest.TestCase):
                 )
 
     def test_state_dict_forwarding(self) -> None:
-        """Test that the state_dict is properly forwarded to the model."""
-        chemprop_classifier = get_classification_pipeline()
-        chemprop_classifier.fit(["CCO", "CCN"], [0, 1])
-        chemprop_model = chemprop_classifier.named_steps["model"]
-        state_dict = chemprop_model.model.state_dict()
+        """Test that the state_dict can be set.
 
-        new_chemprop_classifier = get_classification_pipeline()
-        new_chemprop_classifier.set_params(model__state_dict=state_dict)
+        Note:
+        ----
+        Testing that the predictions agree is done in test_chemprop_pipeline.py.
 
-        orig_pred = chemprop_classifier.predict(["CCO", "CCN"])
-        new_pred = new_chemprop_classifier.predict(["CCO", "CCN"])
+        """
+        # Create a Chemprop model that is used to define the state_dict
+        chemprop_classifier = get_chemprop_model_binary_classification_mpnn()
+        state_dict = chemprop_classifier.model.state_dict()
 
-        self.assertTrue(np.allclose(orig_pred, new_pred))
+        # Test passing the state_dict directly
+        new_model = ChempropModel(
+            model=get_chemprop_model_binary_classification_mpnn().model,
+            state_dict=state_dict,
+        )
+        new_model_state_dict = new_model.model.state_dict()
+        self.assertEqual(state_dict.keys(), new_model_state_dict.keys())
+        for key, value in state_dict.items():
+            self.assertTrue(
+                torch.equal(value, new_model_state_dict[key]),
+                f"Mismatch for key {key}: {value} != {new_model_state_dict[key]}",
+            )
+
+        # Test passing the state_dict via a file
+        with tempfile.TemporaryDirectory() as tmpdir:
+            safe_path = Path(tmpdir) / "chemprop.pt"
+            torch.save(state_dict, safe_path)
+            new_model2 = ChempropModel(
+                model=get_chemprop_model_binary_classification_mpnn().model,
+                state_dict=safe_path,
+            )
+            new_model2_state_dict = new_model2.model.state_dict()
+            self.assertEqual(state_dict.keys(), new_model2_state_dict.keys())
+            for key, value in state_dict.items():
+                self.assertTrue(
+                    torch.equal(value, new_model2_state_dict[key]),
+                    f"Mismatch for key {key}: {value} != {new_model2_state_dict[key]}",
+                )
 
 
 class TestChempropClassifier(unittest.TestCase):
