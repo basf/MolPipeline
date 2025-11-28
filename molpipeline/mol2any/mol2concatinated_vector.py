@@ -319,7 +319,10 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
 
         """
-        return np.vstack(list(value_list))
+        values = list(value_list)
+        if len(values) == 0:
+            return np.empty((0, self.n_features), dtype=np.float64)
+        return np.vstack(values)
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.
@@ -437,7 +440,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         """
         for element, value in zip(
-            self._element_list, zip(*values, strict=True), strict=True
+            self._element_list, zip(*values, strict=True), strict=True,
         ):
             element[1].fit_to_result(value)
         return self

@@ -4,50 +4,91 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 
 import abc
 import copy
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Literal,
-    Self,
-    TypeAlias,
-    get_args,
-    overload,
-)
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, get_args, overload, Mapping
 
 import numpy as np
 import numpy.typing as npt
+from rdkit.DataStructs import (
+    ExplicitBitVect,
+    IntSparseIntVect,
+    SparseBitVect,
+    UIntSparseIntVect,
+)
+from scipy import sparse
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.utils.matrices import sparse_from_index_value_dicts
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping, Sequence
-
     from rdkit.Chem import rdFingerprintGenerator
-    from rdkit.DataStructs.cDataStructs import ExplicitBitVect
-    from scipy import sparse
 
     from molpipeline.utils.molpipeline_types import RDKitMol
-    from molpipeline.utils.substructure_handling import AtomEnvironment
+
 
 # possible output types for a fingerprint:
 # - "sparse" is a sparse csr_matrix
 # - "dense" is a numpy array
-# - "explicit_bit_vect" is a list of RDKit's ExplicitBitVect
-OutputDatatype: TypeAlias = Literal["sparse", "dense", "explicit_bit_vect"]
+# - "rdkit" will return RDKit's native datastructure for the respective fingerprint
+#           and it's parameters, for example ExplicitBitVect, IntSparseBitVect,
+#           UIntSparseBitVect.
+FPReturnAsOption: TypeAlias = Literal[
+    "sparse",
+    "dense",
+    "rdkit",
+]
+
+# Return type of pretransform_single method. Each returned value corresponds to a
+# fingerprints of a single molecule.
+FPTransformSingleReturnDataType: TypeAlias = (
+    # sparse dict representation
+    dict[int, int]
+    # dense numpy array
+    | npt.NDArray[np.int_]
+    # RDKit's native data structures
+    | ExplicitBitVect
+    | IntSparseIntVect
+    | UIntSparseIntVect
+    | SparseBitVect
+)
+
+# Input types for assemble_output method. Corresponds to iterable of
+# FPTransformSingleReturnDataType.
+FPAssembleOutputInputType: TypeAlias = (
+    # sparse dict representation
+    Iterable[dict[int, int]]
+    # dense numpy array
+    | Iterable[npt.NDArray[np.int_]]
+    # RDKit's native data structures
+    | Iterable[ExplicitBitVect]
+    | Iterable[UIntSparseIntVect]
+    | Iterable[IntSparseIntVect]
+    | Iterable[SparseBitVect]
+)
+
+# Output types for assemble_output method. Corresponds to fingerprints of multiple
+# molecules in a single data structure, e.g. a matrix.
+FPAssembleOutputOutputType: TypeAlias = (
+    sparse.csr_matrix
+    | npt.NDArray[np.int_]
+    | list[ExplicitBitVect]
+    | list[UIntSparseIntVect]
+    | list[IntSparseIntVect]
+    | list[SparseBitVect]
+)
 
 
 class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
-    """Abstract PipelineElement which transform molecules to integer vectors."""
+    """Abstract PipelineElement which transform molecules to fingerprints."""
 
     _n_bits: int
     _feature_names: list[str]
     _output_type = "binary"
-    _return_as: OutputDatatype
+    _return_as: FPReturnAsOption
 
     def __init__(
         self,
-        return_as: OutputDatatype = "sparse",
+        return_as: FPReturnAsOption = "sparse",
         name: str = "MolToFingerprintPipelineElement",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -56,12 +97,15 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
         Parameters
         ----------
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"]
+        return_as: FPReturnAsOption
             Type of output. When "sparse" the fingerprints will be returned as a
             scipy.sparse.csr_matrix holding a sparse representation of the bit vectors.
             With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of
-            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+            With "rdkit" the fingerprints
+            will be returned as a list of oneof
+            RDKit's ExplicitBitVect,
+            IntSparseBitVect, UIntSparseBitVect, etc. depending on the fingerprint
+            and parameters.
         name: str
             Name of PipelineElement.
         n_jobs: int, default=1
@@ -75,6 +119,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             n_jobs=n_jobs,
             uuid=uuid,
         )
+        self._validate_return_as(return_as)
         self._return_as = return_as
 
     @property
@@ -86,6 +131,27 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     def feature_names(self) -> list[str]:
         """Get feature names."""
         return self._feature_names[:]
+
+    @staticmethod
+    def _validate_return_as(return_as: str) -> None:
+        """Validate return_as parameter.
+
+        Parameters
+        ----------
+        return_as: str
+            Type of output. Has to be one of "sparse", "dense" or "rdkit".
+
+        Raises
+        ------
+        ValueError
+            If return_as is not one of the allowed options.
+
+        """
+        if return_as not in get_args(FPReturnAsOption):
+            raise ValueError(
+                f"return_as has to be one of {get_args(FPReturnAsOption)}! "
+                f"(Received: {return_as})",
+            )
 
     @overload
     def assemble_output(  # type: ignore
@@ -105,33 +171,46 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         value_list: Iterable[ExplicitBitVect],
     ) -> list[ExplicitBitVect]: ...
 
+    @overload
     def assemble_output(
         self,
-        value_list: (
-            Iterable[dict[int, int]]
-            | Iterable[npt.NDArray[np.int_]]
-            | Iterable[ExplicitBitVect]
-        ),
-    ) -> sparse.csr_matrix | npt.NDArray[np.int_] | list[ExplicitBitVect]:
+        value_list: Iterable[UIntSparseIntVect],
+    ) -> list[UIntSparseIntVect]: ...
+
+    @overload
+    def assemble_output(
+        self,
+        value_list: Iterable[IntSparseIntVect],
+    ) -> list[IntSparseIntVect]: ...
+
+    @overload
+    def assemble_output(
+        self,
+        value_list: Iterable[SparseBitVect],
+    ) -> list[SparseBitVect]: ...
+
+    def assemble_output(
+        self,
+        value_list: FPAssembleOutputInputType,
+    ) -> FPAssembleOutputOutputType:
         """Transform output of all transform_single operations to matrix.
 
         Parameters
         ----------
-        value_list:  Iterable[dict[int, int]] | Iterable[npt.NDArray[np.int_]] |
-            Iterable[ExplicitBitVect]
-            Either Iterable of dicts which encode the rows of the feature matrix.
-            Keys: column index, values: column value. Each dict represents one molecule.
-            Or an Iterable of RDKit's ExplicitBitVect or an Iterable of numpy arrays
-            representing the fingerprint list.
+        value_list: FPAssembleOutputInputType
+            Iterable of fingerprint representation for a single molecule which are
+            transformed to a matrix.
 
         Returns
         -------
-        sparse.csr_matrix | npt.NDArray[np.int_] | list[ExplicitBitVect]
-            Matrix of Morgan-fingerprint features.
+        FPAssembleOutputOutputType
+            Matrix of fingerprint features.
 
         """
-        if self._return_as == "explicit_bit_vect":
-            # return as list of RDkit's ExplicitBitVect
+        if self._return_as == "rdkit":
+            # return as list of RDkit's native data structures, depending on the
+            # fingerprint method and whether counted=True or not, this can be
+            # ExplicitBitVect, IntSparseBitVect or UIntSparseBitVect, etc.
             return list(value_list)  # type: ignore
         if self._return_as == "dense":
             # return dense numpy matrix
@@ -170,11 +249,6 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         parameters: Any
             Dictionary of parameter names and values.
 
-        Raises
-        ------
-        ValueError
-            If return_as is not one of the allowed values.
-
         Returns
         -------
         Self
@@ -184,17 +258,13 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         parameter_dict_copy = dict(parameters)
         return_as = parameter_dict_copy.pop("return_as", None)
         if return_as is not None:
-            if return_as not in get_args(OutputDatatype):
-                raise ValueError(
-                    f"return_as has to be one of {get_args(OutputDatatype)}! "
-                    f"(Received: {return_as})",
-                )
+            self._validate_return_as(return_as)
             self._return_as = return_as
         super().set_params(**parameter_dict_copy)
         return self
 
     def transform(self, values: list[RDKitMol]) -> sparse.csr_matrix:
-        """Transform the list of molecules to a sparse matrix.
+        """Transform the list of molecules to sparse matrix of fingerprint features.
 
         Parameters
         ----------
@@ -204,7 +274,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         Returns
         -------
         sparse.csr_matrix
-            Sparse matrix of Morgan-fingerprint features.
+            Sparse matrix of fingerprint features.
 
         """
         return super().transform(values)
@@ -213,10 +283,8 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
     def pretransform_single(
         self,
         value: RDKitMol,
-    ) -> dict[int, int] | npt.NDArray[np.int_] | ExplicitBitVect:
-        """Transform mol to dict.
-
-         Items encode columns indices and values, respectively.
+    ) -> FPTransformSingleReturnDataType:
+        """Transform mol to fingerprint representation.
 
         Parameters
         ----------
@@ -225,10 +293,8 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
         Returns
         -------
-        dict[int, int]
-            Dictionary to encode row in matrix.
-            Keys: column index
-            Values: column value
+        FPTransformSingleReturnDataType
+            Fingerprint representation encoding one row in the matrix.
 
         """
 
@@ -273,7 +339,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         self,
         n_bits: int = 2048,
         counted: bool = False,
-        return_as: OutputDatatype = "sparse",
+        return_as: FPReturnAsOption = "sparse",
         name: str = "MolToRDKitGenFin",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -286,9 +352,8 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
             Number of bits in fingerprint.
         counted: bool, default=False
             Whether to count the bits or not.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+        return_as: FPReturnAsOption, default="sparse"
             Type of output.
-            When "sparse" the fingerprints will be returned as a scipy.sparse.csr_matrix
         name: str, default="MolToRDKitGenFin"
             Name of PipelineElement.
         n_jobs: int, default=1
@@ -317,13 +382,8 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
         """
 
-    def pretransform_single(
-        self,
-        value: RDKitMol,
-    ) -> ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]:
-        """Transform a single compound to a dictionary.
-
-        Keys denote the feature position, values the count. Here always 1.
+    def pretransform_single(self, value: RDKitMol) -> FPTransformSingleReturnDataType:
+        """Transform a single compound to a fingerprint representation.
 
         Parameters
         ----------
@@ -332,10 +392,11 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
         Returns
         -------
-        ExplicitBitVect | npt.NDArray[np.int_] | dict[int, int]
-            If return_as is "explicit_bit_vect" return ExplicitBitVect.
+        FPTransformSingleReturnDataTypes
+            If return_as is "rdkit" return RDKit's data structure.
             If return_as is "dense" return numpy array.
-            If return_as is "sparse" return dictionary with feature-position as key and
+            If return_as is "sparse" return dictionary with feature-position as key
+            and
             count as value.
 
         """
@@ -350,7 +411,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         else:
             fingerprint = fingerprint_generator.GetFingerprint(value)
 
-        if self._return_as == "explicit_bit_vect":
+        if self._return_as == "rdkit":
             return fingerprint
 
         if self.counted:
@@ -417,6 +478,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         -------
         Mapping[int, Sequence[AtomEnvironment]]
             Dictionary with mapping from bit to encoded
-            AtomEnvironments (which contain atom indices).
+            AtomEnvironments
+            (which contain atom indices).
 
         """

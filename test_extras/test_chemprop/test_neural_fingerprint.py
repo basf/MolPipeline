@@ -12,7 +12,7 @@ from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_neural_fp_encoder,
 )
 
-logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
+logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)  # pylint: disable=no-member
 
 
 class TestChempropNeuralFingerprint(unittest.TestCase):

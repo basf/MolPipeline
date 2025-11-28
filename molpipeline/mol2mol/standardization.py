@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Self, Union
+from typing import Any, ClassVar, Self, Union
+
+try:
+    from typing import override  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import override
 
 from rdkit import Chem
 from rdkit.Chem import SaltRemover as rdkit_SaltRemover
@@ -46,6 +51,7 @@ MolHashing = Union[
 class TautomerCanonicalizer(_MolToMolPipelineElement):
     """MolToMolPipelineElement which canonicalizes tautomers of a molecule."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Canonicalize tautomers of molecule.
 
@@ -58,13 +64,16 @@ class TautomerCanonicalizer(_MolToMolPipelineElement):
         -------
         OptionalMol
             Canonicalized molecule if possible, else InvalidInstance.
+
         """
         enumerator = rdMolStandardize.TautomerEnumerator()
         try:
             return enumerator.Canonicalize(value)
         except RuntimeError as error:
             return InvalidInstance(
-                self.uuid, f"Tautomer enumeration failed.: {error}", self.name
+                self.uuid,
+                f"Tautomer enumeration failed.: {error}",
+                self.name,
             )
 
 
@@ -74,8 +83,11 @@ class ChargeParentExtractor(_MolToMolPipelineElement):
     The charge-parent is the largest fragment after neutralization.
     """
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
-        """Return charge-parent of molecule, which is the largest fragment after neutralization.
+        """Return charge-parent of molecule.
+
+         The charge-parent of molecule is the largest fragment after neutralization.
 
         Parameters
         ----------
@@ -86,6 +98,7 @@ class ChargeParentExtractor(_MolToMolPipelineElement):
         -------
         OptionalMol
             Charge-parent of molecule if possible, else InvalidInstance.
+
         """
         return rdMolStandardize.ChargeParent(value)
 
@@ -122,6 +135,7 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.hashing_method = hashing_method
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove duplicate fragments from molecule.
 
@@ -134,6 +148,7 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule without duplicate fragments if possible, else InvalidInstance.
+
         """
         fragments = Chem.GetMolFrags(value, asMols=True)
         fragment_hash_list = [
@@ -142,7 +157,9 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
         ]
         if len(fragment_hash_list) == 0:
             return InvalidInstance(
-                self.uuid, "Molecule contains no fragments.", self.name
+                self.uuid,
+                "Molecule contains no fragments.",
+                self.name,
             )
         unique_fragment_hashes = {fragment_hash_list[0][0]}
         recombined_fragment = fragment_hash_list[0][1]
@@ -159,6 +176,7 @@ class FragmentDeduplicator(_MolToMolPipelineElement):
 class LargestFragmentChooser(_MolToMolPipelineElement):
     """MolToMolPipelineElement which returns the largest fragment of a molecule."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Return largest fragment of molecule.
 
@@ -171,13 +189,15 @@ class LargestFragmentChooser(_MolToMolPipelineElement):
         -------
         OptionalMol
             Largest fragment of molecule if possible, else InvalidInstance.
+
         """
         return rdMolStandardize.LargestFragmentChooser().choose(value)
 
 
 class MetalDisconnector(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes bonds between organic compounds and metals."""
+    """Removes bonds between organic compounds and metals."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Cleave bonds with metals.
 
@@ -190,17 +210,20 @@ class MetalDisconnector(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule without bonds to metals if possible, else InvalidInstance.
+
         """
         mol = rdMolStandardize.MetalDisconnector().Disconnect(value)
         if mol is not None:
-            # sometimes the molecule is not sanitized after disconnecting, e.g. RingInfo is not updated.
+            # sometimes the molecule is not sanitized after disconnecting
+            # e.g. RingInfo is not updated.
             SanitizeMol(mol)
         return mol
 
 
 class IsotopeRemover(_MolToMolPipelineElement):
-    """MolToMolPipelineElement which removes isotope information of atoms in a molecule."""
+    """Removes isotope information of atoms in a molecule."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove isotope information of each atom.
 
@@ -216,6 +239,7 @@ class IsotopeRemover(_MolToMolPipelineElement):
         -------
         OptionalMol
             Largest fragment of molecule if possible, else InvalidInstance.
+
         """
         for atom in value.GetAtoms():
             atom.SetIsotope(0)
@@ -225,6 +249,7 @@ class IsotopeRemover(_MolToMolPipelineElement):
 class ExplicitHydrogenRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes explicit hydrogen atoms from a molecule."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove explicit hydrogen atoms.
 
@@ -237,6 +262,7 @@ class ExplicitHydrogenRemover(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule without explicit hydrogen atoms if possible, else InvalidInstance.
+
         """
         return Chem.RemoveHs(value)
 
@@ -244,6 +270,7 @@ class ExplicitHydrogenRemover(_MolToMolPipelineElement):
 class StereoRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes stereo-information from the molecule."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove stereo-information in molecule.
 
@@ -256,6 +283,7 @@ class StereoRemover(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule without stereo-information if possible, else InvalidInstance.
+
         """
         copy_mol = RDKitMol(value)
         rdmolops.RemoveStereochemistry(copy_mol)
@@ -265,6 +293,7 @@ class StereoRemover(_MolToMolPipelineElement):
 class SaltRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes metal ions from molecule."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove metal ions.
 
@@ -277,26 +306,26 @@ class SaltRemover(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule without metal ions if possible, else InvalidInstance.
+
         """
-        salt_less_mol = rdkit_SaltRemover.SaltRemover().StripMol(value)
-        return salt_less_mol
+        return rdkit_SaltRemover.SaltRemover().StripMol(value)
 
 
 class SolventRemover(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes defined fragments from a molecule."""
 
     _solvent_mol_list: list[RDKitMol]
-    standard_solvent_smiles_list: list[str] = [
-        "[OH2]",
-        "ClCCl",
-        "ClC(Cl)Cl",
-        "CCOC(=O)C",
-        "CO",
-        "CC(C)O",
-        "CC(=O)C",
-        "CS(=O)C",
-        "CCO",
-        "CN(C)C",
+    standard_solvent_smiles_list: ClassVar[list[str]] = [
+        "[OH2]",  # WATER
+        "ClCCl",  # DICHLOROMETHANE
+        "ClC(Cl)Cl",  # TRICHLOROMETHANE
+        "CCOC(=O)C",  # ETHYL ACETATE
+        "CO",  # METHANOL
+        "CC(C)O",  # ISOPROPANOL
+        "CC(=O)C",  # ACETONE
+        "CS(=O)C",  # DMSO
+        "CCO",  # ETHANOL
+        "CN(C)C",  # TRIMETHYLAMINE
     ]
 
     def __init__(
@@ -314,7 +343,8 @@ class SolventRemover(_MolToMolPipelineElement):
         Parameters
         ----------
         solvent_smiles_list: list[str], optional
-            List of SMILES of fragments to remove, by default None which uses the default solvent list:
+            List of SMILES of fragments to remove.
+            None defaults to the following solvent list:
             - WATER	[OH2]
             - DICHLOROMETHANE	ClCCl
             - TRICHLOROMETHANE	ClC(Cl)Cl
@@ -330,7 +360,9 @@ class SolventRemover(_MolToMolPipelineElement):
         n_jobs: int, default=1
             Number of parallel jobs to use.
         uuid: str | None, optional
-            Unique identifier of the pipeline element. If None, a random UUID is generated.
+            Unique identifier of the pipeline element.
+            If None, a random UUID is generated.
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if solvent_smiles_list is None:
@@ -383,6 +415,7 @@ class SolventRemover(_MolToMolPipelineElement):
         -------
         dict[str, Any]
             Parameters of pipeline element.
+
         """
         params = super().get_params(deep=deep)
         if deep:
@@ -405,6 +438,7 @@ class SolventRemover(_MolToMolPipelineElement):
         -------
         Self
             Pipeline element with set parameters.
+
         """
         param_copy = dict(parameters)
         solvent_smiles_list = param_copy.pop("solvent_smiles_list", None)
@@ -413,6 +447,7 @@ class SolventRemover(_MolToMolPipelineElement):
         super().set_params(**param_copy)
         return self
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove all fragments from molecule.
 
@@ -425,6 +460,7 @@ class SolventRemover(_MolToMolPipelineElement):
         -------
         OptionalMol
             Molecule without fragments if possible, else InvalidInstance.
+
         """
         kept_fragments = []
         for fragment in Chem.GetMolFrags(value, asMols=True):
@@ -449,9 +485,40 @@ class SolventRemover(_MolToMolPipelineElement):
         return combined_fragments
 
 
+class MixtureOnlySolventRemover(SolventRemover):
+    """Removes defined fragments from a molecule if the molecule is a mixture.
+
+    This is a subclass of SolventRemover and only removes the defined solvents
+    if the molecule contains multiple fragments. Thus, standalone solvents are not
+    removed.
+
+    """
+
+    @override
+    def pretransform_single(self, value: RDKitMol) -> OptionalMol:
+        """Remove all solvent fragments from molecule if it is a mixture.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            Molecule to remove solvent fragments from.
+
+        Returns
+        -------
+        OptionalMol
+            Molecule without additional solvent fragments or a standalone solvent.
+            If it is a mixture of solvents only, an InvalidInstance is returned.
+
+        """
+        if len(Chem.GetMolFrags(value)) > 1:
+            return super().pretransform_single(value)
+        return value
+
+
 class Uncharger(_MolToMolPipelineElement):
     """MolToMolPipelineElement which removes charges in a molecule, if possible."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Remove charges of molecule.
 
@@ -464,5 +531,6 @@ class Uncharger(_MolToMolPipelineElement):
         -------
         OptionalMol
             Uncharged molecule if possible, else InvalidInstance.
+
         """
         return rdMolStandardize.Uncharger().uncharge(value)

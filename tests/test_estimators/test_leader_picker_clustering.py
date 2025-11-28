@@ -97,7 +97,7 @@ class TestLeaderPickerEstimator(unittest.TestCase):
                     (
                         "morgan2",
                         MolToMorganFP(
-                            return_as="explicit_bit_vect",
+                            return_as="rdkit",
                             n_bits=1024,
                             radius=2,
                         ),

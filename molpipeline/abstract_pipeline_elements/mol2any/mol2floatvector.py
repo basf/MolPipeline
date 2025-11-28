@@ -75,7 +75,11 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             Matrix with descriptor values of each molecule.
 
         """
-        return np.vstack(list(value_list))
+        values = list(value_list)
+        if len(values) == 0:
+            # nothing to assemble
+            return np.empty((0, self.n_features), dtype=np.float64)
+        return np.vstack(values)
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.

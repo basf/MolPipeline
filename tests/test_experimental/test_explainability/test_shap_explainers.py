@@ -52,8 +52,10 @@ TEST_SMILES_WITH_BAD_SMILES = [
     "CCC(-O)O",
     "CCCN",
     "BAD_SMILES_2",
+    "C1=NC(N)=[Se]=C1",  # fails physchem calculation but not morgan calculation
+    "Si",  # fails morgan calculation but not physchem calculation
 ]
-CONTAINS_OX_BAD_SMILES = [0, 1, 1, 0, 0, 1, 0, 1]
+CONTAINS_OX_BAD_SMILES = [0, 1, 1, 0, 0, 1, 0, 1, 0, 0]
 
 _RANDOM_STATE = 67056
 
@@ -341,7 +343,7 @@ class TestSHAPExplainers(unittest.TestCase):
                     self.assertIsNotNone(mol_reader_subpipeline)
 
                     for i, explanation in enumerate(explanations):
-                        if i in {3, 7}:
+                        if i in {3, 7, 9}:
                             self.assertFalse(explanation.is_valid())
                             continue
 

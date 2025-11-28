@@ -247,7 +247,9 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         expected_df = pd.read_csv(data_path, sep="\t")
         descriptor_names = expected_df.drop(columns=["smiles"]).columns.tolist()
         smi2mol = SmilesToMol()
-        property_element = MolToRDKitPhysChem(descriptor_list=descriptor_names)
+        property_element = MolToRDKitPhysChem(
+            descriptor_list=descriptor_names,
+        )
         pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -271,7 +273,9 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         ]
 
         # test with return_with_errors=False
-        property_element = MolToRDKitPhysChem(return_with_errors=False)
+        property_element = MolToRDKitPhysChem(
+            return_with_errors=False,
+        )
 
         error_filter = ErrorFilter.from_element_list([property_element])
         error_replacer = FilterReinserter.from_error_filter(
@@ -303,7 +307,9 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         )
 
         # test with return_with_errors=True
-        property_element2 = MolToRDKitPhysChem(return_with_errors=True)
+        property_element2 = MolToRDKitPhysChem(
+            return_with_errors=True,
+        )
 
         error_filter2 = ErrorFilter.from_element_list([property_element2])
         filter_reinserter = FilterReinserter.from_error_filter(
@@ -357,6 +363,27 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         # because it has 0 heavy atoms
         output = pipeline.fit_transform(["[HH]"])
         self.assertTrue(output.shape == (1, len(DEFAULT_DESCRIPTORS)))
+
+    def test_empty_result(self) -> None:
+        """Test that an empty result does not crash the pipeline."""
+        # test with a molecule that fails the PhysChem calculation and without
+        # standardizer
+        pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                (
+                    "property_element",
+                    MolToRDKitPhysChem(),
+                ),
+            ],
+        )
+        pipeline.fit_transform(
+            [
+                "C1=NC(N)=[Se]=C1",  # fails PhysChem calculation
+            ],
+        )
+        self.assertIsNotNone(pipeline)  # test for ruff to not have a staticmethod
+
 
     def test_empty_descriptor_list(self) -> None:
         """Test that an empty descriptor list raises ValueError."""

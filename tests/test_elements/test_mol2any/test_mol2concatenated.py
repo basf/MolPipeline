@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal, get_args
 import numpy as np
 from rdkit import Chem
 
-from molpipeline import Pipeline
+from molpipeline import ErrorFilter, Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import (
     Mol2PathFP,
@@ -38,7 +38,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             Literal[
                 "sparse",
                 "dense",
-                "explicit_bit_vect",
+                "rdkit",
             ],
         )
 
@@ -200,7 +200,8 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                 feature_names = conc_elem.feature_names
 
                 if use_feature_names_prefix:
-                    # test feature names are unique
+                    # test feature names are unique if prefix is used or only
+                    # one element is used
                     self.assertEqual(
                         len(feature_names),
                         len(set(feature_names)),
@@ -322,6 +323,35 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             len(concat_elem.feature_names),
             len(set(concat_elem.feature_names)),
         )
+
+    def test_empty_results(self) -> None:
+        """Test that an empty output doesn't crash the pipeline."""
+        concat_elem = MolToConcatenatedVector(
+            [
+                (
+                    "RDKitPhysChem",
+                    MolToRDKitPhysChem(standardizer=None),
+                ),
+                (
+                    "MorganFP",
+                    MolToMorganFP(return_as="dense"),
+                ),
+            ],
+        )
+        pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                ("concat_vector_element", concat_elem),
+                ("error_filter", ErrorFilter(filter_everything=True)),
+            ],
+        )
+
+        output = pipeline.fit_transform(
+            [
+                "C1=NC(N)=[Se]=C1",  # fails PhysChem calculation
+            ],
+        )
+        self.assertEqual(output.shape, (0, concat_elem.n_features))
 
 
 if __name__ == "__main__":

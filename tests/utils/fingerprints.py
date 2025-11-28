@@ -2,16 +2,30 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, TypeGuard
+
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
-from rdkit.Chem import rdFingerprintGenerator as rdkit_fp
-from rdkit.DataStructs import ExplicitBitVect, UIntSparseIntVect
+from rdkit.Chem import rdFingerprintGenerator
+from rdkit.DataStructs import (
+    ExplicitBitVect,
+    IntSparseIntVect,
+    SparseBitVect,
+    UIntSparseIntVect,
+)
 from scipy import sparse
+
+if TYPE_CHECKING:
+    from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
+        FPAssembleOutputOutputType,
+    )
 
 
 def make_sparse_fp(
-    smiles_list: list[str], radius: int, n_bits: int
+    smiles_list: list[str],
+    radius: int,
+    n_bits: int,
 ) -> sparse.csr_matrix:
     """Create a sparse Morgan fingerprint matrix from a list of SMILES.
 
@@ -30,9 +44,10 @@ def make_sparse_fp(
     -------
     sparse.csr_matrix
         Feature matrix.
+
     """
     vector_list = []
-    morgan_fp = rdkit_fp.GetMorganGenerator(radius=radius, fpSize=n_bits)
+    morgan_fp = rdFingerprintGenerator.GetMorganGenerator(radius=radius, fpSize=n_bits)
     for smiles in smiles_list:
         mol = Chem.MolFromSmiles(smiles)
         vector = morgan_fp.GetFingerprintAsNumPy(mol)
@@ -40,14 +55,37 @@ def make_sparse_fp(
     return sparse.vstack(vector_list)
 
 
+def _is_sparse_rdkit_fp_list(
+    fingerprints: FPAssembleOutputOutputType,
+) -> TypeGuard[list[UIntSparseIntVect] | list[IntSparseIntVect] | list[SparseBitVect]]:
+    """Check if fingerprints are a list of sparse fingerprints.
+
+    Parameters
+    ----------
+    fingerprints: FPAssembleOutputOutputType
+        Fingerprint matrix.
+
+    Returns
+    -------
+    TypeGuard
+        True if fingerprints are a list of sparse fingerprints.
+
+    """
+    return (
+        all(isinstance(fp, UIntSparseIntVect) for fp in fingerprints)
+        or all(isinstance(fp, IntSparseIntVect) for fp in fingerprints)
+        or all(isinstance(fp, SparseBitVect) for fp in fingerprints)
+    )
+
+
 def fingerprints_to_numpy(
-    fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_],
+    fingerprints: FPAssembleOutputOutputType,
 ) -> npt.NDArray[np.int_]:
     """Convert fingerprints in various types to numpy.
 
     Parameters
     ----------
-    fingerprints: list[ExplicitBitVect] | sparse.csr_matrix | npt.NDArray[np.int_]
+    fingerprints: FPAssembleOutputOutputType
         Fingerprint matrix.
 
     Raises
@@ -63,7 +101,7 @@ def fingerprints_to_numpy(
     """
     if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):
         return np.array(fingerprints)
-    if all(isinstance(fp, UIntSparseIntVect) for fp in fingerprints):
+    if _is_sparse_rdkit_fp_list(fingerprints):
         return np.array([fp.ToList() for fp in fingerprints])
     if isinstance(fingerprints, sparse.csr_matrix):
         return fingerprints.toarray()

@@ -41,10 +41,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
         smi2mol = SmilesToMol()
         sparse_path_fp = Mol2PathFP(n_bits=1024, return_as="sparse")
         dense_path_fp = Mol2PathFP(n_bits=1024, return_as="dense")
-        explicit_bit_vect_path_fp = Mol2PathFP(
-            n_bits=1024,
-            return_as="explicit_bit_vect",
-        )
+        rdkit_vect_path_fp = Mol2PathFP(n_bits=1024, return_as="rdkit")
         sparse_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -57,16 +54,16 @@ class TestMol2PathFingerprint(unittest.TestCase):
                 ("dense_path_fp", dense_path_fp),
             ],
         )
-        explicit_bit_vect_pipeline = Pipeline(
+        rdkit_vect_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
-                ("explicit_bit_vect_path_fp", explicit_bit_vect_path_fp),
+                ("rdkit_vect_path_fp", rdkit_vect_path_fp),
             ],
         )
 
         sparse_output = sparse_pipeline.fit_transform(test_smiles)
         dense_output = dense_pipeline.fit_transform(test_smiles)
-        explicit_bit_vect_path_fp_output = explicit_bit_vect_pipeline.fit_transform(
+        rdkit_vect_path_fp_output = rdkit_vect_pipeline.fit_transform(
             test_smiles,
         )
 
@@ -75,7 +72,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
         self.assertTrue(
             np.equal(
                 dense_output,
-                np.array(explicit_bit_vect_path_fp_output),
+                np.array(rdkit_vect_path_fp_output),
             ).all(),
         )
 
@@ -124,7 +121,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
         self.assertEqual(mol_fp.get_params()["n_bits"], 1024)
 
     def test_setter_invalid_input(self) -> None:
-        """Test if the setters raise an error for invalid input."""
+        """Test the setters raise an error for invalid input."""
         mol_fp = Mol2PathFP()
         params: dict[str, Any] = {
             "min_path": 2,
