@@ -97,6 +97,7 @@ DEFAULT_BINARY_CLASSIFICATION_PARAMS = {
     "model__predictor__task_weights": Tensor([1.0]),
     "model__predictor__threshold": None,
     "n_jobs": 1,
+    "state_dict": None,
 }
 
 DEFAULT_SET_PARAMS = {
