@@ -4,6 +4,7 @@ import logging
 import unittest
 from collections.abc import Iterable
 
+import numpy as np
 import torch
 from chemprop.nn.metrics import MSE
 from sklearn.base import clone
@@ -34,6 +35,7 @@ from test_extras.test_chemprop.chemprop_test_utils.constant_vars import (
 )
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_chemprop_model_binary_classification_mpnn,
+    get_classification_pipeline,
 )
 
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)  # pylint: disable=no-member
@@ -151,6 +153,21 @@ class TestChempropModel(unittest.TestCase):
                     param,
                     f"Test failed for {param_name}",
                 )
+
+    def test_state_dict_forwarding(self) -> None:
+        """Test that the state_dict is properly forwarded to the model."""
+        chemprop_classifier = get_classification_pipeline()
+        chemprop_classifier.fit(["CCO", "CCN"], [0, 1])
+        chemprop_model = chemprop_classifier.named_steps["model"]
+        state_dict = chemprop_model.model.state_dict()
+
+        new_chemprop_classifier = get_classification_pipeline()
+        new_chemprop_classifier.set_params(model__state_dict=state_dict)
+
+        orig_pred = chemprop_classifier.predict(["CCO", "CCN"])
+        new_pred = new_chemprop_classifier.predict(["CCO", "CCN"])
+
+        self.assertTrue(np.allclose(orig_pred, new_pred))
 
 
 class TestChempropClassifier(unittest.TestCase):
