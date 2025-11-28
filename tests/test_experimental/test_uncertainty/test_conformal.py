@@ -9,6 +9,7 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
@@ -143,7 +144,6 @@ class BaseConformalTestData(unittest.TestCase):
         """
         self.assertIsInstance(prediction_sets, np.ndarray)
         self.assertEqual(prediction_sets.shape[1], n_classes)
-        # Check all values are binary (0 or 1)
         self.assertTrue(np.all(np.isin(prediction_sets, [0, 1])))
 
     def _get_train_calib_test_splits(
@@ -349,25 +349,15 @@ class TestConformalClassifier(BaseConformalTestData):
         cp_margin.calibrate(x_calib, y_calib)
         sets_margin = cp_margin.predict_set(x_test)
         p_values_margin = cp_margin.predict_p(x_test)
-        # Added: full end-to-end test for log nonconformity (same style as hinge & margin)
-        cp_log = ConformalClassifier(clf, nonconformity="log")
-        cp_log.fit(x_train, y_train)
-        cp_log.calibrate(x_calib, y_calib)
-        sets_log = cp_log.predict_set(x_test)
-        p_values_log = cp_log.predict_p(x_test)
         self.assertEqual(len(sets_hinge), len(y_test))
         self.assertEqual(len(sets_margin), len(y_test))
-        self.assertEqual(len(sets_log), len(y_test))
         self.assertEqual(len(p_values_hinge), len(y_test))
         self.assertEqual(len(p_values_margin), len(y_test))
-        self.assertEqual(len(p_values_log), len(y_test))
         self.assertTrue(np.all((p_values_hinge >= 0) & (p_values_hinge <= 1)))
         self.assertTrue(np.all((p_values_margin >= 0) & (p_values_margin <= 1)))
-        self.assertTrue(np.all((p_values_log >= 0) & (p_values_log <= 1)))
         n_classes = len(np.unique(y_train))
         self._check_prediction_sets_content(sets_hinge, n_classes)
         self._check_prediction_sets_content(sets_margin, n_classes)
-        self._check_prediction_sets_content(sets_log, n_classes)
 
     def test_nonconformity_registry_create(self) -> None:
         """Test nonconformity function registry and creation utility."""
@@ -376,8 +366,70 @@ class TestConformalClassifier(BaseConformalTestData):
             create_nonconformity_function("svm_margin"), SVMMarginNonconformity
         )
 
-    def test_svm_margin_with_svc(self) -> None:  # pylint: disable=too-many-locals
-        """Instantiate a linear SVM and validate SVMMarginNonconformity on real decision values."""
+    def test_log_nc_function(self) -> None:
+        """Test log_nc nonconformity function directly."""
+        x_prob = np.array([[0.9, 0.1], [0.3, 0.7], [0.6, 0.4]])
+        classes = np.array([0, 1])
+        y = np.array([0, 1, 0])
+
+        scores = LogNonconformity.log_nc(x_prob, classes, y)
+        expected = -np.log([0.9, 0.7, 0.6])
+        self.assertTrue(np.allclose(scores, expected))
+
+        scores_all = LogNonconformity.log_nc(x_prob, classes, None)
+        expected_all = -np.log(x_prob)
+        self.assertTrue(np.allclose(scores_all, expected_all))
+
+        y_series = pd.Series(y)
+        scores_series = LogNonconformity.log_nc(x_prob, classes, y_series)
+        self.assertTrue(np.allclose(scores_series, expected))
+
+        x_prob_small = np.array([[1e-15, 1.0], [1.0, 1e-15]])
+        y_small = np.array([0, 1])
+        scores_small = LogNonconformity.log_nc(x_prob_small, classes, y_small)
+        self.assertTrue(np.all(np.isfinite(scores_small)))
+        self.assertTrue(np.all(scores_small >= -np.log(1.0)))
+
+    def test_log_nonconformity_class(self) -> None:  # pylint: disable=too-many-locals
+        """Test LogNonconformity functor class."""
+        x_train, x_calib, x_test, y_train, y_calib, _y_test = (
+            self._get_train_calib_test_splits(self.x_clf, self.y_clf)
+        )
+
+        classes = np.array(sorted(np.unique(y_train)))
+        clf = RandomForestClassifier(random_state=42, n_estimators=10)
+        clf.fit(x_train, y_train)
+
+        # Get probability predictions
+        probs_calib = clf.predict_proba(x_calib)
+        probs_test = clf.predict_proba(x_test)
+
+        log_nc_func = LogNonconformity()
+
+        # Test with true labels (calibration)
+        nc_calib = log_nc_func(probs_calib, classes, y_calib)
+        self.assertEqual(nc_calib.shape, (len(y_calib),))
+        self.assertTrue(
+            np.all(nc_calib >= 0)
+        )  # Nonconformity scores should be non-negative
+
+        # Test without true labels (test set - returns matrix)
+        nc_test_all = log_nc_func(probs_test, classes, None)
+        self.assertEqual(nc_test_all.shape, (len(probs_test), len(classes)))
+        self.assertTrue(np.all(nc_test_all >= 0))
+
+        # Test get_name method
+        self.assertEqual(log_nc_func.get_name(), "log")
+
+        # Test that it works with ConformalClassifier
+        cp = ConformalClassifier(clf, nonconformity="log")
+        cp.fit(x_train, y_train)
+        cp.calibrate(x_calib, y_calib)
+        sets = cp.predict_set(x_test)
+        self.assertEqual(len(sets), len(probs_test))
+
+    def test_svm_margin_binary_classification(self) -> None:  # pylint: disable=too-many-locals
+        """Test SVMMarginNonconformity with binary SVM classification."""
         x_train, x_calib, x_test, y_train, y_calib, _y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
@@ -389,41 +441,95 @@ class TestConformalClassifier(BaseConformalTestData):
         svc.fit(x_train, y_train)
 
         # Decision function values (signed distances to hyperplane)
-        dec_calib = svc.decision_function(x_calib)  # shape (n_calib,)
-        dec_test = svc.decision_function(x_test)  # shape (n_test,)
-        self.assertEqual(dec_calib.ndim, 1)
-        self.assertEqual(dec_test.ndim, 1)
+        y_score_calib = svc.decision_function(x_calib)
+        y_score_test = svc.decision_function(x_test)
+        self.assertEqual(y_score_calib.ndim, 1)
+        self.assertEqual(y_score_test.ndim, 1)
 
-        # Nonconformity for true labels on calibration set
-        nc_calib_true = SVMMarginNonconformity()(dec_calib, classes, y_calib)
-        self.assertEqual(nc_calib_true.shape, (len(dec_calib),))
+        # Test nonconformity for true labels on calibration set
+        nc_calib_true = SVMMarginNonconformity()(y_score_calib, classes, y_calib)
+        self.assertEqual(nc_calib_true.shape, (len(y_score_calib),))
 
-        # Expected per formula: NC = 1 - d for positive class, d + 1 for negative class
         y_mapped = np.where(y_calib == classes[1], 1, -1)
-        expected_nc = np.where(y_mapped == 1, 1 - dec_calib, dec_calib + 1)
+        expected_nc = np.where(y_mapped == 1, 1 - y_score_calib, y_score_calib + 1)
         self.assertTrue(np.allclose(nc_calib_true, expected_nc))
 
-        # All-class nonconformity matrix for test set
-        nc_test_all = SVMMarginNonconformity()(dec_test, classes, None)
-        self.assertEqual(nc_test_all.shape, (len(dec_test), 2))
-        # Expected columns: [d + 1, 1 - d]
-        expected_all = np.column_stack((dec_test + 1, 1 - dec_test))
+        nc_test_all = SVMMarginNonconformity()(y_score_test, classes, None)
+        self.assertEqual(nc_test_all.shape, (len(y_score_test), 2))
+        expected_all = np.column_stack((y_score_test + 1, 1 - y_score_test))
         self.assertTrue(np.allclose(nc_test_all, expected_all))
 
-        # Basic sanity: lower nonconformity for correctly and confidently classified samples
         preds = svc.predict(x_test)
-        confident_mask = np.abs(dec_test) > 1.5
-        # For confident correct positives, 1 - d should be small; for confident correct negatives, d + 1 should be small
+        confident_mask = np.abs(y_score_test) > 0.5
+
         pos_confident = confident_mask & (preds == classes[1])
         neg_confident = confident_mask & (preds == classes[0])
-        if np.any(pos_confident):
-            self.assertTrue(
-                np.all(nc_test_all[pos_confident, 1] < nc_test_all[pos_confident, 0])
-            )
-        if np.any(neg_confident):
-            self.assertTrue(
-                np.all(nc_test_all[neg_confident, 0] < nc_test_all[neg_confident, 1])
-            )
+        self.assertGreater(
+            np.sum(pos_confident),
+            0,
+            f"Expected confident positive predictions (got {np.sum(pos_confident)})",
+        )
+        self.assertGreater(
+            np.sum(neg_confident),
+            0,
+            f"Expected confident negative predictions (got {np.sum(neg_confident)})",
+        )
+
+        self.assertTrue(
+            np.all(nc_test_all[pos_confident, 1] < nc_test_all[pos_confident, 0]),
+            "Confident positives should have lower NC for their true class",
+        )
+        self.assertTrue(
+            np.all(nc_test_all[neg_confident, 0] < nc_test_all[neg_confident, 1]),
+            "Confident negatives should have lower NC for their true class",
+        )
+
+    def test_svm_margin_multiclass(self) -> None:  # pylint: disable=too-many-locals
+        """Test SVMMarginNonconformity with multiclass SVM classification."""
+        x_data, y_data = make_classification(
+            n_samples=300,
+            n_features=20,
+            n_informative=15,
+            n_redundant=5,
+            n_classes=3,
+            random_state=42,
+        )
+
+        x_train, x_test, y_train, y_test = train_test_split(
+            x_data, y_data, test_size=0.3, random_state=42
+        )
+
+        classes = np.array(sorted(np.unique(y_train)))
+        self.assertEqual(len(classes), 3)
+
+        # Train multiclass SVM (one-vs-rest)
+        svc = SVC(
+            kernel="linear",
+            decision_function_shape="ovr",
+            probability=False,
+            random_state=42,
+        )
+        svc.fit(x_train, y_train)
+
+        # Get decision function values (one column per class)
+        y_score_test = svc.decision_function(x_test)
+        self.assertEqual(y_score_test.shape, (len(x_test), 3))
+
+        # Test nonconformity for true labels
+        nc_test_true = SVMMarginNonconformity()(y_score_test, classes, y_test)
+        self.assertEqual(nc_test_true.shape, (len(y_test),))
+
+        expected_nc = np.zeros(len(y_test))
+        for i, true_label in enumerate(y_test):
+            class_idx = np.where(classes == true_label)[0][0]
+            expected_nc[i] = 1 - y_score_test[i, class_idx]
+        self.assertTrue(np.allclose(nc_test_true, expected_nc))
+
+        nc_test_all = SVMMarginNonconformity()(y_score_test, classes, None)
+        self.assertEqual(nc_test_all.shape, (len(x_test), 3))
+
+        expected_all = 1 - y_score_test
+        self.assertTrue(np.allclose(nc_test_all, expected_all))
 
     def test_cross_conformal_classifier(self) -> None:
         """Test CrossConformalClassifier."""
@@ -520,15 +626,12 @@ class TestConformalClassifier(BaseConformalTestData):
         predicted_with_invalid = conformal_pipeline.predict(test_smiles_with_invalid)
 
         self.assertEqual(len(predicted_with_invalid), len(test_smiles_with_invalid))
-        # Check that invalid SMILES produce nan values at correct positions
         n_valid = len(test_smiles)
         n_invalid = len(invalid_smiles)
 
-        # Valid predictions should not be nan
         valid_predictions = predicted_with_invalid[:n_valid]
         self.assertFalse(np.isnan(valid_predictions).any())
 
-        # Invalid predictions should be nan
         invalid_predictions = predicted_with_invalid[n_valid:]
         self.assertTrue(np.isnan(invalid_predictions).all())
         self.assertEqual(len(invalid_predictions), n_invalid)
