@@ -1,8 +1,10 @@
 """Test Chemprop component wrapper."""
 
 import logging
+import tempfile
 import unittest
 from collections.abc import Iterable
+from pathlib import Path
 
 import torch
 from chemprop.nn.metrics import MSE
@@ -150,6 +152,47 @@ class TestChempropModel(unittest.TestCase):
                     param_dict[param_name],
                     param,
                     f"Test failed for {param_name}",
+                )
+
+    def test_state_dict_forwarding(self) -> None:
+        """Test that the state_dict can be set.
+
+        Note:
+        ----
+        Testing that the predictions agree is done in test_chemprop_pipeline.py.
+
+        """
+        # Create a Chemprop model that is used to define the state_dict
+        chemprop_classifier = get_chemprop_model_binary_classification_mpnn()
+        state_dict = chemprop_classifier.model.state_dict()
+
+        # Test passing the state_dict directly
+        new_model = ChempropModel(
+            model=get_chemprop_model_binary_classification_mpnn().model,
+            state_dict=state_dict,
+        )
+        new_model_state_dict = new_model.model.state_dict()
+        self.assertEqual(state_dict.keys(), new_model_state_dict.keys())
+        for key, value in state_dict.items():
+            self.assertTrue(
+                torch.equal(value, new_model_state_dict[key]),
+                f"Mismatch for key {key}: {value} != {new_model_state_dict[key]}",
+            )
+
+        # Test passing the state_dict via a file
+        with tempfile.TemporaryDirectory() as tmpdir:
+            safe_path = Path(tmpdir) / "chemprop.pt"
+            torch.save(state_dict, safe_path)
+            new_model2 = ChempropModel(
+                model=get_chemprop_model_binary_classification_mpnn().model,
+                state_dict=safe_path,
+            )
+            new_model2_state_dict = new_model2.model.state_dict()
+            self.assertEqual(state_dict.keys(), new_model2_state_dict.keys())
+            for key, value in state_dict.items():
+                self.assertTrue(
+                    torch.equal(value, new_model2_state_dict[key]),
+                    f"Mismatch for key {key}: {value} != {new_model2_state_dict[key]}",
                 )
 
 

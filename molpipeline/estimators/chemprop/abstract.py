@@ -2,16 +2,17 @@
 
 import abc
 from collections.abc import Sequence
-from typing import Any
+from pathlib import Path
+from typing import Any, Self
 
-# pylint: disable=duplicate-code
 try:
-    from typing import Self  # type: ignore[attr-defined]
+    from typing import override  # type: ignore[attr-defined]
 except ImportError:
-    from typing_extensions import Self
+    from typing_extensions import override
 
 import numpy as np
 import numpy.typing as npt
+import torch
 
 try:
     from chemprop.data import MoleculeDataset, build_dataloader
@@ -31,10 +32,11 @@ class ABCChemprop(BaseEstimator, abc.ABC):
 
     Notes
     -----
-    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor, this class
-    provides the common functionality for both classes.
-    Although this class does not implement abstract methods, it is marked as abstract to prevent
-    instantiation. (without predict or transform methods this class is useless.)
+    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor,
+    this class provides the common functionality for both classes.
+    Although this class does not implement abstract methods, it is marked as abstract
+    to prevent instantiation.
+    (without predict or transform methods this class is useless.)
 
     Attributes
     ----------
@@ -47,11 +49,12 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     lightning_trainer : pl.Trainer
         The lightning trainer to use for training the model.
     trainer_params : dict[str, Any]
-        The parameters of the lightning trainer. This is used as the trainer is not compatible with the
-        `get_params` method.
+        The parameters of the lightning trainer. This is used as the trainer is not
+        compatible with the `get_params` method.
     model_ckpoint_params : dict[str, Any]
-        The parameters of the model checkpoint callback. This is used as the callback is not compatible with the
-        `get_params` method.
+        The parameters of the model checkpoint callback. This is used as the callback
+        is not compatible with the `get_params` method.
+
     """
 
     model: MPNN
@@ -67,6 +70,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        state_dict: str | Path | dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop abstract model.
@@ -81,9 +85,13 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        state_dict : str | Path | None, optional
+            Path to the pretrained weights file, by default None
+            None means that the model is not initialized with pretrained weights.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
+
         """
         self.model = model
         self.batch_size = batch_size
@@ -99,17 +107,32 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             )
         self.lightning_trainer = lightning_trainer
         self.trainer_params = get_params_trainer(self.lightning_trainer)
+        self.state_dict = state_dict
         self.set_params(**kwargs)
+
+    def _set_state_dict(self) -> None:
+        """Set the weights of the model if a weights path is provided."""
+        if self.state_dict is None:
+            return
+        state_dict = self.state_dict
+        if isinstance(state_dict, str):
+            state_dict = Path(state_dict)
+        if isinstance(state_dict, Path):
+            with state_dict.open("rb") as f:
+                state_dict_ = torch.load(f, weights_only=True)
+            state_dict = state_dict_
+        self.model.load_state_dict(state_dict)
 
     def _update_trainer(self) -> None:
         """Update the trainer for the model."""
         trainer_params = dict(self.trainer_params)
         if self.model_ckpoint_params:
             trainer_params["callbacks"] = [
-                pl.callbacks.ModelCheckpoint(**self.model_ckpoint_params)
+                pl.callbacks.ModelCheckpoint(**self.model_ckpoint_params),
             ]
         self.lightning_trainer = pl.Trainer(**trainer_params)
 
+    @override
     def fit(
         self,
         X: MoleculeDataset,  # pylint: disable=invalid-name
@@ -128,6 +151,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         -------
         Self
             The fitted model.
+
         """
         if not isinstance(y, np.ndarray):
             y = np.array(y)
@@ -135,7 +159,9 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             y = y.reshape(-1, 1)
         X.Y = y
         training_data = build_dataloader(
-            X, batch_size=self.batch_size, num_workers=self.n_jobs
+            X,
+            batch_size=self.batch_size,
+            num_workers=self.n_jobs,
         )
         self.lightning_trainer.fit(self.model, training_data)
         # The trainer is reinitalized to avoid storing the training data
@@ -147,7 +173,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
 
         Note
         ----
-        Parameters for the trainer and the checkpoint callback are filtered out and added as attributes of the model.
+        Parameters for the trainer and the checkpoint callback are filtered out and
+        added as attributes of the model.
         This is done due to incompatibility with the `get_params` method.
 
         Parameters
@@ -159,6 +186,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         -------
         Self
             The model with the new parameters.
+
         """
         params, trainer_params = self._filter_params(params, "lightning_trainer")
         params, model_ckpoint_params = self._filter_params(params, "callback_modelckpt")
@@ -166,6 +194,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.model_ckpoint_params.update(model_ckpoint_params)
         super().set_params(**params)
         self._update_trainer()
+        self._set_state_dict()
         return self
 
     def get_params(self, deep: bool = False) -> dict[str, Any]:
@@ -178,24 +207,28 @@ class ABCChemprop(BaseEstimator, abc.ABC):
 
         Notes
         -----
-        The parameters of the trainer and the model checkpoint are added irrespective of the `deep` parameter.
-        This is done due to their incompatibility with the `get_params` and `set_params` methods.
+        The parameters of the trainer and the model checkpoint are added irrespective
+        of the `deep` parameter. This is done due to their incompatibility with the
+        `get_params` and `set_params` methods.
 
         Returns
         -------
         dict[str, Any]
             The parameters of the model.
+
         """
         params = super().get_params(deep)
-        # Since the trainer and the model checkpoint are not compatible with the `get_params` and `set_params` methods
-        # they are not passed as objects but as parameters. Hence, the `deep` parameter is ignored and the parameters
-        # are always returned.
+        # Since the trainer and the model checkpoint are not compatible with the
+        # `get_params` and `set_params` methods they are not passed as objects but as
+        # parameters. Hence, the `deep` parameter is ignored and the parameters are
+        # always returned.
         for name, value in self.trainer_params.items():
             params[f"lightning_trainer__{name}"] = value
         for name, value in self.model_ckpoint_params.items():
             params[f"callback_modelckpt__{name}"] = value
         # set to none as the trainer is created from the parameters
-        # Otherwise, the sklearn clone will fail as the trainer is updated by replacing the object
+        # Otherwise, the sklearn clone will fail as the trainer is updated by
+        # replacing the object
         params["lightning_trainer"] = None
         return params
 
@@ -219,6 +252,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             The filtered parameters for the model.
         dict[str, Any]
             The filtered parameters for the trainer.
+
         """
         trainer_params = {}
         other_params = {}
