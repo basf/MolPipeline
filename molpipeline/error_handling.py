@@ -2,13 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 
 import numpy as np
 import numpy.typing as npt

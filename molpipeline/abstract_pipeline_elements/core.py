@@ -6,13 +6,7 @@ import abc
 import copy
 import inspect
 from collections.abc import Iterable
-from typing import Any, NamedTuple, Union
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
+from typing import Any, NamedTuple, Self, Union
 from uuid import uuid4
 
 import numpy as np

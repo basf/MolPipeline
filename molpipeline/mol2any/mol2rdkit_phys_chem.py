@@ -4,14 +4,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
 import copy
+from typing import Any, Callable, Self
 
 import numpy as np
 import numpy.typing as npt

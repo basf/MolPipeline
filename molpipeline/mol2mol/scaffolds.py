@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-try:
-    from typing import Self  # pylint: disable=no-name-in-module
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold as RDKIT_MurckoScaffold
