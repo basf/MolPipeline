@@ -152,7 +152,9 @@ class TestChempropPipeline(unittest.TestCase):
         state_dict = chemprop_model.model.state_dict()
 
         new_chemprop_classifier = get_classification_pipeline()
-        new_chemprop_classifier.set_params(model__state_dict=state_dict)
+        new_chemprop_classifier.set_params(
+            model__model__state_dict_preloaded=state_dict,
+        )
 
         orig_pred = chemprop_classifier.predict(["CCO", "CCN"])
         new_pred = new_chemprop_classifier.predict(["CCO", "CCN"])

@@ -169,7 +169,7 @@ class TestChempropModel(unittest.TestCase):
         # Test passing the state_dict directly
         new_model = ChempropModel(
             model=get_chemprop_model_binary_classification_mpnn().model,
-            state_dict=state_dict,
+            model__state_dict_preloaded=state_dict,
         )
         new_model_state_dict = new_model.model.state_dict()
         self.assertEqual(state_dict.keys(), new_model_state_dict.keys())
@@ -185,7 +185,7 @@ class TestChempropModel(unittest.TestCase):
             torch.save(state_dict, safe_path)
             new_model2 = ChempropModel(
                 model=get_chemprop_model_binary_classification_mpnn().model,
-                state_dict=safe_path,
+                model__state_dict_preloaded=safe_path,
             )
             new_model2_state_dict = new_model2.model.state_dict()
             self.assertEqual(state_dict.keys(), new_model2_state_dict.keys())

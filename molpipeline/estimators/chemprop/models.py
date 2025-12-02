@@ -1,7 +1,6 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any, Self
 
 try:
@@ -54,7 +53,6 @@ class ChempropModel(ABCChemprop):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
-        state_dict: str | Path | dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop abstract model.
@@ -69,8 +67,6 @@ class ChempropModel(ABCChemprop):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
-        state_dict: str | Path | dict[str, Any] | None, optional
-            Path to the pretrained weights file or state_dict dictionary,
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -81,7 +77,6 @@ class ChempropModel(ABCChemprop):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
-            state_dict=state_dict,
             **kwargs,
         )
         self._classes_ = None
@@ -312,7 +307,6 @@ class ChempropClassifier(ChempropModel):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
-        state_dict: str | Path | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop classifier model.
@@ -327,8 +321,6 @@ class ChempropClassifier(ChempropModel):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
-        state_dict: str | Path | None, optional
-            Path to the pretrained weights file, by default None
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -349,7 +341,6 @@ class ChempropClassifier(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
-            state_dict=state_dict,
             **kwargs,
         )
         if not self._is_binary_classifier():
@@ -390,7 +381,6 @@ class ChempropRegressor(ChempropModel):
         n_tasks: int = 1,
         batch_size: int = 64,
         n_jobs: int = 1,
-        state_dict: str | Path | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop regressor model.
@@ -407,8 +397,6 @@ class ChempropRegressor(ChempropModel):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
-        state_dict: str | Path | None, optional
-            Path to the pretrained weights file, by default None
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -424,7 +412,6 @@ class ChempropRegressor(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
-            state_dict=state_dict,
             **kwargs,
         )
         self.n_tasks = n_tasks

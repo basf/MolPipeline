@@ -2,7 +2,6 @@
 
 import abc
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any, Self
 
 try:
@@ -12,7 +11,6 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
-import torch
 
 try:
     from chemprop.data import MoleculeDataset, build_dataloader
@@ -70,7 +68,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
-        state_dict: str | Path | dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop abstract model.
@@ -85,9 +82,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
-        state_dict : str | Path | None, optional
-            Path to the pretrained weights file, by default None
-            None means that the model is not initialized with pretrained weights.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -107,21 +101,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             )
         self.lightning_trainer = lightning_trainer
         self.trainer_params = get_params_trainer(self.lightning_trainer)
-        self.state_dict = state_dict
         self.set_params(**kwargs)
-
-    def _set_state_dict(self) -> None:
-        """Set the weights of the model if a weights path is provided."""
-        if self.state_dict is None:
-            return
-        state_dict = self.state_dict
-        if isinstance(state_dict, str):
-            state_dict = Path(state_dict)
-        if isinstance(state_dict, Path):
-            with state_dict.open("rb") as f:
-                state_dict_ = torch.load(f, weights_only=True)
-            state_dict = state_dict_
-        self.model.load_state_dict(state_dict)
 
     def _update_trainer(self) -> None:
         """Update the trainer for the model."""
@@ -194,7 +174,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.model_ckpoint_params.update(model_ckpoint_params)
         super().set_params(**params)
         self._update_trainer()
-        self._set_state_dict()
         return self
 
     def get_params(self, deep: bool = False) -> dict[str, Any]:

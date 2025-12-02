@@ -82,6 +82,7 @@ DEFAULT_BINARY_CLASSIFICATION_PARAMS = {
     "model__message_passing__dropout_rate": 0.0,
     "model__message_passing__undirected": False,
     "model__message_passing": BondMessagePassing,
+    "model__message_passing__state_dict_preloaded": None,
     "model__metric_list": None,
     "model__predictor__activation": "relu",
     "model__warmup_epochs": 2,
@@ -95,9 +96,10 @@ DEFAULT_BINARY_CLASSIFICATION_PARAMS = {
     "model__predictor__n_tasks": 1,
     "model__predictor__output_transform": nn.Identity,
     "model__predictor__task_weights": Tensor([1.0]),
+    "model__predictor__state_dict_preloaded": None,
     "model__predictor__threshold": None,
+    "model__state_dict_preloaded": None,
     "n_jobs": 1,
-    "state_dict": None,
 }
 
 DEFAULT_SET_PARAMS = {
@@ -152,6 +154,7 @@ DEFAULT_SET_PARAMS = {
     "model__message_passing__depth": 3,
     "model__message_passing__dropout_rate": 0.0,
     "model__message_passing__undirected": False,
+    "model__message_passing__state_dict_preloaded": None,
     "model__metric_list": None,
     "model__predictor__activation": "relu",
     "model__warmup_epochs": 2,
@@ -161,6 +164,8 @@ DEFAULT_SET_PARAMS = {
     "model__predictor__n_layers": 1,
     "model__predictor__n_tasks": 1,
     "model__predictor__threshold": None,
+    "model__predictor__state_dict_preloaded": None,
+    "model__state_dict_preloaded": None,
     "n_jobs": 1,
 }
 
@@ -222,6 +227,7 @@ DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS = {
     "model__message_passing__dropout_rate": 0.0,
     "model__message_passing__undirected": False,
     "model__message_passing": BondMessagePassing,
+    "model__message_passing__state_dict_preloaded": None,
     "model__metric_list": None,
     "model__predictor__activation": "relu",
     "model__warmup_epochs": 2,
@@ -237,6 +243,8 @@ DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS = {
     "model__predictor__output_transform": nn.Identity,
     "model__predictor__task_weights": Tensor([1.0, 1.0, 1.0]),
     "model__predictor__threshold": None,
+    "model__predictor__state_dict_preloaded": None,
+    "model__state_dict_preloaded": None,
     "n_classes": 3,
     "n_jobs": 1,
 }
