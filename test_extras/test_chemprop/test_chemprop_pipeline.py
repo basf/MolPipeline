@@ -16,6 +16,7 @@ from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
+from molpipeline.utils.file_loading.url_file_loading import URLFileLoader
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_classification_pipeline,
@@ -160,6 +161,20 @@ class TestChempropPipeline(unittest.TestCase):
         new_pred = new_chemprop_classifier.predict(["CCO", "CCN"])
 
         self.assertTrue(np.allclose(orig_pred, new_pred))
+
+    def test_state_dict_from_url(self) -> None:
+        """Test that the state_dict can be loaded from a URL."""
+        chemeleon_url = "https://zenodo.org/records/15460715/files/chemeleon_mp.pt"
+        chemprop_classifier = get_classification_pipeline(
+            chemprop_kwargs={
+                "model__message_passing__state_dict_ref": URLFileLoader(chemeleon_url),
+                "model__message_passing__d_h": 2048,
+                "model__predictor__input_dim": 2048,
+            },
+        )
+
+        pred = chemprop_classifier.predict(["CCO", "CCN"])
+        self.assertEqual(len(pred), 2)
 
 
 class TestRegressionPipeline(unittest.TestCase):

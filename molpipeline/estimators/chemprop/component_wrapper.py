@@ -2,6 +2,7 @@
 
 import abc
 from collections.abc import Iterable
+from io import BytesIO
 from pathlib import Path
 from typing import Any, Self
 
@@ -42,6 +43,7 @@ from molpipeline.estimators.chemprop.metric_wrapper import (
     MulticlassMCCMetric,
     MVELoss,
 )
+from molpipeline.utils.file_loading.abc_file_loading import ABCFileLoader
 
 
 def parse_state_dict_ref(
@@ -68,13 +70,20 @@ def parse_state_dict_ref(
     if isinstance(state_dict, (str, Path)):
         path = Path(state_dict)
         with path.open("rb") as f:
-            return torch.load(f, weights_only=True)
-
-    if isinstance(state_dict, dict):
-        return state_dict
-    raise ValueError(
-        f"state_dict must be a dict, str, or Path. Got {type(state_dict)}.",
-    )
+            state_dict_ = torch.load(f, weights_only=True)
+    elif isinstance(state_dict, ABCFileLoader):
+        file_bytes = state_dict.load_file()
+        with BytesIO(file_bytes) as f:
+            state_dict_ = torch.load(f, weights_only=True)
+    elif isinstance(state_dict, dict):
+        state_dict_ = state_dict
+    else:
+        raise ValueError(
+            f"state_dict must be a dict, str, or Path. Got {type(state_dict)}.",
+        )
+    if "state_dict" in state_dict_:
+        return state_dict_["state_dict"]
+    return state_dict_
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes

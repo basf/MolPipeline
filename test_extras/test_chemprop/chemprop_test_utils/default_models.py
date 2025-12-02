@@ -200,8 +200,14 @@ def get_regression_pipeline(n_tasks: int = 1) -> Pipeline:
     )
 
 
-def get_classification_pipeline() -> Pipeline:
+def get_classification_pipeline(chemprop_kwargs: dict[str, Any]) -> Pipeline:
     """Get the Chemprop model pipeline for classification.
+
+    Parameters
+    ----------
+    chemprop_kwargs : dict[str, Any]
+        Additional keyword arguments to pass to the ChempropClassifier during
+        initialization.
 
     Returns
     -------
@@ -216,7 +222,10 @@ def get_classification_pipeline() -> Pipeline:
         error_filter,
         fill_value=np.nan,
     )
-    chemprop_model = ChempropClassifier(lightning_trainer=DEFAULT_TRAINER)
+    chemprop_model = ChempropClassifier(
+        lightning_trainer=DEFAULT_TRAINER,
+        **chemprop_kwargs,
+    )
     return Pipeline(
         steps=[
             ("smiles2mol", smiles2mol),
