@@ -90,7 +90,7 @@ def parse_state_dict_ref(
 class BondMessagePassing(_BondMessagePassing, BaseEstimator):
     """A wrapper for the BondMessagePassing class."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         d_v: int = DEFAULT_ATOM_FDIM,
         d_e: int = DEFAULT_BOND_FDIM,
@@ -483,7 +483,7 @@ class MPNN(_MPNN, BaseEstimator):
 
     bn: nn.BatchNorm1d | nn.Identity
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         message_passing: MessagePassing,
         agg: Aggregation,
