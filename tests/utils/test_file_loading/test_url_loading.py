@@ -10,7 +10,9 @@ class TestURLFileLoader(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test variables."""
-        self.test_url = "https://zenodo.org/records/15460715/files/chemeleon_mp.pt"
+        self.test_url = (
+            "https://github.com/basf/MolPipeline/blob/main/.github/molpipeline.png"
+        )
         self.loader = URLFileLoader(url=self.test_url, timeout=10)
 
     def test_initialization(self) -> None:
