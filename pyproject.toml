@@ -29,6 +29,7 @@ dependencies = [
 [project.optional-dependencies]
 chemprop = [
     "chemprop>=2.2.0,<2.3.0",
+    "dvc>=3.64.1",
     "lightning>=2.5.1",
 ]
 notebooks = [
