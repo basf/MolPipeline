@@ -44,10 +44,10 @@ from molpipeline.estimators.chemprop.metric_wrapper import (
 )
 
 
-def parse_state_dict(
+def parse_state_dict_ref(
     state_dict: dict[str, Any] | str | Path,
 ) -> dict[str, Any]:
-    """Load a state dict from a file or return the state dict if already provided.
+    """Load a state dict from a ref file or return the state dict if already provided.
 
     Parameters
     ----------
@@ -92,7 +92,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         activation: str | Activation = Activation.RELU,
         undirected: bool = False,
         d_vd: int | None = None,
-        state_dict_preloaded: str | Path | dict[str, Any] | None = None,
+        state_dict_ref: str | Path | dict[str, Any] | None = None,
     ):
         """Initialize the BondMessagePassing class.
 
@@ -117,7 +117,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         d_vd : int or None, optional
             Dimension of additional vertex descriptors that will be concatenated to the
             hidden features before readout
-        state_dict_preloaded : str | Path | dict[str, Any] | None, optional
+        state_dict_ref : str | Path | dict[str, Any] | None, optional
             Path to a state dict to load the model weights from.
 
         """
@@ -139,9 +139,9 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         self.bias = bias
         self.activation = activation
         self.dropout_rate = dropout_rate
-        self.state_dict_preloaded = state_dict_preloaded
-        if self.state_dict_preloaded is not None:
-            self.load_state_dict(parse_state_dict(self.state_dict_preloaded))
+        self.state_dict_ref = state_dict_ref
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
@@ -164,8 +164,8 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
             self.tau = get_activation_function(self.activation)
         else:
             self.tau = self.activation
-        if self.state_dict_preloaded is not None:
-            self.load_state_dict(parse_state_dict(self.state_dict_preloaded))
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
         return self
 
     def set_params(self, **params: Any) -> Self:
@@ -206,7 +206,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         task_weights: Tensor | None = None,
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
-        state_dict_preloaded: str | Path | dict[str, Any] | None = None,
+        state_dict_ref: str | Path | dict[str, Any] | None = None,
         **kwargs: Any,
     ):
         """Initialize the BinaryClassificationFFN class.
@@ -233,7 +233,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             Threshold for binary classification.
         output_transform : UnscaleTransform or None, optional (default=None)
             Transformations to apply to the output. None defaults to UnscaleTransform.
-        state_dict_preloaded : str | Path | dict[str, Any] | None, optional
+        state_dict_ref : str | Path | dict[str, Any] | None, optional
             Path to a state dict to load the model weights from.
         kwargs : Any
             Additional keyword arguments.
@@ -260,9 +260,9 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         self.activation = activation
         self.task_weights = task_weights
         self.threshold = threshold
-        self.state_dict_preloaded = state_dict_preloaded
-        if self.state_dict_preloaded is not None:
-            self.load_state_dict(parse_state_dict(self.state_dict_preloaded))
+        self.state_dict_ref = state_dict_ref
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
 
     @property
     def input_dim(self) -> int:
@@ -315,8 +315,8 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             dropout=self.dropout,
             activation=self.activation,
         )
-        if self.state_dict_preloaded is not None:
-            self.load_state_dict(parse_state_dict(self.state_dict_preloaded))
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
         return self
 
     def set_params(self, **params: Any) -> Self:
@@ -396,7 +396,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         task_weights: Tensor | None = None,
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
-        state_dict_preloaded: str | Path | dict[str, Any] | None = None,
+        state_dict_ref: str | Path | dict[str, Any] | None = None,
     ):
         """Initialize the MulticlassClassificationFFN class.
 
@@ -424,7 +424,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
             Threshold for binary classification.
         output_transform : UnscaleTransform or None, optional (default=None)
             Transformations to apply to the output. None defaults to UnscaleTransform.
-        state_dict_preloaded : str | Path | dict[str, Any] | None, optional
+        state_dict_ref : str | Path | dict[str, Any] | None, optional
             Path to a state dict to load the model weights from.
 
         """
@@ -443,9 +443,9 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         )
 
         self.n_classes = n_classes
-        self.state_dict_preloaded = state_dict_preloaded
-        if self.state_dict_preloaded is not None:
-            self.load_state_dict(parse_state_dict(self.state_dict_preloaded))
+        self.state_dict_ref = state_dict_ref
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
 
 
 class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type: ignore
@@ -485,7 +485,7 @@ class MPNN(_MPNN, BaseEstimator):
         init_lr: float = 1e-4,
         max_lr: float = 1e-3,
         final_lr: float = 1e-4,
-        state_dict_preloaded: str | Path | dict[str, Any] | None = None,
+        state_dict_ref: str | Path | dict[str, Any] | None = None,
     ):
         """Initialize the MPNN class.
 
@@ -509,7 +509,7 @@ class MPNN(_MPNN, BaseEstimator):
             The maximum learning rate.
         final_lr : float, optional (default=1e-4)
             The final learning rate.
-        state_dict_preloaded : str | Path | dict[str, Any] | None, optional
+        state_dict_ref : str | Path | dict[str, Any] | None, optional
             Path to a state dict to load the model weights from.
 
         """
@@ -526,9 +526,9 @@ class MPNN(_MPNN, BaseEstimator):
         )
         self.metric_list = metric_list
         self.batch_norm = batch_norm
-        self.state_dict_preloaded = state_dict_preloaded
-        if self.state_dict_preloaded is not None:
-            self.load_state_dict(parse_state_dict(self.state_dict_preloaded))
+        self.state_dict_ref = state_dict_ref
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
@@ -551,8 +551,8 @@ class MPNN(_MPNN, BaseEstimator):
             )
         else:
             self.metrics = nn.ModuleList([*list(self.metric_list), self.criterion])
-        if self.state_dict_preloaded is not None:
-            self.load_state_dict(parse_state_dict(self.state_dict_preloaded))
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
         return self
 
     def set_params(self, **params: Any) -> Self:
