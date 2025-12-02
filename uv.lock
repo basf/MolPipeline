@@ -2407,6 +2407,7 @@ chemprop = [
     { name = "chemprop" },
     { name = "dvc" },
     { name = "lightning" },
+    { name = "requests" },
 ]
 notebooks = [
     { name = "jupyterlab" },
@@ -2458,6 +2459,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.26.4" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "rdkit", specifier = ">=2023.9.1" },
+    { name = "requests", marker = "extra == 'chemprop'", specifier = ">=2.32.5" },
     { name = "scikit-learn", specifier = ">=1.6.0" },
     { name = "scipy", specifier = ">=1.15.2" },
     { name = "seaborn", marker = "extra == 'notebooks'", specifier = ">=0.13.2" },
