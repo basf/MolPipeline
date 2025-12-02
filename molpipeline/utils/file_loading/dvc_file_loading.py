@@ -2,17 +2,9 @@
 
 from typing import Any
 
-from loguru import logger
+import dvc.api
 
 from molpipeline.utils.file_loading.abc_file_loading import ABCFileLoader
-
-try:
-    import dvc.api
-except ImportError as e:
-    logger.error(
-        "Failed to import dvc. Make sure dvc is installed to use DVCFileLoader.",
-    )
-    raise e
 
 
 class DVCFileLoader(ABCFileLoader):
