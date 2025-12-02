@@ -49,7 +49,7 @@ class URLFileLoader(ABCFileLoader):
             The parameters of the file loader.
 
         """
-        return {"url": self.url}
+        return {"url": self.url, "timeout": self.timeout}
 
     def set_params(self, **params: Any) -> None:
         """Set the parameters of the file loader.
