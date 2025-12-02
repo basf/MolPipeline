@@ -81,7 +81,7 @@ def parse_state_dict_ref(
 class BondMessagePassing(_BondMessagePassing, BaseEstimator):
     """A wrapper for the BondMessagePassing class."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         d_v: int = DEFAULT_ATOM_FDIM,
         d_e: int = DEFAULT_BOND_FDIM,
@@ -428,7 +428,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
             Path to a state dict to load the model weights from.
 
         """
-        super().__init__(
+        super().__init__(  # pylint: disable=too-many-arguments
             n_tasks,
             input_dim,
             hidden_dim,
