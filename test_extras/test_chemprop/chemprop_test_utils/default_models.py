@@ -200,12 +200,14 @@ def get_regression_pipeline(n_tasks: int = 1) -> Pipeline:
     )
 
 
-def get_classification_pipeline(chemprop_kwargs: dict[str, Any]) -> Pipeline:
+def get_classification_pipeline(
+    chemprop_kwargs: dict[str, Any] | None = None,
+) -> Pipeline:
     """Get the Chemprop model pipeline for classification.
 
     Parameters
     ----------
-    chemprop_kwargs : dict[str, Any]
+    chemprop_kwargs : dict[str, Any] | None, optional
         Additional keyword arguments to pass to the ChempropClassifier during
         initialization.
 
@@ -215,6 +217,7 @@ def get_classification_pipeline(chemprop_kwargs: dict[str, Any]) -> Pipeline:
         The Chemprop model pipeline for classification.
 
     """
+    chemprop_kwargs = chemprop_kwargs or {}
     smiles2mol = SmilesToMol()
     mol2chemprop = MolToChemprop()
     error_filter = ErrorFilter(filter_everything=True)
