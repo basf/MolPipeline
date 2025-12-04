@@ -113,7 +113,6 @@ ignore = [
     "N803",  #  Argument name should be lowercase  # TO REMOVE
     "N806",  #  Variable in function should be lowercase  # TO REMOVE
     "N813",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
-    "PD011",   # Use `.to_numpy()` instead of `.values`  # TO REMOVE
     "PD901",   #  Avoid using the generic variable name `df` for DataFrames  # TO REMOVE
     "PGH003",  # Blanket type ignore for types
     "PGH004",  # Use specific rule codes when using `noqa`  # TO REMOVE
@@ -150,7 +149,6 @@ ignore = [
     "SIM117",  # Use a single `with` statement with multiple contexts instead of nested `with` statements  # TO REMOVE
     "SIM401",  # Use `xxx` instead of an `if` block  # TO REMOVE
     "SLF001",  # Private member accessed  # TO REMOVE
-    "T201",    # print found  # TO REMOVE
     "TC001",   # Move application import  `xxx` into a type-checking block  # TO REMOVE
     "TC002",   # Move third-party import `xxx` into a type-checking block  # TO REMOVE
     "TC003",   # Move standard library import `xxx` into a type-checking block  # TO REMOVE

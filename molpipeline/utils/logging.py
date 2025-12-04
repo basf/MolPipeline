@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import timeit
-from collections.abc import Generator
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 from loguru import logger
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 def _message_with_time(source: str, message: str, time: float) -> str:
@@ -28,15 +31,13 @@ def _message_with_time(source: str, message: str, time: float) -> str:
     -------
     str
         Message with elapsed time.
+
     """
     start_message = f"[{source}] "
 
     # adapted from joblib.logger.short_format_time without the Windows -.1s
     # adjustment
-    if time > 60:
-        time_str = f"{(time / 60):4.1f}min"
-    else:
-        time_str = f" {time:5.1f}s"
+    time_str = f"{time / 60:4.1f}min" if time > 60 else f" {time:5.1f}s"  # noqa: PLR2004
 
     end_message = f" {message}, total={time_str}"
     dots_len = 70 - len(start_message) - len(end_message)
@@ -45,7 +46,9 @@ def _message_with_time(source: str, message: str, time: float) -> str:
 
 @contextmanager
 def print_elapsed_time(
-    source: str, message: str | None = None, use_logger: bool = False
+    source: str,
+    message: str | None = None,
+    use_logger: bool = False,
 ) -> Generator[None, None, None]:
     """Log elapsed time to stdout when the context is exited.
 
@@ -61,8 +64,8 @@ def print_elapsed_time(
     use_logger : bool, default=False
         If True, the message will be logged using the logger.
 
-    Returns
-    -------
+    Yields
+    ------
     context_manager
         Prints elapsed time upon exit if verbose.
 
@@ -73,10 +76,12 @@ def print_elapsed_time(
         start = timeit.default_timer()
         yield
         message_to_print = _message_with_time(
-            source, message, timeit.default_timer() - start
+            source,
+            message,
+            timeit.default_timer() - start,
         )
 
         if use_logger:
             logger.info(message_to_print)
         else:
-            print(message_to_print)
+            print(message_to_print)  # noqa: T201
