@@ -2,6 +2,7 @@
 
 import io
 import unittest
+from unittest import mock
 
 import pandas as pd
 
@@ -24,7 +25,13 @@ class TestDVCFileLoading(unittest.TestCase):
 
     def test_load_file(self) -> None:
         """Test loading a file via DVC."""
-        content = self.dvc_loader.load_file()
+        with mock.patch("dvc.api.open", autospec=True) as mock_dvc_open:
+            mock_file = mock.MagicMock()
+            mock_file.read.return_value = b"col1\tcol2\n1\t2\n3\t4\n"
+            mock_dvc_open.return_value.__enter__.return_value = mock_file
+            content = self.dvc_loader.load_file()
+            self.assertEqual(mock_dvc_open.call_count, 1)
+
         self.assertIsInstance(content, bytes)
         self.assertGreater(len(content), 0)
         loaded_df = pd.read_csv(io.BytesIO(content), sep="\t")
@@ -40,7 +47,7 @@ class TestDVCFileLoading(unittest.TestCase):
     def test_set_params(self) -> None:
         """Test setting parameters of the DVC file loader."""
         new_file_path = "Readme.md"
-        new_repo = "https://github.com/EBjerrum/scikit-mol"
+        new_repo = "OtherRepo"
         new_rev = "dev"
         dvc_loader = DVCFileLoader(
             file_path=self.file_path,

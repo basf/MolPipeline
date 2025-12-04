@@ -1,6 +1,7 @@
 """Tests for URL file loading utilities."""
 
 import unittest
+from unittest import mock
 
 from molpipeline.utils.file_loading.url_file_loading import URLFileLoader
 
@@ -33,6 +34,13 @@ class TestURLFileLoader(unittest.TestCase):
 
     def test_load_file(self) -> None:
         """Test load_file method."""
-        content = self.loader.load_file()
-        self.assertIsInstance(content, bytes)
-        self.assertGreater(len(content), 0)
+        mock_message = "Mocked content"
+        with mock.patch("requests.get") as mock_get:
+            mock_response = mock.MagicMock()
+            mock_response.content = mock_message.encode("utf-8")
+            mock_response.raise_for_status = mock.MagicMock()
+            mock_get.return_value = mock_response
+            loaded_file = self.loader.load_file()
+            self.assertEqual(mock_get.call_count, 1)
+
+        self.assertEqual(loaded_file.decode(), mock_message)
