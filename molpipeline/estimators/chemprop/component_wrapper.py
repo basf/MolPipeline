@@ -82,7 +82,7 @@ def parse_state_dict_ref(
             f"state_dict must be a dict, str, or Path. Got {type(state_dict)}.",
         )
     if "state_dict" in state_dict_:
-        return state_dict_["state_dict"]
+        return parse_state_dict_ref(state_dict_["state_dict"])
     return state_dict_
 
 
