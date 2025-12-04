@@ -173,7 +173,7 @@ class TestChempropPipeline(unittest.TestCase):
             },
         )
 
-        pred = chemprop_classifier.predict(["CCO", "CCN"])
+        pred = chemprop_classifier.predict_proba(["CCO", "CCN"])
         self.assertEqual(len(pred), 2)
 
 
