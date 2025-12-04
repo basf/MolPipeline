@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from numbers import Integral
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -16,12 +16,6 @@ from molpipeline.any2mol import AutoToMol
 from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2mol import EmptyMoleculeFilter, MakeScaffoldGeneric, MurckoScaffold
 from molpipeline.utils.molpipeline_types import AnyStep, OptionalMol
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
 
 __all__ = [
     "MurckoScaffoldClustering",
