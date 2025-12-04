@@ -3,16 +3,19 @@
 import unittest
 from io import BytesIO
 from typing import TypeVar
+from unittest import mock
 
 import joblib
 import numpy as np
 import pandas as pd
+import torch
 from sklearn.base import clone
 from sklearn.calibration import CalibratedClassifierCV
 
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
+from molpipeline.estimators.chemprop.component_wrapper import BondMessagePassing
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
@@ -25,6 +28,9 @@ from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_multiclass_classification_pipeline,
     get_regression_pipeline,
     get_smiles_checker_pipeline,
+)
+from test_extras.test_chemprop.chemprop_test_utils.randomization import (
+    randomize_state_dict_weights,
 )
 from tests import TEST_DATA_DIR
 
@@ -157,22 +163,48 @@ class TestChempropPipeline(unittest.TestCase):
             model__model__state_dict_ref=state_dict,
         )
 
-        orig_pred = chemprop_classifier.predict(["CCO", "CCN"])
-        new_pred = new_chemprop_classifier.predict(["CCO", "CCN"])
+        orig_pred = chemprop_classifier.predict_proba(["CCO", "CCN"])
+        new_pred = new_chemprop_classifier.predict_proba(["CCO", "CCN"])
 
         self.assertTrue(np.allclose(orig_pred, new_pred))
 
     def test_state_dict_from_url(self) -> None:
         """Test that the state_dict can be loaded from a URL."""
-        chemeleon_url = "https://zenodo.org/records/15460715/files/chemeleon_mp.pt"
-        chemprop_classifier = get_classification_pipeline(
-            chemprop_kwargs={
-                "model__message_passing__state_dict_ref": URLFileLoader(chemeleon_url),
-                "model__message_passing__d_h": 2048,
-                "model__predictor__input_dim": 2048,
-            },
-        )
+        chemeleon_url = "dummy_chemeleon_url.pt"
+        chemeleon_dummy = BondMessagePassing(d_h=2048)
+        dummy_state_dict = randomize_state_dict_weights(chemeleon_dummy.state_dict())
 
+        with mock.patch(
+            "molpipeline.utils.file_loading.url_file_loading.requests.get",
+        ) as mock_get:
+            mock_response = mock.Mock()
+            buffer = BytesIO()
+            torch.save(dummy_state_dict, buffer)
+            buffer.seek(0)
+            mock_response.content = buffer.read()
+            mock_get.return_value = mock_response
+            chemprop_classifier = get_classification_pipeline(
+                chemprop_kwargs={
+                    "model__message_passing__state_dict_ref": URLFileLoader(
+                        chemeleon_url,
+                    ),
+                    "model__message_passing__d_h": 2048,
+                    "model__predictor__input_dim": 2048,
+                },
+            )
+            self.assertEqual(mock_get.call_count, 1)
+
+        # Check that the state dict was loaded correctly
+        chemprop_mpnn = chemprop_classifier.named_steps["model"].model
+        loaded_state_dict = chemprop_mpnn.message_passing.state_dict()
+        self.assertEqual(
+            dummy_state_dict.keys(),
+            loaded_state_dict.keys(),
+        )
+        for key, value in dummy_state_dict.items():
+            self.assertTrue(torch.equal(value, loaded_state_dict[key]))
+
+        # Check that the prediction works
         pred = chemprop_classifier.predict_proba(["CCO", "CCN"])
         self.assertEqual(len(pred), 2)
 
