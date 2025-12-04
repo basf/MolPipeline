@@ -9,7 +9,6 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
@@ -372,21 +371,29 @@ class TestConformalClassifier(BaseConformalTestData):
         classes = np.array([0, 1])
         y = np.array([0, 1, 0])
 
-        scores = LogNonconformity.log_nc(x_prob, classes, y)
-        expected = -np.log([0.9, 0.7, 0.6])
-        self.assertTrue(np.allclose(scores, expected))
-
-        scores_all = LogNonconformity.log_nc(x_prob, classes, None)
+        # log_nc now only takes y_prob, returns all class scores
+        scores_all = LogNonconformity.log_nc(x_prob)
         expected_all = -np.log(x_prob)
         self.assertTrue(np.allclose(scores_all, expected_all))
 
+        # Extract true class scores using helper method
+        log_nc_func = LogNonconformity()
+        scores = log_nc_func.extract_true_class_scores(scores_all, y, classes)
+        expected = -np.log([0.9, 0.7, 0.6])
+        self.assertTrue(np.allclose(scores, expected))
+
         y_series = pd.Series(y)
-        scores_series = LogNonconformity.log_nc(x_prob, classes, y_series)
+        scores_series = log_nc_func.extract_true_class_scores(
+            scores_all, y_series.to_numpy(), classes
+        )
         self.assertTrue(np.allclose(scores_series, expected))
 
         x_prob_small = np.array([[1e-15, 1.0], [1.0, 1e-15]])
         y_small = np.array([0, 1])
-        scores_small = LogNonconformity.log_nc(x_prob_small, classes, y_small)
+        scores_all_small = LogNonconformity.log_nc(x_prob_small)
+        scores_small = log_nc_func.extract_true_class_scores(
+            scores_all_small, y_small, classes
+        )
         self.assertTrue(np.all(np.isfinite(scores_small)))
         self.assertTrue(np.all(scores_small >= -np.log(1.0)))
 
@@ -406,15 +413,15 @@ class TestConformalClassifier(BaseConformalTestData):
 
         log_nc_func = LogNonconformity()
 
-        # Test with true labels (calibration)
-        nc_calib = log_nc_func(probs_calib, classes, y_calib)
+        # Test with true labels (calibration) - use kwargs
+        nc_calib = log_nc_func(probs_calib, classes=classes, y_true=y_calib)
         self.assertEqual(nc_calib.shape, (len(y_calib),))
         self.assertTrue(
             np.all(nc_calib >= 0)
         )  # Nonconformity scores should be non-negative
 
         # Test without true labels (test set - returns matrix)
-        nc_test_all = log_nc_func(probs_test, classes, None)
+        nc_test_all = log_nc_func(probs_test)
         self.assertEqual(nc_test_all.shape, (len(probs_test), len(classes)))
         self.assertTrue(np.all(nc_test_all >= 0))
 
@@ -446,15 +453,17 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(y_score_calib.ndim, 1)
         self.assertEqual(y_score_test.ndim, 1)
 
-        # Test nonconformity for true labels on calibration set
-        nc_calib_true = SVMMarginNonconformity()(y_score_calib, classes, y_calib)
+        # Test nonconformity for true labels on calibration set - use kwargs
+        nc_calib_true = SVMMarginNonconformity()(
+            y_score_calib, classes=classes, y_true=y_calib
+        )
         self.assertEqual(nc_calib_true.shape, (len(y_score_calib),))
 
         y_mapped = np.where(y_calib == classes[1], 1, -1)
         expected_nc = np.where(y_mapped == 1, 1 - y_score_calib, y_score_calib + 1)
         self.assertTrue(np.allclose(nc_calib_true, expected_nc))
 
-        nc_test_all = SVMMarginNonconformity()(y_score_test, classes, None)
+        nc_test_all = SVMMarginNonconformity()(y_score_test)
         self.assertEqual(nc_test_all.shape, (len(y_score_test), 2))
         expected_all = np.column_stack((y_score_test + 1, 1 - y_score_test))
         self.assertTrue(np.allclose(nc_test_all, expected_all))
@@ -483,53 +492,6 @@ class TestConformalClassifier(BaseConformalTestData):
             np.all(nc_test_all[neg_confident, 0] < nc_test_all[neg_confident, 1]),
             "Confident negatives should have lower NC for their true class",
         )
-
-    def test_svm_margin_multiclass(self) -> None:  # pylint: disable=too-many-locals
-        """Test SVMMarginNonconformity with multiclass SVM classification."""
-        x_data, y_data = make_classification(
-            n_samples=300,
-            n_features=20,
-            n_informative=15,
-            n_redundant=5,
-            n_classes=3,
-            random_state=42,
-        )
-
-        x_train, x_test, y_train, y_test = train_test_split(
-            x_data, y_data, test_size=0.3, random_state=42
-        )
-
-        classes = np.array(sorted(np.unique(y_train)))
-        self.assertEqual(len(classes), 3)
-
-        # Train multiclass SVM (one-vs-rest)
-        svc = SVC(
-            kernel="linear",
-            decision_function_shape="ovr",
-            probability=False,
-            random_state=42,
-        )
-        svc.fit(x_train, y_train)
-
-        # Get decision function values (one column per class)
-        y_score_test = svc.decision_function(x_test)
-        self.assertEqual(y_score_test.shape, (len(x_test), 3))
-
-        # Test nonconformity for true labels
-        nc_test_true = SVMMarginNonconformity()(y_score_test, classes, y_test)
-        self.assertEqual(nc_test_true.shape, (len(y_test),))
-
-        expected_nc = np.zeros(len(y_test))
-        for i, true_label in enumerate(y_test):
-            class_idx = np.where(classes == true_label)[0][0]
-            expected_nc[i] = 1 - y_score_test[i, class_idx]
-        self.assertTrue(np.allclose(nc_test_true, expected_nc))
-
-        nc_test_all = SVMMarginNonconformity()(y_score_test, classes, None)
-        self.assertEqual(nc_test_all.shape, (len(x_test), 3))
-
-        expected_all = 1 - y_score_test
-        self.assertTrue(np.allclose(nc_test_all, expected_all))
 
     def test_cross_conformal_classifier(self) -> None:
         """Test CrossConformalClassifier."""

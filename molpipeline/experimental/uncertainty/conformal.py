@@ -45,7 +45,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):
 
         """
         self.estimator = estimator
-        self.nonconformity_func = create_nonconformity_function(nonconformity)
+        self.nonconformity = nonconformity
         self.kwargs = kwargs
 
     @property
@@ -81,6 +81,13 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         """
         # Handle old models that might have 'nonconformity' instead of 'nonconformity_func'
         if "nonconformity" in state and "nonconformity_func" not in state:
+            warnings.warn(
+                "Loading a model with the old 'nonconformity' attribute format. "
+                "This backward compatibility will be removed in version 0.13.0. "
+                "Please re-save your models with the current version.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             state["nonconformity_func"] = create_nonconformity_function(
                 state.pop("nonconformity")
             )
