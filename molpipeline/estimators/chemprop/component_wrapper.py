@@ -72,8 +72,7 @@ def parse_state_dict_ref(
         with path.open("rb") as f:
             state_dict_ = torch.load(f, weights_only=True)
     elif isinstance(state_dict, ABCFileLoader):
-        file_bytes = state_dict.load_file()
-        with BytesIO(file_bytes) as f:
+        with BytesIO(state_dict.load_file()) as f:
             state_dict_ = torch.load(f, weights_only=True)
     elif isinstance(state_dict, dict):
         state_dict_ = state_dict
