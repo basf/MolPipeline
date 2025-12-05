@@ -2,14 +2,9 @@
 
 import abc
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, Self, TypeAlias
 
 import pandas as pd
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
