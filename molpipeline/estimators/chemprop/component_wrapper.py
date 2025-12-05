@@ -1,6 +1,7 @@
 """Wrapper classes for the chemprop components for compatibility with scikit-learn."""
 
 import abc
+import warnings
 from collections.abc import Iterable
 from io import BytesIO
 from pathlib import Path
@@ -45,6 +46,8 @@ from molpipeline.estimators.chemprop.metric_wrapper import (
 )
 from molpipeline.utils.file_loading.abc_file_loading import ABCFileLoader
 
+warnings.simplefilter("always", DeprecationWarning)
+
 
 def parse_state_dict_ref(
     state_dict: dict[str, Any] | str | Path,
@@ -83,6 +86,13 @@ def parse_state_dict_ref(
     if "state_dict" in state_dict_:
         return parse_state_dict_ref(state_dict_["state_dict"])
     return state_dict_
+
+
+WARN_MSG = (
+    "Loading an old model without the 'state_dict_ref' attribute. "
+    "This backward compatibility will be removed in version 0.13.0. "
+    "Please re-save your models with the current version."
+)
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
@@ -150,6 +160,20 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         self.state_dict_ref = state_dict_ref
         if self.state_dict_ref is not None:
             self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            state["state_dict_ref"] = None
+        self.__dict__.update(state)
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
@@ -306,6 +330,20 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         """
         self._n_tasks = value
 
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            state["state_dict_ref"] = None
+        self.__dict__.update(state)
+
     def reinitialize_fnn(self) -> Self:
         """Reinitialize the feedforward network.
 
@@ -455,6 +493,20 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         if self.state_dict_ref is not None:
             self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
 
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            state["state_dict_ref"] = None
+        self.__dict__.update(state)
+
 
 class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type: ignore
     """A wrapper for the MulticlassDirichletFFN class."""
@@ -537,6 +589,20 @@ class MPNN(_MPNN, BaseEstimator):
         self.state_dict_ref = state_dict_ref
         if self.state_dict_ref is not None:
             self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            state["state_dict_ref"] = None
+        self.__dict__.update(state)
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
