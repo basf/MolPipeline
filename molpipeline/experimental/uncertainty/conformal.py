@@ -175,14 +175,8 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         """
         params = {
             "estimator": self.estimator,
+            "nonconformity": self.nonconformity,
         }
-
-        # Handle nonconformity_func special case
-        if hasattr(self, "nonconformity_func"):
-            nc_func = self.nonconformity_func
-            params["nonconformity"] = (
-                nc_func.get_name() if nc_func is not None else None
-            )
 
         # Get other parameters from parent class (exclude handled keys)
         parent_params = {
