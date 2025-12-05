@@ -378,21 +378,20 @@ class TestConformalClassifier(BaseConformalTestData):
 
         # Extract true class scores using helper method
         log_nc_func = LogNonconformity()
-        scores = log_nc_func.extract_true_class_scores(scores_all, y, classes)
+        scores = log_nc_func.extract_true_class_scores(log_nc_func, x_prob, y, classes)
         expected = -np.log([0.9, 0.7, 0.6])
         self.assertTrue(np.allclose(scores, expected))
 
         y_series = pd.Series(y)
         scores_series = log_nc_func.extract_true_class_scores(
-            scores_all, y_series.to_numpy(), classes
+            log_nc_func, x_prob, y_series.to_numpy(), classes
         )
         self.assertTrue(np.allclose(scores_series, expected))
 
         x_prob_small = np.array([[1e-15, 1.0], [1.0, 1e-15]])
         y_small = np.array([0, 1])
-        scores_all_small = LogNonconformity.log_nc(x_prob_small)
         scores_small = log_nc_func.extract_true_class_scores(
-            scores_all_small, y_small, classes
+            log_nc_func, x_prob_small, y_small, classes
         )
         self.assertTrue(np.all(np.isfinite(scores_small)))
         self.assertTrue(np.all(scores_small >= -np.log(1.0)))

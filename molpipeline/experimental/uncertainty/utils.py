@@ -56,36 +56,37 @@ class NonconformityFunctor(ABC):
 
         """
 
-    @staticmethod
+    @classmethod
     def extract_true_class_scores(
-        nc_scores: npt.NDArray[np.float64],
+        cls,
+        nc_function: "NonconformityFunctor",
+        y_prob: npt.NDArray[np.float64],
         y_true: npt.NDArray[Any],
         classes: npt.NDArray[Any],
     ) -> npt.NDArray[np.float64]:
-        """Extract nonconformity scores for the true class from a matrix of scores.
+        """Extract nonconformity scores for the true class using a nonconformity function.
+
+        This method calls the nc function to get all class scores, then extracts true class scores.
 
         Parameters
         ----------
-        nc_scores : npt.NDArray[np.float64]
-            Nonconformity scores of shape (n_samples, n_classes).
+        nc_function : NonconformityFunctor
+            The nonconformity function to compute scores.
+        y_prob : npt.NDArray[np.float64]
+            Probability predictions or raw predictions.
         y_true : npt.NDArray[Any]
             True class labels of shape (n_samples,).
         classes : npt.NDArray[Any]
-            Unique class labels corresponding to columns in nc_scores.
+            Unique class labels corresponding to columns in scores.
 
         Returns
         -------
         npt.NDArray[np.float64]
             Nonconformity scores for the true class, shape (n_samples,).
         """
-        class_to_idx = {cls: idx for idx, cls in enumerate(classes)}
-        class_indexes = np.fromiter(
-            (class_to_idx[label] for label in y_true),
-            dtype=np.intp,
-            count=len(y_true),
-        )
-
-        return nc_scores[np.arange(len(y_true)), class_indexes]
+        nc_scores = nc_function(y_prob, classes=classes, y_true=None)
+        class_indices = np.searchsorted(classes, y_true)
+        return nc_scores[np.arange(len(y_true)), class_indices]
 
 
 class HingeNonconformity(NonconformityFunctor):
@@ -116,11 +117,9 @@ class HingeNonconformity(NonconformityFunctor):
             - Otherwise: shape (n_samples, n_classes) for all classes
 
         """
-        nc_scores = hinge(y_prob, None, None)
-
         if y_true is not None and classes is not None:
-            return self.extract_true_class_scores(nc_scores, y_true, classes)
-        return nc_scores
+            return self.extract_true_class_scores(self, y_prob, y_true, classes)
+        return hinge(y_prob, None, None)
 
     def get_name(self) -> str:  # noqa: PLR6301
         """Get function name for parameter serialization.
@@ -162,11 +161,9 @@ class MarginNonconformity(NonconformityFunctor):
             - Otherwise: shape (n_samples, n_classes) for all classes
 
         """
-        nc_scores = margin(y_prob, None, None)
-
         if y_true is not None and classes is not None:
-            return self.extract_true_class_scores(nc_scores, y_true, classes)
-        return nc_scores
+            return self.extract_true_class_scores(self, y_prob, y_true, classes)
+        return margin(y_prob, None, None)
 
     def get_name(self) -> str:  # noqa: PLR6301
         """Get function name for parameter serialization.
@@ -227,11 +224,9 @@ class LogNonconformity(NonconformityFunctor):
             - Otherwise: shape (n_samples, n_classes) for all classes
 
         """
-        nc_scores = self.log_nc(y_prob)
-
         if y_true is not None and classes is not None:
-            return self.extract_true_class_scores(nc_scores, y_true, classes)
-        return nc_scores
+            return self.extract_true_class_scores(self, y_prob, y_true, classes)
+        return self.log_nc(y_prob)
 
     def get_name(self) -> str:  # noqa: PLR6301
         """Get function name for parameter serialization.
@@ -288,6 +283,9 @@ class SVMMarginNonconformity(NonconformityFunctor):
             - If y_true provided: shape (n_samples,) for true class only
             - Otherwise: shape (n_samples, 2) with scores for both classes
         """
+        if y_true is not None and classes is not None:
+            return self.extract_true_class_scores(self, y_score, y_true, classes)
+
         decision_values = y_score.flatten()
 
         # Always compute conformity scores for both classes (negative, positive)
@@ -298,11 +296,7 @@ class SVMMarginNonconformity(NonconformityFunctor):
                 decision_values - 1.0,  # positive class margin distance
             ),
         )
-        nc_scores = -conformity_matrix
-
-        if y_true is not None and classes is not None:
-            return self.extract_true_class_scores(nc_scores, y_true, classes)
-        return nc_scores
+        return -conformity_matrix
 
     def get_name(self) -> str:  # noqa: PLR6301
         """Get function name for parameter serialization.
