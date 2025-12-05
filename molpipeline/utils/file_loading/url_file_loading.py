@@ -62,3 +62,5 @@ class URLFileLoader(ABCFileLoader):
         """
         if "url" in params:
             self.url = params["url"]
+        if "timeout" in params:
+            self.timeout = params["timeout"]

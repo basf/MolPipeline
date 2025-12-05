@@ -29,8 +29,10 @@ class TestURLFileLoader(unittest.TestCase):
     def test_set_params(self) -> None:
         """Test set_params method."""
         new_url = "https://www.test.com"
-        self.loader.set_params(url=new_url)
+        new_timeout = 20
+        self.loader.set_params(url=new_url, timeout=new_timeout)
         self.assertEqual(self.loader.url, new_url)
+        self.assertEqual(self.loader.timeout, new_timeout)
 
     def test_load_file(self) -> None:
         """Test load_file method."""
