@@ -2,12 +2,9 @@
 
 import abc
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, Optional, TypeAlias, Union
+from typing import Any, Literal, Self, TypeAlias
 
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+import pandas as pd
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -20,7 +17,7 @@ from molpipeline.utils.molpipeline_types import (
     IntCountRange,
     IntOrIntCountRange,
 )
-from molpipeline.utils.value_conversions import count_value_to_tuple
+from molpipeline.utils.value_conversions import assure_range
 
 # possible mode types for a KeepMatchesFilter:
 # - "any" means one match is enough
@@ -29,7 +26,9 @@ FilterModeType: TypeAlias = Literal["any", "all"]
 
 
 def _within_boundaries(
-    lower_bound: Optional[float], upper_bound: Optional[float], property_value: float
+    lower_bound: float | None,
+    upper_bound: float | None,
+    property_value: float,
 ) -> bool:
     """Check if a value is within the specified boundaries.
 
@@ -48,12 +47,11 @@ def _within_boundaries(
     -------
     bool
         True if the value is within the boundaries, else False.
+
     """
     if lower_bound is not None and property_value < lower_bound:
         return False
-    if upper_bound is not None and property_value > upper_bound:
-        return False
-    return True
+    return not (upper_bound is not None and property_value > upper_bound)
 
 
 class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
@@ -62,10 +60,11 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     Notes
     -----
     There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
-        - mode = "any" & keep_matches = False: Must not match any filter element.
-        - mode = "all" & keep_matches = True: Needs to match all filter elements.
-        - mode = "all" & keep_matches = False: Must not match all filter elements.
+      - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+      - mode = "any" & keep_matches = False: Must not match any filter element.
+      - mode = "all" & keep_matches = True: Needs to match all filter elements.
+      - mode = "all" & keep_matches = False: Must not match all filter elements.
+
     """
 
     keep_matches: bool
@@ -73,28 +72,40 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
     def __init__(
         self,
-        filter_elements: Union[
-            Mapping[Any, Union[FloatCountRange, IntCountRange, IntOrIntCountRange]],
-            Sequence[Any],
-        ],
+        filter_elements: (
+            Mapping[
+                Any,
+                FloatCountRange | IntCountRange | IntOrIntCountRange,
+            ]
+            | Sequence[Any]
+            | pd.Series
+        ),
         keep_matches: bool = True,
         mode: FilterModeType = "any",
-        name: Optional[str] = None,
+        name: str | None = None,
         n_jobs: int = 1,
-        uuid: Optional[str] = None,
+        uuid: str | None = None,
     ) -> None:
         """Initialize BasePatternsFilter.
 
         Parameters
         ----------
-        filter_elements: Union[Mapping[Any, Union[FloatCountRange, IntCountRange, IntOrIntCountRange]], Sequence[Any]]
-            List of filter elements. Typically can be a list of patterns or a dictionary with patterns as keys and
-            an int for exact count or a tuple of minimum and maximum.
-            NOTE: for each child class, the type of filter_elements must be specified by the filter_elements setter.
+        filter_elements: Mapping[
+                Any,
+                FloatCountRange | IntCountRange | IntOrIntCountRange,
+            ]
+            | Sequence[Any]
+            | pd.Series
+            List of filter elements. Typically, can be a list of patterns or a
+            dictionary with patterns as keys and an int for exact count or a tuple of
+            minimum and maximum.
+            NOTE: for each child class, the type of filter_elements must be specified by
+                  the filter_elements setter.
         keep_matches: bool, optional (default: True)
             If True, molecules containing the specified patterns are kept, else removed.
         mode: FilterModeType, optional (default: "any")
-            If "any", at least one of the specified patterns must be present in the molecule.
+            If "any", at least one of the specified patterns must be present in the
+            molecule.
             If "all", all of the specified patterns must be present in the molecule.
         name: Optional[str], optional (default: None)
             Name of the pipeline element.
@@ -102,6 +113,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
             Number of parallel jobs to use.
         uuid: str, optional (default: None)
             Unique identifier of the pipeline element.
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.filter_elements = filter_elements  # type: ignore
@@ -119,14 +131,15 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     @abc.abstractmethod
     def filter_elements(
         self,
-        filter_elements: Union[Mapping[Any, FloatCountRange], Sequence[Any]],
+        filter_elements: Mapping[Any, FloatCountRange],
     ) -> None:
         """Set filter elements as dict.
 
         Parameters
         ----------
-        filter_elements: Union[Mapping[Any, FloatCountRange], Sequence[Any]]
+        filter_elements: Union[Mapping[Any, FloatCountRange]
             List of filter elements.
+
         """
 
     def set_params(self, **parameters: Any) -> Self:
@@ -141,6 +154,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         -------
         Self
             Self.
+
         """
         parameter_copy = dict(parameters)
         if "keep_matches" in parameter_copy:
@@ -164,6 +178,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         -------
         dict[str, Any]
             Parameters of BaseKeepMatchesFilter.
+
         """
         params = super().get_params(deep=deep)
         params["keep_matches"] = self.keep_matches
@@ -171,13 +186,14 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         params["filter_elements"] = self.filter_elements
         return params
 
-    def pretransform_single(  # pylint: disable=too-many-return-statements
-        self, value: RDKitMol
+    def pretransform_single(  # pylint: disable=too-many-return-statements # noqa: PLR0911
+        self,
+        value: RDKitMol,
     ) -> OptionalMol:
         """Invalidate or validate molecule based on specified filter.
 
         There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+        - mode = "any" & keep_matches = True: Needs to match at least one filter element
         - mode = "any" & keep_matches = False: Must not match any filter element.
         - mode = "all" & keep_matches = True: Needs to match all filter elements.
         - mode = "all" & keep_matches = False: Must not match all filter elements.
@@ -206,7 +222,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                     if not self.keep_matches:
                         return InvalidInstance(
                             self.uuid,
-                            f"Molecule contains forbidden filter element {filter_element}.",
+                            "Molecule contains forbidden filter element "
+                            f"{filter_element}.",
                             self.name,
                         )
                     return value
@@ -215,7 +232,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                 if self.keep_matches:
                     return InvalidInstance(
                         self.uuid,
-                        f"Molecule does not contain required filter element {filter_element}.",
+                        "Molecule does not contain required filter element"
+                        f" {filter_element}.",
                         self.name,
                     )
                 return value
@@ -229,7 +247,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                     "Molecule does not match any of the required filter elements.",
                     self.name,
                 )
-            #  else: No match with forbidden filter elements was found, return original molecule
+            #  else: No match with forbidden filter elements was found,
+            #        return original molecule
             return value
 
         if self.mode == "all":
@@ -246,7 +265,9 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
     @abc.abstractmethod
     def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol
+        self,
+        filter_element: Any,
+        value: RDKitMol,
     ) -> float:
         """Calculate the value of a single match.
 
@@ -261,6 +282,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         -------
         float
             Value of the match.
+
         """
 
 
@@ -282,33 +304,45 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     - mode = "any" & keep_matches = False: Must not match any filter element.
     - mode = "all" & keep_matches = True: Needs to match all filter elements.
     - mode = "all" & keep_matches = False: Must not match all filter elements.
+
     """
 
-    _filter_elements: Mapping[str, IntCountRange]
+    _filter_elements: Mapping[str, FloatCountRange]
 
     @property
-    def filter_elements(self) -> Mapping[str, IntCountRange]:
+    def filter_elements(self) -> Mapping[str, FloatCountRange]:
         """Get allowed filter elements (patterns) as dict."""
         return self._filter_elements
 
     @filter_elements.setter
     def filter_elements(
         self,
-        patterns: Union[list[str], Mapping[str, IntOrIntCountRange]],
+        patterns: list[str] | set[str] | pd.Series | Mapping[str, FloatCountRange],
     ) -> None:
         """Set allowed filter elements (patterns) as dict.
 
         Parameters
         ----------
-        patterns: Union[list[str], Mapping[str, IntOrIntCountRange]]
-            List of patterns.
+        patterns: list[str] | set[str] | pd.Series | Mapping[str, FloatCountRange]
+            List-like or Mapping data structure of patterns.
+
+        Raises
+        ------
+        ValueError
+            If the patterns are not valid SMILES or SMARTS, or if the type is invalid.
+
         """
-        if isinstance(patterns, (list, set)):
+        if isinstance(patterns, (list, set, pd.Series)):
             self._filter_elements = dict.fromkeys(patterns, (1, None))
-        else:
+        elif isinstance(patterns, dict):
             self._filter_elements = {
-                pat: count_value_to_tuple(count) for pat, count in patterns.items()
+                pat: assure_range(count) for pat, count in patterns.items()
             }
+        else:
+            raise ValueError(
+                "Invalid type for patterns. Must be a list of strings or a dictionary"
+                " with patterns as keys and counts as values.",
+            )
         self.patterns_mol_dict = list(self._filter_elements.keys())  # type: ignore
 
     @property
@@ -351,10 +385,13 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         -------
         RDKitMol
             RDKitMol object of the pattern.
+
         """
 
     def _calculate_single_element_value(
-        self, filter_element: Any, value: RDKitMol
+        self,
+        filter_element: Any,
+        value: RDKitMol,
     ) -> int:
         """Calculate a single match count for a molecule.
 
@@ -369,5 +406,6 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         -------
         int
             smarts match count value.
+
         """
         return len(value.GetSubstructMatches(self.patterns_mol_dict[filter_element]))

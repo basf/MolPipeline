@@ -3,12 +3,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 from numpy import typing as npt
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -43,7 +38,7 @@ class PostPredictionTransformation(BaseEstimator, TransformerMixin, abc.ABC):
         """
 
 
-class PostPredictionWrapper(PostPredictionTransformation):
+class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=too-many-ancestors
     """Wrapper for post prediction transformations.
 
     This class is used to wrap a PipelineElement in a PostPredictionTransformation.

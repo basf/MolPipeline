@@ -4,12 +4,7 @@ from __future__ import annotations
 
 import abc
 from collections.abc import Iterable
-from typing import Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -84,7 +79,11 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         npt.NDArray[np.float64]
             Matrix with descriptor values of each molecule.
         """
-        return np.vstack(list(value_list))
+        values = list(value_list)
+        if len(values) == 0:
+            # nothing to assemble
+            return np.empty((0, self.n_features), dtype=np.float64)
+        return np.vstack(values)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defined during object initialization.
@@ -134,15 +133,19 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        values: list[RDKitMol]
-            List of RDKit molecules to which the Pipeline element is fitted.
+        values: list[npt.NDArray[np.float64]]
+            List of float vectors to which the Pipeline element is fitted.
 
         Returns
         -------
         Self
             Fitted MolToDescriptorPipelineElement.
         """
-        value_matrix = np.vstack(list(values))
+        value_list = list(values)
+        if len(value_list) == 0:
+            # nothing to fit
+            return self
+        value_matrix = np.vstack(value_list)
         if self._standardizer is not None:
             self._standardizer.fit(value_matrix, None)
         return self

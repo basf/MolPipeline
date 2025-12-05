@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 from rdkit import Chem
 
@@ -53,7 +48,7 @@ class SmilesToMol(SimpleStringToMolElement):
         """
         # set up rdkit smiles parser parameters
         parser_params = Chem.SmilesParserParams()
-        parser_params.removeHs = self._remove_hydrogens
+        parser_params.removeHs = self._remove_hydrogens  # type: ignore[assignment]
         return parser_params
 
     def string_to_mol(self, value: str) -> RDKitMol:

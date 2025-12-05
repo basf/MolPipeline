@@ -3,12 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -313,7 +308,10 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         npt.NDArray[np.float64]
             Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
         """
-        return np.vstack(list(value_list))
+        values = list(value_list)
+        if len(values) == 0:
+            return np.empty((0, self.n_features), dtype=np.float64)
+        return np.vstack(values)
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.

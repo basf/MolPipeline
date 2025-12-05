@@ -6,13 +6,7 @@ import abc
 import copy
 import inspect
 from collections.abc import Iterable
-from typing import Any, NamedTuple, Union
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
+from typing import Any, NamedTuple, Self, Union
 from uuid import uuid4
 
 import numpy as np
@@ -380,7 +374,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         return self.get_params()
 
     @parameters.setter
-    def parameters(self, **parameters: Any) -> None:
+    def parameters(self, parameters: Any) -> None:
         """Set the parameters of the object.
 
         Parameters

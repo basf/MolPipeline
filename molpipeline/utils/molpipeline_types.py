@@ -9,15 +9,11 @@ from typing import (
     Literal,
     Optional,
     Protocol,
+    Self,
     TypeAlias,
     TypeVar,
     Union,
 )
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt
