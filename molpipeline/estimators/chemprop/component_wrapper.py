@@ -172,8 +172,8 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         """
         if "state_dict_ref" not in state:
             warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
-            state["state_dict_ref"] = None
-        self.__dict__.update(state)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
@@ -341,8 +341,8 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         """
         if "state_dict_ref" not in state:
             warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
-            state["state_dict_ref"] = None
-        self.__dict__.update(state)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
     def reinitialize_fnn(self) -> Self:
         """Reinitialize the feedforward network.
@@ -504,8 +504,8 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         """
         if "state_dict_ref" not in state:
             warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
-            state["state_dict_ref"] = None
-        self.__dict__.update(state)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
 
 class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type: ignore
@@ -601,8 +601,8 @@ class MPNN(_MPNN, BaseEstimator):
         """
         if "state_dict_ref" not in state:
             warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
-            state["state_dict_ref"] = None
-        self.__dict__.update(state)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
