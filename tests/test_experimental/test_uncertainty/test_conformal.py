@@ -412,7 +412,7 @@ class TestConformalClassifier(BaseConformalTestData):
 
         log_nc_func = LogNonconformity()
 
-        # Test with true labels (calibration) - use kwargs
+        # Test with true labels (calibration)
         nc_calib = log_nc_func(probs_calib, classes=classes, y_true=y_calib)
         self.assertEqual(nc_calib.shape, (len(y_calib),))
         self.assertTrue(
@@ -452,7 +452,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(y_score_calib.ndim, 1)
         self.assertEqual(y_score_test.ndim, 1)
 
-        # Test nonconformity for true labels on calibration set - use kwargs
+        # Test nonconformity for true labels on calibration set
         nc_calib_true = SVMMarginNonconformity()(
             y_score_calib, classes=classes, y_true=y_calib
         )
