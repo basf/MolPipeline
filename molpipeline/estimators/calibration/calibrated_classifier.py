@@ -649,11 +649,11 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
                     )
                 predictions = predictions.reshape(-1, 1)
 
-            if sample_weight is not None:
+            if calibration_sample_weight is not None:
                 # Check that the sample_weight dtype is consistent with the
                 # predictions to avoid unintentional upcasts.
-                sample_weight = _check_sample_weight(
-                    sample_weight,
+                calibration_sample_weight = _check_sample_weight(
+                    calibration_sample_weight,
                     predictions,
                     dtype=predictions.dtype,
                 )
@@ -667,8 +667,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
                 y,
                 self.classes_,
                 self.method,
-                xp=xp,
-                sample_weight=sample_weight,
+                sample_weight=calibration_sample_weight,
             )
             self.calibrated_classifiers_.append(calibrated_classifier)
 
