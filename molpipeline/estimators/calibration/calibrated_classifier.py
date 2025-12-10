@@ -165,7 +165,7 @@ def move_to(
     )
 
 
-class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator):
+class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator):  # pylint: disable=too-many-instance-attributes
     """Calibrate probabilities using isotonic, sigmoid, or temperature scaling.
 
     This class uses cross-validation to both estimate the parameters of a
@@ -480,9 +480,9 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
         # CalibratedClassifierCV.estimator is not validated yet
         prefer_skip_nested_validation=False,
     )
-    def fit(  # noqa: PLR0912, PLR0914, PLR0915
+    def fit(  # noqa: PLR0912, PLR0914, PLR0915  # pylint: disable=R0912,R0914,R0915
         self,
-        X: npt.ArrayLike,
+        X: npt.ArrayLike,  # pylint: disable=C0103
         y: npt.ArrayLike,
         sample_weight: npt.ArrayLike | None = None,
         **fit_params: Any,
@@ -524,7 +524,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
         if ensemble == "auto":
             ensemble = not isinstance(estimator, FrozenEstimator)
 
-        self.calibrated_classifiers_ = []
+        self.calibrated_classifiers_ = []  # pylint: disable=W0201
 
         if self.class_weight is not None:
             calibration_sample_weight = compute_sample_weight(
@@ -538,7 +538,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
 
         # Set `classes_` using all `y`
         label_encoder_ = LabelEncoder().fit(y)
-        self.classes_ = label_encoder_.classes_
+        self.classes_ = label_encoder_.classes_  # pylint: disable=W0201
         if self.method == "temperature" and isinstance(y[0], str):  # type: ignore
             # for temperature scaling if `y` contains strings then encode it
             # right here to avoid fitting LabelEncoder again within the
@@ -577,7 +577,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
 
         xp, is_array_api, device_ = get_namespace_and_device(X)
         if is_array_api:
-            y, calibration_sample_weight = move_to(  # type: ignore
+            y, calibration_sample_weight = move_to(  # type: ignore  # pylint: disable=W0632
                 y,
                 calibration_sample_weight,
                 xp=xp,
@@ -608,7 +608,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
 
         if ensemble:
             parallel = Parallel(n_jobs=self.n_jobs)
-            self.calibrated_classifiers_ = parallel(
+            self.calibrated_classifiers_ = parallel(  # pylint: disable=W0201
                 delayed(_fit_classifier_calibrator_pair)(
                     clone(estimator),
                     X,
@@ -673,13 +673,13 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
 
         first_clf = self.calibrated_classifiers_[0].estimator
         if hasattr(first_clf, "n_features_in_"):
-            self.n_features_in_ = first_clf.n_features_in_
+            self.n_features_in_ = first_clf.n_features_in_  # pylint: disable=W0201
         if hasattr(first_clf, "feature_names_in_"):
-            self.feature_names_in_ = first_clf.feature_names_in_
+            self.feature_names_in_ = first_clf.feature_names_in_  # pylint: disable=W0201
         return self
 
     @override
-    def predict_proba(self, X: npt.ArrayLike) -> npt.NDArray[np.float64]:
+    def predict_proba(self, X: npt.ArrayLike) -> npt.NDArray[np.float64]:  # pylint: disable=C0103
         """Calibrated probabilities of classification.
 
         This function returns calibrated probabilities of classification
@@ -710,7 +710,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
         return mean_proba
 
     @override
-    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:
+    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:  # pylint: disable=C0103
         """Predict the target of new samples.
 
         The predicted class is the class that has the highest probability,
