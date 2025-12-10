@@ -11,7 +11,6 @@ from typing import Any, ClassVar, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
-import scipy.sparse as sp
 from sklearn.base import (
     BaseEstimator,
     ClassifierMixin,
@@ -30,9 +29,9 @@ from sklearn.svm import LinearSVC
 from sklearn.utils import Bunch, get_tags, indexable
 from sklearn.utils._array_api import (
     _convert_to_numpy,  # noqa: PLC2701
-    _is_numpy_namespace,  # noqa: PLC2701
     get_namespace,  # noqa: PLC2701
     get_namespace_and_device,  # noqa: PLC2701
+    move_to,  # noqa: PLC2701
 )
 from sklearn.utils._param_validation import (
     HasMethods,  # noqa: PLC2701
@@ -56,114 +55,6 @@ from sklearn.utils.validation import (
     check_is_fitted,
 )
 from typing_extensions import override
-
-
-def move_to(
-    *arrays: npt.ArrayLike,
-    xp: Any,
-    device: Any,
-) -> npt.ArrayLike | tuple[npt.ArrayLike | None, ...] | None:
-    """Move all arrays to `xp` and `device`.
-
-    Taken from sklearn.utils._array_api.move_to without any changes to the function.
-    Only linting is applied.
-    Copied to maintain compatibility with scikit-learn versions < 1.8
-
-    Each array will be moved to the reference namespace and device if
-    it is not already using it. Otherwise the array is left unchanged.
-
-    `array` may contain `None` entries, these are left unchanged.
-
-    Sparse arrays are accepted (as pass through) if the reference namespace is
-    Numpy, in which case they are returned unchanged. Otherwise a `TypeError`
-    is raised.
-
-    Parameters
-    ----------
-    *arrays : iterable of arrays
-        Arrays to (potentially) move.
-
-    xp : namespace
-        Array API namespace to move arrays to.
-
-    device : device
-        Array API device to move arrays to.
-
-    Returns
-    -------
-    arrays : tuple or array
-        Tuple of arrays with the same namespace and device as reference. Single array
-        returned if only one `arrays` input.
-
-    Raises
-    ------
-    TypeError
-        If any of the input arrays is sparse and the target namespace is not Numpy.
-
-    """
-    sparse_mask = [sp.issparse(array) for array in arrays]
-    none_mask = [array is None for array in arrays]
-    if any(sparse_mask) and not _is_numpy_namespace(xp):
-        raise TypeError(
-            "Sparse arrays are only accepted (and passed through) when the target "
-            "namespace is Numpy",
-        )
-
-    converted_arrays: list[npt.ArrayLike | None] = []
-
-    for array, is_sparse, is_none in zip(arrays, sparse_mask, none_mask, strict=True):
-        if is_none:
-            converted_arrays.append(None)
-        elif is_sparse:
-            converted_arrays.append(array)
-        else:
-            xp_array, _, device_array = get_namespace_and_device(array)
-            if xp == xp_array and device == device_array:
-                converted_arrays.append(array)
-            else:
-                try:
-                    # The dlpack protocol is the future proof and library agnostic
-                    # method to transfer arrays across namespace and device boundaries
-                    # hence this method is attempted first and going through NumPy is
-                    # only used as fallback in case of failure.
-                    # Note: copy=None is the default since array-api 2023.12. Namespace
-                    # libraries should only trigger a copy automatically if needed.
-                    array_converted = xp.from_dlpack(array, device=device)  # type: ignore
-                    # `AttributeError` occurs when `__dlpack__` and `__dlpack_device__`
-                    # methods are not present on the input array
-                    # `TypeError` and `NotImplementedError` for packages that do not
-                    # yet support dlpack 1.0
-                    # (i.e. the `device`/`copy` kwargs, e.g., torch <= 2.8.0)
-                    # See https://github.com/data-apis/array-api/pull/741 for
-                    # more details about the introduction of the `copy` and `device`
-                    # kwargs in the from_dlpack method and their expected
-                    # meaning by namespaces implementing the array API spec.
-                    # https://github.com/numpy/numpy/issues/30341
-                except (
-                    AttributeError,
-                    TypeError,
-                    NotImplementedError,
-                    BufferError,
-                    ValueError,
-                ):
-                    # Converting to numpy is tricky, handle this via dedicated function
-                    if _is_numpy_namespace(xp):
-                        array_converted = _convert_to_numpy(array, xp_array)
-                    # Convert from numpy, all array libraries can do this
-                    elif _is_numpy_namespace(xp_array):
-                        array_converted = xp.asarray(array, device=device)  # type: ignore
-                    else:
-                        # There is no generic way to convert from namespace A to B
-                        # So we first convert from A to numpy and then from numpy to B
-                        # The way to avoid this round trip is to lobby for DLpack
-                        # support in libraries A and B
-                        array_np = _convert_to_numpy(array, xp_array)
-                        array_converted = xp.asarray(array_np, device=device)
-                converted_arrays.append(array_converted)
-
-    return (
-        converted_arrays[0] if len(converted_arrays) == 1 else tuple(converted_arrays)
-    )
 
 
 class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator):  # pylint: disable=too-many-instance-attributes
@@ -625,6 +516,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
                     classes=self.classes_,
                     sample_weight=calibration_sample_weight,
                     fit_params=routed_params.estimator.fit,
+                    xp=xp,
                 )
                 for train, test in cv.split(X, y, **routed_params.splitter.split)
             )
@@ -674,6 +566,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
                 self.classes_,
                 self.method,
                 sample_weight=calibration_sample_weight,
+                xp=xp,
             )
             self.calibrated_classifiers_.append(calibrated_classifier)
 
