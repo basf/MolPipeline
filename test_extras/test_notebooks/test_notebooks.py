@@ -5,10 +5,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+from loguru import logger
+
 # list of directories containing notebooks
 NOTEBOOK_DIRS = ["notebooks"]
 
-# list of prefix paths of notebooks to skip. We mainly skip because some notebooks run too long.
+# list of prefix paths of notebooks to skip.
+# We mainly skip because some notebooks run too long.
 SKIP_NOTEBOOKS_PREFIXES = ["notebooks/advanced_01"]
 
 
@@ -26,12 +29,16 @@ def is_prefix(prefix: Path, path: Path) -> bool:
     -------
     bool
         True if the prefix is a prefix of the path, False otherwise.
+
     """
-    # compares the parents of the paths are equal and the name of the path starts with the prefix file name
+    # compares the parents of the paths are equal and the name of the path starts with
+    # the prefix file name
     return all(
         parent1 == parent2
         for parent1, parent2 in zip(
-            prefix.resolve().parents, path.resolve().parents, strict=True
+            prefix.resolve().parents,
+            path.resolve().parents,
+            strict=True,
         )
     ) and path.name.startswith(prefix.name)
 
@@ -48,6 +55,7 @@ def get_notebook_paths_from_dir(notebook_dir: Path) -> list[Path]:
     -------
     list[Path]
         List of paths to Jupyter notebooks.
+
     """
     # Find all Jupyter notebook files in the directory
     notebooks_paths = []
@@ -64,7 +72,8 @@ def get_notebook_paths_from_dir(notebook_dir: Path) -> list[Path]:
 
 
 def filter_notebooks(
-    notebooks_paths: list[Path], skip_notebooks_prefixes: list[Path]
+    notebooks_paths: list[Path],
+    skip_notebooks_prefixes: list[Path],
 ) -> list[Path]:
     """Filter out notebooks that should be skipped.
 
@@ -79,6 +88,7 @@ def filter_notebooks(
     -------
     list[Path]
         Filtered list of paths to Jupyter notebooks.
+
     """
     return list(
         filter(
@@ -87,14 +97,16 @@ def filter_notebooks(
                 for prefix in skip_notebooks_prefixes
             ),
             notebooks_paths,
-        )
+        ),
     )
 
 
 def run_notebooks(
-    notebook_dir: Path, skip_notebooks_prefixes: list[Path], continue_on_error: bool
+    notebook_dir: Path,
+    skip_notebooks_prefixes: list[Path],
+    continue_on_error: bool,
 ) -> None:
-    """Run all Jupyter notebooks in the given directory and check if they execute without error.
+    """Check all Jupyter notebooks in the given directory.
 
     Parameters
     ----------
@@ -104,6 +116,7 @@ def run_notebooks(
         List of prefixes of notebooks to skip.
     continue_on_error: bool
         If True continue running all notebooks even if an error occurs.
+
     """
     # collect all notebook files from disc
     notebooks_paths = get_notebook_paths_from_dir(notebook_dir)
@@ -124,7 +137,9 @@ def run_notebooks(
             "notebook",
         ]
         with subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         ) as process:
             std_out, std_err = process.communicate()
             error_code = process.returncode
@@ -135,25 +150,25 @@ def run_notebooks(
             log_error_msg = (
                 f"Error executing {notebooks_path}. Error code: {error_code}"
             )
-            print(log_error_msg)
-            print(std_out.decode("utf-8"))
-            print(std_err.decode("utf-8"))
+            logger.error(log_error_msg)
+            logger.error(std_out.decode("utf-8"))
+            logger.error(std_err.decode("utf-8"))
 
             if not continue_on_error:
                 sys.exit(1)
 
     # Check if there were any errors
     if nof_errors == 0:
-        print("All Jupyter notebooks executed successfully with error code 0.")
+        logger.success("All Jupyter notebooks executed successfully with error code 0.")
     else:
-        print(f"Jupyter notebooks executed with {nof_errors} errors.")
+        logger.error(f"Jupyter notebooks executed with {nof_errors} errors.")
         sys.exit(1)
 
 
 def main() -> None:
     """Run the Jupyter notebooks and check if they execute without error."""
     parser = argparse.ArgumentParser(
-        description="Test if all Jupyter notebooks run through with error code 0"
+        description="Test if all Jupyter notebooks run through with error code 0",
     )
     parser.add_argument(
         "-c",

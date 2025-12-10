@@ -2,14 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
 import copy
+from typing import TYPE_CHECKING, Any, Self
 
 from rdkit import Chem
 
