@@ -710,7 +710,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
         return mean_proba
 
     @override
-    def predict(self, X: npt.ArrayLike) -> npt.ArrayLike:
+    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:
         """Predict the target of new samples.
 
         The predicted class is the class that has the highest probability,
