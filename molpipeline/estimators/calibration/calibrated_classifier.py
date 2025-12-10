@@ -2,6 +2,7 @@
 
 # Authors: The scikit-learn developers
 # SPDX-License-Identifier: BSD-3-Clause
+# Adapted by: MolPipeline developers
 
 import warnings
 from inspect import signature
@@ -167,6 +168,11 @@ def move_to(
 
 class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator):  # pylint: disable=too-many-instance-attributes
     """Calibrate probabilities using isotonic, sigmoid, or temperature scaling.
+
+    This class is adapted from scikit-learn to add support for class weights during
+    calibration. In addtion code was adapted to adhere to local style guides.
+    The plan is to upstream these changes to scikit-learn in the future, once a
+    rigerous study has been performed to validate the approach.
 
     This class uses cross-validation to both estimate the parameters of a
     classifier and subsequently calibrate a classifier. With
