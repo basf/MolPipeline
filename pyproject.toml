@@ -21,7 +21,7 @@ dependencies = [
     "numpy>=1.26.4",
     "pandas>=2.2.3",
     "rdkit>=2023.9.1",
-    "scikit-learn>=1.6.0",
+    "scikit-learn>=1.8.0",
     "scipy>=1.15.2",
     "shap>=0.47.1",
     "typing-extensions>=4.13.1",
@@ -30,7 +30,9 @@ dependencies = [
 [project.optional-dependencies]
 chemprop = [
     "chemprop>=2.2.0,<2.3.0",
+    "dvc>=3.64.1",
     "lightning>=2.5.1",
+    "requests>=2.32.5",
 ]
 notebooks = [
     "jupyterlab>=4.4.0",
@@ -93,7 +95,6 @@ ignore = [
     "ANN401",  #  Allow  typing.Any
     "ARG002", #  Unused argument  # TO REMOVE
     "B008",   #  Do not perform function call `StandardScaler` in argument defaults  # TO REMOVE
-    "B020",   #  Loop control variable `generated_smiles` overrides iterable it iterates  # TO REMOVE
     "B024",   #  `xxx` is an abstract base class, but it has no abstract methods or properties  # TO REMOVE
     "B027",   #  `xxx` is an empty method in an abstract base class, but has no abstract decorator  # TO REMOVE
     "COM812", # Trailing comma missing # TO REMOVE
@@ -104,16 +105,12 @@ ignore = [
     "D418", # Function decorated with `@overload` shouldn't contain a docstring"  # TO REMOVE
     "E501", # line-too-long # TO REMOVE
     "ERA001",  # Found commented-out code  # TO REMOVE
-    "FA100",  # Add `from __future__ import annotations`  # TO REMOVE
     "FA102",  # Missing `from __future__ import annotations`  # TO REMOVE
     "FURB113", # Use `xxx.extend(...)` instead of repeatedly calling `xxx.append()  # TO REMOVE
-    "FURB171", # [*] Membership test against single-item container  # TO REMOVE
     "FURB177", #  Prefer `Path.cwd()` over `Path().resolve()  # TO REMOVE
     "N803",  #  Argument name should be lowercase  # TO REMOVE
     "N806",  #  Variable in function should be lowercase  # TO REMOVE
     "N813",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
-    "PD011",   # Use `.to_numpy()` instead of `.values`  # TO REMOVE
-    "PD901",   #  Avoid using the generic variable name `df` for DataFrames  # TO REMOVE
     "PGH003",  # Blanket type ignore for types
     "PGH004",  # Use specific rule codes when using `noqa`  # TO REMOVE
     "PERF203",  # `try`-`except` within a loop incurs performance overhead  # TO REMOVE
@@ -143,13 +140,11 @@ ignore = [
     "SIM102",  # Use a single `if` statement instead of nested `if` statements # TO REMOVE
     "SIM103",  # Return the condition directly  # TO REMOVE
     "SIM105",  #  Use `contextlib.suppress(RuntimeError)` instead of `try`-`except`-`pass`  # TO REMOVE
-    "SIM108",  # Use ternary operator  # TO REMOVE
     "SIM110",  # Use return any() instead of `for` loop  # TO REMOVE
     "SIM114",  # Combine `if` branches  # TO REMOVE
     "SIM117",  # Use a single `with` statement with multiple contexts instead of nested `with` statements  # TO REMOVE
     "SIM401",  # Use `xxx` instead of an `if` block  # TO REMOVE
     "SLF001",  # Private member accessed  # TO REMOVE
-    "T201",    # print found  # TO REMOVE
     "TC001",   # Move application import  `xxx` into a type-checking block  # TO REMOVE
     "TC002",   # Move third-party import `xxx` into a type-checking block  # TO REMOVE
     "TC003",   # Move standard library import `xxx` into a type-checking block  # TO REMOVE

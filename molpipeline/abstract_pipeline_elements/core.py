@@ -13,6 +13,7 @@ from joblib import Parallel, delayed
 from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol
+from sklearn.utils import Tags, TargetTags
 
 from molpipeline.utils.multi_proc import check_available_cores
 
@@ -126,6 +127,23 @@ class ABCPipelineElement(abc.ABC):
         parm_str = ", ".join(parm_list)
         repr_str = f"{self.__class__.__name__}({parm_str})"
         return repr_str
+
+    def __sklearn_tags__(self) -> Tags:
+        """Return Tags for the Element.
+
+        Returns
+        -------
+        Tags
+            Tags for the Element.
+
+        """
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+            transformer_tags=None,
+            regressor_tags=None,
+            classifier_tags=None,
+        )
 
     def _get_non_default_parameters(self) -> dict[str, Any]:
         """Return all parameters which are not default.
