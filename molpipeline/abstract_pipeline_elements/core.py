@@ -129,7 +129,7 @@ class ABCPipelineElement(abc.ABC):
         repr_str = f"{self.__class__.__name__}({parm_str})"
         return repr_str
 
-    def __sklearn_tags__(self)-> Tags:
+    def __sklearn_tags__(self) -> Tags:
         """Return Tags for the Element.
 
         Return
