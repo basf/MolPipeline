@@ -415,7 +415,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
         cv: Any = None,
         n_jobs: int | None = None,
         ensemble: Literal["auto"] | bool = "auto",
-        class_weight: dict[Any, float] | None = None,
+        class_weight: dict[Any, float] | Literal["balanced"] | None = None,
     ):
         """Initialize the CalibratedClassifierCV instance.
 
@@ -617,7 +617,6 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
                     test=test,
                     method=self.method,
                     classes=self.classes_,
-                    xp=xp,
                     sample_weight=calibration_sample_weight,
                     fit_params=routed_params.estimator.fit,
                 )
