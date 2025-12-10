@@ -132,8 +132,8 @@ class ABCPipelineElement(abc.ABC):
     def __sklearn_tags__(self) -> Tags:
         """Return Tags for the Element.
 
-        Return
-        ------
+        Returns
+        -------
         Tags
             Tags for the Element.
 
