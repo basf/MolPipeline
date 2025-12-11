@@ -6,17 +6,16 @@
 
 import warnings
 from inspect import signature
-from numbers import Integral
-from typing import Any, ClassVar, Literal, Self
+from typing import Any, Literal, Self
 
-import numpy as np
 import numpy.typing as npt
 from sklearn.base import (
     BaseEstimator,
-    ClassifierMixin,
-    MetaEstimatorMixin,
     _fit_context,  # noqa: PLC2701
     clone,
+)
+from sklearn.calibration import (
+    CalibratedClassifierCV as SklearnCalibratedClassifierCV,
 )
 from sklearn.calibration import (
     _fit_calibrator,  # noqa: PLC2701
@@ -25,24 +24,14 @@ from sklearn.calibration import (
 from sklearn.frozen import FrozenEstimator
 from sklearn.model_selection import LeaveOneOut, check_cv, cross_val_predict
 from sklearn.preprocessing import LabelEncoder
-from sklearn.svm import LinearSVC
-from sklearn.utils import Bunch, get_tags, indexable
+from sklearn.utils import Bunch, indexable
 from sklearn.utils._array_api import (
-    _convert_to_numpy,  # noqa: PLC2701
-    get_namespace,  # noqa: PLC2701
     get_namespace_and_device,  # noqa: PLC2701
     move_to,  # noqa: PLC2701
 )
-from sklearn.utils._param_validation import (
-    HasMethods,  # noqa: PLC2701
-    StrOptions,  # noqa: PLC2701
-)
 from sklearn.utils._response import _process_predict_proba  # noqa: PLC2701
-from sklearn.utils._tags import Tags
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metadata_routing import (
-    MetadataRouter,
-    MethodMapping,
     _routing_enabled,  # noqa: PLC2701
     process_routing,
 )
@@ -51,13 +40,11 @@ from sklearn.utils.parallel import Parallel, delayed
 from sklearn.utils.validation import (
     _check_response_method,  # noqa: PLC2701
     _check_sample_weight,  # noqa: PLC2701
-    _num_samples,  # noqa: PLC2701
-    check_is_fitted,
 )
 from typing_extensions import override
 
 
-class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator):  # pylint: disable=too-many-instance-attributes
+class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
     """Calibrate probabilities using isotonic, sigmoid, or temperature scaling.
 
     This class is adapted from scikit-learn to add support for class weights during
@@ -292,18 +279,6 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
 
     """
 
-    _parameter_constraints: ClassVar[dict[str, Any]] = {
-        "estimator": [
-            HasMethods(["fit", "predict_proba"]),
-            HasMethods(["fit", "decision_function"]),
-            None,
-        ],
-        "method": [StrOptions({"isotonic", "sigmoid", "temperature"})],
-        "cv": ["cv_object"],
-        "n_jobs": [Integral, None],
-        "ensemble": ["boolean", StrOptions({"auto"})],
-    }
-
     def __init__(
         self,
         estimator: BaseEstimator | None = None,
@@ -345,32 +320,14 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
             See :term:`Glossary <class_weight>` for more details.
 
         """
-        self.estimator = estimator
-        self.method = method
-        self.cv = cv
-        self.n_jobs = n_jobs
-        self.ensemble = ensemble
+        super().__init__(
+            estimator=estimator,
+            method=method,
+            cv=cv,
+            n_jobs=n_jobs,
+            ensemble=ensemble,
+        )
         self.class_weight = class_weight
-
-    def _get_estimator(self) -> BaseEstimator:
-        """Resolve which estimator to return (default is LinearSVC).
-
-        Returns
-        -------
-        estimator : BaseEstimator
-            The estimator to be used for calibration.
-
-        """
-        if self.estimator is None:
-            # we want all classifiers that don't expose a random_state
-            # to be deterministic (and we don't want to expose this one).
-            estimator = LinearSVC(random_state=0)
-            if _routing_enabled():
-                estimator.set_fit_request(sample_weight=True)
-        else:
-            estimator = self.estimator
-
-        return estimator
 
     @override
     @_fit_context(
@@ -576,103 +533,3 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
         if hasattr(first_clf, "feature_names_in_"):
             self.feature_names_in_ = first_clf.feature_names_in_  # pylint: disable=W0201
         return self
-
-    @override
-    def predict_proba(self, X: npt.ArrayLike) -> npt.NDArray[np.float64]:  # pylint: disable=C0103
-        """Calibrated probabilities of classification.
-
-        This function returns calibrated probabilities of classification
-        according to each class on an array of test vectors X.
-
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The samples, as accepted by `estimator.predict_proba`.
-
-        Returns
-        -------
-        C : ndarray of shape (n_samples, n_classes)
-            The predicted probas.
-
-        """
-        check_is_fitted(self)
-        # Compute the arithmetic mean of the predictions of the calibrated
-        # classifiers
-        xp, _, device_ = get_namespace_and_device(X)
-        mean_proba = xp.zeros((_num_samples(X), self.classes_.shape[0]), device=device_)
-        for calibrated_classifier in self.calibrated_classifiers_:
-            proba = calibrated_classifier.predict_proba(X)
-            mean_proba += proba
-
-        mean_proba /= len(self.calibrated_classifiers_)
-
-        return mean_proba
-
-    @override
-    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:  # pylint: disable=C0103
-        """Predict the target of new samples.
-
-        The predicted class is the class that has the highest probability,
-        and can thus be different from the prediction of the uncalibrated classifier.
-
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The samples, as accepted by `estimator.predict`.
-
-        Returns
-        -------
-        C : ndarray of shape (n_samples,)
-            The predicted class.
-
-        """
-        xp, _ = get_namespace(X)
-        check_is_fitted(self)
-        class_indices = xp.argmax(self.predict_proba(X), axis=1)
-        if isinstance(self.classes_[0], str):
-            class_indices = _convert_to_numpy(class_indices, xp=xp)
-
-        return self.classes_[class_indices]
-
-    def get_metadata_routing(self) -> MetadataRouter:
-        """Get metadata routing of this object.
-
-        Please check :ref:`User Guide <metadata_routing>` on how the routing
-        mechanism works.
-
-        Returns
-        -------
-        routing : MetadataRouter
-            A :class:`~sklearn.utils.metadata_routing.MetadataRouter` encapsulating
-            routing information.
-
-        """
-        return (
-            MetadataRouter(owner=self)
-            .add_self_request(self)
-            .add(
-                estimator=self._get_estimator(),
-                method_mapping=MethodMapping().add(caller="fit", callee="fit"),
-            )
-            .add(
-                splitter=self.cv,
-                method_mapping=MethodMapping().add(caller="fit", callee="split"),
-            )
-        )
-
-    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
-        """Get the sklearn tags for this estimator.
-
-        Returns
-        -------
-        tags : Tags
-            The sklearn tags of this estimator.
-
-        """
-        tags = super().__sklearn_tags__()
-        estimator_tags = get_tags(self._get_estimator())
-        tags.input_tags.sparse = estimator_tags.input_tags.sparse
-        tags.array_api_support = (
-            estimator_tags.array_api_support and self.method == "temperature"
-        )
-        return tags
