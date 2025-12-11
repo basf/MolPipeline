@@ -29,8 +29,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):
     def __init__(
         self,
         estimator: BaseEstimator,
-        *,
-        confidence_level: float = 0.9,
+        nonconformity: str | NonconformityFunctor | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize BaseConformalPredictor.
@@ -39,15 +38,64 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         ----------
         estimator : BaseEstimator
             The base estimator to wrap.
-        confidence_level : float, optional
-            Default confidence level for prediction intervals/sets (default: 0.9).
+        nonconformity : str | NonconformityFunctor | None, optional
+            Nonconformity function to use.
         **kwargs : Any
             Additional keyword arguments for configuration.
 
         """
         self.estimator = estimator
-        self.confidence_level = self._validate_confidence_level(confidence_level)
+        self.nonconformity = nonconformity
         self.kwargs = kwargs
+
+    @property
+    def nonconformity(self) -> str | NonconformityFunctor | None:
+        """Get the nonconformity parameter value.
+
+        This property is needed for sklearn's get_params/set_params compatibility.
+        """
+        if self.nonconformity_func is None:
+            return None
+        if isinstance(self.nonconformity_func, NonconformityFunctor):
+            return self.nonconformity_func.get_name()
+        return self.nonconformity_func
+
+    @nonconformity.setter
+    def nonconformity(self, value: str | NonconformityFunctor | None) -> None:
+        """Set the nonconformity function.
+
+        Parameters
+        ----------
+        value : str | NonconformityFunctor | None
+            The nonconformity function to set.
+        """
+        self.nonconformity_func = create_nonconformity_function(value)
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+        """
+        if "nonconformity_func" not in state:
+            warnings.warn(
+                "Loading a model with the old 'nonconformity' attribute format. "
+                "This backward compatibility will be removed in version 0.13.0. "
+                "Please re-save your models with the current version.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            fixed_state = dict(state)  # Shallow Copy
+            if "nonconformity" in state:
+                fixed_state["nonconformity_func"] = create_nonconformity_function(
+                    fixed_state.pop("nonconformity")
+                )
+            else:
+                fixed_state["nonconformity_func"] = None
+            return super().__setstate__(fixed_state)
+        return super().__setstate__(state)
 
     @abstractmethod
     def evaluate(
@@ -60,9 +108,9 @@ class BaseConformalPredictor(BaseEstimator, ABC):
 
         Parameters
         ----------
-        x : np.ndarray
+        x: np.ndarray
             Features to evaluate.
-        y : np.ndarray
+        y: np.ndarray
             True labels/targets.
         **kwargs : Any
             Additional parameters for evaluation.
@@ -128,17 +176,16 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         """
         params = {
             "estimator": self.estimator,
-            "confidence_level": self.confidence_level,
+            "nonconformity": self.nonconformity,
         }
 
-        for attr_name, attr_value in super().get_params(deep=deep).items():
-            if attr_name not in {"estimator", "confidence_level", "kwargs"}:
-                if attr_name == "nonconformity_func":
-                    params["nonconformity"] = (
-                        attr_value.get_name() if attr_value is not None else None
-                    )
-                else:
-                    params[attr_name] = attr_value
+        # Get other parameters from parent class (exclude handled keys)
+        parent_params = {
+            k: v
+            for k, v in super().get_params(deep=deep).items()
+            if k not in {"estimator", "kwargs", "nonconformity_func"}
+        }
+        params.update(parent_params)
 
         params.update(self.kwargs)
 
@@ -162,18 +209,15 @@ class BaseConformalPredictor(BaseEstimator, ABC):
             Self.
 
         """
-        updated_params: dict[str, Any] = {}
-        for key, value in params.items():
-            if key == "nonconformity":
-                updated_params["nonconformity_func"] = create_nonconformity_function(
-                    value
-                )
-            elif key == "confidence_level":
-                updated_params["confidence_level"] = self._validate_confidence_level(
-                    value
-                )
-        params.update(updated_params)
-        super().set_params(**params)
+        # Make a copy to avoid modifying the input dictionary
+        params_copy = params.copy()
+
+        # Convert nonconformity parameter to nonconformity_func attribute
+        if "nonconformity" in params_copy:
+            params_copy["nonconformity_func"] = create_nonconformity_function(
+                params_copy.pop("nonconformity")  # Remove original key
+            )
+        super().set_params(**params_copy)
         return self
 
 
@@ -187,7 +231,6 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self,
         estimator: BaseEstimator,
         *,
-        confidence_level: float = 0.9,
         mondrian: bool = False,
         nonconformity: (str | NonconformityFunctor | None) = None,
         **kwargs: Any,
@@ -198,8 +241,6 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         ----------
         estimator : BaseEstimator
             The base classifier to wrap.
-        confidence_level : float, optional
-            Default confidence level for prediction sets (default: 0.9).
         mondrian : bool, optional
             Whether to use Mondrian (class-conditional) conformal prediction
             (default: False).
@@ -216,14 +257,12 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         TypeError
             If nonconformity_func is not a NonconformityFunctor or None.
         """
-        super().__init__(estimator, confidence_level=confidence_level, **kwargs)
+        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.mondrian = mondrian
-        nc_func = create_nonconformity_function(nonconformity)
-        if not (nc_func is None or callable(nc_func)):
+        if not (self.nonconformity_func is None or callable(self.nonconformity_func)):
             raise TypeError(
-                f"nonconformity_func must be a NonconformityFunctor or None, got {type(nc_func).__name__}"
+                f"nonconformity_func must be a NonconformityFunctor or None, got {type(self.nonconformity_func).__name__}"
             )
-        self.nonconformity_func = nc_func
         self._crepes_wrapper: WrapClassifier | None = None
 
     def fit(
@@ -236,9 +275,9 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Training features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             Training targets.
         **fit_params : Any
             Additional parameters passed to estimator fit method.
@@ -271,9 +310,9 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Calibration features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             Calibration targets.
         **calib_params : Any
             Additional calibration parameters.
@@ -308,7 +347,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
 
         Raises
@@ -331,7 +370,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
 
         Raises
@@ -352,17 +391,17 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
     def predict_set(
         self,
         x: npt.NDArray[Any],
-        confidence: float | None = None,
+        confidence: float = 0.9,
         **kwargs: Any,
     ) -> npt.NDArray[np.int_]:
         """Predict conformal sets.
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
         confidence : float, optional
-            Confidence level. If None, uses self.confidence_level.
+            Confidence level (default: 0.9).
         **kwargs : Any
             Additional parameters passed to crepes.
 
@@ -380,9 +419,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         if self._crepes_wrapper is None:
             raise ValueError("Must fit and calibrate before predicting")
 
-        conf = confidence if confidence is not None else self.confidence_level
-        if confidence is not None:
-            conf = self._validate_confidence_level(confidence)
+        conf = self._validate_confidence_level(confidence)
 
         return self._crepes_wrapper.predict_set(x, confidence=conf, **kwargs)
 
@@ -391,7 +428,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
         **kwargs : Any
             Additional parameters passed to crepes.
@@ -415,7 +452,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
-        confidence: float | None = None,
+        confidence: float = 0.9,
         metrics: list[str] | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
@@ -423,12 +460,12 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Test features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             True test labels.
         confidence : float, optional
-            Confidence level for evaluation. If None, uses self.confidence_level.
+            Confidence level for evaluation (default: 0.9).
         metrics : list[str] | None, optional
             Metrics to compute. If None, uses default metrics.
             Available: 'error', 'avg_c', 'one_c', 'empty', 'ks_test',
@@ -450,9 +487,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         if self._crepes_wrapper is None:
             raise ValueError("Must fit and calibrate before evaluating")
 
-        conf = confidence if confidence is not None else self.confidence_level
-        if confidence is not None:
-            conf = self._validate_confidence_level(confidence)
+        conf = self._validate_confidence_level(confidence)
 
         if metrics is None:
             metrics = ["error", "avg_c", "one_c", "empty", "ks_test"]
@@ -478,7 +513,6 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         estimator: BaseEstimator,
         *,
         n_folds: int = 5,
-        confidence_level: float = 0.9,
         mondrian: bool = False,
         nonconformity: (str | NonconformityFunctor | None) = None,
         random_state: int | None = None,
@@ -492,8 +526,6 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             The base classifier to wrap.
         n_folds : int, optional
             Number of cross-validation folds (default: 5).
-        confidence_level : float, optional
-            Default confidence level for prediction sets (default: 0.9).
         mondrian : bool, optional
             Whether to use Mondrian conformal prediction (default: False).
         nonconformity : str | NonconformityFunctor | None, optional
@@ -504,10 +536,9 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Additional keyword arguments.
 
         """
-        super().__init__(estimator, confidence_level=confidence_level, **kwargs)
+        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.n_folds = n_folds
         self.mondrian = mondrian
-        self.nonconformity_func = create_nonconformity_function(nonconformity)
         self.random_state = random_state
         self.models_: list[ConformalClassifier] = []
 
@@ -520,9 +551,9 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Training features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             Training targets.
 
         Returns
@@ -546,7 +577,6 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
             model = ConformalClassifier(
                 clone(self.estimator),
-                confidence_level=self.confidence_level,
                 mondrian=self.mondrian,
                 nonconformity=self.nonconformity_func,
                 **self.kwargs,
@@ -562,7 +592,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
 
         Raises
@@ -587,7 +617,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
 
         Raises
@@ -610,17 +640,17 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
     def predict_set(
         self,
         x: npt.NDArray[Any],
-        confidence: float | None = None,
+        confidence: float = 0.9,
         **kwargs: Any,
     ) -> npt.NDArray[np.int_]:
         """Predict conformal sets using aggregated models.
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
         confidence : float, optional
-            Confidence level. If None, uses self.confidence_level.
+            Confidence level (default: 0.9).
         **kwargs : Any
             Additional parameters.
 
@@ -638,9 +668,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         if not self.models_:
             raise ValueError("Must fit before predicting")
 
-        conf = confidence if confidence is not None else self.confidence_level
-        if confidence is not None:
-            conf = self._validate_confidence_level(confidence)
+        conf = self._validate_confidence_level(confidence)
 
         p_values_list = [model.predict_p(x, **kwargs) for model in self.models_]
         aggregated_p_values = np.median(p_values_list, axis=0)
@@ -652,7 +680,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
         **kwargs : Any
             Additional parameters.
@@ -678,7 +706,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
-        confidence: float | None = None,
+        confidence: float = 0.9,
         metrics: list[str] | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
@@ -686,12 +714,12 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Test features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             True test labels.
         confidence : float, optional
-            Confidence level for evaluation. If None, uses self.confidence_level.
+            Confidence level for evaluation (default: 0.9).
         metrics : list[str] | None, optional
             Metrics to compute. If None, uses default metrics.
             Available: 'error', 'avg_c', 'one_c', 'empty', 'ks_test',
@@ -713,9 +741,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         if not self.models_:
             raise ValueError("Must fit before evaluating")
 
-        conf = confidence if confidence is not None else self.confidence_level
-        if confidence is not None:
-            conf = self._validate_confidence_level(confidence)
+        conf = self._validate_confidence_level(confidence)
 
         if metrics is None:
             metrics = ["error", "avg_c", "one_c", "empty", "ks_test"]
@@ -747,7 +773,6 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self,
         estimator: BaseEstimator,
         *,
-        confidence_level: float = 0.9,
         mondrian: bool = False,
         difficulty_estimator: DifficultyEstimator | None = None,
         binning_bins: int = 10,
@@ -760,8 +785,6 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         ----------
         estimator : BaseEstimator
             The base regressor to wrap.
-        confidence_level : float, optional
-            Default confidence level for prediction intervals (default: 0.9).
         mondrian : bool, optional
             Whether to use Mondrian conformal prediction (default: False).
         difficulty_estimator : DifficultyEstimator | None, optional
@@ -775,11 +798,10 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
             Additional keyword arguments passed to crepes calibration.
 
         """
-        super().__init__(estimator, confidence_level=confidence_level, **kwargs)
+        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.mondrian = mondrian
         self.difficulty_estimator = difficulty_estimator
         self.binning_bins = binning_bins
-        self.nonconformity_func = create_nonconformity_function(nonconformity)
         self._crepes_wrapper: WrapRegressor | None = None
 
     def fit(
@@ -792,9 +814,9 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Training features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             Training targets.
         **fit_params : Any
             Additional parameters passed to estimator fit method.
@@ -827,9 +849,9 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Calibration features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             Calibration targets.
         **calib_params : Any
             Additional calibration parameters.
@@ -869,7 +891,7 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
 
         Raises
@@ -890,17 +912,17 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
     def predict_int(
         self,
         x: npt.NDArray[Any],
-        confidence: float | None = None,
+        confidence: float = 0.9,
         **kwargs: Any,
     ) -> npt.NDArray[Any]:
         """Predict intervals.
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
         confidence : float, optional
-            Confidence level. If None, uses self.confidence_level.
+            Confidence level (default: 0.9).
         **kwargs : Any
             Additional parameters passed to crepes.
 
@@ -918,9 +940,7 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         if self._crepes_wrapper is None:
             raise ValueError("Must fit and calibrate before predicting")
 
-        conf = confidence if confidence is not None else self.confidence_level
-        if confidence is not None:
-            conf = self._validate_confidence_level(confidence)
+        conf = self._validate_confidence_level(confidence)
 
         return self._crepes_wrapper.predict_int(x, confidence=conf, **kwargs)
 
@@ -928,7 +948,7 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
-        confidence: float | None = None,
+        confidence: float = 0.9,
         metrics: list[str] | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
@@ -936,12 +956,12 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Test features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             True test targets.
         confidence : float, optional
-            Confidence level for evaluation. If None, uses self.confidence_level.
+            Confidence level for evaluation (default: 0.9).
         metrics : list[str] | None, optional
             Metrics to compute. If None, uses default metrics.
             Available: 'error', 'eff_mean', 'eff_med', 'ks_test',
@@ -963,9 +983,7 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         if self._crepes_wrapper is None:
             raise ValueError("Must fit and calibrate before evaluating")
 
-        conf = confidence if confidence is not None else self.confidence_level
-        if confidence is not None:
-            conf = self._validate_confidence_level(confidence)
+        conf = self._validate_confidence_level(confidence)
 
         if metrics is None:
             metrics = ["error", "eff_mean", "eff_med", "ks_test"]
@@ -991,7 +1009,6 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         estimator: BaseEstimator,
         *,
         n_folds: int = 5,
-        confidence_level: float = 0.9,
         mondrian: bool = False,
         difficulty_estimator: DifficultyEstimator | None = None,
         binning_bins: int = 10,
@@ -1007,8 +1024,6 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
             The base regressor to wrap.
         n_folds : int, optional
             Number of cross-validation folds (default: 5).
-        confidence_level : float, optional
-            Default confidence level for prediction intervals (default: 0.9).
         mondrian : bool, optional
             Whether to use Mondrian conformal prediction (default: False).
         difficulty_estimator : DifficultyEstimator | None, optional
@@ -1021,14 +1036,12 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
             Random state for reproducibility (default: None).
         **kwargs : Any
             Additional keyword arguments.
-
         """
-        super().__init__(estimator, confidence_level=confidence_level, **kwargs)
+        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.n_folds = n_folds
         self.mondrian = mondrian
         self.difficulty_estimator = difficulty_estimator
         self.binning_bins = binning_bins
-        self.nonconformity_func = create_nonconformity_function(nonconformity)
         self.random_state = random_state
         self.models_: list[ConformalRegressor] = []
 
@@ -1041,9 +1054,9 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Training features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             Training targets.
 
         Returns
@@ -1070,7 +1083,6 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
             model = ConformalRegressor(
                 clone(self.estimator),
-                confidence_level=self.confidence_level,
                 mondrian=self.mondrian,
                 difficulty_estimator=self.difficulty_estimator,
                 binning_bins=self.binning_bins,
@@ -1088,7 +1100,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
 
         Raises
@@ -1111,17 +1123,17 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
     def predict_int(
         self,
         x: npt.NDArray[Any],
-        confidence: float | None = None,
+        confidence: float = 0.9,
         **kwargs: Any,
     ) -> npt.NDArray[Any]:
         """Predict intervals using aggregated models.
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Features to predict.
         confidence : float, optional
-            Confidence level. If None, uses self.confidence_level.
+            Confidence level (default: 0.9).
         **kwargs : Any
             Additional parameters.
 
@@ -1139,9 +1151,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         if not self.models_:
             raise ValueError("Must fit before predicting")
 
-        conf = confidence if confidence is not None else self.confidence_level
-        if confidence is not None:
-            conf = self._validate_confidence_level(confidence)
+        conf = self._validate_confidence_level(confidence)
 
         intervals_list = [
             model.predict_int(x, confidence=conf, **kwargs) for model in self.models_
@@ -1152,7 +1162,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
-        confidence: float | None = None,
+        confidence: float = 0.9,
         metrics: list[str] | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
@@ -1160,12 +1170,12 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
         Parameters
         ----------
-        x : npt.NDArray[Any]
+        x: npt.NDArray[Any]
             Test features.
-        y : npt.NDArray[Any]
+        y: npt.NDArray[Any]
             True test targets.
         confidence : float, optional
-            Confidence level for evaluation. If None, uses self.confidence_level.
+            Confidence level for evaluation (default: 0.9).
         metrics : list[str] | None, optional
             Metrics to compute. If None, uses default metrics.
             Available: 'error', 'eff_mean', 'eff_med', 'ks_test',
@@ -1187,9 +1197,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         if not self.models_:
             raise ValueError("Must fit before evaluating")
 
-        conf = confidence if confidence is not None else self.confidence_level
-        if confidence is not None:
-            conf = self._validate_confidence_level(confidence)
+        conf = self._validate_confidence_level(confidence)
 
         if metrics is None:
             metrics = ["error", "eff_mean", "eff_med", "ks_test"]
