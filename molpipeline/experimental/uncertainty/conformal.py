@@ -79,8 +79,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         state : dict[str, Any]
             The object's state dictionary.
         """
-        # Handle old models that might have 'nonconformity' instead of 'nonconformity_func'
-        if "nonconformity" in state and "nonconformity_func" not in state:
+        if "nonconformity_func" not in state:
             warnings.warn(
                 "Loading a model with the old 'nonconformity' attribute format. "
                 "This backward compatibility will be removed in version 0.13.0. "
@@ -88,13 +87,15 @@ class BaseConformalPredictor(BaseEstimator, ABC):
                 DeprecationWarning,
                 stacklevel=2,
             )
-            state["nonconformity_func"] = create_nonconformity_function(
-                state.pop("nonconformity")
-            )
-        # If neither exists, set to None
-        if "nonconformity_func" not in state:
-            state["nonconformity_func"] = None
-        self.__dict__.update(state)
+            fixed_state = dict(state)  # Shallow Copy
+            if "nonconformity" in state:
+                fixed_state["nonconformity_func"] = create_nonconformity_function(
+                    fixed_state.pop("nonconformity")
+                )
+            else:
+                fixed_state["nonconformity_func"] = None
+            return super().__setstate__(fixed_state)
+        return super().__setstate__(state)
 
     @abstractmethod
     def evaluate(
