@@ -5,7 +5,7 @@ import importlib.util
 from molpipeline.mol2any.mol2bin import MolToBinary
 from molpipeline.mol2any.mol2bool import MolToBool
 from molpipeline.mol2any.mol2concatinated_vector import MolToConcatenatedVector
-from molpipeline.mol2any.mol2fragment_fingerprint import MolToFingerprintPipelineElement
+from molpipeline.mol2any.mol2fragment_fingerprint import MolToFragmentFP
 from molpipeline.mol2any.mol2inchi import MolToInchi, MolToInchiKey
 from molpipeline.mol2any.mol2maccs_key_fingerprint import MolToMACCSFP
 from molpipeline.mol2any.mol2morgan_fingerprint import MolToMorganFP
@@ -20,7 +20,7 @@ __all__ = [
     "MolToBinary",
     "MolToBool",
     "MolToConcatenatedVector",
-    "MolToFingerprintPipelineElement",
+    "MolToFragmentFP",
     "MolToInchi",
     "MolToInchiKey",
     "MolToMACCSFP",
