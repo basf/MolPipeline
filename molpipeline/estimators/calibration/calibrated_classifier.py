@@ -91,9 +91,9 @@ def merge_class_and_sample_weights(
     return class_weights_array * sample_weight
 
 
-def _fit_classifier_calibrator_pair(  # noqa: PLR0917
+def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R0917
     estimator: BaseEstimator,
-    X: npt.ArrayLike,  # noqa: N803
+    X: npt.ArrayLike,  # noqa: N803  # pylint: disable=C0103
     y: npt.ArrayLike,
     train: npt.NDArray[np.int_],
     test: npt.NDArray[np.int_],
@@ -157,12 +157,12 @@ def _fit_classifier_calibrator_pair(  # noqa: PLR0917
 
     """
     fit_params_train = _check_method_params(X, params=fit_params, indices=train)
-    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # noqa: N806
-    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # noqa: N806
+    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # noqa: N806  # pylint: disable=C0103
+    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # noqa: N806  # pylint: disable=C0103
 
     estimator.fit(X_train, y_train, **fit_params_train)
 
-    predictions, _ = _get_response_values(
+    predictions, _ = _get_response_values(  # pylint: disable=W0632
         estimator,
         X_test,
         response_method=["decision_function", "predict_proba"],
