@@ -325,6 +325,8 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         If a dict, it must be provided in this form: ``{class_label: weight}``.
         Those weights won't be used for the underlying estimator training.
         See :term:`Glossary <class_weight>` for more details.
+        If both `class_weight` and `sample_weight` are provided during
+        :meth:`fit`, the sample weights are multiplied by the class weights.
 
     Attributes
     ----------
