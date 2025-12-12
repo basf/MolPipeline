@@ -90,7 +90,7 @@ class MolToFragmentFP(MolToFingerprintPipelineElement):
             # Validating Smarts
             smarts_obj = Chem.MolFromSmarts(substructure)
             if smarts_obj is None:
-                raise ValueError(f"Invalid SMARTS pattern: {substructure}")
+                raise ValueError(f"Invalid SMARTS pattern {i}: {substructure}")
             self._substructure_obj_list.append(smarts_obj)
 
             # Adding pattern to the filter catalogue
