@@ -8,6 +8,7 @@ import warnings
 from inspect import signature
 from typing import Any, Literal, Self
 
+import numpy as np
 import numpy.typing as npt
 from sklearn.base import (
     BaseEstimator,
@@ -18,18 +19,25 @@ from sklearn.calibration import (
     CalibratedClassifierCV as SklearnCalibratedClassifierCV,
 )
 from sklearn.calibration import (
+    _CalibratedClassifier,
     _fit_calibrator,  # noqa: PLC2701
-    _fit_classifier_calibrator_pair,  # noqa: PLC2701
 )
 from sklearn.frozen import FrozenEstimator
 from sklearn.model_selection import LeaveOneOut, check_cv, cross_val_predict
 from sklearn.preprocessing import LabelEncoder
-from sklearn.utils import Bunch, indexable
+from sklearn.utils import (
+    Bunch,
+    _safe_indexing,  # noqa: PLC2701
+    indexable,
+)
 from sklearn.utils._array_api import (
     get_namespace_and_device,  # noqa: PLC2701
     move_to,  # noqa: PLC2701
 )
-from sklearn.utils._response import _process_predict_proba  # noqa: PLC2701
+from sklearn.utils._response import (
+    _get_response_values,  # noqa: PLC2701
+    _process_predict_proba,  # noqa: PLC2701
+)
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metadata_routing import (
     _routing_enabled,  # noqa: PLC2701
@@ -38,10 +46,149 @@ from sklearn.utils.metadata_routing import (
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.parallel import Parallel, delayed
 from sklearn.utils.validation import (
+    _check_method_params,  # noqa: PLC2701
     _check_response_method,  # noqa: PLC2701
     _check_sample_weight,  # noqa: PLC2701
 )
 from typing_extensions import override
+
+
+def merge_class_and_sample_weights(
+    y: npt.ArrayLike,
+    class_weight: dict[Any, float] | Literal["balanced"] | None,
+    sample_weight: npt.ArrayLike | None,
+) -> npt.ArrayLike | None:
+    """Merge class weights and sample weights into a single sample weight array.
+
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target values.
+
+    class_weight : dict[Any, float] | 'balanced' | None, optional
+        Class weights used for the calibration.
+        If a dict, it must be provided in this form: ``{class_label: weight}``.
+        Those weights won't be used for the underlying estimator training.
+        See :term:`Glossary <class_weight>` for more details.
+
+    sample_weight : npt.ArrayLike | None, optional
+        Sample weights. If None, then samples are equally weighted.
+
+    Returns
+    -------
+    merged_sample_weight : ndarray of shape (n_samples,) or None
+        Merged sample weights. If both `class_weight` and `sample_weight` are None,
+        returns None.
+
+    """
+    if class_weight is None:
+        return sample_weight
+
+    class_weights_array = compute_sample_weight(class_weight, y)
+    if sample_weight is None:
+        return class_weights_array
+
+    return class_weights_array * sample_weight
+
+
+def _fit_classifier_calibrator_pair(  # noqa: PLR0917
+    estimator: BaseEstimator,
+    X: npt.ArrayLike,  # noqa: N803
+    y: npt.ArrayLike,
+    train: npt.NDArray[np.int_],
+    test: npt.NDArray[np.int_],
+    method: Literal["sigmoid", "isotonic", "temperature"],
+    classes: npt.ArrayLike,
+    xp: Any,
+    class_weight: dict[Any, float] | Literal["balanced"] | None = None,
+    sample_weight: npt.ArrayLike | None = None,
+    fit_params: dict[str, Any] | None = None,
+) -> _CalibratedClassifier:
+    """Fit a classifier/calibration pair on a given train/test split.
+
+    Adapted from scikit-learn to add support for class weights during calibration.
+
+    Fit the classifier on the train set, compute its predictions on the test
+    set and use the predictions as input to fit the calibrator along with the
+    test labels.
+
+    Parameters
+    ----------
+    estimator : estimator instance
+        Cloned base estimator.
+
+    X : array-like, shape (n_samples, n_features)
+        Sample data.
+
+    y : array-like, shape (n_samples,)
+        Targets.
+
+    train : ndarray, shape (n_train_indices,)
+        Indices of the training subset.
+
+    test : ndarray, shape (n_test_indices,)
+        Indices of the testing subset.
+
+    method : {'sigmoid', 'isotonic', 'temperature'}
+        Method to use for calibration.
+
+    classes : ndarray, shape (n_classes,)
+        The target classes.
+
+    xp : namespace
+        Array API namespace.
+
+    class_weight : dict or 'balanced', optional
+        Class weights used for the calibration.
+        If a dict, it must be provided in this form: ``{class_label: weight}``.
+        Those weights won't be used for the underlying estimator training.
+        See :term:`Glossary <class_weight>` for more details.
+
+    sample_weight : array-like, default=None
+        Sample weights for `X`.
+
+    fit_params : dict, default=None
+        Parameters to pass to the `fit` method of the underlying
+        classifier.
+
+    Returns
+    -------
+    calibrated_classifier : _CalibratedClassifier instance
+
+    """
+    fit_params_train = _check_method_params(X, params=fit_params, indices=train)
+    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # noqa: N806
+    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # noqa: N806
+
+    estimator.fit(X_train, y_train, **fit_params_train)
+
+    predictions, _ = _get_response_values(
+        estimator,
+        X_test,
+        response_method=["decision_function", "predict_proba"],
+    )
+    if predictions.ndim == 1:
+        # Reshape binary output from `(n_samples,)` to `(n_samples, 1)`
+        predictions = predictions.reshape(-1, 1)
+
+    sample_weight = merge_class_and_sample_weights(y, class_weight, sample_weight)
+
+    if sample_weight is not None:
+        # Check that the sample_weight dtype is consistent with the predictions
+        # to avoid unintentional upcasts.
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=predictions.dtype)
+        sw_test = _safe_indexing(sample_weight, test)
+    else:
+        sw_test = None
+    return _fit_calibrator(
+        estimator,
+        predictions,
+        y_test,
+        classes,
+        method,
+        xp=xp,
+        sample_weight=sw_test,
+    )
 
 
 class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
@@ -279,6 +426,8 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
     """
 
+    class_weight: dict[Any, float] | Literal["balanced"] | None
+
     def __init__(
         self,
         estimator: BaseEstimator | None = None,
@@ -380,16 +529,6 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         self.calibrated_classifiers_ = []  # pylint: disable=W0201
 
-        if self.class_weight is not None:
-            calibration_sample_weight = compute_sample_weight(
-                self.class_weight,
-                y,
-            )
-            if sample_weight is not None:
-                calibration_sample_weight *= sample_weight
-        else:
-            calibration_sample_weight = None
-
         # Set `classes_` using all `y`
         label_encoder_ = LabelEncoder().fit(y)
         self.classes_ = label_encoder_.classes_  # pylint: disable=W0201
@@ -431,9 +570,9 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         xp, is_array_api, device_ = get_namespace_and_device(X)
         if is_array_api:
-            y, calibration_sample_weight = move_to(  # type: ignore  # pylint: disable=W0632
+            y, sample_weight = move_to(  # type: ignore  # pylint: disable=W0632
                 y,
-                calibration_sample_weight,
+                sample_weight,
                 xp=xp,
                 device=device_,
             )
@@ -471,13 +610,19 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
                     test=test,
                     method=self.method,
                     classes=self.classes_,
-                    sample_weight=calibration_sample_weight,
+                    class_weight=self.class_weight,
+                    sample_weight=sample_weight,
                     fit_params=routed_params.estimator.fit,
                     xp=xp,
                 )
                 for train, test in cv.split(X, y, **routed_params.splitter.split)
             )
         else:
+            calibration_sample_weight = merge_class_and_sample_weights(
+                y,
+                self.class_weight,
+                sample_weight,
+            )
             this_estimator = clone(estimator)
             method_name = _check_response_method(
                 this_estimator,
