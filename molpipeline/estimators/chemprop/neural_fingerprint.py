@@ -120,6 +120,8 @@ class ChempropNeuralFP(ABCChemprop):
         self,
         X: MoleculeDataset,  # pylint: disable=invalid-name  # noqa: N803
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
+        *,
+        sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,
     ) -> npt.NDArray[np.float64]:
         """Fit the model and transform the input.
 
@@ -129,6 +131,8 @@ class ChempropNeuralFP(ABCChemprop):
             The input data.
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
+        sample_weight : npt.NDArray[np.float64] | None, optional
+            Sample weights for the input data, by default None.
 
         Returns
         -------
@@ -136,5 +140,5 @@ class ChempropNeuralFP(ABCChemprop):
             The neural fingerprint of the input data.
 
         """
-        self.fit(X, y)
+        self.fit(X, y, sample_weight=sample_weight)
         return self.transform(X)
