@@ -16,6 +16,7 @@ from molpipeline.any2mol import SmilesToMol
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import BondMessagePassing
+from molpipeline.estimators.chemprop.metric_wrapper import BCELoss
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
@@ -207,6 +208,23 @@ class TestChempropPipeline(unittest.TestCase):
         # Check that the prediction works
         pred = chemprop_classifier.predict_proba(["CCO", "CCN"])
         self.assertEqual(len(pred), 2)
+
+    def test_sample_weight_forwarding(self) -> None:
+        """Test that the sample weights are properly forwarded to the loss function."""
+        smiles = ["CCO", "CCN"] * 32
+        y = [0, 1] * 32
+        sample_weight = np.ones(64) * 0.5
+
+        bce_loss = BCELoss()
+        bce_loss.update = mock.MagicMock(side_effect=bce_loss.update)
+        model = get_classification_pipeline(
+            chemprop_kwargs={"model__predictor__criterion": bce_loss},
+        )
+        model.fit(smiles, y, model__sample_weight=sample_weight)
+        for call_params in bce_loss.update.call_args_list:
+            call_args = call_params[0]
+            weight = call_args[3]
+            self.assertTrue(np.allclose(weight, sample_weight))
 
 
 class TestRegressionPipeline(unittest.TestCase):
