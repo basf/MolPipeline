@@ -171,8 +171,6 @@ def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R
         # Reshape binary output from `(n_samples,)` to `(n_samples, 1)`
         predictions = predictions.reshape(-1, 1)
 
-    sample_weight = merge_class_and_sample_weights(y, class_weight, sample_weight)
-
     if sample_weight is not None:
         # Check that the sample_weight dtype is consistent with the predictions
         # to avoid unintentional upcasts.
@@ -180,6 +178,7 @@ def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R
         sw_test = _safe_indexing(sample_weight, test)
     else:
         sw_test = None
+    sw_test = merge_class_and_sample_weights(y_test, class_weight, sw_test)
     return _fit_calibrator(
         estimator,
         predictions,
