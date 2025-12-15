@@ -1,5 +1,6 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
+import warnings
 from collections.abc import Sequence
 from typing import Any, Literal, Self
 
@@ -350,6 +351,25 @@ class ChempropClassifier(ChempropModel):
         self.class_weight = class_weight
         if not self._is_binary_classifier():
             raise ValueError("ChempropClassifier should be a binary classifier.")
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "class_weight" not in state:
+            warnings.warn(
+                "Loading old ChempropClassifier without class_weight."
+                " Setting class_weight to None.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.class_weight = None
+        super().__setstate__(state)
 
     def set_params(self, **params: Any) -> Self:
         """Set the parameters of the model and check if it is a binary classifier.
