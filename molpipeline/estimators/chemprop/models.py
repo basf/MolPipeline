@@ -1,7 +1,7 @@
 """Wrapper for Chemprop to make it compatible with scikit-learn."""
 
 from collections.abc import Sequence
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 try:
     from typing import override  # type: ignore[attr-defined]
@@ -10,25 +10,17 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
-from loguru import logger
+from chemprop.data import MoleculeDataset, build_dataloader
+from chemprop.nn.predictors import BinaryClassificationFFNBase
+from lightning import pytorch as pl
 from sklearn.base import clone
 from sklearn.utils._tags import (
     ClassifierTags,  # noqa: PLC2701
     RegressorTags,  # noqa: PLC2701
     Tags,
 )
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metaestimators import available_if
-
-try:
-    from chemprop.data import MoleculeDataset, build_dataloader
-    from chemprop.nn.predictors import BinaryClassificationFFNBase
-    from lightning import pytorch as pl
-except ImportError as error:
-    logger.error(
-        "Chemprop is not installed. Please install it using `pip install chemprop`.",
-    )
-    logger.info(error)
-
 
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import (
@@ -207,6 +199,8 @@ class ChempropModel(ABCChemprop):
         self,
         X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
+        *,
+        sample_weight: npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model to the data.
 
@@ -216,6 +210,8 @@ class ChempropModel(ABCChemprop):
             The input data.
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
+        sample_weight : npt.NDArray[np.float64] | None, optional
+            The sample weights.
 
         Returns
         -------
@@ -225,7 +221,7 @@ class ChempropModel(ABCChemprop):
         """
         if self._is_classifier():
             self._classes_ = np.unique(y)
-        return super().fit(X, y)
+        return super().fit(X, y, sample_weight=sample_weight)
 
     @override
     def predict(
@@ -305,6 +301,7 @@ class ChempropClassifier(ChempropModel):
         self,
         model: MPNN | None = None,
         lightning_trainer: pl.Trainer | None = None,
+        class_weight: Literal["balanced"] | dict[int, float] | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
         **kwargs: Any,
@@ -317,6 +314,13 @@ class ChempropClassifier(ChempropModel):
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
             The lightning trainer to use, by default None
+        class_weight : Literal["balanced"] | dict[int, float] | None, optional
+            The class weights to use, by default None
+            If "balanced", the class weights will be calculated using the
+            sklearn.utils.class_weight.compute_class_weight function.
+            If a dict is provided, it should map class labels to weights.
+            If sample_weight is provided during fitting, class_weight will be multiplied
+            with sample_weight.
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
@@ -343,6 +347,7 @@ class ChempropClassifier(ChempropModel):
             n_jobs=n_jobs,
             **kwargs,
         )
+        self.class_weight = class_weight
         if not self._is_binary_classifier():
             raise ValueError("ChempropClassifier should be a binary classifier.")
 
@@ -369,6 +374,42 @@ class ChempropClassifier(ChempropModel):
         if not self._is_binary_classifier():
             raise ValueError("ChempropClassifier should be a binary classifier.")
         return self
+
+    @override
+    def fit(
+        self,
+        X: MoleculeDataset,
+        y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
+        *,
+        sample_weight: npt.NDArray[np.float64] | None = None,
+    ) -> Self:
+        """Fit the model to the data.
+
+        Parameters
+        ----------
+        X : MoleculeDataset
+            The input data.
+        y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
+            The target data.
+        sample_weight : npt.NDArray[np.float64] | None, optional
+            The sample weights.
+
+        Returns
+        -------
+        Self
+            The fitted model.
+
+        """
+        if self.class_weight is not None:
+            class_weights = compute_sample_weight(
+                class_weight=self.class_weight,
+                y=y,
+            )
+            if sample_weight is not None:
+                sample_weight *= class_weights
+            else:
+                sample_weight = class_weights
+        return super().fit(X, y, sample_weight=sample_weight)
 
 
 class ChempropRegressor(ChempropModel):
@@ -530,6 +571,8 @@ class ChempropMulticlassClassifier(ChempropModel):
         self,
         X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
+        *,
+        sample_weight: npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model to the data.
 
@@ -539,6 +582,8 @@ class ChempropMulticlassClassifier(ChempropModel):
             The input data.
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
+        sample_weight : npt.NDArray[np.float64] | None, optional
+            The sample weights.
 
         Returns
         -------
@@ -547,7 +592,7 @@ class ChempropMulticlassClassifier(ChempropModel):
 
         """
         self._check_correct_input(y)
-        return super().fit(X, y)
+        return super().fit(X, y, sample_weight=sample_weight)
 
     def _check_correct_input(
         self,

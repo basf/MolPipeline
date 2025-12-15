@@ -11,13 +11,9 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
-
-try:
-    from chemprop.data import MoleculeDataset, build_dataloader
-    from chemprop.models.model import MPNN
-    from lightning import pytorch as pl
-except ImportError:
-    pass
+from chemprop.data import MoleculeDataset, build_dataloader
+from chemprop.models.model import MPNN
+from lightning import pytorch as pl
 from sklearn.base import BaseEstimator
 
 from molpipeline.estimators.chemprop.lightning_wrapper import get_params_trainer
@@ -117,6 +113,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self,
         X: MoleculeDataset,  # pylint: disable=invalid-name
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
+        *,
+        sample_weight: npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model to the data.
 
@@ -126,6 +124,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             The input data.
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
+        sample_weight : npt.NDArray[np.float64] | None, optional
+            The sample weights.
 
         Returns
         -------
@@ -138,6 +138,9 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         if y.ndim == 1:
             y = y.reshape(-1, 1)
         X.Y = y
+        if sample_weight is not None:
+            for data_point, s_weight in zip(X.data, sample_weight, strict=True):
+                data_point.weight = s_weight
         training_data = build_dataloader(
             X,
             batch_size=self.batch_size,
