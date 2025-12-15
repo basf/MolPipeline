@@ -1,7 +1,9 @@
 """Initialize Chemprop module."""
 
-try:
-    from molpipeline.estimators.chemprop.models import (  # noqa: F401
+import importlib.util
+
+if importlib.util.find_spec("chemprop") is not None:
+    from molpipeline.estimators.chemprop.models import (
         ChempropClassifier,
         ChempropModel,
         ChempropNeuralFP,
@@ -14,5 +16,5 @@ try:
         "ChempropNeuralFP",
         "ChempropRegressor",
     ]
-except ImportError:
+else:
     __all__ = []
