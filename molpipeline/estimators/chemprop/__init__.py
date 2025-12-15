@@ -2,6 +2,8 @@
 
 import importlib.util
 
+__all__ = []
+
 if importlib.util.find_spec("chemprop") is not None:
     from molpipeline.estimators.chemprop.models import (
         ChempropClassifier,
@@ -10,11 +12,9 @@ if importlib.util.find_spec("chemprop") is not None:
         ChempropRegressor,
     )
 
-    __all__ = [
+    __all__ += [
         "ChempropClassifier",
         "ChempropModel",
         "ChempropNeuralFP",
         "ChempropRegressor",
     ]
-else:
-    __all__ = []
