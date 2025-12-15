@@ -29,6 +29,7 @@ NO_IDENTITY_CHECK = [
 
 DEFAULT_BINARY_CLASSIFICATION_PARAMS = {
     "batch_size": 64,
+    "class_weight": None,
     "lightning_trainer": None,
     "lightning_trainer__enable_checkpointing": False,
     "lightning_trainer__enable_model_summary": False,
