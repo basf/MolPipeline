@@ -1,4 +1,4 @@
-"""Wrap Chemprop in a sklearn like transformer returning the neural fingerprint as a numpy array."""
+"""Wrap Chemprop in a transformer returning the neural fingerprint as a numpy array."""
 
 from collections.abc import Sequence
 from typing import Any, Self
@@ -8,16 +8,20 @@ import numpy.typing as npt
 from chemprop.data import BatchMolGraph, MoleculeDataset
 from chemprop.models.model import MPNN
 from lightning import pytorch as pl
+from typing_extensions import override
 
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 
 
 class ChempropNeuralFP(ABCChemprop):
-    """Wrap Chemprop in a sklearn like transformer returning the neural fingerprint as a numpy array.
+    """Wrap Chemprop in a transformer returning the neural fingerprint as a numpy array.
 
-    This class is not a (grand-) child of MolToAnyPipelineElement, as it does not support the `pretransform_single`
-    method. To maintain compatibility with the MolToAnyPipelineElement, the `output_type` property is implemented.
-    It can be used as any other transformer in the pipeline, except in the `MolToConcatenatedVector`.
+    This class is not a (grand-) child of MolToAnyPipelineElement, as it does not
+    support the `pretransform_single` method. To maintain compatibility with the
+    MolToAnyPipelineElement, the `output_type` property is implemented.
+    It can be used as any other transformer in the pipeline, except in the
+    `MolToConcatenatedVector`.
+
     """
 
     @property
@@ -50,6 +54,7 @@ class ChempropNeuralFP(ABCChemprop):
             Whether to allow fitting or set to fixed encoding.
         **kwargs: Any
             Parameters for components of the model.
+
         """
         # pylint: disable=duplicate-code
         self.disable_fitting = disable_fitting
@@ -61,10 +66,13 @@ class ChempropNeuralFP(ABCChemprop):
             **kwargs,
         )
 
+    @override
     def fit(
         self,
         X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
+        *,
+        sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model.
 
@@ -74,19 +82,22 @@ class ChempropNeuralFP(ABCChemprop):
             The input data.
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
+        sample_weight : npt.NDArray[np.float64] | None, optional
+            Sample weights for the input data, by default None.
 
         Returns
         -------
         Self
             The fitted model.
+
         """
         if self.disable_fitting:
             return self
-        return super().fit(X, y)
+        return super().fit(X, y, sample_weight=sample_weight)
 
     def transform(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
+        X: MoleculeDataset,  # pylint: disable=invalid-name  # noqa: N803
     ) -> npt.NDArray[np.float64]:
         """Transform the input.
 
@@ -99,6 +110,7 @@ class ChempropNeuralFP(ABCChemprop):
         -------
         npt.NDArray[np.float64]
             The neural fingerprint of the input data.
+
         """
         self.model.eval()
         mol_data = [X[i].mg for i in range(len(X))]
@@ -106,7 +118,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     def fit_transform(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
+        X: MoleculeDataset,  # pylint: disable=invalid-name  # noqa: N803
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
     ) -> npt.NDArray[np.float64]:
         """Fit the model and transform the input.
@@ -122,6 +134,7 @@ class ChempropNeuralFP(ABCChemprop):
         -------
         npt.NDArray[np.float64]
             The neural fingerprint of the input data.
+
         """
         self.fit(X, y)
         return self.transform(X)
