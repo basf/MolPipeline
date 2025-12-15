@@ -200,7 +200,7 @@ class ChempropModel(ABCChemprop):
         X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
         *,
-        sample_weight: npt.NDArray[np.float64] | None = None,
+        sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model to the data.
 
@@ -210,7 +210,7 @@ class ChempropModel(ABCChemprop):
             The input data.
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
-        sample_weight : npt.NDArray[np.float64] | None, optional
+        sample_weight : Sequence[float] |npt.NDArray[np.float64] | None, optional
             The sample weights.
 
         Returns
@@ -381,7 +381,7 @@ class ChempropClassifier(ChempropModel):
         X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
         *,
-        sample_weight: npt.NDArray[np.float64] | None = None,
+        sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model to the data.
 
@@ -391,7 +391,7 @@ class ChempropClassifier(ChempropModel):
             The input data.
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
-        sample_weight : npt.NDArray[np.float64] | None, optional
+        sample_weight : Sequence[float] | npt.NDArray[np.float64] | None, optional
             The sample weights.
 
         Returns
@@ -572,7 +572,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
         *,
-        sample_weight: npt.NDArray[np.float64] | None = None,
+        sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model to the data.
 
@@ -582,7 +582,7 @@ class ChempropMulticlassClassifier(ChempropModel):
             The input data.
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
-        sample_weight : npt.NDArray[np.float64] | None, optional
+        sample_weight : Sequence[float] | npt.NDArray[np.float64] | None, optional
             The sample weights.
 
         Returns
