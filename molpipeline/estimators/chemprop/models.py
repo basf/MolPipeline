@@ -341,6 +341,7 @@ class ChempropClassifier(ChempropModel):
             agg = SumAggregation()
             predictor = BinaryClassificationFFN()
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
+        self.class_weight = class_weight
         super().__init__(
             model=model,
             lightning_trainer=lightning_trainer,
@@ -348,7 +349,6 @@ class ChempropClassifier(ChempropModel):
             n_jobs=n_jobs,
             **kwargs,
         )
-        self.class_weight = class_weight
         if not self._is_binary_classifier():
             raise ValueError("ChempropClassifier should be a binary classifier.")
 
