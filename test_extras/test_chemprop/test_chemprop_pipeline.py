@@ -226,6 +226,56 @@ class TestChempropPipeline(unittest.TestCase):
             weight = call_args[3]
             self.assertTrue(np.allclose(weight, sample_weight))
 
+    def test_class_weight_no_sample_weight(self) -> None:
+        """Test that class_weight is used correctly."""
+        # Use a small dummy dataset with 80% of class 0 and 20% of class 1
+        smiles = ["CCO", "CCN", "CCC", "CCCl", "c1ccccc1"] * 4
+        y = np.array([0, 0, 0, 0, 1] * 4)
+        # Test with class_weight='balanced'
+        bce_loss = BCELoss()
+        bce_loss.update = mock.MagicMock(side_effect=bce_loss.update)
+        model = get_classification_pipeline(
+            chemprop_kwargs={
+                "class_weight": "balanced",
+                "model__predictor__criterion": bce_loss,
+            },
+        )
+        model.fit(smiles, y)
+        for call_params in bce_loss.update.call_args_list:
+            call_args = call_params[0]
+            label = call_args[1].detach().cpu().numpy()
+            weight = call_args[3].detach().cpu().numpy()
+            # Check that weights correspond to class_weight='balanced'
+            neg_label_weight_sum = np.sum(weight[label == 0])
+            pos_label_weight_sum = np.sum(weight[label == 1])
+            self.assertAlmostEqual(neg_label_weight_sum, pos_label_weight_sum)
+
+    def test_class_weight_with_sample_weight(self) -> None:
+        """Test that class_weight and sample_weight are combined correctly."""
+        # Use a small dummy dataset with 80% of class 0 and 20% of class 1
+        smiles = ["CCO", "CCN", "CCC", "CCCl", "c1ccccc1"] * 4
+        y = np.array([0, 0, 0, 0, 1] * 4)
+        # The last component has double weight
+        sample_weight = np.array([1.0, 1.0, 1.0, 1.0, 2.0] * 4)
+        # Test with class_weight='balanced'
+        bce_loss = BCELoss()
+        bce_loss.update = mock.MagicMock(side_effect=bce_loss.update)
+        model = get_classification_pipeline(
+            chemprop_kwargs={
+                "class_weight": "balanced",
+                "model__predictor__criterion": bce_loss,
+            },
+        )
+        model.fit(smiles, y, model__sample_weight=sample_weight)
+        for call_params in bce_loss.update.call_args_list:
+            call_args = call_params[0]
+            label = call_args[1].detach().cpu().numpy()
+            weight = call_args[3].detach().cpu().numpy()
+            # Compute expected weights
+            neg_label_weight_sum = np.sum(weight[label == 0])
+            pos_label_weight_sum = np.sum(weight[label == 1])
+            self.assertAlmostEqual(neg_label_weight_sum * 2, pos_label_weight_sum)
+
 
 class TestRegressionPipeline(unittest.TestCase):
     """Test the Chemprop model pipeline for regression."""
