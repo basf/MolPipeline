@@ -46,7 +46,7 @@ class TestMol2Binary(unittest.TestCase):
             [
                 ("Smiles2Mol", SmilesToMol()),
                 ("Mol2Binary", MolToBinary()),
-            ]
+            ],
         )
         log_block = rdBase.BlockLogs()
         binary_mols = pipeline.fit_transform(test_smiles)
@@ -55,8 +55,12 @@ class TestMol2Binary(unittest.TestCase):
         self.assertTrue(
             all(
                 Chem.MolToInchi(smiles_mol) == Chem.MolToInchi(original_mol)
-                for smiles_mol, original_mol in zip(actual_mols, expected_mols)
-            )
+                for smiles_mol, original_mol in zip(
+                    actual_mols,
+                    expected_mols,
+                    strict=True,
+                )
+            ),
         )
         del log_block
 
@@ -65,7 +69,7 @@ class TestMol2Binary(unittest.TestCase):
         pipeline = Pipeline(
             [
                 ("Mol2Binary", MolToBinary()),
-            ]
+            ],
         )
 
         # test empty molecule
