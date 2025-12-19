@@ -218,6 +218,7 @@ class TestChempropClassifier(unittest.TestCase):
         chemprop_model = ChempropClassifier(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_BINARY_CLASSIFICATION_PARAMS)  # Shallow copy
+        expected_params["class_weight"] = None
         self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
         for param_name, param in expected_params.items():
             if param_name in NO_IDENTITY_CHECK:
