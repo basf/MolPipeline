@@ -172,7 +172,7 @@ class TestChempropPipeline(unittest.TestCase):
 
     def test_state_dict_from_url(self) -> None:
         """Test that the state_dict can be loaded from a URL."""
-        chemeleon_url = "https://dummy_chemeleon_url.pt"
+        chemeleon_url = "dummy_chemeleon_url.pt"
         chemeleon_dummy = BondMessagePassing(d_h=2048)
         dummy_state_dict = randomize_state_dict_weights(chemeleon_dummy.state_dict())
 
