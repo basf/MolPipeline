@@ -3,6 +3,7 @@
 from typing import Any
 
 import dvc.api
+from typing_extensions import override
 
 from molpipeline.utils.file_loading.abc_file_loading import ABCFileLoader
 
@@ -49,8 +50,14 @@ class DVCFileLoader(ABCFileLoader):
         with dvc.api.open(self.file_path, repo=self.repo, rev=self.rev, mode="rb") as f:
             return f.read()
 
-    def get_params(self) -> dict[str, Any]:
+    @override
+    def get_params(self, deep: bool = False) -> dict[str, Any]:
         """Get the parameters of the file loader.
+
+        Parameters
+        ----------
+        deep : bool, default=False
+            Whether to return the parameters of sub-objects (if any).
 
         Returns
         -------
