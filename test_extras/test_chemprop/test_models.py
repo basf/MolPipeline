@@ -281,6 +281,36 @@ class TestChempropRegressor(unittest.TestCase):
                     f"Test failed for {param_name}",
                 )
 
+    def test_set_params(self) -> None:
+        """Test the set_params methods."""
+        chemprop_model = ChempropRegressor(
+            lightning_trainer__accelerator="cpu",
+        )
+        changed_params = {
+            "batch_size": 64,
+            "lightning_trainer__max_epochs": 15,
+            "model__message_passing__depth": 4,
+        }
+
+        chemprop_model.set_params(**changed_params)
+        current_params = chemprop_model.get_params(deep=True)
+        self.assertGreaterEqual(current_params.keys(), changed_params.keys())
+        for param, value in changed_params.items():
+            self.assertEqual(current_params[param], value)
+
+    def test_init_kwargs(self) -> None:
+        """Test that init kwargs are correctly set as parameters."""
+        non_default_kwargs = {
+            "batch_size": 128,
+            "lightning_trainer__max_epochs": 20,
+            "model__message_passing__depth": 5,
+        }
+        chemprop_model = ChempropRegressor(**non_default_kwargs)  # type: ignore
+        current_params = chemprop_model.get_params(deep=True)
+        self.assertGreaterEqual(current_params.keys(), non_default_kwargs.keys())
+        for param, value in non_default_kwargs.items():
+            self.assertEqual(current_params[param], value)
+
 
 class TestChempropMulticlassClassifier(unittest.TestCase):
     """Test the Chemprop classifier model."""
