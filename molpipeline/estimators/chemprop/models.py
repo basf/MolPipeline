@@ -412,7 +412,8 @@ class ChempropClassifier(ChempropModel):
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
             The target data.
         sample_weight : Sequence[float] | npt.NDArray[np.float64] | None, optional
-            The sample weights.
+            The sample weights. If class_weight is set, the sample weights will be
+            multiplied with the class weights.
 
         Returns
         -------
