@@ -21,6 +21,7 @@ from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
 from molpipeline.utils.file_loading.url_file_loading import URLFileLoader
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_classification_pipeline,
@@ -208,6 +209,46 @@ class TestChempropPipeline(unittest.TestCase):
         # Check that the prediction works
         pred = chemprop_classifier.predict_proba(["CCO", "CCN"])
         self.assertEqual(len(pred), 2)
+
+    def test_state_dict_from_url_serialization(self) -> None:
+        """Test that the state_dict set via URLFileLoader can be serialized."""
+        chemeleon_url = "https://dummy_chemeleon_url.pt"
+        chemeleon_dummy = BondMessagePassing(d_h=2048)
+        dummy_state_dict = randomize_state_dict_weights(chemeleon_dummy.state_dict())
+
+        with mock.patch(
+            "molpipeline.utils.file_loading.url_file_loading.requests.get",
+        ) as mock_get:
+            mock_response = mock.Mock()
+            buffer = BytesIO()
+            torch.save(dummy_state_dict, buffer)
+            buffer.seek(0)
+            mock_response.content = buffer.read()
+            mock_get.return_value = mock_response
+            chemprop_classifier = get_classification_pipeline(
+                chemprop_kwargs={
+                    "model__message_passing__state_dict_ref": URLFileLoader(
+                        chemeleon_url,
+                    ),
+                    "model__message_passing__d_h": 2048,
+                    "model__predictor__input_dim": 2048,
+                },
+            )
+            self.assertEqual(mock_get.call_count, 1)
+
+            # Serialize and deserialize the pipeline
+            chemprop_classifier_json = recursive_to_json(chemprop_classifier)
+            chemprop_classifier_loaded = recursive_from_json(chemprop_classifier_json)
+            self.assertEqual(mock_get.call_count, 2)
+        # Check that the state dict was loaded correctly
+        chemprop_mpnn = chemprop_classifier_loaded.named_steps["model"].model
+        loaded_state_dict = chemprop_mpnn.message_passing.state_dict()
+        self.assertEqual(
+            dummy_state_dict.keys(),
+            loaded_state_dict.keys(),
+        )
+        for key, value in dummy_state_dict.items():
+            self.assertTrue(torch.equal(value, loaded_state_dict[key]))
 
     def test_sample_weight_forwarding(self) -> None:
         """Test that the sample weights are properly forwarded to the loss function."""
