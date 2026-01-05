@@ -199,6 +199,24 @@ image.save("explanation.png")
 ```
 Note that the explainability module is fully-functional but in the 'experimental' directory because we might make changes to the API.
 
+### Baseline machine learning models
+
+MolPipeline provides optimized configurations for common baseline models, such as Random Forest. Based on experience,
+these often perform better than simply using sklearn's default settings and binary fingerprints.
+
+Our Random Forest baseline:
+
+```python
+from molpipeline.estimators.baselines import (
+    get_rf_classifier_baseline,
+    get_rf_regressor_baseline,
+)
+
+rf_clf_baseline = get_rf_classifier_baseline(n_jobs=16, random_state=42)
+rf_reg_baseline = get_rf_regressor_baseline(n_jobs=16, random_state=42)
+```
+
+
 ## License
 
 This software is licensed under the MIT license. See the [LICENSE](LICENSE) file for details.
