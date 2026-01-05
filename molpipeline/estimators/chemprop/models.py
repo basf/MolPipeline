@@ -469,6 +469,7 @@ class ChempropRegressor(ChempropModel):
             agg = SumAggregation()
             predictor = RegressionFFN(n_tasks=n_tasks)
             model = MPNN(message_passing=bond_encoder, agg=agg, predictor=predictor)
+        self.n_tasks = n_tasks
         super().__init__(
             model=model,
             lightning_trainer=lightning_trainer,
@@ -476,7 +477,6 @@ class ChempropRegressor(ChempropModel):
             n_jobs=n_jobs,
             **kwargs,
         )
-        self.n_tasks = n_tasks
 
 
 class ChempropMulticlassClassifier(ChempropModel):

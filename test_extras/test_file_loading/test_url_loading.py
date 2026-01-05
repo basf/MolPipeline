@@ -3,7 +3,10 @@
 import unittest
 from unittest import mock
 
+from sklearn.base import clone
+
 from molpipeline.utils.file_loading.url_file_loading import URLFileLoader
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 
 
 class TestURLFileLoader(unittest.TestCase):
@@ -46,3 +49,19 @@ class TestURLFileLoader(unittest.TestCase):
             self.assertEqual(mock_get.call_count, 1)
 
         self.assertEqual(loaded_file.decode(), mock_message)
+
+    def test_serialization(self) -> None:
+        """Test serialization and deserialization of URLFileLoader."""
+        json_data = recursive_to_json(self.loader)
+        new_loader = recursive_from_json(json_data)
+        self.assertIsInstance(new_loader, URLFileLoader)
+        self.assertEqual(new_loader.url, self.loader.url)
+        self.assertEqual(new_loader.timeout, self.loader.timeout)
+
+    def test_cloning(self) -> None:
+        """Test cloning of URLFileLoader."""
+        cloned_loader: URLFileLoader = clone(self.loader)  # type: ignore
+        self.assertNotEqual(cloned_loader, self.loader)
+        self.assertIsInstance(cloned_loader, URLFileLoader)
+        self.assertEqual(cloned_loader.url, self.loader.url)
+        self.assertEqual(cloned_loader.timeout, self.loader.timeout)
