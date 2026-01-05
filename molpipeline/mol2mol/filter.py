@@ -73,8 +73,7 @@ class ElementFilter(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None,
-            optional
+        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None, optional
             List of atomic numbers of elements to allowed in molecules.
             Per default allowed elements are:
             H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
