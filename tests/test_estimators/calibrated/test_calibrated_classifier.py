@@ -5,11 +5,11 @@ Tests use a small imbalanced dataset.
 
 import unittest
 
-from loguru import logger
 import numpy as np
+from loguru import logger
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import balanced_accuracy_score, recall_score, accuracy_score
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, recall_score
 from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn.utils.class_weight import compute_class_weight
 
@@ -28,7 +28,6 @@ class TestCalibratedClassifierCV(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up any necessary components before each test."""
-
         n_c0 = 900
         n_c1 = 100
 
@@ -46,7 +45,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         false_neg = int(n_c0 - true_neg)
 
         logger.debug(
-            f"TP: {true_pos}, FN: {false_neg}, TN: {true_neg}, FP: {false_pos}"
+            f"TP: {true_pos}, FN: {false_neg}, TN: {true_neg}, FP: {false_pos}",
         )
 
         n_c0_sample = true_neg + false_pos
@@ -66,7 +65,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         )
 
         logger.debug(
-            f"Before flipping: Class 0: {np.sum(y==0)}, Class 1: {np.sum(y==1)}"
+            f"Before flipping: Class 0: {np.sum(y == 0)}, Class 1: {np.sum(y == 1)}",
         )
         rng = np.random.default_rng(SEED)
         flip_c0_indices = rng.choice(np.where(y == 0)[0], size=false_pos, replace=False)
@@ -75,12 +74,11 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         y[flip_c1_indices] = 0
         logger.debug(
             f"Flipped {false_pos} labels from class 0 to 1 and "
-            f"{false_neg} labels from class 1 to 0."
+            f"{false_neg} labels from class 1 to 0.",
         )
         logger.debug(
-            f"After flipping: Class 0: {np.sum(y==0)}, Class 1: {np.sum(y==1)}"
+            f"After flipping: Class 0: {np.sum(y == 0)}, Class 1: {np.sum(y == 1)}",
         )
-
 
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
             x,
