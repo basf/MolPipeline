@@ -554,7 +554,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         Parameters
         ----------
         n_classes : int
-            number of classes
+            Number of classes.
 
         """
         self.model.predictor.n_classes = n_classes

@@ -80,7 +80,7 @@ class ElementFilter(_MolToMolPipelineElement):
             H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
             Alternatively, a dictionary can be passed with atomic numbers as keys and an
             int for exact count or a tuple of minimum and maximum.
-        add_hydrogens: bool, optional (default: True)
+        add_hydrogens: bool, default = True
             If True, in case Hydrogens are in allowed_element_list, add hydrogens to the
             molecule before filtering.
         name: str, default="ElementFilterPipe"

@@ -40,7 +40,7 @@ class MolToBool(MolToAnyPipelineElement):
         Parameters
         ----------
         value: Any
-            Current representation of the molecule. (Eg. SMILES, RDKit Mol, ...)
+            Current representation of the molecule.
 
         Returns
         -------
