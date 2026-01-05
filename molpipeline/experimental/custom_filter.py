@@ -48,12 +48,13 @@ class CustomFilter(_MolToMolPipelineElement):
         Parameters
         ----------
         value : RDKitMol
-            input value
+            Molecule to check against the filter.
 
         Returns
         -------
         OptionalMol
-            output value
+            The original molecule if it passes the filter, otherwise an InvalidInstance.
+
         """
         if self.func(value):
             return value

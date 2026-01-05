@@ -98,9 +98,9 @@ class Grid2D(abc.ABC):
         Parameters
         ----------
         x_idx: int
-            cell-index along x-axis.
+            Cell-index along x-axis.
         y_idx: int
-            cell-index along y-axis.
+            Cell-index along y-axis.
 
         Returns
         -------

@@ -643,8 +643,6 @@ class Pipeline(_Pipeline):
             transformations in the pipeline are not propagated to the
             final estimator.
 
-            .. versionadded:: 0.20
-
         Raises
         ------
         AssertionError
