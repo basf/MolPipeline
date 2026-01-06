@@ -1,7 +1,5 @@
 """Implementation for 2D pharmacophore fingerprints."""
 
-from __future__ import annotations
-
 import copy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Self

@@ -1,7 +1,5 @@
 """Type guards for various types used in the package."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import scipy

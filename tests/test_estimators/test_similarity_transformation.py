@@ -1,7 +1,5 @@
 """Unit tests for the TanimotoToTraining estimator."""
 
-from __future__ import annotations
-
 import unittest
 from typing import TYPE_CHECKING
 

@@ -1,7 +1,5 @@
 """Classes and functions for detecting and handling None values."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 
 import numpy as np

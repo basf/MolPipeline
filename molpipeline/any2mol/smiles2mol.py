@@ -1,6 +1,5 @@
 """Classes ment to transform given input to a RDKit molecule."""
 
-from __future__ import annotations
 
 from typing import Any, Self
 

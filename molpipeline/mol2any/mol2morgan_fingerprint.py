@@ -1,7 +1,5 @@
 """Implementations for the Morgan fingerprint."""
 
-from __future__ import annotations  # for all the python 3.8 users out there.
-
 import copy
 from typing import TYPE_CHECKING, Any, Self
 

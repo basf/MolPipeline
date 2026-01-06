@@ -1,7 +1,5 @@
 """Tests for the MolToMACCSFP pipeline element."""
 
-from __future__ import annotations
-
 import unittest
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Functions of fingerprints for comparing output with molpipline."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, TypeGuard
 
 import numpy as np

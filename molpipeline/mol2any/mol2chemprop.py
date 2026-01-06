@@ -2,8 +2,6 @@
 
 # pylint: disable=too-many-arguments
 
-from __future__ import annotations
-
 import warnings
 from collections.abc import Iterable
 from typing import Any

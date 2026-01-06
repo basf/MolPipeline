@@ -1,7 +1,5 @@
 """Defines the pipeline which handles pipeline elements for molecular operations."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import Any, Self
 

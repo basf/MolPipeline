@@ -1,7 +1,5 @@
 """Abstract classes for transforming rdkit molecules to float vectors."""
 
-from __future__ import annotations
-
 import abc
 from collections.abc import Iterable
 from typing import Any, Self

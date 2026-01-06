@@ -1,7 +1,5 @@
 """Utility functions for explainability."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Sequence
 

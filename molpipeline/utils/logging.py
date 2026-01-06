@@ -1,7 +1,5 @@
 """Logging helper functions."""
 
-from __future__ import annotations
-
 import timeit
 from contextlib import contextmanager
 from typing import TYPE_CHECKING

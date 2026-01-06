@@ -1,7 +1,5 @@
 """Module for checking values."""
 
-from __future__ import annotations
-
 from typing import Any
 
 __all__ = ["get_length", "is_empty"]

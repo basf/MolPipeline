@@ -3,8 +3,6 @@
 This is only relevant for explainable AI, where atoms need to be mapped to features.
 """
 
-from __future__ import annotations
-
 from rdkit import Chem
 
 

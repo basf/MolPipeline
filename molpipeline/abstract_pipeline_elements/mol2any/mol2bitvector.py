@@ -1,7 +1,5 @@
 """Abstract classes for transforming rdkit molecules to bit vectors."""
 
-from __future__ import annotations  # for all the python 3.8 users out there.
-
 import abc
 import copy
 from collections.abc import Iterable

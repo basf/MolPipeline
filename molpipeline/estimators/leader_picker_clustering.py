@@ -1,6 +1,5 @@
 """LeaderPicker-based clustering estimator."""
 
-from __future__ import annotations
 
 from collections.abc import Sequence
 from itertools import compress

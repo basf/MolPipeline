@@ -1,6 +1,5 @@
 """Class for Transforming SDF-strings to rdkit molecules."""
 
-from __future__ import annotations
 
 import copy
 from typing import TYPE_CHECKING, Any, Self
