@@ -7,14 +7,13 @@ import unittest
 
 import numpy as np
 from loguru import logger
+from sklearn.calibration import CalibratedClassifierCV as SKCalibratedClassifierCV
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, recall_score
 from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn.utils import compute_sample_weight
 from sklearn.utils.class_weight import compute_class_weight
-
-from sklearn.calibration import CalibratedClassifierCV as SKCalibratedClassifierCV
 
 from molpipeline.estimators.calibration.calibrated_classifier import (
     CalibratedClassifierCV,
@@ -30,7 +29,16 @@ class TestCalibratedClassifierCV(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        """Set up any necessary components before each test."""
+        """Set up any necessary components before each test.
+
+        Raises
+        ------
+        AssertionError
+            If generated class distributions do not match expected values.
+        AssertionError
+            If final class distributions do not match requested values.
+
+        """
         n_c0 = 900  # Class 0 is majority class
         n_c1 = 100  # Class 1 is minority class
 
@@ -69,7 +77,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
 
         if not (np.sum(y == 0) == n_c0_sample and np.sum(y == 1) == n_c1_sample):
             raise AssertionError(
-                "Generated class distribution does not match expected."
+                "Generated class distribution does not match expected.",
             )
         rng = np.random.default_rng(SEED)
         flip_c0_indices = rng.choice(np.where(y == 0)[0], size=false_pos, replace=False)
@@ -78,7 +86,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         y[flip_c1_indices] = 0
         if not (np.sum(y == 0) == n_c0 and np.sum(y == 1) == n_c1):
             raise AssertionError(
-                "Final class distribution does not match requested distribution."
+                "Final class distribution does not match requested distribution.",
             )
 
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
@@ -149,7 +157,6 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         measures performance on the minority class, will be lower than selectivity.
 
         """
-
         param_grid = ParameterGrid(
             {
                 "ensemble": [True, False, "auto"],
