@@ -72,7 +72,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
             class_sep=2,
             flip_y=0,
             n_clusters_per_class=1,
-            weights=[sample_weight, 1 / sample_weight],
+            weights=[sample_weight, 1 - sample_weight],
             random_state=SEED,
         )
 
@@ -150,7 +150,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                 sensitivity = recall_score(self.y_test, preds, pos_label=1)
                 selectivity = recall_score(self.y_test, preds, pos_label=0)
                 ba = balanced_accuracy_score(self.y_test, preds)
-                logger.info(
+                logger.debug(
                     f"Params: {params}, Balanced Accuracy: {ba:.3f}, "
                     f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
                 )
