@@ -449,7 +449,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         Parameters
         ----------
         n_classes : int
-            The number classes expected in the output.
+            The number of classes expected in the output.
         n_tasks : int, default=1
             Number of tasks.
         input_dim : int, default=DEFAULT_HIDDEN_DIM
