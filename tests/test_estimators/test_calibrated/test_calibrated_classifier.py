@@ -298,7 +298,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                     f"{ba:.3f}, Sensitivity: {sensitivity:.3f}, "
                     f"Selectivity: {selectivity:.3f}",
                 )
-                # Temperature seems to neglect minority class despite class_weight
+                # Temperature seems to neglect minority class despite sample_weight
                 if params["method"] != "temperature":
                     self.assertGreater(ba, self.expected_ba - TOLERANCE)
                     self.assertGreater(sensitivity, self.sensitivity - TOLERANCE)
