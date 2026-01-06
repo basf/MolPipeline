@@ -57,7 +57,7 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
         Parameters
         ----------
         value: str
-            string representation.
+            String representation of the molecule.
 
         Returns
         -------
@@ -96,7 +96,7 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
         Parameters
         ----------
         value: str
-            string representation
+            String representation of the molecule.
 
         Returns
         -------
