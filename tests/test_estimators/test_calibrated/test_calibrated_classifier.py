@@ -20,7 +20,9 @@ from molpipeline.estimators.calibration.calibrated_classifier import (
 )
 from tests.utils.logging import capture_logs
 
+# Parameters for the tests
 SEED = 42
+TOLERANCE = 0.05
 
 
 class TestCalibratedClassifierCV(unittest.TestCase):
@@ -45,6 +47,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
 
         self.selectivity = 0.8
         self.sensitivity = 0.8
+        self.expected_ba = (self.selectivity + self.sensitivity) / 2
 
         # To reach desired selectivity/sensitivity, we need to adjust the number of
         # samples before flipping labels
@@ -154,14 +157,13 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                     f"Params: {params}, Balanced Accuracy: {ba:.3f}, "
                     f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
                 )
-                expected_ba = (self.sensitivity + self.selectivity) / 2
-                self.assertGreater(selectivity, self.selectivity - 0.05)
+                self.assertGreater(selectivity, self.selectivity - TOLERANCE)
 
                 # Temperature seems to neglect minority class despite class_weight
                 if params["method"] != "temperature":
-                    self.assertGreater(ba, expected_ba - 0.05)
-                    self.assertGreater(sensitivity, self.sensitivity - 0.05)
-                    self.assertLess(abs(sensitivity - selectivity), 0.15)
+                    self.assertGreater(ba, self.expected_ba - TOLERANCE)
+                    self.assertGreater(sensitivity, self.sensitivity - TOLERANCE)
+                    self.assertLess(abs(sensitivity - selectivity), TOLERANCE * 2)
                 else:
                     # This is not what should happen but what happens.
                     # If these tests fail we should test if the minority class is
@@ -218,11 +220,12 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                     f"Accuracy: {ac:.3f}, "
                     f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
                 )
-                self.assertGreater(ac, (self.sensitivity + self.selectivity) / 2 - 0.1)
-                self.assertLess(ba, (self.sensitivity + self.selectivity) / 2 - 0.1)
-                self.assertLess(sensitivity, self.sensitivity - 0.1)
-                self.assertGreater(selectivity, self.selectivity - 0.1)
-                self.assertGreater(selectivity - sensitivity, 0.1)
+                # Accuracy should be high and balanced accuracy low due to imbalance
+                self.assertGreater(ac, self.expected_ba - TOLERANCE)
+                self.assertLess(ba, self.expected_ba - TOLERANCE)
+                self.assertLess(sensitivity, self.sensitivity - TOLERANCE)
+                self.assertGreater(selectivity, self.selectivity - TOLERANCE)
+                self.assertGreater(selectivity - sensitivity, TOLERANCE)
 
     def test_without_class_weight_and_with_sample_weight(self) -> None:
         """Test CalibratedClassifierCV without class_weight but with sample_weight.
@@ -287,7 +290,6 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                 self.assertEqual(sk_probas.shape, (self.x_test.shape[0], 2))
                 self.assertTrue(np.allclose(probas, sk_probas))
 
-                expected_ba = (self.sensitivity + self.selectivity) / 2
                 sensitivity = recall_score(self.y_test, preds, pos_label=1)
                 selectivity = recall_score(self.y_test, preds, pos_label=0)
                 ba = balanced_accuracy_score(self.y_test, preds)
@@ -298,9 +300,9 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                 )
                 # Temperature seems to neglect minority class despite class_weight
                 if params["method"] != "temperature":
-                    self.assertGreater(ba, expected_ba - 0.05)
-                    self.assertGreater(sensitivity, self.sensitivity - 0.05)
-                    self.assertLess(abs(sensitivity - selectivity), 0.15)
+                    self.assertGreater(ba, self.expected_ba - TOLERANCE)
+                    self.assertGreater(sensitivity, self.sensitivity - TOLERANCE)
+                    self.assertLess(abs(sensitivity - selectivity), TOLERANCE * 2)
                 else:
                     # This is not what should happen but what happens.
                     # If these tests fail we should test if the minority class is
