@@ -18,6 +18,7 @@ from sklearn.utils.class_weight import compute_class_weight
 from molpipeline.estimators.calibration.calibrated_classifier import (
     CalibratedClassifierCV,
 )
+from tests.utils.logging import capture_logs
 
 SEED = 42
 
@@ -97,6 +98,24 @@ class TestCalibratedClassifierCV(unittest.TestCase):
             stratify=y,
         )
 
+    def test_temperature_and_class_weight_warning(self) -> None:
+        """Test that warning is raised when using temperature method with class_weight.
+
+        Using class_weight with temperature method seems to have no effect.
+
+        """
+        with capture_logs(level="WARNING") as log_capture:
+            CalibratedClassifierCV(
+                method="temperature",
+                class_weight="balanced",
+            )
+        warning_messages = "\n".join(log_capture)
+        self.assertIn(
+            "At the moment temperature scaling with class weights seems to have no "
+            "effect.",
+            warning_messages,
+        )
+
     def test_with_class_weight(self) -> None:
         """Test CalibratedClassifierCV with class_weight on imbalanced data.
 
@@ -116,20 +135,13 @@ class TestCalibratedClassifierCV(unittest.TestCase):
             {
                 "class_weight": ["balanced", class_weight_dict],
                 "ensemble": [True, False, "auto"],
-                "method": ["isotonic", "sigmoid"],
+                "method": ["isotonic", "sigmoid", "temperature"],
             },
         )
         for params in param_grid:
             with self.subTest(params=params):
-                clf = LogisticRegression(
-                    random_state=SEED,
-                    class_weight=None,
-                )
-                calibrated = CalibratedClassifierCV(
-                    clf,
-                    cv=2,
-                    **params,
-                )
+                clf = LogisticRegression(random_state=SEED, class_weight=None)
+                calibrated = CalibratedClassifierCV(clf, cv=2, **params)
                 calibrated.fit(self.x_train, self.y_train)
                 preds = calibrated.predict(self.x_test)
                 probas = calibrated.predict_proba(self.x_test)
@@ -142,11 +154,20 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                     f"Params: {params}, Balanced Accuracy: {ba:.3f}, "
                     f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
                 )
-
-                self.assertGreater(ba, (self.sensitivity + self.selectivity) / 2 - 0.05)
-                self.assertGreater(sensitivity, self.sensitivity - 0.05)
+                expected_ba = (self.sensitivity + self.selectivity) / 2
                 self.assertGreater(selectivity, self.selectivity - 0.05)
-                self.assertLess(abs(sensitivity - selectivity), 0.15)
+
+                # Temperature seems to neglect minority class despite class_weight
+                if params["method"] != "temperature":
+                    self.assertGreater(ba, expected_ba - 0.05)
+                    self.assertGreater(sensitivity, self.sensitivity - 0.05)
+                    self.assertLess(abs(sensitivity - selectivity), 0.15)
+                else:
+                    # This is not what should happen but what happens.
+                    # If these tests fail we should test if the minority class is
+                    # respected and update the tests.
+                    self.assertLessEqual(ba, 0.5)
+                    self.assertLessEqual(sensitivity, 0.1)
 
     def test_without_class_weight(self) -> None:
         """Test CalibratedClassifierCV without class_weight on imbalanced data.
