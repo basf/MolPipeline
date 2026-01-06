@@ -10,6 +10,7 @@ from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
+from loguru import logger
 from sklearn.base import (
     BaseEstimator,
     _fit_context,  # noqa: PLC2701
@@ -470,6 +471,11 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             See :term:`Glossary <class_weight>` for more details.
 
         """
+        if method == "temperature" and class_weight is not None:
+            logger.warning(
+                "At the moment temperature scaling with class weights "
+                "seems to have no effect.",
+            )
         super().__init__(
             estimator=estimator,
             method=method,
