@@ -231,7 +231,8 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         implementation should match sklearn's behavior.
 
         Since we provide sample weights, we expect sensitivity and selectivity
-        to be reasonably balanced and both above 0.8.
+        to be reasonably balanced and both above 0.8. Temperature scaling seems to
+        neglect the minority class despite sample weights, though. Hence, we exclude it.
 
         Since the sample_weight is also forwarded to the logistic regression,
         we invert its class weights to evaluate only the effect of sample_weight for
