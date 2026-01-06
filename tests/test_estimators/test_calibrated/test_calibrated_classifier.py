@@ -239,10 +239,12 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         the calibration itself.
 
         """
-        classes = np.array([0, 1])
         sample_weight = compute_sample_weight("balanced", self.y_train)
-        class_weight = compute_class_weight("balanced", y=self.y_train, classes=classes)
-        inverted_class_weight_dict = dict(zip(classes, 1 / class_weight, strict=True))
+        class_weight = compute_class_weight(
+            "balanced",
+            y=self.y_train,
+            classes=np.array([0, 1]),
+        )
         param_grid = ParameterGrid(
             {
                 "ensemble": [True, False, "auto"],
@@ -253,8 +255,8 @@ class TestCalibratedClassifierCV(unittest.TestCase):
             with self.subTest(params=params):
                 clf = LogisticRegression(
                     # Invert class weights to isolate effect of sample_weight
-                    # on calibration sample_weight * 1/class_weight = uniform weights
-                    class_weight=inverted_class_weight_dict,
+                    # on calibration: sample_weight * 1/class_weight = uniform weights
+                    class_weight={0: 1 / class_weight[0], 1: 1 / class_weight[1]},
                     random_state=SEED,
                 )
                 calibrated = CalibratedClassifierCV(
