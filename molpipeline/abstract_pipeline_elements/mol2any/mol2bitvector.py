@@ -452,7 +452,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         radius: int, default=2
             Radius of fingerprint.
         use_features: bool, default=False
-            Whether to represent atoms by element or category (donor, acceptor. etc.)
+            Whether to represent atoms by element or category (donor, acceptor, etc.)
         counted: bool, default=False
             Whether to count the bits or not.
         return_as: FPReturnAsOption, default="sparse"
