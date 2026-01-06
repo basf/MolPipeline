@@ -201,10 +201,13 @@ Note that the explainability module is fully-functional but in the 'experimental
 
 ### Baseline machine learning models
 
-MolPipeline provides optimized configurations for common baseline models, such as Random Forest. Based on experience,
-these often perform better than simply using sklearn's default settings and binary fingerprints.
+MolPipeline provides optimized configurations for common baseline models for molecular property prediction, such as
+Random Forest.
+Based on practical experience, these often perform better than simply using Random Forest with scikit-learn’s default
+settings and binary Morgan fingerprints. In addition, our Random Forest baseline performs much better than the simple
+configuration on the Polaris and MoleculeACE benchmarks; see the [paperTODO](TODO).
 
-Our Random Forest baseline:
+There is a convenient function to get a Random Forest baseline model as a Pipeline:
 
 ```python
 from molpipeline.estimators.baselines import (
@@ -212,9 +215,86 @@ from molpipeline.estimators.baselines import (
     get_rf_regressor_baseline,
 )
 
-rf_clf_baseline = get_rf_classifier_baseline(n_jobs=16, random_state=42)
-rf_reg_baseline = get_rf_regressor_baseline(n_jobs=16, random_state=42)
+# get the RandomForestClassifier baseline as a Pipeline
+rf_baseline = get_rf_classifier_baseline(n_jobs=16, random_state=42)
+# Uncomment for the RandomForestRegressor baseline
+# rf_baseline = get_rf_regressor_baseline(n_jobs=16, random_state=42)
+
+X = ["CCCCCC", "c1ccccc1"]
+y = [0.2, 0.4]
+
+rf_baseline.fit(X, y)
+preds = rf_baseline.predict(X)
 ```
+
+The Random Forest baseline models differ to the model with scikit-learn defaults and binary fingerprints in the following ways:
+- Use `n_estimators=500` instead of sklearn's default `n_estimators=100`.
+- Use Morgan **count** fingerprint instead of commonly used **binary** fingerprint.
+- Concatenate Morgan count fingerprints with RDKit's physiochemical (PhysChem) descriptors, which
+  ofter work orthogonally to fingerprints.
+- Based on our experience, minimal hyperparameter tuning of Random Forests's `max_features`
+  can (slightly) improve and significantly speed up training.
+  In this configuration, we set: `max_features="log2"`.
+
+Here is the pipeline definition code for the RandomForestClassifier baseline:
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import VarianceThreshold
+
+from molpipeline import Pipeline
+from molpipeline.any2mol import AutoToMol
+from molpipeline.mol2any import (
+    MolToConcatenatedVector,
+    MolToMorganFP,
+    MolToRDKitPhysChem,
+)
+
+random_state = 42
+n_jobs = 16
+pipe_baseline = Pipeline(
+    [
+        ("auto2mol", AutoToMol()),  # reading molecules
+        (
+            "morgan_physchem",
+            MolToConcatenatedVector(
+                [
+                    (
+                        "RDKitPhysChem",
+                        MolToRDKitPhysChem(
+                            standardizer=None,  # we avoid standardization at this point
+                        ),
+                    ),
+                    (
+                        "MorganFP",
+                        MolToMorganFP(
+                            n_bits=2048,
+                            radius=2,
+                            return_as="dense",
+                            counted=True,
+                        ),
+                    ),
+                ],
+            ),
+        ),
+        # remove zero-variance features. Usually, doesn't really improve accuracy
+        # but makes training faster.
+        ("variance_filter", VarianceThreshold(0.0)),
+        (
+            "model",
+            RandomForestClassifier(
+                n_estimators=500,
+                random_state=random_state,
+                n_jobs=n_jobs,
+                max_features="log2",
+            ),
+        ),
+    ],
+    n_jobs=n_jobs,
+)
+```
+
+The code for `RandomForestRegressor` looks the same but uses `RandomForestRegressor` instead of `RandomForestClassifier`.
 
 
 ## License
