@@ -19,7 +19,7 @@ class MolToInchi(_MolToStringPipelineElement):
         Parameters
         ----------
         value: RDKitMol
-            molecule to transform
+            Molecule to transform to an INCHI string.
 
         Returns
         -------
@@ -43,11 +43,12 @@ class MolToInchiKey(_MolToStringPipelineElement):
         Parameters
         ----------
         name: str, default="MolToInchiKey"
-            name of PipelineElement
+            Name of PipelineElement
         n_jobs: int, default=1
-            number of jobs to use for parallelization
+            Number of jobs to use for parallelization
         uuid:  str | None, optional
-            uuid of PipelineElement, by default None
+            UUID of PipelineElement, by default None
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
@@ -57,7 +58,7 @@ class MolToInchiKey(_MolToStringPipelineElement):
         Parameters
         ----------
         value: RDKitMol
-            molecule to transform
+            Molecule to transform to an INCHI-key string.
 
         Returns
         -------

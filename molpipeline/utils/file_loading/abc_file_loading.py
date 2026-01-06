@@ -19,8 +19,13 @@ class ABCFileLoader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_params(self) -> dict[str, Any]:
+    def get_params(self, deep: bool = False) -> dict[str, Any]:
         """Get the parameters of the file loader.
+
+        Parameters
+        ----------
+        deep : bool, default=False
+            Whether to return the parameters of sub-objects (if any).
 
         Returns
         -------

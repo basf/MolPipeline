@@ -40,10 +40,10 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         Parameters
         ----------
         radius: int, default=2
-            radius of the circular fingerprint [1].
-            Radius of 2 corresponds to ECFP4 (radius 2 -> diameter 4)
-        use_features: bool, optional (default=False)
-            Instead of atoms, features are encoded in the fingerprint. [2]
+            Radius of the circular fingerprint [1].
+            Radius of 2 corresponds to ECFP4.
+        use_features: bool, default=False
+            Instead of atoms, features are encoded in the fingerprint [2].
         n_bits: int, default=2048
             Size of fingerprint.
         counted: bool, default=False
