@@ -443,27 +443,27 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         Parameters
         ----------
-        estimator : estimator instance, default=None
+        estimator : BaseEstimator | None, optional
             The classifier whose output need to be calibrated to provide more
             accurate `predict_proba` outputs. The default classifier is
             a :class:`~sklearn.svm.LinearSVC`.
-        method : {'sigmoid', 'isotonic', 'temperature'}, default='sigmoid'
+        method : Literal['sigmoid', 'isotonic', 'temperature'], default='sigmoid'
             The method to use for calibration. Can be:
-            - 'sigmoid', which corresponds to Platt's method (i.e. a binary logistic
-              regression model).
-            - 'isotonic', which is a non-parametric approach.
-            - 'temperature', temperature scaling.
-        cv : int, cross-validation generator, or iterable, default=None
+            - 'sigmoid', which corresponds to Platt's method (i.e. A binary logistic
+              regression model)
+            - 'isotonic', which is a non-parametric approach
+            - 'temperature', temperature scaling
+        cv : int, cross-validation generator, or iterable, optional
             Determines the cross-validation splitting strategy.
-        n_jobs : int, default=None
+        n_jobs : int, optional
             Number of jobs to run in parallel.
             ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-            ``-1`` means using all processors.
-        ensemble : bool, or "auto", default="auto"
+            The value ``-1`` means using all processors.
+        ensemble : Literal["auto"] | bool, default="auto"
             Determines how the calibrator is fitted.
-            "auto" will use `False` if the `estimator` is a
+            The value "auto" will use `False` if the `estimator` is a
             :class:`~sklearn.frozen.FrozenEstimator`, and `True` otherwise.
-        class_weight : dict or 'balanced', default=None
+        class_weight : dict | Literal['balanced'], optional
             Class weights used for the calibration.
             If a dict, it must be provided in this form: ``{class_label: weight}``.
             Those weights won't be used for the underlying estimator training.
