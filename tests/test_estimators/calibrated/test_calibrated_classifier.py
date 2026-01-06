@@ -11,7 +11,10 @@ from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, recall_score
 from sklearn.model_selection import ParameterGrid, train_test_split
+from sklearn.utils import compute_sample_weight
 from sklearn.utils.class_weight import compute_class_weight
+
+from sklearn.calibration import CalibratedClassifierCV as SKCalibratedClassifierCV
 
 from molpipeline.estimators.calibration.calibrated_classifier import (
     CalibratedClassifierCV,
@@ -28,8 +31,8 @@ class TestCalibratedClassifierCV(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up any necessary components before each test."""
-        n_c0 = 900
-        n_c1 = 100
+        n_c0 = 900  # Class 0 is majority class
+        n_c1 = 100  # Class 1 is minority class
 
         self.selectivity = 0.8
         self.sensitivity = 0.8
@@ -64,21 +67,19 @@ class TestCalibratedClassifierCV(unittest.TestCase):
             random_state=SEED,
         )
 
-        logger.debug(
-            f"Before flipping: Class 0: {np.sum(y == 0)}, Class 1: {np.sum(y == 1)}",
-        )
+        if not (np.sum(y == 0) == n_c0_sample and np.sum(y == 1) == n_c1_sample):
+            raise AssertionError(
+                "Generated class distribution does not match expected."
+            )
         rng = np.random.default_rng(SEED)
         flip_c0_indices = rng.choice(np.where(y == 0)[0], size=false_pos, replace=False)
         flip_c1_indices = rng.choice(np.where(y == 1)[0], size=false_neg, replace=False)
         y[flip_c0_indices] = 1
         y[flip_c1_indices] = 0
-        logger.debug(
-            f"Flipped {false_pos} labels from class 0 to 1 and "
-            f"{false_neg} labels from class 1 to 0.",
-        )
-        logger.debug(
-            f"After flipping: Class 0: {np.sum(y == 0)}, Class 1: {np.sum(y == 1)}",
-        )
+        if not (np.sum(y == 0) == n_c0 and np.sum(y == 1) == n_c1):
+            raise AssertionError(
+                "Final class distribution does not match requested distribution."
+            )
 
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
             x,
@@ -88,11 +89,11 @@ class TestCalibratedClassifierCV(unittest.TestCase):
             stratify=y,
         )
 
-    def test_calibrated_classifiercv_with_class_weight(self) -> None:
+    def test_with_class_weight(self) -> None:
         """Test CalibratedClassifierCV with class_weight on imbalanced data.
 
         Since we account for class imbalance, we expect sensitivity and selectivity
-        to be reasonably balanced and both above 0.9.
+        to be reasonably balanced and both above 0.8.
         This should pass consistently for all parameter combinations tested here.
 
         """
@@ -139,42 +140,124 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                 self.assertGreater(selectivity, self.selectivity - 0.05)
                 self.assertLess(abs(sensitivity - selectivity), 0.15)
 
-    def test_calibrated_classifiercv_without_class_weight(self) -> None:
+    def test_without_class_weight(self) -> None:
         """Test CalibratedClassifierCV without class_weight on imbalanced data.
+
+        Without class_weighting our implementation should match sklearn's.
 
         Since we do not account for class imbalance, we expect that sensitivity, which
         measures performance on the minority class, will be lower than selectivity.
 
         """
-        clf = LogisticRegression(random_state=SEED, class_weight=None)
-        calibrated = CalibratedClassifierCV(
-            clf,
-            cv=2,
-            method="isotonic",
-            class_weight=None,
-            ensemble=False,
-        )
-        calibrated.fit(self.x_train, self.y_train)
-        preds = calibrated.predict(self.x_test)
-        probas = calibrated.predict_proba(self.x_test)
-        self.assertEqual(preds.shape, (self.x_test.shape[0],))
-        self.assertEqual(probas.shape, (self.x_test.shape[0], 2))
 
-        ba = balanced_accuracy_score(self.y_test, preds)
-        ac = accuracy_score(self.y_test, preds)
-        sensitivity = recall_score(self.y_test, preds, pos_label=1)
-        selectivity = recall_score(self.y_test, preds, pos_label=0)
-        logger.debug(
-            f"Without class_weight - Balanced Accuracy: "
-            f"{balanced_accuracy_score(self.y_test, preds):.3f}, "
-            f"Accuracy: {ac:.3f}, "
-            f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
+        param_grid = ParameterGrid(
+            {
+                "ensemble": [True, False, "auto"],
+                "method": ["isotonic", "sigmoid"],
+            },
         )
-        self.assertGreater(ac, (self.sensitivity + self.selectivity) / 2 - 0.1)
-        self.assertLess(ba, (self.sensitivity + self.selectivity) / 2 - 0.1)
-        self.assertLess(sensitivity, self.sensitivity - 0.1)
-        self.assertGreater(selectivity, self.selectivity - 0.1)
-        self.assertGreater(selectivity - sensitivity, 0.1)
+        for params in param_grid:
+            with self.subTest(params=params):
+                clf = LogisticRegression(random_state=SEED, class_weight=None)
+                calibrated = CalibratedClassifierCV(
+                    clf,
+                    cv=2,
+                    class_weight=None,
+                    **params,
+                )
+                sk_calibrated = SKCalibratedClassifierCV(
+                    clf,
+                    cv=2,
+                    **params,
+                )
+                calibrated.fit(self.x_train, self.y_train)
+                sk_calibrated.fit(self.x_train, self.y_train)
+                preds = calibrated.predict(self.x_test)
+                probas = calibrated.predict_proba(self.x_test)
+                sk_probas = sk_calibrated.predict_proba(self.x_test)
+                self.assertEqual(preds.shape, (self.x_test.shape[0],))
+                self.assertEqual(probas.shape, (self.x_test.shape[0], 2))
+                self.assertEqual(sk_probas.shape, (self.x_test.shape[0], 2))
+                self.assertTrue(np.allclose(probas, sk_probas))
+
+                ba = balanced_accuracy_score(self.y_test, preds)
+                ac = accuracy_score(self.y_test, preds)
+                sensitivity = recall_score(self.y_test, preds, pos_label=1)
+                selectivity = recall_score(self.y_test, preds, pos_label=0)
+                logger.debug(
+                    f"Without class_weight - Balanced Accuracy: "
+                    f"{balanced_accuracy_score(self.y_test, preds):.3f}, "
+                    f"Accuracy: {ac:.3f}, "
+                    f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
+                )
+                self.assertGreater(ac, (self.sensitivity + self.selectivity) / 2 - 0.1)
+                self.assertLess(ba, (self.sensitivity + self.selectivity) / 2 - 0.1)
+                self.assertLess(sensitivity, self.sensitivity - 0.1)
+                self.assertGreater(selectivity, self.selectivity - 0.1)
+                self.assertGreater(selectivity - sensitivity, 0.1)
+
+    def test_without_class_weight_and_with_sample_weight(self) -> None:
+        """Test CalibratedClassifierCV without class_weight but with sample_weight.
+
+        Sample weights are accepted by sklearn's CalibratedClassifierCV, so our
+        implementation should match sklearn's behavior.
+
+        Since we provide sample weights, we expect sensitivity and selectivity
+        to be reasonably balanced and both above 0.8.
+        This should pass consistently for all parameter combinations tested here.
+
+        """
+        sample_weight = compute_sample_weight("balanced", self.y_train)
+        param_grid = ParameterGrid(
+            {
+                "ensemble": [True, False, "auto"],
+                "method": ["isotonic", "sigmoid"],
+            },
+        )
+        for params in param_grid:
+            with self.subTest(params=params):
+                clf = LogisticRegression(
+                    random_state=SEED,
+                )
+                calibrated = CalibratedClassifierCV(
+                    clf,
+                    cv=2,
+                    **params,
+                )
+                sk_calibrated = SKCalibratedClassifierCV(
+                    clf,
+                    cv=2,
+                    **params,
+                )
+                calibrated.fit(
+                    self.x_train,
+                    self.y_train,
+                    sample_weight=sample_weight,
+                )
+                sk_calibrated.fit(
+                    self.x_train,
+                    self.y_train,
+                    sample_weight=sample_weight,
+                )
+                preds = calibrated.predict(self.x_test)
+                probas = calibrated.predict_proba(self.x_test)
+                sk_probas = sk_calibrated.predict_proba(self.x_test)
+                self.assertEqual(preds.shape, (self.x_test.shape[0],))
+                self.assertEqual(probas.shape, (self.x_test.shape[0], 2))
+                self.assertEqual(sk_probas.shape, (self.x_test.shape[0], 2))
+                self.assertTrue(np.allclose(probas, sk_probas))
+                sensitivity = recall_score(self.y_test, preds, pos_label=1)
+                selectivity = recall_score(self.y_test, preds, pos_label=0)
+                ba = balanced_accuracy_score(self.y_test, preds)
+                logger.debug(
+                    f"With sample_weight - Params: {params}, Balanced Accuracy: "
+                    f"{ba:.3f}, Sensitivity: {sensitivity:.3f}, "
+                    f"Selectivity: {selectivity:.3f}",
+                )
+                self.assertGreater(ba, (self.sensitivity + self.selectivity) / 2 - 0.05)
+                self.assertGreater(sensitivity, self.sensitivity - 0.05)
+                self.assertGreater(selectivity, self.selectivity - 0.05)
+                self.assertLess(abs(sensitivity - selectivity), 0.15)
 
 
 if __name__ == "__main__":
