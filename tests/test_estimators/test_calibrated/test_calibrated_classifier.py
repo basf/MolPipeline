@@ -97,7 +97,7 @@ def make_specific_classification(
         raise AssertionError(
             "Generated class distribution does not match expected.",
         )
-    rng = np.random.default_rng(SEED)
+    rng = np.random.default_rng(random_state)
     flip_c0_indices = rng.choice(np.where(y == 0)[0], size=false_pos, replace=False)
     flip_c1_indices = rng.choice(np.where(y == 1)[0], size=false_neg, replace=False)
     y[flip_c0_indices] = 1
