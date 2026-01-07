@@ -26,7 +26,7 @@ SEED = 42
 TOLERANCE = 0.1
 
 
-def make_specific_classification(
+def make_specific_classification(  # pylint: disable=too-many-locals
     n_positive: int,
     n_negative: int,
     selectivity: float,
@@ -109,7 +109,7 @@ def make_specific_classification(
     return x, y
 
 
-class TestCalibratedClassifierCV(unittest.TestCase):
+class TestCalibratedClassifierCV(unittest.TestCase):  # pylint: disable=too-many-instance-attributes
     """Unit tests for CalibratedClassifierCV with emphasis on class_weight.
 
     Tests use a small imbalanced dataset.
