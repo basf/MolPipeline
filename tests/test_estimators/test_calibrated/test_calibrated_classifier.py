@@ -191,6 +191,8 @@ class TestCalibratedClassifierCV(unittest.TestCase):  # pylint: disable=too-many
             f"Balanced Accuracy: {ba:.3f}, {roc_auc}"
             f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
         )
+
+        self.assertGreater(selectivity, self.selectivity - TOLERANCE)
         if balanced_model:
             self.assertGreater(ba, self.expected_ba - TOLERANCE)
             self.assertGreater(sensitivity, self.sensitivity - TOLERANCE)
@@ -198,7 +200,6 @@ class TestCalibratedClassifierCV(unittest.TestCase):  # pylint: disable=too-many
         else:
             self.assertLess(ba, self.expected_ba - TOLERANCE)
             self.assertLess(sensitivity, self.sensitivity - TOLERANCE)
-            self.assertGreater(selectivity, self.selectivity - TOLERANCE)
             self.assertGreater(selectivity - sensitivity, TOLERANCE)
 
     def test_temperature_and_class_weight_warning(self) -> None:
