@@ -200,7 +200,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):  # pylint: disable=too-many
         else:
             self.assertLess(ba, self.expected_ba - TOLERANCE)
             self.assertLess(sensitivity, self.sensitivity - TOLERANCE)
-            self.assertGreater(selectivity - sensitivity, TOLERANCE)
+            self.assertGreater(abs(sensitivity - selectivity), TOLERANCE * 2)
 
     def test_temperature_and_class_weight_warning(self) -> None:
         """Test that warning is raised when using temperature method with class_weight.
