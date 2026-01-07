@@ -41,18 +41,19 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         element_list: list[MolToAnyPipelineElement]
             List of Pipeline Elements of which the output is concatenated.
-        use_feature_names_prefix: bool, optional (default=True)
+        use_feature_names_prefix: bool, default=True
             If True, will add the pipeline element's name as prefix to feature names.
             If False, only the feature names are used. This can lead to duplicate
             feature names.
-        name: str, optional (default="MolToConcatenatedVector")
-            name of pipeline.
-        n_jobs: int, optional (default=1)
+        name: str, default="MolToConcatenatedVector"
+            Name of pipeline.
+        n_jobs: int, default=1
             Number of cores used.
-        uuid: str | None, optional (default=None)
+        uuid: str | None, optional
             UUID of the pipeline element. If None, a random UUID is generated.
         kwargs: Any
-            Additional keyword arguments. Can be used to set parameters of the pipeline elements.
+            Additional keyword arguments.
+            Can be used to set parameters of the pipeline elements.
 
         Raises
         ------

@@ -40,7 +40,7 @@ class SDFToMol(_StringToMolPipelineElement):
         n_jobs: int, default=1
             Number of cores used for processing.
         uuid: str | None, optional
-            uuid of PipelineElement, by default None
+            UUID of PipelineElement, by default None
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)

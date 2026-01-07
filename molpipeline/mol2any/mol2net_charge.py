@@ -42,9 +42,11 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         ----------
         charge_method: MolToNetChargeMethod, optional (default="formal_charge")
             Policy how to compute the net charge of a molecule.
-            "formal_charge" uses sum of the formal charges assigned to each atom.
-            "gasteiger" computes the Gasteiger partial charges and returns the rounded
-            sum over the atoms.
+            Can be "formal_charge" which uses sum of the formal charges assigned to
+            each atom. The setting "gasteiger" computes the Gasteiger partial
+            charges and returns the rounded sum over the atoms.
+        standardizer: AnyTransformer, optional
+            Standardizer to use, by default StandardScaler()
         name: str, optional
             Name of the pipeline element, by default "MolToNetCharge"
         n_jobs: int, optional

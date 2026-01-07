@@ -100,10 +100,8 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         return_as: FPReturnAsOption
             Type of output. When "sparse" the fingerprints will be returned as a
             scipy.sparse.csr_matrix holding a sparse representation of the bit vectors.
-            With "dense" a numpy matrix will be returned.
-            With "rdkit" the fingerprints
-            will be returned as a list of oneof
-            RDKit's ExplicitBitVect,
+            With "dense" a numpy matrix will be returned. With "rdkit" the fingerprints
+            will be returned as a list of one of RDKit's ExplicitBitVect,
             IntSparseBitVect, UIntSparseBitVect, etc. depending on the fingerprint
             and parameters.
         name: str
@@ -396,8 +394,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
             If return_as is "rdkit" return RDKit's data structure.
             If return_as is "dense" return numpy array.
             If return_as is "sparse" return dictionary with feature-position as key
-            and
-            count as value.
+            and count as value.
 
         """
         fingerprint_generator = self._get_fp_generator()
