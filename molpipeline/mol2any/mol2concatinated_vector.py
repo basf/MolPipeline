@@ -441,7 +441,9 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         """
         for element, value in zip(
-            self._element_list, zip(*values, strict=True), strict=True,
+            self._element_list,
+            zip(*values, strict=True),
+            strict=True,
         ):
             element[1].fit_to_result(value)
         return self

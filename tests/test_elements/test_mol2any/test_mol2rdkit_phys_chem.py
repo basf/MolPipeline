@@ -384,7 +384,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         )
         self.assertIsNotNone(pipeline)  # test for ruff to not have a staticmethod
 
-
     def test_empty_descriptor_list(self) -> None:
         """Test that an empty descriptor list raises ValueError."""
         with self.assertRaises(ValueError) as context:

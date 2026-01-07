@@ -5,7 +5,16 @@ from __future__ import annotations  # for all the python 3.8 users out there.
 import abc
 import copy
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, get_args, overload, Mapping
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Self,
+    TypeAlias,
+    get_args,
+    overload,
+    Mapping,
+)
 
 import numpy as np
 import numpy.typing as npt
