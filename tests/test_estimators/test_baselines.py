@@ -21,6 +21,7 @@ class TestBaselines(unittest.TestCase):
         self.test_smiles = ["CCO", "CCN", "CCC", "CCCl", "CCBr"]
         self.test_y = [0, 1, 0, 1, 0]
 
+        # pylint: disable=duplicate-code
         self.test_smiles_with_bad_smiles = [
             "CC",
             "CCO",
