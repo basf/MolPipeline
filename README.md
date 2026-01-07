@@ -211,20 +211,32 @@ There is a convenient function to get a Random Forest baseline model as a Pipeli
 
 ```python
 from molpipeline.estimators.baselines import (
-    get_rf_classifier_baseline,
     get_rf_regressor_baseline,
 )
 
-# get the RandomForestClassifier baseline as a Pipeline
-rf_baseline = get_rf_classifier_baseline(n_jobs=16, random_state=42)
-# Uncomment for the RandomForestRegressor baseline
-# rf_baseline = get_rf_regressor_baseline(n_jobs=16, random_state=42)
+# get the RandomForestRegressor baseline as a Pipeline
+rf_baseline = get_rf_regressor_baseline(n_jobs=16, random_state=42)
+# For classification tasks, use get_rf_classifier_baseline instead
 
 X = ["CCCCCC", "c1ccccc1"]
 y = [0.2, 0.4]
 
 rf_baseline.fit(X, y)
 preds = rf_baseline.predict(X)
+# output: [0.2468    nan 0.3428]
+
+# Optionally, set `error_handling=True` to enable automated error handling to gracefully
+# set predictions to NaN for invalid and failing molecules
+rf_baseline = get_rf_regressor_baseline(n_jobs=16, random_state=42, error_handling=True)
+# For classification tasks, use get_rf_classifier_baseline instead
+
+X = ["CCCCCC", "bad_smiles", "c1ccccc1"]
+y = [0.2, 0.1, 0.4]
+
+rf_baseline.fit(X, y)
+preds = rf_baseline.predict(X)
+# output: array([0.2468    nan 0.3428])
+
 ```
 
 The Random Forest baseline models differ to the model with scikit-learn defaults and binary fingerprints in the following ways:
@@ -295,6 +307,7 @@ pipe_baseline = Pipeline(
 ```
 
 The code for `RandomForestRegressor` looks the same but uses `RandomForestRegressor` instead of `RandomForestClassifier`.
+The code for automated error handling is omitted for clarity.
 
 
 ## License
