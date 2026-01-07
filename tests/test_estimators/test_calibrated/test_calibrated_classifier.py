@@ -353,7 +353,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):  # pylint: disable=too-many
                     log_info=f"Uncalibrated {params}",
                 )
 
-                # Evaluate calibrate balanced model
+                # Evaluate calibrated balanced model
                 calibrated = CalibratedClassifierCV(cv=2, **params)
                 calibrated.fit(self.x_train, self.y_train)
                 preds = calibrated.predict(self.x_test)
