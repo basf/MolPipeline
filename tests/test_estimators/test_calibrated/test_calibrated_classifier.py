@@ -83,10 +83,10 @@ def make_specific_classification(
     sample_weight = n_c0_sample / (n_c0_sample + n_c1_sample)
     x, y = make_classification(
         n_samples=n_c0_sample + n_c1_sample,
-        n_features=10,
-        n_informative=6,
-        n_redundant=2,
-        class_sep=10,
+        n_features=1,
+        n_informative=1,
+        n_redundant=0,
+        class_sep=2,
         flip_y=0,
         n_clusters_per_class=1,
         weights=[sample_weight, 1 - sample_weight],
@@ -151,7 +151,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         self.cal_param_dict = {
             "ensemble": [True, False, "auto"],
             "method": ["isotonic", "sigmoid", "temperature"],
-            "estimator": LogisticRegression(random_state=SEED, class_weight=None),
+            "estimator": [LogisticRegression(random_state=SEED, class_weight=None)],
             "class_weight": ["balanced", class_weight_dict],
         }
 
@@ -270,7 +270,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                 self.evaluate_predictions(
                     self.y_test,
                     preds,
-                    probas,
+                    probas[:, 1],
                     balanced_model=False,
                     log_info=params,
                 )
@@ -328,9 +328,63 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                 self.evaluate_predictions(
                     self.y_test,
                     preds,
-                    probas,
+                    probas[:, 1],
                     balanced_model=params["method"] != "temperature",
                     log_info=params,
+                )
+
+    def test_balanced_model_does_not_regress(self) -> None:
+        """Test that a balanced model does not regress when calibrated."""
+        for params in ParameterGrid(self.cal_param_dict):
+            with self.subTest(params=params):
+                # Uncalibrated balanced model
+                base_model = params["estimator"]
+                base_model.set_params(class_weight="balanced")
+                base_model.fit(self.x_train, self.y_train)
+                base_preds = base_model.predict(self.x_test)
+                base_probas = base_model.predict_proba(self.x_test)
+
+                # Evaluate uncalibrated model. This is just a sanity check.
+                self.evaluate_predictions(
+                    self.y_test,
+                    base_preds,
+                    score=base_probas[:, 1],
+                    balanced_model=True,
+                    log_info=f"Uncalibrated {params}",
+                )
+
+                # Evaluate calibrate balanced model
+                calibrated = CalibratedClassifierCV(cv=2, **params)
+                calibrated.fit(self.x_train, self.y_train)
+                preds = calibrated.predict(self.x_test)
+                probas = calibrated.predict_proba(self.x_test)
+
+                self.evaluate_predictions(
+                    self.y_test,
+                    preds,
+                    score=probas[:, 1],
+                    balanced_model=True,
+                    log_info=f"Calibrated {params}",
+                )
+
+                # Test that sklearn's CalibratedClassifierCV regresses
+                # Sklearn's implementation does not account for class_weight internally.
+                # Hence, the calibrated model is unbalanced.
+                sk_params = dict(params)
+                sk_params.pop("class_weight")
+                sk_calibrated = SKCalibratedClassifierCV(cv=2, **sk_params)
+                sk_calibrated.fit(self.x_train, self.y_train)
+                sk_preds = sk_calibrated.predict(self.x_test)
+                sk_probas = sk_calibrated.predict_proba(self.x_test)
+
+                # Temperature scaling with sklearn seems to have only litte effect
+                # on the calibration. So it is still a balanced model.
+                self.evaluate_predictions(
+                    self.y_test,
+                    sk_preds,
+                    score=sk_probas[:, 1],
+                    balanced_model=params["method"] == "temperature",
+                    log_info=f"Sklearn Calibrated {params}",
                 )
 
 
