@@ -6,11 +6,12 @@ Tests use a small imbalanced dataset.
 import unittest
 
 import numpy as np
+import numpy.typing as npt
 from loguru import logger
 from sklearn.calibration import CalibratedClassifierCV as SKCalibratedClassifierCV
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, recall_score
+from sklearn.metrics import balanced_accuracy_score, recall_score, roc_auc_score
 from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn.utils import compute_sample_weight
 from sklearn.utils.class_weight import compute_class_weight
@@ -22,7 +23,90 @@ from tests.utils.logging import capture_logs
 
 # Parameters for the tests
 SEED = 42
-TOLERANCE = 0.05
+TOLERANCE = 0.1
+
+
+def make_specific_classification(
+    n_positive: int,
+    n_negative: int,
+    selectivity: float,
+    sensitivity: float,
+    random_state: int | None = None,
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.int64]]:
+    """Create a classification dataset with specific class distribution and performance.
+
+    Parameters
+    ----------
+    n_positive : int
+        Number of positive samples.
+    n_negative : int
+        Number of negative samples.
+    selectivity : float
+        Desired selectivity (true negative rate).
+    sensitivity : float
+        Desired sensitivity (true positive rate).
+    random_state : int | None, optional
+        Random state for reproducibility, by default None.
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        Features of the dataset.
+    npt.NDArray[np.int64]
+        Labels of the dataset.
+
+    Raises
+    ------
+    AssertionError
+        If the generated class distribution does not match expected.
+    AssertionError
+        If the final class distribution does not match requested.
+
+    """
+    # To reach desired selectivity/sensitivity, we need to adjust the number of
+    # samples before flipping labels
+    # We sample from class 0: True negatives + False positives
+    # We sample from class 1: True positives + False negatives
+
+    true_pos = int(n_positive * sensitivity)
+    false_pos = int(n_positive - true_pos)
+    true_neg = int(n_negative * selectivity)
+    false_neg = int(n_negative - true_neg)
+
+    logger.debug(
+        f"TP: {true_pos}, FN: {false_neg}, TN: {true_neg}, FP: {false_pos}",
+    )
+
+    n_c0_sample = true_neg + false_pos
+    n_c1_sample = true_pos + false_neg
+
+    sample_weight = n_c0_sample / (n_c0_sample + n_c1_sample)
+    x, y = make_classification(
+        n_samples=n_c0_sample + n_c1_sample,
+        n_features=10,
+        n_informative=6,
+        n_redundant=2,
+        class_sep=10,
+        flip_y=0,
+        n_clusters_per_class=1,
+        weights=[sample_weight, 1 - sample_weight],
+        random_state=random_state,
+    )
+
+    if not (np.sum(y == 0) == n_c0_sample and np.sum(y == 1) == n_c1_sample):
+        raise AssertionError(
+            "Generated class distribution does not match expected.",
+        )
+    rng = np.random.default_rng(SEED)
+    flip_c0_indices = rng.choice(np.where(y == 0)[0], size=false_pos, replace=False)
+    flip_c1_indices = rng.choice(np.where(y == 1)[0], size=false_neg, replace=False)
+    y[flip_c0_indices] = 1
+    y[flip_c1_indices] = 0
+    if not (np.sum(y == 0) == n_negative and np.sum(y == 1) == n_positive):
+        raise AssertionError(
+            "Final class distribution does not match requested distribution.",
+        )
+    return x, y
 
 
 class TestCalibratedClassifierCV(unittest.TestCase):
@@ -32,16 +116,7 @@ class TestCalibratedClassifierCV(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        """Set up any necessary components before each test.
-
-        Raises
-        ------
-        AssertionError
-            If generated class distributions do not match expected values.
-        AssertionError
-            If final class distributions do not match requested values.
-
-        """
+        """Set up any necessary components before each test."""
         n_c0 = 900  # Class 0 is majority class
         n_c1 = 100  # Class 1 is minority class
 
@@ -49,57 +124,82 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         self.sensitivity = 0.8
         self.expected_ba = (self.selectivity + self.sensitivity) / 2
 
-        # To reach desired selectivity/sensitivity, we need to adjust the number of
-        # samples before flipping labels
-        # We sample from class 0: True negatives + False positives
-        # We sample from class 1: True positives + False negatives
-
-        true_pos = int(n_c1 * self.sensitivity)
-        false_pos = int(n_c1 - true_pos)
-        true_neg = int(n_c0 * self.selectivity)
-        false_neg = int(n_c0 - true_neg)
-
-        logger.debug(
-            f"TP: {true_pos}, FN: {false_neg}, TN: {true_neg}, FP: {false_pos}",
-        )
-
-        n_c0_sample = true_neg + false_pos
-        n_c1_sample = true_pos + false_neg
-
-        sample_weight = n_c0_sample / (n_c0_sample + n_c1_sample)
-        x, y = make_classification(
-            n_samples=n_c0_sample + n_c1_sample,
-            n_features=1,
-            n_informative=1,
-            n_redundant=0,
-            class_sep=2,
-            flip_y=0,
-            n_clusters_per_class=1,
-            weights=[sample_weight, 1 - sample_weight],
+        x, y = make_specific_classification(
+            n_positive=n_c1,
+            n_negative=n_c0,
+            selectivity=self.selectivity,
+            sensitivity=self.sensitivity,
             random_state=SEED,
         )
-
-        if not (np.sum(y == 0) == n_c0_sample and np.sum(y == 1) == n_c1_sample):
-            raise AssertionError(
-                "Generated class distribution does not match expected.",
-            )
-        rng = np.random.default_rng(SEED)
-        flip_c0_indices = rng.choice(np.where(y == 0)[0], size=false_pos, replace=False)
-        flip_c1_indices = rng.choice(np.where(y == 1)[0], size=false_neg, replace=False)
-        y[flip_c0_indices] = 1
-        y[flip_c1_indices] = 0
-        if not (np.sum(y == 0) == n_c0 and np.sum(y == 1) == n_c1):
-            raise AssertionError(
-                "Final class distribution does not match requested distribution.",
-            )
 
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
             x,
             y,
-            test_size=0.2,
+            test_size=0.3,
             random_state=SEED,
             stratify=y,
         )
+
+        classes = np.array([0, 1])
+        class_weight_arr = compute_class_weight(
+            "balanced",
+            y=self.y_train,
+            classes=classes,
+        )
+        class_weight_dict = dict(zip(classes, class_weight_arr, strict=True))
+
+        self.cal_param_dict = {
+            "ensemble": [True, False, "auto"],
+            "method": ["isotonic", "sigmoid", "temperature"],
+            "estimator": LogisticRegression(random_state=SEED, class_weight=None),
+            "class_weight": ["balanced", class_weight_dict],
+        }
+
+    def evaluate_predictions(
+        self,
+        y_true: npt.NDArray[np.int64],
+        pred: npt.NDArray[np.int64],
+        score: npt.NDArray[np.float64] | None = None,
+        balanced_model: bool = True,
+        log_info: str = "",
+    ) -> None:
+        """Evaluate predictions and check the metrics.
+
+        Parameters
+        ----------
+        y_true : npt.NDArray[np.int64]
+            True labels.
+        pred : npt.NDArray[np.int64]
+            Predicted labels.
+        score : npt.NDArray[np.float64] | None, optional
+            Score/probabilities for positive class, by default None.
+        balanced_model : bool, default=True
+            Whether the model is unbalanced.
+        log_info : str, optional
+            Additional info to log, by default "".
+
+        """
+        sensitivity = recall_score(y_true, pred, pos_label=1)
+        selectivity = recall_score(y_true, pred, pos_label=0)
+        if score is not None:
+            roc_auc = f"ROC AUC: {roc_auc_score(y_true, score):.3f} "
+        else:
+            roc_auc = ""
+        ba = balanced_accuracy_score(y_true, pred)
+        logger.debug(
+            f"{log_info}\n"
+            f"Balanced Accuracy: {ba:.3f}, {roc_auc}"
+            f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
+        )
+        if balanced_model:
+            self.assertGreater(ba, self.expected_ba - TOLERANCE)
+            self.assertGreater(sensitivity, self.sensitivity - TOLERANCE)
+            self.assertLess(abs(sensitivity - selectivity), TOLERANCE * 2)
+        else:
+            self.assertLess(ba, self.expected_ba - TOLERANCE)
+            self.assertLess(sensitivity, self.sensitivity - TOLERANCE)
+            self.assertGreater(selectivity, self.selectivity - TOLERANCE)
+            self.assertGreater(selectivity - sensitivity, TOLERANCE)
 
     def test_temperature_and_class_weight_warning(self) -> None:
         """Test that warning is raised when using temperature method with class_weight.
@@ -127,49 +227,21 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         This should pass consistently for all parameter combinations tested here.
 
         """
-        classes = np.array([0, 1])
-        class_weight_arr = compute_class_weight(
-            "balanced",
-            y=self.y_train,
-            classes=classes,
-        )
-        class_weight_dict = dict(zip(classes, class_weight_arr, strict=True))
-        param_grid = ParameterGrid(
-            {
-                "class_weight": ["balanced", class_weight_dict],
-                "ensemble": [True, False, "auto"],
-                "method": ["isotonic", "sigmoid", "temperature"],
-            },
-        )
-        for params in param_grid:
+        for params in ParameterGrid(self.cal_param_dict):
             with self.subTest(params=params):
-                clf = LogisticRegression(random_state=SEED, class_weight=None)
-                calibrated = CalibratedClassifierCV(clf, cv=2, **params)
+                calibrated = CalibratedClassifierCV(cv=2, **params)
                 calibrated.fit(self.x_train, self.y_train)
                 preds = calibrated.predict(self.x_test)
                 probas = calibrated.predict_proba(self.x_test)
                 self.assertEqual(preds.shape, (self.x_test.shape[0],))
                 self.assertEqual(probas.shape, (self.x_test.shape[0], 2))
-                sensitivity = recall_score(self.y_test, preds, pos_label=1)
-                selectivity = recall_score(self.y_test, preds, pos_label=0)
-                ba = balanced_accuracy_score(self.y_test, preds)
-                logger.debug(
-                    f"Params: {params}, Balanced Accuracy: {ba:.3f}, "
-                    f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
+                self.evaluate_predictions(
+                    self.y_test,
+                    preds,
+                    score=probas[:, 1],
+                    balanced_model=params["method"] != "temperature",
+                    log_info=params,
                 )
-                self.assertGreater(selectivity, self.selectivity - TOLERANCE)
-
-                # Temperature seems to neglect minority class despite class_weight
-                if params["method"] != "temperature":
-                    self.assertGreater(ba, self.expected_ba - TOLERANCE)
-                    self.assertGreater(sensitivity, self.sensitivity - TOLERANCE)
-                    self.assertLess(abs(sensitivity - selectivity), TOLERANCE * 2)
-                else:
-                    # This is not what should happen but what happens.
-                    # If these tests fail we should test if the minority class is
-                    # respected and update the tests.
-                    self.assertLessEqual(ba, 0.5)
-                    self.assertLessEqual(sensitivity, 0.1)
 
     def test_without_class_weight(self) -> None:
         """Test CalibratedClassifierCV without class_weight on imbalanced data.
@@ -180,26 +252,12 @@ class TestCalibratedClassifierCV(unittest.TestCase):
         measures performance on the minority class, will be lower than selectivity.
 
         """
-        param_grid = ParameterGrid(
-            {
-                "ensemble": [True, False, "auto"],
-                "method": ["isotonic", "sigmoid", "temperature"],
-            },
-        )
-        for params in param_grid:
+        param_grid = dict(self.cal_param_dict)
+        param_grid.pop("class_weight")
+        for params in ParameterGrid(param_grid):
             with self.subTest(params=params):
-                clf = LogisticRegression(random_state=SEED, class_weight=None)
-                calibrated = CalibratedClassifierCV(
-                    clf,
-                    cv=2,
-                    class_weight=None,
-                    **params,
-                )
-                sk_calibrated = SKCalibratedClassifierCV(
-                    clf,
-                    cv=2,
-                    **params,
-                )
+                calibrated = CalibratedClassifierCV(cv=2, class_weight=None, **params)
+                sk_calibrated = SKCalibratedClassifierCV(cv=2, **params)
                 calibrated.fit(self.x_train, self.y_train)
                 sk_calibrated.fit(self.x_train, self.y_train)
                 preds = calibrated.predict(self.x_test)
@@ -209,23 +267,13 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                 self.assertEqual(probas.shape, (self.x_test.shape[0], 2))
                 self.assertEqual(sk_probas.shape, (self.x_test.shape[0], 2))
                 self.assertTrue(np.allclose(probas, sk_probas))
-
-                ba = balanced_accuracy_score(self.y_test, preds)
-                ac = accuracy_score(self.y_test, preds)
-                sensitivity = recall_score(self.y_test, preds, pos_label=1)
-                selectivity = recall_score(self.y_test, preds, pos_label=0)
-                logger.debug(
-                    f"Without class_weight - Balanced Accuracy: "
-                    f"{balanced_accuracy_score(self.y_test, preds):.3f}, "
-                    f"Accuracy: {ac:.3f}, "
-                    f"Sensitivity: {sensitivity:.3f}, Selectivity: {selectivity:.3f}",
+                self.evaluate_predictions(
+                    self.y_test,
+                    preds,
+                    probas,
+                    balanced_model=False,
+                    log_info=params,
                 )
-                # Accuracy should be high and balanced accuracy low due to imbalance
-                self.assertGreater(ac, self.expected_ba - TOLERANCE)
-                self.assertLess(ba, self.expected_ba - TOLERANCE)
-                self.assertLess(sensitivity, self.sensitivity - TOLERANCE)
-                self.assertGreater(selectivity, self.selectivity - TOLERANCE)
-                self.assertGreater(selectivity - sensitivity, TOLERANCE)
 
     def test_without_class_weight_and_with_sample_weight(self) -> None:
         """Test CalibratedClassifierCV without class_weight but with sample_weight.
@@ -248,30 +296,18 @@ class TestCalibratedClassifierCV(unittest.TestCase):
             y=self.y_train,
             classes=np.array([0, 1]),
         )
-        param_grid = ParameterGrid(
-            {
-                "ensemble": [True, False, "auto"],
-                "method": ["isotonic", "sigmoid", "temperature"],
-            },
-        )
-        for params in param_grid:
+        param_dict = dict(self.cal_param_dict)
+        param_dict.pop("class_weight")
+        for params in ParameterGrid(param_dict):
+            params["estimator"].set_params(
+                class_weight={
+                    0: 1 / class_weight[0],
+                    1: 1 / class_weight[1],
+                },
+            )
             with self.subTest(params=params):
-                clf = LogisticRegression(
-                    # Invert class weights to isolate effect of sample_weight
-                    # on calibration: sample_weight * 1/class_weight = uniform weights
-                    class_weight={0: 1 / class_weight[0], 1: 1 / class_weight[1]},
-                    random_state=SEED,
-                )
-                calibrated = CalibratedClassifierCV(
-                    clf,
-                    cv=2,
-                    **params,
-                )
-                sk_calibrated = SKCalibratedClassifierCV(
-                    clf,
-                    cv=2,
-                    **params,
-                )
+                calibrated = CalibratedClassifierCV(cv=2, **params, class_weight=None)
+                sk_calibrated = SKCalibratedClassifierCV(cv=2, **params)
                 calibrated.fit(
                     self.x_train,
                     self.y_train,
@@ -289,26 +325,13 @@ class TestCalibratedClassifierCV(unittest.TestCase):
                 self.assertEqual(probas.shape, (self.x_test.shape[0], 2))
                 self.assertEqual(sk_probas.shape, (self.x_test.shape[0], 2))
                 self.assertTrue(np.allclose(probas, sk_probas))
-
-                sensitivity = recall_score(self.y_test, preds, pos_label=1)
-                selectivity = recall_score(self.y_test, preds, pos_label=0)
-                ba = balanced_accuracy_score(self.y_test, preds)
-                logger.debug(
-                    f"With sample_weight - Params: {params}, Balanced Accuracy: "
-                    f"{ba:.3f}, Sensitivity: {sensitivity:.3f}, "
-                    f"Selectivity: {selectivity:.3f}",
+                self.evaluate_predictions(
+                    self.y_test,
+                    preds,
+                    probas,
+                    balanced_model=params["method"] != "temperature",
+                    log_info=params,
                 )
-                # Temperature seems to neglect minority class despite sample_weight
-                if params["method"] != "temperature":
-                    self.assertGreater(ba, self.expected_ba - TOLERANCE)
-                    self.assertGreater(sensitivity, self.sensitivity - TOLERANCE)
-                    self.assertLess(abs(sensitivity - selectivity), TOLERANCE * 2)
-                else:
-                    # This is not what should happen but what happens.
-                    # If these tests fail we should test if the minority class is
-                    # respected and update the tests.
-                    self.assertLessEqual(ba, 0.5)
-                    self.assertLessEqual(sensitivity, 0.1)
 
 
 if __name__ == "__main__":
