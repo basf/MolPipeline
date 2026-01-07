@@ -3,6 +3,7 @@
 from typing import Any
 
 import requests
+from typing_extensions import override
 
 from molpipeline.utils.file_loading.abc_file_loading import ABCFileLoader
 
@@ -40,8 +41,14 @@ class URLFileLoader(ABCFileLoader):
         response.raise_for_status()
         return response.content
 
-    def get_params(self) -> dict[str, Any]:
+    @override
+    def get_params(self, deep: bool = False) -> dict[str, Any]:
         """Get the parameters of the file loader.
+
+        Parameters
+        ----------
+        deep : bool, default=False
+            Whether to return the parameters of sub-objects (if any).
 
         Returns
         -------

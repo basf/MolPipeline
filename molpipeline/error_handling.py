@@ -192,9 +192,9 @@ class ErrorFilter(ABCPipelineElement):
         Parameters
         ----------
         values: AnyVarSeq
-            Values used for fitting. (Not really used)
+            Values used for fitting. For compatibility with sklearn, not used.
         labels: Any
-            Label used for fitting. (Not really used)
+            Label used for fitting. For compatibility with sklearn, not used.
 
         Returns
         -------
@@ -218,7 +218,7 @@ class ErrorFilter(ABCPipelineElement):
         values: TypeFixedVarSeq
             Iterable to which element is fitted and which is subsequently transformed.
         labels: Any
-            Label used for fitting. (Not used, but for compatibility with sklearn)
+            Label used for fitting. For compatibility with sklearn, not used.
 
         Returns
         -------
@@ -665,9 +665,9 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         values: TypeFixedVarSeq
             Values used for fitting.
         labels: Any
-            Label used for fitting. (Not used, but for compatibility with sklearn)
+            Label used for fitting. For compatibility with sklearn, not used.
         **params: Any
-            Additional keyword arguments. (Not used)
+            Additional keyword arguments. For compatibility with sklearn, not used.
 
         Returns
         -------
@@ -694,9 +694,9 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         values: TypeFixedVarSeq
             Iterable to which element is fitted and which is subsequently transformed.
         labels: Any
-            Label used for fitting. (Not used, but for compatibility with sklearn)
+            Label used for fitting. For compatibility with sklearn, not used.
         **params: Any
-            Additional keyword arguments. (Not used)
+            Additional keyword arguments. For compatibility with sklearn, not used.
 
         Returns
         -------

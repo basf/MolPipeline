@@ -449,26 +449,26 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         Parameters
         ----------
         n_classes : int
-            how many classes are expected in the output
-        n_tasks : int, optional (default=1)
+            The number of classes expected in the output.
+        n_tasks : int, default=1
             Number of tasks.
-        input_dim : int, optional (default=DEFAULT_HIDDEN_DIM)
+        input_dim : int, default=DEFAULT_HIDDEN_DIM
             Input dimension.
-        hidden_dim : int, optional (default=300)
+        hidden_dim : int, default=300
             Hidden dimension.
-        n_layers : int, optional (default=1)
+        n_layers : int, default=1
             Number of layers.
-        dropout : float, optional (default=0)
+        dropout : float, default=0
             Dropout rate.
-        activation : str, optional (default="relu")
+        activation : str, default="relu"
             Activation function.
-        criterion : LossFunction or None, optional (default=None)
+        criterion : LossFunction | None, optional
             Loss function. None defaults to BCELoss.
-        task_weights : Tensor or None, optional (default=None)
+        task_weights : Tensor or None, optional
             Task weights.
-        threshold : float or None, optional (default=None)
+        threshold : float | None, optional
             Threshold for binary classification.
-        output_transform : UnscaleTransform or None, optional (default=None)
+        output_transform : UnscaleTransform | None, optional
             Transformations to apply to the output. None defaults to UnscaleTransform.
         state_dict_ref : str | Path | dict[str, Any] | None, optional
             Path to a state dict to load the model weights from.

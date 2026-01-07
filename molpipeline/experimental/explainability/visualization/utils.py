@@ -54,7 +54,7 @@ def pad(
     lim: Sequence[float] | npt.NDArray[np.float64]
         Limits which are extended.
     ratio: float
-        factor by which the limits are extended.
+        Factor by which the limits are extended.
 
     Returns
     -------

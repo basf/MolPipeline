@@ -398,7 +398,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         Parameters
         ----------
         filter_element: Any
-            smarts to calculate match count for.
+            Smarts to calculate match count for.
         value: RDKitMol
             Molecule to calculate smarts match count for.
 
