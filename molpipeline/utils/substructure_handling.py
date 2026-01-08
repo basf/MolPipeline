@@ -3,6 +3,8 @@
 This is only relevant for explainable AI, where atoms need to be mapped to features.
 """
 
+from typing import Self
+
 from rdkit import Chem
 
 
@@ -44,7 +46,7 @@ class CircularAtomEnvironment(AtomEnvironment):
     @classmethod
     def from_mol(
         cls, mol: Chem.Mol, central_atom_index: int, radius: int
-    ) -> CircularAtomEnvironment:
+    ) -> Self:
         """Generate class from mol, using location (central_atom_index) and the radius.
 
         Parameters
@@ -58,7 +60,7 @@ class CircularAtomEnvironment(AtomEnvironment):
 
         Returns
         -------
-        CircularAtomEnvironment
+        Self
             Encoded the atoms which are within the radius of the central atom and are part of the feature.
         """
         if radius == 0:

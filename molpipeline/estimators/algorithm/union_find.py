@@ -1,5 +1,6 @@
 """Union find algorithm."""
 
+from typing import Self
 
 import numpy as np
 import numpy.typing as npt
@@ -20,7 +21,7 @@ class UnionFindNode:
         # connected component number for each node. Needed at the end when connected components are getting extracted.
         self.connected_component_number = -1
 
-    def find(self) -> UnionFindNode:
+    def find(self) -> Self:
         """Find the root node.
 
         Returns
@@ -32,7 +33,7 @@ class UnionFindNode:
             self.parent = self.parent.find()
         return self.parent
 
-    def union(self, other: UnionFindNode) -> UnionFindNode:
+    def union(self, other: Self) -> Self:
         """Union two nodes.
 
         Parameters
@@ -42,7 +43,7 @@ class UnionFindNode:
 
         Returns
         -------
-        UnionFindNode
+        Self
             Root node of set or self.
         """
         # get the root nodes of the connected components of both nodes.
@@ -60,13 +61,13 @@ class UnionFindNode:
 
     @staticmethod
     def get_connected_components(
-        union_find_nodes: list[UnionFindNode],
+        union_find_nodes: list[Self],
     ) -> tuple[int, npt.NDArray[np.int32]]:
         """Get connected components from a union find node list.
 
         Parameters
         ----------
-        union_find_nodes: list[UnionFindNode]
+        union_find_nodes: list[Self]
             List of union find nodes.
 
         Returns

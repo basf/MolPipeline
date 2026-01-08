@@ -72,7 +72,7 @@ class _MolPipeline:
     @property
     def _transforming_elements(
         self,
-    ) -> list[TransformingPipelineElement | _MolPipeline]:
+    ) -> list[TransformingPipelineElement | Self]:
         """Get the elements which transform the input."""
         return [
             element
@@ -173,12 +173,12 @@ class _MolPipeline:
 
     def _get_meta_element_list(
         self,
-    ) -> list[ABCPipelineElement | _MolPipeline]:
+    ) -> list[ABCPipelineElement | Self]:
         """Merge elements which do not require fitting to a meta element which improves parallelization.
 
         Returns
         -------
-        list[ABCPipelineElement | _MolPipeline]
+        list[ABCPipelineElement | Self]
             List of pipeline elements and meta elements.
         """
         meta_element_list: list[ABCPipelineElement | _MolPipeline] = []
