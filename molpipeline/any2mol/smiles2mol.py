@@ -1,6 +1,5 @@
 """Classes ment to transform given input to a RDKit molecule."""
 
-
 from typing import Any, Self
 
 from rdkit import Chem

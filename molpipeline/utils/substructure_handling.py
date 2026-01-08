@@ -44,9 +44,7 @@ class CircularAtomEnvironment(AtomEnvironment):
         self.radius = radius
 
     @classmethod
-    def from_mol(
-        cls, mol: Chem.Mol, central_atom_index: int, radius: int
-    ) -> Self:
+    def from_mol(cls, mol: Chem.Mol, central_atom_index: int, radius: int) -> Self:
         """Generate class from mol, using location (central_atom_index) and the radius.
 
         Parameters

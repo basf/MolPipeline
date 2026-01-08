@@ -1,6 +1,5 @@
 """Connected component clustering estimator."""
 
-
 from numbers import Real
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 

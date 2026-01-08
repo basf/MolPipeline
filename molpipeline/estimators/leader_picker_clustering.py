@@ -1,6 +1,5 @@
 """LeaderPicker-based clustering estimator."""
 
-
 from collections.abc import Sequence
 from itertools import compress
 from numbers import Real
