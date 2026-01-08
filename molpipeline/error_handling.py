@@ -1,6 +1,7 @@
 """Classes and functions for detecting and handling None values."""
 
-from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
+from collections.abc import Iterable, Sequence
+from typing import Any, Generic, Self, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -12,11 +13,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     RemovedInstance,
     TransformingPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
-
-    from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
+from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
 
 __all__ = ["ErrorFilter", "FilterReinserter", "_MultipleErrorFilter"]
 

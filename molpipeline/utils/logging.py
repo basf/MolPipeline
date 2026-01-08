@@ -1,13 +1,10 @@
 """Logging helper functions."""
 
 import timeit
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
 
 from loguru import logger
-
-if TYPE_CHECKING:
-    from collections.abc import Generator
 
 
 def _message_with_time(source: str, message: str, time: float) -> str:

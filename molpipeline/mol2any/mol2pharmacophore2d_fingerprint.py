@@ -2,7 +2,7 @@
 
 import copy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Self
+from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -19,9 +19,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     FPReturnAsOption,
     MolToFingerprintPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 _MIN_POINT_COUNT = 2
 

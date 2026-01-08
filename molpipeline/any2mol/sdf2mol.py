@@ -1,7 +1,7 @@
 """Class for Transforming SDF-strings to rdkit molecules."""
 
 import copy
-from typing import TYPE_CHECKING, Any, Self
+from typing import Any, Self
 
 from rdkit import Chem
 
@@ -9,9 +9,7 @@ from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
-
-if TYPE_CHECKING:
-    from molpipeline.utils.molpipeline_types import OptionalMol
+from molpipeline.utils.molpipeline_types import OptionalMol
 
 
 class SDFToMol(_StringToMolPipelineElement):

@@ -1,11 +1,8 @@
 """Functions to handle sparse matrices."""
 
-from typing import TYPE_CHECKING
+from collections.abc import Iterable
 
 from scipy import sparse
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
 
 
 def sparse_from_index_value_dicts(
