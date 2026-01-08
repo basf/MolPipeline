@@ -173,13 +173,14 @@ class _MolPipeline:
 
     def _get_meta_element_list(
         self,
-    ) -> list[ABCPipelineElement | Self]:
+    ) -> "list[ABCPipelineElement | _MolPipeline]":
         """Merge elements which do not require fitting to a meta element which improves parallelization.
 
         Returns
         -------
-        list[ABCPipelineElement | Self]
+        list[ABCPipelineElement | "_MolPipeline"]
             List of pipeline elements and meta elements.
+
         """
         meta_element_list: list[ABCPipelineElement | _MolPipeline] = []
         no_fit_element_list: list[ABCPipelineElement] = []

@@ -62,12 +62,10 @@ class CircularAtomEnvironment(AtomEnvironment):
             Encoded the atoms which are within the radius of the central atom and are part of the feature.
         """
         if radius == 0:
-            return CircularAtomEnvironment(
-                central_atom_index, radius, {central_atom_index}
-            )
+            return cls(central_atom_index, radius, {central_atom_index})
 
         env = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, central_atom_index)
         amap: dict[int, int] = {}
         _ = Chem.PathToSubmol(mol, env, atomMap=amap)
         env_atoms = amap.keys()
-        return CircularAtomEnvironment(central_atom_index, radius, set(env_atoms))
+        return cls(central_atom_index, radius, set(env_atoms))
