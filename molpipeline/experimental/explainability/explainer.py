@@ -1,20 +1,18 @@
 """Explainer classes for explaining predictions."""
 
 import abc
+from collections.abc import Callable
 from typing import Any
-
-import numpy as np
-import numpy.typing as npt
-import pandas as pd
-import shap
 
 try:
     from typing import override  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import override
 
-from collections.abc import Callable
-
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+import shap
 from scipy.sparse import spmatrix
 from sklearn.base import BaseEstimator
 
