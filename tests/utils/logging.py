@@ -1,5 +1,7 @@
 """Test utils for logging."""
 
+from __future__ import annotations  # Required for loguru type hints
+
 from collections.abc import Generator
 from contextlib import contextmanager
 
@@ -10,7 +12,7 @@ from loguru import logger
 @contextmanager
 def capture_logs(
     level: str = "INFO", log_format: str = "{level}:{name}:{message}"
-) -> Generator[list["loguru.Message"], None, None]:
+) -> Generator[list[loguru.Message], None, None]:
     """Capture loguru-based logs.
 
     Custom context manager to test loguru-based logs. For details and usage examples,
@@ -29,7 +31,7 @@ def capture_logs(
         List of log messages
 
     """
-    output: list["loguru.Message"] = []
+    output: list[loguru.Message] = []
     handler_id = logger.add(output.append, level=level, format=log_format)
     yield output
     logger.remove(handler_id)
