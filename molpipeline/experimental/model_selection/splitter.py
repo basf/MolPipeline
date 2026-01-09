@@ -6,7 +6,7 @@ from typing import Any, Literal, get_args
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from numpy.random import RandomState
+from numpy.random import RandomState  # pylint: disable=no-name-in-module
 from sklearn.model_selection import BaseShuffleSplit, StratifiedKFold
 from sklearn.model_selection._split import _validate_shuffle_split
 from sklearn.utils import check_array, shuffle
