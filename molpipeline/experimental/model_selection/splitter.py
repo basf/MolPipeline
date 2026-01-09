@@ -73,7 +73,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
         self._default_test_size = 0.2
         if split_mode not in get_args(SplitModeOption):
             raise ValueError(
-                "Bad parameter 'split_mode'. Allowed are 'groups' and 'samples'."
+                "Bad parameter 'split_mode'. Allowed are 'groups' and 'samples'.",
             )
         self.split_mode = split_mode
 
@@ -99,6 +99,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
             The training set indices for that split.
         test: npt.NDArray[np.int_]
             The testing set indices for that split.
+
         """
         # pylint: disable=too-many-locals
         n_samples = _num_samples(X)
@@ -123,7 +124,9 @@ class GroupShuffleSplit(BaseShuffleSplit):
 
             # randomize the group order for assignment to train/test
             group_counts_shuffled, unique_groups_indices_shuffled = shuffle(
-                group_counts, unique_groups_indices, random_state=rng
+                group_counts,
+                unique_groups_indices,
+                random_state=rng,
             )
 
             # track train and test sets in arrays of length 2
@@ -205,6 +208,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
             If the 'groups' parameter is None.
         AssertionError
             If the 'split_mode' parameter is not 'groups' or 'samples'.
+
         """
         if groups is None:
             raise ValueError("The 'groups' parameter should not be None.")

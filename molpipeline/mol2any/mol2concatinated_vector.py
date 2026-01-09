@@ -68,7 +68,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         self._set_element_execution_details(self._element_list)
         # set feature names
         self._feature_names = self._create_feature_names(
-            self._element_list, self._use_feature_names_prefix
+            self._element_list,
+            self._use_feature_names_prefix,
         )
         self.set_params(**kwargs)
 
@@ -95,7 +96,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
                 feature_count += element.n_bits
             else:
                 raise ValueError(
-                    f"Element {element} does not have n_features or n_bits."
+                    f"Element {element} does not have n_features or n_bits.",
                 )
         return feature_count
 
@@ -129,18 +130,19 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         list[str]
             List of feature names.
+
         """
         feature_names = []
         for name, element in element_list:
             if not hasattr(element, "feature_names"):
                 raise ValueError(
-                    f"Element {element} does not have feature_names attribute."
+                    f"Element {element} does not have feature_names attribute.",
                 )
 
             if use_feature_names_prefix:
                 # use element name as prefix
                 feature_names.extend(
-                    [f"{name}__{feature}" for feature in element.feature_names]  # type: ignore[attr-defined]
+                    [f"{name}__{feature}" for feature in element.feature_names],  # type: ignore[attr-defined]
                 )
             else:
                 feature_names.extend(element.feature_names)  # type: ignore[attr-defined]
@@ -149,12 +151,13 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             logger.warning(
                 "Feature names in MolToConcatenatedVector are not unique."
                 " Set use_feature_names_prefix=True and use unique pipeline element"
-                " names to avoid this."
+                " names to avoid this.",
             )
         return feature_names
 
     def _set_element_execution_details(
-        self, element_list: list[tuple[str, MolToAnyPipelineElement]]
+        self,
+        element_list: list[tuple[str, MolToAnyPipelineElement]],
     ) -> None:
         """Set output type and requires fitting for the concatenated vector.
 
@@ -162,6 +165,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         element_list: list[tuple[str, MolToAnyPipelineElement]]
             List of pipeline elements.
+
         """
         output_types = set()
         for _, element in self._element_list:
@@ -188,6 +192,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         dict[str, Any]
             Parameters defining the object.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -195,7 +200,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
                 (str(name), clone(ele)) for name, ele in self.element_list
             ]
             parameters["use_feature_names_prefix"] = bool(
-                self._use_feature_names_prefix
+                self._use_feature_names_prefix,
             )
         else:
             parameters["element_list"] = self.element_list
@@ -207,7 +212,9 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         return parameters
 
     def _set_element_list(
-        self, parameter_copy: dict[str, Any], **parameters: Any
+        self,
+        parameter_copy: dict[str, Any],
+        **parameters: Any,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Set the element list and run necessary configurations.
 
@@ -227,6 +234,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         tuple[dict[str, Any], dict[str, Any]]
             Updated parameter_copy and parameters.
+
         """
         element_list = parameter_copy.pop("element_list", None)
         if element_list is not None:
@@ -269,12 +277,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         Self
             Mol2ConcatenatedVector object with updated parameters.
+
         """
         parameter_copy = dict(parameters)
 
         # handle element_list
         parameter_copy, parameters = self._set_element_list(
-            parameter_copy, **parameters
+            parameter_copy,
+            **parameters,
         )
 
         # handle use_feature_names_prefix
@@ -306,6 +316,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         npt.NDArray[np.float64]
             Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+
         """
         values = list(value_list)
         if len(values) == 0:
@@ -324,6 +335,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         npt.NDArray[np.float64]
             Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+
         """
         output: npt.NDArray[np.float64] = super().transform(values)
         return output
@@ -346,13 +358,15 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         Self
             Fitted pipeline element.
+
         """
         for pipeline_element in self._element_list:
             pipeline_element[1].fit(values)
         return self
 
     def pretransform_single(
-        self, value: RDKitMol
+        self,
+        value: RDKitMol,
     ) -> list[npt.NDArray[np.float64] | dict[int, int]] | InvalidInstance:
         """Get pretransform of each element and concatenate for output.
 
@@ -366,6 +380,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         list[npt.NDArray[np.float64] | dict[int, int]] | InvalidInstance
             List of pretransformed values of each pipeline element.
             If any element returns None, InvalidInstance is returned.
+
         """
         final_vector = []
         error_message = ""
@@ -392,12 +407,14 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         Any
             Finalized output.
+
         """
         final_vector_list = []
-        for (_, element), sub_value in zip(self._element_list, value):
+        for (_, element), sub_value in zip(self._element_list, value, strict=False):
             final_value = element.finalize_single(sub_value)
             if isinstance(element, MolToFingerprintPipelineElement) and isinstance(
-                final_value, dict
+                final_value,
+                dict,
             ):
                 vector = np.zeros(element.n_bits)
                 vector[list(final_value.keys())] = np.array(list(final_value.values()))
@@ -419,7 +436,12 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         Self
             Fitted pipeline element.
+
         """
-        for element, value in zip(self._element_list, zip(*values)):
+        for element, value in zip(
+            self._element_list,
+            zip(*values, strict=False),
+            strict=False,
+        ):
             element[1].fit_to_result(value)
         return self

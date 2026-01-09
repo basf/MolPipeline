@@ -28,6 +28,7 @@ class UnionFindNode:
         -------
         "UnionFindNode"
             Root node.
+
         """
         if self.parent is not self:
             self.parent = self.parent.find()
@@ -45,6 +46,7 @@ class UnionFindNode:
         -------
         "UnionFindNode"
             Root node of set or self.
+
         """
         # get the root nodes of the connected components of both nodes.
         # Additionally, compress the paths to the root nodes by setting others' parent to the root node.
@@ -74,6 +76,7 @@ class UnionFindNode:
         -------
         tuple[int, np.ndarray[int]]
             Number of connected components and connected component labels.
+
         """
         # results
         connected_components_counter = 0

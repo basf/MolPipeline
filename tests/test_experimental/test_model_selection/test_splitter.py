@@ -39,7 +39,8 @@ class TestGroupShuffleSplit(unittest.TestCase):
             groups = range(10)
             for split_mode in get_args(SplitModeOption):
                 split_generator = GroupShuffleSplit(
-                    train_size=train_size, split_mode=split_mode
+                    train_size=train_size,
+                    split_mode=split_mode,
                 ).split(X, y, groups)
                 X_train, X_test = next(split_generator)  # pylint: disable=invalid-name
                 self.assertEqual(len(X_train), exp_train)
@@ -78,7 +79,10 @@ class TestGroupShuffleSplit(unittest.TestCase):
             test_size = 1.0 / 3
             for split_mode in get_args(SplitModeOption):
                 gss = GroupShuffleSplit(
-                    n_splits, test_size=test_size, random_state=0, split_mode=split_mode
+                    n_splits,
+                    test_size=test_size,
+                    random_state=0,
+                    split_mode=split_mode,
                 )
 
                 # Make sure the repr works
@@ -95,10 +99,10 @@ class TestGroupShuffleSplit(unittest.TestCase):
                     l_train_unique = np.unique(groups_i_array[train])
                     l_test_unique = np.unique(groups_i_array[test])
                     self.assertFalse(
-                        np.any(np.isin(groups_i_array[train], l_test_unique))
+                        np.any(np.isin(groups_i_array[train], l_test_unique)),
                     )
                     self.assertFalse(
-                        np.any(np.isin(groups_i_array[test], l_train_unique))
+                        np.any(np.isin(groups_i_array[test], l_train_unique)),
                     )
 
                     # Second test: train and test add up to all the data
@@ -113,12 +117,13 @@ class TestGroupShuffleSplit(unittest.TestCase):
                     # Fourth test:
                     # unique train and test groups are correct, +- 1 for rounding error
                     self.assertLessEqual(
-                        abs(len(l_test_unique) - round(test_size * len(l_unique))), 1
+                        abs(len(l_test_unique) - round(test_size * len(l_unique))),
+                        1,
                     )
                     self.assertLessEqual(
                         abs(
                             len(l_train_unique)
-                            - round((1.0 - test_size) * len(l_unique))
+                            - round((1.0 - test_size) * len(l_unique)),
                         ),
                         1,
                     )
@@ -145,6 +150,7 @@ class TestGroupShuffleSplit(unittest.TestCase):
             for (train_mp, test_mp), (train_sk, test_sk) in zip(
                 gss_molpipeline.split(X, y, groups=groups_i),
                 gss_sklearn.split(X, y, groups=groups_i),
+                strict=False,
             ):
                 # test that for the same seed the exact same splits are produced
                 assert_array_equal(train_mp, train_sk)

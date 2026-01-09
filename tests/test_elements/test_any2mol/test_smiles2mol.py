@@ -21,7 +21,7 @@ class TestSmiles2Mol(unittest.TestCase):
                     "Smiles2Mol",
                     SmilesToMol(remove_hydrogens=True),
                 ),
-            ]
+            ],
         )
         mols = pipeline.fit_transform([smiles])
         self.assertEqual(len(mols), 1)
@@ -35,7 +35,7 @@ class TestSmiles2Mol(unittest.TestCase):
                     "Smiles2Mol",
                     SmilesToMol(remove_hydrogens=False),
                 ),
-            ]
+            ],
         )
         mols2 = pipeline2.fit_transform([smiles])
         self.assertEqual(len(mols2), 1)

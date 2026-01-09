@@ -61,6 +61,7 @@ def _make_grid_from_mol(
     -------
     ValueGrid
         ValueGrid object.
+
     """
     xl: list[float]
     yl: list[float]
@@ -116,6 +117,7 @@ def _add_gaussians_for_atoms(
     -------
     ValueGrid
         ValueGrid object with added functions.
+
     """
     for i in range(mol.GetNumAtoms()):
         if atom_weights[i] == 0:
@@ -162,6 +164,7 @@ def _add_gaussians_for_bonds(
     -------
     ValueGrid
         ValueGrid object with added functions.
+
     """
     # Adding Gauss-functions centered at bonds (position between the two bonded-atoms)
     for i, bond in enumerate(mol.GetBonds()):
@@ -260,10 +263,19 @@ def make_sum_of_gaussians_grid(
     # setup grid and add functions for atoms and bonds
     value_grid = _make_grid_from_mol(mol, grid_resolution, padding)
     value_grid = _add_gaussians_for_atoms(
-        mol, conf, value_grid, atom_weights, atom_width
+        mol,
+        conf,
+        value_grid,
+        atom_weights,
+        atom_width,
     )
     value_grid = _add_gaussians_for_bonds(
-        mol, conf, value_grid, bond_weights, bond_width, bond_length
+        mol,
+        conf,
+        value_grid,
+        bond_weights,
+        bond_width,
+        bond_length,
     )
 
     # evaluate all functions at pixel positions to obtain pixel values
@@ -407,7 +419,11 @@ def _structure_heatmap(
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
 ) -> tuple[
-    rdMolDraw2D.MolDraw2DCairo, ValueGrid, ColorGrid, colors.Normalize, Colormap
+    rdMolDraw2D.MolDraw2DCairo,
+    ValueGrid,
+    ColorGrid,
+    colors.Normalize,
+    Colormap,
 ]:
     """Create a heatmap of the molecular structure, highlighting atoms with weighted Gaussian's.
 
@@ -431,6 +447,7 @@ def _structure_heatmap(
     rdMolDraw2D.MolDraw2DCairo, ValueGrid, ColorGrid, colors.Normalize, Colormap
         The configured drawer, the value grid, the color grid, the normalizer, and the
         color map.
+
     """
     drawer = Draw.MolDraw2DCairo(width, height)
     # Coloring atoms of element 0 to 100 black
@@ -504,9 +521,15 @@ def structure_heatmap(
     -------
     Image
         The image as PNG.
+
     """
     drawer, *_ = _structure_heatmap(
-        mol, atom_weights, color, width, height, color_limits
+        mol,
+        atom_weights,
+        color,
+        width,
+        height,
+        color_limits,
     )
     figure_bytes = drawer.GetDrawingText()
     image = to_png(figure_bytes)
@@ -581,7 +604,7 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
 
     if explanation.prediction.ndim > 2:
         raise ValueError(
-            "Unsupported shape for prediction. Maximum 2 dimension is supported."
+            "Unsupported shape for prediction. Maximum 2 dimension is supported.",
         )
 
     if explanation.feature_weights.ndim == 1:
@@ -593,7 +616,8 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
 
     # calculate the sum of the SHAP values for present and absent features
     sum_present_shap, sum_absent_shap = calc_present_and_absent_shap_contributions(
-        explanation.feature_vector, feature_weights
+        explanation.feature_vector,
+        feature_weights,
     )
 
     with plt.ioff():
@@ -626,7 +650,10 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
         fig.colorbar(im, ax=ax, orientation="vertical", fraction=0.015, pad=0.0)
 
         _add_shap_present_absent_features_text(
-            fig, explanation, sum_present_shap, sum_absent_shap
+            fig,
+            explanation,
+            sum_present_shap,
+            sum_absent_shap,
         )
 
         image = plt_to_pil(fig)

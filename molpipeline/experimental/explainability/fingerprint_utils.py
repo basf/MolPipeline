@@ -12,7 +12,8 @@ from molpipeline.utils.substructure_handling import AtomEnvironment
 
 
 def assign_prediction_importance(
-    bit_dict: dict[int, Sequence[AtomEnvironment]], weights: npt.NDArray[np.float64]
+    bit_dict: dict[int, Sequence[AtomEnvironment]],
+    weights: npt.NDArray[np.float64],
 ) -> dict[int, float]:
     """Assign the prediction importance.
 
@@ -48,13 +49,15 @@ def assign_prediction_importance(
     if not np.isclose(sum(weights), sum(atom_contribution.values())).all():
         raise AssertionError(
             f"Weights and atom contributions don't sum to the same value:"
-            f" {weights.sum()} != {sum(atom_contribution.values())}"
+            f" {weights.sum()} != {sum(atom_contribution.values())}",
         )
     return atom_contribution
 
 
 def fingerprint_shap_to_atomweights(
-    mol: RDKitMol, fingerprint_element: MolToMorganFP, shap_mat: npt.NDArray[np.float64]
+    mol: RDKitMol,
+    fingerprint_element: MolToMorganFP,
+    shap_mat: npt.NDArray[np.float64],
 ) -> list[float]:
     """Convert SHAP values to atom weights.
 
@@ -74,10 +77,11 @@ def fingerprint_shap_to_atomweights(
     -------
     list[float]
         The atom weights.
+
     """
     bit_atom_env_dict: dict[int, Sequence[AtomEnvironment]]
     bit_atom_env_dict = dict(
-        fingerprint_element.bit2atom_mapping(mol)
+        fingerprint_element.bit2atom_mapping(mol),
     )  # MyPy invariants make me do this.
     atom_weight_dict = assign_prediction_importance(bit_atom_env_dict, shap_mat)
     atom_weight_list = [

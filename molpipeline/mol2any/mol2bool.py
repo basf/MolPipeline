@@ -26,6 +26,7 @@ class MolToBool(MolToAnyPipelineElement):
         -------
         str
             Binary representation of molecule.
+
         """
         if isinstance(value, InvalidInstance):
             return False
@@ -46,6 +47,7 @@ class MolToBool(MolToAnyPipelineElement):
         -------
         Any
             Bool representation of the molecule.
+
         """
         pre_value = self.pretransform_single(value)
         return self.finalize_single(pre_value)

@@ -72,6 +72,7 @@ class SHAPFeatureExplanation(
         -------
         bool
             True if the explanation is valid, False otherwise.
+
         """
         return all(
             [
@@ -80,7 +81,7 @@ class SHAPFeatureExplanation(
                 self.molecule is not None,
                 self.prediction is not None,
                 self.feature_weights is not None,
-            ]
+            ],
         )
 
 
@@ -101,6 +102,7 @@ class SHAPFeatureAndAtomExplanation(
         -------
         bool
             True if the explanation is valid, False otherwise.
+
         """
         return all(
             [
@@ -110,5 +112,5 @@ class SHAPFeatureAndAtomExplanation(
                 self.prediction is not None,
                 self.feature_weights is not None,
                 self.atom_weights is not None,
-            ]
+            ],
         )

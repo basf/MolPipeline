@@ -19,6 +19,7 @@ class AtomEnvironment:
         ----------
         environment_atoms: set[int]
             Indices of atoms encoded by environment.
+
         """
         self.environment_atoms = environment_atoms  # set of all atoms within radius
 
@@ -38,6 +39,7 @@ class CircularAtomEnvironment(AtomEnvironment):
             Radius of feature.
         environment_atoms: set[int]
             All indices of atoms within radius of central atom.
+
         """
         super().__init__(environment_atoms)
         self.central_atom = central_atom
@@ -60,6 +62,7 @@ class CircularAtomEnvironment(AtomEnvironment):
         -------
         Self
             Encoded the atoms which are within the radius of the central atom and are part of the feature.
+
         """
         if radius == 0:
             return cls(central_atom_index, radius, {central_atom_index})

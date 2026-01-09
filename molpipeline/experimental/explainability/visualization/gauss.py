@@ -34,6 +34,7 @@ class GaussFunctor2D:  # pylint: disable=too-few-public-methods
             Scaling factor.
         rotation: float
             Rotation angle in radians.
+
         """
         self.center = center
         self.std = np.array([std1, std2]) ** 2  # scale stds to variance
@@ -41,13 +42,13 @@ class GaussFunctor2D:  # pylint: disable=too-few-public-methods
         self.rotation = rotation
 
         self._a = np.cos(self.rotation) ** 2 / (2 * self.std[0]) + np.sin(
-            self.rotation
+            self.rotation,
         ) ** 2 / (2 * self.std[1])
         self._b = -np.sin(2 * self.rotation) / (4 * self.std[0]) + np.sin(
-            2 * self.rotation
+            2 * self.rotation,
         ) / (4 * self.std[1])
         self._c = np.sin(self.rotation) ** 2 / (2 * self.std[0]) + np.cos(
-            self.rotation
+            self.rotation,
         ) ** 2 / (2 * self.std[1])
 
     def __call__(self, pos: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
@@ -62,6 +63,7 @@ class GaussFunctor2D:  # pylint: disable=too-few-public-methods
         -------
         npt.NDArray[np.float64]
             Array of function values at the given positions.
+
         """
         exponent = self._a * (pos[:, 0] - self.center[0]) ** 2
         exponent += (

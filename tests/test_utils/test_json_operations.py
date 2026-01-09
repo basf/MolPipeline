@@ -44,7 +44,9 @@ class JsonConversionTest(unittest.TestCase):
 
         # Separate comparison of the steps as models cannot be compared directly
         for (orig_name, orig_obj), (recreated_name, recreated_obj) in zip(
-            original_steps, recreated_steps
+            original_steps,
+            recreated_steps,
+            strict=False,
         ):
             # Remove the model from the original params
             del original_params[orig_name]
