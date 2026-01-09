@@ -37,6 +37,7 @@ class MolToChemprop(MolToAnyPipelineElement):
     References
     ----------
     [1] https://github.com/chemprop/chemprop/
+
     """
 
     graph_featurizer: GraphFeaturizer[RDKitMol] | None
@@ -67,6 +68,7 @@ class MolToChemprop(MolToAnyPipelineElement):
             Number of parallel jobs to use. Defaults to 1.
         uuid: str | None, optional
             UUID of the pipeline element.
+
         """
         self.graph_featurizer = graph_featurizer or SimpleMoleculeMolGraphFeaturizer()
         self.mol_featurizer = mol_featurizer
@@ -89,6 +91,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         -------
         MoleculeDatapoint
             Molecular representation used as input for ChemProp.
+
         """
         mol_features: npt.NDArray[np.float64] | None = None
         if self.mol_featurizer is not None:
@@ -96,7 +99,8 @@ class MolToChemprop(MolToAnyPipelineElement):
         return MoleculeDatapoint(mol=value, x_d=mol_features)
 
     def assemble_output(
-        self, value_list: Iterable[MoleculeDatapoint]
+        self,
+        value_list: Iterable[MoleculeDatapoint],
     ) -> MoleculeDataset:
         """Assemble the output from the parallelized pretransform_single.
 
@@ -109,6 +113,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         -------
         Any
             Assembled output.
+
         """
         return MoleculeDataset(data=list(value_list), featurizer=self.graph_featurizer)
 
@@ -124,6 +129,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         -------
         dict
             Parameters of this pipeline element.
+
         """
         params = super().get_params(deep=deep)
         params["graph_featurizer"] = self.graph_featurizer
@@ -152,6 +158,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         -------
         Self
             This pipeline element with the parameters set.
+
         """
         param_copy = dict(parameters)
         graph_featurizer = param_copy.pop("graph_featurizer", None)

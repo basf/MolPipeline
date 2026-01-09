@@ -19,7 +19,7 @@ class TestMurckoScaffold(TestCase):
                 ("smiles_to_mol", AutoToMol()),
                 ("murcko_scaffold", MurckoScaffold()),
                 ("scaffold_to_smiles", MolToSmiles()),
-            ]
+            ],
         )
         smiles_list = ["Cc1ccc(=O)[nH]c1", "O=CC1CCC(c2ccccc2)CC1", "CCC"]
         expected_scaffold_list = ["O=c1cccc[nH]1", "c1ccc(C2CCCCC2)cc1", ""]
@@ -39,12 +39,14 @@ class TestMakeScaffoldGeneric(TestCase):
                 ("murcko_scaffold", MurckoScaffold()),
                 ("make_scaffold_generic", MakeScaffoldGeneric()),
                 ("scaffold_to_smiles", MolToSmiles()),
-            ]
+            ],
         )
         self.smiles_list = ["Cc1ccc(=O)[nH]c1", "O=CC1CCC(c2ccccc2)CC1", "CCC"]
 
     def check_generic_scaffold(
-        self, params: dict[str, Any], expected_scaffold_list: list[str]
+        self,
+        params: dict[str, Any],
+        expected_scaffold_list: list[str],
     ) -> None:
         """Set parameters and check the results.
 
@@ -58,14 +60,15 @@ class TestMakeScaffoldGeneric(TestCase):
         """
         self.generic_scaffold_pipeline.set_params(**params)
         generic_scaffold_list = self.generic_scaffold_pipeline.transform(
-            self.smiles_list
+            self.smiles_list,
         )
         self.assertListEqual(expected_scaffold_list, generic_scaffold_list)
 
     def test_generic_scaffold_generation_pipeline(self) -> None:
         """Test the generic scaffold generation."""
         self.check_generic_scaffold(
-            params={}, expected_scaffold_list=["CC1CCCCC1", "C1CCC(C2CCCCC2)CC1", ""]
+            params={},
+            expected_scaffold_list=["CC1CCCCC1", "C1CCC(C2CCCCC2)CC1", ""],
         )
 
         # Test the generic scaffold generation with generic atoms

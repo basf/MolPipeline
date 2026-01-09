@@ -20,5 +20,6 @@ class MolToBinary(MolToAnyPipelineElement):
         -------
         str
             Binary representation of molecule.
+
         """
         return value.ToBinary()

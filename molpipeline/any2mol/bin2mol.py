@@ -24,6 +24,7 @@ class BinaryToMol(AnyToMolPipelineElement):
         -------
         OptionalMol
             Rdkit molecule if valid binary representation, else None.
+
         """
         if value is None:
             return InvalidInstance(

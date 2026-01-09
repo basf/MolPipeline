@@ -24,6 +24,7 @@ class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
         -------
         list[str]
             List of string representations of the molecules.
+
         """
         string_list: list[str] = super().transform(values)
         return string_list
@@ -41,4 +42,5 @@ class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
         -------
         str
             SMILES representation of molecule.
+
         """

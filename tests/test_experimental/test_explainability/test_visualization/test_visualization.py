@@ -64,7 +64,7 @@ def _get_test_morgan_rf_pipeline(task: str = "classification") -> Pipeline:
                 "model",
                 model,
             ),
-        ]
+        ],
     )
     return pipeline
 
@@ -112,29 +112,33 @@ class TestExplainabilityVisualization(unittest.TestCase):
         # tree explainer for regression
         cls.test_tree_explainer_reg = SHAPTreeExplainer(cls.test_pipeline_reg)
         cls.test_tree_explanations_reg = cls.test_tree_explainer_reg.explain(
-            TEST_SMILES
+            TEST_SMILES,
         )
 
         # kernel explainer for classification
         kernel_kwargs_clf = construct_kernel_shap_kwargs(
-            cls.test_pipeline_clf, TEST_SMILES
+            cls.test_pipeline_clf,
+            TEST_SMILES,
         )
         cls.test_kernel_explainer_clf = SHAPKernelExplainer(
-            cls.test_pipeline_clf, **kernel_kwargs_clf
+            cls.test_pipeline_clf,
+            **kernel_kwargs_clf,
         )
         cls.test_kernel_explanations_clf = cls.test_kernel_explainer_clf.explain(
-            TEST_SMILES
+            TEST_SMILES,
         )
 
         # kernel explainer for regression
         kernel_kwargs_reg = construct_kernel_shap_kwargs(
-            cls.test_pipeline_reg, TEST_SMILES
+            cls.test_pipeline_reg,
+            TEST_SMILES,
         )
         cls.test_kernel_explainer_reg = SHAPKernelExplainer(
-            cls.test_pipeline_reg, **kernel_kwargs_reg
+            cls.test_pipeline_reg,
+            **kernel_kwargs_reg,
         )
         cls.test_kernel_explanations_reg = cls.test_kernel_explainer_reg.explain(
-            TEST_SMILES
+            TEST_SMILES,
         )
 
     def test_structure_heatmap_fingerprint_based_atom_coloring(self) -> None:
@@ -198,15 +202,15 @@ class TestExplainabilityVisualization(unittest.TestCase):
         """
         mol_implicit_hydrogens = Chem.MolFromSmiles("C")
         explanations1 = self.test_tree_explainer_clf.explain(
-            [Chem.MolToSmiles(mol_implicit_hydrogens)]
+            [Chem.MolToSmiles(mol_implicit_hydrogens)],
         )
         mol_added_hydrogens = Chem.AddHs(mol_implicit_hydrogens)
         explanations2 = self.test_tree_explainer_clf.explain(
-            [Chem.MolToSmiles(mol_added_hydrogens)]
+            [Chem.MolToSmiles(mol_added_hydrogens)],
         )
         mol_explicit_hydrogens = Chem.MolFromSmiles("[H]C([H])([H])[H]")
         explanations3 = self.test_tree_explainer_clf.explain(
-            [Chem.MolToSmiles(mol_explicit_hydrogens)]
+            [Chem.MolToSmiles(mol_explicit_hydrogens)],
         )
 
         # test explanations' atom weights

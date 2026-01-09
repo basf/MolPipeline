@@ -1,14 +1,18 @@
 """Test the comparison functions."""
 
-from typing import Callable
+from typing import TYPE_CHECKING
 from unittest import TestCase
 
-from molpipeline import Pipeline
 from molpipeline.utils.comparison import check_pipelines_equivalent
 from tests.utils.default_models import (
     get_morgan_physchem_rf_pipeline,
     get_standardization_pipeline,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from molpipeline import Pipeline
 
 
 class TestComparison(TestCase):

@@ -28,6 +28,7 @@ if TORCH_AVAILABLE:
         -------
         object
             The JSON-serializable object.
+
         """
         if isinstance(obj, torch.Tensor):
             object_dict: dict[str, Any] = {
@@ -56,5 +57,6 @@ else:
         -------
         object
             The JSON-serializable object.
+
         """
         return obj, False

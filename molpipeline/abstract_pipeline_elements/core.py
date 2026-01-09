@@ -29,6 +29,7 @@ class InvalidInstance(NamedTuple):
     element_name: str | None
         Optional name of the element which could not be processed.
         The name of the pipeline element is often more descriptive than the id.
+
     """
 
     element_id: str
@@ -42,6 +43,7 @@ class InvalidInstance(NamedTuple):
         -------
         str
             String representation of InvalidInstance.
+
         """
         return (
             f"InvalidInstance({self.element_name or self.element_id}, {self.message})"
@@ -75,6 +77,7 @@ class RemovedInstance:  # pylint: disable=too-few-public-methods
         -------
         str
             String representation of RemovedInstance.
+
         """
         return f"RemovedInstance({self.filter_element_id}, {self.message})"
 
@@ -102,6 +105,7 @@ class ABCPipelineElement(abc.ABC):
             Number of cores used for processing.
         uuid: str | None, optional
             Unique identifier of the PipelineElement.
+
         """
         if name is None:
             name = self.__class__.__name__
@@ -119,6 +123,7 @@ class ABCPipelineElement(abc.ABC):
         -------
         str
             String representation of object.
+
         """
         parm_list = []
         for key, value in self._get_non_default_parameters().items():
@@ -151,6 +156,7 @@ class ABCPipelineElement(abc.ABC):
         -------
         dict[str, Any]
             Dictionary of non default parameters.
+
         """
         signature = inspect.signature(self.__class__.__init__)
         self_params = self.get_params()
@@ -178,6 +184,7 @@ class ABCPipelineElement(abc.ABC):
         -------
         dict[str, Any]
             Parameters of the object.
+
         """
         if deep:
             return {
@@ -214,7 +221,7 @@ class ABCPipelineElement(abc.ABC):
         for att_name, att_value in parameters.items():
             if not hasattr(self, att_name):
                 raise ValueError(
-                    f"Cannot set attribute {att_name} on {self.__class__.__name__}"
+                    f"Cannot set attribute {att_name} on {self.__class__.__name__}",
                 )
             setattr(self, att_name, att_value)
         return self
@@ -268,6 +275,7 @@ class ABCPipelineElement(abc.ABC):
         -------
         Self
             Fitted object.
+
         """
         _ = self.fit_transform(values, labels)
         return self
@@ -286,6 +294,7 @@ class ABCPipelineElement(abc.ABC):
         -------
         Self
             Fitted object.
+
         """
         return self
 
@@ -308,6 +317,7 @@ class ABCPipelineElement(abc.ABC):
         -------
         Any
             List of instances in new representation.
+
         """
 
     @abc.abstractmethod
@@ -324,6 +334,7 @@ class ABCPipelineElement(abc.ABC):
         -------
         Any
             Transformed input_values.
+
         """
 
     @abc.abstractmethod
@@ -339,6 +350,7 @@ class ABCPipelineElement(abc.ABC):
         -------
         Any
             Transformed value.
+
         """
 
 
@@ -365,6 +377,7 @@ class TransformingPipelineElement(ABCPipelineElement):
             Number of cores used for processing.
         uuid: str | None, optional
             Unique identifier of the PipelineElement.
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self._is_fitted = False
@@ -419,7 +432,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         for key, value in self.additional_attributes.items():
             if not hasattr(recreated_object, key):
                 raise AssertionError(
-                    f"Cannot set attribute {key} on {self.__class__.__name__}. This should not happen!"
+                    f"Cannot set attribute {key} on {self.__class__.__name__}. This should not happen!",
                 )
             setattr(recreated_object, key, copy.copy(value))
         return recreated_object
@@ -438,6 +451,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         Self
             Fitted object.
+
         """
         self._is_fitted = True
         return super().fit_to_result(values)
@@ -460,6 +474,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         Any
             List of molecules in new representation.
+
         """
         self._is_fitted = True
         if self.requires_fitting:
@@ -508,6 +523,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         Any
             Aggregated output. This can also be the original input.
+
         """
         return list(value_list)
 
@@ -528,6 +544,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         Any
             Pretransformed value. (Skips applying parameters learned during fitting)
+
         """
 
     def finalize_single(self, value: Any) -> Any:
@@ -542,6 +559,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         Any
             Finalized value.
+
         """
         return value
 
@@ -557,6 +575,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         list[Any]
             Transformed input_values.
+
         """
         parallel = Parallel(n_jobs=self.n_jobs)
         output_values = parallel(
@@ -576,6 +595,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         list[Any]
             List of transformed values.
+
         """
         parallel = Parallel(n_jobs=self.n_jobs)
         output_values = parallel(
@@ -596,6 +616,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         Any
             Transformed input_values.
+
         """
         output_rows = self.pretransform(values)
         output_rows = self.finalize_list(output_rows)
@@ -610,6 +631,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         dict[str, Any]
             A dictionary with all attributes necessary to initialize a object with same parameters.
+
         """
         json_dict: dict[str, Any] = {
             "__name__": self.__class__.__name__,
@@ -645,6 +667,7 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         -------
         list[OptionalMol]
             List of molecules or InvalidInstances, if corresponding transformation was not successful.
+
         """
         mol_list: list[OptionalMol] = super().transform(values)  # Stupid mypy...
         return mol_list
@@ -661,17 +684,18 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         -------
         OptionalMol
             Transformed molecule if transformation was successful, else InvalidInstance.
+
         """
         try:
             return super().transform_single(value)
         except Exception as exc:
             if isinstance(value, Chem.Mol):
                 logger.error(
-                    f"Failed to process: {Chem.MolToSmiles(value)} | ({self.name}) ({self.uuid})"
+                    f"Failed to process: {Chem.MolToSmiles(value)} | ({self.name}) ({self.uuid})",
                 )
             else:
                 logger.error(
-                    f"Failed to process: {value} ({type(value)}) | ({self.name}) ({self.uuid})"
+                    f"Failed to process: {value} ({type(value)}) | ({self.name}) ({self.uuid})",
                 )
             raise exc
 
@@ -690,6 +714,7 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         -------
         OptionalMol
             Transformed molecule if transformation was successful, else InvalidInstance.
+
         """
 
 
@@ -710,6 +735,7 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         -------
         list[OptionalMol]
             List of molecules or InvalidInstances, if corresponding representation was invalid.
+
         """
         mol_list: list[OptionalMol] = super().transform(values)  # Stupid mypy...
         return mol_list
@@ -727,6 +753,7 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         -------
         OptionalMol
             Obtained molecule if valid representation, else InvalidInstance.
+
         """
 
 
@@ -748,4 +775,5 @@ class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
         -------
         Any
             Transformed molecule.
+
         """

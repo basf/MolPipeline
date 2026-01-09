@@ -16,7 +16,8 @@ class TestABCChemprop(unittest.TestCase):
         }
         # pylint: disable=protected-access
         other_params, callback_params = ABCChemprop._filter_params(
-            dummy_params, "callback_modelckpt"
+            dummy_params,
+            "callback_modelckpt",
         )
         # pylint: enable=protected-access
         self.assertEqual(callback_params, {"monitor": "val_loss"})
@@ -30,7 +31,8 @@ class TestABCChemprop(unittest.TestCase):
         }
         # pylint: disable=protected-access
         other_params, trainer_params = ABCChemprop._filter_params(
-            dummy_params, "lightning_trainer"
+            dummy_params,
+            "lightning_trainer",
         )
         # pylint: enable=protected-access
         self.assertEqual(trainer_params, {"max_epochs": 50})

@@ -35,6 +35,7 @@ def transform_functions2string(value: Any) -> Any:
     -------
     Any
         Json file containing the dictionary.
+
     """
     if callable(value):
         out_dict = {
@@ -77,6 +78,7 @@ def transform_string2function(value: Any) -> Any:
     -------
     Any
         Json file containing the dictionary.
+
     """
     if isinstance(value, dict):
         if "load_from_constructor" in value:
@@ -116,6 +118,7 @@ def builtin_to_json(obj: _U) -> _U:
     -------
     str | int | float | bool | None
         The same object as the input.
+
     """
 
 
@@ -132,6 +135,7 @@ def builtin_to_json(obj: list[Any]) -> list[Any]:
     -------
     list[Any]
         List of transformed objects.
+
     """
 
 
@@ -148,6 +152,7 @@ def builtin_to_json(obj: tuple[Any, ...]) -> tuple[Any, ...]:
     -------
     tuple[Any]
         Tuple of transformed objects.
+
     """
 
 
@@ -240,7 +245,8 @@ def recursive_to_json(obj: Any) -> Any:
         return None
 
     if isinstance(
-        obj, (str, int, float, bool, dict, types.FunctionType, list, set, tuple)
+        obj,
+        (str, int, float, bool, dict, types.FunctionType, list, set, tuple),
     ):
         return_value = builtin_to_json(obj)
         return return_value

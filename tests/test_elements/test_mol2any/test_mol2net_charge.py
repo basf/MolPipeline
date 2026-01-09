@@ -20,7 +20,7 @@ DF_TEST_DATA = pd.DataFrame(
         ],
         "expected_net_charges_formal_charge": [2, 0, 0, -2, 1],
         "expected_net_charges_gasteiger": [2, -1, -1, -2, np.nan],
-    }
+    },
 )
 
 
@@ -54,7 +54,7 @@ class TestNetChargeCalculator(unittest.TestCase):
                 .reshape(-1, 1),
                 actual_net_charges,
                 equal_nan=True,
-            )
+            ),
         )
 
     def test_net_charge_calculation_gasteiger(self) -> None:
@@ -84,7 +84,7 @@ class TestNetChargeCalculator(unittest.TestCase):
                 .reshape(-1, 1),
                 actual_net_charges,
                 equal_nan=True,
-            )
+            ),
         )
 
 

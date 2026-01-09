@@ -28,6 +28,6 @@ class LoggingUtilsTest(unittest.TestCase):
         output2 = stream2.getvalue()
         self.assertTrue(
             output2.startswith(
-                "[source] ................................... my message, total="
-            )
+                "[source] ................................... my message, total=",
+            ),
         )

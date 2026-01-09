@@ -23,6 +23,7 @@ class MolToInchi(_MolToStringPipelineElement):
         -------
         str
             INCHI string
+
         """
         return str(Chem.MolToInchi(value))
 
@@ -62,5 +63,6 @@ class MolToInchiKey(_MolToStringPipelineElement):
         -------
         str
             INCHI-key of molecule.
+
         """
         return str(Chem.MolToInchiKey(value))

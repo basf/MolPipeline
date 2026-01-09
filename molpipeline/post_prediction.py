@@ -33,6 +33,7 @@ class PostPredictionTransformation(BaseEstimator, TransformerMixin, abc.ABC):
         -------
         npt.NDArray[Any]
             Transformed data.
+
         """
 
 
@@ -85,6 +86,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         -------
         Self
             Fitted PostPredictionWrapper.
+
         """
         if isinstance(self.wrapped_estimator, FilterReinserter):
             self.wrapped_estimator.fit(X, **params)
@@ -122,7 +124,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         if hasattr(self.wrapped_estimator, "transform"):
             return self.wrapped_estimator.transform(X, **params)
         raise AttributeError(
-            f"Estimator {self.wrapped_estimator} has neither predict nor transform method."
+            f"Estimator {self.wrapped_estimator} has neither predict nor transform method.",
         )
 
     def fit_transform(
@@ -160,7 +162,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
                 return self.wrapped_estimator.fit_transform(X)
             return self.wrapped_estimator.fit_transform(X, y, **params)
         raise AttributeError(
-            f"Estimator {self.wrapped_estimator} has neither fit_predict nor fit_transform method."
+            f"Estimator {self.wrapped_estimator} has neither fit_predict nor fit_transform method.",
         )
 
     def inverse_transform(
@@ -183,11 +185,12 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         -------
         npt.NDArray[Any]
             Inverse transformed data.
+
         """
         if hasattr(self.wrapped_estimator, "inverse_transform"):
             return self.wrapped_estimator.inverse_transform(X)
         raise AttributeError(
-            f"Estimator {self.wrapped_estimator} has no inverse_transform method."
+            f"Estimator {self.wrapped_estimator} has no inverse_transform method.",
         )
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
@@ -202,6 +205,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         -------
         dict[str, Any]
             Parameters.
+
         """
         param_dict = {"wrapped_estimator": self.wrapped_estimator}
         if deep:
@@ -221,6 +225,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         -------
         dict[str, Any]
             Parameters.
+
         """
         param_copy = dict(params)
         if "wrapped_estimator" in param_copy:

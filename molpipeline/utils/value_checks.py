@@ -17,6 +17,7 @@ def is_empty(value: Any) -> bool:
     -------
     bool
         True if value is empty, False otherwise.
+
     """
     if get_length(value) == 0:
         return True
@@ -40,6 +41,7 @@ def get_length(values: Any) -> int:
     -------
     int
         Length of the values.
+
     """
     if hasattr(values, "shape"):
         return values.shape[0]

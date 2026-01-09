@@ -29,6 +29,7 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         -------
         dict[str, int]
             Parameters of the featurizer.
+
         """
         return {}
 
@@ -44,5 +45,6 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         -------
         Self
             This featurizer with the parameters set.
+
         """
         return self
