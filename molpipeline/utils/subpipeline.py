@@ -1,6 +1,7 @@
 """Helper functions to extract subpipelines from a pipeline."""
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from sklearn.base import BaseEstimator
 

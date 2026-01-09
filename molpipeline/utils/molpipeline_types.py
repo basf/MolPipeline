@@ -2,16 +2,7 @@
 
 from collections.abc import Sequence
 from numbers import Number
-from typing import (
-    Any,
-    Literal,
-    Optional,
-    Protocol,
-    Self,
-    TypeAlias,
-    TypeVar,
-    Union,
-)
+from typing import Any, Literal, Protocol, Self, TypeAlias, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -43,14 +34,14 @@ _NT = TypeVar("_NT", bound=np.generic)
 TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_NT])  # type: ignore
 AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 
-FloatCountRange: TypeAlias = tuple[Optional[float], Optional[float]]
-IntCountRange: TypeAlias = tuple[Optional[int], Optional[int]]
+FloatCountRange: TypeAlias = tuple[float | None, float | None]
+IntCountRange: TypeAlias = tuple[int | None, int | None]
 
 # IntOrIntCountRange for Typing of count ranges
 # - a single int for an exact value match
 # - a range given as a tuple with a lower and upper bound
 #   - both limits are optional
-IntOrIntCountRange: TypeAlias = Union[int, IntCountRange]
+IntOrIntCountRange: TypeAlias = int | IntCountRange
 
 
 class AnySklearnEstimator(Protocol):
@@ -68,6 +59,7 @@ class AnySklearnEstimator(Protocol):
         -------
         dict[str, Any]
             Parameter names mapped to their values.
+
         """
 
     def set_params(self, **params: Any) -> Self:
@@ -82,6 +74,7 @@ class AnySklearnEstimator(Protocol):
         -------
         Self
             Estimator with updated parameters.
+
         """
 
     def fit(
@@ -106,6 +99,7 @@ class AnySklearnEstimator(Protocol):
         -------
         Self
             Fitted estimator.
+
         """
 
 
@@ -133,6 +127,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
         -------
         npt.NDArray[Any]
             Predictions.
+
         """
 
 
@@ -161,6 +156,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         -------
         npt.NDArray[Any]
             Transformed array.
+
         """
 
     def transform(
@@ -181,10 +177,10 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         -------
         npt.NDArray[Any]
             Transformed array.
+
         """
 
 
-AnyElement = Union[
-    AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]
-]
+AnyElement = AnyTransformer | AnyPredictor | ABCPipelineElement | Literal["passthrough"]
+
 AnyStep = tuple[str, AnyElement]
