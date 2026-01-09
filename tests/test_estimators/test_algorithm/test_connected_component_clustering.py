@@ -1,7 +1,5 @@
 """Test connected component clustering algorithm."""
 
-from __future__ import annotations
-
 import unittest
 from typing import Any
 

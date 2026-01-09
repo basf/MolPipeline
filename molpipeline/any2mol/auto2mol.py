@@ -1,7 +1,5 @@
 """Classes to transform given input to a RDKit molecule."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from molpipeline.abstract_pipeline_elements.core import (

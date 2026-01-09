@@ -1,7 +1,5 @@
 """Test functionality of the pipeline class."""
 
-from __future__ import annotations
-
 import tempfile
 import unittest
 from itertools import combinations

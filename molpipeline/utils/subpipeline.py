@@ -1,7 +1,5 @@
 """Helper functions to extract subpipelines from a pipeline."""
 
-from __future__ import annotations
-
 from typing import Any, Callable
 
 from sklearn.base import BaseEstimator

@@ -1,13 +1,12 @@
 """Nearest neighbor algorithm."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
 from joblib import Parallel, delayed
+from scipy import sparse
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import NearestNeighbors
 
@@ -16,7 +15,6 @@ from molpipeline.utils.multi_proc import check_available_cores
 from molpipeline.utils.value_checks import get_length
 
 if TYPE_CHECKING:
-    from scipy import sparse
     from scipy.sparse import csr_matrix
 
 __all__ = ["NamedNearestNeighbors"]

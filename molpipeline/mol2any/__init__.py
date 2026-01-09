@@ -1,5 +1,7 @@
 """Init the module for mol2any pipeline elements."""
 
+import importlib.util
+
 from molpipeline.mol2any.mol2bin import MolToBinary
 from molpipeline.mol2any.mol2bool import MolToBool
 from molpipeline.mol2any.mol2concatinated_vector import MolToConcatenatedVector
@@ -27,9 +29,7 @@ __all__ = [
     "MolToSmiles",
 ]
 
-try:
+if importlib.util.find_spec("chemprop") is not None:
     from molpipeline.mol2any.mol2chemprop import MolToChemprop  # noqa
 
-    __all__.append("MolToChemprop")
-except ImportError:
-    pass
+    __all__ += ["MolToChemprop"]

@@ -1,7 +1,5 @@
 """Class for transforming molecules to SMILES representations."""
 
-from __future__ import annotations
-
 import abc
 
 from rdkit import Chem

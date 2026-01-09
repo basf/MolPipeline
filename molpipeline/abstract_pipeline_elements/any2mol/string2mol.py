@@ -1,7 +1,5 @@
 """Abstract classes for creating rdkit molecules from string representations."""
 
-from __future__ import annotations
-
 import abc
 
 from molpipeline.abstract_pipeline_elements.core import (

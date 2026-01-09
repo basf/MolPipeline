@@ -1,7 +1,5 @@
 """Module for custom filter functionality."""
 
-from __future__ import annotations
-
 from typing import Any, Callable, Self
 
 from molpipeline.abstract_pipeline_elements.core import (
