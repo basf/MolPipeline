@@ -1,22 +1,18 @@
 """Sklearn estimators for computing similarity and distance matrices."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any, Self
+from typing import Any, Self
 
 try:
     from typing import override  # type: ignore
 except ImportError:
     from typing_extensions import override
 
+import numpy as np
+import numpy.typing as npt
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
-
-if TYPE_CHECKING:
-    import numpy as np
-    import numpy.typing as npt
 
 
 class TanimotoToTraining(BaseEstimator, TransformerMixin):

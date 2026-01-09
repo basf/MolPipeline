@@ -1,7 +1,5 @@
 """Classes to filter molecule lists."""
 
-from __future__ import annotations
-
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from typing import Any, Self

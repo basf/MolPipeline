@@ -1,7 +1,5 @@
 """Test construction of concatenated fingerprints."""
 
-from __future__ import annotations
-
 import itertools
 import unittest
 from typing import TYPE_CHECKING, Any, Literal, get_args

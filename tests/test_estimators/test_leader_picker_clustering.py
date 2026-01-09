@@ -1,7 +1,5 @@
 """Test leader picker clustering estimator."""
 
-from __future__ import annotations
-
 import unittest
 from typing import Any
 

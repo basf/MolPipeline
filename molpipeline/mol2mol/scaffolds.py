@@ -1,7 +1,5 @@
 """Classes for standardizing molecules."""
 
-from __future__ import annotations
-
 from typing import Any, Self
 
 from rdkit import Chem

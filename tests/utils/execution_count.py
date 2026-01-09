@@ -1,7 +1,5 @@
 """Functions for counting the number of times a function is executed."""
 
-from __future__ import annotations
-
 from typing import Any, Self
 
 from sklearn.base import BaseEstimator

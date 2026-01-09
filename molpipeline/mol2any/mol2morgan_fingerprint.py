@@ -1,8 +1,7 @@
 """Implementations for the Morgan fingerprint."""
 
-from __future__ import annotations  # for all the python 3.8 users out there.
-
-from typing import TYPE_CHECKING, Any, Self
+from collections.abc import Mapping, Sequence
+from typing import Any, Self
 
 from rdkit.Chem import rdFingerprintGenerator
 
@@ -10,12 +9,9 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     FPReturnAsOption,
     MolToRDKitGenFPElement,
 )
+from molpipeline.utils.molpipeline_types import RDKitMol
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-
-    from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToMorganFP(MolToRDKitGenFPElement):

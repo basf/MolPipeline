@@ -2,11 +2,9 @@
 
 # pylint: disable=too-many-arguments
 
-from __future__ import annotations
-
 import warnings
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -142,7 +140,7 @@ class MolToChemprop(MolToAnyPipelineElement):
                     params[f"mol_featurizer__{key}"] = value
         return params
 
-    def set_params(self, **parameters: Any) -> MolToChemprop:
+    def set_params(self, **parameters: Any) -> Self:
         """Set the parameters of this pipeline element.
 
         Parameters
@@ -152,7 +150,7 @@ class MolToChemprop(MolToAnyPipelineElement):
 
         Returns
         -------
-        MolToChemprop
+        Self
             This pipeline element with the parameters set.
         """
         param_copy = dict(parameters)

@@ -1,13 +1,12 @@
 """Connected component clustering estimator."""
 
-from __future__ import annotations
-
 from numbers import Real
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import Any, ClassVar, Self
 
 import numpy as np
 import numpy.typing as npt
 from scipy import sparse
+from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # noqa: PLC2701
 from sklearn.utils._param_validation import Interval  # noqa: PLC2701
 from sklearn.utils.validation import validate_data
@@ -17,9 +16,6 @@ from molpipeline.estimators.algorithm.connected_component_clustering import (
     connected_components_iterative_algorithm,
 )
 from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
-
-if TYPE_CHECKING:
-    from scipy.sparse import csr_matrix
 
 
 class ConnectedComponentClustering(ClusterMixin, BaseEstimator):

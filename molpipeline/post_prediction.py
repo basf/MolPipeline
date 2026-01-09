@@ -1,7 +1,5 @@
 """Module for elements that are applied in the pipeline after the prediction."""
 
-from __future__ import annotations
-
 import abc
 from typing import Any, Self
 

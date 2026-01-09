@@ -1,6 +1,6 @@
 """Test utils for logging."""
 
-from __future__ import annotations
+from __future__ import annotations  # Required for loguru type hints
 
 from collections.abc import Generator
 from contextlib import contextmanager

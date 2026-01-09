@@ -1,8 +1,6 @@
 """Functions of fingerprints for comparing output with molpipline."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, TypeGuard
+from typing import TypeGuard
 
 import numpy as np
 import numpy.typing as npt
@@ -16,10 +14,9 @@ from rdkit.DataStructs import (
 )
 from scipy import sparse
 
-if TYPE_CHECKING:
-    from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
-        FPAssembleOutputOutputType,
-    )
+from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
+    FPAssembleOutputOutputType,
+)
 
 
 def make_sparse_fp(

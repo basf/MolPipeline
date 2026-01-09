@@ -5,8 +5,6 @@ Much of the visualization code in this file originates from projects of Christia
     https://github.com/c-feldmann/compchemkit
 """
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 
 import numpy as np

@@ -1,12 +1,9 @@
 """Abstract classes for transforming rdkit molecules to bit vectors."""
 
-from __future__ import annotations  # for all the python 3.8 users out there.
-
 import abc
 import copy
 from collections.abc import Iterable
 from typing import (
-    TYPE_CHECKING,
     Any,
     Literal,
     Self,
@@ -18,6 +15,7 @@ from typing import (
 
 import numpy as np
 import numpy.typing as npt
+from rdkit.Chem import rdFingerprintGenerator
 from rdkit.DataStructs import (
     ExplicitBitVect,
     IntSparseIntVect,
@@ -28,12 +26,8 @@ from scipy import sparse
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.utils.matrices import sparse_from_index_value_dicts
-
-if TYPE_CHECKING:
-    from rdkit.Chem import rdFingerprintGenerator
-
-    from molpipeline.utils.molpipeline_types import RDKitMol
-
+from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.substructure_handling import AtomEnvironment
 
 # possible output types for a fingerprint:
 # - "sparse" is a sparse csr_matrix

@@ -1,7 +1,5 @@
 """Classes for transforming rdkit molecules to inchi."""
 
-from __future__ import annotations
-
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (

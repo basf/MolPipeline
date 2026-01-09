@@ -1,7 +1,5 @@
 """All abstract classes later pipeline elements inherit from."""
 
-from __future__ import annotations  # for all the python 3.8 users out there.
-
 import abc
 import copy
 import inspect
