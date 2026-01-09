@@ -46,7 +46,7 @@ class JsonConversionTest(unittest.TestCase):
         for (orig_name, orig_obj), (recreated_name, recreated_obj) in zip(
             original_steps,
             recreated_steps,
-            strict=False,
+            strict=True,
         ):
             # Remove the model from the original params
             del original_params[orig_name]

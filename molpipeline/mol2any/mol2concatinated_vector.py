@@ -410,7 +410,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
         """
         final_vector_list = []
-        for (_, element), sub_value in zip(self._element_list, value, strict=False):
+        for (_, element), sub_value in zip(self._element_list, value, strict=True):
             final_value = element.finalize_single(sub_value)
             if isinstance(element, MolToFingerprintPipelineElement) and isinstance(
                 final_value,
@@ -440,8 +440,8 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         """
         for element, value in zip(
             self._element_list,
-            zip(*values, strict=False),
-            strict=False,
+            zip(*values, strict=True),
+            strict=True,
         ):
             element[1].fit_to_result(value)
         return self

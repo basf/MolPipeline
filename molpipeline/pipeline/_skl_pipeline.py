@@ -322,11 +322,11 @@ class Pipeline(_Pipeline):
                     raise AssertionError()
                 if not len(name) == len(step_idx) == len(ele_list):
                     raise AssertionError()
-                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=False):
+                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=True):
                     self.steps[idx_i] = (name_i, ele_i)
                 if y is not None:
                     y = fitted_transformer.co_transform(y)
-                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=False):
+                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=True):
                     self.steps[idx_i] = (name_i, ele_i)
                 self._set_error_resinserter()
             elif isinstance(name, list) or isinstance(step_idx, list):

@@ -150,7 +150,7 @@ class TestGroupShuffleSplit(unittest.TestCase):
             for (train_mp, test_mp), (train_sk, test_sk) in zip(
                 gss_molpipeline.split(X, y, groups=groups_i),
                 gss_sklearn.split(X, y, groups=groups_i),
-                strict=False,
+                strict=True,
             ):
                 # test that for the same seed the exact same splits are produced
                 assert_array_equal(train_mp, train_sk)

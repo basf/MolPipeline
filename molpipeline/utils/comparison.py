@@ -75,7 +75,7 @@ def compare_recursive(  # pylint: disable=too-many-return-statements
     if isinstance(value_a, (list, tuple)):
         if len(value_a) != len(value_b):
             return False
-        for val_a, val_b in zip(value_a, value_b, strict=False):
+        for val_a, val_b in zip(value_a, value_b, strict=True):
             if not compare_recursive(val_a, val_b):
                 return False
         return True
