@@ -132,6 +132,7 @@ ignore = [
     "RUF005",  # Consider iterable unpacking instead of concatenation  # TO REMOVE
     "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`  # TO REMOVE
     "RUF067",  # `__init__` module should only contain docstrings and re-exports
+    "RUF100",  #  Unused noqa  # TO REMOVE
     "S101",   # Use of `assert` detected  # TO REMOVE
     "S311",  #  suspicious-non-cryptographic-random-usage
     "SIM102",  # Use a single `if` statement instead of nested `if` statements # TO REMOVE
