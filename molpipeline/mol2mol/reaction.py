@@ -48,6 +48,7 @@ class MolToMolReaction(MolToMolPipelineElement):
             Number of cores used.
         uuid: str | None, optional
             UUID of the pipeline element. If None, a random UUID is generated.
+
         """
         super().__init__(
             name=name,
@@ -70,6 +71,7 @@ class MolToMolReaction(MolToMolPipelineElement):
         -------
         dict[str, Any]
             Dictionary containing all parameters defining the object.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -96,6 +98,7 @@ class MolToMolReaction(MolToMolPipelineElement):
         -------
         Self
             MolToMolReaction with updated parameters.
+
         """
         super().set_params(**parameters)
         if "reaction" in parameters:
@@ -168,12 +171,14 @@ class MolToMolReaction(MolToMolPipelineElement):
                 else:
                     mol_id = "None"
                 raise ValueError(
-                    f"Not able to handle multiple reactions: Mol ID: {mol_id}"
+                    f"Not able to handle multiple reactions: Mol ID: {mol_id}",
                 )
 
         if len(product_list) == 0:
             return InvalidInstance(
-                self.uuid, "Reaction did not yield any product.", self.name
+                self.uuid,
+                "Reaction did not yield any product.",
+                self.name,
             )
         product = product_list[0][0]
         AllChem.SanitizeMol(product)  # type: ignore[attr-defined]

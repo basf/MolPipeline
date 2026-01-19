@@ -32,6 +32,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         ----------
         distance_threshold : float
             Minimum distance between cluster centroids.
+
         """
         self.distance_threshold: float = distance_threshold
         self.n_clusters_: int | None = None
@@ -59,12 +60,14 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         -------
         Self
             Fitted estimator.
+
         """
         return self._fit(X)
 
     @staticmethod
     def _assign_points_to_clusters_based_on_centroid(
-        picks: Sequence[int], fps: Sequence[ExplicitBitVect]
+        picks: Sequence[int],
+        fps: Sequence[ExplicitBitVect],
     ) -> tuple[int, npt.NDArray[np.int32]]:
         """Assign points to clusters based on centroid.
 
@@ -81,6 +84,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         -------
         tuple[int, np.ndarray[int]]
             Number of clusters and cluster labels.
+
         """
         labels: npt.NDArray[np.int32] = np.full(len(fps), -1, dtype=np.int32)
         max_similarities = np.full(len(fps), -np.inf, dtype=np.float64)
@@ -106,6 +110,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         -------
         Self
             Fitted estimator.
+
         """
         lp = rdSimDivPickers.LeaderPicker()
 
@@ -148,6 +153,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         -------
         np.ndarray[int]
             Cluster labels.
+
         """
         # pylint: disable=W0246
         return super().fit_predict(X, y, **kwargs)

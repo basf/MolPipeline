@@ -22,5 +22,6 @@ class MolToSmiles(_MolToStringPipelineElement):
         -------
         str
             SMILES string of molecule.
+
         """
         return str(Chem.MolToSmiles(value))

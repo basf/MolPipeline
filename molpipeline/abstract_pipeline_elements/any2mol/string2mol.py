@@ -27,6 +27,7 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         -------
         list[OptionalMol]
             List of RDKit molecules. If a string representation could not be transformed to a molecule, None is returned.
+
         """
         return super().transform(values)
 
@@ -43,6 +44,7 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         -------
         OptionalMol
             RDKit molecule if representation was valid, else InvalidInstance.
+
         """
 
 
@@ -61,6 +63,7 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
         -------
         OptionalMol
             Rdkit molecule if valid string representation, else None.
+
         """
         if value is None:
             return InvalidInstance(
@@ -100,4 +103,5 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
         -------
         RDKitMol
             Rdkit molecule if valid representation, else None.
+
         """

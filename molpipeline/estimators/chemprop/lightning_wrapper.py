@@ -25,6 +25,7 @@ def get_enable_progress_bar(trainer: pl.Trainer) -> bool:
     -------
     bool
         If the progress bar is enabled in the lightning trainer.
+
     """
     for callback in trainer.callbacks:  # type: ignore[attr-defined]
         if isinstance(callback, ProgressBar):
@@ -44,6 +45,7 @@ def get_device(trainer: pl.Trainer) -> str | Accelerator:
     -------
     str
         The device used by the lightning trainer.
+
     """
     devices: str | Accelerator
     if isinstance(trainer.accelerator, CPUAccelerator):
@@ -105,6 +107,7 @@ def get_trainer_path(trainer: pl.Trainer) -> str | None:
     str | None
         The path of the lightning trainer.
         None if the path is the current path.
+
     """
     curr_path = str(Path(".").resolve())
     trainer_path: str | None = trainer.default_root_dir
@@ -125,6 +128,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
     -------
     dict[str, Any]
         The parameters of the lightning trainer.
+
     """
     if trainer.callbacks and isinstance(trainer.callbacks[-1], Timer):  # type: ignore[attr-defined]
         max_time = trainer.callbacks[-1].duration  # type: ignore[attr-defined]
@@ -194,6 +198,7 @@ def get_non_default_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
     -------
     dict[str, Any]
         The parameters of the lightning trainer.
+
     """
     trainer_dict = get_params_trainer(trainer)
     non_default_values = {}
