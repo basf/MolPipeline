@@ -1,7 +1,8 @@
 """Implementations for the RDKit Path Fingerprint."""
 
 import copy
-from typing import TYPE_CHECKING, Any, Self
+from collections.abc import Mapping, Sequence
+from typing import Any, Self
 
 from rdkit.Chem import rdFingerprintGenerator
 
@@ -9,12 +10,8 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     FPReturnAsOption,
     MolToRDKitGenFPElement,
 )
+from molpipeline.utils.molpipeline_types import RDKitMol
 from molpipeline.utils.substructure_handling import AtomEnvironment
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-
-    from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-attributes

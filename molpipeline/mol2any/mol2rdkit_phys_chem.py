@@ -4,7 +4,7 @@
 
 import copy
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Self
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -16,11 +16,7 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 RDKIT_DESCRIPTOR_DICT: dict[str, Callable[[Chem.Mol], float]]
 RDKIT_DESCRIPTOR_DICT = dict(Descriptors.descList)

@@ -2,7 +2,7 @@
 
 import abc
 import copy
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import (
     Any,
     Literal,

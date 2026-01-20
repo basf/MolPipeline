@@ -1,21 +1,16 @@
 """Abstract classes for transforming rdkit molecules to float vectors."""
 
 import abc
-from typing import TYPE_CHECKING
+from collections.abc import Iterable
 
 import numpy as np
+import numpy.typing as npt
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
     MolToAnyPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    import numpy.typing as npt
-
-    from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):

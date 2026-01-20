@@ -1,7 +1,7 @@
 """MolToNetCharge pipeline element."""
 
 import copy
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias
+from typing import Any, Literal, Self, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
@@ -12,9 +12,7 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 # Methods to compute the net charge of a molecule.
 # - "formal_charge" uses the formal charges of the atoms
