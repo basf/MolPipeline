@@ -30,6 +30,6 @@ __all__ = [
 ]
 
 if importlib.util.find_spec("chemprop") is not None:
-    from molpipeline.mol2any.mol2chemprop import MolToChemprop  # noqa
+    from molpipeline.mol2any.mol2chemprop import MolToChemprop
 
     __all__ += ["MolToChemprop"]

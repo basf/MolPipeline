@@ -331,9 +331,10 @@ class _MolPipeline:
         iter_value = input_value
         for p_element in self._element_list:
             try:
-                if not isinstance(iter_value, RemovedInstance):
-                    iter_value = p_element.transform_single(iter_value)
-                elif isinstance(p_element, FilterReinserter):
+                if not isinstance(iter_value, RemovedInstance) or isinstance(
+                    p_element,
+                    FilterReinserter,
+                ):
                     iter_value = p_element.transform_single(iter_value)
             except MolSanitizeException as err:
                 iter_value = InvalidInstance(
@@ -396,11 +397,6 @@ class _MolPipeline:
             return last_element.assemble_output(value_list)
         return list(value_list)
 
-    def _finish(self) -> None:
-        """Inform each pipeline element that the iterations have finished."""
-        for p_element in self._element_list:
-            p_element.finish()
-
     def _transform_iterator(self, x_input: Any) -> Any:
         """Transform the input according to the sequence of provided PipelineElements.
 
@@ -432,7 +428,6 @@ class _MolPipeline:
             else:
                 yield transformed_value
         agg_filter.set_total(len(x_input))
-        self._finish()
 
     def co_transform(self, x_input: TypeFixedVarSeq) -> TypeFixedVarSeq:
         """Filter flagged rows from the input.

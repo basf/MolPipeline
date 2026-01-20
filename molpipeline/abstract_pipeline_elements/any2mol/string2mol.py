@@ -65,13 +65,6 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
             Rdkit molecule if valid string representation, else None.
 
         """
-        if value is None:
-            return InvalidInstance(
-                self.uuid,
-                f"Invalid representation: {value}",
-                self.name,
-            )
-
         if not isinstance(value, str):
             return InvalidInstance(
                 self.uuid,
@@ -91,7 +84,7 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
         return mol
 
     @abc.abstractmethod
-    def string_to_mol(self, value: str) -> RDKitMol:
+    def string_to_mol(self, value: str) -> RDKitMol | None:
         """Transform string representation to molecule.
 
         Parameters
@@ -101,7 +94,7 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
 
         Returns
         -------
-        RDKitMol
+        RDKitMol | None
             Rdkit molecule if valid representation, else None.
 
         """

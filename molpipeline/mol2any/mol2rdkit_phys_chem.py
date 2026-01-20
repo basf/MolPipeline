@@ -11,13 +11,12 @@ import numpy.typing as npt
 from loguru import logger
 from rdkit import Chem, rdBase
 from rdkit.Chem import Descriptors
-from sklearn.preprocessing import StandardScaler
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 RDKIT_DESCRIPTOR_DICT: dict[str, Callable[[Chem.Mol], float]]
 RDKIT_DESCRIPTOR_DICT = dict(Descriptors.descList)
@@ -30,7 +29,7 @@ DEFAULT_DESCRIPTORS = [
 
 
 class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
-    """PipelineElement for creating a Descriptor vector based on RDKit phys-chem properties."""
+    """Descriptor based on RDKit phys-chem properties."""
 
     _descriptor_list: list[str]
 
@@ -38,7 +37,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         self,
         descriptor_list: list[str] | None = None,
         return_with_errors: bool = False,
-        standardizer: AnyTransformer | None = StandardScaler(),
         log_exceptions: bool = True,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
@@ -49,12 +47,11 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         descriptor_list: list[str] | None, optional
-            List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
+            List of descriptor names to calculate.
+            If None, DEFAULT_DESCRIPTORS are used.
         return_with_errors: bool, default=False
             False: Returns an InvalidInstance if any error occurs during calculations.
             True: Returns a vector with NaN values for failed descriptor calculations.
-        standardizer: AnyTransformer | None, default=StandardScaler()
-            Standardizer to use.
         log_exceptions: bool, default=True
             Log traceback of exceptions occurring during descriptor calculation.
         name: str, default="Mol2RDKitPhysChem"
@@ -70,7 +67,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         self._return_with_errors = return_with_errors
         self._log_exceptions = log_exceptions
         super().__init__(
-            standardizer=standardizer,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
@@ -93,7 +89,8 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         descriptor_list: list[str] | None
-            List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
+            List of descriptor names to calculate.
+            If None, DEFAULT_DESCRIPTORS are used.
 
         Raises
         ------
@@ -108,7 +105,8 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             self._descriptor_list = DEFAULT_DESCRIPTORS
         elif len(descriptor_list) == 0:
             raise ValueError(
-                "Empty descriptor_list is not allowed. Use None for default descriptors.",
+                "Empty descriptor_list is not allowed. "
+                "Use None for default descriptors.",
             )
         else:
             # check all user defined descriptors are valid
