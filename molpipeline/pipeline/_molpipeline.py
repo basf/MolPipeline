@@ -132,6 +132,7 @@ class _MolPipeline:
         -------
         dict[str, Any]
             Dictionary containing the parameter names and corresponding values.
+
         """
         if deep:
             return {
@@ -157,6 +158,7 @@ class _MolPipeline:
         -------
         Self
             MolPipeline object with updated parameters.
+
         """
         if "element_list" in parameter_dict:
             self._element_list = parameter_dict["element_list"]
@@ -195,7 +197,7 @@ class _MolPipeline:
                     meta_element_list.append(no_fit_element_list[0])
                 elif len(no_fit_element_list) > 1:
                     meta_element_list.append(
-                        _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs)
+                        _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs),
                     )
                 no_fit_element_list = []
                 meta_element_list.append(element)
@@ -203,7 +205,7 @@ class _MolPipeline:
             meta_element_list.append(no_fit_element_list[0])
         elif len(no_fit_element_list) > 1:
             meta_element_list.append(
-                _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs)
+                _MolPipeline(no_fit_element_list, n_jobs=self.n_jobs),
             )
         return meta_element_list
 
@@ -228,6 +230,7 @@ class _MolPipeline:
         -------
         Self
             Fitted MolPipeline.
+
         """
         _ = y  # Making pylint happy
         _ = fit_params  # Making pylint happy
@@ -262,6 +265,7 @@ class _MolPipeline:
         -------
         Any
             Transformed molecules.
+
         """
         iter_input = x_input
 
@@ -296,8 +300,8 @@ class _MolPipeline:
         for error_filter in self._filter_elements:
             removed_idx_list = removed_rows[error_filter]
             error_filter.error_indices = []
-            for new_idx, _idx in enumerate(iter_idx_array):
-                if _idx in removed_idx_list:
+            for new_idx, idx_ in enumerate(iter_idx_array):
+                if idx_ in removed_idx_list:
                     error_filter.error_indices.append(new_idx)
             error_filter.n_total = len(iter_idx_array)
             iter_idx_array = error_filter.co_transform(iter_idx_array)
@@ -321,6 +325,7 @@ class _MolPipeline:
         -------
         Any
             Transformed molecular representation.
+
         """
         log_block = BlockLogs()
         iter_value = input_value
@@ -351,6 +356,7 @@ class _MolPipeline:
         -------
         Any
             Transformed molecular representations.
+
         """
         return list(self._transform_iterator(x_input))
 
@@ -366,6 +372,7 @@ class _MolPipeline:
         -------
         Any
             Transformed molecular representations.
+
         """
         output_generator = self._transform_iterator(x_input)
         return self.assemble_output(output_generator)
@@ -382,6 +389,7 @@ class _MolPipeline:
         -------
         Any
             Assembled output.
+
         """
         last_element = self._transforming_elements[-1]
         if hasattr(last_element, "assemble_output"):
@@ -432,5 +440,6 @@ class _MolPipeline:
         -------
         Any
             Filtered molecular representations.
+
         """
         return self._filter_elements_agg.co_transform(x_input)

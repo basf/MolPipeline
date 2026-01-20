@@ -44,6 +44,7 @@ class AutoToMol(AnyToMolPipelineElement):
             - InchiToMol
             - BinaryToMol
             - SDFToMol
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         # pipeline elements for transforming the input to a molecule
@@ -68,6 +69,7 @@ class AutoToMol(AnyToMolPipelineElement):
         -------
         OptionalMol
             Rdkit molecule if the input can be transformed, else None.
+
         """
         if value is None:
             return InvalidInstance(

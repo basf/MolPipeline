@@ -11,7 +11,8 @@ from sklearn.metrics._scorer import _BaseScorer
 
 
 def ignored_value_scorer(
-    scorer: str | _BaseScorer, ignore_value: Any = None
+    scorer: str | _BaseScorer,
+    ignore_value: Any = None,
 ) -> _BaseScorer:
     """Create a scorer that ignores a given value in the prediction array.
 
@@ -30,6 +31,7 @@ def ignored_value_scorer(
     -------
     _BaseScorer
         The scorer that ignores the given value.
+
     """
     if isinstance(scorer, str):
         scorer = metrics.get_scorer(scorer)
@@ -60,6 +62,7 @@ def ignored_value_scorer(
         -------
         float
             The score for the given prediction arrays.
+
         """
         retained_y_true: npt.NDArray[np.bool_]
         retained_y_pred: npt.NDArray[np.bool_]
@@ -74,7 +77,7 @@ def ignored_value_scorer(
 
         if not np.all(all_retained):
             logger.warning(
-                f"Warning, prediction array contains NaN values, removing {sum(~all_retained)} elements"
+                f"Warning, prediction array contains NaN values, removing {sum(~all_retained)} elements",
             )
         y_true_ = np.copy(np.array(y_true)[all_retained])
         y_pred_ = np.array(np.array(y_pred)[all_retained].tolist())
@@ -84,5 +87,7 @@ def ignored_value_scorer(
         return score_func(y_true_, y_pred_, **kwargs_)
 
     return metrics.make_scorer(
-        newscore, response_method=response_method, **scorer_kwargs
+        newscore,
+        response_method=response_method,
+        **scorer_kwargs,
     )

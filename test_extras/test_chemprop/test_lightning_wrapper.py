@@ -16,6 +16,7 @@ class TestLightningWrapper(unittest.TestCase):
     Notes
     -----
     These tests are not exhaustive.
+
     """
 
     def test_setting_deterministic(self) -> None:

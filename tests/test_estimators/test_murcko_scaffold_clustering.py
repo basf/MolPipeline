@@ -33,13 +33,14 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
 
             # test basic scaffold-based clustering works as intended
             scaffold_cluster_labels = estimator_ignore_linear.fit_predict(
-                SCAFFOLD_SMILES
+                SCAFFOLD_SMILES,
             )
             expected_scaffold_labels = [1.0, 0.0, 1.0]
 
             self.assertEqual(estimator_ignore_linear.n_clusters_, 2)
             self.assertListEqual(
-                list(scaffold_cluster_labels), expected_scaffold_labels
+                list(scaffold_cluster_labels),
+                expected_scaffold_labels,
             )
 
             # test linear molecule handling. We expect the linear molecules to be ignored.

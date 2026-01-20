@@ -181,6 +181,6 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         """
 
 
-AnyElement = AnyTransformer | AnyPredictor | ABCPipelineElement | Literal["passthrough"]
-
+AnyElement = AnyTransformer | AnyPredictor | ABCPipelineElement |
+    Literal["passthrough"],
 AnyStep = tuple[str, AnyElement]
