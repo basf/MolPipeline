@@ -5,7 +5,7 @@ from rdkit import Chem
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     SimpleStringToMolElement,
 )
-from molpipeline.abstract_pipeline_elements.core import InvalidInstance, RDKitMol
+from molpipeline.abstract_pipeline_elements.core import RDKitMol
 
 
 class InchiToMol(SimpleStringToMolElement):
