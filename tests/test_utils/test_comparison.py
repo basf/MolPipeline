@@ -1,6 +1,6 @@
 """Test the comparison functions."""
 
-from collections.abc import TYPE_CHECKING
+from typing import TYPE_CHECKING
 from unittest import TestCase
 
 from molpipeline.utils.comparison import check_pipelines_equivalent
