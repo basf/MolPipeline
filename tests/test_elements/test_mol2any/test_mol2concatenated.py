@@ -2,12 +2,13 @@
 
 import itertools
 import unittest
-from typing import TYPE_CHECKING, Any, Literal, get_args
+from typing import Any, Literal, get_args
 
 import numpy as np
 from rdkit import Chem
 
 from molpipeline import ErrorFilter, Pipeline
+from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import (
     Mol2PathFP,
@@ -19,9 +20,6 @@ from molpipeline.mol2any import (
 )
 from tests.utils.fingerprints import fingerprints_to_numpy
 from tests.utils.logging import capture_logs
-
-if TYPE_CHECKING:
-    from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 
 
 class TestConcatenatedFingerprint(unittest.TestCase):
@@ -328,7 +326,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             [
                 (
                     "RDKitPhysChem",
-                    MolToRDKitPhysChem(standardizer=None),
+                    MolToRDKitPhysChem(),
                 ),
                 (
                     "MorganFP",

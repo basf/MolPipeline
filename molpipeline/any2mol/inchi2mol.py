@@ -5,13 +5,13 @@ from rdkit import Chem
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     SimpleStringToMolElement,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance, OptionalMol
 
 
 class InchiToMol(SimpleStringToMolElement):
     """Transforms Inchi to RDKit Mol objects."""
 
-    def string_to_mol(self, value: str) -> RDKitMol:
+    def string_to_mol(self, value: str) -> OptionalMol:
         """Transform Inchi string to molecule.
 
         Parameters
@@ -21,8 +21,15 @@ class InchiToMol(SimpleStringToMolElement):
 
         Returns
         -------
-        RDKitMol
-            Rdkit molecule if valid Inchi, else None.
+        OptionalMol
+            Rdkit molecule if valid Inchi, else InvalidInstance.
 
         """
-        return Chem.MolFromInchi(value)
+        mol = Chem.MolFromInchi(value)
+        if mol is None:
+            return InvalidInstance(
+                self.uuid,
+                f"Invalid Inchi string: {value}",
+                self.name,
+            )
+        return mol
