@@ -13,7 +13,6 @@ from molpipeline.utils.molpipeline_types import RDKitMol
 from molpipeline.utils.substructure_handling import CircularAtomEnvironment
 
 
-
 class MolToMorganFP(MolToRDKitGenFPElement):
     """Folded Morgan Fingerprint.
 

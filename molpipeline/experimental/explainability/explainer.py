@@ -36,6 +36,7 @@ from molpipeline.experimental.explainability.fingerprint_utils import (
 from molpipeline.utils.subpipeline import SubpipelineExtractor, get_model_from_pipeline
 from molpipeline.utils.type_guards import sparse_type_guard
 
+
 def _to_dense(
     feature_matrix: npt.NDArray[Any] | spmatrix,
 ) -> npt.NDArray[Any]:

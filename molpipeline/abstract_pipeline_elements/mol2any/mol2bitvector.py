@@ -2,7 +2,7 @@
 
 import abc
 import copy
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import (
     Any,
     Literal,
@@ -10,7 +10,6 @@ from typing import (
     TypeAlias,
     get_args,
     overload,
-    Mapping,
 )
 
 import numpy as np
