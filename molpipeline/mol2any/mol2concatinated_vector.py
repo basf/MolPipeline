@@ -1,4 +1,4 @@
-"""Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
+"""Classes for descriptors from multiple concatenated descriptors or fingerprints."""
 
 from collections.abc import Iterable
 from typing import Any, Self

@@ -297,7 +297,7 @@ def get_color_normalizer_from_data(
 def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
     """Draw a ColorGrid object to a RDKit Draw.MolDraw2D canvas.
 
-    Each pixel is drawn as rectangle, so if you use Draw.MolDrawSVG brace yourself and your RAM!
+    Each pixel is drawn as rectangle, so if you use Draw.MolDrawSVG brace yourself!
 
     Parameters
     ----------
@@ -307,8 +307,8 @@ def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
         ColorGrid object to be drawn on the canvas.
 
     """
-    # draw only grid points whose color is not white.
-    # we check for the exact values of white (1,1,1). np.isclose returns almost the same pixels but is slightly slower.
+    # draw only grid points whose color is not white. We check for the exact values of
+    # white (1,1,1). np.isclose returns almost the same pixels but is slightly slower.
     mask = np.where(~np.all(color_grid.color_grid[:, :, :3] == [1, 1, 1], axis=2))
 
     for x, y in zip(*mask, strict=True):

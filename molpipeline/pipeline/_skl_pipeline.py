@@ -1007,7 +1007,8 @@ class Pipeline(_Pipeline):
             pass
 
         try:
-            # Only the _final_estimator is changed from the original implementation is changed in the following 2 lines
+            # Only the _final_estimator is changed from the original implementation is
+            # changed in the following 2 lines
             if (
                 self._final_estimator is not None
                 and self._final_estimator != "passthrough"
