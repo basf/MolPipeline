@@ -156,7 +156,7 @@ class Pipeline(_Pipeline):
     ) -> Iterable[_AggregatedPipelineStep]:
         """Iterate over all non post-processing steps.
 
-        Steps which are children of a ABCPipelineElement were aggregated to a MolPipeline.
+        Steps where children of a ABCPipelineElement are aggregated to a MolPipeline.
 
         Parameters
         ----------
@@ -687,7 +687,8 @@ class Pipeline(_Pipeline):
                 iter_input = self._final_estimator.predict(iter_input, **params)
         else:
             raise AssertionError(
-                "Final estimator does not implement predict, hence this function should not be available.",
+                "Final estimator does not implement predict, hence this function "
+                "should not be available.",
             )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)

@@ -145,7 +145,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
     trainer_dict = {
         "accelerator": get_device(trainer),
         "strategy": "auto",  # trainer.strategy, # collides with accelerator
-        "devices": "auto",  # trainer._accelerator_connector._devices_flag does not really work
+        "devices": "auto",  # trainer._accelerator_connector._devices_flag does not work
         "num_nodes": trainer.num_nodes,
         "precision": trainer.precision,
         "logger": trainer.logger,
@@ -174,12 +174,12 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "deterministic": torch.are_deterministic_algorithms_enabled(),
         "benchmark": torch.backends.cudnn.benchmark,
         "inference_mode": trainer.predict_loop.inference_mode,
-        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # pylint: disable=protected-access
+        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # pylint: disable=protected-access  # noqa: E501
         # "profiler": trainer.profiler,  # type: ignore[attr-defined]
         "detect_anomaly": trainer._detect_anomaly,  # pylint: disable=protected-access
         "barebones": trainer.barebones,
         # "plugins": trainer.plugins,  # can not be exctracted
-        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related
+        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related  # noqa: E501
         "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,  # type: ignore[attr-defined]
         "default_root_dir": get_trainer_path(trainer),
     }
