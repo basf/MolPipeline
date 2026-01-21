@@ -310,8 +310,7 @@ class ABCPipelineElement(abc.ABC):
         Parameters
         ----------
         values: Any
-            Apply transformation specified in transform_single to all instances
-            in the value_list.
+            Apply transformation specified in transform_single to the value_list.
         labels: Any
             Optional label for fitting.
 
@@ -330,8 +329,8 @@ class ABCPipelineElement(abc.ABC):
         ----------
         values: Any
             Iterable of instances to be transformed.
-            Could be list of molecule representations (SMILES, RDKit Molecules,
-            PhysChem vectors etc.).
+            Could be list of molecule representations (SMILES, Molecules, PhysChem
+            vectors etc.).
 
         Returns
         -------
@@ -472,8 +471,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         Parameters
         ----------
         values: Any
-            Apply transformation specified in transform_single to all molecules
-            in the value_list.
+            Apply transformation specified in transform_single to the value_list.
         labels: Any
             Optional label for fitting.
 
@@ -495,8 +493,7 @@ class TransformingPipelineElement(ABCPipelineElement):
     def transform_single(self, value: Any) -> Any:
         """Transform a single molecule to the new representation.
 
-        RemovedMolecule objects are passed without change, as no transformations
-        are applicable.
+        RemovedMolecule objects are passed without change.
 
         Parameters
         ----------
@@ -539,8 +536,8 @@ class TransformingPipelineElement(ABCPipelineElement):
     def pretransform_single(self, value: Any) -> Any:
         """Transform the instance, but skips parameters learned during fitting.
 
-        This is the first step for the full transformation. It is followed by
-        the finalize_single method and assemble output which collects all single
+        This is the first step for the full transformation. It is followed by the
+        finalize_single method and assemble output which collects all single
         transformations. These functions are split as they need to be accessed
         separately from outside the object.
 
@@ -615,8 +612,8 @@ class TransformingPipelineElement(ABCPipelineElement):
         ----------
         values: Any
             Iterable of instances to be transformed.
-            Could be list of molecule representations (SMILES, RDKit Molecules,
-            PhysChem vectors etc.).
+            Could be list of molecule representations (SMILES, Molecules, PhysChem
+            vectors etc.).
 
         Returns
         -------
@@ -636,8 +633,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         Returns
         -------
         dict[str, Any]
-            A dictionary with all attributes necessary to initialize an object
-            with same parameters.
+            A dictionary with all attributes necessary to recreate the object.
 
         """
         json_dict: dict[str, Any] = {
@@ -756,8 +752,8 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
     def pretransform_single(self, value: Any) -> OptionalMol:
         """Transform a single instance to a molecule.
 
-        The transformations only includes steps which do not depend on
-        parameters learned during fitting.
+        The transformations only includes steps which do not depend on parameters
+        learned during fitting.
 
         Parameters
         ----------
