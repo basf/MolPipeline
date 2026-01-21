@@ -49,7 +49,7 @@ IntCountRange: TypeAlias = tuple[int | None, int | None]
 # - a single int for an exact value match
 # - a range given as a tuple with a lower and upper bound
 #   - both limits are optional
-IntOrIntCountRange: TypeAlias = Union[int, IntCountRange]
+IntOrIntCountRange: TypeAlias = int | IntCountRange
 
 
 class AnySklearnEstimator(Protocol):

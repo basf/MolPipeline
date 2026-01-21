@@ -1,6 +1,6 @@
 """Conformal prediction wrappers for classification and regression using crepes.
 
-This module provides a unified interface for conformal prediction with four main classes:
+This module provides a unified interface for conformal prediction with 4 main classes:
 - ConformalClassifier: Single-model conformal classification
 - CrossConformalClassifier: Cross-validation conformal classification
 - ConformalRegressor: Single-model conformal regression

@@ -7,9 +7,10 @@ import numpy.typing as npt
 class UnionFindNode:
     """Union find node.
 
-    A UnionFindNode is a node in a union find data structure, also called disjoint-set data structure.
-    It stores a collection of non-overlapping sets and provides operations for merging these sets.
-    It can be used to determine connected components in a graph.
+    A UnionFindNode is a node in a union find data structure, also called disjoint-set
+    data structure. It stores a collection of non-overlapping sets and provides
+    operations for merging these sets. It can be used to determine connected components
+    in a graph.
     """
 
     parent: "UnionFindNode"
@@ -18,7 +19,8 @@ class UnionFindNode:
         """Initialize union find node."""
         # initially, each node is its own parent
         self.parent = self
-        # connected component number for each node. Needed at the end when connected components are getting extracted.
+        # connected component number for each node.
+        # Needed at the end when connected components are getting extracted.
         self.connected_component_number = -1
 
     def find(self) -> "UnionFindNode":
@@ -49,15 +51,18 @@ class UnionFindNode:
 
         """
         # get the root nodes of the connected components of both nodes.
-        # Additionally, compress the paths to the root nodes by setting others' parent to the root node.
+        # Compress the paths to root nodes by setting others' parent to the root node.
         if self is self.parent:
-            # this node is a parent. Meaning the root of the connected component. Let's overwrite it.
+            # this node is a parent. Meaning the root of the connected component.
+            # Let's overwrite it.
             self.parent = other.find()
         elif self is other:
-            # this node is the other node. They are identical and therefore already in the same set.
+            # this node is the other node.
+            # They are identical and therefore already in the same set.
             return self
         else:
-            # add other node to this node's parent (and in addition to this connected component)
+            # add other node to this node's parent
+            # (and in addition to this connected component)
             self.parent = self.parent.union(other)
         return self.parent
 
@@ -85,7 +90,8 @@ class UnionFindNode:
         for i, node in enumerate(union_find_nodes):
             root_parent = node.find()
             if root_parent.connected_component_number == -1:
-                # found root node of a connected component. Annotate it with a connected component number.
+                # found root node of a connected component.
+                # Annotate it with a connected component number.
                 root_parent.connected_component_number = connected_components_counter
                 connected_components_counter += 1
             connected_components_array[i] = root_parent.connected_component_number

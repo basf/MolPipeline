@@ -13,7 +13,10 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class CustomFilter(_MolToMolPipelineElement):
-    """Filters molecules based on a custom boolean function. Elements not passing the filter will be set to InvalidInstances."""
+    """Filters molecules based on a custom boolean function.
+
+    Elements not passing the filter will be set to InvalidInstances.
+    """
 
     def __init__(
         self,

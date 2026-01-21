@@ -16,7 +16,7 @@ DF_TEST_DATA = pd.DataFrame(
             "c1cc(c(nc1)Cl)C(=O)Nc2c(c3c(s2)CCCCC3)C(=O)N",
             "Cc1ccc(cc1)S(=O)(=O)Nc2c(c3c(s2)C[C@@H](CC3)C)C(=O)N",
             "c1cc(oc1)CN=C2C=C(C(=CC2=C(O)[O-])S(=O)(=O)[NH-])Cl",
-            "C[C@@H]1[C@@H](OP2(O1)(O[C@H]([C@H](O2)C)C)C[NH+]3CCCCC3)C",  # this one fails gasteiger charge computation
+            "C[C@@H]1[C@@H](OP2(O1)(O[C@H]([C@H](O2)C)C)C[NH+]3CCCCC3)C",  # this one fails gasteiger charge computation  # noqa: E501
         ],
         "expected_net_charges_formal_charge": [2, 0, 0, -2, 1],
         "expected_net_charges_gasteiger": [2, -1, -1, -2, np.nan],
@@ -29,7 +29,7 @@ class TestNetChargeCalculator(unittest.TestCase):
 
     def test_net_charge_calculation_formal_charge(self) -> None:
         """Test if the net charge calculation works as expected for formal charges."""
-        # we need the error filter and reinserter to handle the case where the charge calculation fails
+        # error filter and reinserter for cases where the charge calculation fails
         error_filter = ErrorFilter(filter_everything=True)
         pipeline = Pipeline(
             [
@@ -58,8 +58,8 @@ class TestNetChargeCalculator(unittest.TestCase):
         )
 
     def test_net_charge_calculation_gasteiger(self) -> None:
-        """Test if the net charge calculation works as expected for gasteiger charges."""
-        # we need the error filter and reinserter to handle the case where the charge calculation fails
+        """Test if the calculation works as expected for gasteiger charges."""
+        # error filter and reinserter for cases where the charge calculation fails
         error_filter = ErrorFilter(filter_everything=True)
         pipeline = Pipeline(
             [

@@ -76,7 +76,8 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         Parameters
         ----------
         picks : Sequence[int]
-            Indices of selected cluster centroids to which the remaining data will be assigned.
+            Indices of selected cluster centroids to which the remaining data will be
+            assigned.
         fps : Sequence[ExplicitBitVect]
             Fingerprints of the whole data sets.
 

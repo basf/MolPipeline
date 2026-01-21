@@ -35,7 +35,7 @@ class MurckoScaffold(_MolToMolPipelineElement):
 
 
 class MakeScaffoldGeneric(_MolToMolPipelineElement):
-    """MolToMol-PipelineElement which sets all atoms to carbon and all bonds to single bond.
+    """PipelineElement which sets all atoms to carbon and all bonds to single bond.
 
     Done to make scaffolds less speciffic.
     """

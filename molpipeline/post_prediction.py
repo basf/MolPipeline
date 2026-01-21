@@ -124,7 +124,8 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         if hasattr(self.wrapped_estimator, "transform"):
             return self.wrapped_estimator.transform(X, **params)
         raise AttributeError(
-            f"Estimator {self.wrapped_estimator} has neither predict nor transform method.",
+            f"Estimator {self.wrapped_estimator} has neither predict nor transform"
+            f"method.",
         )
 
     def fit_transform(
@@ -162,7 +163,8 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
                 return self.wrapped_estimator.fit_transform(X)
             return self.wrapped_estimator.fit_transform(X, y, **params)
         raise AttributeError(
-            f"Estimator {self.wrapped_estimator} has neither fit_predict nor fit_transform method.",
+            f"Estimator {self.wrapped_estimator} has neither fit_predict nor"
+            f"fit_transform method.",
         )
 
     def inverse_transform(

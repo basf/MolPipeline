@@ -29,10 +29,11 @@ from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToChemprop(MolToAnyPipelineElement):
-    """PipelineElement for creating a graph representation used as input for Chemprop models.
+    """Element for creating a graph representation used as input for Chemprop models.
 
-    Each molecule is transformed to a MoleculeDatapoint object, which are then assembled into a MoleculeDataset.
-    The MoleculeDataset can be used as input for Chemprop models.[1]
+    Each molecule is transformed to a MoleculeDatapoint object, which are then assembled
+    into a MoleculeDataset. The MoleculeDataset can be used as input for Chemprop
+    models.[1]
 
     References
     ----------
@@ -123,7 +124,7 @@ class MolToChemprop(MolToAnyPipelineElement):
         Parameters
         ----------
         deep: bool, default=True
-            If True, will return the parameters for this pipeline element and its subobjects.
+            If True, the parameters of the sub-components are also returned.
 
         Returns
         -------

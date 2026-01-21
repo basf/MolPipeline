@@ -126,7 +126,9 @@ class CountingTransformerWrapper(BaseEstimator):
 
 
 def get_exec_counted_rf_regressor(random_state: int) -> Pipeline:
-    """Get a morgan + random forest pipeline, which counts the number of transformations.
+    """Get a morgan + random forest pipeline.
+
+     The pipeline counts the number of transformations.
 
     Parameters
     ----------

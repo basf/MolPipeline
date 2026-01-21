@@ -1,6 +1,7 @@
 """Visualization functions for the explainability module.
 
-Much of the visualization code in this file originates from projects of Christian W. Feldmann:
+Much of the visualization code in this file originates from projects of Christian W.
+Feldmann:
     https://github.com/c-feldmann/rdkit_heatmaps
     https://github.com/c-feldmann/compchemkit
 """
@@ -67,8 +68,8 @@ def _make_grid_from_mol(
     yl: list[float]
     xl, yl = [list(lim) for lim in get_mol_lims(mol)]  # Limit of molecule
 
-    # Extent of the canvas is approximated by size of molecule scaled by ratio of canvas height and width.
-    # Would be nice if this was directly accessible...
+    # Extent of the canvas is approximated by size of molecule scaled by ratio of canvas
+    # height and width.  Would be nice if this was directly accessible...
     mol_height = yl[1] - yl[0]
     mol_width = xl[1] - xl[0]
 
@@ -201,10 +202,12 @@ def make_sum_of_gaussians_grid(
 ) -> ValueGrid:
     """Map weights of atoms and bonds to the drawing of a RDKit molecular depiction.
 
-    For each atom and bond of depicted molecule a Gauss-function, centered at the respective object, is created and
-    scaled by the corresponding weight. Gauss-functions of atoms are circular, while Gauss-functions of bonds can be
-    distorted along the bond axis. The value of each pixel is determined as the sum of all function-values at the pixel
-    position. Subsequently, the values are mapped to a color and drawn onto the canvas.
+    For each atom and bond of depicted molecule a Gauss-function, centered at the
+    respective object, is created and scaled by the corresponding weight.
+    Gauss-functions of atoms are circular, while Gauss-functions of bonds can be
+    distorted along the bond axis. The value of each pixel is determined as the sum of
+    all function-values at the pixel position. Subsequently, the values are mapped to a
+    color and drawn onto the canvas.
 
     Inspired from https://github.com/c-feldmann/rdkit_heatmaps/blob/master/rdkit_heatmaps/molmapping.py
 
@@ -292,8 +295,8 @@ def _add_shap_present_absent_features_text(
 ) -> None:
     """Add text to the figure to display the SHAP prediction composition.
 
-    The added text includes the prediction value, the expected value, the sum of the SHAP values for present features,
-    and the sum of the SHAP values for absent features.
+    The added text includes the predicted value, the expected value, the sum of the SHAP
+    values for present features, and the sum of the SHAP values for absent features.
 
     Parameters
     ----------
@@ -425,7 +428,9 @@ def _structure_heatmap(
     colors.Normalize,
     Colormap,
 ]:
-    """Create a heatmap of the molecular structure, highlighting atoms with weighted Gaussian's.
+    """Create a heatmap of the molecular structure.
+
+     Atoms are highlighted with weighted Gaussians.
 
     Parameters
     ----------

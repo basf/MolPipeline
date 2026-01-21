@@ -30,7 +30,7 @@ DEFAULT_DESCRIPTORS = [
 
 
 class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
-    """PipelineElement for creating a Descriptor vector based on RDKit phys-chem properties."""
+    """Element for creating a descriptor vector based on RDKit phys-chem properties."""
 
     _descriptor_list: list[str]
 
@@ -49,7 +49,8 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         descriptor_list: list[str] | None, optional
-            List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
+            List of descriptor names to calculate.
+            If None, DEFAULT_DESCRIPTORS are used.
         return_with_errors: bool, default=False
             False: Returns an InvalidInstance if any error occurs during calculations.
             True: Returns a vector with NaN values for failed descriptor calculations.
@@ -93,7 +94,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         descriptor_list: list[str] | None
-            List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
+            List of descriptors to calculate. If None, DEFAULT_DESCRIPTORS are used.
 
         Raises
         ------
@@ -108,7 +109,8 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
             self._descriptor_list = DEFAULT_DESCRIPTORS
         elif len(descriptor_list) == 0:
             raise ValueError(
-                "Empty descriptor_list is not allowed. Use None for default descriptors.",
+                "Empty descriptor_list is not allowed. "
+                "Use None for default descriptors.",
             )
         else:
             # check all user defined descriptors are valid

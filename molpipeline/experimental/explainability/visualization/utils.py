@@ -18,7 +18,8 @@ RGBAtuple = tuple[float, float, float, float]
 def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float]]:
     """Return the extent of the molecule.
 
-    x- and y-coordinates of all atoms in the molecule are accessed, returning min- and max-values for both axes.
+    x- and y-coordinates of all atoms in the molecule are accessed, returning min- and
+    max-values for both axes.
 
     Parameters
     ----------
@@ -48,7 +49,7 @@ def pad(
     lim: Sequence[float] | npt.NDArray[np.float64],
     ratio: float,
 ) -> tuple[float, float]:
-    """Take a 2-dimensional vector and adds len(vector) * ratio / 2 to each side and returns obtained vector.
+    """Take a 2-dimensional vector and adds len(vector) * ratio / 2 to each side.
 
     Parameters
     ----------
@@ -245,7 +246,8 @@ def calc_present_and_absent_shap_contributions(
     """
     if feature_vector.max() > 1 or feature_vector.min() < 0:
         raise ValueError(
-            "Feature vector must be binary. Alternatively, use the structure_heatmap function instead.",
+            "Feature vector must be binary. Alternatively, use the structure_heatmap "
+            "function instead.",
         )
 
     # determine present/absent features using the binary feature vector
