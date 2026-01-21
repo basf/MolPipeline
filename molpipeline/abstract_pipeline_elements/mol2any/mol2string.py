@@ -8,7 +8,7 @@ from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 
 
 class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
-    """Abstract class for PipelineElements which transform molecules to integer vectors."""
+    """Abstract class for transforming molecules to string representations."""
 
     _output_type = "str"
 
