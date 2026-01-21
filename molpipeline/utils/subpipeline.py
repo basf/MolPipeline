@@ -452,7 +452,7 @@ def get_featurization_subpipeline(
     -------
     Pipeline | None
         The extracted featurization subpipeline.
-         None if the featurization element was not found.
+        None if the featurization element was not found.
 
     """
     pipeline_extractor = SubpipelineExtractor(pipeline)

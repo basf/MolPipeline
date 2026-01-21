@@ -43,7 +43,8 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
                 expected_scaffold_labels,
             )
 
-            # test linear molecule handling. We expect the linear molecules to be ignored.
+            # test linear molecule handling.
+            # We expect the linear molecules to be ignored.
             input_smiles = SCAFFOLD_SMILES + LINEAR_SMILES
             cluster_labels = estimator_ignore_linear.fit_predict(input_smiles)
             nan_mask = np.isnan(cluster_labels)

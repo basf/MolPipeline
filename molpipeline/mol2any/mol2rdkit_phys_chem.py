@@ -94,7 +94,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         descriptor_list: list[str] | None
-            List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are used.
+            List of descriptors to calculate. If None, DEFAULT_DESCRIPTORS are used.
 
         Raises
         ------
