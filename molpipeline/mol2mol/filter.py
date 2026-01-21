@@ -314,10 +314,10 @@ class ComplexFilter(_BaseKeepMatchesFilter):
     Notes
     -----
     There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
-        - mode = "any" & keep_matches = False: Must not match any filter element.
-        - mode = "all" & keep_matches = True: Needs to match all filter elements.
-        - mode = "all" & keep_matches = False: Must not match all filter elements.
+        - mode= "any" & keep_matches= True: Needs to match at least one filter element.
+        - mode= "any" & keep_matches= False: Must not match any filter element.
+        - mode= "all" & keep_matches= True: Needs to match all filter elements.
+        - mode= "all" & keep_matches= False: Must not match all filter elements.
 
     """
 

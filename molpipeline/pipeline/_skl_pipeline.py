@@ -185,9 +185,9 @@ class Pipeline(_Pipeline):
             if last_element is None:
                 last_element = step
                 continue
-            if not filter_passthrough:
-                yield last_element
-            elif step[2] is not None and step[2] != "passthrough":
+            if not filter_passthrough or (
+                step[2] is not None and step[2] != "passthrough"
+            ):
                 yield last_element
             last_element = step
 
@@ -1079,7 +1079,8 @@ class Pipeline(_Pipeline):
 
             router.add(method_mapping=method_mapping, **{name: trans})
 
-        # Only the _non_post_processing_steps is changed from the original implementation is changed in the following line
+        # Only the _non_post_processing_steps is changed from the original
+        # implementation is changed in the following line
         final_name, final_est = self._non_post_processing_steps()[-1]
         if final_est is None or final_est == "passthrough":
             return router

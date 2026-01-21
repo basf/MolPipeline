@@ -225,7 +225,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertGreaterEqual(results["ks_test"], 0.0)
         self.assertLessEqual(results["ks_test"], 1.0)
 
-    def test_evaluate_methods_cross_conformal(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
+    def test_evaluate_methods_cross_conformal(self) -> None:  # pylint: disable=too-many-locals
         """Test evaluate methods for cross-conformal predictors (classification)."""
         # Test CrossConformalClassifier
         x_train_clf, x_test_clf, y_train_clf, y_test_clf = train_test_split(
@@ -333,7 +333,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
 
-    def test_nonconformity_functions(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
+    def test_nonconformity_functions(self) -> None:  # pylint: disable=too-many-locals
         """Test different nonconformity functions in ConformalClassifier."""
         data_splits = self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         x_train, x_calib, x_test, y_train, y_calib, y_test = data_splits
@@ -675,7 +675,7 @@ class TestConformalRegressor(BaseConformalTestData):
         self.assertEqual(intervals.shape[1], 2)
 
     def test_cross_conformal_confidence_effect_regression(self) -> None:
-        """Test confidence level effect in cross-conformal regression with stratified folds."""
+        """Test confidence level effect in cross-conformal regression."""
         splits = create_continuous_stratified_folds(
             self.y_reg,
             n_splits=2,
