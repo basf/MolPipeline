@@ -81,7 +81,7 @@ class AutoToMol(AnyToMolPipelineElement):
         if isinstance(value, RDKitMol):
             return value
 
-        # sequentially try to transform the input to a molecule using predefined elements
+        # transform input sequentially using the elements
         for element in self.elements:
             mol = element.pretransform_single(value)
             if not isinstance(mol, InvalidInstance):

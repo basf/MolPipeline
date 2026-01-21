@@ -108,7 +108,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         self.assertIs(extractor.get_model_element(), pipeline.steps[3][1])
 
     def test_get_molecule_reader_subpipeline(self) -> None:
-        """Test extracting subpipeline up to the molecule reader element from pipelines."""
+        """Test extracting subpipeline up to the molecule reader element."""
         # test basic example
         pipeline = Pipeline(
             [

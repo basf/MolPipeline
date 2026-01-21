@@ -113,8 +113,9 @@ class TestConnectedComponentClusteringAlgorithm(unittest.TestCase):
             self.assertTrue(np.equal(cc_labels, expected_clustering).all())
 
     def test_connected_components_iterative_chunking(self) -> None:
-        """Test the chunking of the iterative connected component clustering algorithm."""
-        # test standard case: two samples with a similarity of >=0.5 group into the same cluster
+        """Test the chunking of the iterative connected component clustering."""
+        # test standard case:
+        # two samples with a similarity of >=0.5 group into the same cluster
 
         fingerprint_matrix = csr_matrix([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
 
@@ -126,7 +127,7 @@ class TestConnectedComponentClusteringAlgorithm(unittest.TestCase):
         self.assertEqual(nof_cc, 2)
         self.assertTrue(np.equal(cc_labels, [0, 1, 0]).all())
 
-        # test equals case: two samples with a similarity of 1 group into the same cluster
+        # test equals case: two samples with a sim of 1 group into the same cluster
         nof_cc, cc_labels = connected_components_iterative_algorithm(
             fingerprint_matrix,
             1.0,

@@ -1,6 +1,7 @@
 """Module for generating heatmaps from 2D-grids.
 
-Much of the visualization code in this file originates from projects of Christian W. Feldmann:
+Much of the visualization code in this file originates from projects of Christian W.
+Feldmann:
     https://github.com/c-feldmann/rdkit_heatmaps
     https://github.com/c-feldmann/compchemkit
 """
@@ -18,7 +19,8 @@ from rdkit.Geometry.rdGeometry import Point2D
 class Grid2D(abc.ABC):
     """Metaclass for discrete 2-dimensional grids.
 
-    This class holds a matrix of values accessed by index, where each cell is associated with a specific location.
+    This class holds a matrix of values accessed by index, where each cell is associated
+    with a specific location.
     """
 
     def __init__(
@@ -95,7 +97,7 @@ class Grid2D(abc.ABC):
         x_idx: int,
         y_idx: int,
     ) -> tuple[tuple[float, float], tuple[float, float]]:
-        """Get x and y coordinates for the upper left and lower right position of specified pixel.
+        """Get coordinates for the upper left and lower right of the specified pixel.
 
         Parameters
         ----------

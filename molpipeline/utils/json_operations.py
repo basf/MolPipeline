@@ -21,10 +21,10 @@ __all__ = [
 def transform_functions2string(value: Any) -> Any:
     """Transform functions to string representation.
 
-    If the value is a function, it is transformed to a dictionary containing the module and the class name.
-    If the value is a dictionary, the function is called recursively for each value.
-    If the value is a list, the function is called recursively for each value.
-    Else the value is returned as is.
+    If the value is a function, it is transformed to a dictionary containing the module
+    and the class name. If the value is a dictionary, the function is called recursively
+    for each value. If the value is a list, the function is called recursively for each
+    value. Else the value is returned as is.
 
     Parameters
     ----------
@@ -63,8 +63,8 @@ def transform_functions2string(value: Any) -> Any:
 def transform_string2function(value: Any) -> Any:
     """Transform string representation of functions to actual functions.
 
-    If the value is a dictionary containing the key "load_from_constructor" and the value is True,
-    the function is loaded from the module and class name.
+    If the value is a dictionary containing the key "load_from_constructor" and the
+    value is True, the function is loaded from the module and class name.
     If the value is a dictionary, the function is called recursively for each value.
     If the value is a list, the function is called recursively for each value.
     Else the value is returned as is.
@@ -232,7 +232,8 @@ def recursive_to_json(obj: Any) -> Any:
     Parameters
     ----------
     obj: Any
-        Object to be transformed. Can be a string, int, float, bool, list, tuple, dict, callable or a sklearn model.
+        Object to be transformed. Can be a string, int, float, bool, list, tuple, dict,
+        callable or a sklearn model.
         A sklearn model is defined as an object with a get_params method.
 
     Returns

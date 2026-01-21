@@ -146,18 +146,21 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         """
         if not isinstance(confidence_level, (int, float)):
             raise ValueError(
-                f"confidence_level must be a number, got {type(confidence_level).__name__}",
+                f"confidence_level must be a number, got "
+                f"{type(confidence_level).__name__}",
             )
 
         if not 0 < confidence_level <= 1:
             raise ValueError(
-                f"confidence_level must be between 0 (exclusive) and 1 (inclusive), got {confidence_level}",
+                f"confidence_level must be between 0 (exclusive) and 1 (inclusive), "
+                f"got {confidence_level}",
             )
 
         if confidence_level < 0.5:
             warnings.warn(
                 f"Confidence level {confidence_level} is less than 0.5 (50%). "
-                "This represents weak confidence and may produce unreliable prediction sets/intervals.",
+                "This represents weak confidence and may produce unreliable prediction "
+                "sets/intervals.",
                 UserWarning,
                 stacklevel=3,
             )
@@ -487,7 +490,8 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         Raises
         ------
         ValueError
-            If the model has not been fitted and calibrated or confidence level is invalid.
+            If the model has not been fitted and calibrated or confidence level is
+            invalid.
 
         """
         if self._crepes_wrapper is None:
@@ -984,7 +988,8 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         Raises
         ------
         ValueError
-            If the model has not been fitted and calibrated or confidence level is invalid.
+            If the model has not been fitted and calibrated or confidence level is
+            invalid.
 
         """
         if self._crepes_wrapper is None:
