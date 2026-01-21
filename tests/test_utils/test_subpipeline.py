@@ -141,7 +141,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
             self.assertIs(subpipe_step, pipeline.steps[i])
 
     def test_get_featurization_subpipeline(self) -> None:
-        """Test extracting subpipeline up to the featurization element from pipelines."""
+        """Test extracting subpipeline up to the featurization element."""
         # test basic example
         pipeline = Pipeline(
             [
@@ -223,7 +223,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
             self.assertIs(subpipe_step, pipeline.steps[i])
 
     def test_get_subpipeline(self) -> None:
-        """Test extracting subpipeline as a certain interval from the original pipeline."""
+        """Test extracting subpipeline as a certain interval."""
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),

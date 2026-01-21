@@ -335,7 +335,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Returns
         -------
         npt.NDArray[np.float64]
-            Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+            Matrix of shape (n_molecules, n_features) with concatenated features.
 
         """
         output: npt.NDArray[np.float64] = super().transform(values)
@@ -351,7 +351,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Parameters
         ----------
         values: list[RDKitMol]
-            List of molecules used to fit the pipeline elements creating the concatenated vector.
+            List of molecules used to fit the pipeline elements.
         labels: Any
             Labels for the molecules. Not used.
 

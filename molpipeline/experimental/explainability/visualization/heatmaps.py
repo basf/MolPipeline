@@ -154,8 +154,8 @@ class ColorGrid(Grid2D):
 class ValueGrid(Grid2D):
     """Calculate and store values of cells.
 
-    Evaluates all added functions for the position of each cell and calculates the value of each cell as sum of these
-    functions.
+    Evaluates all added functions for the position of each cell and calculates the value
+    of each cell as sum of these functions.
     """
 
     # list of functions to be evaluated for each grid cell
@@ -183,7 +183,9 @@ class ValueGrid(Grid2D):
             Resolution (number of cells) along x-axis.
         y_res: int
             Resolution (number of cells) along y-axis.
-        function_list: list[Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]], optional
+        function_list: list[\
+         Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],\
+         ], optional
             List of functions to be evaluated for each cell, by default None.
 
         """
@@ -294,7 +296,7 @@ def get_color_normalizer_from_data(
 def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
     """Draw a ColorGrid object to a RDKit Draw.MolDraw2D canvas.
 
-    Each pixel is drawn as rectangle, so if you use Draw.MolDrawSVG brace yourself and your RAM!
+    Each pixel is drawn as rectangle, so if you use Draw.MolDrawSVG brace yourself!
 
     Parameters
     ----------
@@ -304,8 +306,8 @@ def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
         ColorGrid object to be drawn on the canvas.
 
     """
-    # draw only grid points whose color is not white.
-    # we check for the exact values of white (1,1,1). np.isclose returns almost the same pixels but is slightly slower.
+    # draw only grid points whose color is not white. We check for the exact values of
+    # white (1,1,1). np.isclose returns almost the same pixels but is slightly slower.
     mask = np.where(~np.all(color_grid.color_grid[:, :, :3] == [1, 1, 1], axis=2))
 
     for x, y in zip(*mask, strict=True):

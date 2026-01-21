@@ -269,7 +269,8 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self.mondrian = mondrian
         if not (self.nonconformity_func is None or callable(self.nonconformity_func)):
             raise TypeError(
-                f"nonconformity_func must be a NonconformityFunctor or None, got {type(self.nonconformity_func).__name__}",
+                f"nonconformity_func must be a NonconformityFunctor or None, got "
+                f"{type(self.nonconformity_func).__name__}",
             )
         self._crepes_wrapper: WrapClassifier | None = None
 

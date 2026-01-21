@@ -1,4 +1,4 @@
-"""Contains functions for loading and saving pipeline elements and models to json files."""
+"""Contains functions for loading and saving objects to/from json files."""
 
 import types
 import typing
