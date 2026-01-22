@@ -8,9 +8,10 @@ import numpy.typing as npt
 import pandas as pd
 from numpy.random import RandomState  # pylint: disable=no-name-in-module
 from sklearn.model_selection import BaseShuffleSplit, StratifiedKFold
-from sklearn.model_selection._split import _validate_shuffle_split
+from sklearn.model_selection._split import _validate_shuffle_split  # noqa: PLC2701
 from sklearn.utils import check_array, shuffle
-from sklearn.utils.validation import _num_samples, check_random_state
+from sklearn.utils.validation import _num_samples, check_random_state  # noqa: PLC2701
+from typing_extensions import override
 
 SplitModeOption = Literal["groups", "samples"]
 
@@ -77,9 +78,9 @@ class GroupShuffleSplit(BaseShuffleSplit):
             )
         self.split_mode = split_mode
 
-    def _iter_indices_split_mode_samples(
+    def _iter_indices_split_mode_samples(  # noqa: PLR0914
         self,
-        X: Any,  # pylint: disable=invalid-name
+        X: Any,  # pylint: disable=invalid-name  # noqa: N803
         groups: npt.ArrayLike,
     ) -> Generator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None]:
         """Generate indices to split data into training and test sets.
@@ -176,6 +177,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
 
             yield train, test
 
+    @override
     def _iter_indices(
         self,
         X: Any,
