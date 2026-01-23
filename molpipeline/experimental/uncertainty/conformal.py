@@ -806,14 +806,6 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
     ) -> npt.NDArray[Any]:
         """Convert conformal p-values to calibrated probabilities using cross-validation.
 
-        Extends Vovk et al. (2014) antitonic calibration to cross-conformal prediction
-        by fitting one isotonic regression per fold and averaging the resulting
-        probability estimates.
-
-        This implements the pseudoalgo from Vovk et al. (2014), adapted for cross-validation:
-        For each class y, fit an antitonic density g_y(p) to calibration p-values,
-        then compute P'(y) = g_y(1)/g_y(p_y^0) and normalize to get probabilities.
-
         Parameters
         ----------
         x : npt.NDArray[Any]
@@ -832,11 +824,6 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         ------
         ValueError
             If model has not been fitted via fit_and_calibrate().
-
-        References
-        ----------
-        Vovk, V., Petej, I., & Fedorova, V. (2014). From conformal to probabilistic
-        prediction. arXiv preprint arXiv:1406.5600.
 
         """
         if not self.models_:
