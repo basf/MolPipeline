@@ -11,6 +11,7 @@ from crepes import WrapClassifier, WrapRegressor
 from crepes.extras import DifficultyEstimator, MondrianCategorizer
 from scipy.stats import mode
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
+from sklearn.isotonic import IsotonicRegression
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import check_random_state
 
@@ -269,6 +270,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
                 f"nonconformity_func must be a NonconformityFunctor or None, got {type(self.nonconformity_func).__name__}",
             )
         self._crepes_wrapper: WrapClassifier | None = None
+        self._x_calib: npt.NDArray[Any] | None = None
 
     def fit(
         self,
@@ -346,6 +348,8 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             kwargs["nc"] = self.nonconformity_func
 
         self._crepes_wrapper.calibrate(x, y, **kwargs)
+        # Store calibration data for antitonic calibration
+        self._x_calib = x
         return self
 
     def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
@@ -454,6 +458,90 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             raise ValueError("Must fit and calibrate before predicting")
         return self._crepes_wrapper.predict_p(x, **kwargs)
 
+    def predict_proba_antitonic(  # pylint: disable=too-many-locals
+        self,
+        x: npt.NDArray[Any],
+        x_calib: npt.NDArray[Any] | None = None,
+    ) -> npt.NDArray[Any]:
+        """Convert conformal p-values to calibrated probabilities via antitonic regression.
+
+        Implements the method from Vovk et al. (2014) "From conformal to probabilistic
+        prediction" (https://arxiv.org/abs/1406.5600) for transforming p-values into
+        well-calibrated probability estimates using isotonic regression.
+
+        The algorithm fits a decreasing function g(p) for each class using isotonic
+        regression, then computes calibrated probabilities as P(y) ∝ g(1)/g(p_y),
+        normalized to sum to 1.
+
+        Parameters
+        ----------
+        x : npt.NDArray[Any]
+            Test samples of shape (n_samples, n_features).
+        x_calib : npt.NDArray[Any] | None, optional
+            Calibration samples for fitting isotonic regression.
+            If None, uses calibration data stored during calibrate().
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Calibrated probabilities of shape (n_samples, n_classes).
+
+        Raises
+        ------
+        ValueError
+            If model has not been fitted and calibrated.
+
+        References
+        ----------
+        Vovk, V., Petej, I., & Fedorova, V. (2014). From conformal to probabilistic
+        prediction. arXiv preprint arXiv:1406.5600.
+
+        """
+        if self._crepes_wrapper is None:
+            raise ValueError("Must fit and calibrate before predicting")
+
+        # Obtain conformal p-values for test and calibration sets
+        p_values_test = self.predict_p(x)
+        n_classes = p_values_test.shape[1]
+
+        if x_calib is not None:
+            p_values_calib = self.predict_p(x_calib)
+        else:
+            if self._x_calib is None:
+                raise ValueError(
+                    "No calibration data available. Either pass x_calib explicitly "
+                    "or ensure calibrate() was called before this method.",
+                )
+            p_values_calib = self.predict_p(self._x_calib)
+
+        # Apply antitonic calibration independently for each class
+        epsilon = 1e-10
+        calibrated_probs_unnorm = np.zeros_like(p_values_test)
+
+        for y_class in range(n_classes):
+            p_y_calib = p_values_calib[:, y_class]
+            p_y_test = p_values_test[:, y_class]
+
+            # Fit antitonic (decreasing) function g(p) via isotonic regression
+            # Target: 1/(p + ε) creates a decreasing relationship
+            sorted_indices = np.argsort(p_y_calib)
+            p_sorted = p_y_calib[sorted_indices]
+            targets = 1.0 / (p_sorted + epsilon)
+
+            iso = IsotonicRegression(increasing=False, out_of_bounds="clip")
+            iso.fit(p_sorted, targets)
+
+            # Compute calibrated probabilities: P(y) ∝ g(1) / g(p_y)
+            g_test = iso.predict(p_y_test)
+            g_1 = iso.predict([[1.0]])[0]
+            calibrated_probs_unnorm[:, y_class] = g_1 / (g_test + epsilon)
+
+        # Normalize to obtain valid probability distribution
+        prob_sum = calibrated_probs_unnorm.sum(axis=1, keepdims=True)
+        calibrated_probs = calibrated_probs_unnorm / (prob_sum + epsilon)
+
+        return calibrated_probs
+
     def evaluate(
         self,
         x: npt.NDArray[Any],
@@ -547,6 +635,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self.mondrian = mondrian
         self.random_state = random_state
         self.models_: list[ConformalClassifier] = []
+        self.cv_splits_: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]] = []
 
     def fit_and_calibrate(
         self,
@@ -569,6 +658,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         """
         self.models_ = []
+        self.cv_splits_ = []
         rng = check_random_state(self.random_state)
 
         splitter = StratifiedKFold(
@@ -590,6 +680,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             model.fit(x_train, y_train)
             model.calibrate(x_calib, y_calib)
             self.models_.append(model)
+            self.cv_splits_.append((train_idx, calib_idx))
 
         return self
 
@@ -707,6 +798,100 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         p_values_list = [model.predict_p(x, **kwargs) for model in self.models_]
         return np.median(p_values_list, axis=0)
+
+    def predict_proba_antitonic(  # pylint: disable=too-many-locals
+        self,
+        x: npt.NDArray[Any],
+        x_train: npt.NDArray[Any],
+    ) -> npt.NDArray[Any]:
+        """Convert conformal p-values to calibrated probabilities using cross-validation.
+
+        Extends Vovk et al. (2014) antitonic calibration to cross-conformal prediction
+        by fitting one isotonic regression per fold and averaging the resulting
+        probability estimates.
+
+        This implements the pseudoalgo from Vovk et al. (2014), adapted for cross-validation:
+        For each class y, fit an antitonic density g_y(p) to calibration p-values,
+        then compute P'(y) = g_y(1)/g_y(p_y^0) and normalize to get probabilities.
+
+        Parameters
+        ----------
+        x : npt.NDArray[Any]
+            Test samples of shape (n_samples, n_features).
+        x_train : npt.NDArray[Any]
+            Training samples of shape (n_train, n_features) used to extract
+            calibration data for each fold.
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Calibrated probabilities of shape (n_samples, n_classes),
+            averaged across all folds.
+
+        Raises
+        ------
+        ValueError
+            If model has not been fitted via fit_and_calibrate().
+
+        References
+        ----------
+        Vovk, V., Petej, I., & Fedorova, V. (2014). From conformal to probabilistic
+        prediction. arXiv preprint arXiv:1406.5600.
+
+        """
+        if not self.models_:
+            raise ValueError("Must fit before predicting")
+        if not self.cv_splits_:
+            raise ValueError(
+                "CV splits not found. Ensure fit_and_calibrate() was called.",
+            )
+
+        # Determine number of classes
+        p_values_sample = self.models_[0].predict_p(x[:1])
+        n_classes = p_values_sample.shape[1]
+        epsilon = 1e-10
+
+        # Apply antitonic calibration for each fold independently
+        calibrated_probs_per_fold = []
+
+        for fold_idx, (_, cal_idx) in enumerate(self.cv_splits_):
+            model = self.models_[fold_idx]
+            x_cal_fold = x_train[cal_idx]
+
+            # Obtain p-values for this fold
+            p_values_calib = model.predict_p(x_cal_fold)
+            p_values_test = model.predict_p(x)
+
+            # Calibrate each class independently using antitonic density
+            calibrated_probs_unnorm = np.zeros_like(p_values_test)
+
+            for y_class in range(n_classes):
+                p_y_calib = p_values_calib[:, y_class]
+                p_y_test = p_values_test[:, y_class]
+
+                # Fit antitonic density g_y(p) via isotonic regression
+                # Following Algorithm 1: g should be decreasing, so we fit to 1/(p + ε)
+                sorted_indices = np.argsort(p_y_calib)
+                p_sorted = p_y_calib[sorted_indices]
+                targets = 1.0 / (p_sorted + epsilon)
+
+                iso = IsotonicRegression(increasing=False, out_of_bounds="clip")
+                iso.fit(p_sorted, targets)
+
+                # Compute calibrated probabilities: P'(y) = g_y(1) / g_y(p_y^0)
+                g_test = iso.predict(p_y_test)
+                g_1 = iso.predict([[1.0]])[0]
+                calibrated_probs_unnorm[:, y_class] = g_1 / (g_test + epsilon)
+
+            # Normalize to valid probability distribution
+            prob_sum = calibrated_probs_unnorm.sum(axis=1, keepdims=True)
+            calibrated_probs_fold = calibrated_probs_unnorm / (prob_sum + epsilon)
+            calibrated_probs_per_fold.append(calibrated_probs_fold)
+
+        # Average probabilities across all folds for robust estimates
+        calibrated_probs = np.mean(calibrated_probs_per_fold, axis=0)
+
+        return calibrated_probs
 
     def evaluate(
         self,

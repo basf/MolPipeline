@@ -225,7 +225,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertGreaterEqual(results["ks_test"], 0.0)
         self.assertLessEqual(results["ks_test"], 1.0)
 
-    def test_evaluate_methods_cross_conformal(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
+    def test_evaluate_methods_cross_conformal(self) -> None:  # pylint: disable=too-many-locals
         """Test evaluate methods for cross-conformal predictors (classification)."""
         # Test CrossConformalClassifier
         x_train_clf, x_test_clf, y_train_clf, y_test_clf = train_test_split(
@@ -290,11 +290,11 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(probs.shape[0], len(y_test))
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
+        sets_80 = cp.predict_set(x_test, confidence=0.80)
         sets_90 = cp.predict_set(x_test, confidence=0.90)
-        sets_95 = cp.predict_set(x_test, confidence=0.95)
+        size_80 = float(np.mean([np.sum(set_row) for set_row in sets_80]))
         size_90 = float(np.mean([np.sum(set_row) for set_row in sets_90]))
-        size_95 = float(np.mean([np.sum(set_row) for set_row in sets_95]))
-        self.assertLessEqual(size_90, size_95)
+        self.assertLessEqual(size_80, size_90)
 
     def test_class_specific_behavior(self) -> None:
         """Test that ConformalClassifier has classification-specific methods."""
@@ -333,7 +333,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
 
-    def test_nonconformity_functions(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
+    def test_nonconformity_functions(self) -> None:  # pylint: disable=too-many-locals
         """Test different nonconformity functions in ConformalClassifier."""
         data_splits = self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         x_train, x_calib, x_test, y_train, y_calib, y_test = data_splits
@@ -603,6 +603,29 @@ class TestConformalClassifier(BaseConformalTestData):
         invalid_predictions = predicted_with_invalid[n_valid:]
         self.assertTrue(np.isnan(invalid_predictions).all())
         self.assertEqual(len(invalid_predictions), n_invalid)
+
+    def test_conformal_classifier_antitonic(self) -> None:
+        """Test basic functionality of antitonic calibration for ConformalClassifier."""
+        x_train, x_calib, x_test, y_train, y_calib, _y_test = (
+            self._get_train_calib_test_splits(self.x_clf, self.y_clf)
+        )
+
+        clf = RandomForestClassifier(random_state=42, n_estimators=50)
+        model = ConformalClassifier(clf)
+        model.fit(x_train, y_train)
+        model.calibrate(x_calib, y_calib)
+
+        probs = model.predict_proba_antitonic(x_test)
+
+        self.assertEqual(probs.shape, (len(x_test), 2))
+        np.testing.assert_array_almost_equal(probs.sum(axis=1), np.ones(len(x_test)))
+        self.assertTrue(np.all(probs >= 0))
+        self.assertTrue(np.all(probs <= 1))
+        p_values = model.predict_p(x_test)
+        p_class1 = p_values[:, 1]
+        prob_class1 = probs[:, 1]
+        rank_correlation = np.corrcoef(p_class1, prob_class1)[0, 1]
+        self.assertGreater(rank_correlation, 0.7)
 
 
 # Regression-specific tests
