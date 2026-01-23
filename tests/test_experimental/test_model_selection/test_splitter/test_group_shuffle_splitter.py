@@ -4,7 +4,6 @@ import unittest
 from typing import get_args
 
 import numpy as np
-from numpy.testing import assert_array_equal
 from sklearn.model_selection import GroupShuffleSplit as SklearnGroupShuffleSplit
 
 from molpipeline.experimental.model_selection.splitter import (
@@ -34,17 +33,17 @@ class TestGroupShuffleSplit(unittest.TestCase):
         for train_size, exp_train, exp_test in [(None, 8, 2), (7, 7, 3), (0.7, 7, 3)]:
             # Check that the default value has the expected behavior, i.e. 0.2 if both
             # unspecified or complement train_size unless both are specified.
-            X = np.ones(10)  # pylint: disable=invalid-name
+            x = np.ones(10)
             y = np.ones(10)
             groups = range(10)
             for split_mode in get_args(SplitModeOption):
                 split_generator = GroupShuffleSplit(
                     train_size=train_size,
                     split_mode=split_mode,
-                ).split(X, y, groups)
-                X_train, X_test = next(split_generator)  # pylint: disable=invalid-name
-                self.assertEqual(len(X_train), exp_train)
-                self.assertEqual(len(X_test), exp_test)
+                ).split(x, y, groups)
+                x_train, x_test = next(split_generator)
+                self.assertEqual(len(x_train), exp_train)
+                self.assertEqual(len(x_test), exp_test)
 
     def test_invalid_split_mode(self) -> None:
         """Test that an invalid split mode raises a ValueError."""
@@ -74,7 +73,7 @@ class TestGroupShuffleSplit(unittest.TestCase):
 
         """
         for groups_i in _TEST_GROUPS:
-            X = y = np.ones(len(groups_i))  # pylint: disable=invalid-name
+            x = y = np.ones(len(groups_i))
             n_splits = 6
             test_size = 1.0 / 3
             for split_mode in get_args(SplitModeOption):
@@ -89,12 +88,12 @@ class TestGroupShuffleSplit(unittest.TestCase):
                 repr(gss)
 
                 # Test that the length is correct
-                self.assertEqual(gss.get_n_splits(X, y, groups=groups_i), n_splits)
+                self.assertEqual(gss.get_n_splits(x, y, groups=groups_i), n_splits)
 
                 l_unique = np.unique(groups_i)
                 groups_i_array = np.asarray(groups_i)
 
-                for train, test in gss.split(X, y, groups=groups_i):
+                for train, test in gss.split(x, y, groups=groups_i):
                     # First test: no train group is in the test set and vice versa
                     l_train_unique = np.unique(groups_i_array[train])
                     l_test_unique = np.unique(groups_i_array[test])
@@ -112,7 +111,7 @@ class TestGroupShuffleSplit(unittest.TestCase):
                     )
 
                     # Third test: train and test are disjoint
-                    assert_array_equal(np.intersect1d(train, test), [])
+                    self.assertTrue(np.array_equal(np.intersect1d(train, test), []))
 
                     # Fourth test:
                     # unique train and test groups are correct, +- 1 for rounding error
@@ -129,10 +128,10 @@ class TestGroupShuffleSplit(unittest.TestCase):
                     )
 
     def test_compare_to_sklearn_implementation(self) -> None:
-        """Test that MolPipelines implementation produces the same results as sklearn's for split_mode='groups'."""
+        """Test that MolPipelines produces the same results as sklearn."""
         random_seed = 987
         for groups_i in _TEST_GROUPS:
-            X = y = np.ones(len(groups_i))  # pylint: disable=invalid-name
+            x = y = np.ones(len(groups_i))
             n_splits = 6
             test_size = 1.0 / 3
             gss_molpipeline = GroupShuffleSplit(
@@ -148,10 +147,10 @@ class TestGroupShuffleSplit(unittest.TestCase):
             )
 
             for (train_mp, test_mp), (train_sk, test_sk) in zip(
-                gss_molpipeline.split(X, y, groups=groups_i),
-                gss_sklearn.split(X, y, groups=groups_i),
+                gss_molpipeline.split(x, y, groups=groups_i),
+                gss_sklearn.split(x, y, groups=groups_i),
                 strict=True,
             ):
                 # test that for the same seed the exact same splits are produced
-                assert_array_equal(train_mp, train_sk)
-                assert_array_equal(test_mp, test_sk)
+                self.assertTrue(np.array_equal(train_mp, train_sk))
+                self.assertTrue(np.array_equal(test_mp, test_sk))
