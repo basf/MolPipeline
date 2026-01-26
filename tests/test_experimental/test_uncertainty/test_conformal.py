@@ -291,10 +291,10 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
         sets_80 = cp.predict_set(x_test, confidence=0.80)
-        sets_90 = cp.predict_set(x_test, confidence=0.90)
+        sets_95 = cp.predict_set(x_test, confidence=0.95)
         size_80 = float(np.mean([np.sum(set_row) for set_row in sets_80]))
-        size_90 = float(np.mean([np.sum(set_row) for set_row in sets_90]))
-        self.assertLessEqual(size_80, size_90)
+        size_95 = float(np.mean([np.sum(set_row) for set_row in sets_95]))
+        self.assertLessEqual(size_80, size_95)
 
     def test_class_specific_behavior(self) -> None:
         """Test that ConformalClassifier has classification-specific methods."""
