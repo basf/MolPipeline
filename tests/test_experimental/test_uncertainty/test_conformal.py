@@ -290,11 +290,11 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(probs.shape[0], len(y_test))
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
-        sets_90 = cp.predict_set(x_test, confidence=0.90)
+        sets_80 = cp.predict_set(x_test, confidence=0.80)
         sets_95 = cp.predict_set(x_test, confidence=0.95)
-        size_90 = float(np.mean([np.sum(set_row) for set_row in sets_90]))
+        size_80 = float(np.mean([np.sum(set_row) for set_row in sets_80]))
         size_95 = float(np.mean([np.sum(set_row) for set_row in sets_95]))
-        self.assertLessEqual(size_90, size_95)
+        self.assertLessEqual(size_80, size_95)
 
     def test_class_specific_behavior(self) -> None:
         """Test that ConformalClassifier has classification-specific methods."""
@@ -534,12 +534,12 @@ class TestConformalClassifier(BaseConformalTestData):
         clf = RandomForestClassifier(random_state=42, n_estimators=5)
         ccp = CrossConformalClassifier(clf, n_folds=2)
         ccp.fit_and_calibrate(x_train, y_train)
-        sets_90 = ccp.predict_set(x_test, confidence=0.90)
+        sets_80 = ccp.predict_set(x_test, confidence=0.80)
         sets_95 = ccp.predict_set(x_test, confidence=0.95)
-        size_90 = float(np.mean([np.sum(set_row) for set_row in sets_90]))
+        size_80 = float(np.mean([np.sum(set_row) for set_row in sets_80]))
         size_95 = float(np.mean([np.sum(set_row) for set_row in sets_95]))
 
-        self.assertLessEqual(size_90, size_95)
+        self.assertLessEqual(size_80, size_95)
 
     def test_pipeline_wrapped_by_conformal_classifier(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
         """Test a MolPipeline wrapped by ConformalClassifier."""
@@ -618,13 +618,13 @@ class TestConformalRegressor(BaseConformalTestData):
         cp = ConformalRegressor(reg)
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
-        intervals_90 = cp.predict_int(x_test, confidence=0.90)
-        self.assertEqual(intervals_90.shape[0], len(y_test))
-        self.assertEqual(intervals_90.shape[1], 2)
+        intervals_80 = cp.predict_int(x_test, confidence=0.80)
+        self.assertEqual(intervals_80.shape[0], len(y_test))
+        self.assertEqual(intervals_80.shape[1], 2)
         intervals_95 = cp.predict_int(x_test, confidence=0.95)
-        width_90 = float(np.mean(intervals_90[:, 1] - intervals_90[:, 0]))
+        width_80 = float(np.mean(intervals_80[:, 1] - intervals_80[:, 0]))
         width_95 = float(np.mean(intervals_95[:, 1] - intervals_95[:, 0]))
-        self.assertLess(width_90, width_95)
+        self.assertLess(width_80, width_95)
 
     def test_class_specific_behavior(self) -> None:
         """Test that ConformalRegressor has regression-specific methods."""
@@ -687,11 +687,11 @@ class TestConformalRegressor(BaseConformalTestData):
         reg = RandomForestRegressor(random_state=42, n_estimators=5)
         ccp = CrossConformalRegressor(reg, n_folds=2)
         ccp.fit_and_calibrate(x_train, y_train)
-        intervals_90 = ccp.predict_int(x_test, confidence=0.90)
+        intervals_80 = ccp.predict_int(x_test, confidence=0.80)
         intervals_95 = ccp.predict_int(x_test, confidence=0.95)
-        width_90 = float(np.mean(intervals_90[:, 1] - intervals_90[:, 0]))
+        width_80 = float(np.mean(intervals_80[:, 1] - intervals_80[:, 0]))
         width_95 = float(np.mean(intervals_95[:, 1] - intervals_95[:, 0]))
-        self.assertLess(width_90, width_95)
+        self.assertLess(width_80, width_95)
 
     def test_pipeline_wrapped_by_cross_conformal_regressor(self) -> None:
         """Test a MolPipeline wrapped by CrossConformalRegressor."""
