@@ -11,7 +11,7 @@ from molpipeline.experimental.model_selection.splitter.time_threshold_splitter i
 )
 
 
-class TestTimeThresholdSplitter(unittest.TestCase):
+class TestTimeThresholdSplitter(unittest.TestCase):  # noqa: PLR0904
     """Tests for TimeThresholdSplitter."""
 
     def _assert_splits_equal(  # pylint: disable=duplicate-code
@@ -404,6 +404,31 @@ class TestTimeThresholdSplitter(unittest.TestCase):
                 last_year=2022,
                 n_years=1,
                 round_to="year",  # type: ignore[arg-type]
+            )
+
+    def test_init_raises_when_neither_threshold_list_nor_last_year_provided(
+        self,
+    ) -> None:
+        """Ensure __init__ raises when neither threshold_list nor last_year is set."""
+        with self.assertRaisesRegex(
+            ValueError,
+            "Either 'threshold_list' must be provided or 'last_year' must be specified",
+        ):
+            TimeThresholdSplitter()
+
+    def test_init_raises_when_both_threshold_list_and_last_year_provided(self) -> None:
+        """Ensure __init__ raises when both threshold_list and last_year are set."""
+        threshold_list = [
+            pd.Timestamp("2020-01-01"),
+            pd.Timestamp("2021-01-01"),
+        ]
+        with self.assertRaisesRegex(
+            ValueError,
+            "Provide either 'threshold_list' or 'last_year', not both.",
+        ):
+            TimeThresholdSplitter(
+                threshold_list=threshold_list,
+                last_year=2022,
             )
 
 
