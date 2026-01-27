@@ -8,10 +8,14 @@ from molpipeline.experimental.model_selection.splitter.group_shuffle_splitter im
     SplitModeOption,
     create_continuous_stratified_folds,
 )
+from molpipeline.experimental.model_selection.splitter.time_threshold_splitter import (
+    TimeThresholdSplitter,
+)
 
 __all__ = [
     "AddOneGroupSplit",
     "GroupShuffleSplit",
     "SplitModeOption",
+    "TimeThresholdSplitter",
     "create_continuous_stratified_folds",
 ]
