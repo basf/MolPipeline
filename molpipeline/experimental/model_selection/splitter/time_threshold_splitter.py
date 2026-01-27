@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -173,6 +173,48 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         # Use parent class get_n_splits method with converted groups
         return super().get_n_splits(X=X, y=y, groups=group_indices)
 
+    @staticmethod
+    def _round_threshold(
+        threshold: pd.Timestamp,
+        round_to: Literal["day", "month", "hour"] | None,
+    ) -> pd.Timestamp:
+        """Round a timestamp to the requested precision.
+
+        Parameters
+        ----------
+        threshold : pd.Timestamp
+            Timestamp to round.
+        round_to : {"day", "month", "hour"} or None
+            Target precision. If ``None``, the timestamp is returned unchanged.
+
+        Returns
+        -------
+        pd.Timestamp
+            Rounded timestamp.
+
+        Raises
+        ------
+        ValueError
+            If round_to is not one of the valid options.
+
+        """
+        if round_to is not None and round_to not in {"day", "month", "hour"}:
+            raise ValueError(
+                f"round_to must be 'day', 'month', 'hour', or None, got '{round_to}'",
+            )
+
+        if round_to == "day":
+            return threshold.normalize()
+        if round_to == "hour":
+            return threshold.floor("h")
+        if round_to == "month":
+            return pd.Timestamp(
+                year=threshold.year,
+                month=threshold.month,
+                day=1,
+            )
+        return threshold
+
     @classmethod
     def from_splits_per_year(
         cls,
@@ -181,6 +223,7 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         n_years: int = 5,
         n_skip: int = 1,
         max_splits: int | None = None,
+        round_to: Literal["day", "month", "hour"] | None = "day",
     ) -> Self:
         """Create a TimeThresholdSplitter from the number of splits per year.
 
@@ -196,6 +239,10 @@ class TimeThresholdSplitter(AddOneGroupSplit):
             Number of initial groups to skip as test sets.
         max_splits : int | None, optional
             Maximum number of splits to create, by default None.
+        round_to : Literal["day", "month", "hour"] | None, default="day"
+            Rounding precision for threshold timestamps.
+            Options: "day" (midnight), "month" (start of month), "hour" (start of hour).
+            If None, keep exact fractional timestamps.
 
         Returns
         -------
@@ -216,9 +263,10 @@ class TimeThresholdSplitter(AddOneGroupSplit):
 
         for year in range(n_years):
             year_start = pd.Timestamp(year=last_year - year, month=1, day=1)
-            threshold_list.extend(
-                [year_start + split * time_delta for split in range(splits_per_year)],
-            )
+            for split in range(splits_per_year):
+                threshold = year_start + split * time_delta
+                threshold = cls._round_threshold(threshold, round_to)
+                threshold_list.append(threshold)
 
         return cls(
             threshold_list=sorted(threshold_list),

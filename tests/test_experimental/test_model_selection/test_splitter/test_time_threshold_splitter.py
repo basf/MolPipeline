@@ -56,6 +56,14 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "The groups parameter is required."):
             splitter.get_n_splits(X=np.ones(2), groups=None)
 
+    def test_empty_threshold_list(self) -> None:
+        """Test that an empty threshold list raises ValueError."""
+        with self.assertRaisesRegex(
+            ValueError,
+            "threshold_list must contain at least one",
+        ):
+            TimeThresholdSplitter(threshold_list=[])
+
     def test_generates_expected_splits(self) -> None:
         """Verify splitter yields cumulative train groups by default."""
         threshold_list = [pd.Timestamp("2020-06-01"), pd.Timestamp("2021-06-01")]
@@ -111,10 +119,10 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         splits = list(splitter.split(X=features, groups=time_data))
 
         # Skip group 0 and 1, start test from group 2
+        # Split 1: Train: Groups 0,1, Test: Group 2
+        # Split 2: Train: Groups 0,1,2, Test: Group 3
         expected = [
-            # Train: Groups 0,1, Test: Group 2
             (np.array([0, 1, 2, 3]), np.array([4, 5])),
-            # Train: Groups 0,1,2, Test: Group 3
             (np.array([0, 1, 2, 3, 4, 5]), np.array([6, 7])),
         ]
 
@@ -145,9 +153,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         features = np.ones(len(time_data))
         splits = list(splitter.split(X=features, groups=time_data))
 
-        # Only last split
+        # Train: Groups 0,1,2, Test: Group 3
         expected = [
-            # Train: Groups 0,1,2, Test: Group 3
             (np.array([0, 1, 2, 3, 4, 5]), np.array([6, 7])),
         ]
 
@@ -170,6 +177,27 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         # 3 groups created (0, 1, 2), with n_skip=0, all 3 serve as test sets
         self.assertEqual(n_splits, 2)
 
+    def test_all_data_in_same_group(self) -> None:
+        """Test when all data falls into the same group."""
+        threshold_list = [pd.Timestamp("2025-01-01")]
+        splitter = TimeThresholdSplitter(threshold_list=threshold_list)
+
+        time_data = pd.Series(
+            [
+                pd.Timestamp("2020-01-01"),  # Group 0
+                pd.Timestamp("2021-01-01"),  # Group 0
+                pd.Timestamp("2022-01-01"),  # Group 0
+            ],
+        )
+
+        features = np.ones(len(time_data))
+
+        # Only one group, resulting in zero splits, raise ValueError on split attempt
+        n_splits = splitter.get_n_splits(X=features, groups=time_data)
+        self.assertEqual(n_splits, 0)
+        with self.assertRaisesRegex(ValueError, "Not enough groups to create "):
+            list(splitter.split(X=features, groups=time_data))
+
     def test_threshold_list_sorted_on_init(self) -> None:
         """Verify threshold list is sorted during initialization."""
         unsorted_thresholds = [
@@ -186,52 +214,6 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         ]
 
         self.assertEqual(splitter.threshold_list, expected_sorted)
-
-    def test_from_splits_per_year_basic(self) -> None:
-        """Test from_splits_per_year class method with basic parameters."""
-        splitter = TimeThresholdSplitter.from_splits_per_year(
-            splits_per_year=2,
-            last_year=2022,
-            n_years=2,
-        )
-
-        # Should create 4 thresholds (2 per year * 2 years)
-        self.assertEqual(len(splitter.threshold_list), 4)
-        expected_thresholds = [
-            pd.Timestamp("2021-01-01"),
-            pd.Timestamp("2021-07-02 15:00"),  # Approx. mid-year
-            pd.Timestamp("2022-01-01"),
-            pd.Timestamp("2022-07-02 15:00"),  # Approx. mid-year
-        ]
-        for expected, actual in zip(
-            expected_thresholds,
-            splitter.threshold_list,
-            strict=False,
-        ):
-            self.assertEqual(expected, actual)
-
-    def test_from_splits_per_year_with_n_skip_and_max_splits(self) -> None:
-        """Test from_splits_per_year with n_skip and max_splits parameters."""
-        splitter = TimeThresholdSplitter.from_splits_per_year(
-            splits_per_year=4,
-            last_year=2022,
-            n_years=3,
-            n_skip=2,
-            max_splits=2,
-        )
-
-        self.assertEqual(splitter.n_skip, 2)
-        self.assertEqual(splitter.max_splits, 2)
-        self.assertEqual(len(splitter.threshold_list), 12)  # 4 * 3
-
-    def test_from_splits_per_year_invalid_splits_too_low(self) -> None:
-        """Ensure from_splits_per_year raises when splits_per_year < 1."""
-        with self.assertRaisesRegex(ValueError, "splits_per_year must be at least 1"):
-            TimeThresholdSplitter.from_splits_per_year(
-                splits_per_year=0,
-                last_year=2022,
-                n_years=2,
-            )
 
     def test_convert_time_to_groups(self) -> None:
         """Test _convert_time_to_groups helper method."""
@@ -272,34 +254,152 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         # Should create 3 splits (one per group)
         self.assertEqual(len(splits), 2)
 
-    def test_empty_threshold_list(self) -> None:
-        """Test that an empty threshold list raises ValueError."""
-        with self.assertRaisesRegex(
-            ValueError,
-            "threshold_list must contain at least one",
-        ):
-            TimeThresholdSplitter(threshold_list=[])
+    def test_from_splits_per_year_basic(self) -> None:
+        """Test from_splits_per_year class method with basic parameters.
 
-    def test_all_data_in_same_group(self) -> None:
-        """Test when all data falls into the same group."""
-        threshold_list = [pd.Timestamp("2025-01-01")]
-        splitter = TimeThresholdSplitter(threshold_list=threshold_list)
+        In default, timestamps are rounded to midnight (00:00:00).
 
-        time_data = pd.Series(
-            [
-                pd.Timestamp("2020-01-01"),  # Group 0
-                pd.Timestamp("2021-01-01"),  # Group 0
-                pd.Timestamp("2022-01-01"),  # Group 0
-            ],
+        """
+        splitter = TimeThresholdSplitter.from_splits_per_year(
+            splits_per_year=2,
+            last_year=2022,
+            n_years=2,
         )
 
-        features = np.ones(len(time_data))
+        # Should create 4 thresholds (2 per year * 2 years)
+        self.assertEqual(len(splitter.threshold_list), 4)
+        # By default, timestamps are rounded to midnight (00:00:00)
+        expected_thresholds = [
+            pd.Timestamp("2021-01-01"),
+            pd.Timestamp("2021-07-02"),  # Mid-year, rounded to midnight
+            pd.Timestamp("2022-01-01"),
+            pd.Timestamp("2022-07-02"),  # Mid-year, rounded to midnight
+        ]
+        for expected, actual in zip(
+            expected_thresholds,
+            splitter.threshold_list,
+            strict=False,
+        ):
+            self.assertEqual(expected, actual)
 
-        # Only one group, with n_skip=0, group 0 serves as test set
-        n_splits = splitter.get_n_splits(X=features, groups=time_data)
-        self.assertEqual(n_splits, 0)
-        with self.assertRaisesRegex(ValueError, "Not enough groups to create "):
-            list(splitter.split(X=features, groups=time_data))
+    def test_from_splits_per_year_with_n_skip_and_max_splits(self) -> None:
+        """Test from_splits_per_year with n_skip and max_splits parameters."""
+        splitter = TimeThresholdSplitter.from_splits_per_year(
+            splits_per_year=4,
+            last_year=2022,
+            n_years=3,
+            n_skip=2,
+            max_splits=2,
+        )
+
+        self.assertEqual(splitter.n_skip, 2)
+        self.assertEqual(splitter.max_splits, 2)
+        self.assertEqual(len(splitter.threshold_list), 12)  # 4 * 3
+
+    def test_from_splits_per_year_invalid_splits_too_low(self) -> None:
+        """Ensure from_splits_per_year raises when splits_per_year < 1."""
+        with self.assertRaisesRegex(ValueError, "splits_per_year must be at least 1"):
+            TimeThresholdSplitter.from_splits_per_year(
+                splits_per_year=0,
+                last_year=2022,
+                n_years=2,
+            )
+
+    def test_from_splits_per_year_round_to_day(self) -> None:
+        """Test from_splits_per_year with round_to='day' (default)."""
+        splitter = TimeThresholdSplitter.from_splits_per_year(
+            splits_per_year=2,
+            last_year=2022,
+            n_years=1,
+            round_to="day",
+        )
+
+        # All thresholds should be at midnight (00:00:00)
+        for threshold in splitter.threshold_list:
+            self.assertEqual(threshold.hour, 0)
+            self.assertEqual(threshold.minute, 0)
+            self.assertEqual(threshold.second, 0)
+            self.assertEqual(threshold.microsecond, 0)
+
+    def test_from_splits_per_year_round_to_none(self) -> None:
+        """Test from_splits_per_year with round_to=None."""
+        splitter = TimeThresholdSplitter.from_splits_per_year(
+            splits_per_year=2,
+            last_year=2022,
+            n_years=1,
+            round_to=None,
+        )
+
+        # At least one threshold should have non-zero time components
+        # because 365.25 / 2 = 182.625 days
+        has_non_zero_time = any(
+            threshold.hour != 0
+            or threshold.minute != 0
+            or threshold.second != 0
+            or threshold.microsecond != 0
+            for threshold in splitter.threshold_list
+        )
+        self.assertTrue(has_non_zero_time)
+
+    def test_from_splits_per_year_round_to_default(self) -> None:
+        """Test from_splits_per_year uses round_to='day' by default."""
+        splitter = TimeThresholdSplitter.from_splits_per_year(
+            splits_per_year=4,
+            last_year=2022,
+            n_years=1,
+        )
+
+        # All thresholds should be at midnight (00:00:00) by default
+        for threshold in splitter.threshold_list:
+            self.assertEqual(threshold.hour, 0)
+            self.assertEqual(threshold.minute, 0)
+            self.assertEqual(threshold.second, 0)
+            self.assertEqual(threshold.microsecond, 0)
+
+    def test_from_splits_per_year_round_to_hour(self) -> None:
+        """Test from_splits_per_year with round_to='hour'."""
+        splitter = TimeThresholdSplitter.from_splits_per_year(
+            splits_per_year=2,
+            last_year=2022,
+            n_years=1,
+            round_to="hour",
+        )
+
+        # All thresholds should have zero minutes, seconds, and microseconds
+        for threshold in splitter.threshold_list:
+            self.assertEqual(threshold.minute, 0)
+            self.assertEqual(threshold.second, 0)
+            self.assertEqual(threshold.microsecond, 0)
+
+    def test_from_splits_per_year_round_to_month(self) -> None:
+        """Test from_splits_per_year with round_to='month'."""
+        splitter = TimeThresholdSplitter.from_splits_per_year(
+            splits_per_year=3,
+            last_year=2022,
+            n_years=1,
+            round_to="month",
+        )
+
+        # All thresholds should be at the first day of the month at midnight
+        for threshold in splitter.threshold_list:
+            self.assertEqual(threshold.day, 1)
+            self.assertEqual(threshold.hour, 0)
+            self.assertEqual(threshold.minute, 0)
+            self.assertEqual(threshold.second, 0)
+            self.assertEqual(threshold.microsecond, 0)
+
+    def test_from_splits_per_year_round_to_invalid(self) -> None:
+        """Test from_splits_per_year raises error for invalid round_to value."""
+        with self.assertRaisesRegex(
+            ValueError,
+            "round_to must be 'day', 'month', 'hour', or None",
+        ):
+            TimeThresholdSplitter.from_splits_per_year(
+                splits_per_year=2,
+                last_year=2022,
+                n_years=1,
+                round_to="year",  # type: ignore[arg-type]
+            )
 
 
 if __name__ == "__main__":
