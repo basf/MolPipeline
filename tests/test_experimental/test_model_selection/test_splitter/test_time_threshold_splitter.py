@@ -11,7 +11,7 @@ from molpipeline.experimental.model_selection.splitter.time_threshold_splitter i
 )
 
 
-class TestTimeThresholdSplitter(unittest.TestCase):  # noqa: PLR0904
+class TestTimeThresholdSplitter(unittest.TestCase):
     """Tests for TimeThresholdSplitter."""
 
     def _assert_splits_equal(  # pylint: disable=duplicate-code
@@ -42,6 +42,35 @@ class TestTimeThresholdSplitter(unittest.TestCase):  # noqa: PLR0904
                 f"Test indices mismatch at split {i}",
             )
 
+    def test_invalid_init_params(self) -> None:
+        """Check that invalid combinations of init parameters raise errors."""
+        # Empty threshold list
+        with self.assertRaisesRegex(
+            ValueError,
+            "threshold_list must contain at least one",
+        ):
+            TimeThresholdSplitter(threshold_list=[])
+
+        # Neither threshold_list nor last_year provided
+        with self.assertRaisesRegex(
+            ValueError,
+            "Either 'threshold_list' must be provided or 'last_year' must be ",
+        ):
+            TimeThresholdSplitter()
+
+        # Both threshold_list and last_year provided
+        with self.assertRaisesRegex(
+            ValueError,
+            "Provide either 'threshold_list' or 'last_year', not both.",
+        ):
+            TimeThresholdSplitter(
+                threshold_list=[
+                    pd.Timestamp("2020-01-01"),
+                    pd.Timestamp("2021-01-01"),
+                ],
+                last_year=2022,
+            )
+
     def test_split_raises_without_groups(self) -> None:
         """Ensure split raises when groups are missing."""
         threshold_list = [pd.Timestamp("2020-01-01"), pd.Timestamp("2021-01-01")]
@@ -56,14 +85,6 @@ class TestTimeThresholdSplitter(unittest.TestCase):  # noqa: PLR0904
         splitter = TimeThresholdSplitter(threshold_list=threshold_list)
         with self.assertRaisesRegex(ValueError, "The groups parameter is required."):
             splitter.get_n_splits(X=np.ones(2), groups=None)
-
-    def test_empty_threshold_list(self) -> None:
-        """Test that an empty threshold list raises ValueError."""
-        with self.assertRaisesRegex(
-            ValueError,
-            "threshold_list must contain at least one",
-        ):
-            TimeThresholdSplitter(threshold_list=[])
 
     def test_generates_expected_splits(self) -> None:
         """Verify splitter yields cumulative train groups by default."""
@@ -405,32 +426,3 @@ class TestTimeThresholdSplitter(unittest.TestCase):  # noqa: PLR0904
                 n_years=1,
                 round_to="year",  # type: ignore[arg-type]
             )
-
-    def test_init_raises_when_neither_threshold_list_nor_last_year_provided(
-        self,
-    ) -> None:
-        """Ensure __init__ raises when neither threshold_list nor last_year is set."""
-        with self.assertRaisesRegex(
-            ValueError,
-            "Either 'threshold_list' must be provided or 'last_year' must be specified",
-        ):
-            TimeThresholdSplitter()
-
-    def test_init_raises_when_both_threshold_list_and_last_year_provided(self) -> None:
-        """Ensure __init__ raises when both threshold_list and last_year are set."""
-        threshold_list = [
-            pd.Timestamp("2020-01-01"),
-            pd.Timestamp("2021-01-01"),
-        ]
-        with self.assertRaisesRegex(
-            ValueError,
-            "Provide either 'threshold_list' or 'last_year', not both.",
-        ):
-            TimeThresholdSplitter(
-                threshold_list=threshold_list,
-                last_year=2022,
-            )
-
-
-if __name__ == "__main__":
-    unittest.main()
