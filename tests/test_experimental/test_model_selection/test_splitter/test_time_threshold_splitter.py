@@ -13,7 +13,7 @@ from molpipeline.experimental.model_selection.splitter.time_threshold_splitter i
 class TestTimeThresholdSplitter(unittest.TestCase):
     """Tests for TimeThresholdSplitter."""
 
-    def _assert_splits_equal(
+    def _assert_splits_equal(  # pylint: disable=duplicate-code
         self,
         actual_splits: list[tuple[np.ndarray, np.ndarray]],
         expected_splits: list[tuple[np.ndarray, np.ndarray]],
