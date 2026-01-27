@@ -9,8 +9,11 @@ import numpy.typing as npt
 class AddOneGroupSplit:
     """Add sequentially one group to the training set.
 
-    The lowest group is always part of the training set,
-    and the highest group is always part of the test set.
+    Splitting strategy:
+    - Groups ≤ n_skip: Always in training set
+    - Highest group: Always in test set
+    - Intermediate groups: Each serves once as test set, then joins training set
+    - Training set grows incrementally with each split
 
     """
 
@@ -19,15 +22,16 @@ class AddOneGroupSplit:
 
     def __init__(
         self,
-        n_skip: int = 0,
+        n_skip: int = 1,
         max_splits: int | None = None,
     ) -> None:
         """Initialize the AddOneGroupSplit.
 
         Parameters
         ----------
-        n_skip : int, optional
-            Number of initial groups to skip, by default 0.
+        n_skip : int, default=1
+            Number of initial groups to skip as test sets.
+            This means that the n groups are always part of the training set.
         max_splits : int | None, optional
             Maximum number of splits to create, by default None.
             If more splits are possible, only the last splits are returned.
@@ -65,16 +69,23 @@ class AddOneGroupSplit:
         ------
         ValueError
             If the groups parameter is not provided.
+        ValueError
+            If not enough groups are available to create any splits.
 
         """
         if groups is None:
             raise ValueError("The groups parameter is required.")
 
         unique_groups = sorted(np.unique(groups))
-        n_skip = self.n_skip + 1  # First group is always in training set
+        n_skip = self.n_skip
         test_groups = unique_groups[n_skip:]
+        # If max_splits is set, limit the number of splits from the end
         if self.max_splits is not None and len(test_groups) > self.max_splits:
             test_groups = test_groups[-self.max_splits :]
+        if not test_groups:
+            raise ValueError(
+                "Not enough groups to create any splits with the given n_skip.",
+            )
 
         for group in test_groups:
             train_idx = np.where(groups < group)[0]
@@ -111,7 +122,7 @@ class AddOneGroupSplit:
         """
         if groups is None:
             raise ValueError("The groups parameter is required.")
-        max_possible_splits = len(np.unique(groups)) - 1 - self.n_skip
+        max_possible_splits = len(np.unique(groups)) - self.n_skip
         if self.max_splits is not None:
             return min(max_possible_splits, self.max_splits)
         return max_possible_splits
