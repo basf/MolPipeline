@@ -259,12 +259,12 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         self._assert_splits_equal(splits, expected)
 
     def test_from_splits_per_year_basic(self) -> None:
-        """Test from_splits_per_year class method with basic parameters.
+        """Test constructing from per-year parameters with basic settings.
 
         In default, timestamps are rounded to midnight (00:00:00).
 
         """
-        splitter = TimeThresholdSplitter.from_splits_per_year(
+        splitter = TimeThresholdSplitter(
             splits_per_year=2,
             last_year=2022,
             n_years=2,
@@ -287,8 +287,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             self.assertEqual(expected, actual)
 
     def test_from_splits_per_year_with_n_skip_and_max_splits(self) -> None:
-        """Test from_splits_per_year with n_skip and max_splits parameters."""
-        splitter = TimeThresholdSplitter.from_splits_per_year(
+        """Test constructor with n_skip and max_splits parameters."""
+        splitter = TimeThresholdSplitter(
             splits_per_year=4,
             last_year=2022,
             n_years=3,
@@ -301,17 +301,17 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         self.assertEqual(len(splitter.threshold_list), 12)  # 4 * 3
 
     def test_from_splits_per_year_invalid_splits_too_low(self) -> None:
-        """Ensure from_splits_per_year raises when splits_per_year < 1."""
+        """Ensure constructor raises when splits_per_year < 1."""
         with self.assertRaisesRegex(ValueError, "splits_per_year must be at least 1"):
-            TimeThresholdSplitter.from_splits_per_year(
+            TimeThresholdSplitter(
                 splits_per_year=0,
                 last_year=2022,
                 n_years=2,
             )
 
     def test_from_splits_per_year_round_to_day(self) -> None:
-        """Test from_splits_per_year with round_to='day' (default)."""
-        splitter = TimeThresholdSplitter.from_splits_per_year(
+        """Test constructor with round_to='day' (default)."""
+        splitter = TimeThresholdSplitter(
             splits_per_year=2,
             last_year=2022,
             n_years=1,
@@ -326,8 +326,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             self.assertEqual(threshold.microsecond, 0)
 
     def test_from_splits_per_year_round_to_none(self) -> None:
-        """Test from_splits_per_year with round_to=None."""
-        splitter = TimeThresholdSplitter.from_splits_per_year(
+        """Test constructor with round_to=None."""
+        splitter = TimeThresholdSplitter(
             splits_per_year=2,
             last_year=2022,
             n_years=1,
@@ -346,8 +346,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         self.assertTrue(has_non_zero_time)
 
     def test_from_splits_per_year_round_to_default(self) -> None:
-        """Test from_splits_per_year uses round_to='day' by default."""
-        splitter = TimeThresholdSplitter.from_splits_per_year(
+        """Test constructor uses round_to='day' by default."""
+        splitter = TimeThresholdSplitter(
             splits_per_year=4,
             last_year=2022,
             n_years=1,
@@ -361,8 +361,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             self.assertEqual(threshold.microsecond, 0)
 
     def test_from_splits_per_year_round_to_hour(self) -> None:
-        """Test from_splits_per_year with round_to='hour'."""
-        splitter = TimeThresholdSplitter.from_splits_per_year(
+        """Test constructor with round_to='hour'."""
+        splitter = TimeThresholdSplitter(
             splits_per_year=2,
             last_year=2022,
             n_years=1,
@@ -376,8 +376,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             self.assertEqual(threshold.microsecond, 0)
 
     def test_from_splits_per_year_round_to_month(self) -> None:
-        """Test from_splits_per_year with round_to='month'."""
-        splitter = TimeThresholdSplitter.from_splits_per_year(
+        """Test constructor with round_to='month'."""
+        splitter = TimeThresholdSplitter(
             splits_per_year=3,
             last_year=2022,
             n_years=1,
@@ -393,12 +393,12 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             self.assertEqual(threshold.microsecond, 0)
 
     def test_from_splits_per_year_round_to_invalid(self) -> None:
-        """Test from_splits_per_year raises error for invalid round_to value."""
+        """Test constructor raises error for invalid round_to value."""
         with self.assertRaisesRegex(
             ValueError,
             "round_to must be 'day', 'month', 'hour', or None",
         ):
-            TimeThresholdSplitter.from_splits_per_year(
+            TimeThresholdSplitter(
                 splits_per_year=2,
                 last_year=2022,
                 n_years=1,

@@ -15,8 +15,6 @@ from molpipeline.experimental.model_selection.splitter.add_one_group_split impor
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from typing_extensions import Self
-
 
 class TimeThresholdSplitter(AddOneGroupSplit):
     """Split data based on time thresholds using AddOneGroupSplit strategy.
@@ -37,7 +35,14 @@ class TimeThresholdSplitter(AddOneGroupSplit):
 
     def __init__(
         self,
-        threshold_list: list[pd.Timestamp],
+        threshold_list: list[pd.Timestamp] | None = None,
+        *,
+        # Parameters for time-based construction when threshold_list is not provided
+        last_year: int | None = None,
+        n_years: int = 5,
+        splits_per_year: int = 1,
+        round_to: Literal["day", "month", "hour"] | None = "day",
+        # Generic AddOneGroupSplit parameters
         n_skip: int = 1,
         max_splits: int | None = None,
     ) -> None:
@@ -45,27 +50,117 @@ class TimeThresholdSplitter(AddOneGroupSplit):
 
         Parameters
         ----------
-        threshold_list : list[pd.Timestamp]
-            List of time thresholds to partition the data into groups.
-            Data points are assigned to groups based on which threshold
-            they exceed.
+        threshold_list : list[pd.Timestamp] | None, optional
+            Explicit list of time thresholds to partition the data into groups.
+            Data points are assigned to groups based on which threshold they exceed.
+            If None, thresholds are constructed from `splits_per_year` and
+            related parameters.
+        last_year : int | None, optional
+            The end year for the splits. Used only when `threshold_list` is
+            None.
+        n_years : int, default=5
+            Number of years to create the splits for when constructing thresholds
+            from `splits_per_year`.
+        splits_per_year : int, default=1
+            Number of splits per year. Must be at least 1 if provided. Used only
+            when `threshold_list` is None.
+        round_to : {"day", "month", "hour"} or None, default="day"
+            Rounding precision for threshold timestamps when constructing them
+            from ``splits_per_year``. Options: "day" (midnight), "month"
+            (start of month), "hour" (start of hour). If ``None``, keep exact
+            fractional timestamps.
         n_skip : int, default=1
-            Number of initial groups to skip as test sets.
-            These groups are always part of the training set.
+            Number of initial groups to skip as test sets. These groups are
+            always part of the training set.
         max_splits : int | None, optional
-            Maximum number of splits to create, by default None.
-            If more splits are possible, only the last splits are returned.
+            Maximum number of splits to create, by default ``None``. If more
+            splits are possible, only the last ones are returned.
 
         Raises
         ------
         ValueError
-            If threshold_list is empty.
+            If both ``threshold_list`` and ``splits_per_year``/``last_year``
+            parameters are provided.
+        ValueError
+            If neither ``threshold_list`` nor the per-year parameters are
+            provided.
+        ValueError
+            If ``threshold_list`` is empty after resolution.
+        ValueError
+            If ``splits_per_year`` is provided and is less than 1.
 
         """
         super().__init__(n_skip=n_skip, max_splits=max_splits)
+
+        if threshold_list is not None and last_year is not None:
+            raise ValueError(
+                "Provide either 'threshold_list' or 'last_year', not both.",
+            )
+
+        if threshold_list is None:
+            if last_year is None:
+                raise ValueError(
+                    "Either 'threshold_list' must be provided or "
+                    "'last_year' must be specified to generate thresholds.",
+                )
+            threshold_list = self._build_thresholds_from_years(
+                splits_per_year=splits_per_year,
+                last_year=last_year,
+                n_years=n_years,
+                round_to=round_to,
+            )
+
         if len(threshold_list) == 0:
             raise ValueError("threshold_list must contain at least one timestamp.")
+
         self.threshold_list = sorted(threshold_list)
+
+    def _build_thresholds_from_years(
+        self,
+        *,
+        splits_per_year: int,
+        last_year: int,
+        n_years: int,
+        round_to: Literal["day", "month", "hour"] | None,
+    ) -> list[pd.Timestamp]:
+        """Construct a threshold list from year-based configuration.
+
+        Parameters
+        ----------
+        splits_per_year : int
+            Number of splits per year. Must be at least 1.
+        last_year : int
+            The end year for the splits.
+        n_years : int
+            Number of years to create the splits for.
+        round_to : {"day", "month", "hour"} or None
+            Rounding precision for threshold timestamps.
+
+        Returns
+        -------
+        list[pd.Timestamp]
+            A list of constructed threshold timestamps.
+
+        Raises
+        ------
+        ValueError
+            If required parameters are missing or invalid.
+
+        """
+        if splits_per_year < 1:
+            raise ValueError("splits_per_year must be at least 1.")
+
+        constructed_thresholds: list[pd.Timestamp] = []
+        time_delta = pd.Timedelta(days=365.25 / splits_per_year)
+
+        for year in range(n_years):
+            year_start = pd.Timestamp(year=last_year - year, month=1, day=1)
+            for split in range(splits_per_year):
+                threshold = year_start + split * time_delta
+                threshold = self._round_threshold(threshold, round_to)
+                constructed_thresholds.append(threshold)
+
+        return constructed_thresholds
 
     def _convert_time_to_groups(
         self,
@@ -214,62 +309,3 @@ class TimeThresholdSplitter(AddOneGroupSplit):
                 day=1,
             )
         return threshold
-
-    @classmethod
-    def from_splits_per_year(
-        cls,
-        splits_per_year: int,
-        last_year: int,
-        n_years: int = 5,
-        n_skip: int = 1,
-        max_splits: int | None = None,
-        round_to: Literal["day", "month", "hour"] | None = "day",
-    ) -> Self:
-        """Create a TimeThresholdSplitter from the number of splits per year.
-
-        Parameters
-        ----------
-        splits_per_year : int
-            Number of splits per year. Must be between 1 and 12.
-        last_year : int
-            The end year for the splits.
-        n_years : int, optional
-            Number of years to create the splits for, by default 5.
-        n_skip : int, default=1
-            Number of initial groups to skip as test sets.
-        max_splits : int | None, optional
-            Maximum number of splits to create, by default None.
-        round_to : Literal["day", "month", "hour"] | None, default="day"
-            Rounding precision for threshold timestamps.
-            Options: "day" (midnight), "month" (start of month), "hour" (start of hour).
-            If None, keep exact fractional timestamps.
-
-        Returns
-        -------
-        Self
-            The TimeThresholdSplitter instance.
-
-        Raises
-        ------
-        ValueError
-            If splits_per_year is less than 1.
-
-        """
-        if splits_per_year < 1:
-            raise ValueError("splits_per_year must be at least 1.")
-
-        threshold_list = []
-        time_delta = pd.Timedelta(days=365.25 / splits_per_year)
-
-        for year in range(n_years):
-            year_start = pd.Timestamp(year=last_year - year, month=1, day=1)
-            for split in range(splits_per_year):
-                threshold = year_start + split * time_delta
-                threshold = cls._round_threshold(threshold, round_to)
-                threshold_list.append(threshold)
-
-        return cls(
-            threshold_list=sorted(threshold_list),
-            n_skip=n_skip,
-            max_splits=max_splits,
-        )
