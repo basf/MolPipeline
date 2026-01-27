@@ -151,9 +151,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             (np.array([0, 1, 2, 3, 4, 5]), np.array([6, 7])),
         ]
 
-        self.assertEqual(len(splits), 1)
-        self.assertTrue(np.array_equal(splits[0][0], expected[0][0]))
-        self.assertTrue(np.array_equal(splits[0][1], expected[0][1]))
+        self._assert_splits_equal(splits, expected)
 
     def test_get_n_splits(self) -> None:
         """Check get_n_splits returns correct number of splits."""
