@@ -42,8 +42,8 @@ class AddOneGroupSplit:
 
     def split(
         self,
-        X: npt.ArrayLike,  # pylint:  # noqa: ARG002,N803
-        y: npt.ArrayLike | None = None,  # noqa: ARG002
+        X: npt.ArrayLike,  # noqa: ARG002,N803  # pylint: disable=invalid-name,unused-argument
+        y: npt.ArrayLike | None = None,  # noqa: ARG002# pylint: disable=unused-argument
         groups: npt.ArrayLike | None = None,
     ) -> Iterator[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]]:
         """Get the group split.
@@ -94,8 +94,8 @@ class AddOneGroupSplit:
 
     def get_n_splits(
         self,
-        X: npt.ArrayLike,  # noqa: ARG002,N803
-        y: npt.ArrayLike | None = None,  # noqa: ARG002
+        X: npt.ArrayLike,  # noqa: ARG002,N803  # pylint: disable=invalid-name,unused-argument
+        y: npt.ArrayLike | None = None,  # noqa: ARG002# pylint: disable=unused-argument
         groups: npt.ArrayLike | None = None,
     ) -> int:
         """Get the number of splits.
