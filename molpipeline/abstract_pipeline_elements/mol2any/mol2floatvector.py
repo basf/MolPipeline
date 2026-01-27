@@ -17,7 +17,7 @@ from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
-    """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
+    """PipelineElement for descriptor-vectors of each molecule."""
 
     _standardizer: AnyTransformer | None
     _output_type = "float"
@@ -35,7 +35,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         standardizer: AnyTransformer | None default=StandardScaler()
-            The output is post_processed according to the standardizer if not None.
+            Used for post-processing the output, if not None.
         name: str, default='MolToDescriptorPipelineElement'
             Name of the PipelineElement.
         n_jobs: int, default=1
@@ -70,7 +70,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         value_list: Iterable[npt.NDArray[np.float64]]
-            List of numpy arrays with calculated descriptor values of each molecule.
+            List of descriptor arrays for each molecule.
 
         Returns
         -------
@@ -95,7 +95,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Returns
         -------
         dict[str, Any]
-            Dictionary containing all parameters relevant to initialize the object with same properties.
+            Dictionary containing all relevant parameters.
 
         """
         params = super().get_params(deep)
@@ -179,7 +179,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         values: list[RDKitMol]
-            List of RDKit molecules for which the descriptor vectors are calculated.
+            List of RDKit molecules.
 
         Returns
         -------
@@ -217,7 +217,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         self,
         value: RDKitMol,
     ) -> npt.NDArray[np.float64] | InvalidInstance:
-        """Transform mol to dict, where items encode columns indices and values, respectively.
+        """Transform mol to the descriptor vector.
 
         Parameters
         ----------

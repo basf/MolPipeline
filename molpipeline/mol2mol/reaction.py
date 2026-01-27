@@ -16,7 +16,7 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class MolToMolReaction(MolToMolPipelineElement):
-    """PipelineElement which transforms the input according to the specified reaction."""
+    """PipelineElement for transforming the input according to the reaction."""
 
     additive_list: list[RDKitMol]
     handle_multi: Literal["pass", "warn", "raise"]

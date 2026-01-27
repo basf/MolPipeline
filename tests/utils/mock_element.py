@@ -115,8 +115,8 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
     def assemble_output(self, value_list: Iterable[Any]) -> Any:
         """Aggregate rows, which in most cases is just return the list.
 
-        Some representations might be better representd as a single object. For example a list of vectors can
-        be transformed to a matrix.
+        Some representations might be better representd as a single object.
+        For example a list of vectors can  be transformed to a matrix.
 
         Parameters
         ----------

@@ -131,16 +131,18 @@ class TestSHAPExplainers(unittest.TestCase):
                 estimator,
                 GradientBoostingClassifier,
             ):
-                # there is currently a bug in SHAP's TreeExplainer for GradientBoostingClassifier
-                # https://github.com/shap/shap/issues/3177 returning only one feature weight
-                # which is also based on log odds. This check is a workaround until the bug is fixed.
+                # there is currently a bug in SHAP's TreeExplainer for
+                # GradientBoostingClassifier, returning only one feature weight, which
+                # is also based on log odds.
+                # This check is a workaround until the bug is fixed.
+                # see https://github.com/shap/shap/issues/3177
                 self.assertEqual(
                     (nof_features,),
                     explanation.feature_weights.shape,  # type: ignore[union-attr]
                 )
             elif isinstance(estimator, SVC):
-                # SVC seems to be handled differently by SHAP. It returns only a one dimensional
-                # feature array for binary classification.
+                # SVC seems to be handled differently by SHAP. It returns only a one
+                # dimensional feature array for binary classification.
                 self.assertTrue(
                     (1,),
                     explanation.prediction.shape,  # type: ignore[union-attr]
@@ -168,7 +170,7 @@ class TestSHAPExplainers(unittest.TestCase):
     def test_explanations_fingerprint_pipeline(  # pylint: disable=too-many-locals
         self,
     ) -> None:
-        """Test SHAP's TreeExplainer wrapper on MolPipeline's pipelines with fingerprints."""
+        """Test SHAP's TreeExplainer wrapper on pipelines with fingerprints."""
         tree_estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),

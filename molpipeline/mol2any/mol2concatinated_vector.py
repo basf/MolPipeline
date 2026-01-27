@@ -1,4 +1,4 @@
-"""Classes for creating arrays from multiple concatenated descriptors or fingerprints."""
+"""Classes for descriptors from multiple concatenated descriptors or fingerprints."""
 
 from collections.abc import Iterable
 from typing import Any, Self
@@ -19,7 +19,7 @@ from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToConcatenatedVector(MolToAnyPipelineElement):
-    """Creates a concatenated descriptor vectored from multiple MolToAny PipelineElements."""
+    """Creates a concatenated descriptor vector from multiple elements."""
 
     _element_list: list[tuple[str, MolToAnyPipelineElement]]
 
@@ -310,12 +310,13 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Parameters
         ----------
         value_list: Iterable[npt.NDArray[np.float64]]
-            List of molecular descriptors or fingerprints which are concatenated to a single matrix.
+            List of molecular descriptors or fingerprints which are concatenated to a
+            single matrix.
 
         Returns
         -------
         npt.NDArray[np.float64]
-            Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+            Matrix of shape (n_molecules, n_features) with concatenated features.
 
         """
         values = list(value_list)
@@ -334,7 +335,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Returns
         -------
         npt.NDArray[np.float64]
-            Matrix of shape (n_molecules, n_features) with concatenated features specified during init.
+            Matrix of shape (n_molecules, n_features) with concatenated features.
 
         """
         output: npt.NDArray[np.float64] = super().transform(values)
@@ -350,7 +351,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         Parameters
         ----------
         values: list[RDKitMol]
-            List of molecules used to fit the pipeline elements creating the concatenated vector.
+            List of molecules used to fit the pipeline elements.
         labels: Any
             Labels for the molecules. Not used.
 

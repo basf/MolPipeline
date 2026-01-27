@@ -15,8 +15,10 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
 from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 
 # Methods to compute the net charge of a molecule.
-# - "formal_charge" uses the formal charges of the atoms with rdkit.Chem.rdmolops.GetFormalCharge
-# - "gasteiger" uses the Gasteiger charges of the atoms with rdkit.Chem.rdPartialCharges.ComputeGasteigerCharges
+# - "formal_charge" uses the formal charges of the atoms
+#   - uses rdkit.Chem.rdmolops.GetFormalCharge
+# - "gasteiger" uses the Gasteiger charges of the atoms with
+#   - uses rdkit.Chem.rdPartialCharges.ComputeGasteigerCharges
 MolToNetChargeMethod: TypeAlias = Literal["formal_charge", "gasteiger"]
 
 
