@@ -251,8 +251,12 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         features = np.ones(len(time_data))
         splits = list(splitter.split(X=features, groups=time_data))
 
-        # Should create 3 splits (one per group)
-        self.assertEqual(len(splits), 2)
+        expected = [
+            (np.array([0]), np.array([1])),
+            (np.array([0, 1]), np.array([2])),
+        ]
+
+        self._assert_splits_equal(splits, expected)
 
     def test_from_splits_per_year_basic(self) -> None:
         """Test from_splits_per_year class method with basic parameters.
