@@ -3,6 +3,7 @@
 import unittest
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from molpipeline.experimental.model_selection.splitter.time_threshold_splitter import (
@@ -15,16 +16,16 @@ class TestTimeThresholdSplitter(unittest.TestCase):
 
     def _assert_splits_equal(  # pylint: disable=duplicate-code
         self,
-        actual_splits: list[tuple[np.ndarray, np.ndarray]],
-        expected_splits: list[tuple[np.ndarray, np.ndarray]],
+        actual_splits: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]],
+        expected_splits: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]],
     ) -> None:
         """Assert that actual splits match expected splits.
 
         Parameters
         ----------
-        actual_splits : list[tuple[np.ndarray, np.ndarray]]
+        actual_splits : list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]
             The actual train/test split indices.
-        expected_splits : list[tuple[np.ndarray, np.ndarray]]
+        expected_splits : list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]
             The expected train/test split indices.
 
         """
