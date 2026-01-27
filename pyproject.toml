@@ -155,7 +155,8 @@ ignore = [
      "S101",
      "S404",
      "S603",
-     "S607"
+     "S607",
+     "SLF001",
  ]
 
 [tool.ruff.lint.pylint]

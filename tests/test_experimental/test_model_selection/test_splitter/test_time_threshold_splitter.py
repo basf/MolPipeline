@@ -229,7 +229,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             ],
         )
 
-        group_indices = splitter._convert_time_to_groups(time_data)  # noqa: SLF001  # pylint: disable=protected-access
+        group_indices = splitter._convert_time_to_groups(time_data)  # pylint: disable=protected-access
         expected = np.array([0, 0, 1, 2])
 
         self.assertTrue(np.array_equal(group_indices, expected))
