@@ -12,6 +12,34 @@ from molpipeline.experimental.model_selection.splitter.add_one_group_split impor
 class TestAddOneGroupSplit(unittest.TestCase):
     """Tests for AddOneGroupSplit."""
 
+    def _assert_splits_equal(
+        self,
+        actual_splits: list[tuple[np.ndarray, np.ndarray]],
+        expected_splits: list[tuple[np.ndarray, np.ndarray]],
+    ) -> None:
+        """Assert that actual splits match expected splits.
+
+        Parameters
+        ----------
+        actual_splits : list[tuple[np.ndarray, np.ndarray]]
+            The actual train/test split indices.
+        expected_splits : list[tuple[np.ndarray, np.ndarray]]
+            The expected train/test split indices.
+
+        """
+        self.assertEqual(len(actual_splits), len(expected_splits))
+        for i, (actual, expected) in enumerate(
+            zip(actual_splits, expected_splits, strict=True),
+        ):
+            self.assertTrue(
+                np.array_equal(actual[0], expected[0]),
+                f"Train indices mismatch at split {i}",
+            )
+            self.assertTrue(
+                np.array_equal(actual[1], expected[1]),
+                f"Test indices mismatch at split {i}",
+            )
+
     def test_split_raises_without_groups(self) -> None:
         """Ensure split raises when groups are missing."""
         splitter = AddOneGroupSplit()
@@ -35,10 +63,7 @@ class TestAddOneGroupSplit(unittest.TestCase):
             (np.array([0, 1, 2, 3]), np.array([4, 5])),
         ]
 
-        self.assertEqual(len(splits), 2)
-        for i in range(2):
-            self.assertTrue(np.array_equal(splits[i][0], expected[i][0]))
-            self.assertTrue(np.array_equal(splits[i][1], expected[i][1]))
+        self._assert_splits_equal(splits, expected)
 
     def test_n_skip(self) -> None:
         """Verify initial splits can be skipped via n_skip."""
@@ -50,10 +75,7 @@ class TestAddOneGroupSplit(unittest.TestCase):
             (np.array([0, 1, 2, 3, 4, 5]), np.array([6, 7])),
         ]
 
-        self.assertEqual(len(splits), 2)
-        for i in range(2):
-            self.assertTrue(np.array_equal(splits[i][0], expected[i][0]))
-            self.assertTrue(np.array_equal(splits[i][1], expected[i][1]))
+        self._assert_splits_equal(splits, expected)
 
     def test_applies_max_splits_from_end(self) -> None:
         """Ensure max_splits limits the number of yielded splits."""
@@ -64,10 +86,7 @@ class TestAddOneGroupSplit(unittest.TestCase):
             (np.array([0, 1, 2, 3, 4, 5]), np.array([6, 7])),
         ]
 
-        self.assertEqual(len(splits), 1)
-        for i in range(1):
-            self.assertTrue(np.array_equal(splits[i][0], expected[i][0]))
-            self.assertTrue(np.array_equal(splits[i][1], expected[i][1]))
+        self._assert_splits_equal(splits, expected)
 
     def test_no_test_data_raise_error(self) -> None:
         """Check get_n_splits accounts for n_skip and max_splits."""
