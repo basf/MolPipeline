@@ -56,8 +56,15 @@ class TimeThresholdSplitter(AddOneGroupSplit):
             Maximum number of splits to create, by default None.
             If more splits are possible, only the last splits are returned.
 
+        Raises
+        ------
+        ValueError
+            If threshold_list is empty.
+
         """
         super().__init__(n_skip=n_skip, max_splits=max_splits)
+        if len(threshold_list) == 0:
+            raise ValueError("threshold_list must contain at least one timestamp.")
         self.threshold_list = sorted(threshold_list)
 
     def _convert_time_to_groups(
@@ -199,14 +206,10 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         ------
         ValueError
             If splits_per_year is less than 1.
-        ValueError
-            If splits_per_year is greater than 12.
 
         """
         if splits_per_year < 1:
             raise ValueError("splits_per_year must be at least 1.")
-        if splits_per_year > 12:  # noqa: PLR2004
-            raise ValueError("splits_per_year must be at most 12.")
 
         threshold_list = []
         time_delta = pd.Timedelta(days=365.25 / splits_per_year)
