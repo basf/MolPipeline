@@ -1,6 +1,7 @@
 """Gaussian functions for visualization.
 
-Much of the visualization code in this file originates from projects of Christian W. Feldmann:
+Much of the visualization code in this file originates from projects of Christian W.
+Feldmann:
     https://github.com/c-feldmann/rdkit_heatmaps
     https://github.com/c-feldmann/compchemkit
 """

@@ -16,7 +16,7 @@ from molpipeline.experimental.explainability import (
 from molpipeline.experimental.explainability.visualization.visualization import (
     make_sum_of_gaussians_grid,
 )
-from tests.test_experimental.test_explainability.test_visualization.test_visualization import (
+from tests.test_experimental.test_explainability.test_visualization.test_visualization import (  # noqa: E501
     _get_test_morgan_rf_pipeline,
 )
 

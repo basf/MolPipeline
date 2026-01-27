@@ -610,7 +610,7 @@ class TestConformalRegressor(BaseConformalTestData):
     """Core functionality tests for ConformalRegressor."""
 
     def test_confidence_effect_regression(self) -> None:
-        """Test effect of confidence parameter on prediction intervals in ConformalRegressor."""
+        """Test effect of confidence parameter on prediction intervals."""
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_reg, self.y_reg)
         )
@@ -675,7 +675,7 @@ class TestConformalRegressor(BaseConformalTestData):
         self.assertEqual(intervals.shape[1], 2)
 
     def test_cross_conformal_confidence_effect_regression(self) -> None:
-        """Test confidence level effect in cross-conformal regression with stratified folds."""
+        """Test confidence level effect in cross-conformal regression."""
         splits = create_continuous_stratified_folds(
             self.y_reg,
             n_splits=2,
@@ -787,7 +787,7 @@ class TestConformalRegressor(BaseConformalTestData):
         self.assertLessEqual(results["ks_test"], 1.0)
 
     def test_evaluate_methods_cross_conformal_regressor(self) -> None:
-        """Test evaluate methods for cross-conformal predictors (regression) with stratified folds."""
+        """Test evaluate methods for cross-conformal predictors (regression)."""
         splits = create_continuous_stratified_folds(
             self.y_reg,
             n_splits=2,

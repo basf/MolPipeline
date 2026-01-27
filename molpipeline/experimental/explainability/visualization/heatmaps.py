@@ -1,6 +1,7 @@
 """Module for generating heatmaps from 2D-grids.
 
-Much of the visualization code in this file originates from projects of Christian W. Feldmann:
+Much of the visualization code in this file originates from projects of Christian W.
+Feldmann:
     https://github.com/c-feldmann/rdkit_heatmaps
     https://github.com/c-feldmann/compchemkit
 """
@@ -18,7 +19,8 @@ from rdkit.Geometry.rdGeometry import Point2D
 class Grid2D(abc.ABC):
     """Metaclass for discrete 2-dimensional grids.
 
-    This class holds a matrix of values accessed by index, where each cell is associated with a specific location.
+    This class holds a matrix of values accessed by index, where each cell is associated
+    with a specific location.
     """
 
     def __init__(
@@ -95,7 +97,7 @@ class Grid2D(abc.ABC):
         x_idx: int,
         y_idx: int,
     ) -> tuple[tuple[float, float], tuple[float, float]]:
-        """Get x and y coordinates for the upper left and lower right position of specified pixel.
+        """Get coordinates for the upper left and lower right of the specified pixel.
 
         Parameters
         ----------
@@ -152,8 +154,8 @@ class ColorGrid(Grid2D):
 class ValueGrid(Grid2D):
     """Calculate and store values of cells.
 
-    Evaluates all added functions for the position of each cell and calculates the value of each cell as sum of these
-    functions.
+    Evaluates all added functions for the position of each cell and calculates the value
+    of each cell as sum of these functions.
     """
 
     # list of functions to be evaluated for each grid cell
@@ -181,7 +183,9 @@ class ValueGrid(Grid2D):
             Resolution (number of cells) along x-axis.
         y_res: int
             Resolution (number of cells) along y-axis.
-        function_list: list[Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]], optional
+        function_list: list[\
+         Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],\
+         ], optional
             List of functions to be evaluated for each cell, by default None.
 
         """
@@ -292,7 +296,7 @@ def get_color_normalizer_from_data(
 def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
     """Draw a ColorGrid object to a RDKit Draw.MolDraw2D canvas.
 
-    Each pixel is drawn as rectangle, so if you use Draw.MolDrawSVG brace yourself and your RAM!
+    Each pixel is drawn as rectangle, so if you use Draw.MolDrawSVG brace yourself!
 
     Parameters
     ----------
@@ -302,8 +306,8 @@ def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:
         ColorGrid object to be drawn on the canvas.
 
     """
-    # draw only grid points whose color is not white.
-    # we check for the exact values of white (1,1,1). np.isclose returns almost the same pixels but is slightly slower.
+    # draw only grid points whose color is not white. We check for the exact values of
+    # white (1,1,1). np.isclose returns almost the same pixels but is slightly slower.
     mask = np.where(~np.all(color_grid.color_grid[:, :, :3] == [1, 1, 1], axis=2))
 
     for x, y in zip(*mask, strict=True):

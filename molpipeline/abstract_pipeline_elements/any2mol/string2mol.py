@@ -10,7 +10,7 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
-    """Abstract class for PipelineElements which transform molecules to integer vectors."""
+    """Abstract class for transforming strings to molecules."""
 
     _input_type = "str"
     _output_type = "RDKitMol"
@@ -21,12 +21,13 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         Parameters
         ----------
         values: list[str]
-            List of string representations of molecules which are transformed to RDKit molecules.
+            List of string representations of molecules.
 
         Returns
         -------
         list[OptionalMol]
-            List of RDKit molecules. If a string representation could not be transformed to a molecule, None is returned.
+            List of RDKit molecules.
+            InvalidInstance if the representation was invalid.
 
         """
         return super().transform(values)

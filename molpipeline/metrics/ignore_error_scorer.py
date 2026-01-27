@@ -77,7 +77,8 @@ def ignored_value_scorer(
 
         if not np.all(all_retained):
             logger.warning(
-                f"Warning, prediction array contains NaN values, removing {sum(~all_retained)} elements",
+                f"Warning, prediction array contains NaN values, "
+                f"removing {sum(~all_retained)} elements",
             )
         y_true_ = np.copy(np.array(y_true)[all_retained])
         y_pred_ = np.array(np.array(y_pred)[all_retained].tolist())
