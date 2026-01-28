@@ -16,6 +16,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
+FinalThresholdStr = Literal["now", "Q1", "Q2", "Q3", "Q4"]
+
+
 class TimeThresholdSplitter(AddOneGroupSplit):
     """Split data based on time thresholds using AddOneGroupSplit strategy.
 
@@ -38,7 +41,7 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         threshold_list: list[pd.Timestamp] | None = None,
         *,
         # Parameters for time-based construction when threshold_list is not provided
-        last_year: int | None = None,
+        final_threshold: pd.Timestamp | FinalThresholdStr | None = None,
         n_years: int = 5,
         splits_per_year: int = 1,
         round_to: Literal["day", "month", "hour"] | None = "day",
@@ -53,20 +56,21 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         threshold_list : list[pd.Timestamp] | None, optional
             Explicit list of time thresholds to partition the data into groups.
             Data points are assigned to groups based on which threshold they exceed.
-            If None, thresholds are constructed from `splits_per_year` and
+            If None, thresholds are constructed from ``final_threshold`` and
             related parameters.
-        last_year : int | None, optional
-            The end year for the splits. Used only when `threshold_list` is
-            None.
+        final_threshold : pandas.Timestamp or {"now", "Q1", "Q2", "Q3", "Q4"}, optional
+            The upper bound for generating thresholds when ``threshold_list`` is
+            not provided. ``"now"`` uses the current timestamp. ``"Q1"``-""Q4"``
+            use the start of the respective quarter in the current year.
         n_years : int, default=5
             Number of years to create the splits for when constructing thresholds
-            from `splits_per_year`.
+            from ``final_threshold``.
         splits_per_year : int, default=1
             Number of splits per year. Must be at least 1 if provided. Used only
-            when `threshold_list` is None.
+            when ``threshold_list`` is None.
         round_to : {"day", "month", "hour"} or None, default="day"
             Rounding precision for threshold timestamps when constructing them
-            from ``splits_per_year``. Options: "day" (midnight), "month"
+            from ``final_threshold``. Options: "day" (midnight), "month"
             (start of month), "hour" (start of hour). If ``None``, keep exact
             fractional timestamps.
         n_skip : int, default=1
@@ -79,10 +83,10 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         Raises
         ------
         ValueError
-            If both ``threshold_list`` and ``splits_per_year``/``last_year``
-            parameters are provided.
+            If both ``threshold_list`` and ``final_threshold`` parameters are
+            provided.
         ValueError
-            If neither ``threshold_list`` nor the per-year parameters are
+            If neither ``threshold_list`` nor ``final_threshold`` are
             provided.
         ValueError
             If ``threshold_list`` is empty after resolution.
@@ -92,20 +96,20 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         """
         super().__init__(n_skip=n_skip, max_splits=max_splits)
 
-        if threshold_list is not None and last_year is not None:
+        if threshold_list is not None and final_threshold is not None:
             raise ValueError(
-                "Provide either 'threshold_list' or 'last_year', not both.",
+                "Provide either 'threshold_list' or 'final_threshold', not both.",
             )
 
         if threshold_list is None:
-            if last_year is None:
+            if final_threshold is None:
                 raise ValueError(
                     "Either 'threshold_list' must be provided or "
-                    "'last_year' must be specified to generate thresholds.",
+                    "'final_threshold' must be specified to generate thresholds.",
                 )
             threshold_list = self._build_thresholds_from_years(
                 splits_per_year=splits_per_year,
-                last_year=last_year,
+                final_threshold=final_threshold,
                 n_years=n_years,
                 round_to=round_to,
             )
@@ -119,7 +123,7 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         self,
         *,
         splits_per_year: int,
-        last_year: int,
+        final_threshold: pd.Timestamp | FinalThresholdStr,
         n_years: int,
         round_to: Literal["day", "month", "hour"] | None,
     ) -> list[pd.Timestamp]:
@@ -129,8 +133,8 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         ----------
         splits_per_year : int
             Number of splits per year. Must be at least 1.
-        last_year : int
-            The end year for the splits.
+        final_threshold : pandas.Timestamp or {"now", "Q1", "Q2", "Q3", "Q4"}
+            The upper bound for the generated thresholds.
         n_years : int
             Number of years to create the splits for.
         round_to : {"day", "month", "hour"} or None
@@ -150,17 +154,72 @@ class TimeThresholdSplitter(AddOneGroupSplit):
         if splits_per_year < 1:
             raise ValueError("splits_per_year must be at least 1.")
 
+        resolved_final = self._resolve_final_threshold(final_threshold)
         constructed_thresholds: list[pd.Timestamp] = []
+
         time_delta = pd.Timedelta(days=365.25 / splits_per_year)
 
-        for year in range(n_years):
-            year_start = pd.Timestamp(year=last_year - year, month=1, day=1)
+        # We go backwards in time from the resolved final threshold over n_years
+        for year_offset in range(n_years):
+            year_start = pd.Timestamp(
+                year=resolved_final.year - year_offset,
+                month=resolved_final.month,
+                day=resolved_final.day,
+                hour=resolved_final.hour,
+                minute=resolved_final.minute,
+                second=resolved_final.second,
+                microsecond=resolved_final.microsecond,
+            )
             for split in range(splits_per_year):
-                threshold = year_start + split * time_delta
+                threshold = year_start - split * time_delta
                 threshold = self._round_threshold(threshold, round_to)
                 constructed_thresholds.append(threshold)
 
         return constructed_thresholds
+
+    @staticmethod
+    def _resolve_final_threshold(
+        final_threshold: pd.Timestamp | FinalThresholdStr,
+    ) -> pd.Timestamp:
+        """Resolve a flexible ``final_threshold`` specification.
+
+        Parameters
+        ----------
+        final_threshold : pandas.Timestamp or {"now", "Q1", "Q2", "Q3", "Q4"}
+            Specification of the final threshold.
+
+        Returns
+        -------
+        pandas.Timestamp
+            Resolved timestamp value.
+
+        Raises
+        ------
+        ValueError
+            If the string specifier is not one of the supported values.
+
+        """
+        if isinstance(final_threshold, pd.Timestamp):
+            return final_threshold
+
+        now = pd.Timestamp.now()
+        if final_threshold == "now":
+            return now
+
+        quarter_start_map = {
+            "Q1": pd.Timestamp(year=now.year, month=1, day=1),
+            "Q2": pd.Timestamp(year=now.year, month=4, day=1),
+            "Q3": pd.Timestamp(year=now.year, month=7, day=1),
+            "Q4": pd.Timestamp(year=now.year, month=10, day=1),
+        }
+        mapped_threshold = quarter_start_map.get(final_threshold)
+        if mapped_threshold is not None:
+            return mapped_threshold
+
+        raise ValueError(
+            "Unsupported final_threshold value. "
+            "Use a Timestamp, 'now', or one of 'Q1', 'Q2', 'Q3', 'Q4'.",
+        )
 
     def _convert_time_to_groups(
         self,
@@ -185,7 +244,7 @@ class TimeThresholdSplitter(AddOneGroupSplit):
 
         split_index = np.zeros(len(groups), dtype=np.int64)
         for threshold in self.threshold_list:
-            split_index[groups > threshold] += 1
+            split_index[groups >= threshold] += 1
         return split_index
 
     def split(

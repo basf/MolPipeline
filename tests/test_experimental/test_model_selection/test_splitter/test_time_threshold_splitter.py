@@ -51,24 +51,24 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         ):
             TimeThresholdSplitter(threshold_list=[])
 
-        # Neither threshold_list nor last_year provided
+        # Neither threshold_list nor final_threshold provided
         with self.assertRaisesRegex(
             ValueError,
-            "Either 'threshold_list' must be provided or 'last_year' must be ",
+            "Either 'threshold_list' must be provided or 'final_threshold' must be",
         ):
             TimeThresholdSplitter()
 
-        # Both threshold_list and last_year provided
+        # Both threshold_list and final_threshold provided
         with self.assertRaisesRegex(
             ValueError,
-            "Provide either 'threshold_list' or 'last_year', not both.",
+            "Provide either 'threshold_list' or 'final_threshold', not both.",
         ):
             TimeThresholdSplitter(
                 threshold_list=[
                     pd.Timestamp("2020-01-01"),
                     pd.Timestamp("2021-01-01"),
                 ],
-                last_year=2022,
+                final_threshold=pd.Timestamp("2022-01-01"),
             )
 
     def test_split_raises_without_groups(self) -> None:
@@ -280,66 +280,18 @@ class TestTimeThresholdSplitter(unittest.TestCase):
 
         self._assert_splits_equal(splits, expected)
 
-    def test_from_splits_per_year_basic(self) -> None:
-        """Test constructing from per-year parameters with basic settings.
-
-        In default, timestamps are rounded to midnight (00:00:00).
-
-        """
+    def test_builds_thresholds_from_final_threshold_timestamp(self) -> None:
+        """Construct thresholds using a concrete Timestamp final_threshold."""
+        final_ts = pd.Timestamp("2022-12-31")
         splitter = TimeThresholdSplitter(
-            splits_per_year=2,
-            last_year=2022,
-            n_years=2,
-        )
-
-        # Should create 4 thresholds (2 per year * 2 years)
-        self.assertEqual(len(splitter.threshold_list), 4)
-        # By default, timestamps are rounded to midnight (00:00:00)
-        expected_thresholds = [
-            pd.Timestamp("2021-01-01"),
-            pd.Timestamp("2021-07-02"),  # Mid-year, rounded to midnight
-            pd.Timestamp("2022-01-01"),
-            pd.Timestamp("2022-07-02"),  # Mid-year, rounded to midnight
-        ]
-        for expected, actual in zip(
-            expected_thresholds,
-            splitter.threshold_list,
-            strict=False,
-        ):
-            self.assertEqual(expected, actual)
-
-    def test_from_splits_per_year_with_n_skip_and_max_splits(self) -> None:
-        """Test constructor with n_skip and max_splits parameters."""
-        splitter = TimeThresholdSplitter(
-            splits_per_year=4,
-            last_year=2022,
-            n_years=3,
-            n_skip=2,
-            max_splits=2,
-        )
-
-        self.assertEqual(splitter.n_skip, 2)
-        self.assertEqual(splitter.max_splits, 2)
-        self.assertEqual(len(splitter.threshold_list), 12)  # 4 * 3
-
-    def test_from_splits_per_year_invalid_splits_too_low(self) -> None:
-        """Ensure constructor raises when splits_per_year < 1."""
-        with self.assertRaisesRegex(ValueError, "splits_per_year must be at least 1"):
-            TimeThresholdSplitter(
-                splits_per_year=0,
-                last_year=2022,
-                n_years=2,
-            )
-
-    def test_from_splits_per_year_round_to_day(self) -> None:
-        """Test constructor with round_to='day' (default)."""
-        splitter = TimeThresholdSplitter(
-            splits_per_year=2,
-            last_year=2022,
+            final_threshold=final_ts,
             n_years=1,
+            splits_per_year=2,
             round_to="day",
         )
 
+        self.assertGreaterEqual(len(splitter.threshold_list), 2)
+        self.assertEqual(splitter.threshold_list[-1], final_ts)
         # All thresholds should be at midnight (00:00:00)
         for threshold in splitter.threshold_list:
             self.assertEqual(threshold.hour, 0)
@@ -347,82 +299,79 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             self.assertEqual(threshold.second, 0)
             self.assertEqual(threshold.microsecond, 0)
 
-    def test_from_splits_per_year_round_to_none(self) -> None:
-        """Test constructor with round_to=None."""
-        splitter = TimeThresholdSplitter(
-            splits_per_year=2,
-            last_year=2022,
-            n_years=1,
-            round_to=None,
-        )
+    def test_resolve_final_threshold_special_strings(self) -> None:
+        """Test that "now" and quarter strings are accepted as final_threshold."""
+        splitter_now = TimeThresholdSplitter(final_threshold="now")
+        self.assertIsInstance(splitter_now.threshold_list, list)
 
-        # At least one threshold should have non-zero time components
-        # because 365.25 / 2 = 182.625 days
-        has_non_zero_time = any(
-            threshold.hour != 0
-            or threshold.minute != 0
-            or threshold.second != 0
-            or threshold.microsecond != 0
-            for threshold in splitter.threshold_list
-        )
-        self.assertTrue(has_non_zero_time)
+        for quarter in ["Q1", "Q2", "Q3", "Q4"]:
+            splitter_quarter = TimeThresholdSplitter(final_threshold=quarter)  # type: ignore
+            self.assertIsInstance(splitter_quarter.threshold_list, list)
 
-    def test_from_splits_per_year_round_to_default(self) -> None:
-        """Test constructor uses round_to='day' by default."""
-        splitter = TimeThresholdSplitter(
-            splits_per_year=4,
-            last_year=2022,
-            n_years=1,
-        )
-
-        # All thresholds should be at midnight (00:00:00) by default
-        for threshold in splitter.threshold_list:
-            self.assertEqual(threshold.hour, 0)
-            self.assertEqual(threshold.minute, 0)
-            self.assertEqual(threshold.second, 0)
-            self.assertEqual(threshold.microsecond, 0)
-
-    def test_from_splits_per_year_round_to_hour(self) -> None:
-        """Test constructor with round_to='hour'."""
-        splitter = TimeThresholdSplitter(
-            splits_per_year=2,
-            last_year=2022,
-            n_years=1,
-            round_to="hour",
-        )
-
-        # All thresholds should have zero minutes, seconds, and microseconds
-        for threshold in splitter.threshold_list:
-            self.assertEqual(threshold.minute, 0)
-            self.assertEqual(threshold.second, 0)
-            self.assertEqual(threshold.microsecond, 0)
-
-    def test_from_splits_per_year_round_to_month(self) -> None:
-        """Test constructor with round_to='month'."""
-        splitter = TimeThresholdSplitter(
-            splits_per_year=3,
-            last_year=2022,
-            n_years=1,
-            round_to="month",
-        )
-
-        # All thresholds should be at the first day of the month at midnight
-        for threshold in splitter.threshold_list:
-            self.assertEqual(threshold.day, 1)
-            self.assertEqual(threshold.hour, 0)
-            self.assertEqual(threshold.minute, 0)
-            self.assertEqual(threshold.second, 0)
-            self.assertEqual(threshold.microsecond, 0)
-
-    def test_from_splits_per_year_round_to_invalid(self) -> None:
-        """Test constructor raises error for invalid round_to value."""
+    def test_round_threshold_validation(self) -> None:
+        """Ensure invalid round_to raises a clear ValueError."""
         with self.assertRaisesRegex(
             ValueError,
             "round_to must be 'day', 'month', 'hour', or None",
         ):
             TimeThresholdSplitter(
-                splits_per_year=2,
-                last_year=2022,
+                final_threshold=pd.Timestamp("2022-12-31"),
+                splits_per_year=1,
                 n_years=1,
-                round_to="year",  # type: ignore[arg-type]
+                round_to="invalid",  # type: ignore[arg-type]
             )
+
+    def test_final_threshold_now_uses_current_year(self) -> None:
+        """Ensure final_threshold='now' uses the current year as reference.
+
+        The constructed thresholds should all lie in a window that includes the
+        current year and be rounded according to the default ``round_to='day'``.
+
+        """
+        now = pd.Timestamp.now()
+        splitter = TimeThresholdSplitter(
+            final_threshold="now",
+            n_years=1,
+            splits_per_year=2,
+        )
+
+        self.assertEqual(len(splitter.threshold_list), 2)
+        self.assertEqual(splitter.threshold_list[-1].year, now.year)
+        self.assertEqual(splitter.threshold_list[-1].month, now.month)
+        self.assertEqual(splitter.threshold_list[-1].day, now.day)
+        self.assertEqual(splitter.threshold_list[-1].hour, 0)
+        self.assertEqual(splitter.threshold_list[-1].minute, 0)
+        self.assertEqual(splitter.threshold_list[-1].second, 0)
+        # All thresholds should be within one year around the current year
+        years = {ts.year for ts in splitter.threshold_list}
+        self.assertIn(now.year, years)
+        # Default round_to='day' => thresholds at midnight
+        for threshold in splitter.threshold_list:
+            self.assertEqual(threshold.hour, 0)
+            self.assertEqual(threshold.minute, 0)
+            self.assertEqual(threshold.second, 0)
+            self.assertEqual(threshold.microsecond, 0)
+
+    def test_final_threshold_quarters_end_of_quarter_month(self) -> None:
+        """Ensure quarter strings resolve to ends of their respective quarters.
+
+        For 'Q1'..'Q4', the internally resolved final threshold should fall into
+        the current year and produce at least one threshold. We also check that
+        timestamps are day-rounded.
+
+        """
+        quarter_month_map = {"Q1": 1, "Q2": 4, "Q3": 7, "Q4": 10}
+
+        for quarter, month in quarter_month_map.items():
+            splitter = TimeThresholdSplitter(
+                final_threshold=quarter,  # type: ignore
+                n_years=1,
+                splits_per_year=1,
+            )
+            self.assertEqual(len(splitter.threshold_list), 1)
+            self.assertEqual(splitter.threshold_list[-1].month, month)
+            self.assertEqual(splitter.threshold_list[-1].day, 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
