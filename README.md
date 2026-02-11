@@ -48,6 +48,7 @@ Further links: [repository](https://github.com/basf/neural-fingerprint-uncertain
     - [Feature calculation](#feature-calculation)
     - [Clustering](#clustering)
     - [Explainability](#explainability)
+    - [Baseline machine learning models](#Baseline-machine-learning-models)
   - [License](#license)
 
 ## Installation
