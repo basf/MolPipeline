@@ -1,7 +1,5 @@
 """Test Murcko scaffold clustering estimator."""
 
-from __future__ import annotations
-
 import unittest
 
 import numpy as np
@@ -35,16 +33,18 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
 
             # test basic scaffold-based clustering works as intended
             scaffold_cluster_labels = estimator_ignore_linear.fit_predict(
-                SCAFFOLD_SMILES
+                SCAFFOLD_SMILES,
             )
             expected_scaffold_labels = [1.0, 0.0, 1.0]
 
             self.assertEqual(estimator_ignore_linear.n_clusters_, 2)
             self.assertListEqual(
-                list(scaffold_cluster_labels), expected_scaffold_labels
+                list(scaffold_cluster_labels),
+                expected_scaffold_labels,
             )
 
-            # test linear molecule handling. We expect the linear molecules to be ignored.
+            # test linear molecule handling.
+            # We expect the linear molecules to be ignored.
             input_smiles = SCAFFOLD_SMILES + LINEAR_SMILES
             cluster_labels = estimator_ignore_linear.fit_predict(input_smiles)
             nan_mask = np.isnan(cluster_labels)
@@ -66,7 +66,8 @@ class TestMurckoScaffoldClusteringEstimator(unittest.TestCase):
                 )
             )
 
-            # test linear molecule handling. We expect the linear molecules to be clustered in the same cluster
+            # test linear molecule handling.
+            # We expect the linear molecules to be clustered in the same cluster
             input_smiles = SCAFFOLD_SMILES + LINEAR_SMILES
             cluster_labels = estimator_cluster_linear.fit_predict(input_smiles)
             expected_cluster_labels = [1.0, 0.0, 1.0, 2.0, 2.0, 2.0]

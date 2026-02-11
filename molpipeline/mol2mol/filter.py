@@ -1,7 +1,5 @@
 """Classes to filter molecule lists."""
 
-from __future__ import annotations
-
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from typing import Any, Self
@@ -37,10 +35,11 @@ from molpipeline.utils.value_conversions import assure_range
 
 
 class ElementFilter(_MolToMolPipelineElement):
-    """ElementFilter which removes molecules containing chemical elements other than specified.
+    """Filter to remove molecules containing chemical elements other than specified.
 
     Molecular elements are filtered based on their atomic number.
-    The filter can be configured to allow only specific elements and/or a specific number of atoms of each element.
+    The filter can be configured to allow only specific elements and/or a specific
+    number of atoms of each element.
     """
 
     DEFAULT_ALLOWED_ELEMENT_NUMBERS = [
@@ -73,13 +72,14 @@ class ElementFilter(_MolToMolPipelineElement):
 
         Parameters
         ----------
-        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None, optional
+        allowed_element_numbers: list[int] | dict[int, IntOrIntCountRange] | None,\
+         optional
             List of atomic numbers of elements to allowed in molecules.
             Per default allowed elements are:
             H, B, C, N, O, F, Si, P, S, Cl, Se, Br, I.
             Alternatively, a dictionary can be passed with atomic numbers as keys and an
             int for exact count or a tuple of minimum and maximum.
-        add_hydrogens: bool, default = True
+        add_hydrogens: bool, default=True
             If True, in case Hydrogens are in allowed_element_list, add hydrogens to the
             molecule before filtering.
         name: str, default="ElementFilterPipe"
@@ -106,7 +106,8 @@ class ElementFilter(_MolToMolPipelineElement):
         Parameters
         ----------
         add_hydrogens: bool
-            If True, in case Hydrogens are in allowed_element_list, add hydrogens to the molecule before filtering.
+            If True, in case Hydrogens are in allowed_element_list, add hydrogens to the
+            molecule before filtering.
 
         """
         self._add_hydrogens = add_hydrogens
@@ -115,8 +116,9 @@ class ElementFilter(_MolToMolPipelineElement):
         else:
             if 1 in self.allowed_element_numbers:
                 logger.warning(
-                    "Hydrogens are included in allowed_element_numbers, but add_hydrogens is set to False. "
-                    "Thus hydrogens are NOT added before filtering. You might receive unexpected results.",
+                    "Hydrogens are included in allowed_element_numbers, but "
+                    "add_hydrogens is set to False.  Thus hydrogens are NOT added "
+                    "before filtering. You might receive unexpected results.",
                 )
             self.process_hydrogens = False
 
@@ -241,10 +243,10 @@ class SmartsFilter(_BasePatternsFilter):
     Notes
     -----
     There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
-        - mode = "any" & keep_matches = False: Must not match any filter element.
-        - mode = "all" & keep_matches = True: Needs to match all filter elements.
-        - mode = "all" & keep_matches = False: Must not match all filter elements.
+        - mode= "any" & keep_matches= True: Needs to match at least one filter element.
+        - mode= "any" & keep_matches= False: Must not match any filter element.
+        - mode= "all" & keep_matches= True: Needs to match all filter elements.
+        - mode= "all" & keep_matches= False: Must not match all filter elements.
 
     """
 
@@ -276,10 +278,10 @@ class SmilesFilter(_BasePatternsFilter):
     Notes
     -----
     There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
-        - mode = "any" & keep_matches = False: Must not match any filter element.
-        - mode = "all" & keep_matches = True: Needs to match all filter elements.
-        - mode = "all" & keep_matches = False: Must not match all filter elements.
+        - mode= "any" & keep_matches= True: Needs to match at least one filter element.
+        - mode= "any" & keep_matches= False: Must not match any filter element.
+        - mode= "all" & keep_matches= True: Needs to match all filter elements.
+        - mode= "all" & keep_matches= False: Must not match all filter elements.
 
     """
 
@@ -312,10 +314,10 @@ class ComplexFilter(_BaseKeepMatchesFilter):
     Notes
     -----
     There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
-        - mode = "any" & keep_matches = False: Must not match any filter element.
-        - mode = "all" & keep_matches = True: Needs to match all filter elements.
-        - mode = "all" & keep_matches = False: Must not match all filter elements.
+        - mode= "any" & keep_matches= True: Needs to match at least one filter element.
+        - mode= "any" & keep_matches= False: Must not match any filter element.
+        - mode= "all" & keep_matches= True: Needs to match all filter elements.
+        - mode= "all" & keep_matches= False: Must not match all filter elements.
 
     """
 
@@ -486,10 +488,10 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
     Notes
     -----
     There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
-        - mode = "any" & keep_matches = False: Must not match any filter element.
-        - mode = "all" & keep_matches = True: Needs to match all filter elements.
-        - mode = "all" & keep_matches = False: Must not match all filter elements.
+        - mode= "any" & keep_matches= True: Needs to match at least one filter element.
+        - mode= "any" & keep_matches= False: Must not match any filter element.
+        - mode= "all" & keep_matches= True: Needs to match all filter elements.
+        - mode= "all" & keep_matches= False: Must not match all filter elements.
 
     """
 
@@ -515,7 +517,8 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         """
         if not all(hasattr(Descriptors, descriptor) for descriptor in descriptors):
             raise ValueError(
-                "You are trying to use an invalid descriptor. Use RDKit Descriptors module.",
+                "You are trying to use an invalid descriptor. "
+                "Use RDKit Descriptors module.",
             )
         self._filter_elements = descriptors
 

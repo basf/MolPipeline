@@ -50,7 +50,7 @@ def get_morgan_physchem_rf_pipeline(n_jobs: int = 1) -> Pipeline:
                     [
                         ("morgan", MolToMorganFP(n_bits=2048)),
                         ("physchem", MolToRDKitPhysChem()),
-                    ]
+                    ],
                 ),
             ),
             ("error_filter", error_filter),
@@ -58,7 +58,7 @@ def get_morgan_physchem_rf_pipeline(n_jobs: int = 1) -> Pipeline:
             (
                 "filter_reinserter",
                 PostPredictionWrapper(
-                    FilterReinserter.from_error_filter(error_filter, None)
+                    FilterReinserter.from_error_filter(error_filter, None),
                 ),
             ),
         ],

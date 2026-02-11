@@ -43,6 +43,6 @@ class TestUnionFind(unittest.TestCase):
                     4,
                     1,
                 ],
-            ).all()
+            ).all(),
         )
         self.assertEqual(cc_num, 5)

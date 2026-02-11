@@ -68,6 +68,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         ----------
         value : str | NonconformityFunctor | None
             The nonconformity function to set.
+
         """
         self.nonconformity_func = create_nonconformity_function(value)
 
@@ -78,6 +79,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         ----------
         state : dict[str, Any]
             The object's state dictionary.
+
         """
         if "nonconformity_func" not in state:
             warnings.warn(
@@ -90,7 +92,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):
             fixed_state = dict(state)  # Shallow Copy
             if "nonconformity" in state:
                 fixed_state["nonconformity_func"] = create_nonconformity_function(
-                    fixed_state.pop("nonconformity")
+                    fixed_state.pop("nonconformity"),
                 )
             else:
                 fixed_state["nonconformity_func"] = None
@@ -119,6 +121,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         -------
         dict[str, Any]
             Dictionary of evaluation metrics.
+
         """
 
     @staticmethod
@@ -139,21 +142,25 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         ------
         ValueError
             If confidence level is not between 0 (exclusive) and 1 (inclusive).
+
         """
         if not isinstance(confidence_level, (int, float)):
             raise ValueError(
-                f"confidence_level must be a number, got {type(confidence_level).__name__}"
+                f"confidence_level must be a number, got "
+                f"{type(confidence_level).__name__}",
             )
 
         if not 0 < confidence_level <= 1:
             raise ValueError(
-                f"confidence_level must be between 0 (exclusive) and 1 (inclusive), got {confidence_level}"
+                f"confidence_level must be between 0 (exclusive) and 1 (inclusive), "
+                f"got {confidence_level}",
             )
 
         if confidence_level < 0.5:
             warnings.warn(
                 f"Confidence level {confidence_level} is less than 0.5 (50%). "
-                "This represents weak confidence and may produce unreliable prediction sets/intervals.",
+                "This represents weak confidence and may produce unreliable prediction "
+                "sets/intervals.",
                 UserWarning,
                 stacklevel=3,
             )
@@ -215,7 +222,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         # Convert nonconformity parameter to nonconformity_func attribute
         if "nonconformity" in params_copy:
             params_copy["nonconformity_func"] = create_nonconformity_function(
-                params_copy.pop("nonconformity")  # Remove original key
+                params_copy.pop("nonconformity"),  # Remove original key
             )
         super().set_params(**params_copy)
         return self
@@ -256,12 +263,14 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         ------
         TypeError
             If nonconformity_func is not a NonconformityFunctor or None.
+
         """
         super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.mondrian = mondrian
         if not (self.nonconformity_func is None or callable(self.nonconformity_func)):
             raise TypeError(
-                f"nonconformity_func must be a NonconformityFunctor or None, got {type(self.nonconformity_func).__name__}"
+                f"nonconformity_func must be a NonconformityFunctor or None, got "
+                f"{type(self.nonconformity_func).__name__}",
             )
         self._crepes_wrapper: WrapClassifier | None = None
 
@@ -291,11 +300,12 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         ------
         RuntimeError
             If internal crepes wrapper initialization fails.
+
         """
         self._crepes_wrapper = WrapClassifier(clone(self.estimator))
         if self._crepes_wrapper is None:
             raise RuntimeError(
-                "Internal error: _crepes_wrapper is None after initialization."
+                "Internal error: _crepes_wrapper is None after initialization.",
             )
         self._crepes_wrapper.fit(x, y, **fit_params)
         return self
@@ -481,7 +491,8 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         Raises
         ------
         ValueError
-            If the model has not been fitted and calibrated or confidence level is invalid.
+            If the model has not been fitted and calibrated or confidence level is
+            invalid.
 
         """
         if self._crepes_wrapper is None:
@@ -830,11 +841,12 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         ------
         RuntimeError
             If internal crepes wrapper initialization fails.
+
         """
         self._crepes_wrapper = WrapRegressor(clone(self.estimator))
         if self._crepes_wrapper is None:
             raise RuntimeError(
-                "Internal error: _crepes_wrapper is None after initialization."
+                "Internal error: _crepes_wrapper is None after initialization.",
             )
         self._crepes_wrapper.fit(x, y, **fit_params)
         return self
@@ -977,7 +989,8 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         Raises
         ------
         ValueError
-            If the model has not been fitted and calibrated or confidence level is invalid.
+            If the model has not been fitted and calibrated or confidence level is
+            invalid.
 
         """
         if self._crepes_wrapper is None:
@@ -1036,6 +1049,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
             Random state for reproducibility (default: None).
         **kwargs : Any
             Additional keyword arguments.
+
         """
         super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.n_folds = n_folds

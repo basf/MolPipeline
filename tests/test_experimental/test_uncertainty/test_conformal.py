@@ -362,7 +362,8 @@ class TestConformalClassifier(BaseConformalTestData):
         """Test nonconformity function registry and creation utility."""
         self.assertIsInstance(create_nonconformity_function("log"), LogNonconformity)
         self.assertIsInstance(
-            create_nonconformity_function("svm_margin"), SVMMarginNonconformity
+            create_nonconformity_function("svm_margin"),
+            SVMMarginNonconformity,
         )
 
     def test_log_nc_function(self) -> None:
@@ -384,14 +385,18 @@ class TestConformalClassifier(BaseConformalTestData):
 
         y_series = pd.Series(y)
         scores_series = log_nc_func.extract_true_class_scores(
-            x_prob, y_series.to_numpy(), classes
+            x_prob,
+            y_series.to_numpy(),
+            classes,
         )
         self.assertTrue(np.allclose(scores_series, expected))
 
         x_prob_small = np.array([[1e-15, 1.0], [1.0, 1e-15]])
         y_small = np.array([0, 1])
         scores_small = log_nc_func.extract_true_class_scores(
-            x_prob_small, y_small, classes
+            x_prob_small,
+            y_small,
+            classes,
         )
         self.assertTrue(np.all(np.isfinite(scores_small)))
         self.assertTrue(np.all(scores_small >= -np.log(1.0)))
@@ -416,7 +421,7 @@ class TestConformalClassifier(BaseConformalTestData):
         nc_calib = log_nc_func(probs_calib, classes=classes, y_true=y_calib)
         self.assertEqual(nc_calib.shape, (len(y_calib),))
         self.assertTrue(
-            np.all(nc_calib >= 0)
+            np.all(nc_calib >= 0),
         )  # Nonconformity scores should be non-negative
 
         # Test without true labels (test set - returns matrix)
@@ -454,7 +459,9 @@ class TestConformalClassifier(BaseConformalTestData):
 
         # Test nonconformity for true labels on calibration set
         nc_calib_true = SVMMarginNonconformity()(
-            y_score_calib, classes=classes, y_true=y_calib
+            y_score_calib,
+            classes=classes,
+            y_true=y_calib,
         )
         self.assertEqual(nc_calib_true.shape, (len(y_score_calib),))
 
@@ -603,7 +610,7 @@ class TestConformalRegressor(BaseConformalTestData):
     """Core functionality tests for ConformalRegressor."""
 
     def test_confidence_effect_regression(self) -> None:
-        """Test effect of confidence parameter on prediction intervals in ConformalRegressor."""
+        """Test effect of confidence parameter on prediction intervals."""
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_reg, self.y_reg)
         )
@@ -649,7 +656,9 @@ class TestConformalRegressor(BaseConformalTestData):
     def test_cross_conformal_regressor(self) -> None:
         """Test CrossConformalRegressor with stratified folds for regression."""
         splits = create_continuous_stratified_folds(
-            self.y_reg, n_splits=2, random_state=42
+            self.y_reg,
+            n_splits=2,
+            random_state=42,
         )
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]
@@ -666,9 +675,11 @@ class TestConformalRegressor(BaseConformalTestData):
         self.assertEqual(intervals.shape[1], 2)
 
     def test_cross_conformal_confidence_effect_regression(self) -> None:
-        """Test confidence level effect in cross-conformal regression with stratified folds."""
+        """Test confidence level effect in cross-conformal regression."""
         splits = create_continuous_stratified_folds(
-            self.y_reg, n_splits=2, random_state=42
+            self.y_reg,
+            n_splits=2,
+            random_state=42,
         )
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]
@@ -776,9 +787,11 @@ class TestConformalRegressor(BaseConformalTestData):
         self.assertLessEqual(results["ks_test"], 1.0)
 
     def test_evaluate_methods_cross_conformal_regressor(self) -> None:
-        """Test evaluate methods for cross-conformal predictors (regression) with stratified folds."""
+        """Test evaluate methods for cross-conformal predictors (regression)."""
         splits = create_continuous_stratified_folds(
-            self.y_reg, n_splits=2, random_state=42
+            self.y_reg,
+            n_splits=2,
+            random_state=42,
         )
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]

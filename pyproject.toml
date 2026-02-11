@@ -97,15 +97,12 @@ ignore = [
     "B008",   #  Do not perform function call `StandardScaler` in argument defaults  # TO REMOVE
     "B024",   #  `xxx` is an abstract base class, but it has no abstract methods or properties  # TO REMOVE
     "B027",   #  `xxx` is an empty method in an abstract base class, but has no abstract decorator  # TO REMOVE
-    "COM812", # Trailing comma missing # TO REMOVE
     "DOC202", # Docstring should not have a returns section because the function doesn't return anything  # TO REMOVE
-    "D203", # 1 blank line required before class docstring  # TO REMOVE
+    "D203", # incorrect-blank-line-before-class
     "D213", # blank-line-before-class-docstring
-    "D413", # missing-blank-line-after-last-section # TO REMOVE
     "D418", # Function decorated with `@overload` shouldn't contain a docstring"  # TO REMOVE
-    "E501", # line-too-long # TO REMOVE
     "ERA001",  # Found commented-out code  # TO REMOVE
-    "FA102",  # Missing `from __future__ import annotations`  # TO REMOVE
+    "FA102",  # Missing `from __future__ import annotations`
     "FURB113", # Use `xxx.extend(...)` instead of repeatedly calling `xxx.append()  # TO REMOVE
     "FURB177", #  Prefer `Path.cwd()` over `Path().resolve()  # TO REMOVE
     "N803",  #  Argument name should be lowercase  # TO REMOVE
@@ -115,7 +112,6 @@ ignore = [
     "PGH004",  # Use specific rule codes when using `noqa`  # TO REMOVE
     "PERF203",  # `try`-`except` within a loop incurs performance overhead  # TO REMOVE
     "PERF401", # Use a list comprehension to create a transformed list  # TO REMOVE
-    "PIE804",  # Unnecessary `dict` kwargs  # TO REMOVE
     "PLC1901", # `rest == ""` can be simplified to `not rest` as an empty string is falsey  # TO REMOVE
     "PLR0911", # Too many return statements (8 > 6)  # TO REMOVE
     "PLR0912", # Too many branches (19 > 12)  # TO REMOVE
@@ -134,7 +130,8 @@ ignore = [
     "RET504",  # Unnecessary assignment  # TO REMOVE
     "RUF005",  # Consider iterable unpacking instead of concatenation  # TO REMOVE
     "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`  # TO REMOVE
-    "RUF100", #  Unused noqa  # TO REMOVE
+    "RUF067",  # `__init__` module should only contain docstrings and re-exports
+    "RUF100",  #  Unused noqa  # TO REMOVE
     "S101",   # Use of `assert` detected  # TO REMOVE
     "S311",  #  suspicious-non-cryptographic-random-usage
     "SIM102",  # Use a single `if` statement instead of nested `if` statements # TO REMOVE
@@ -145,12 +142,11 @@ ignore = [
     "SIM117",  # Use a single `with` statement with multiple contexts instead of nested `with` statements  # TO REMOVE
     "SIM401",  # Use `xxx` instead of an `if` block  # TO REMOVE
     "SLF001",  # Private member accessed  # TO REMOVE
-    "TC001",   # Move application import  `xxx` into a type-checking block  # TO REMOVE
-    "TC002",   # Move third-party import `xxx` into a type-checking block  # TO REMOVE
-    "TC003",   # Move standard library import `xxx` into a type-checking block  # TO REMOVE
+    "UP007",   # Use `X | Y` for type annotations  # TO REMOVE
 ]
  [tool.ruff.lint.per-file-ignores]
  "*.ipynb" = [
+     "E501",
      "PLE1142",
      "F704",
      "T201"

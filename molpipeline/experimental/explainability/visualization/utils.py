@@ -18,7 +18,8 @@ RGBAtuple = tuple[float, float, float, float]
 def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float]]:
     """Return the extent of the molecule.
 
-    x- and y-coordinates of all atoms in the molecule are accessed, returning min- and max-values for both axes.
+    x- and y-coordinates of all atoms in the molecule are accessed, returning min- and
+    max-values for both axes.
 
     Parameters
     ----------
@@ -45,9 +46,10 @@ def get_mol_lims(mol: Chem.Mol) -> tuple[tuple[float, float], tuple[float, float
 
 
 def pad(
-    lim: Sequence[float] | npt.NDArray[np.float64], ratio: float
+    lim: Sequence[float] | npt.NDArray[np.float64],
+    ratio: float,
 ) -> tuple[float, float]:
-    """Take a 2-dimensional vector and adds len(vector) * ratio / 2 to each side and returns obtained vector.
+    """Take a 2-dimensional vector and adds len(vector) * ratio / 2 to each side.
 
     Parameters
     ----------
@@ -189,7 +191,8 @@ def plt_to_pil(figure: plt.Figure) -> Image.Image:
 
 
 def get_atom_coords_of_bond(
-    bond: Chem.Bond, conf: Chem.Conformer
+    bond: Chem.Bond,
+    conf: Chem.Conformer,
 ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """Get the two atom coordinates of a bond in the conformation.
 
@@ -218,7 +221,8 @@ def get_atom_coords_of_bond(
 
 
 def calc_present_and_absent_shap_contributions(
-    feature_vector: npt.NDArray[np.float64], feature_weights: npt.NDArray[np.float64]
+    feature_vector: npt.NDArray[np.float64],
+    feature_weights: npt.NDArray[np.float64],
 ) -> tuple[float, float]:
     """Get the sum of present and absent SHAP values.
 
@@ -242,7 +246,8 @@ def calc_present_and_absent_shap_contributions(
     """
     if feature_vector.max() > 1 or feature_vector.min() < 0:
         raise ValueError(
-            "Feature vector must be binary. Alternatively, use the structure_heatmap function instead."
+            "Feature vector must be binary. Alternatively, use the structure_heatmap "
+            "function instead.",
         )
 
     # determine present/absent features using the binary feature vector
