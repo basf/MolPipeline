@@ -1,7 +1,5 @@
 """Classes ment to transform given input to a RDKit molecule."""
 
-from __future__ import annotations
-
 from typing import Any, Self
 
 from rdkit import Chem
@@ -34,6 +32,7 @@ class SmilesToMol(SimpleStringToMolElement):
             Number of jobs to run in parallel.
         uuid: str | None, optional
             UUID of the object.
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self._remove_hydrogens = remove_hydrogens
@@ -45,6 +44,7 @@ class SmilesToMol(SimpleStringToMolElement):
         -------
         dict[str, Any]
             Configuration for the parser.
+
         """
         # set up rdkit smiles parser parameters
         parser_params = Chem.SmilesParserParams()
@@ -63,6 +63,7 @@ class SmilesToMol(SimpleStringToMolElement):
         -------
         RDKitMol
             Rdkit molecule if valid SMILES, else None.
+
         """
         return Chem.MolFromSmiles(value, self._get_parser_config())
 
@@ -78,6 +79,7 @@ class SmilesToMol(SimpleStringToMolElement):
         -------
         dict[str, Any]
             Dictionary of parameters.
+
         """
         parameters = super().get_params(deep)
         if deep:
@@ -99,6 +101,7 @@ class SmilesToMol(SimpleStringToMolElement):
         -------
         Self
             SmilesToMol pipeline element with updated parameters.
+
         """
         parameter_copy = dict(parameters)
         remove_hydrogens = parameter_copy.pop("remove_hydrogens", None)

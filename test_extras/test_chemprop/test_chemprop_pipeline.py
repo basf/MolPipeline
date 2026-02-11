@@ -16,10 +16,12 @@ from molpipeline.any2mol import SmilesToMol
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import BondMessagePassing
+from molpipeline.estimators.chemprop.metric_wrapper import BCELoss
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
 from molpipeline.utils.file_loading.url_file_loading import URLFileLoader
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_classification_pipeline,
@@ -207,6 +209,113 @@ class TestChempropPipeline(unittest.TestCase):
         # Check that the prediction works
         pred = chemprop_classifier.predict_proba(["CCO", "CCN"])
         self.assertEqual(len(pred), 2)
+
+    def test_state_dict_from_url_serialization(self) -> None:
+        """Test that the state_dict set via URLFileLoader can be serialized."""
+        chemeleon_url = "https://dummy_chemeleon_url.pt"
+        chemeleon_dummy = BondMessagePassing(d_h=2048)
+        dummy_state_dict = randomize_state_dict_weights(chemeleon_dummy.state_dict())
+
+        with mock.patch(
+            "molpipeline.utils.file_loading.url_file_loading.requests.get",
+        ) as mock_get:
+            mock_response = mock.Mock()
+            buffer = BytesIO()
+            torch.save(dummy_state_dict, buffer)
+            buffer.seek(0)
+            mock_response.content = buffer.read()
+            mock_get.return_value = mock_response
+            chemprop_classifier = get_classification_pipeline(
+                chemprop_kwargs={
+                    "model__message_passing__state_dict_ref": URLFileLoader(
+                        chemeleon_url,
+                    ),
+                    "model__message_passing__d_h": 2048,
+                    "model__predictor__input_dim": 2048,
+                },
+            )
+            self.assertEqual(mock_get.call_count, 1)
+
+            # Serialize and deserialize the pipeline
+            chemprop_classifier_json = recursive_to_json(chemprop_classifier)
+            chemprop_classifier_loaded = recursive_from_json(chemprop_classifier_json)
+            self.assertEqual(mock_get.call_count, 2)
+        # Check that the state dict was loaded correctly
+        chemprop_mpnn = chemprop_classifier_loaded.named_steps["model"].model
+        loaded_state_dict = chemprop_mpnn.message_passing.state_dict()
+        self.assertEqual(
+            dummy_state_dict.keys(),
+            loaded_state_dict.keys(),
+        )
+        for key, value in dummy_state_dict.items():
+            self.assertTrue(torch.equal(value, loaded_state_dict[key]))
+
+    def test_sample_weight_forwarding(self) -> None:
+        """Test that the sample weights are properly forwarded to the loss function."""
+        smiles = ["CCO", "CCN"] * 32
+        y = [0, 1] * 32
+        sample_weight = np.ones(64) * 0.5
+
+        bce_loss = BCELoss()
+        bce_loss.update = mock.MagicMock(side_effect=bce_loss.update)
+        model = get_classification_pipeline(
+            chemprop_kwargs={"model__predictor__criterion": bce_loss},
+        )
+        model.fit(smiles, y, model__sample_weight=sample_weight)
+        for call_params in bce_loss.update.call_args_list:
+            call_args = call_params[0]
+            weight = call_args[3]
+            self.assertTrue(np.allclose(weight, sample_weight))
+
+    def test_class_weight_no_sample_weight(self) -> None:
+        """Test that class_weight is used correctly."""
+        # Use a small dummy dataset with 80% of class 0 and 20% of class 1
+        smiles = ["CCO", "CCN", "CCC", "CCCl", "c1ccccc1"] * 4
+        y = np.array([0, 0, 0, 0, 1] * 4)
+        # Test with class_weight='balanced'
+        bce_loss = BCELoss()
+        bce_loss.update = mock.MagicMock(side_effect=bce_loss.update)
+        model = get_classification_pipeline(
+            chemprop_kwargs={
+                "class_weight": "balanced",
+                "model__predictor__criterion": bce_loss,
+            },
+        )
+        model.fit(smiles, y)
+        for call_params in bce_loss.update.call_args_list:
+            call_args = call_params[0]
+            label = call_args[1].detach().cpu().numpy()
+            weight = call_args[3].detach().cpu().numpy()
+            # Check that weights correspond to class_weight='balanced'
+            neg_label_weight_sum = np.sum(weight[label == 0])
+            pos_label_weight_sum = np.sum(weight[label == 1])
+            self.assertAlmostEqual(neg_label_weight_sum, pos_label_weight_sum)
+
+    def test_class_weight_with_sample_weight(self) -> None:
+        """Test that class_weight and sample_weight are combined correctly."""
+        # Use a small dummy dataset with 80% of class 0 and 20% of class 1
+        smiles = ["CCO", "CCN", "CCC", "CCCl", "c1ccccc1"] * 4
+        y = np.array([0, 0, 0, 0, 1] * 4)
+        # The last component has double weight
+        sample_weight = np.array([1.0, 1.0, 1.0, 1.0, 2.0] * 4)
+        # Test with class_weight='balanced'
+        bce_loss = BCELoss()
+        bce_loss.update = mock.MagicMock(side_effect=bce_loss.update)
+        model = get_classification_pipeline(
+            chemprop_kwargs={
+                "class_weight": "balanced",
+                "model__predictor__criterion": bce_loss,
+            },
+        )
+        model.fit(smiles, y, model__sample_weight=sample_weight)
+        for call_params in bce_loss.update.call_args_list:
+            call_args = call_params[0]
+            label = call_args[1].detach().cpu().numpy()
+            weight = call_args[3].detach().cpu().numpy()
+            # Compute expected weights
+            neg_label_weight_sum = np.sum(weight[label == 0])
+            pos_label_weight_sum = np.sum(weight[label == 1])
+            self.assertAlmostEqual(neg_label_weight_sum * 2, pos_label_weight_sum)
 
 
 class TestRegressionPipeline(unittest.TestCase):

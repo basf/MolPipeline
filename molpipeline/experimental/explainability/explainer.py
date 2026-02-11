@@ -1,20 +1,22 @@
 """Explainer classes for explaining predictions."""
 
-from __future__ import annotations
-
 import abc
-from typing import TYPE_CHECKING, Any
-
-import numpy as np
-import numpy.typing as npt
-import pandas as pd
-import shap
+from collections.abc import Callable
+from typing import Any
 
 try:
     from typing import override  # type: ignore[attr-defined]
 except ImportError:
     from typing_extensions import override
 
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+import shap
+from scipy.sparse import spmatrix
+from sklearn.base import BaseEstimator
+
+from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance, OptionalMol
 from molpipeline.experimental.explainability.explanation import (
     AtomExplanationMixin,
@@ -31,14 +33,6 @@ from molpipeline.experimental.explainability.fingerprint_utils import (
 from molpipeline.mol2any import MolToMorganFP
 from molpipeline.utils.subpipeline import SubpipelineExtractor, get_model_from_pipeline
 from molpipeline.utils.type_guards import sparse_type_guard
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from scipy.sparse import spmatrix
-    from sklearn.base import BaseEstimator
-
-    from molpipeline import Pipeline
 
 
 def _to_dense(

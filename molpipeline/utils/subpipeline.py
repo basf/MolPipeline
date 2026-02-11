@@ -1,8 +1,7 @@
 """Helper functions to extract subpipelines from a pipeline."""
 
-from __future__ import annotations
-
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from sklearn.base import BaseEstimator
 
@@ -14,11 +13,12 @@ from molpipeline.abstract_pipeline_elements.core import (
 
 
 def _get_molecule_reading_position_from_pipeline(pipeline: Pipeline) -> int | None:
-    """Heuristic to select the position of the central molecule reading element in a pipeline.
+    """Heuristic to select the position of the central molecule reading element.
 
-    This function searches the last AnyToMolPipelineElement in the pipeline. We select the last
-    AnyToMolPipelineElement in the pipeline because we have some standardization pipelines
-    that write the molecule a smiles and read them back in to ensure they are readable.
+    This function searches the last AnyToMolPipelineElement in the pipeline. We select
+    the last AnyToMolPipelineElement in the pipeline because we have some
+    standardization pipelines  that write the molecule a smiles and read them back in to
+    ensure they are readable.
 
     Parameters
     ----------
@@ -29,6 +29,7 @@ def _get_molecule_reading_position_from_pipeline(pipeline: Pipeline) -> int | No
     -------
     int | None
         The position of the molecule reading element in the pipeline.
+
     """
     for i, step in enumerate(reversed(pipeline.steps)):
         if isinstance(step[1], AnyToMolPipelineElement):
@@ -37,10 +38,10 @@ def _get_molecule_reading_position_from_pipeline(pipeline: Pipeline) -> int | No
 
 
 def _get_model_element_position_from_pipeline(pipeline: Pipeline) -> int | None:
-    """Heuristic to select the position of the machine learning estimator model in a pipeline.
+    """Heuristic to select the position of the machine learning estimator model.
 
-    The returned element should be the element returning the pipeline's predictions. So, the
-    pipeline up to this element can be executed to obtain the predictions.
+    The returned element should be the element returning the pipeline's predictions.
+    So, the pipeline up to this element can be executed to obtain the predictions.
 
     Parameters
     ----------
@@ -50,7 +51,9 @@ def _get_model_element_position_from_pipeline(pipeline: Pipeline) -> int | None:
     Returns
     -------
     int | None
-        The position of the model element in the pipeline or None if no model element is found.
+        The position of the model element in the pipeline.
+        None if no model element is found.
+
     """
     for i, step in enumerate(reversed(pipeline.steps)):
         if isinstance(step[1], BaseEstimator):
@@ -72,7 +75,8 @@ def _get_featurization_element_position_from_pipeline(pipeline: Pipeline) -> int
     Returns
     -------
     int | None
-        The position of the featurization element in the pipeline or None if no featurization element is found.
+        The position of the featurization element in the pipeline.
+        None if no featurization element is found.
 
     """
     for i, step in enumerate(reversed(pipeline.steps)):
@@ -91,6 +95,7 @@ class SubpipelineExtractor:
         ----------
         pipeline : Pipeline
             The pipeline to extract subpipelines from.
+
         """
         self.pipeline = pipeline
 
@@ -106,6 +111,7 @@ class SubpipelineExtractor:
         -------
         int | None
             The index of the element or None if the element was not found.
+
         """
         for i, (_, pipeline_element) in enumerate(self.pipeline.steps):
             if pipeline_element is element:
@@ -124,6 +130,7 @@ class SubpipelineExtractor:
         -------
         int | None
             The index of the element or None if the element was not found.
+
         """
         for i, (name, _) in enumerate(self.pipeline.steps):
             if name == element_name:
@@ -148,6 +155,7 @@ class SubpipelineExtractor:
         -------
         Any | None
             The index of the extracted element or None if the element was not found.
+
         """
         if element_name is not None:
             return self._get_index_of_element_by_name(element_name)
@@ -171,6 +179,7 @@ class SubpipelineExtractor:
         -------
         Any | None
             The extracted element or None if the element was not found.
+
         """
         if element_name is not None:
             # if a name is provided, access the element by name
@@ -181,9 +190,10 @@ class SubpipelineExtractor:
         return self.pipeline.steps[element_index][1]
 
     def get_molecule_reader_element(
-        self, element_name: str | None = None
+        self,
+        element_name: str | None = None,
     ) -> AnyToMolPipelineElement | None:
-        """Get the molecule reader element from the pipeline, e.g. a SmilesToMol element.
+        """Get the molecule reader element from the pipeline.
 
         Parameters
         ----------
@@ -194,6 +204,7 @@ class SubpipelineExtractor:
         -------
         AnyToMolPipelineElement | None
             The extracted molecule reader element or None if the element was not found.
+
         """
         return self._extract_single_element(
             element_name,
@@ -201,9 +212,10 @@ class SubpipelineExtractor:
         )
 
     def get_featurization_element(
-        self, element_name: str | None = None
+        self,
+        element_name: str | None = None,
     ) -> BaseEstimator | None:
-        """Get the featurization element from the pipeline, e.g., a MolToMorganFP element.
+        """Get the featurization element from the pipeline.
 
         Parameters
         ----------
@@ -214,15 +226,18 @@ class SubpipelineExtractor:
         -------
         BaseEstimator | None
             The extracted featurization element or None if the element was not found.
+
         """
         return self._extract_single_element(
-            element_name, _get_featurization_element_position_from_pipeline
+            element_name,
+            _get_featurization_element_position_from_pipeline,
         )
 
     def get_model_element(
-        self, element_name: str | None = None
+        self,
+        element_name: str | None = None,
     ) -> BaseEstimator | None:
-        """Get the machine learning model element from the pipeline, e.g. a RandomForestClassifier.
+        """Get the machine learning model element from the pipeline.
 
         Parameters
         ----------
@@ -233,9 +248,11 @@ class SubpipelineExtractor:
         -------
         BaseEstimator | None
             The extracted model element or None if the element was not found.
+
         """
         return self._extract_single_element(
-            element_name, _get_model_element_position_from_pipeline
+            element_name,
+            _get_model_element_position_from_pipeline,
         )
 
     def _get_subpipline_from_start(
@@ -243,7 +260,7 @@ class SubpipelineExtractor:
         element_name: str | None,
         start_get_index_function: Callable[[Pipeline], int | None],
     ) -> Pipeline | None:
-        """Get a subpipeline up to a specific element starting from the first element of the original pipeline.
+        """Get a subpipeline up to a specific element starting from the first element.
 
         Parameters
         ----------
@@ -255,21 +272,26 @@ class SubpipelineExtractor:
         Returns
         -------
         Pipeline | None
-            The extracted subpipeline or None if the corresponding last element was not found.
+            The extracted subpipeline.
+            None if the corresponding last element was not found.
+
         """
         element_index = self._extract_single_element_index(
-            element_name, start_get_index_function
+            element_name,
+            start_get_index_function,
         )
         if element_index is None:
             return None
         return Pipeline(steps=self.pipeline.steps[: element_index + 1])
 
     def get_molecule_reader_subpipeline(
-        self, element_name: str | None = None
+        self,
+        element_name: str | None = None,
     ) -> Pipeline | None:
         """Get a subpipeline up to the molecule reading element.
 
-        Note that standardization steps, like salt removal, are not guaranteed to be included.
+        Note that standardization steps, like salt removal, are not guaranteed to be
+        included.
 
         Parameters
         ----------
@@ -279,14 +301,18 @@ class SubpipelineExtractor:
         Returns
         -------
         Pipeline | None
-            The extracted subpipeline or None if the corresponding last element was not found.
+            The extracted subpipeline.
+            None if the corresponding last element was not found.
+
         """
         return self._get_subpipline_from_start(
-            element_name, _get_molecule_reading_position_from_pipeline
+            element_name,
+            _get_molecule_reading_position_from_pipeline,
         )
 
     def get_featurization_subpipeline(
-        self, element_name: str | None = None
+        self,
+        element_name: str | None = None,
     ) -> Pipeline | None:
         """Get a subpipeline up to the featurization element.
 
@@ -298,10 +324,13 @@ class SubpipelineExtractor:
         Returns
         -------
         Pipeline | None
-            The extracted subpipeline or None if the corresponding last element was not found.
+            The extracted subpipeline.
+            None if the corresponding last element was not found.
+
         """
         return self._get_subpipline_from_start(
-            element_name, _get_featurization_element_position_from_pipeline
+            element_name,
+            _get_featurization_element_position_from_pipeline,
         )
 
     def get_model_subpipeline(self, element_name: str | None = None) -> Pipeline | None:
@@ -315,10 +344,13 @@ class SubpipelineExtractor:
         Returns
         -------
         Pipeline | None
-            The extracted subpipeline or None if the corresponding last element was not found.
+            The extracted subpipeline.
+            None if the corresponding last element was not found.
+
         """
         return self._get_subpipline_from_start(
-            element_name, _get_model_element_position_from_pipeline
+            element_name,
+            _get_model_element_position_from_pipeline,
         )
 
     def get_subpipeline(
@@ -331,7 +363,6 @@ class SubpipelineExtractor:
         """Get a subpipeline between two elements.
 
         This function only checks the names of the elements.
-        If the elements are not found or the second element is before the first element, a ValueError is raised.
 
         Parameters
         ----------
@@ -357,6 +388,7 @@ class SubpipelineExtractor:
         -------
         Pipeline | None
             The extracted subpipeline or None if the elements were not found.
+
         """
         first_element_index = self._get_index_of_element_by_id(first_element)
         if first_element_index is None:
@@ -371,10 +403,10 @@ class SubpipelineExtractor:
 
         if second_element_index < first_element_index:
             raise ValueError(
-                f"Element {second_element} must be after element {first_element}."
+                f"Element {second_element} must be after element {first_element}.",
             )
         return Pipeline(
-            steps=self.pipeline.steps[first_element_index : second_element_index + 1]
+            steps=self.pipeline.steps[first_element_index : second_element_index + 1],
         )
 
     def get_all_filter_reinserter_fill_values(self) -> list[Any]:
@@ -384,20 +416,23 @@ class SubpipelineExtractor:
         -------
         list[Any]
             The fill values for all FilterReinserter elements in the pipeline.
+
         """
         fill_values = set()
         for _, step in self.pipeline.steps:
             if isinstance(step, FilterReinserter):
                 fill_values.add(step.fill_value)
             if isinstance(step, PostPredictionWrapper) and isinstance(
-                step.wrapped_estimator, FilterReinserter
+                step.wrapped_estimator,
+                FilterReinserter,
             ):
                 fill_values.add(step.wrapped_estimator.fill_value)
         return list(fill_values)
 
 
 def get_featurization_subpipeline(
-    pipeline: Pipeline, raise_not_found: bool = False
+    pipeline: Pipeline,
+    raise_not_found: bool = False,
 ) -> Pipeline | None:
     """Get the featurization subpipeline from a pipeline.
 
@@ -416,7 +451,9 @@ def get_featurization_subpipeline(
     Returns
     -------
     Pipeline | None
-        The extracted featurization subpipeline or None if the featurization element was not found.
+        The extracted featurization subpipeline.
+        None if the featurization element was not found.
+
     """
     pipeline_extractor = SubpipelineExtractor(pipeline)
     featurization_subpipeline = pipeline_extractor.get_featurization_subpipeline()
@@ -426,7 +463,8 @@ def get_featurization_subpipeline(
 
 
 def get_model_from_pipeline(
-    pipeline: Pipeline, raise_not_found: bool = False
+    pipeline: Pipeline,
+    raise_not_found: bool = False,
 ) -> BaseEstimator | None:
     """Get the model from a pipeline.
 
@@ -446,6 +484,7 @@ def get_model_from_pipeline(
     -------
     BaseEstimator | None
         The extracted model or None if the model was not found.
+
     """
     pipeline_extractor = SubpipelineExtractor(pipeline)
     model = pipeline_extractor.get_model_element()

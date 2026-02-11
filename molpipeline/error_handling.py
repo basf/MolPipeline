@@ -1,8 +1,7 @@
 """Classes and functions for detecting and handling None values."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
+from collections.abc import Iterable, Sequence
+from typing import Any, Generic, Self, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -14,11 +13,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     RemovedInstance,
     TransformingPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
-
-    from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
+from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
 
 __all__ = ["ErrorFilter", "FilterReinserter", "_MultipleErrorFilter"]
 
@@ -192,9 +187,9 @@ class ErrorFilter(ABCPipelineElement):
         Parameters
         ----------
         values: AnyVarSeq
-            Values used for fitting. (Not really used)
+            Values used for fitting. For compatibility with sklearn, not used.
         labels: Any
-            Label used for fitting. (Not really used)
+            Label used for fitting. For compatibility with sklearn, not used.
 
         Returns
         -------
@@ -218,7 +213,7 @@ class ErrorFilter(ABCPipelineElement):
         values: TypeFixedVarSeq
             Iterable to which element is fitted and which is subsequently transformed.
         labels: Any
-            Label used for fitting. (Not used, but for compatibility with sklearn)
+            Label used for fitting. For compatibility with sklearn, not used.
 
         Returns
         -------
@@ -665,9 +660,9 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         values: TypeFixedVarSeq
             Values used for fitting.
         labels: Any
-            Label used for fitting. (Not used, but for compatibility with sklearn)
+            Label used for fitting. For compatibility with sklearn, not used.
         **params: Any
-            Additional keyword arguments. (Not used)
+            Additional keyword arguments. For compatibility with sklearn, not used.
 
         Returns
         -------
@@ -694,9 +689,9 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         values: TypeFixedVarSeq
             Iterable to which element is fitted and which is subsequently transformed.
         labels: Any
-            Label used for fitting. (Not used, but for compatibility with sklearn)
+            Label used for fitting. For compatibility with sklearn, not used.
         **params: Any
-            Additional keyword arguments. (Not used)
+            Additional keyword arguments. For compatibility with sklearn, not used.
 
         Returns
         -------

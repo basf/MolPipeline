@@ -1,6 +1,6 @@
 """Conformal prediction wrappers for classification and regression using crepes.
 
-This module provides a unified interface for conformal prediction with four main classes:
+This module provides a unified interface for conformal prediction with 4 main classes:
 - ConformalClassifier: Single-model conformal classification
 - CrossConformalClassifier: Cross-validation conformal classification
 - ConformalRegressor: Single-model conformal regression
@@ -20,8 +20,10 @@ from molpipeline.experimental.uncertainty.conformal import (
 # Import nonconformity functions from utils
 from molpipeline.experimental.uncertainty.utils import (
     HingeNonconformity,
+    LogNonconformity,
     MarginNonconformity,
     NonconformityFunctor,
+    SVMMarginNonconformity,
     create_nonconformity_function,
 )
 
@@ -32,7 +34,9 @@ __all__ = [
     "CrossConformalClassifier",
     "CrossConformalRegressor",
     "HingeNonconformity",
+    "LogNonconformity",
     "MarginNonconformity",
     "NonconformityFunctor",
+    "SVMMarginNonconformity",
     "create_nonconformity_function",
 ]

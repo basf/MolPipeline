@@ -1,7 +1,5 @@
 """Unit tests for Gaussian process kernels using the Tanimoto similarity."""
 
-from __future__ import annotations
-
 import abc
 import unittest
 

@@ -1,13 +1,12 @@
 """Nearest neighbor algorithm."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
 from joblib import Parallel, delayed
+from scipy import sparse
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import NearestNeighbors
 
@@ -16,7 +15,6 @@ from molpipeline.utils.multi_proc import check_available_cores
 from molpipeline.utils.value_checks import get_length
 
 if TYPE_CHECKING:
-    from scipy import sparse
     from scipy.sparse import csr_matrix
 
 __all__ = ["NamedNearestNeighbors"]
@@ -63,27 +61,28 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
 
         Parameters
         ----------
-        n_neighbors : int, optional (default = 5)
+        n_neighbors : int, default=5
             The number of neighbors to get.
-        radius : float, optional (default = 1.0)
+        radius : float, default=1.0
             Range of parameter space to use by default for radius_neighbors queries.
-        algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, (default = 'auto')
+        algorithm : Literal['auto', 'ball_tree', 'kd_tree', 'brute'], default='auto'
             Algorithm used to compute the nearest neighbors.
-        leaf_size : int, optional (default = 30)
+        leaf_size : int, default=30
             Leaf size passed to BallTree or KDTree. This can affect the speed of the
             construction and query, as well as the memory required to store the tree.
             The optimal value depends on the nature of the problem.
-        metric : Union[str, Callable], optional (default = 'minkowski')
+        metric : str | Callable, default = 'minkowski'
             The distance metric to use for the tree.
             The default metric is minkowski, and with p=2 is equivalent to the standard
-             Euclidean metric.
-        p : int, optional (default = 2)
+            Euclidean metric.
+        p : int, default=2
             Power parameter for the Minkowski metric.
-        metric_params : dict, optional (default = None)
+        metric_params : dict, optional
             Additional keyword arguments for the metric function.
-        n_jobs : int, optional (default = None)
-            The number of parallel jobs to run for neighbors search. None means 1 unless
-            in a joblib.parallel_backend context. -1 means using all processors.
+        n_jobs : int, optional
+            The number of parallel jobs to run for neighbors search.
+            None means 1, unless in a joblib.parallel_backend context.
+            A value of -1 means using all processors.
 
         """
         super().__init__(

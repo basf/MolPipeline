@@ -1,8 +1,7 @@
 """Module for custom filter functionality."""
 
-from __future__ import annotations
-
-from typing import Any, Callable, Self
+from collections.abc import Callable
+from typing import Any, Self
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -14,7 +13,10 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class CustomFilter(_MolToMolPipelineElement):
-    """Filters molecules based on a custom boolean function. Elements not passing the filter will be set to InvalidInstances."""
+    """Filters molecules based on a custom boolean function.
+
+    Elements not passing the filter will be set to InvalidInstances.
+    """
 
     def __init__(
         self,
@@ -28,13 +30,14 @@ class CustomFilter(_MolToMolPipelineElement):
         Parameters
         ----------
         func : Callable[[RDKitMol], bool]
-            custom function to filter molecules
+            Custom function to filter molecules
         name : str, default="CustomFilter"
-            name of the element, by default "CustomFilter"
+            Name of the element, by default "CustomFilter"
         n_jobs : int, default=1
-            number of jobs to use, by default 1
+            Number of jobs to use, by default 1
         uuid :  str | None, optional
-            uuid of the element, by default None
+            UUID of the element, by default None
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.func = func
@@ -47,12 +50,13 @@ class CustomFilter(_MolToMolPipelineElement):
         Parameters
         ----------
         value : RDKitMol
-            input value
+            Molecule to check against the filter.
 
         Returns
         -------
         OptionalMol
-            output value
+            The original molecule if it passes the filter, otherwise an InvalidInstance.
+
         """
         if self.func(value):
             return value
@@ -74,6 +78,7 @@ class CustomFilter(_MolToMolPipelineElement):
         -------
         dict[str, Any]
             Parameters of CustomFilter.
+
         """
         params = super().get_params(deep=deep)
         if deep:
@@ -94,6 +99,7 @@ class CustomFilter(_MolToMolPipelineElement):
         -------
         Self
             Self.
+
         """
         parameter_copy = dict(parameters)
         if "func" in parameter_copy:

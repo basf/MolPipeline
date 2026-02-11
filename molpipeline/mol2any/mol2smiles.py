@@ -1,7 +1,5 @@
 """Classes for transforming rdkit molecules to any type of output."""
 
-from __future__ import annotations
-
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
@@ -24,5 +22,6 @@ class MolToSmiles(_MolToStringPipelineElement):
         -------
         str
             SMILES string of molecule.
+
         """
         return str(Chem.MolToSmiles(value))

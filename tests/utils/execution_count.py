@@ -1,7 +1,5 @@
 """Functions for counting the number of times a function is executed."""
 
-from __future__ import annotations
-
 from typing import Any, Self
 
 from sklearn.base import BaseEstimator
@@ -23,6 +21,7 @@ class CountingTransformerWrapper(BaseEstimator):
         ----------
         element : ABCPipelineElement
             The element to wrap.
+
         """
         self.element = element
         self.n_transformations = 0
@@ -41,6 +40,7 @@ class CountingTransformerWrapper(BaseEstimator):
         -------
         Any
             The fitted data.
+
         """
         self.element.fit(X, y)
         return self
@@ -60,6 +60,7 @@ class CountingTransformerWrapper(BaseEstimator):
         -------
         Any
             The transformed data.
+
         """
         return self.element.transform(X)
 
@@ -77,6 +78,7 @@ class CountingTransformerWrapper(BaseEstimator):
         -------
         Any
             The transformed data.
+
         """
         self.n_transformations += 1
         return self.element.fit_transform(X, y)
@@ -93,6 +95,7 @@ class CountingTransformerWrapper(BaseEstimator):
         -------
         dict[str, Any]
             The parameters of the transformer.
+
         """
         params = {
             "element": self.element,
@@ -113,6 +116,7 @@ class CountingTransformerWrapper(BaseEstimator):
         -------
         Self
             The transformer with the set parameters
+
         """
         element = params.pop("element", None)
         if element is not None:
@@ -122,7 +126,9 @@ class CountingTransformerWrapper(BaseEstimator):
 
 
 def get_exec_counted_rf_regressor(random_state: int) -> Pipeline:
-    """Get a morgan + random forest pipeline, which counts the number of transformations.
+    """Get a morgan + random forest pipeline.
+
+     The pipeline counts the number of transformations.
 
     Parameters
     ----------
@@ -133,6 +139,7 @@ def get_exec_counted_rf_regressor(random_state: int) -> Pipeline:
     -------
     Pipeline
         A pipeline with a morgan fingerprint, physchem descriptors, and a random forest
+
     """
     smi2mol = SmilesToMol()
 

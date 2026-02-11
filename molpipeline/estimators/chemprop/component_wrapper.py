@@ -1,6 +1,7 @@
 """Wrapper classes for the chemprop components for compatibility with scikit-learn."""
 
 import abc
+import warnings
 from collections.abc import Iterable
 from io import BytesIO
 from pathlib import Path
@@ -45,6 +46,8 @@ from molpipeline.estimators.chemprop.metric_wrapper import (
 )
 from molpipeline.utils.file_loading.abc_file_loading import ABCFileLoader
 
+warnings.simplefilter("always", DeprecationWarning)
+
 
 def parse_state_dict_ref(
     state_dict: dict[str, Any] | str | Path,
@@ -83,6 +86,13 @@ def parse_state_dict_ref(
     if "state_dict" in state_dict_:
         return parse_state_dict_ref(state_dict_["state_dict"])
     return state_dict_
+
+
+WARN_MSG = (
+    "Loading an old model without the 'state_dict_ref' attribute. "
+    "This backward compatibility will be removed in version 0.13.0. "
+    "Please re-save your models with the current version."
+)
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
@@ -150,6 +160,20 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         self.state_dict_ref = state_dict_ref
         if self.state_dict_ref is not None:
             self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
@@ -306,6 +330,20 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         """
         self._n_tasks = value
 
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            self.state_dict_ref = None
+        super().__setstate__(state)
+
     def reinitialize_fnn(self) -> Self:
         """Reinitialize the feedforward network.
 
@@ -411,26 +449,26 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         Parameters
         ----------
         n_classes : int
-            how many classes are expected in the output
-        n_tasks : int, optional (default=1)
+            The number of classes expected in the output.
+        n_tasks : int, default=1
             Number of tasks.
-        input_dim : int, optional (default=DEFAULT_HIDDEN_DIM)
+        input_dim : int, default=DEFAULT_HIDDEN_DIM
             Input dimension.
-        hidden_dim : int, optional (default=300)
+        hidden_dim : int, default=300
             Hidden dimension.
-        n_layers : int, optional (default=1)
+        n_layers : int, default=1
             Number of layers.
-        dropout : float, optional (default=0)
+        dropout : float, default=0
             Dropout rate.
-        activation : str, optional (default="relu")
+        activation : str, default="relu"
             Activation function.
-        criterion : LossFunction or None, optional (default=None)
+        criterion : LossFunction | None, optional
             Loss function. None defaults to BCELoss.
-        task_weights : Tensor or None, optional (default=None)
+        task_weights : Tensor or None, optional
             Task weights.
-        threshold : float or None, optional (default=None)
+        threshold : float | None, optional
             Threshold for binary classification.
-        output_transform : UnscaleTransform or None, optional (default=None)
+        output_transform : UnscaleTransform | None, optional
             Transformations to apply to the output. None defaults to UnscaleTransform.
         state_dict_ref : str | Path | dict[str, Any] | None, optional
             Path to a state dict to load the model weights from.
@@ -454,6 +492,20 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         self.state_dict_ref = state_dict_ref
         if self.state_dict_ref is not None:
             self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
 
 class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type: ignore
@@ -537,6 +589,20 @@ class MPNN(_MPNN, BaseEstimator):
         self.state_dict_ref = state_dict_ref
         if self.state_dict_ref is not None:
             self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
