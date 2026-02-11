@@ -67,10 +67,7 @@ def compare_recursive(  # pylint: disable=too-many-return-statements
     if isinstance(value_a, dict):
         if set(value_a.keys()) != set(value_b.keys()):
             return False
-        for key in value_a:
-            if not compare_recursive(value_a[key], value_b[key]):
-                return False
-        return True
+        return all(compare_recursive(value_a[key], value_b[key]) for key in value_a)
 
     if isinstance(value_a, (list, tuple)):
         if len(value_a) != len(value_b):
