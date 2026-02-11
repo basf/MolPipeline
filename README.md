@@ -203,9 +203,11 @@ Note that the explainability module is fully-functional but in the 'experimental
 
 MolPipeline provides optimized configurations for common baseline models for molecular property prediction, such as
 Random Forest.
-Based on practical experience, these often perform better than simply using Random Forest with scikit-learn’s default
-settings and binary Morgan fingerprints. In addition, our Random Forest baseline performs much better than the simple
-configuration on the Polaris and MoleculeACE benchmarks; see the [paperTODO](TODO).
+Based on practical experience, these often perform better than simply using scikit-learn’s default settings and binary
+Morgan fingerprints. In addition, our Random Forest baseline was part of CheMeleon's benchmark experiments,
+where it performs much better than the simple configuration on the Polaris and MoleculeACE benchmarks; see the paper
+[Deep Learning Foundation Models from Classical Molecular Descriptors](https://arxiv.org/abs/2506.15792) and
+[repository](https://github.com/JacksonBurns/CheMeleon).
 
 There is a convenient function to get a Random Forest baseline model as a Pipeline:
 
