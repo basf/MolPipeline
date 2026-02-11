@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-from molpipeline.estimators.baselines import (
+from molpipeline.predefined_pipelines import (
     get_rf_classifier_baseline,
     get_rf_regressor_baseline,
 )

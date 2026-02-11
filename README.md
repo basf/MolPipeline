@@ -201,7 +201,7 @@ Note that the explainability module is fully-functional but in the 'experimental
 
 ### Baseline machine learning models
 
-MolPipeline provides optimized configurations for common baseline models for molecular property prediction, such as
+MolPipeline provides improved configurations for common baseline models for molecular property prediction, such as
 Random Forest.
 Based on practical experience, these often perform better than simply using scikit-learn’s default settings and binary
 Morgan fingerprints. In addition, our Random Forest baseline was part of CheMeleon's benchmark experiments,
@@ -212,7 +212,7 @@ where it performs much better than the simple configuration on the Polaris and M
 There is a convenient function to get a Random Forest baseline model as a Pipeline:
 
 ```python
-from molpipeline.estimators.baselines import (
+from molpipeline.predefined_pipelines import (
     get_rf_regressor_baseline,
 )
 
@@ -225,7 +225,7 @@ y = [0.2, 0.4]
 
 rf_baseline.fit(X, y)
 preds = rf_baseline.predict(X)
-# output: [0.2468    nan 0.3428]
+# output: [0.2468   0.3428]
 
 # Optionally, set `error_handling=True` to enable automated error handling to gracefully
 # set predictions to NaN for invalid and failing molecules
