@@ -219,7 +219,6 @@ class ErrorFilter(SingleInstanceTransformerMixin, TransformingPipelineElement):
             Iterable to which element is fitted and which is subsequently transformed.
         labels: Any, optional
             Label used for fitting.
-            (Not used, but required for compatibility with sklearn)
 
         Returns
         -------
@@ -701,7 +700,6 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             Iterable to which element is fitted and which is subsequently transformed.
         labels: Any, optional
             Label used for fitting.
-            (Not used, but required for compatibility with sklearn)
         **params: Any
             Additional keyword arguments. For compatibility with sklearn, not used.
 

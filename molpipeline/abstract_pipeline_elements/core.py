@@ -482,13 +482,12 @@ class SingleInstanceTransformerMixin(abc.ABC):
         Parameters
         ----------
         value: Any
-            Current representation of the molecule. (Eg. SMILES, RDKit Mol, ...)
+            Current representation of the molecule.
 
         Returns
         -------
         Any
             New representation of the molecule.
-            (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
 
         """
         if isinstance(value, InvalidInstance):

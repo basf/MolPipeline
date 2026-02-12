@@ -374,17 +374,16 @@ class AdapterPipeline(_Pipeline):
         Parameters
         ----------
         X : iterable
-            Data to predict on. Must fulfill input requirements of first step
-            of the pipeline.
+            Data to predict on.
+            Must fulfill input requirements of first step of the pipeline.
 
         routed_params: Bunch
-            parameters for each step as returned by process_routing
+            Parameters for each step as returned by process_routing `transform`.
 
         Raises
         ------
         AssertionError
-            If one of the transformers is 'passthrough' or does not implement
-            `transform`.
+            If one of the transformers is 'passthrough' or does not implement.
 
         Returns
         -------
