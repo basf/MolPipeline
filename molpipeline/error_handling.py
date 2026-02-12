@@ -6,6 +6,7 @@ from typing import Any, Generic, Self, TypeVar
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from loguru import logger
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,

@@ -42,62 +42,6 @@ __all__ = ["Pipeline"]
 
 _IndexedStep = tuple[int, str, AnyElement]
 _AggStep = tuple[list[int], list[str], "Pipeline"]
-_AggregatedPipelineStep = _IndexedStep | _AggStep
-
-
-def _agg_transformers(
-    transformer_list: Sequence[tuple[int, str, AnyElement]],
-    n_jobs: int = 1,
-) -> tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]:
-    """Aggregate transformers to a single step.
-
-    Parameters
-    ----------
-    transformer_list: list[tuple[int, str, AnyElement]]
-        List of transformers to aggregate.
-    n_jobs: int, optional
-        Number of cores used for aggregated steps.
-
-    Returns
-    -------
-    tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]
-        Aggregated transformer.
-        If the list contains only one transformer, it is returned as is.
-
-    """
-    index_list = [step[0] for step in transformer_list]
-    name_list = [step[1] for step in transformer_list]
-    if len(transformer_list) == 1:
-        return transformer_list[0]
-    return (
-        index_list,
-        name_list,
-        Pipeline(
-            [(step[1], step[2]) for step in transformer_list],
-            n_jobs=n_jobs,
-        ),
-    )
-
-
-def check_single_instance_support(
-    estimator: Any,
-) -> TypeIs[SingleInstanceTransformerMixin | Pipeline]:
-    """Check if the estimator supports single instance processing.
-
-    Parameters
-    ----------
-    estimator: Any
-        Estimator to check.
-
-    Returns
-    -------
-    TypeIs[SingleInstanceTransformerMixin | Pipeline]
-        True if the estimator supports single instance processing.
-
-    """
-    if isinstance(estimator, SingleInstanceTransformerMixin):
-        return True
-    return isinstance(estimator, Pipeline) and estimator.supports_single_instance
 
 
 class Pipeline(AdapterPipeline, TransformingPipelineElement):  # pylint: disable=too-many-ancestors
@@ -154,7 +98,7 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):  # pylint: disable
         with_final: bool = True,
         filter_passthrough: bool = True,
     ) -> Generator[
-        tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement],
+        tuple[list[int], list[str], "Pipeline"] | tuple[int, str, AnyElement],
         Any,
         None,
     ]:
@@ -657,3 +601,58 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):  # pylint: disable
 
         """
         return self._filter_elements_agg.co_transform(x_input)
+
+
+def _agg_transformers(
+    transformer_list: Sequence[tuple[int, str, AnyElement]],
+    n_jobs: int = 1,
+) -> tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]:
+    """Aggregate transformers to a single step.
+
+    Parameters
+    ----------
+    transformer_list: list[tuple[int, str, AnyElement]]
+        List of transformers to aggregate.
+    n_jobs: int, optional
+        Number of cores used for aggregated steps.
+
+    Returns
+    -------
+    tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]
+        Aggregated transformer.
+        If the list contains only one transformer, it is returned as is.
+
+    """
+    index_list = [step[0] for step in transformer_list]
+    name_list = [step[1] for step in transformer_list]
+    if len(transformer_list) == 1:
+        return transformer_list[0]
+    return (
+        index_list,
+        name_list,
+        Pipeline(
+            [(step[1], step[2]) for step in transformer_list],
+            n_jobs=n_jobs,
+        ),
+    )
+
+
+def check_single_instance_support(
+    estimator: Any,
+) -> TypeIs[SingleInstanceTransformerMixin | Pipeline]:
+    """Check if the estimator supports single instance processing.
+
+    Parameters
+    ----------
+    estimator: Any
+        Estimator to check.
+
+    Returns
+    -------
+    TypeIs[SingleInstanceTransformerMixin | Pipeline]
+        True if the estimator supports single instance processing.
+
+    """
+    if isinstance(estimator, SingleInstanceTransformerMixin):
+        return True
+    return isinstance(estimator, Pipeline) and estimator.supports_single_instance
