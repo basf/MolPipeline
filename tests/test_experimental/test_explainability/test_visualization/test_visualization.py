@@ -56,7 +56,7 @@ def _get_test_morgan_rf_pipeline(task: str = "classification") -> Pipeline:
     else:
         raise ValueError(f"Invalid task: {task}")
 
-    pipeline = Pipeline(
+    return Pipeline(
         [
             ("smi2mol", SmilesToMol()),
             ("morgan", MolToMorganFP(radius=1, n_bits=1024)),
@@ -66,7 +66,6 @@ def _get_test_morgan_rf_pipeline(task: str = "classification") -> Pipeline:
             ),
         ],
     )
-    return pipeline
 
 
 class TestExplainabilityVisualization(unittest.TestCase):

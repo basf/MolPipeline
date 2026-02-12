@@ -79,7 +79,7 @@ class AnySklearnEstimator(Protocol):
 
     def fit(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # pylint: disable=invalid-name  # noqa: N803
         y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> Self:
@@ -87,7 +87,7 @@ class AnySklearnEstimator(Protocol):
 
         Parameters
         ----------
-        X: npt.NDArray[Any]
+        X: npt.ArrayLike
             Model input.
         y: npt.NDArray[Any] | None
             Target values.
@@ -108,7 +108,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
 
     def fit_predict(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # pylint: disable=invalid-name  # noqa: N803
         y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
@@ -116,7 +116,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
 
         Parameters
         ----------
-        X: npt.NDArray[Any]
+        X: npt.ArrayLike
             Model input.
         y: npt.NDArray[Any] | None
             Target values.
@@ -136,7 +136,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
 
     def fit_transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # pylint: disable=invalid-name  # noqa: N803
         y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
@@ -144,7 +144,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
 
         Parameters
         ----------
-        X: npt.NDArray[Any]
+        X: npt.ArrayLike
             Model input.
         y: npt.NDArray[Any] | None
             Target values.
@@ -161,14 +161,14 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
 
     def transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # pylint: disable=invalid-name  # noqa: N803
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Transform and return X according to object protocol.
 
         Parameters
         ----------
-        X: npt.NDArray[Any]
+        X: npt.ArrayLike
             Model input.
         params: Any
             Additional parameters for transforming.

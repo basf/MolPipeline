@@ -98,7 +98,7 @@ class ElementFilterTest(unittest.TestCase):
         ]
 
         for test_params in test_params_list_with_results:
-            pipeline.set_params(**test_params["params"])
+            pipeline.set_params(**test_params["params"])  # type: ignore
             filtered_smiles = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles, test_params["result"])
 
@@ -188,7 +188,7 @@ class ComplexFilterTest(unittest.TestCase):
         ]
 
         for test_params in test_params_list_with_results:
-            pipeline.set_params(**test_params["params"])
+            pipeline.set_params(**test_params["params"])  # type: ignore
             filtered_smiles = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles, test_params["result"])
 
@@ -276,7 +276,7 @@ class SmartsSmilesFilterTest(unittest.TestCase):
             ]
 
             for test_params in test_params_list_with_results:
-                pipeline.set_params(**test_params["params"])
+                pipeline.set_params(**test_params["params"])  # type: ignore
                 filtered_smiles = pipeline.fit_transform(SMILES_LIST)
                 self.assertEqual(filtered_smiles, test_params["result"])
 
@@ -433,7 +433,7 @@ class RDKitDescriptorsFilterTest(unittest.TestCase):
         ]
 
         for test_params in test_params_list_with_results:
-            pipeline.set_params(**test_params["params"])
+            pipeline.set_params(**test_params["params"])  # type: ignore
             filtered_smiles = pipeline.fit_transform(SMILES_LIST)
             self.assertEqual(filtered_smiles, test_params["result"])
 

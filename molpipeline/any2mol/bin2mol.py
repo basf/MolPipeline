@@ -1,5 +1,7 @@
 """Classes ment to transform given input to a RDKit molecule."""
 
+import contextlib
+
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.core import (
@@ -41,10 +43,8 @@ class BinaryToMol(AnyToMolPipelineElement):
             )
 
         mol: OptionalMol | None = None
-        try:
+        with contextlib.suppress(RuntimeError):
             mol = Chem.Mol(value)
-        except RuntimeError:
-            pass
 
         if not mol:
             return InvalidInstance(
