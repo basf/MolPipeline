@@ -14,11 +14,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     SingleInstanceTransformerMixin,
     TransformingPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
-
-    from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
+from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
 
 __all__ = ["ErrorFilter", "FilterReinserter", "_MultipleErrorFilter"]
 
@@ -748,7 +744,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         if len(values) != self.error_filter.n_total - len(
             self.error_filter.error_indices,
         ):
-            expected_length = self.error_filter.n_total - len(
+            self.error_filter.n_total - len(
                 self.error_filter.error_indices,
             )
             raise ValueError(

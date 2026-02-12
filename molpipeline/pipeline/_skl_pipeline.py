@@ -2,11 +2,12 @@
 
 # pylint: disable=too-many-lines
 
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable, Sequence
 from copy import deepcopy
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeIs
+from typing import Any, Literal, Self, TypeIs
 
+import joblib
 import numpy as np
 from joblib import Parallel, delayed
 from rdkit.Chem.rdchem import MolSanitizeException
@@ -33,14 +34,8 @@ from molpipeline.utils.molpipeline_types import (
     AnyPredictor,
     AnyStep,
     AnyTransformer,
+    TypeFixedVarSeq,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Generator, Iterable, Sequence
-
-    import joblib
-
-    from molpipeline.utils.molpipeline_types import TypeFixedVarSeq
 
 __all__ = ["Pipeline"]
 
@@ -371,8 +366,8 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):  # pylint: disable
         for error_filter in self._filter_elements:
             removed_idx_list = removed_row_dict[error_filter]
             error_filter.error_indices = []
-            for new_idx, _idx in enumerate(iter_idx_array):
-                if _idx in removed_idx_list:
+            for new_idx, idx_ in enumerate(iter_idx_array):
+                if idx_ in removed_idx_list:
                     error_filter.error_indices.append(new_idx)
             error_filter.n_total = len(iter_idx_array)
             iter_idx_array = error_filter.co_transform(iter_idx_array)

@@ -1,7 +1,8 @@
 """Mock PipelineElement for testing."""
 
 import copy
-from typing import TYPE_CHECKING, Any, Self
+from collections.abc import Iterable
+from typing import Any, Self
 
 import numpy as np
 
@@ -10,9 +11,6 @@ from molpipeline.abstract_pipeline_elements.core import (
     SingleInstanceTransformerMixin,
     TransformingPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
 
 
 class MockTransformingPipelineElement(

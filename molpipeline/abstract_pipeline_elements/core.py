@@ -3,7 +3,8 @@
 import abc
 import copy
 import inspect
-from typing import TYPE_CHECKING, Any, NamedTuple, Self
+from collections.abc import Iterable
+from typing import Any, NamedTuple, Self
 from uuid import uuid4
 
 from joblib import Parallel, delayed
@@ -13,9 +14,6 @@ from rdkit.Chem import Mol as RDKitMol
 from sklearn.utils import Tags, TargetTags
 
 from molpipeline.utils.multi_proc import check_available_cores
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
 
 
 class InvalidInstance(NamedTuple):
@@ -435,6 +433,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         Any
             Transformed input_values.
+
         """
         output_values = self.pretransform(values)
         return self.assemble_output(output_values)
@@ -490,6 +489,7 @@ class SingleInstanceTransformerMixin(abc.ABC):
         Any
             New representation of the molecule.
             (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
+
         """
         if isinstance(value, InvalidInstance):
             return value
@@ -513,6 +513,7 @@ class SingleInstanceTransformerMixin(abc.ABC):
         -------
         Any
             Pretransformed value. (Skips applying parameters learned during fitting)
+
         """
 
 

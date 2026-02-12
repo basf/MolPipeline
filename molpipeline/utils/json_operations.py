@@ -38,12 +38,11 @@ def transform_functions2string(value: Any) -> Any:
 
     """
     if callable(value):
-        out_dict = {
+        return {
             "load_from_constructor": True,
             "__name__": value.__name__,
             "__module__": value.__module__,
         }
-        return out_dict
 
     if isinstance(value, dict):
         out_dict = {}
@@ -52,10 +51,7 @@ def transform_functions2string(value: Any) -> Any:
         return out_dict
 
     if isinstance(value, list):
-        out_list = []
-        for list_value in value:
-            out_list.append(transform_functions2string(list_value))
-        return out_list
+        return [transform_functions2string(list_value) for list_value in value]
 
     return value
 
@@ -94,10 +90,7 @@ def transform_string2function(value: Any) -> Any:
         return out_dict
 
     if isinstance(value, list):
-        out_list = []
-        for list_value in value:
-            out_list.append(transform_string2function(list_value))
-        return out_list
+        return [transform_string2function(list_value) for list_value in value]
 
     return value
 
@@ -249,8 +242,7 @@ def recursive_to_json(obj: Any) -> Any:
         obj,
         (str, int, float, bool, dict, types.FunctionType, list, set, tuple),
     ):
-        return_value = builtin_to_json(obj)
-        return return_value
+        return builtin_to_json(obj)
 
     # If neither of the above, it is assumed to be an object.
     object_dict: dict[str, Any] = {

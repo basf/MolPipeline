@@ -1,6 +1,7 @@
 """Classes for descriptors from multiple concatenated descriptors or fingerprints."""
 
-from typing import TYPE_CHECKING, Any, Self
+from collections.abc import Iterable
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -14,11 +15,7 @@ from molpipeline.abstract_pipeline_elements.core import (
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToFingerprintPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToConcatenatedVector(MolToAnyPipelineElement):
