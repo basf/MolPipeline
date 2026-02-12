@@ -166,9 +166,8 @@ class ABCPipelineElement(abc.ABC):
             if value_default is inspect.Parameter.empty:
                 non_default_params[parm] = self_params[parm]
                 continue
-            if parm in self_params:
-                if value_default.default != self_params[parm]:
-                    non_default_params[parm] = self_params[parm]
+            if parm in self_params and value_default.default != self_params[parm]:
+                non_default_params[parm] = self_params[parm]
         return non_default_params
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
