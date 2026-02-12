@@ -29,7 +29,7 @@ DEFAULT_DESCRIPTORS = [
 
 
 class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
-    """Descriptor based on RDKit phys-chem properties."""
+    """Element for creating a descriptor vector based on RDKit phys-chem properties."""
 
     _descriptor_list: list[str]
 
@@ -89,7 +89,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         descriptor_list: list[str] | None
-            List of descriptor names to calculate.
+            List of descriptors to calculate.
             If None, DEFAULT_DESCRIPTORS are used.
 
         Raises

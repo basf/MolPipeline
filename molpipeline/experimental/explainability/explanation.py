@@ -19,7 +19,7 @@ class _AbstractMoleculeExplanation(abc.ABC):
 
 @dataclasses.dataclass(kw_only=True)
 class FeatureInfoMixin:
-    """Mixin providing additional information about the features used in the explanation."""
+    """Mixin for additional information about the features used in the explanation."""
 
     feature_vector: npt.NDArray[np.float64] | None = None
     feature_names: list[str] | None = None

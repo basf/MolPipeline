@@ -61,7 +61,7 @@ class CircularAtomEnvironment(AtomEnvironment):
         Returns
         -------
         Self
-            Encoded the atoms which are within the radius of the central atom and are part of the feature.
+            Encoded the atoms which are within the radius of the central atom.
 
         """
         if radius == 0:

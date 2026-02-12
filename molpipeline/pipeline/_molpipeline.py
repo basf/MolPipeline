@@ -93,7 +93,8 @@ class _MolPipeline:
         ----------
         requested_jobs: int
             Number of cores requested for transformation steps.
-            If fewer cores than requested are available, the number of cores is set to maximum available.
+            If fewer cores than requested are available, the number of cores is set to
+            maximum available.
 
         """
         self._n_jobs = check_available_cores(requested_jobs)
@@ -110,7 +111,7 @@ class _MolPipeline:
         Parameters
         ----------
         parameter_dict: dict[str, Any]
-            Dictionary containing the parameter names and corresponding values to be set.
+            Parameter to be set.
 
         """
         self.set_params(**parameter_dict)
@@ -152,7 +153,7 @@ class _MolPipeline:
         Parameters
         ----------
         parameter_dict: Any
-            Dictionary containing the parameter names and corresponding values to be set.
+            Parameters to be set.
 
         Returns
         -------
@@ -176,7 +177,9 @@ class _MolPipeline:
     def _get_meta_element_list(
         self,
     ) -> "list[ABCPipelineElement | _MolPipeline]":
-        """Merge elements which do not require fitting to a meta element which improves parallelization.
+        """Merge elements which do not require fitting to a meta element.
+
+        This improves parallelization of the pipeline.
 
         Returns
         -------
@@ -244,7 +247,7 @@ class _MolPipeline:
         y: Any = None,
         **fit_params: dict[str, Any],
     ) -> Any:
-        """Fit the MolPipeline according to x_input and return the transformed molecules.
+        """Fit the MolPipeline according to input and return the transformed molecules.
 
         Parameters
         ----------
@@ -274,7 +277,8 @@ class _MolPipeline:
             removed_rows[error_filter] = []
         iter_idx_array = np.arange(len(iter_input))
 
-        # The meta elements merge steps which do not require fitting to improve parallelization
+        # The meta elements merge steps which do not require fitting to improve
+        # parallelization
         for i_element in self._get_meta_element_list():
             if not isinstance(i_element, (TransformingPipelineElement, _MolPipeline)):
                 continue
@@ -314,7 +318,7 @@ class _MolPipeline:
         return iter_input
 
     def transform_single(self, input_value: Any) -> Any:
-        """Transform a single input according to the sequence of provided PipelineElements.
+        """Transform a single input according to the sequence of PipelineElements.
 
         Parameters
         ----------
@@ -346,7 +350,7 @@ class _MolPipeline:
         return iter_value
 
     def pretransform(self, x_input: Any) -> Any:
-        """Transform the input according to the sequence BUT skip the assemble output step.
+        """Transform the input according to the sequence without assembling the output.
 
         Parameters
         ----------

@@ -14,7 +14,7 @@ from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
-    """PipelineElement for generating descriptor-vectors."""
+    """PipelineElement for descriptor-vectors of each molecule."""
 
     _output_type = "float"
     _feature_names: list[str]
@@ -60,7 +60,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         value_list: Iterable[npt.NDArray[np.float64]]
-            List of numpy arrays with calculated descriptor values of each molecule.
+            List of descriptor arrays for each molecule.
 
         Returns
         -------
@@ -80,7 +80,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         values: list[RDKitMol]
-            List of RDKit molecules for which the descriptor vectors are calculated.
+            List of RDKit molecules.
 
         Returns
         -------
@@ -96,9 +96,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         self,
         value: RDKitMol,
     ) -> npt.NDArray[np.float64] | InvalidInstance:
-        """Transform mol to dict.
-
-        Items encode columns indices and values, respectively.
+        """Transform mol to the descriptor vector.
 
         Parameters
         ----------

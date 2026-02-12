@@ -136,9 +136,10 @@ class TestSHAPExplainers(unittest.TestCase):
                 GradientBoostingClassifier,
             ):
                 # there is currently a bug in SHAP's TreeExplainer for
-                # GradientBoostingClassifier https://github.com/shap/shap/issues/3177
-                # returning only one feature weight which is also based on log odds.
+                # GradientBoostingClassifier, returning only one feature weight, which
+                # is also based on log odds.
                 # This check is a workaround until the bug is fixed.
+                # see https://github.com/shap/shap/issues/3177
                 self.assertEqual(
                     (nof_features,),
                     explanation.feature_weights.shape,  # type: ignore[union-attr]
@@ -225,7 +226,7 @@ class TestSHAPExplainers(unittest.TestCase):
     def test_explanations_fingerprint_pipeline(  # pylint: disable=too-many-locals
         self,
     ) -> None:
-        """Test SHAP's TreeExplainer wrapper on Pipelines with fingerprints."""
+        """Test SHAP's TreeExplainer wrapper on pipelines with fingerprints."""
         tree_estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
