@@ -132,7 +132,7 @@ class ColorGrid(Grid2D):
         y_lim: Sequence[float],
         x_res: int,
         y_res: int,
-    ):
+    ) -> None:
         """Initialize the ColorGrid with limits and resolution of the axes.
 
         Parameters
@@ -170,7 +170,7 @@ class ValueGrid(Grid2D):
         function_list: (
             list[Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]]] | None
         ) = None,
-    ):
+    ) -> None:
         """Initialize the ValueGrid with limits and resolution of the axes.
 
         Parameters

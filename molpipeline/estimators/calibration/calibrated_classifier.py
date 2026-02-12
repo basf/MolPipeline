@@ -439,7 +439,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         n_jobs: int | None = None,
         ensemble: Literal["auto"] | bool = "auto",
         class_weight: dict[Any, float] | Literal["balanced"] | None = None,
-    ):
+    ) -> None:
         """Initialize the CalibratedClassifierCV instance.
 
         Parameters

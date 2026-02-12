@@ -36,7 +36,7 @@ class MolToInchiKey(_MolToStringPipelineElement):
         name: str = "MolToInchiKey",
         n_jobs: int = 1,
         uuid: str | None = None,
-    ):
+    ) -> None:
         """Initialize MolToInchiKey.
 
         Parameters

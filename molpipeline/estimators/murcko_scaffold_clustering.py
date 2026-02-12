@@ -37,7 +37,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         make_generic: bool = False,
         n_jobs: int = 1,
         linear_molecules_strategy: Literal["ignore", "own_cluster"] = "ignore",
-    ):
+    ) -> None:
         """Initialize Murcko scaffold clustering estimator.
 
         Parameters

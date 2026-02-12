@@ -87,7 +87,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
         name: str = "MolToFingerprintPipelineElement",
         n_jobs: int = 1,
         uuid: str | None = None,
-    ):
+    ) -> None:
         """Initialize abstract class.
 
         Parameters
@@ -302,7 +302,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
         name: str = "MolToRDKitGenFin",
         n_jobs: int = 1,
         uuid: str | None = None,
-    ):
+    ) -> None:
         """Initialize abstract class.
 
         Parameters
@@ -438,7 +438,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         name: str = "AbstractMorgan",
         n_jobs: int = 1,
         uuid: str | None = None,
-    ):
+    ) -> None:
         """Initialize abstract class.
 
         Parameters

@@ -65,7 +65,7 @@ class Pipeline(_Pipeline):
         memory: str | joblib.Memory | None = None,
         verbose: bool = False,
         n_jobs: int = 1,
-    ):
+    ) -> None:
         """Initialize Pipeline.
 
         Parameters
