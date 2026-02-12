@@ -29,7 +29,10 @@ class CircularAtomEnvironment(AtomEnvironment):
     """A Class to store environment-information for morgan-fingerprint features."""
 
     def __init__(
-        self, central_atom: int, radius: int, environment_atoms: set[int],
+        self,
+        central_atom: int,
+        radius: int,
+        environment_atoms: set[int],
     ) -> None:
         """Initialize CircularAtomEnvironment.
 
