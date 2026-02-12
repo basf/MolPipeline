@@ -1,6 +1,4 @@
-"""Classes for descriptors from multiple descriptors or fingerprints."""
-
-from __future__ import annotations
+"""Classes for descriptors from multiple concatenated descriptors or fingerprints."""
 
 from typing import TYPE_CHECKING, Any, Self
 
@@ -24,7 +22,7 @@ if TYPE_CHECKING:
 
 
 class MolToConcatenatedVector(MolToAnyPipelineElement):
-    """A concatenated descriptor vector from multiple MolToAny PipelineElements."""
+    """Creates a concatenated descriptor vector from multiple elements."""
 
     _element_list: list[tuple[str, MolToAnyPipelineElement]]
 
@@ -44,15 +42,15 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         ----------
         element_list: list[MolToAnyPipelineElement]
             List of Pipeline Elements of which the output is concatenated.
-        use_feature_names_prefix: bool, optional (default=True)
+        use_feature_names_prefix: bool, default=True
             If True, will add the pipeline element's name as prefix to feature names.
             If False, only the feature names are used. This can lead to duplicate
             feature names.
-        name: str, optional (default="MolToConcatenatedVector")
-            name of pipeline.
-        n_jobs: int, optional (default=1)
+        name: str, default="MolToConcatenatedVector"
+            Name of pipeline.
+        n_jobs: int, default=1
             Number of cores used.
-        uuid: str | None, optional (default=None)
+        uuid: str | None, optional
             UUID of the pipeline element. If None, a random UUID is generated.
         kwargs: Any
             Additional keyword arguments.
@@ -308,10 +306,13 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         npt.NDArray[np.float64]
             Matrix of shape (n_molecules, n_features) with concatenated features
-            specified during init.
+            .
 
         """
-        return np.vstack(list(value_list))
+        values = list(value_list)
+        if len(values) == 0:
+            return np.empty((0, self.n_features), dtype=np.float64)
+        return np.vstack(values)
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.
@@ -325,7 +326,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         -------
         npt.NDArray[np.float64]
             Matrix of shape (n_molecules, n_features) with concatenated features
-            specified during init.
+            .
 
         """
         output: npt.NDArray[np.float64] = super().transform(values)

@@ -1,12 +1,11 @@
 """Classes and functions for detecting and handling None values."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
+from collections.abc import Iterable, Sequence
+from typing import Any, Generic, Self, TypeVar
 
 import numpy as np
 import numpy.typing as npt
-from loguru import logger
+import pandas as pd
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
@@ -28,7 +27,7 @@ _S = TypeVar("_S")
 
 
 class ErrorFilter(SingleInstanceTransformerMixin, TransformingPipelineElement):
-    """Filter to remove InvalidInstances from a list of values."""
+    """Collects tracks and removes error values."""
 
     element_ids: set[str]
     error_indices: list[int]
@@ -196,9 +195,9 @@ class ErrorFilter(SingleInstanceTransformerMixin, TransformingPipelineElement):
         Parameters
         ----------
         values: AnyVarSeq
-            Values used for fitting. (Not really used)
+            Values used for fitting. For compatibility with sklearn, not used.
         labels: Any
-            Label used for fitting. (Not really used)
+            Label used for fitting. For compatibility with sklearn, not used.
 
         Returns
         -------
@@ -235,7 +234,7 @@ class ErrorFilter(SingleInstanceTransformerMixin, TransformingPipelineElement):
         return self.transform(values)
 
     def co_transform(self, values: TypeFixedVarSeq) -> TypeFixedVarSeq:
-        """Remove rows at positions which contained discarded values in `transform`.
+        """Remove rows at positions with discarded values.
 
         This ensures that rows of this instance maintain a one to one correspondence
         with the rows of data seen during transformation.
@@ -271,6 +270,8 @@ class ErrorFilter(SingleInstanceTransformerMixin, TransformingPipelineElement):
             return out_list  # type: ignore  # mypy does not support higher-kinded types
         if isinstance(values, np.ndarray):
             return np.delete(values, self.error_indices, axis=0)  # type: ignore
+        if isinstance(values, pd.Series):
+            return values.drop(values.index[self.error_indices])
         raise TypeError(f"Unexpected Type: {type(values)}")
 
     def transform(self, values: TypeFixedVarSeq) -> TypeFixedVarSeq:
@@ -309,7 +310,7 @@ class ErrorFilter(SingleInstanceTransformerMixin, TransformingPipelineElement):
         Returns
         -------
         Any
-            The original value or a RemovedInstance.
+            Transformed value.
 
         """
         return self.pretransform_single(value)
@@ -375,7 +376,7 @@ class _MultipleErrorFilter:
         return values
 
     def co_transform(self, values: TypeFixedVarSeq) -> TypeFixedVarSeq:
-        """Remove rows at positions which contained discarded values in `transform`.
+        """Remove rows at positions with discarded values.
 
         Parameters
         ----------
@@ -385,7 +386,7 @@ class _MultipleErrorFilter:
         Returns
         -------
         TypeFixedVarSeq
-            Iterable where rows are removed which were removed in `transform`.
+            Iterable without rows removed during the transformation.
 
         """
         for error_filter in self.error_filter_list:
@@ -440,8 +441,8 @@ class _MultipleErrorFilter:
                 break
         else:
             raise ValueError(
-                f"Invalid instance not captured by any ErrorFilter: "
-                f"{value.filter_element_id}",
+                "Invalid instance not captured by any ErrorFilter:"
+                f" {value.filter_element_id}",
             )
 
     def set_total(self, total: int) -> None:
@@ -636,10 +637,31 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             raise ValueError(f"ErrorFilter with id {self.error_filter_id} not found")
         return self
 
+    @staticmethod
+    def _validate_input_values(values: TypeFixedVarSeq) -> None:
+        """Validate the input values.
+
+        Parameters
+        ----------
+        values: TypeFixedVarSeq
+            Values to be checked.
+
+        Raises
+        ------
+        TypeError
+            If values is not a list, numpy array or pandas Series.
+
+        """
+        if not isinstance(values, (list, np.ndarray, pd.Series)):
+            raise TypeError(
+                "Values must be a list, numpy array or pandas Series. "
+                f"Received: {type(values)}",
+            )
+
     # pylint: disable=unused-argument
     def fit(
         self,
-        values: TypeFixedVarSeq,  # noqa: ARG002
+        values: TypeFixedVarSeq,
         labels: Any = None,  # noqa: ARG002
         **params: Any,  # noqa: ARG002
     ) -> Self:
@@ -651,11 +673,10 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         ----------
         values: TypeFixedVarSeq
             Values used for fitting.
-        labels: Any, optional
-            Label used for fitting.
-            (Not used, but required for compatibility with sklearn)
+        labels: Any
+            Label used for fitting. For compatibility with sklearn, not used.
         **params: Any
-            Additional keyword arguments. (Not used)
+            Additional keyword arguments. For compatibility with sklearn, not used.
 
         Returns
         -------
@@ -663,6 +684,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             Fitted FilterReinserter.
 
         """
+        self._validate_input_values(values)
         return self
 
     # pylint: disable=unused-argument
@@ -684,7 +706,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             Label used for fitting.
             (Not used, but required for compatibility with sklearn)
         **params: Any
-            Additional keyword arguments. (Not used)
+            Additional keyword arguments. For compatibility with sklearn, not used.
 
         Returns
         -------
@@ -698,7 +720,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
     def transform(
         self,
         values: TypeFixedVarSeq,
-        **params: Any,  # noqa: ARG002
+        **params: Any,
     ) -> TypeFixedVarSeq:
         """Transform iterable of values by removing invalid instances.
 
@@ -722,9 +744,13 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             Iterable where invalid instances were removed.
 
         """
+        self._validate_input_values(values)
         if len(values) != self.error_filter.n_total - len(
             self.error_filter.error_indices,
         ):
+            expected_length = self.error_filter.n_total - len(
+                self.error_filter.error_indices,
+            )
             raise ValueError(
                 f"Length of values does not match length of values in fit. "
                 f"Expected: "
@@ -778,8 +804,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         Returns
         -------
         npt.NDArray[Any]
-            Numpy array where dummy values were inserted to replace instances which
-            could not be processed.
+            Numpy array where unprocessable values are replaced by dummy values.
 
         """
         fill_value = self.fill_value
@@ -817,8 +842,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         Returns
         -------
         AnyVarSeq
-            Iterable where dummy values were inserted to replace molecules which could
-            not be processed.
+            Iterable where unprocessable values are replaced by dummy values.
 
         """
         if isinstance(value_container, list):

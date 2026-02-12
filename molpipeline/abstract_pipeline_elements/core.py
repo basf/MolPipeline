@@ -1,7 +1,5 @@
 """All abstract classes later pipeline elements inherit from."""
 
-from __future__ import annotations  # for all the python 3.8 users out there.
-
 import abc
 import copy
 import inspect
@@ -12,6 +10,7 @@ from joblib import Parallel, delayed
 from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol
+from sklearn.utils import Tags, TargetTags
 
 from molpipeline.utils.multi_proc import check_available_cores
 
@@ -66,7 +65,7 @@ class RemovedInstance:  # pylint: disable=too-few-public-methods
         filter_element_id: str
             FilterElement which removed the molecule.
         message: str | None, optional
-            Optional message why the molecule was removed.
+            Information why the molecule was removed.
 
         """
         self.filter_element_id = filter_element_id
@@ -132,6 +131,23 @@ class ABCPipelineElement(abc.ABC):
         parm_str = ", ".join(parm_list)
         return f"{self.__class__.__name__}({parm_str})"
 
+    def __sklearn_tags__(self) -> Tags:
+        """Return Tags for the Element.
+
+        Returns
+        -------
+        Tags
+            Tags for the Element.
+
+        """
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+            transformer_tags=None,
+            regressor_tags=None,
+            classifier_tags=None,
+        )
+
     def _get_non_default_parameters(self) -> dict[str, Any]:
         """Return all parameters which are not default.
 
@@ -182,7 +198,7 @@ class ABCPipelineElement(abc.ABC):
         }
 
     def set_params(self, **parameters: Any) -> Self:
-        """Set the parameters of the object.
+        """Change the parameters of the object.
 
         Parameters
         ----------
@@ -232,6 +248,9 @@ class ABCPipelineElement(abc.ABC):
     ) -> Self:
         """Fit object to input_values.
 
+        Most objects might not need fitting, but it is implemented for
+        consistency for all PipelineElements.
+
         Parameters
         ----------
         values: Any
@@ -258,7 +277,7 @@ class ABCPipelineElement(abc.ABC):
         Parameters
         ----------
         values: Any
-            Apply transform_single to all molecules in the value_list.
+            Apply transform_single to the value_list.
         labels: Any
             Optional label for fitting.
 
@@ -276,9 +295,10 @@ class ABCPipelineElement(abc.ABC):
         Parameters
         ----------
         values: Any
-            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules,
-            PhysChem vectors etc.).
-            Input depends on the concrete PipelineElement.
+            Iterable of instances to be transformed.
+            Could be list of molecule representations (SMILES, Molecules,
+            PhysChem
+            vectors etc.).
 
         Returns
         -------
@@ -353,7 +373,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         Parameters
         ----------
         values: Any
-            Apply transform_single to all molecules in the value_list.
+            Apply transform_single to the value_list.
         labels: Any
             Optional label for fitting.
 
@@ -415,7 +435,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         -------
         Any
             Transformed input_values.
-
         """
         output_values = self.pretransform(values)
         return self.assemble_output(output_values)
@@ -471,7 +490,6 @@ class SingleInstanceTransformerMixin(abc.ABC):
         Any
             New representation of the molecule.
             (Eg. SMILES, RDKit Mol, Descriptor-Vector, ...)
-
         """
         if isinstance(value, InvalidInstance):
             return value
@@ -495,7 +513,6 @@ class SingleInstanceTransformerMixin(abc.ABC):
         -------
         Any
             Pretransformed value. (Skips applying parameters learned during fitting)
-
         """
 
 
@@ -520,7 +537,8 @@ class MolToMolPipelineElement(
         Returns
         -------
         list[OptionalMol]
-            List of molecules or InvalidInstances.
+            List of molecules.
+            InvalidInstances, if the transformation was not successful.
 
         """
         mol_list: list[OptionalMol] = super().transform(values)  # Stupid mypy...
@@ -547,12 +565,14 @@ class MolToMolPipelineElement(
         except Exception as exc:
             if isinstance(value, Chem.Mol):
                 logger.error(
-                    f"Failed to process: {Chem.MolToSmiles(value)} | ({self.name}) "
+                    f"Failed to process: {Chem.MolToSmiles(value)} | "
+                    f"({self.name}) "
                     f"({self.uuid})",
                 )
             else:
                 logger.error(
-                    f"Failed to process: {value} ({type(value)}) | ({self.name}) "
+                    f"Failed to process: {value} ({type(value)}) | "
+                    f"({self.name}) "
                     f"({self.uuid})",
                 )
             raise exc
@@ -596,7 +616,8 @@ class AnyToMolPipelineElement(
         Returns
         -------
         list[OptionalMol]
-            List of molecules or InvalidInstances.
+            List of molecules.
+            InvalidInstance if the representation was invalid.
 
         """
         mol_list: list[OptionalMol] = super().transform(values)  # Stupid mypy...
@@ -604,7 +625,10 @@ class AnyToMolPipelineElement(
 
     @abc.abstractmethod
     def pretransform_single(self, value: Any) -> OptionalMol:
-        """Transform the instance to a molecule.
+        """Transform a single instance to a molecule.
+
+        The transformations only includes steps which do not depend on parameters
+        learned during fitting.
 
         Parameters
         ----------

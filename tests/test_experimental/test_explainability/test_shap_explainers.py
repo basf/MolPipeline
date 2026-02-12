@@ -52,8 +52,10 @@ TEST_SMILES_WITH_BAD_SMILES = [
     "CCC(-O)O",
     "CCCN",
     "BAD_SMILES_2",
+    "C1=NC(N)=[Se]=C1",  # fails physchem calculation but not morgan calculation
+    "Si",  # fails morgan calculation but not physchem calculation
 ]
-CONTAINS_OX_BAD_SMILES = [0, 1, 1, 0, 0, 1, 0, 1]
+CONTAINS_OX_BAD_SMILES = [0, 1, 1, 0, 0, 1, 0, 1, 0, 0]
 
 _RANDOM_STATE = 67056
 
@@ -134,9 +136,10 @@ class TestSHAPExplainers(unittest.TestCase):
                 GradientBoostingClassifier,
             ):
                 # there is currently a bug in SHAP's TreeExplainer for
-                # GradientBoostingClassifier https://github.com/shap/shap/issues/3177
-                # returning only one feature weight which is also based on log odds.
+                # GradientBoostingClassifier, returning only one feature weight, which
+                # is also based on log odds.
                 # This check is a workaround until the bug is fixed.
+                # see https://github.com/shap/shap/issues/3177
                 self.assertEqual(
                     (nof_features,),
                     explanation.feature_weights.shape,  # type: ignore[union-attr]
@@ -223,7 +226,7 @@ class TestSHAPExplainers(unittest.TestCase):
     def test_explanations_fingerprint_pipeline(  # pylint: disable=too-many-locals
         self,
     ) -> None:
-        """Test SHAP's TreeExplainer wrapper on Pipelines with fingerprints."""
+        """Test SHAP's TreeExplainer wrapper on pipelines with fingerprints."""
         tree_estimators = [
             RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
             RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
@@ -341,7 +344,7 @@ class TestSHAPExplainers(unittest.TestCase):
                     self.assertIsNotNone(mol_reader_subpipeline)
 
                     for i, explanation in enumerate(explanations):
-                        if i in {3, 7}:
+                        if i in {3, 7, 9}:
                             self.assertFalse(explanation.is_valid())
                             continue
 

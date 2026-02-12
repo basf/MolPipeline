@@ -1,17 +1,22 @@
 """Explainer classes for explaining predictions."""
 
-from __future__ import annotations
-
 import abc
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable
+from typing import Any
+
+try:
+    from typing import override  # type: ignore[attr-defined]
+except ImportError:
+    from typing_extensions import override
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import shap
-from scipy.sparse import issparse, spmatrix
-from typing_extensions import override
+from scipy.sparse import spmatrix
+from sklearn.base import BaseEstimator
 
+from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance, OptionalMol
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     MolToRDKitGenFPElement,
@@ -29,13 +34,7 @@ from molpipeline.experimental.explainability.fingerprint_utils import (
     fingerprint_shap_to_atomweights,
 )
 from molpipeline.utils.subpipeline import SubpipelineExtractor, get_model_from_pipeline
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from sklearn.base import BaseEstimator
-
-    from molpipeline import Pipeline
+from molpipeline.utils.type_guards import sparse_type_guard
 
 
 def _to_dense(
@@ -54,14 +53,17 @@ def _to_dense(
         The input features in a compatible format.
 
     """
-    if issparse(feature_matrix):
-        return feature_matrix.todense()  # type: ignore[union-attr]
-    return feature_matrix
+    if sparse_type_guard(feature_matrix):
+        return feature_matrix.todense()  # type: ignore # Can be removed for py>=3.13
+    return feature_matrix  # type: ignore # Can be removed for py>=3.13
 
 
 def _get_prediction_function(
     pipeline: Pipeline | BaseEstimator,
-) -> Callable[[npt.ArrayLike], npt.ArrayLike]:
+) -> Callable[
+    [npt.ArrayLike | spmatrix],
+    npt.NDArray[np.float64] | npt.NDArray[np.int64],
+]:
     """Get the prediction function of a model.
 
     Parameters
@@ -92,7 +94,7 @@ def _get_prediction_function(
 # This function might also be put at a more central position in the lib.
 def _get_predictions(
     pipeline: Pipeline,
-    feature_matrix: npt.NDArray[Any] | spmatrix,
+    feature_matrix: npt.ArrayLike | spmatrix,
 ) -> npt.NDArray[np.float64]:
     """Get the predictions of a model.
 
@@ -276,7 +278,8 @@ class SHAPExplainerAdapter(  # pylint: disable=too-few-public-methods
             Whether the prediction is valid.
 
         """
-        # if no prediction could be obtained (length is 0); the prediction guaranteed
+        # if no prediction could be obtained (length is 0);
+        # the prediction guaranteed
         # failed.
         if len(prediction) == 0:
             return False

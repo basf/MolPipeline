@@ -1,7 +1,8 @@
 """Defines a pipeline is exposed to the user, accessible via pipeline."""
 
-from __future__ import annotations
+# pylint: disable=too-many-lines
 
+from collections.abc import Iterable
 from copy import deepcopy
 from itertools import islice
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeIs
@@ -164,8 +165,7 @@ class Pipeline(AdapterPipeline, TransformingPipelineElement):  # pylint: disable
     ]:
         """Iterate over all non post-processing steps.
 
-        Steps which are children of a ABCPipelineElement were aggregated to a
-        MolPipeline.
+        Steps where children of a ABCPipelineElement are aggregated to a MolPipeline.
 
         Parameters
         ----------

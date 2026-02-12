@@ -1,7 +1,5 @@
 """Module for elements that are applied in the pipeline after the prediction."""
 
-from __future__ import annotations
-
 import abc
 from typing import Any, Self
 
@@ -39,7 +37,7 @@ class PostPredictionTransformation(BaseEstimator, TransformerMixin, abc.ABC):
         """
 
 
-class PostPredictionWrapper(PostPredictionTransformation):
+class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=too-many-ancestors
     """Wrapper for post prediction transformations.
 
     This class is used to wrap a PipelineElement in a PostPredictionTransformation.
@@ -126,7 +124,8 @@ class PostPredictionWrapper(PostPredictionTransformation):
         if hasattr(self.wrapped_estimator, "transform"):
             return self.wrapped_estimator.transform(X, **params)
         raise AttributeError(
-            f"Estimator {self.wrapped_estimator} has neither predict nor transform method.",
+            f"Estimator {self.wrapped_estimator} has neither predict nor transform"
+            f"method.",
         )
 
     def fit_transform(
@@ -164,7 +163,8 @@ class PostPredictionWrapper(PostPredictionTransformation):
                 return self.wrapped_estimator.fit_transform(X)
             return self.wrapped_estimator.fit_transform(X, y, **params)
         raise AttributeError(
-            f"Estimator {self.wrapped_estimator} has neither fit_predict nor fit_transform method.",
+            f"Estimator {self.wrapped_estimator} has neither fit_predict nor"
+            f"fit_transform method.",
         )
 
     def inverse_transform(

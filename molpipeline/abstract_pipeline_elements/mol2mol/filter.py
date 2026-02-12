@@ -4,6 +4,8 @@ import abc
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, Self, TypeAlias
 
+import pandas as pd
+
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
     MolToMolPipelineElement,
@@ -49,9 +51,7 @@ def _within_boundaries(
     """
     if lower_bound is not None and property_value < lower_bound:
         return False
-    if upper_bound is not None and property_value > upper_bound:
-        return False
-    return True
+    return not (upper_bound is not None and property_value > upper_bound)
 
 
 class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
@@ -60,10 +60,10 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     Notes
     -----
     There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
-        - mode = "any" & keep_matches = False: Must not match any filter element.
-        - mode = "all" & keep_matches = True: Needs to match all filter elements.
-        - mode = "all" & keep_matches = False: Must not match all filter elements.
+      - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+      - mode = "any" & keep_matches = False: Must not match any filter element.
+      - mode = "all" & keep_matches = True: Needs to match all filter elements.
+      - mode = "all" & keep_matches = False: Must not match all filter elements.
 
     """
 
@@ -72,11 +72,14 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
     def __init__(
         self,
-        filter_elements: Mapping[
-            Any,
-            FloatCountRange | IntCountRange | IntOrIntCountRange,
-        ]
-        | Sequence[Any],
+        filter_elements: (
+            Mapping[
+                Any,
+                FloatCountRange | IntCountRange | IntOrIntCountRange,
+            ]
+            | Sequence[Any]
+            | pd.Series
+        ),
         keep_matches: bool = True,
         mode: FilterModeType = "any",
         name: str | None = None,
@@ -180,14 +183,14 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         params["filter_elements"] = self.filter_elements
         return params
 
-    def pretransform_single(  # pylint: disable=too-many-return-statements
+    def pretransform_single(  # pylint: disable=too-many-return-statements # noqa: PLR0911
         self,
         value: RDKitMol,
     ) -> OptionalMol:
         """Invalidate or validate molecule based on specified filter.
 
         There are four possible scenarios:
-        - mode = "any" & keep_matches = True: Needs to match at least one filter element.
+        - mode = "any" & keep_matches = True: Needs to match at least one filter element
         - mode = "any" & keep_matches = False: Must not match any filter element.
         - mode = "all" & keep_matches = True: Needs to match all filter elements.
         - mode = "all" & keep_matches = False: Must not match all filter elements.
@@ -216,7 +219,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                     if not self.keep_matches:
                         return InvalidInstance(
                             self.uuid,
-                            f"Molecule contains forbidden filter element {filter_element}.",
+                            "Molecule contains forbidden filter element "
+                            f"{filter_element}.",
                             self.name,
                         )
                     return value
@@ -225,7 +229,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                 if self.keep_matches:
                     return InvalidInstance(
                         self.uuid,
-                        f"Molecule does not contain required filter element {filter_element}.",
+                        "Molecule does not contain required filter element"
+                        f" {filter_element}.",
                         self.name,
                     )
                 return value
@@ -239,7 +244,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
                     "Molecule does not match any of the required filter elements.",
                     self.name,
                 )
-            #  else: No match with forbidden filter elements was found, return original molecule
+            #  else: No match with forbidden filter elements was found,
+            #        return original molecule
             return value
 
         if self.mode == "all":
@@ -308,22 +314,32 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     @filter_elements.setter
     def filter_elements(
         self,
-        patterns: list[str] | Mapping[str, FloatCountRange],
+        patterns: list[str] | set[str] | pd.Series | Mapping[str, FloatCountRange],
     ) -> None:
         """Set allowed filter elements (patterns) as dict.
 
         Parameters
         ----------
-        patterns: list[str] | Mapping[str, FloatCountRange]
-            List of patterns.
+        patterns: list[str] | set[str] | pd.Series | Mapping[str, FloatCountRange]
+            List-like or Mapping data structure of patterns.
+
+        Raises
+        ------
+        ValueError
+            If the patterns are not valid SMILES or SMARTS, or if the type is invalid.
 
         """
-        if isinstance(patterns, (list, set)):
+        if isinstance(patterns, (list, set, pd.Series)):
             self._filter_elements = dict.fromkeys(patterns, (1, None))
-        else:
+        elif isinstance(patterns, dict):
             self._filter_elements = {
                 pat: assure_range(count) for pat, count in patterns.items()
             }
+        else:
+            raise ValueError(
+                "Invalid type for patterns. Must be a list of strings or a dictionary"
+                " with patterns as keys and counts as values.",
+            )
         self.patterns_mol_dict = list(self._filter_elements.keys())  # type: ignore
 
     @property
@@ -379,7 +395,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
         Parameters
         ----------
         filter_element: Any
-            smarts to calculate match count for.
+            Smarts to calculate match count for.
         value: RDKitMol
             Molecule to calculate smarts match count for.
 

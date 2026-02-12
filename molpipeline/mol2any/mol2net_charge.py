@@ -1,9 +1,7 @@
 """MolToNetCharge pipeline element."""
 
-from __future__ import annotations
-
 import copy
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias
+from typing import Any, Literal, Self, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
@@ -14,9 +12,7 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 # Methods to compute the net charge of a molecule.
 # - "formal_charge" uses the formal charges of the atoms
@@ -42,9 +38,9 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         ----------
         charge_method: MolToNetChargeMethod, optional (default="formal_charge")
             Policy how to compute the net charge of a molecule.
-            "formal_charge" uses sum of the formal charges assigned to each atom.
-            "gasteiger" computes the Gasteiger partial charges and returns the rounded
-            sum over the atoms.
+            Can be "formal_charge" which uses sum of the formal charges assigned to
+            each atom. The setting "gasteiger" computes the Gasteiger partial
+            charges and returns the rounded sum over the atoms.
         name: str, optional
             Name of the pipeline element, by default "MolToNetCharge"
         n_jobs: int, optional
@@ -94,7 +90,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         """
         # copy molecule since ComputeGasteigerCharges modifies the molecule inplace
         value_copy = Chem.Mol(value)
-        rdPartialCharges.ComputeGasteigerCharges(value_copy)
+        rdPartialCharges.ComputeGasteigerCharges(value_copy)  # type: ignore
         atoms_contributions = np.array(
             [atom.GetDoubleProp("_GasteigerCharge") for atom in value_copy.GetAtoms()],
         )

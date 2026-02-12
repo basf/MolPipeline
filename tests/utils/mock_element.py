@@ -1,7 +1,5 @@
 """Mock PipelineElement for testing."""
 
-from __future__ import annotations
-
 import copy
 from typing import TYPE_CHECKING, Any, Self
 

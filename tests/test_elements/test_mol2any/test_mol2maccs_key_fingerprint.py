@@ -1,7 +1,5 @@
 """Tests for the MolToMACCSFP pipeline element."""
 
-from __future__ import annotations
-
 import unittest
 from typing import Any
 
@@ -41,7 +39,7 @@ class TestMolToMACCSFP(unittest.TestCase):
         smi2mol = SmilesToMol()
         sparse_maccs = MolToMACCSFP(return_as="sparse")
         dense_maccs = MolToMACCSFP(return_as="dense")
-        explicit_bit_vect_maccs = MolToMACCSFP(return_as="explicit_bit_vect")
+        rdkit_vect_maccs = MolToMACCSFP(return_as="rdkit")
         sparse_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -54,26 +52,24 @@ class TestMolToMACCSFP(unittest.TestCase):
                 ("dense_maccs", dense_maccs),
             ],
         )
-        explicit_bit_vect_pipeline = Pipeline(
+        rdkit_vect_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
-                ("explicit_bit_vect_maccs", explicit_bit_vect_maccs),
+                ("rdkit_vect_maccs", rdkit_vect_maccs),
             ],
         )
 
         sparse_output = sparse_pipeline.fit_transform(test_smiles)
         dense_output = dense_pipeline.fit_transform(test_smiles)
-        explicit_bit_vect_maccs_output = explicit_bit_vect_pipeline.fit_transform(
-            test_smiles
-        )
+        rdkit_vect_maccs_output = rdkit_vect_pipeline.fit_transform(test_smiles)
 
         self.assertTrue(np.all(sparse_output.toarray() == dense_output))
 
         self.assertTrue(
             np.equal(
                 dense_output,
-                np.array(explicit_bit_vect_maccs_output),
-            ).all()
+                np.array(rdkit_vect_maccs_output),
+            ).all(),
         )
 
     def test_setter_getter(self) -> None:
@@ -86,7 +82,7 @@ class TestMolToMACCSFP(unittest.TestCase):
         self.assertEqual(mol_fp.get_params()["return_as"], "dense")
 
     def test_setter_getter_error_handling(self) -> None:
-        """Test if the setters and getters work as expected when errors are encountered."""
+        """Test if the setters and getters work as expected for errors."""
         mol_fp = MolToMACCSFP()
         params: dict[str, Any] = {
             "return_as": "invalid-option",

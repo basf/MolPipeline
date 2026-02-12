@@ -2,8 +2,8 @@
 
 import unittest
 
-from molpipeline import Pipeline
-from molpipeline.any2mol import SmilesToMol
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline
+from molpipeline.any2mol import AutoToMol, SmilesToMol
 from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2mol import (
     ExplicitHydrogenRemover,
@@ -11,6 +11,7 @@ from molpipeline.mol2mol import (
     IsotopeRemover,
     LargestFragmentChooser,
     MetalDisconnector,
+    MixtureOnlySolventRemover,
     SaltRemover,
     SolventRemover,
     StereoRemover,
@@ -35,14 +36,15 @@ class MolStandardizationTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("stereo_removal", stereo_removal),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         stereo_removed_mol_list = stereo_removal_pipeline.fit_transform(STEREO_MOL_LIST)
         self.assertEqual(stereo_removed_mol_list, NON_STEREO_MOL_LIST)
 
     def test_metal_disconnector_does_not_lose_ringinfo(self) -> None:
         """Test metal disconnector returns valid molecules containing ring info."""
-        # example where metal disconnection leads to inconsistent ringinfo -> Sanitization is necessary.
+        # example where metal disconnection leads to inconsistent ringinfo
+        # -> Sanitization is necessary.
         smiles_uninitialized_ringinfo_after_disconnect = (
             "OC[C@H]1OC(S[Au])[C@H](O)[C@@H](O)[C@@H]1O"
         )
@@ -52,18 +54,18 @@ class MolStandardizationTest(unittest.TestCase):
             [
                 ("smi2mol", smi2mol),
                 ("disconnect_metals", disconnect_metals),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(
-            [smiles_uninitialized_ringinfo_after_disconnect]
+            [smiles_uninitialized_ringinfo_after_disconnect],
         )
         self.assertEqual(len(mols_processed), 1)
-        # Without additional sanitiziting after disconnecting metals the following would fail with
-        # a pre-condition assert from within RDkit.
+        # Without additional sanitiziting after disconnecting metals the following would
+        # fail with a pre-condition assert from within RDkit.
         self.assertEqual(mols_processed[0].GetRingInfo().NumRings(), 1)
 
     def test_duplicate_fragment_by_hash_removal(self) -> None:
-        """Test if duplicate fragements are correctly removed by DeduplicateFragmentsByInchiElement."""
+        """Test if duplicate fragements are correctly removed."""
         duplicate_fragment_smiles_lust = [
             "CC.CC.C",
             "c1ccccc1.C1=C-C=C-C=C1",
@@ -85,7 +87,7 @@ class MolStandardizationTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("unique_fragments", unique_fragments),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(duplicate_fragment_smiles_lust)
         self.assertEqual(expected_unique_fragment_smiles_list, mols_processed)
@@ -111,7 +113,7 @@ class MolStandardizationTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("canonical_tautomer", canonical_tautomer),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(non_canonical_tautomer_list)
         self.assertEqual(canonical_tautomer_list, mols_processed)
@@ -129,7 +131,7 @@ class MolStandardizationTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("charge_neutralizer", charge_neutralizer),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_charge_neutralized_smiles_list, mols_processed)
@@ -147,7 +149,7 @@ class MolStandardizationTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("largest_fragment_chooser", largest_fragment_chooser),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
@@ -170,7 +172,7 @@ class MolStandardizationTest(unittest.TestCase):
                 ("smitomol", smitomol),
                 ("salt_remover", salt_remover),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_smiles_list, mols_processed)
@@ -210,7 +212,7 @@ class MolStandardizationTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("fragment_remover", fragment_remover),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
@@ -228,7 +230,7 @@ class MolStandardizationTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("isotope_info_remover", fragment_remover),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
@@ -247,10 +249,45 @@ class MolStandardizationTest(unittest.TestCase):
                 ("smi2mol", smi2mol),
                 ("explicit_hydrogen_remover", fragment_remover),
                 ("mol2smi", mol2smi),
-            ]
+            ],
         )
         mols_processed = pipeline.fit_transform(mol_list)
         self.assertEqual(expected_largest_fragment_smiles_list, mols_processed)
+
+
+class TestMixtureOnlySolventRemover(unittest.TestCase):
+    """Test if the MixtureOnlySolventRemover works as expected."""
+
+    def test_mixture_only_solvent_removal(self) -> None:
+        """Test if mixture-only solvent removal works as expected."""
+        mol_list = [
+            "CCO.c1ccccc1",  # Ethanol + Benzene
+            "CCO",  # Ethanol only
+            "c1ccccc1",  # Benzene only
+            "CCO.O",  # Ethanol + Water
+        ]
+        expected_processed_smiles_list = [
+            "c1ccccc1",  # Ethanol + Benzene -> Benzene (Benzene is not a solvent)
+            "CCO",  # Ethanol only
+            "c1ccccc1",  # Benzene only
+            None,  # Ethanol + Water -> None (both are solvents)
+        ]
+
+        error_filter = ErrorFilter(filter_everything=True)
+        pipeline = Pipeline(
+            [
+                ("smi2mol", AutoToMol()),
+                ("mixture_only_solvent_remover", MixtureOnlySolventRemover()),
+                ("error_filter", error_filter),
+                ("mol2smi", MolToSmiles()),
+                (
+                    "filter_reinserter",
+                    FilterReinserter.from_error_filter(error_filter, fill_value=None),
+                ),
+            ],
+        )
+        mols_processed = pipeline.fit_transform(mol_list)
+        self.assertEqual(expected_processed_smiles_list, mols_processed)
 
 
 if __name__ == "__main__":

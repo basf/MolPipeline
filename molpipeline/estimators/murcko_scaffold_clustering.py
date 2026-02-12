@@ -1,7 +1,5 @@
 """Murcko scaffold clustering estimator."""
 
-from __future__ import annotations
-
 from numbers import Integral
 from typing import Any, Literal, Self
 
@@ -44,17 +42,16 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
 
         Parameters
         ----------
-        make_generic : bool (default=False)
+        make_generic : bool, default=False
             Makes a Murcko scaffold generic.
-            (i.e. all atom types->C and all bonds->single).
-        n_jobs : int, optional (default=1)
+            Sets all atom types to `C` and all bonds to `single-bond`.
+        n_jobs : int, default=1
             Number of jobs to use for parallelization.
         linear_molecules_strategy : Literal["ignore", "own_cluster"], default="ignore"
-            Strategy for handling linear molecules. Can be "ignore" or "own_cluster".
-            "ignore" will ignore linear molecules, and they will be replaced with NaN in
-            the resulting clustering.
-            "own_cluster" will instead cluster linear molecules in their own cluster
-            and give them a valid cluster label.
+            Strategy for handling linear molecules.
+            The setting "ignore" sets linear molecules to NaN in the resulting
+            clustering.
+            The setting "own_cluster" assigns all linear molecules to their own cluster.
 
         """
         self.n_jobs = n_jobs
@@ -105,7 +102,8 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
 
         elif self.linear_molecules_strategy == "own_cluster":
             # Create error filter for all errors except empty_mol_filter2
-            # This is needed to give linear molecules (empty scaffold) a valid cluster label
+            # This is needed to give linear molecules (empty scaffold) a valid cluster
+            # label
             filter_ele_list = [auto2mol, empty_mol_filter1, murcko_scaffold]
             if scaffold_generic_elem is not None:
                 filter_ele_list.append(scaffold_generic_elem)

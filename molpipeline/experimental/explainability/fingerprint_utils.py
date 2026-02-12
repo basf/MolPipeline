@@ -1,21 +1,16 @@
 """Utility functions for explainability."""
 
-from __future__ import annotations
-
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
 
 import numpy as np
 import numpy.typing as npt
 
-if TYPE_CHECKING:
-    from collections.abc import Sequence
-
-    from molpipeline.abstract_pipeline_elements.core import RDKitMol
-    from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
-        MolToRDKitGenFPElement,
-    )
-    from molpipeline.utils.substructure_handling import AtomEnvironment
+from molpipeline.abstract_pipeline_elements.core import RDKitMol
+from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
+    MolToRDKitGenFPElement,
+)
+from molpipeline.utils.substructure_handling import AtomEnvironment
 
 
 def assign_prediction_importance(

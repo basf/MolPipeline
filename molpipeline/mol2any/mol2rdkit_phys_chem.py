@@ -2,10 +2,9 @@
 
 # pylint: disable=too-many-arguments
 
-from __future__ import annotations
-
 import copy
-from typing import TYPE_CHECKING, Any, Self
+from collections.abc import Callable
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -17,11 +16,7 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 RDKIT_DESCRIPTOR_DICT: dict[str, Callable[[Chem.Mol], float]]
 RDKIT_DESCRIPTOR_DICT = dict(Descriptors.descList)
@@ -34,7 +29,7 @@ DEFAULT_DESCRIPTORS = [
 
 
 class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
-    """Descriptor based on RDKit phys-chem properties."""
+    """Element for creating a descriptor vector based on RDKit phys-chem properties."""
 
     _descriptor_list: list[str]
 
@@ -94,7 +89,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         descriptor_list: list[str] | None
-            List of descriptor names to calculate.
+            List of descriptors to calculate.
             If None, DEFAULT_DESCRIPTORS are used.
 
         Raises

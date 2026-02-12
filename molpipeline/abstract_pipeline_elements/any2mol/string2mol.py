@@ -1,7 +1,5 @@
 """Abstract classes for creating rdkit molecules from string representations."""
 
-from __future__ import annotations
-
 import abc
 
 from molpipeline.abstract_pipeline_elements.core import (
@@ -12,7 +10,7 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
-    """Abstract class for PipelineElements which transform molecules to integer vectors."""
+    """Abstract class for transforming strings to molecules."""
 
     _input_type = "str"
     _output_type = "RDKitMol"
@@ -23,12 +21,14 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         Parameters
         ----------
         values: list[str]
-            List of string representations of molecules which are transformed to RDKit molecules.
+            List of string representations of molecules.
 
         Returns
         -------
         list[OptionalMol]
-            List of RDKit molecules. If a string representation could not be transformed to a molecule, None is returned.
+            List of RDKit molecules.
+            InvalidInstance if the representation was invalid.
+
         """
         return super().transform(values)
 
@@ -45,6 +45,7 @@ class StringToMolPipelineElement(AnyToMolPipelineElement, abc.ABC):
         -------
         OptionalMol
             RDKit molecule if representation was valid, else InvalidInstance.
+
         """
 
 
@@ -57,20 +58,14 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
         Parameters
         ----------
         value: str
-            string representation.
+            String representation of the molecule.
 
         Returns
         -------
         OptionalMol
             Rdkit molecule if valid string representation, else None.
-        """
-        if value is None:
-            return InvalidInstance(
-                self.uuid,
-                f"Invalid representation: {value}",
-                self.name,
-            )
 
+        """
         if not isinstance(value, str):
             return InvalidInstance(
                 self.uuid,
@@ -90,16 +85,17 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
         return mol
 
     @abc.abstractmethod
-    def string_to_mol(self, value: str) -> RDKitMol:
+    def string_to_mol(self, value: str) -> RDKitMol | None:
         """Transform string representation to molecule.
 
         Parameters
         ----------
         value: str
-            string representation
+            String representation of the molecule.
 
         Returns
         -------
-        RDKitMol
+        RDKitMol | None
             Rdkit molecule if valid representation, else None.
+
         """

@@ -1,27 +1,20 @@
 """Abstract classes for transforming rdkit molecules to float vectors."""
 
-from __future__ import annotations
-
 import abc
-from typing import TYPE_CHECKING
+from collections.abc import Iterable
 
 import numpy as np
+import numpy.typing as npt
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
     MolToAnyPipelineElement,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    import numpy.typing as npt
-
-    from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
-    """PipelineElement for generating descriptor-vectors."""
+    """PipelineElement for descriptor-vectors of each molecule."""
 
     _output_type = "float"
     _feature_names: list[str]
@@ -67,7 +60,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         value_list: Iterable[npt.NDArray[np.float64]]
-            List of numpy arrays with calculated descriptor values of each molecule.
+            List of descriptor arrays for each molecule.
 
         Returns
         -------
@@ -75,7 +68,11 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
             Matrix with descriptor values of each molecule.
 
         """
-        return np.vstack(list(value_list))
+        values = list(value_list)
+        if len(values) == 0:
+            # nothing to assemble
+            return np.empty((0, self.n_features), dtype=np.float64)
+        return np.vstack(values)
 
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.
@@ -83,7 +80,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         values: list[RDKitMol]
-            List of RDKit molecules for which the descriptor vectors are calculated.
+            List of RDKit molecules.
 
         Returns
         -------
@@ -99,9 +96,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         self,
         value: RDKitMol,
     ) -> npt.NDArray[np.float64] | InvalidInstance:
-        """Transform mol to dict.
-
-        Items encode columns indices and values, respectively.
+        """Transform mol to the descriptor vector.
 
         Parameters
         ----------

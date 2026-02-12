@@ -1,7 +1,5 @@
 """Class for transforming molecules to SMILES representations."""
 
-from __future__ import annotations
-
 import abc
 
 from rdkit import Chem
@@ -10,7 +8,7 @@ from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 
 
 class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
-    """Abstract class for PipelineElements which transform molecules to integer vectors."""
+    """Abstract class for transforming molecules to string representations."""
 
     _output_type = "str"
 
@@ -26,6 +24,7 @@ class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
         -------
         list[str]
             List of string representations of the molecules.
+
         """
         string_list: list[str] = super().transform(values)
         return string_list
@@ -43,4 +42,5 @@ class MolToStringPipelineElement(MolToAnyPipelineElement, abc.ABC):
         -------
         str
             SMILES representation of molecule.
+
         """

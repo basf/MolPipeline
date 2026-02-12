@@ -20,7 +20,7 @@ class TestMolToBool(unittest.TestCase):
                 2,
                 InvalidInstance(element_id="test", message="test", element_name="Test"),
                 4,
-            ]
+            ],
         )
         self.assertEqual(result, [True, True, False, True])
 
@@ -30,7 +30,7 @@ class TestMolToBool(unittest.TestCase):
             [
                 ("auto_to_mol", AutoToMol()),
                 ("mol2bool", MolToBool()),
-            ]
+            ],
         )
         result = pipeline.transform(["CC", "CCC", "no%valid~smiles"])
         self.assertEqual(result, [True, True, False])

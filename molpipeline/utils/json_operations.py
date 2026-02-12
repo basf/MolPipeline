@@ -1,6 +1,4 @@
-"""Contains functions for loading and saving pipeline elements and models to json files."""
-
-from __future__ import annotations
+"""Contains functions for loading and saving objects to/from json files."""
 
 import types
 import typing
@@ -23,10 +21,10 @@ __all__ = [
 def transform_functions2string(value: Any) -> Any:
     """Transform functions to string representation.
 
-    If the value is a function, it is transformed to a dictionary containing the module and the class name.
-    If the value is a dictionary, the function is called recursively for each value.
-    If the value is a list, the function is called recursively for each value.
-    Else the value is returned as is.
+    If the value is a function, it is transformed to a dictionary containing the module
+    and the class name. If the value is a dictionary, the function is called recursively
+    for each value. If the value is a list, the function is called recursively for each
+    value. Else the value is returned as is.
 
     Parameters
     ----------
@@ -37,6 +35,7 @@ def transform_functions2string(value: Any) -> Any:
     -------
     Any
         Json file containing the dictionary.
+
     """
     if callable(value):
         out_dict = {
@@ -64,8 +63,8 @@ def transform_functions2string(value: Any) -> Any:
 def transform_string2function(value: Any) -> Any:
     """Transform string representation of functions to actual functions.
 
-    If the value is a dictionary containing the key "load_from_constructor" and the value is True,
-    the function is loaded from the module and class name.
+    If the value is a dictionary containing the key "load_from_constructor" and the
+    value is True, the function is loaded from the module and class name.
     If the value is a dictionary, the function is called recursively for each value.
     If the value is a list, the function is called recursively for each value.
     Else the value is returned as is.
@@ -79,6 +78,7 @@ def transform_string2function(value: Any) -> Any:
     -------
     Any
         Json file containing the dictionary.
+
     """
     if isinstance(value, dict):
         if "load_from_constructor" in value:
@@ -118,6 +118,7 @@ def builtin_to_json(obj: _U) -> _U:
     -------
     str | int | float | bool | None
         The same object as the input.
+
     """
 
 
@@ -134,6 +135,7 @@ def builtin_to_json(obj: list[Any]) -> list[Any]:
     -------
     list[Any]
         List of transformed objects.
+
     """
 
 
@@ -150,6 +152,7 @@ def builtin_to_json(obj: tuple[Any, ...]) -> tuple[Any, ...]:
     -------
     tuple[Any]
         Tuple of transformed objects.
+
     """
 
 
@@ -229,7 +232,8 @@ def recursive_to_json(obj: Any) -> Any:
     Parameters
     ----------
     obj: Any
-        Object to be transformed. Can be a string, int, float, bool, list, tuple, dict, callable or a sklearn model.
+        Object to be transformed. Can be a string, int, float, bool, list, tuple, dict,
+        callable or a sklearn model.
         A sklearn model is defined as an object with a get_params method.
 
     Returns
@@ -242,7 +246,8 @@ def recursive_to_json(obj: Any) -> Any:
         return None
 
     if isinstance(
-        obj, (str, int, float, bool, dict, types.FunctionType, list, set, tuple)
+        obj,
+        (str, int, float, bool, dict, types.FunctionType, list, set, tuple),
     ):
         return_value = builtin_to_json(obj)
         return return_value

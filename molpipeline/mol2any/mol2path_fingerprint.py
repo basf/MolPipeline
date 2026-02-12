@@ -1,21 +1,17 @@
 """Implementations for the RDKit Path Fingerprint."""
 
-from __future__ import annotations  # for all the python 3.8 users out there.
-
 import copy
-from typing import TYPE_CHECKING, Any, Literal, Self
+from collections.abc import Mapping, Sequence
+from typing import Any, Self
 
 from rdkit.Chem import rdFingerprintGenerator
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
+    FPReturnAsOption,
     MolToRDKitGenFPElement,
 )
+from molpipeline.utils.molpipeline_types import RDKitMol
 from molpipeline.utils.substructure_handling import AtomEnvironment
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-
-    from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-attributes
@@ -39,7 +35,7 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
         num_bits_per_feature: int = 2,
         atom_invariants_generator: Any = None,
         counted: bool = False,
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"] = "sparse",
+        return_as: FPReturnAsOption = "sparse",
         name: str = "Mol2PathFP",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -71,12 +67,13 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
         counted: bool, default=False
             If True, the fingerprint will be counted.
             If False, the fingerprint will be binary.
-        return_as: Literal["sparse", "dense", "explicit_bit_vect"], default="sparse"
+        return_as: FPReturnAsOption, default="sparse"
             Type of output. When "sparse" the fingerprints will be returned as a
             scipy.sparse.csr_matrix holding a sparse representation of the bit vectors.
-            With "dense" a numpy matrix will be returned.
-            With "explicit_bit_vect" the fingerprints will be returned as a list of
-            RDKit's rdkit.DataStructs.cDataStructs.ExplicitBitVect.
+            With "dense" a numpy matrix will be returned. With "rdkit" the fingerprints
+            will be returned as a list of one of RDKit's ExplicitBitVect,
+            IntSparseBitVect, UIntSparseBitVect, etc. depending on the fingerprint
+            and parameters.
         name: str, default="MolToMorganFP"
             Name of PipelineElement
         n_jobs: int, default=1

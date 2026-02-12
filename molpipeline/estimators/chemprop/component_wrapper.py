@@ -1,7 +1,10 @@
-"""Wrapper classes for the chemprop components to make them compatible with scikit-learn."""
+"""Wrapper classes for the chemprop components for compatibility with scikit-learn."""
 
 import abc
+import warnings
 from collections.abc import Iterable
+from io import BytesIO
+from pathlib import Path
 from typing import Any, Self
 
 import torch
@@ -11,16 +14,9 @@ from chemprop.nn.agg import Aggregation
 from chemprop.nn.agg import MeanAggregation as _MeanAggregation
 from chemprop.nn.agg import SumAggregation as _SumAggregation
 from chemprop.nn.ffn import MLP
-from chemprop.nn.loss import LossFunction
 from chemprop.nn.message_passing import BondMessagePassing as _BondMessagePassing
 from chemprop.nn.message_passing import MessagePassing
-from chemprop.nn.metrics import (
-    BinaryAUROCMetric,
-    CrossEntropyMetric,
-    Metric,
-    MSEMetric,
-    SIDMetric,
-)
+from chemprop.nn.metrics import ChempropMetric
 from chemprop.nn.predictors import BinaryClassificationFFN as _BinaryClassificationFFN
 from chemprop.nn.predictors import BinaryDirichletFFN as _BinaryDirichletFFN
 from chemprop.nn.predictors import EvidentialFFN as _EvidentialFFN
@@ -31,21 +27,71 @@ from chemprop.nn.predictors import MulticlassDirichletFFN as _MulticlassDirichle
 from chemprop.nn.predictors import MveFFN as _MveFFN
 from chemprop.nn.predictors import RegressionFFN as _RegressionFFN
 from chemprop.nn.predictors import SpectralFFN as _SpectralFFN
-from chemprop.nn.predictors import _FFNPredictorBase as _Predictor
+from chemprop.nn.predictors import _FFNPredictorBase as _Predictor  # noqa: PLC2701
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
 from torch import Tensor, nn
 
-from molpipeline.estimators.chemprop.loss_wrapper import (
+from molpipeline.estimators.chemprop.metric_wrapper import (
+    MSE,
+    SID,
     BCELoss,
-    BinaryDirichletLoss,
+    BinaryAUROC,
     CrossEntropyLoss,
+    DirichletLoss,
     EvidentialLoss,
-    MSELoss,
-    MulticlassDirichletLoss,
+    MulticlassMCCMetric,
     MVELoss,
-    SIDLoss,
+)
+from molpipeline.utils.file_loading.abc_file_loading import ABCFileLoader
+
+warnings.simplefilter("always", DeprecationWarning)
+
+
+def parse_state_dict_ref(
+    state_dict: dict[str, Any] | str | Path,
+) -> dict[str, Any]:
+    """Load a state dict from a ref file or return the state dict if already provided.
+
+    Parameters
+    ----------
+    state_dict : dict[str, Any] | str | Path
+        The state dict or path to the state dict.
+
+    Returns
+    -------
+    dict[str, Any]
+        The loaded state dict.
+
+    Raises
+    ------
+    ValueError
+        If the state_dict is not a dict, str, or Path.
+
+    """
+    if isinstance(state_dict, (str, Path)):
+        path = Path(state_dict)
+        with path.open("rb") as f:
+            state_dict_ = torch.load(f, weights_only=True)
+    elif isinstance(state_dict, ABCFileLoader):
+        with BytesIO(state_dict.load_file()) as f:
+            state_dict_ = torch.load(f, weights_only=True)
+    elif isinstance(state_dict, dict):
+        state_dict_ = state_dict
+    else:
+        raise ValueError(
+            f"state_dict must be a dict, str, or Path. Got {type(state_dict)}.",
+        )
+    if "state_dict" in state_dict_:
+        return parse_state_dict_ref(state_dict_["state_dict"])
+    return state_dict_
+
+
+WARN_MSG = (
+    "Loading an old model without the 'state_dict_ref' attribute. "
+    "This backward compatibility will be removed in version 0.13.0. "
+    "Please re-save your models with the current version."
 )
 
 
@@ -53,7 +99,7 @@ from molpipeline.estimators.chemprop.loss_wrapper import (
 class BondMessagePassing(_BondMessagePassing, BaseEstimator):
     """A wrapper for the BondMessagePassing class."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         d_v: int = DEFAULT_ATOM_FDIM,
         d_e: int = DEFAULT_BOND_FDIM,
@@ -64,29 +110,34 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         activation: str | Activation = Activation.RELU,
         undirected: bool = False,
         d_vd: int | None = None,
+        state_dict_ref: str | Path | dict[str, Any] | None = None,
     ):
         """Initialize the BondMessagePassing class.
 
         Parameters
         ----------
-        d_v : int, optional (default=DEFAULT_ATOM_FDIM)
+        d_v : int, default=DEFAULT_ATOM_FDIM
             The input vertices feature dimension, by default DEFAULT_ATOM_FDIM
-        d_e : int, optional (default=DEFAULT_BOND_FDIM)
+        d_e : int, default=DEFAULT_BOND_FDIM
             The input edges feature dimension, by default DEFAULT_BOND_FDIM
-        d_h : int, optional (default=DEFAULT_HIDDEN_DIM)
+        d_h : int, default=DEFAULT_HIDDEN_DIM
             The hidden layer dimension, by default DEFAULT_HIDDEN_DIM
-        bias : bool, optional (default=False)
+        bias : bool, default=False
             Whether to use bias in the weight matrices.
-        depth : int, optional (default=3)
+        depth : int, default=3
             Number of message passing layers.
-        dropout_rate : float, optional (default=0)
+        dropout_rate : float, default=0
             Dropout rate.
         activation : str or Activation, optional (default=Activation.RELU)
             Activation function.
-        undirected : bool, optional (default=False)
+        undirected : bool, default=False
             Whether to use undirected edges.
-        d_vd : int or None, optional (default=None)
-            Dimension of additional vertex descriptors that will be concatenated to the hidden features before readout
+        d_vd : int or None, optional
+            Dimension of additional vertex descriptors that will be concatenated to the
+            hidden features before readout
+        state_dict_ref : str | Path | dict[str, Any] | None, optional
+            Path to a state dict to load the model weights from.
+
         """
         super().__init__(
             d_v,
@@ -106,6 +157,23 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         self.bias = bias
         self.activation = activation
         self.dropout_rate = dropout_rate
+        self.state_dict_ref = state_dict_ref
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
@@ -114,15 +182,22 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         -------
         Self
             The reinitialized network.
+
         """
         self.W_i, self.W_h, self.W_o, self.W_d = self.setup(
-            self.d_v, self.d_e, self.d_h, self.d_vd, self.bias
+            self.d_v,
+            self.d_e,
+            self.d_h,
+            self.d_vd,
+            self.bias,
         )
         self.dropout = nn.Dropout(self.dropout_rate)
         if isinstance(self.activation, str):
             self.tau = get_activation_function(self.activation)
         else:
             self.tau = self.activation
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
         return self
 
     def set_params(self, **params: Any) -> Self:
@@ -137,6 +212,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         self.reinitialize_network()
@@ -147,10 +223,10 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
     """Abstract wrapper for the Predictor class."""
 
-    _T_default_criterion: LossFunction
-    _T_default_metric: Metric
+    _T_default_criterion: ChempropMetric
+    _T_default_metric: ChempropMetric
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(  # pylint: disable=too-many-positional-arguments  # noqa: PLR0917
         self,
         n_tasks: int = 1,
         input_dim: int = DEFAULT_HIDDEN_DIM,
@@ -158,10 +234,11 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         n_layers: int = 1,
         dropout: float = 0,
         activation: str = "relu",
-        criterion: LossFunction | None = None,
+        criterion: ChempropMetric | None = None,
         task_weights: Tensor | None = None,
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
+        state_dict_ref: str | Path | dict[str, Any] | None = None,
         **kwargs: Any,
     ):
         """Initialize the BinaryClassificationFFN class.
@@ -188,8 +265,11 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             Threshold for binary classification.
         output_transform : UnscaleTransform or None, optional (default=None)
             Transformations to apply to the output. None defaults to UnscaleTransform.
+        state_dict_ref : str | Path | dict[str, Any] | None, optional
+            Path to a state dict to load the model weights from.
         kwargs : Any
             Additional keyword arguments.
+
         """
         if task_weights is None:
             task_weights = torch.ones(n_tasks)
@@ -212,6 +292,9 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         self.activation = activation
         self.task_weights = task_weights
         self.threshold = threshold
+        self.state_dict_ref = state_dict_ref
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
 
     @property
     def input_dim(self) -> int:
@@ -226,6 +309,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         ----------
         value : int
             The dimension of input.
+
         """
         self._input_dim = value
 
@@ -242,8 +326,23 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         ----------
         value : int
             The number of tasks.
+
         """
         self._n_tasks = value
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
     def reinitialize_fnn(self) -> Self:
         """Reinitialize the feedforward network.
@@ -252,6 +351,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         -------
         Self
             The reinitialized feedforward network.
+
         """
         self.ffn = MLP.build(
             input_dim=self.input_dim,
@@ -261,6 +361,8 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             dropout=self.dropout,
             activation=self.activation,
         )
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
         return self
 
     def set_params(self, **params: Any) -> Self:
@@ -275,6 +377,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         self.reinitialize_fnn()
@@ -285,8 +388,8 @@ class RegressionFFN(PredictorWrapper, _RegressionFFN):  # type: ignore
     """A wrapper for the RegressionFFN class."""
 
     n_targets: int = 1
-    _T_default_criterion = MSELoss
-    _T_default_metric = MSEMetric
+    _T_default_criterion = MSE
+    _T_default_metric = MSE
 
 
 class MveFFN(PredictorWrapper, _MveFFN):  # type: ignore
@@ -308,15 +411,15 @@ class BinaryClassificationFFN(PredictorWrapper, _BinaryClassificationFFN):  # ty
 
     n_targets: int = 1
     _T_default_criterion = BCELoss
-    _T_default_metric = BinaryAUROCMetric
+    _T_default_metric = BinaryAUROC
 
 
 class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):  # type: ignore
     """A wrapper for the BinaryDirichletFFN class."""
 
     n_targets: int = 2
-    _T_default_criterion = BinaryDirichletLoss
-    _T_default_metric = BinaryAUROCMetric
+    _T_default_criterion = DirichletLoss
+    _T_default_metric = BinaryAUROC
 
 
 class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN):  # type: ignore
@@ -324,9 +427,9 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
 
     n_targets: int = 1
     _T_default_criterion = CrossEntropyLoss
-    _T_default_metric = CrossEntropyMetric
+    _T_default_metric = MulticlassMCCMetric
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(  # pylint: disable=too-many-positional-arguments #noqa: PLR0917
         self,
         n_classes: int,
         n_tasks: int = 1,
@@ -335,39 +438,43 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         n_layers: int = 1,
         dropout: float = 0.0,
         activation: str = "relu",
-        criterion: LossFunction | None = None,
+        criterion: ChempropMetric | None = None,
         task_weights: Tensor | None = None,
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
+        state_dict_ref: str | Path | dict[str, Any] | None = None,
     ):
         """Initialize the MulticlassClassificationFFN class.
 
         Parameters
         ----------
         n_classes : int
-            how many classes are expected in the output
-        n_tasks : int, optional (default=1)
+            The number of classes expected in the output.
+        n_tasks : int, default=1
             Number of tasks.
-        input_dim : int, optional (default=DEFAULT_HIDDEN_DIM)
+        input_dim : int, default=DEFAULT_HIDDEN_DIM
             Input dimension.
-        hidden_dim : int, optional (default=300)
+        hidden_dim : int, default=300
             Hidden dimension.
-        n_layers : int, optional (default=1)
+        n_layers : int, default=1
             Number of layers.
-        dropout : float, optional (default=0)
+        dropout : float, default=0
             Dropout rate.
-        activation : str, optional (default="relu")
+        activation : str, default="relu"
             Activation function.
-        criterion : LossFunction or None, optional (default=None)
+        criterion : LossFunction | None, optional
             Loss function. None defaults to BCELoss.
-        task_weights : Tensor or None, optional (default=None)
+        task_weights : Tensor or None, optional
             Task weights.
-        threshold : float or None, optional (default=None)
+        threshold : float | None, optional
             Threshold for binary classification.
-        output_transform : UnscaleTransform or None, optional (default=None)
+        output_transform : UnscaleTransform | None, optional
             Transformations to apply to the output. None defaults to UnscaleTransform.
+        state_dict_ref : str | Path | dict[str, Any] | None, optional
+            Path to a state dict to load the model weights from.
+
         """
-        super().__init__(
+        super().__init__(  # pylint: disable=too-many-arguments
             n_tasks,
             input_dim,
             hidden_dim,
@@ -382,44 +489,63 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         )
 
         self.n_classes = n_classes
+        self.state_dict_ref = state_dict_ref
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
 
 class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type: ignore
     """A wrapper for the MulticlassDirichletFFN class."""
 
     n_targets: int = 1
-    _T_default_criterion = MulticlassDirichletLoss
-    _T_default_metric = CrossEntropyMetric
+    _T_default_criterion = DirichletLoss
+    _T_default_metric = MulticlassMCCMetric
 
 
 class SpectralFFN(PredictorWrapper, _SpectralFFN):  # type: ignore
     """A wrapper for the SpectralFFN class."""
 
     n_targets: int = 1
-    _T_default_criterion = SIDLoss
-    _T_default_metric = SIDMetric
+    _T_default_criterion = SID
+    _T_default_metric = SID
 
 
 class MPNN(_MPNN, BaseEstimator):
     """A wrapper for the MPNN class.
 
-    The MPNN is the main model class in chemprop. It consists of a message passing network, an aggregation function,
-    and a feedforward network for prediction.
+    The MPNN is the main model class in chemprop. It consists of a message passing
+    network, an aggregation function, and a feedforward network for prediction.
+
     """
 
     bn: nn.BatchNorm1d | nn.Identity
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         message_passing: MessagePassing,
         agg: Aggregation,
         predictor: PredictorWrapper,
         batch_norm: bool = True,
-        metric_list: Iterable[Metric] | None = None,
+        metric_list: Iterable[ChempropMetric] | None = None,
         warmup_epochs: int = 2,
         init_lr: float = 1e-4,
         max_lr: float = 1e-3,
         final_lr: float = 1e-4,
+        state_dict_ref: str | Path | dict[str, Any] | None = None,
     ):
         """Initialize the MPNN class.
 
@@ -443,6 +569,9 @@ class MPNN(_MPNN, BaseEstimator):
             The maximum learning rate.
         final_lr : float, optional (default=1e-4)
             The final learning rate.
+        state_dict_ref : str | Path | dict[str, Any] | None, optional
+            Path to a state dict to load the model weights from.
+
         """
         super().__init__(
             message_passing=message_passing,
@@ -457,6 +586,23 @@ class MPNN(_MPNN, BaseEstimator):
         )
         self.metric_list = metric_list
         self.batch_norm = batch_norm
+        self.state_dict_ref = state_dict_ref
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "state_dict_ref" not in state:
+            warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
+            self.state_dict_ref = None
+        super().__setstate__(state)
 
     def reinitialize_network(self) -> Self:
         """Reinitialize the network with the current parameters.
@@ -465,6 +611,7 @@ class MPNN(_MPNN, BaseEstimator):
         -------
         Self
             The reinitialized network.
+
         """
         if self.batch_norm:
             self.bn = nn.BatchNorm1d(self.message_passing.output_dim)
@@ -473,10 +620,13 @@ class MPNN(_MPNN, BaseEstimator):
 
         if self.metric_list is None:
             # pylint: disable=protected-access
-            self.metrics = [self.predictor._T_default_metric, self.criterion]
+            self.metrics = nn.ModuleList(
+                [self.predictor._T_default_metric(), self.criterion],  # noqa: SLF001
+            )
         else:
-            self.metrics = [*list(self.metric_list), self.criterion]
-
+            self.metrics = nn.ModuleList([*list(self.metric_list), self.criterion])
+        if self.state_dict_ref is not None:
+            self.load_state_dict(parse_state_dict_ref(self.state_dict_ref))
         return self
 
     def set_params(self, **params: Any) -> Self:
@@ -491,6 +641,7 @@ class MPNN(_MPNN, BaseEstimator):
         -------
         Self
             The model with the new parameters.
+
         """
         super().set_params(**params)
         self.reinitialize_network()
@@ -499,7 +650,7 @@ class MPNN(_MPNN, BaseEstimator):
 
 # pylint: disable=too-many-ancestors
 class MeanAggregation(_MeanAggregation, BaseEstimator):
-    """Aggregate the graph-level representation by averaging the node representations."""
+    """Aggregate the graph-level representation by averaging node representations."""
 
     def __init__(self, dim: int = 0):
         """Initialize the MeanAggregation class.
@@ -508,6 +659,7 @@ class MeanAggregation(_MeanAggregation, BaseEstimator):
         ----------
         dim : int, optional (default=0)
             The dimension to aggregate over. See torch_scater.scatter for more details.
+
         """
         super().__init__(dim)
 
@@ -523,5 +675,6 @@ class SumAggregation(_SumAggregation, BaseEstimator):
         ----------
         dim : int, optional (default=0)
             The dimension to aggregate over. See torch_scater.scatter for more details.
+
         """
         super().__init__(dim)

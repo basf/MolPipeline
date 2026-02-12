@@ -129,7 +129,7 @@ class TestGroupShuffleSplit(unittest.TestCase):
                     )
 
     def test_compare_to_sklearn_implementation(self) -> None:
-        """Test that MolPipelines implementation produces the same results as sklearn's for split_mode='groups'."""
+        """Test that MolPipelines produces the same results as sklearn."""
         random_seed = 987
         for groups_i in _TEST_GROUPS:
             X = y = np.ones(len(groups_i))  # pylint: disable=invalid-name

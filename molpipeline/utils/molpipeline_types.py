@@ -1,7 +1,5 @@
 """Definition of types used in molpipeline."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from numbers import Number
 from typing import Any, Literal, Protocol, Self, TypeAlias, TypeVar
@@ -184,5 +182,4 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
 
 
 AnyElement = AnyTransformer | AnyPredictor | ABCPipelineElement | Literal["passthrough"]
-
 AnyStep = tuple[str, AnyElement]
