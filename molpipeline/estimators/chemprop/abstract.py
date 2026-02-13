@@ -11,6 +11,7 @@ except ImportError:
 
 import numpy as np
 import numpy.typing as npt
+import torch
 from chemprop.data import MoleculeDataset, build_dataloader
 from chemprop.models.model import MPNN
 from lightning import pytorch as pl
@@ -98,6 +99,48 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.lightning_trainer = lightning_trainer
         self.trainer_params = get_params_trainer(self.lightning_trainer)
         self.set_params(**kwargs)
+
+    def __getstate__(self) -> dict[str, Any]:
+        """Get the state of the model for pickling.
+
+        Returns
+        -------
+        dict[str, Any]
+            The state of the model.
+
+        """
+        state = self.__dict__.copy()
+        state_dict = state.pop("model").state_dict()
+        new_state_dict = {}
+        for key, value in state_dict.items():
+            if isinstance(value, torch.Tensor):
+                new_state_dict[key] = value.cpu().numpy()
+            else:
+                new_state_dict[key] = value
+
+        state["model_state_dict"] = new_state_dict
+        print(state)
+        return state
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Set the state of the model for unpickling.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The state of the model.
+
+        """
+        model_state_dict = state.pop("model_state_dict")
+        new_model_state_dict = {}
+        for key, value in model_state_dict.items():
+            if isinstance(value, np.ndarray):
+                new_model_state_dict[key] = torch.from_numpy(value)
+            else:
+                new_model_state_dict[key] = value
+        state["model"] = MPNN._load_from_state_dict(new_model_state_dict)
+        self.__dict__.update(state)
+
 
     def _update_trainer(self) -> None:
         """Update the trainer for the model."""

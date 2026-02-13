@@ -94,6 +94,29 @@ WARN_MSG = (
     "Please re-save your models with the current version."
 )
 
+def serialize_torch_tensor(obj: Any) -> Any:
+    """Serialize a torch tensor to a numpy array for pickling.
+
+    Parameters
+    ----------
+    obj : Any
+        The object to serialize.
+
+    Returns
+    -------
+    Any
+        The serialized object.
+    """
+    if isinstance(obj, torch.Tensor):
+        return obj.cpu().numpy()
+    if isinstance(obj, dict):
+        return {key: serialize_torch_tensor(value) for key, value in obj.items()}
+    if isinstance(obj, list):
+        return [serialize_torch_tensor(item) for item in obj]
+    if isinstance(obj, tuple):
+        return tuple(serialize_torch_tensor(item) for item in obj)
+    return obj
+
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
 class BondMessagePassing(_BondMessagePassing, BaseEstimator):
@@ -329,6 +352,25 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
 
         """
         self._n_tasks = value
+
+    def __getstate__(self) -> dict[str, Any]:
+        """Get the state of the object for pickling.
+
+        Returns
+        -------
+        dict[str, Any]
+            The state of the object.
+
+        """
+        state = super().__getstate__()
+        numpy_state = serialize_torch_tensor(state)
+        #numpy_state.pop("_modules")
+        numpy_state.pop("_hparams")
+        import pprint
+        print(numpy_state.keys())
+        pprint.pprint(numpy_state)
+        print("_________________________________________")
+        return numpy_state
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Handle unpickling with backward compatibility.
