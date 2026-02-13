@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from collections.abc import Iterable
 from pathlib import Path
+import joblib
 
 import torch
 from chemprop.nn.metrics import MSE
@@ -201,6 +202,14 @@ class TestChempropModel(unittest.TestCase):
                     torch.equal(value, new_model2_state_dict[key]),
                     f"Mismatch for key {key}: {value} != {new_model2_state_dict[key]}",
                 )
+
+    def test_clone_hash(self) -> None:
+        """Test that the hash of the model is the same after cloning."""
+        chemprop_model = get_chemprop_model_binary_classification_mpnn()
+        cloned_model = clone(chemprop_model)
+        original_hash =joblib.hash(chemprop_model)
+        cloned_hash = joblib.hash(cloned_model)
+        self.assertEqual(original_hash, cloned_hash, "Hash mismatch after cloning the model.")
 
 
 class TestChempropClassifier(unittest.TestCase):

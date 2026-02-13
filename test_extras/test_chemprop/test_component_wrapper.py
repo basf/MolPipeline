@@ -5,6 +5,7 @@ import unittest
 from chemprop.nn.metrics import ChempropMetric
 from sklearn.base import clone
 from torch import nn
+import joblib
 
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,
@@ -42,6 +43,13 @@ class BinaryClassificationFFNTest(unittest.TestCase):
         for param_name, param in orig_params.items():
             self.assertEqual(param, model_params[param_name])
 
+    def test_clone_hash(self) -> None:
+        """Test that cloning the model results in a model with the same parameters."""
+        binary_clf_ffn = BinaryClassificationFFN()
+        binary_clf_ffn_clone = clone(binary_clf_ffn)
+        original_hash = joblib.hash(binary_clf_ffn)
+        clone_hash = joblib.hash(binary_clf_ffn_clone)
+        self.assertEqual(original_hash, clone_hash, "Cloned model does not have the same hash as the original model.")
 
 class BondMessagePassingTest(unittest.TestCase):
     """Test the BondMessagePassing class."""
