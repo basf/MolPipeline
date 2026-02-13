@@ -15,6 +15,7 @@ from molpipeline.experimental.uncertainty.conformal import (
     ConformalRegressor,
     CrossConformalClassifier,
     CrossConformalRegressor,
+    apply_antitonic_calibration,
 )
 
 # Import nonconformity functions from utils
@@ -38,5 +39,6 @@ __all__ = [
     "MarginNonconformity",
     "NonconformityFunctor",
     "SVMMarginNonconformity",
+    "apply_antitonic_calibration",
     "create_nonconformity_function",
 ]
