@@ -33,9 +33,6 @@ from tests import TEST_DATA_DIR
 
 # Set random seeds for reproducibility
 RANDOM_SEED = 42
-random.seed(RANDOM_SEED)
-RNG = np.random.default_rng(RANDOM_SEED)
-
 FP_RADIUS = 2
 FP_SIZE = 1024
 
