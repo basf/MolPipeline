@@ -4,6 +4,8 @@ import abc
 from collections.abc import Sequence
 from typing import Any, Self
 
+from utils.json_operations import recursive_from_json, recursive_to_json
+
 try:
     from typing import override  # type: ignore[attr-defined]
 except ImportError:
@@ -109,8 +111,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             The state of the model.
 
         """
-        state = self.__dict__.copy()
-        state_dict = state.pop("model").state_dict()
+        state = dict(super().__getstate__())
+        state_dict = self.model.state_dict()
         new_state_dict = {}
         for key, value in state_dict.items():
             if isinstance(value, torch.Tensor):
@@ -119,7 +121,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
                 new_state_dict[key] = value
 
         state["model_state_dict"] = new_state_dict
-        print(state)
+        state["model"] = recursive_to_json(self.model)
+        state["lightning_trainer"] = get_params_trainer(self.lightning_trainer)
         return state
 
     def __setstate__(self, state: dict[str, Any]) -> None:
@@ -131,16 +134,17 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             The state of the model.
 
         """
+        state["model"] = recursive_from_json(state.pop("model"))
+        state["lightning_trainer"] = pl.Trainer(**state.pop("lightning_trainer"))
         model_state_dict = state.pop("model_state_dict")
-        new_model_state_dict = {}
+        torch_state_dict = {}
         for key, value in model_state_dict.items():
             if isinstance(value, np.ndarray):
-                new_model_state_dict[key] = torch.from_numpy(value)
+                torch_state_dict[key] = torch.from_numpy(value)
             else:
-                new_model_state_dict[key] = value
-        state["model"] = MPNN._load_from_state_dict(new_model_state_dict)
-        self.__dict__.update(state)
-
+                torch_state_dict[key] = value
+        super().__setstate__(state)
+        self.model.load_state_dict(torch_state_dict)
 
     def _update_trainer(self) -> None:
         """Update the trainer for the model."""
