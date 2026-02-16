@@ -1,7 +1,6 @@
 """Comprehensive tests for conformal prediction wrappers and pipeline integration."""
 # pylint: disable=too-many-lines
 
-import random
 import tempfile
 import unittest
 from pathlib import Path
