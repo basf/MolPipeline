@@ -19,9 +19,7 @@ def is_empty(value: Any) -> bool:
         True if value is empty, False otherwise.
 
     """
-    if get_length(value) == 0:
-        return True
-    return False
+    return get_length(value) == 0
 
 
 def get_length(values: Any) -> int:
