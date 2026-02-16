@@ -7,6 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any, Self
 
+import numpy as np
 import torch
 from chemprop.conf import DEFAULT_ATOM_FDIM, DEFAULT_BOND_FDIM, DEFAULT_HIDDEN_DIM
 from chemprop.models.model import MPNN as _MPNN
@@ -94,6 +95,7 @@ WARN_MSG = (
     "Please re-save your models with the current version."
 )
 
+
 def serialize_torch_tensor(obj: Any) -> Any:
     """Serialize a torch tensor to a numpy array for pickling.
 
@@ -106,6 +108,7 @@ def serialize_torch_tensor(obj: Any) -> Any:
     -------
     Any
         The serialized object.
+
     """
     if isinstance(obj, torch.Tensor):
         return obj.cpu().numpy()
@@ -362,15 +365,18 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             The state of the object.
 
         """
-        state = super().__getstate__()
-        numpy_state = serialize_torch_tensor(state)
-        #numpy_state.pop("_modules")
-        numpy_state.pop("_hparams")
+        state = dict(super().__getstate__())
+        state_dict = self.state_dict()
+        numpy_state_dict = serialize_torch_tensor(state_dict)
+        state.pop("_modules")
+        state.pop("_hparams")
+        state["state_dict"] = numpy_state_dict
         import pprint
-        print(numpy_state.keys())
-        pprint.pprint(numpy_state)
+
+        print(state.keys())
+        pprint.pprint(state)
         print("_________________________________________")
-        return numpy_state
+        return state
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Handle unpickling with backward compatibility.
@@ -381,10 +387,21 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             The object's state dictionary.
 
         """
+        state_copy = dict(state)
+        state_dict = state_copy.pop("state_dict", None)
         if "state_dict_ref" not in state:
             warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
             self.state_dict_ref = None
-        super().__setstate__(state)
+        super().__setstate__(state_copy)
+
+        if state_dict is not None:
+            torch_state_dict = {}
+            for key, value in state_copy["state_dict"].items():
+                if isinstance(value, (np.ndarray, list)):
+                    torch_state_dict[key] = torch.from_numpy(value)
+                else:
+                    torch_state_dict[key] = value
+            self.load_state_dict(torch_state_dict)
 
     def reinitialize_fnn(self) -> Self:
         """Reinitialize the feedforward network.
