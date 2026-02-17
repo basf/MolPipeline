@@ -27,10 +27,7 @@ def get_enable_progress_bar(trainer: pl.Trainer) -> bool:
         If the progress bar is enabled in the lightning trainer.
 
     """
-    for callback in trainer.callbacks:  # type: ignore[attr-defined]
-        if isinstance(callback, ProgressBar):
-            return True
-    return False
+    return any(isinstance(callback, ProgressBar) for callback in trainer.callbacks)
 
 
 def get_device(trainer: pl.Trainer) -> str | Accelerator:
@@ -109,7 +106,7 @@ def get_trainer_path(trainer: pl.Trainer) -> str | None:
         None if the path is the current path.
 
     """
-    curr_path = str(Path(".").resolve())
+    curr_path = str(Path().resolve())
     trainer_path: str | None = trainer.default_root_dir
     if trainer_path == curr_path:
         trainer_path = None
@@ -145,7 +142,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
     trainer_dict = {
         "accelerator": get_device(trainer),
         "strategy": "auto",  # trainer.strategy, # collides with accelerator
-        "devices": "auto",  # trainer._accelerator_connector._devices_flag does not really work
+        "devices": "auto",  # trainer._accelerator_connector._devices_flag does not work
         "num_nodes": trainer.num_nodes,
         "precision": trainer.precision,
         "logger": trainer.logger,
@@ -174,12 +171,12 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "deterministic": torch.are_deterministic_algorithms_enabled(),
         "benchmark": torch.backends.cudnn.benchmark,
         "inference_mode": trainer.predict_loop.inference_mode,
-        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # pylint: disable=protected-access
+        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # pylint: disable=protected-access  # noqa: E501
         # "profiler": trainer.profiler,  # type: ignore[attr-defined]
         "detect_anomaly": trainer._detect_anomaly,  # pylint: disable=protected-access
         "barebones": trainer.barebones,
         # "plugins": trainer.plugins,  # can not be exctracted
-        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related
+        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related  # noqa: E501
         "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,  # type: ignore[attr-defined]
         "default_root_dir": get_trainer_path(trainer),
     }
@@ -201,10 +198,9 @@ def get_non_default_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
 
     """
     trainer_dict = get_params_trainer(trainer)
-    non_default_values = {}
-    for key, value in trainer_dict.items():
-        if key not in TRAINER_DEFAULT_PARAMS:
-            non_default_values[key] = value
-        elif value != TRAINER_DEFAULT_PARAMS[key]:
-            non_default_values[key] = value
+    non_default_values = {
+        key: value
+        for key, value in trainer_dict.items()
+        if key not in TRAINER_DEFAULT_PARAMS or value != TRAINER_DEFAULT_PARAMS[key]
+    }
     return non_default_values
