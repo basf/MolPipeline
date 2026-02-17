@@ -5,8 +5,8 @@ import tempfile
 import unittest
 from collections.abc import Iterable
 from pathlib import Path
-import joblib
 
+import joblib
 import torch
 from chemprop.nn.metrics import MSE
 from sklearn.base import clone
@@ -209,9 +209,13 @@ class TestChempropModel(unittest.TestCase):
         weights = chemprop_model.model.state_dict()
         chemprop_model.set_params(model__state_dict_ref=weights)
         cloned_model = clone(chemprop_model)
-        original_hash =joblib.hash(chemprop_model)
+        original_hash = joblib.hash(chemprop_model)
         cloned_hash = joblib.hash(cloned_model)
-        self.assertEqual(original_hash, cloned_hash, "Hash mismatch after cloning the model.")
+        self.assertEqual(
+            original_hash,
+            cloned_hash,
+            "Hash mismatch after cloning the model.",
+        )
 
 
 class TestChempropClassifier(unittest.TestCase):
