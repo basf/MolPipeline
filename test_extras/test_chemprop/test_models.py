@@ -206,6 +206,8 @@ class TestChempropModel(unittest.TestCase):
     def test_clone_hash(self) -> None:
         """Test that the hash of the model is the same after cloning."""
         chemprop_model = get_chemprop_model_binary_classification_mpnn()
+        weights = chemprop_model.model.state_dict()
+        chemprop_model.set_params(model__state_dict_ref=weights)
         cloned_model = clone(chemprop_model)
         original_hash =joblib.hash(chemprop_model)
         cloned_hash = joblib.hash(cloned_model)
