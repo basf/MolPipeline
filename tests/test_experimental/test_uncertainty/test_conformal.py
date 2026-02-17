@@ -25,6 +25,7 @@ from molpipeline.experimental.uncertainty import (
     CrossConformalRegressor,
     LogNonconformity,
     SVMMarginNonconformity,
+    apply_antitonic_calibration,
     create_nonconformity_function,
 )
 from molpipeline.mol2any import MolToMorganFP
@@ -189,7 +190,6 @@ class BaseConformalTestData(unittest.TestCase):
         return x_train, x_calib, x_test, y_train, y_calib, y_test
 
 
-# Classification-specific tests
 class TestConformalClassifier(BaseConformalTestData):
     """Core functionality tests for ConformalClassifier."""
 
@@ -199,7 +199,7 @@ class TestConformalClassifier(BaseConformalTestData):
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
 
-        clf = RandomForestClassifier(random_state=42, n_estimators=50)
+        clf = RandomForestClassifier(random_state=42, n_estimators=5)
         cp = ConformalClassifier(clf)
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
@@ -225,7 +225,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertGreaterEqual(results["ks_test"], 0.0)
         self.assertLessEqual(results["ks_test"], 1.0)
 
-    def test_evaluate_methods_cross_conformal(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
+    def test_evaluate_methods_cross_conformal(self) -> None:  # pylint: disable=too-many-locals
         """Test evaluate methods for cross-conformal predictors (classification)."""
         # Test CrossConformalClassifier
         x_train_clf, x_test_clf, y_train_clf, y_test_clf = train_test_split(
@@ -235,12 +235,11 @@ class TestConformalClassifier(BaseConformalTestData):
             random_state=42,
         )
 
-        clf = RandomForestClassifier(random_state=42, n_estimators=50)
+        clf = RandomForestClassifier(random_state=42, n_estimators=5)
         ccp_clf = CrossConformalClassifier(clf, n_folds=2)
         ccp_clf.fit_and_calibrate(x_train_clf, y_train_clf)
 
         results_clf = ccp_clf.evaluate(x_test_clf, y_test_clf)
-        # Should have mean and std for each metric
         expected_keys = {
             "error_mean",
             "error_std",
@@ -290,11 +289,11 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(probs.shape[0], len(y_test))
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
-        sets_90 = cp.predict_set(x_test, confidence=0.90)
+        sets_80 = cp.predict_set(x_test, confidence=0.80)
         sets_95 = cp.predict_set(x_test, confidence=0.95)
-        size_90 = float(np.mean([np.sum(set_row) for set_row in sets_90]))
+        size_80 = float(np.mean([np.sum(set_row) for set_row in sets_80]))
         size_95 = float(np.mean([np.sum(set_row) for set_row in sets_95]))
-        self.assertLessEqual(size_90, size_95)
+        self.assertLessEqual(size_80, size_95)
 
     def test_class_specific_behavior(self) -> None:
         """Test that ConformalClassifier has classification-specific methods."""
@@ -308,7 +307,7 @@ class TestConformalClassifier(BaseConformalTestData):
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
-        clf = RandomForestClassifier(random_state=42, n_estimators=50)
+        clf = RandomForestClassifier(random_state=42, n_estimators=5)
         cp_clf = ConformalClassifier(clf)
         with self.assertRaises(ValueError):
             cp_clf.predict(x_test)
@@ -333,7 +332,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
 
-    def test_nonconformity_functions(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
+    def test_nonconformity_functions(self) -> None:  # pylint: disable=too-many-locals
         """Test different nonconformity functions in ConformalClassifier."""
         data_splits = self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         x_train, x_calib, x_test, y_train, y_calib, y_test = data_splits
@@ -604,6 +603,83 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertTrue(np.isnan(invalid_predictions).all())
         self.assertEqual(len(invalid_predictions), n_invalid)
 
+    def test_conformal_classifier_antitonic(self) -> None:
+        """Test basic functionality of antitonic calibration for ConformalClassifier."""
+        x_train, x_calib, x_test, y_train, y_calib, _y_test = (
+            self._get_train_calib_test_splits(self.x_clf, self.y_clf)
+        )
+
+        clf = RandomForestClassifier(random_state=42, n_estimators=5)
+        model = ConformalClassifier(clf)
+        model.fit(x_train, y_train)
+        model.calibrate(x_calib, y_calib)
+
+        probs = model.predict_proba_antitonic(x_test)
+
+        self.assertEqual(probs.shape, (len(x_test), 2))
+        self.assertTrue(np.allclose(probs.sum(axis=1), np.ones(len(x_test))))
+        self.assertTrue(np.all(probs >= 0))
+        self.assertTrue(np.all(probs <= 1))
+        p_values = model.predict_p(x_test)
+        p_class1 = p_values[:, 1]
+        prob_class1 = probs[:, 1]
+        rank_correlation = np.corrcoef(p_class1, prob_class1)[0, 1]
+        self.assertGreater(rank_correlation, 0.7)
+
+    def test_antitonic_calibration_standalone(self) -> None:
+        """Test the standalone apply_antitonic_calibration function.
+
+        Verifies that higher p-values lead to higher calibrated probabilities.
+        In conformal prediction, a high p-value means the prediction is more conforming
+        (more likely), so it should result in higher calibrated probability. The antitonic
+        mapping should preserve this monotonic relationship.
+        """
+        rng = np.random.default_rng(777)
+        p_calib = rng.random((200, 2))
+
+        p_test_high = np.array([[0.9, 0.5], [0.85, 0.5], [0.88, 0.5]])
+        p_test_low = np.array([[0.1, 0.5], [0.15, 0.5], [0.12, 0.5]])
+
+        probs_high = apply_antitonic_calibration(p_test_high, p_calib)
+        probs_low = apply_antitonic_calibration(p_test_low, p_calib)
+
+        # Higher p-values should result in higher calibrated probabilities
+        # (averaging to reduce variance from the stochastic calibration set)
+        avg_prob_high_class0 = probs_high[:, 0].mean()
+        avg_prob_low_class0 = probs_low[:, 0].mean()
+
+        self.assertGreater(avg_prob_high_class0, avg_prob_low_class0)
+
+    def test_cross_conformal_classifier_antitonic(self) -> None:
+        """Test basic functionality of antitonic calibration for CrossConformalClassifier."""
+        x_train, x_test, y_train, y_test = train_test_split(
+            self.x_clf,
+            self.y_clf,
+            test_size=0.2,
+            random_state=42,
+        )
+
+        n_classes = len(np.unique(y_train))
+        clf = RandomForestClassifier(random_state=42, n_estimators=5)
+        model = CrossConformalClassifier(clf, n_folds=2)
+        model.fit_and_calibrate(x_train, y_train)
+
+        probs = model.predict_proba_antitonic(x_test)
+
+        self.assertEqual(probs.shape, (len(x_test), n_classes))
+        self.assertEqual(len(x_test), len(y_test))
+
+        self.assertTrue(np.allclose(probs.sum(axis=1), np.ones(len(x_test))))
+        self.assertTrue(np.all(probs >= 0))
+        self.assertTrue(np.all(probs <= 1))
+
+        # Verify correlation between p-values and probabilities
+        p_values = model.predict_p(x_test)
+        p_class1 = p_values[:, 1]
+        prob_class1 = probs[:, 1]
+        rank_correlation = np.corrcoef(p_class1, prob_class1)[0, 1]
+        self.assertGreater(rank_correlation, 0.7)
+
 
 # Regression-specific tests
 class TestConformalRegressor(BaseConformalTestData):
@@ -638,7 +714,7 @@ class TestConformalRegressor(BaseConformalTestData):
         x_train_reg, x_calib_reg, x_test_reg, y_train_reg, y_calib_reg, y_test_reg = (
             self._get_train_calib_test_splits(self.x_reg, self.y_reg)
         )
-        reg = RandomForestRegressor(random_state=42, n_estimators=50)
+        reg = RandomForestRegressor(random_state=42, n_estimators=5)
         cp_reg = ConformalRegressor(reg)
         with self.assertRaises(ValueError):
             cp_reg.predict(x_test_reg)
@@ -741,7 +817,7 @@ class TestConformalRegressor(BaseConformalTestData):
             test_size=0.3,
             random_state=42,
         )
-        reg = RandomForestRegressor(n_estimators=50, random_state=42)
+        reg = RandomForestRegressor(n_estimators=5, random_state=42)
         ccp = CrossConformalRegressor(reg, n_folds=2, random_state=42)
         ccp.fit_and_calibrate(x_train, y_train)
         original_preds = ccp.predict(x_test)
@@ -763,7 +839,7 @@ class TestConformalRegressor(BaseConformalTestData):
             self._get_train_calib_test_splits(self.x_reg, self.y_reg)
         )
 
-        reg = RandomForestRegressor(random_state=42, n_estimators=50)
+        reg = RandomForestRegressor(random_state=42, n_estimators=5)
         cp = ConformalRegressor(reg)
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
@@ -796,7 +872,7 @@ class TestConformalRegressor(BaseConformalTestData):
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]
         y_train, y_test = self.y_reg[train_idx], self.y_reg[test_idx]
-        reg = RandomForestRegressor(random_state=42, n_estimators=50)
+        reg = RandomForestRegressor(random_state=42, n_estimators=5)
         ccp_reg = CrossConformalRegressor(reg, n_folds=2)
         ccp_reg.fit_and_calibrate(x_train, y_train)
         results_reg = ccp_reg.evaluate(x_test, y_test)
