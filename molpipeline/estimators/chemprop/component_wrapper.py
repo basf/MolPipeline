@@ -96,31 +96,6 @@ WARN_MSG = (
 )
 
 
-def serialize_torch_tensor(obj: Any) -> Any:
-    """Serialize a torch tensor to a numpy array for pickling.
-
-    Parameters
-    ----------
-    obj : Any
-        The object to serialize.
-
-    Returns
-    -------
-    Any
-        The serialized object.
-
-    """
-    if isinstance(obj, torch.Tensor):
-        return obj.cpu().numpy()
-    if isinstance(obj, dict):
-        return {key: serialize_torch_tensor(value) for key, value in obj.items()}
-    if isinstance(obj, list):
-        return [serialize_torch_tensor(item) for item in obj]
-    if isinstance(obj, tuple):
-        return tuple(serialize_torch_tensor(item) for item in obj)
-    return obj
-
-
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
 class BondMessagePassing(_BondMessagePassing, BaseEstimator):
     """A wrapper for the BondMessagePassing class."""
@@ -356,27 +331,6 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         """
         self._n_tasks = value
 
-    def __getstate__(self) -> dict[str, Any]:
-        """Get the state of the object for pickling.
-
-        Returns
-        -------
-        dict[str, Any]
-            The state of the object.
-
-        """
-        state = dict(super().__getstate__())
-        state_dict = self.state_dict()
-        numpy_state_dict = serialize_torch_tensor(state_dict)
-        state.pop("_modules")
-        state.pop("_hparams")
-        state["state_dict"] = numpy_state_dict
-        import pprint
-
-        print(state.keys())
-        pprint.pprint(state)
-        print("_________________________________________")
-        return state
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Handle unpickling with backward compatibility.
@@ -387,21 +341,10 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
             The object's state dictionary.
 
         """
-        state_copy = dict(state)
-        state_dict = state_copy.pop("state_dict", None)
         if "state_dict_ref" not in state:
             warnings.warn(WARN_MSG, DeprecationWarning, stacklevel=2)
             self.state_dict_ref = None
-        super().__setstate__(state_copy)
-
-        if state_dict is not None:
-            torch_state_dict = {}
-            for key, value in state_copy["state_dict"].items():
-                if isinstance(value, (np.ndarray, list)):
-                    torch_state_dict[key] = torch.from_numpy(value)
-                else:
-                    torch_state_dict[key] = value
-            self.load_state_dict(torch_state_dict)
+        super().__setstate__(state)
 
     def reinitialize_fnn(self) -> Self:
         """Reinitialize the feedforward network.
