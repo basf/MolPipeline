@@ -4,13 +4,6 @@ import abc
 from collections.abc import Sequence
 from typing import Any, Self
 
-from utils.json_operations import recursive_from_json, recursive_to_json
-
-try:
-    from typing import override  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import override
-
 import numpy as np
 import numpy.typing as npt
 import torch
@@ -18,8 +11,10 @@ from chemprop.data import MoleculeDataset, build_dataloader
 from chemprop.models.model import MPNN
 from lightning import pytorch as pl
 from sklearn.base import BaseEstimator
+from typing_extensions import override
 
 from molpipeline.estimators.chemprop.lightning_wrapper import get_params_trainer
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 
 # pylint: enable=duplicate-code
 
