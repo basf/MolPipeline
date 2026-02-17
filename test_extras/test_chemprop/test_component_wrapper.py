@@ -5,7 +5,6 @@ import unittest
 from chemprop.nn.metrics import ChempropMetric
 from sklearn.base import clone
 from torch import nn
-import joblib
 
 from molpipeline.estimators.chemprop.component_wrapper import (
     MPNN,

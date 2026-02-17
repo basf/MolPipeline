@@ -7,7 +7,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any, Self
 
-import numpy as np
 import torch
 from chemprop.conf import DEFAULT_ATOM_FDIM, DEFAULT_BOND_FDIM, DEFAULT_HIDDEN_DIM
 from chemprop.models.model import MPNN as _MPNN
@@ -330,7 +329,6 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
 
         """
         self._n_tasks = value
-
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Handle unpickling with backward compatibility.
