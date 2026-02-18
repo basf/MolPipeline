@@ -54,7 +54,7 @@ try:
 
     def _tensor_from_json(
         obj: type,
-        *args: Any,
+        *args: Any,  # pylint: disable=unused-argument  # noqa: ARG001
         **kwargs: Any,
     ) -> tuple[torch.Tensor, Literal[True]] | tuple[type, Literal[False]]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
@@ -63,6 +63,10 @@ try:
         ----------
         obj : type
             The object to initialize.
+        args: Any
+            Positional arguments for initialization.
+        kwargs: Any
+            Keyword arguments for initialization.
 
         Returns
         -------
@@ -97,8 +101,8 @@ except ImportError:
 
     def _tensor_from_json(
         obj: type,
-        *args: Any,
-        **kwargs: Any,
+        *args: Any,  # pylint: disable=unused-argument  # noqa: ARG001
+        **kwargs: Any,  # pylint: disable=unused-argument  # noqa: ARG001
     ) -> tuple[type, Literal[False]]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
 
@@ -106,6 +110,10 @@ except ImportError:
         ----------
         obj : type
             The object to initialize.
+        args: Any
+            Positional arguments for initialization.
+        kwargs: Any
+            Keyword arguments for initialization.
 
         Returns
         -------
@@ -146,6 +154,20 @@ def np_array_to_json(
 def np_dtype_to_json(
     obj: _T,
 ) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
+    """Convert a numpy dtype to a JSON-serializable object.
+
+    Parameters
+    ----------
+    obj : object
+        The numpy dtype to convert.
+
+    Returns
+    -------
+    dict[str, Any] | bool
+        The JSON-serializable object and True if the object is a numpy dtype.
+        Else the original object and False.
+
+    """
     if isinstance(obj, np.dtype):
         return {
             "__name__": type(obj).__name__,
