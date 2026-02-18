@@ -54,7 +54,7 @@ try:
 
     def _tensor_from_json(
         obj: type,
-        *args: Any,  # pylint: disable=unused-argument  # noqa: ARG001
+        *args: Any,  # pylint: disable=unused-argument,  noqa: ARG001
         **kwargs: Any,
     ) -> tuple[Any, Literal[True]] | tuple[type, Literal[False]]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
@@ -102,7 +102,7 @@ except ImportError:
     def _tensor_from_json(
         obj: type,
         *args: Any,  # pylint: disable=unused-argument  # noqa: ARG001
-        **kwargs: Any,  # pylint: disable=unused-argument  # noqa: ARG001
+        **kwargs: Any,  # pylint: disable=unused-argument noqa: ARG001
     ) -> tuple[Any, Literal[True]] | tuple[type, Literal[False]]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
 
