@@ -612,9 +612,9 @@ class TestConformalClassifier(BaseConformalTestData):
         clf = RandomForestClassifier(random_state=42, n_estimators=5)
         model = ConformalClassifier(clf)
         model.fit(x_train, y_train)
-        model.calibrate(x_calib, y_calib)
+        model.calibrate(x_calib, y_calib, calibrate_probs=True)
 
-        probs = model.predict_proba_antitonic(x_test)
+        probs = model.predict_proba(x_test)
 
         self.assertEqual(probs.shape, (len(x_test), 2))
         self.assertTrue(np.allclose(probs.sum(axis=1), np.ones(len(x_test))))
@@ -643,6 +643,25 @@ class TestConformalClassifier(BaseConformalTestData):
         probs_high = apply_antitonic_calibration(p_test_high, p_calib)
         probs_low = apply_antitonic_calibration(p_test_low, p_calib)
 
+        self.assertEqual(probs_high.shape, p_test_high.shape)
+        self.assertEqual(probs_low.shape, p_test_low.shape)
+        self.assertTrue(np.allclose(probs_high.sum(axis=1), 1.0))
+        self.assertTrue(np.allclose(probs_low.sum(axis=1), 1.0))
+
+        # Antitonic calibration should not change ordering within a class.
+        # Since p-values are distinct here, the rank order must be identical.
+        self.assertTrue(
+            np.array_equal(
+                np.argsort(p_test_high[:, 0]),
+                np.argsort(probs_high[:, 0]),
+            ),
+        )
+        self.assertTrue(
+            np.array_equal(
+                np.argsort(p_test_low[:, 0]),
+                np.argsort(probs_low[:, 0]),
+            ),
+        )
         # Higher p-values should result in higher calibrated probabilities
         # (averaging to reduce variance from the stochastic calibration set)
         avg_prob_high_class0 = probs_high[:, 0].mean()
@@ -662,9 +681,9 @@ class TestConformalClassifier(BaseConformalTestData):
         n_classes = len(np.unique(y_train))
         clf = RandomForestClassifier(random_state=42, n_estimators=5)
         model = CrossConformalClassifier(clf, n_folds=2)
-        model.fit_and_calibrate(x_train, y_train)
+        model.fit_and_calibrate(x_train, y_train, calibrate_probs=True)
 
-        probs = model.predict_proba_antitonic(x_test)
+        probs = model.predict_proba(x_test)
 
         self.assertEqual(probs.shape, (len(x_test), n_classes))
         self.assertEqual(len(x_test), len(y_test))
