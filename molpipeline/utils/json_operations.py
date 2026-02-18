@@ -3,10 +3,14 @@
 import types
 import typing
 import warnings
-from typing import Any
+from typing import Any, Literal, TypeVar
+
+import numpy as np
 
 from molpipeline.pipeline import Pipeline
-from molpipeline.utils.json_operations_torch import tensor_to_json
+
+_T = TypeVar("_T")
+
 
 __all__ = [
     "builtin_to_json",
@@ -16,6 +20,139 @@ __all__ = [
     "transform_functions2string",
     "transform_string2function",
 ]
+
+
+try:
+    import torch
+
+    def _tensor_to_json(
+        obj: _T,
+    ) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
+        """Recursively convert a PyTorch model to a JSON-serializable object.
+
+        Parameters
+        ----------
+        obj : object
+            The object to convert.
+
+        Returns
+        -------
+        object
+            The JSON-serializable object.
+
+        """
+        if isinstance(obj, torch.Tensor):
+            object_dict: dict[str, Any] = {
+                "__name__": obj.__class__.__name__,
+                "__module__": obj.__class__.__module__,
+                "__init__": True,
+            }
+        else:
+            return obj, False
+        object_dict["data"] = recursive_to_json(obj.cpu().numpy())
+        return object_dict, True
+
+    def _tensor_from_json(
+        obj: type, *args: Any, **kwargs: Any,
+    ) -> tuple[torch.Tensor, Literal[True]] | tuple[type, Literal[False]]:
+        """Recursively convert a JSON-serializable object to a PyTorch model.
+
+        Parameters
+        ----------
+        obj : type
+            The object to initialize.
+
+        Returns
+        -------
+        object
+            The PyTorch model.
+
+        """
+        if obj is torch.Tensor:
+            return torch.from_numpy(kwargs["data"]), True
+        return obj, False
+
+
+except ImportError:
+
+    def _tensor_to_json(
+        obj: _T,
+    ) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
+        """Recursively convert a PyTorch model to a JSON-serializable object.
+
+        Parameters
+        ----------
+        obj : object
+            The object to convert.
+
+        Returns
+        -------
+        object
+            The JSON-serializable object.
+
+        """
+        return obj, False
+
+    def _tensor_from_json(
+        obj: type, *args: Any, **kwargs: Any,
+    ) -> tuple[type, Literal[False]]:
+        """Recursively convert a JSON-serializable object to a PyTorch model.
+
+        Parameters
+        ----------
+        obj : type
+            The object to initialize.
+
+        Returns
+        -------
+        object
+            The PyTorch model.
+
+        """
+        return obj, False
+
+
+def np_array_to_json(
+    obj: _T,
+) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
+    """Convert a vector to a JSON-serializable object.
+
+    Parameters
+    ----------
+    obj : object
+        The vector to convert.
+
+    Returns
+    -------
+    dict[str, Any] | bool
+        The JSON-serializable object, or False if the object is not a vector.
+
+    """
+    if isinstance(obj, np.ndarray):
+        return {
+            "__name__": "array",
+            "__module__": obj.__class__.__module__,
+            "__init__": True,
+            "__args__": [recursive_to_json(obj.tolist())],
+            "dtype": recursive_to_json(obj.dtype),
+        }, True
+    return obj, False
+
+
+def np_dtype_to_json(
+    obj: _T,
+) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
+    if isinstance(obj, np.dtype):
+        return {
+            "__name__": type(obj).__name__,
+            "__module__": obj.__class__.__module__,
+            "__init__": False,
+        }, True
+    return obj, False
+
+
+TO_JSON_FUNCTIONS = [_tensor_to_json, np_array_to_json, np_dtype_to_json]
+FROM_JSON_FUNCTIONS = [_tensor_from_json]
 
 
 def transform_functions2string(value: Any) -> Any:
@@ -195,7 +332,7 @@ def builtin_to_json(obj: Any) -> Any:
         Json file containing the dictionary.
 
     """
-    if isinstance(obj, (str, int, float, bool)) or obj is None:
+    if isinstance(obj, (str, int, float, bool, type)) or obj is None:
         return obj
 
     if isinstance(obj, types.FunctionType):
@@ -247,10 +384,9 @@ def recursive_to_json(obj: Any) -> Any:
 
     if isinstance(
         obj,
-        (str, int, float, bool, dict, types.FunctionType, list, set, tuple),
+        (str, int, float, bool, dict, types.FunctionType, list, set, tuple, type),
     ):
-        return_value = builtin_to_json(obj)
-        return return_value
+        return builtin_to_json(obj)
 
     # If neither of the above, it is assumed to be an object.
     object_dict: dict[str, Any] = {
@@ -273,10 +409,10 @@ def recursive_to_json(obj: Any) -> Any:
             for key, value in model_params.items():
                 object_dict[key] = recursive_to_json(value)
     else:
-        obj_dict, success = tensor_to_json(obj)
-        # Either not a tensor or torch is not available
-        if success:
-            return obj_dict
+        for to_json_function in TO_JSON_FUNCTIONS:
+            obj_dict, success = to_json_function(obj)
+            if success:
+                return obj_dict
         # If the object is not a sklearn model, a warning is raised
         # as it might not be possible to recreate the object.
         warnings.warn(
@@ -309,6 +445,7 @@ def decode_dict(obj: dict[str, Any]) -> Any:
     obj_module_str = object_params_copy.pop("__module__", None)
     obj_class_str = object_params_copy.pop("__name__", None)
     initialize = object_params_copy.pop("__init__", False)
+    args = object_params_copy.pop("__args__", [])
 
     # Convert remaining Values
     converted_dict = {}
@@ -322,12 +459,15 @@ def decode_dict(obj: dict[str, Any]) -> Any:
         if not initialize:  # If the object is a function or should not be initialized
             return obj_class
         # If the object is a class, but has no parameters
-        if not converted_dict:
-            return obj_class()
         if obj_class is set:
             return set(converted_dict["__set_items__"])
+        for from_json_function in FROM_JSON_FUNCTIONS:
+            obj_class, success = from_json_function(obj_class, *args, **converted_dict)
+            if success:
+                return obj_class
+
         # If the object is a class, and has parameters
-        return obj_class(**converted_dict)
+        return obj_class(*args, **converted_dict)
     return converted_dict
 
 
@@ -350,7 +490,7 @@ def recursive_from_json(obj: Any) -> Any:
         Object specified in the json file.
 
     """
-    if isinstance(obj, (str, int, float, bool)) or obj is None:
+    if isinstance(obj, (str, int, float, bool, type)) or obj is None:
         return obj
 
     if isinstance(obj, dict):
