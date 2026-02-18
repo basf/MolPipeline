@@ -1,7 +1,7 @@
 """Tests conversion of sklearn models to json and back."""
 
 import unittest
-
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
@@ -74,6 +74,34 @@ class JsonConversionTest(unittest.TestCase):
         test_set_json = recursive_to_json(test_set)
         recreated_set = recursive_from_json(test_set_json)
         self.assertEqual(test_set, recreated_set)
+
+    def test_numpy_dtype_roundtrip(self) -> None:
+        """Test if a numpy dtype can be reconstructed from json."""
+        dtype_dict = {
+            "int64": np.int64,
+            "float32": np.float32,
+            "object": np.object_,
+        }
+        for dtype_name, dtype in dtype_dict.items():
+            with self.subTest(dtype=dtype_name):
+                json_data = recursive_to_json(dtype)
+                deserialized_dtype = recursive_from_json(json_data)
+                self.assertEqual(dtype, deserialized_dtype)
+
+    def test_array_roundtrip(self) -> None:
+        """Test if a numpy array can be reconstructed from json."""
+        dtype_dict = {
+            "int64": np.int64,
+            "float32": np.float32,
+            "object": np.object_,
+        }
+        for dtype_name, dtype in dtype_dict.items():
+            with self.subTest(dtype=dtype_name):
+                original_array = np.array([[1, 2], [3, 4]], dtype=dtype)
+                json_data = recursive_to_json(original_array)
+                deserialized_array = recursive_from_json(json_data)
+                self.assertTrue(np.array_equal(original_array, deserialized_array))
+                self.assertEqual(original_array.dtype, deserialized_array.dtype)
 
 
 if __name__ == "__main__":
