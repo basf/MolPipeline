@@ -1,1 +1,1 @@
-"""Unit test for utils function which use extra dependencies."""
+"""Unit test for utils functions which use extra dependencies."""
