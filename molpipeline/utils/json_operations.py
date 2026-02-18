@@ -53,7 +53,9 @@ try:
         return object_dict, True
 
     def _tensor_from_json(
-        obj: type, *args: Any, **kwargs: Any,
+        obj: type,
+        *args: Any,
+        **kwargs: Any,
     ) -> tuple[torch.Tensor, Literal[True]] | tuple[type, Literal[False]]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
 
@@ -94,7 +96,9 @@ except ImportError:
         return obj, False
 
     def _tensor_from_json(
-        obj: type, *args: Any, **kwargs: Any,
+        obj: type,
+        *args: Any,
+        **kwargs: Any,
     ) -> tuple[type, Literal[False]]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
 

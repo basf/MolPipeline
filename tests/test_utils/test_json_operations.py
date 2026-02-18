@@ -1,6 +1,7 @@
 """Tests conversion of sklearn models to json and back."""
 
 import unittest
+
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
