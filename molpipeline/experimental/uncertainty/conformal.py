@@ -88,7 +88,7 @@ def _apply_antitonic_regressors(
     if len(regressors) != n_classes:
         raise ValueError(
             "Number of regressors must match number of classes. "
-            f"Got {len(regressors)} and {n_classes}"
+            f"Got {len(regressors)} and {n_classes}",
         )
 
     calibrated_probs_unnorm = np.zeros_like(p_values_test)
@@ -1292,6 +1292,8 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
             Training features.
         y: npt.NDArray[Any]
             Training targets.
+        fit_params : Any
+            Additional parameters passed to the underlying estimator fit.
 
         Returns
         -------
@@ -1313,8 +1315,8 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         y_array = np.asarray(y)
 
         for train_idx, calib_idx in splits:
-            x_train, x_calib = x_array[train_idx], x_array[calib_idx]
-            y_train, y_calib = y_array[train_idx], y_array[calib_idx]
+            x_train, _ = x_array[train_idx], x_array[calib_idx]
+            y_train, _ = y_array[train_idx], y_array[calib_idx]
 
             model = ConformalRegressor(
                 clone(self.estimator),
@@ -1373,20 +1375,6 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
             model.calibrate(x_calib, y_calib, **calib_params)
 
         return self
-
-    def fit_and_calibrate(  # pylint: disable=too-many-locals
-        self,
-        x: npt.NDArray[Any],
-        y: npt.NDArray[Any],
-    ) -> "CrossConformalRegressor":
-        """Fit and calibrate the cross-conformal regressor.
-
-        Note
-        ----
-        This is kept for backward compatibility. Prefer `fit(...).calibrate(...)`.
-
-        """
-        return self.fit(x, y).calibrate(x, y)
 
     def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Predict using aggregated models.
