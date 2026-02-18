@@ -265,7 +265,7 @@ def transform_string2function(value: Any) -> Any:
     return value
 
 
-_U = typing.TypeVar("_U", str, int, float, bool, None)
+_U = typing.TypeVar("_U", str, int, float, bool, None, type)
 
 
 @typing.overload
