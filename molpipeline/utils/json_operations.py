@@ -52,9 +52,9 @@ try:
         object_dict["data"] = recursive_to_json(obj.cpu().numpy())
         return object_dict, True
 
-    def _tensor_from_json(
+    def _tensor_from_json(  # pylint: disable=unused-argument
         obj: type,
-        *args: Any,  # pylint: disable=unused-argument,  noqa: ARG001
+        *args: Any,  # noqa: ARG001
         **kwargs: Any,
     ) -> tuple[Any, Literal[True]] | tuple[type, Literal[False]]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
@@ -99,10 +99,10 @@ except ImportError:
         """
         return obj, False
 
-    def _tensor_from_json(
+    def _tensor_from_json(  # pylint: disable=unused-argument
         obj: type,
-        *args: Any,  # pylint: disable=unused-argument  # noqa: ARG001
-        **kwargs: Any,  # pylint: disable=unused-argument noqa: ARG001
+        *args: Any,  # noqa: ARG001
+        **kwargs: Any,  # noqa: ARG001
     ) -> tuple[Any, Literal[True]] | tuple[type, Literal[False]]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
 
