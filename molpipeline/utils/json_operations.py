@@ -153,7 +153,6 @@ def np_array_to_json(
     return obj_dict, True
 
 
-
 def np_dtype_to_json(
     obj: _T,
 ) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
@@ -175,10 +174,10 @@ def np_dtype_to_json(
         return obj, False
 
     obj_dict = {
-            "__name__": type(obj).__name__,
-            "__module__": obj.__class__.__module__,
-            "__init__": False,
-        }
+        "__name__": type(obj).__name__,
+        "__module__": obj.__class__.__module__,
+        "__init__": False,
+    }
     return obj_dict, True
 
 
