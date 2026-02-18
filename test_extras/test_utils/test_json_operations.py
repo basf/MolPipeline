@@ -25,6 +25,23 @@ class TestJsonOperations(unittest.TestCase):
         original_tensor = torch.from_numpy(np.array(1))
 
         json_data = recursive_to_json(original_tensor)
+        expected_json_data = {
+            "__name__": "Tensor",
+            "__module__": "torch",
+            "__init__": True,
+            "data": {
+                "__name__": "array",
+                "__module__": "numpy",
+                "__init__": True,
+                "__args__": [1],
+                "dtype": {
+                    "__name__": "Int64DType",
+                    "__module__": "numpy.dtypes",
+                    "__init__": False,
+                },
+            },
+        }
+        self.assertDictEqual(json_data, expected_json_data)
         deserialized_tensor = recursive_from_json(json_data)
 
         self.assertTrue(torch.equal(original_tensor, deserialized_tensor))
