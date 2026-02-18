@@ -41,15 +41,15 @@ try:
             The JSON-serializable object.
 
         """
-        if isinstance(obj, torch.Tensor):
-            object_dict: dict[str, Any] = {
-                "__name__": obj.__class__.__name__,
-                "__module__": obj.__class__.__module__,
-                "__init__": True,
-            }
-        else:
+        if not isinstance(obj, torch.Tensor):
             return obj, False
-        object_dict["data"] = recursive_to_json(obj.cpu().numpy())
+
+        object_dict: dict[str, Any] = {
+            "__name__": obj.__class__.__name__,
+            "__module__": obj.__class__.__module__,
+            "__init__": True,
+            "data": recursive_to_json(obj.cpu().numpy()),
+        }
         return object_dict, True
 
     def _tensor_from_json(  # pylint: disable=unused-argument
@@ -140,15 +140,18 @@ def np_array_to_json(
         The JSON-serializable object, or False if the object is not a vector.
 
     """
-    if isinstance(obj, np.ndarray):
-        return {
-            "__name__": "array",
-            "__module__": obj.__class__.__module__,
-            "__init__": True,
-            "__args__": [recursive_to_json(obj.tolist())],
-            "dtype": recursive_to_json(obj.dtype),
-        }, True
-    return obj, False
+    if not isinstance(obj, np.ndarray):
+        return obj, False
+
+    obj_dict = {
+        "__name__": "array",
+        "__module__": obj.__class__.__module__,
+        "__init__": True,
+        "__args__": [recursive_to_json(obj.tolist())],
+        "dtype": recursive_to_json(obj.dtype),
+    }
+    return obj_dict, True
+
 
 
 def np_dtype_to_json(
@@ -168,13 +171,15 @@ def np_dtype_to_json(
         Else the original object and False.
 
     """
-    if isinstance(obj, np.dtype):
-        return {
+    if not isinstance(obj, np.dtype):
+        return obj, False
+
+    obj_dict = {
             "__name__": type(obj).__name__,
             "__module__": obj.__class__.__module__,
             "__init__": False,
-        }, True
-    return obj, False
+        }
+    return obj_dict, True
 
 
 TO_JSON_FUNCTIONS = [_tensor_to_json, np_array_to_json, np_dtype_to_json]
