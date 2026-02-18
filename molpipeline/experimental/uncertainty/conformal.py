@@ -9,6 +9,7 @@ import numpy as np
 import numpy.typing as npt
 from crepes import WrapClassifier, WrapRegressor
 from crepes.extras import DifficultyEstimator, MondrianCategorizer
+from numpy.random import RandomState  # pylint: disable=no-name-in-module
 from scipy.stats import mode
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.isotonic import IsotonicRegression
@@ -24,22 +25,15 @@ from molpipeline.experimental.uncertainty.utils import (
 )
 
 
-def apply_antitonic_calibration(
-    p_values_test: npt.NDArray[np.float64],
+def _fit_antitonic_regressors(
     p_values_calib: npt.NDArray[np.float64],
+    *,
     epsilon: float = 1e-10,
-) -> npt.NDArray[np.float64]:
-    """Apply antitonic calibration to conformal p-values.
-
-    Transforms conformal p-values into calibrated probabilities using the method
-    from Vovk et al. (2014). For each class, fits a decreasing (antitonic) function
-    g(p) via isotonic regression, then computes calibrated probabilities as
-    P(y) ∝ g(1)/g(p_y), normalized to sum to 1.
+) -> list[IsotonicRegression]:
+    """Fit per-class antitonic (decreasing) isotonic regressors.
 
     Parameters
     ----------
-    p_values_test : npt.NDArray[np.float64]
-        Conformal p-values for test samples, shape (n_samples, n_classes).
     p_values_calib : npt.NDArray[np.float64]
         Conformal p-values for calibration samples, shape (n_calib, n_classes).
     epsilon : float, optional
@@ -47,54 +41,65 @@ def apply_antitonic_calibration(
 
     Returns
     -------
+    list[IsotonicRegression]
+        One fitted regressor per class.
+
+    """
+    n_classes = p_values_calib.shape[1]
+    regressors: list[IsotonicRegression] = []
+    for y_class in range(n_classes):
+        p_y_calib = p_values_calib[:, y_class]
+        targets = 1.0 / (p_y_calib + epsilon)
+        iso = IsotonicRegression(increasing=False, out_of_bounds="clip")
+        iso.fit(p_y_calib, targets)
+        regressors.append(iso)
+    return regressors
+
+
+def _apply_antitonic_regressors(
+    p_values_test: npt.NDArray[np.float64],
+    regressors: list[IsotonicRegression],
+    *,
+    epsilon: float = 1e-10,
+) -> npt.NDArray[np.float64]:
+    """Apply fitted antitonic isotonic regressors to p-values.
+
+    Parameters
+    ----------
+    p_values_test : npt.NDArray[np.float64]
+        Conformal p-values for test samples, shape (n_test, n_classes).
+    regressors : list[IsotonicRegression]
+        Fitted per-class isotonic regressors.
+    epsilon : float, optional
+        Small constant for numerical stability (default: 1e-10).
+
+    Returns
+    -------
     npt.NDArray[np.float64]
-        Calibrated probabilities of shape (n_samples, n_classes), normalized to sum to 1.
+        Calibrated probabilities of shape (n_test, n_classes), normalized to sum to 1.
 
     Raises
     ------
     ValueError
-        If p_values_test and p_values_calib have different number of classes.
-
-    References
-    ----------
-    Vovk, V., Petej, I., & Fedorova, V. (2014). From conformal to probabilistic
-    prediction. arXiv preprint arXiv:1406.5600.
-
-    Examples
-    --------
-    >>> p_test = np.array([[0.8, 0.2], [0.3, 0.7]])
-    >>> p_calib = np.array([[0.9, 0.1], [0.5, 0.5], [0.2, 0.8]])
-    >>> probs = apply_antitonic_calibration(p_test, p_calib)
-    >>> assert probs.shape == (2, 2)
-    >>> assert np.allclose(probs.sum(axis=1), 1.0)
+        If number of regressors does not match number of classes.
 
     """
-    if p_values_test.shape[1] != p_values_calib.shape[1]:
+    n_classes = p_values_test.shape[1]
+    if len(regressors) != n_classes:
         raise ValueError(
-            f"p_values_test and p_values_calib must have the same number of classes. "
-            f"Got {p_values_test.shape[1]} and {p_values_calib.shape[1]}",
+            "Number of regressors must match number of classes. "
+            f"Got {len(regressors)} and {n_classes}"
         )
 
-    n_classes = p_values_test.shape[1]
     calibrated_probs_unnorm = np.zeros_like(p_values_test)
-
     for y_class in range(n_classes):
-        p_y_calib = p_values_calib[:, y_class]
         p_y_test = p_values_test[:, y_class]
+        iso = regressors[y_class]
 
-        # Fit antitonic (decreasing) function g(p) via isotonic regression
-        # Target: 1/(p + ε) creates a decreasing relationship
-        targets = 1.0 / (p_y_calib + epsilon)
-
-        iso = IsotonicRegression(increasing=False, out_of_bounds="clip")
-        iso.fit(p_y_calib, targets)
-
-        # Compute calibrated probabilities: P(y) ∝ g(1) / g(p_y)
         g_test = iso.predict(p_y_test)
         g_1 = iso.predict([1.0])[0]
         calibrated_probs_unnorm[:, y_class] = g_1 / (g_test + epsilon)
 
-    # Normalize to obtain valid probability distribution
     prob_sum = calibrated_probs_unnorm.sum(axis=1, keepdims=True)
     return calibrated_probs_unnorm / (prob_sum + epsilon)
 
@@ -348,33 +353,6 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self._isotonic_regressors: list[IsotonicRegression] | None = None
         self.n_classes_: int | None = None
 
-    def use_prefitted_estimator(
-        self,
-        estimator: BaseEstimator | None = None,
-    ) -> "ConformalClassifier":
-        """Attach an already-fitted estimator without retraining.
-
-        This is useful when calibration should be applied to pre-trained
-        models (e.g., cached CV folds). The estimator must expose
-        ``predict_proba`` compatible with crepes.
-
-        Parameters
-        ----------
-        estimator : BaseEstimator | None
-            A pre-fitted estimator with a ``predict_proba`` method.
-            If None, uses the estimator already stored in this instance.
-
-        Returns
-        -------
-        ConformalClassifier
-            Self.
-
-        """
-        if estimator is not None:
-            self.estimator = estimator
-        self._crepes_wrapper = WrapClassifier(self.estimator)
-        return self
-
     def fit(
         self,
         x: npt.NDArray[Any],
@@ -409,6 +387,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
                 "Internal error: _crepes_wrapper is None after initialization.",
             )
         self._crepes_wrapper.fit(x, y, **fit_params)
+        self.n_classes_ = len(np.unique(y))
         return self
 
     def calibrate(
@@ -599,17 +578,10 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         if self.n_classes_ is None:
             raise ValueError("n_classes_ not set. Call calibrate() first.")
 
-        self._isotonic_regressors = []
-
-        for y_class in range(self.n_classes_):
-            p_y_calib = p_values_calib[:, y_class]
-
-            # Fit antitonic (decreasing) function g(p) via isotonic regression
-            targets = 1.0 / (p_y_calib + epsilon)
-
-            iso = IsotonicRegression(increasing=False, out_of_bounds="clip")
-            iso.fit(p_y_calib, targets)
-            self._isotonic_regressors.append(iso)
+        self._isotonic_regressors = _fit_antitonic_regressors(
+            p_values_calib.astype(np.float64, copy=False),
+            epsilon=epsilon,
+        )
 
     def _apply_isotonic_calibration(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Apply isotonic calibration to predictions.
@@ -636,22 +608,13 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         if self.n_classes_ is None:
             raise ValueError("n_classes_ not set. Call calibrate() first.")
 
-        p_values_test = self.predict_p(x)
+        p_values_test = self.predict_p(x).astype(np.float64, copy=False)
         epsilon = 1e-10
-        calibrated_probs_unnorm = np.zeros((len(x), self.n_classes_))
-
-        for y_class in range(self.n_classes_):
-            p_y_test = p_values_test[:, y_class]
-            iso = self._isotonic_regressors[y_class]
-
-            # Compute calibrated probabilities: P(y) ∝ g(1) / g(p_y)
-            g_test = iso.predict(p_y_test)
-            g_1 = iso.predict([1.0])[0]
-            calibrated_probs_unnorm[:, y_class] = g_1 / (g_test + epsilon)
-
-        # Normalize to obtain valid probability distribution
-        prob_sum = calibrated_probs_unnorm.sum(axis=1, keepdims=True)
-        return calibrated_probs_unnorm / (prob_sum + epsilon)
+        return _apply_antitonic_regressors(
+            p_values_test,
+            self._isotonic_regressors,
+            epsilon=epsilon,
+        )
 
     def evaluate(
         self,
@@ -720,7 +683,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         n_folds: int = 5,
         mondrian: bool = False,
         nonconformity: (str | NonconformityFunctor | None) = None,
-        random_state: int | None = None,
+        random_state: int | RandomState | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize CrossConformalClassifier.
@@ -735,7 +698,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Whether to use Mondrian conformal prediction (default: False).
         nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use for all individual classifiers.
-        random_state : int | None, optional
+        random_state : int | RandomState | None, optional
             Random state for reproducibility (default: None).
         **kwargs : Any
             Additional keyword arguments.
@@ -744,21 +707,21 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.n_folds = n_folds
         self.mondrian = mondrian
-        self.random_state = random_state
+        self.random_state = check_random_state(random_state)
         self.models_: list[ConformalClassifier] = []
         self.cv_splits_: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]] = []
         self.n_classes_: int | None = None
 
-    def fit_and_calibrate(  # pylint: disable=too-many-locals
+    def fit(
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
-        prefitted_estimators: list[BaseEstimator] | None = None,
-        cv_splits: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]
-        | None = None,
-        calibrate_probs: bool = False,
+        **fit_params: Any,
     ) -> "CrossConformalClassifier":
-        """Fit and calibrate the cross-conformal classifier.
+        """Fit cross-conformal models (without calibration).
+
+        This method trains one underlying estimator per fold on the respective
+        training split and stores the fold indices for later calibration.
 
         Parameters
         ----------
@@ -766,13 +729,61 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Training features.
         y: npt.NDArray[Any]
             Training targets.
-        prefitted_estimators : list[BaseEstimator] | None, optional
-            Pre-fitted estimators for each fold (default: None).
-        cv_splits : list[tuple] | None, optional
-            Cross-validation splits (default: None).
+        **fit_params : Any
+            Additional parameters passed to the underlying estimator fit.
+
+        Returns
+        -------
+        CrossConformalClassifier
+            Self.
+
+        """
+        self.models_ = []
+        self.cv_splits_ = []
+        self.n_classes_ = len(np.unique(y))
+
+        splitter = StratifiedKFold(
+            n_splits=self.n_folds,
+            shuffle=True,
+            random_state=self.random_state,
+        )
+
+        for train_idx, calib_idx in splitter.split(x, y):
+            x_train = x[train_idx]
+            y_train = y[train_idx]
+
+            model = ConformalClassifier(
+                clone(self.estimator),
+                mondrian=self.mondrian,
+                nonconformity=self.nonconformity_func,
+                **self.kwargs,
+            )
+            model.fit(x_train, y_train, **fit_params)
+            self.models_.append(model)
+            self.cv_splits_.append((train_idx, calib_idx))
+
+        return self
+
+    def calibrate(
+        self,
+        x: npt.NDArray[Any],
+        y: npt.NDArray[Any],
+        calibrate_probs: bool = False,
+        **calib_params: Any,
+    ) -> "CrossConformalClassifier":
+        """Calibrate already-fitted cross-conformal models.
+
+        Parameters
+        ----------
+        x: npt.NDArray[Any]
+            Features used to extract per-fold calibration splits.
+        y: npt.NDArray[Any]
+            Labels used to extract per-fold calibration splits.
         calibrate_probs : bool, optional
             If True, also calibrate probabilities via antitonic mapping using
             isotonic regression for each fold (default: False).
+        **calib_params : Any
+            Additional parameters passed to each fold's `ConformalClassifier.calibrate`.
 
         Returns
         -------
@@ -782,92 +793,24 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         Raises
         ------
         ValueError
-            If prefitted_estimators and cv_splits have different lengths.
+            If the model has not been fitted.
 
         """
-        self.models_ = []
-        self.cv_splits_ = []
-        self.n_classes_ = len(np.unique(y))
-        rng = check_random_state(self.random_state)
+        if not self.models_ or not self.cv_splits_:
+            raise ValueError("Must fit before calibrating")
 
-        # If prefitted estimators are provided, skip training and only calibrate
-        if prefitted_estimators is not None:
-            return self._fit_and_calibrate_prefitted_estimators(
-                x,
-                y,
-                prefitted_estimators=prefitted_estimators,
-                cv_splits=cv_splits,
-                calibrate_probs=calibrate_probs,
-                rng=rng,
-            )
+        if len(self.models_) != len(self.cv_splits_):
+            raise ValueError("Internal error: models_ and cv_splits_ mismatch")
 
-        splitter = StratifiedKFold(
-            n_splits=self.n_folds,
-            shuffle=True,
-            random_state=rng,
-        )
-
-        for train_idx, calib_idx in splitter.split(x, y):
-            x_train, x_calib = x[train_idx], x[calib_idx]
-            y_train, y_calib = y[train_idx], y[calib_idx]
-
-            model = ConformalClassifier(
-                clone(self.estimator),
-                mondrian=self.mondrian,
-                nonconformity=self.nonconformity_func,
-                **self.kwargs,
-            )
-            model.fit(x_train, y_train)
-            model.calibrate(x_calib, y_calib, calibrate_probs=calibrate_probs)
-            self.models_.append(model)
-            self.cv_splits_.append((train_idx, calib_idx))
-
-        return self
-
-    def _fit_and_calibrate_prefitted_estimators(
-        self,
-        x: npt.NDArray[Any],
-        y: npt.NDArray[Any],
-        *,
-        prefitted_estimators: list[BaseEstimator],
-        cv_splits: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]
-        | None,
-        calibrate_probs: bool,
-        rng: np.random.RandomState,
-    ) -> "CrossConformalClassifier":
-        """Calibrate a cross-conformal ensemble from pre-fitted estimators."""
-        if cv_splits is None:
-            splitter = StratifiedKFold(
-                n_splits=self.n_folds,
-                shuffle=True,
-                random_state=rng,
-            )
-            cv_splits = list(splitter.split(x, y))
-
-        if len(prefitted_estimators) != len(cv_splits):  # pragma: no cover - defensive
-            raise ValueError(
-                "prefitted_estimators and cv_splits must have the same length",
-            )
-
-        for estimator, (train_idx, calib_idx) in zip(
-            prefitted_estimators,
-            cv_splits,
-            strict=True,
-        ):
-            model = ConformalClassifier(
-                estimator,
-                mondrian=self.mondrian,
-                nonconformity=self.nonconformity_func,
-                **self.kwargs,
-            )
-            model.use_prefitted_estimator()
+        for model, (_, calib_idx) in zip(self.models_, self.cv_splits_, strict=True):
+            x_calib = x[calib_idx]
+            y_calib = y[calib_idx]
             model.calibrate(
-                x[calib_idx],
-                y[calib_idx],
+                x_calib,
+                y_calib,
                 calibrate_probs=calibrate_probs,
+                **calib_params,
             )
-            self.models_.append(model)
-            self.cv_splits_.append((train_idx, calib_idx))
 
         return self
 
@@ -985,7 +928,6 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         p_values_list = [model.predict_p(x, **kwargs) for model in self.models_]
         return np.median(p_values_list, axis=0)
-
 
     def evaluate(
         self,
@@ -1331,13 +1273,18 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self.binning_bins = binning_bins
         self.random_state = random_state
         self.models_: list[ConformalRegressor] = []
+        self.cv_splits_: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]] = []
 
-    def fit_and_calibrate(  # pylint: disable=too-many-locals
+    def fit(  # pylint: disable=too-many-locals
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
+        **fit_params: Any,
     ) -> "CrossConformalRegressor":
-        """Fit and calibrate the cross-conformal regressor.
+        """Fit cross-conformal models (without calibration).
+
+        This method trains one underlying estimator per fold on the respective
+        training split and stores the fold indices for later calibration.
 
         Parameters
         ----------
@@ -1353,9 +1300,10 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
         """
         self.models_ = []
+        self.cv_splits_ = []
 
         splits = create_continuous_stratified_folds(
-            y,
+            np.asarray(y),
             n_splits=self.n_folds,
             n_groups=self.binning_bins,
             random_state=self.random_state,
@@ -1376,11 +1324,69 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
                 nonconformity=self.nonconformity_func,
                 **self.kwargs,
             )
-            model.fit(x_train, y_train)
-            model.calibrate(x_calib, y_calib)
+            model.fit(x_train, y_train, **fit_params)
             self.models_.append(model)
+            self.cv_splits_.append((train_idx, calib_idx))
 
         return self
+
+    def calibrate(
+        self,
+        x: npt.NDArray[Any],
+        y: npt.NDArray[Any],
+        **calib_params: Any,
+    ) -> "CrossConformalRegressor":
+        """Calibrate already-fitted cross-conformal models.
+
+        Parameters
+        ----------
+        x: npt.NDArray[Any]
+            Features used to extract per-fold calibration splits.
+        y: npt.NDArray[Any]
+            Targets used to extract per-fold calibration splits.
+        **calib_params : Any
+            Additional parameters passed to each fold's `ConformalRegressor.calibrate`.
+
+        Returns
+        -------
+        CrossConformalRegressor
+            Self.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
+
+        """
+        if not self.models_ or not self.cv_splits_:
+            raise ValueError("Must fit before calibrating")
+
+        if len(self.models_) != len(self.cv_splits_):
+            raise ValueError("Internal error: models_ and cv_splits_ mismatch")
+
+        x_array = np.asarray(x)
+        y_array = np.asarray(y)
+
+        for model, (_, calib_idx) in zip(self.models_, self.cv_splits_, strict=True):
+            x_calib = x_array[calib_idx]
+            y_calib = y_array[calib_idx]
+            model.calibrate(x_calib, y_calib, **calib_params)
+
+        return self
+
+    def fit_and_calibrate(  # pylint: disable=too-many-locals
+        self,
+        x: npt.NDArray[Any],
+        y: npt.NDArray[Any],
+    ) -> "CrossConformalRegressor":
+        """Fit and calibrate the cross-conformal regressor.
+
+        Note
+        ----
+        This is kept for backward compatibility. Prefer `fit(...).calibrate(...)`.
+
+        """
+        return self.fit(x, y).calibrate(x, y)
 
     def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Predict using aggregated models.
