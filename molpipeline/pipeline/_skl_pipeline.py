@@ -464,7 +464,7 @@ class Pipeline(_Pipeline):
         """
         aggregated_transformer_list = []
         for i, (name_i, step_i) in enumerate(self._non_post_processing_steps()):
-            if isinstance(step_i, (ABCPipelineElement, FilterReinserter)):
+            if isinstance(step_i, ABCPipelineElement):
                 aggregated_transformer_list.append((i, name_i, step_i))
             else:
                 if aggregated_transformer_list:
