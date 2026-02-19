@@ -73,7 +73,7 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
                 self.name,
             )
 
-        mol: RDKitMol = self.string_to_mol(value)
+        mol = self.string_to_mol(value)
 
         if not mol:
             return InvalidInstance(

@@ -15,6 +15,8 @@ from molpipeline.mol2any import MolToMorganFP
 class TestLeaderPickerEstimator(unittest.TestCase):
     """Test LeaderPicker clustering estimator."""
 
+    # Remove if https://github.com/rdkit/rdkit/issues/9116 resolved
+    @unittest.expectedFailure
     def test_leader_picker_clustering_estimator(self) -> None:
         """Test LeaderPicker clustering estimator."""
         fingerprint_matrix = [
