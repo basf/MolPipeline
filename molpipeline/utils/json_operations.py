@@ -31,7 +31,7 @@ try:
 
     def _tensor_to_json(
         obj: _T,
-    ) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
+    ) -> tuple[dict[str, Any] | _T, bool]:
         """Recursively convert a PyTorch model to a JSON-serializable object.
 
         Parameters
@@ -41,7 +41,7 @@ try:
 
         Returns
         -------
-        tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]
+        tuple[dict[str, Any] | _T, bool]
             If the object is a PyTorch model, a tuple containing the JSON-serializable
             dictionary and True is returned.
             Else a tuple containing the original object and False is returned.
@@ -58,7 +58,7 @@ try:
         obj: type,
         *args: Any,  # noqa: ARG001
         **kwargs: Any,
-    ) -> tuple[Any, Literal[True]] | tuple[type, Literal[False]]:
+    ) -> tuple[Any | type, bool]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
 
         Parameters
@@ -72,7 +72,7 @@ try:
 
         Returns
         -------
-        tuple[Any, Literal[True]] | tuple[type, Literal[False]]
+        tuple[Any | type, bool]
             If the object is a JSON-serializable PyTorch model, a tuple containing the
             PyTorch model and True is returned.
             Else a tuple containing the original object and False is returned.
@@ -87,7 +87,7 @@ except ImportError:
 
     def _tensor_to_json(
         obj: _T,
-    ) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
+    ) -> tuple[dict[str, Any] | _T, bool]:
         """Recursively convert a PyTorch model to a JSON-serializable object.
 
         Parameters
@@ -97,7 +97,7 @@ except ImportError:
 
         Returns
         -------
-        tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]
+        tuple[dict[str, Any] | _T, bool]
             Same signature as the function when torch is installed, but always returns
             the original object and False, as the conversion is not successful when
             torch is not installed.
@@ -109,7 +109,7 @@ except ImportError:
         obj: type,
         *args: Any,  # noqa: ARG001
         **kwargs: Any,  # noqa: ARG001
-    ) -> tuple[Any, Literal[True]] | tuple[type, Literal[False]]:
+    ) ->tuple[Any | type, bool]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
 
         Parameters
@@ -123,7 +123,7 @@ except ImportError:
 
         Returns
         -------
-        tuple[Any, Literal[True]] | tuple[type, Literal[False]]
+        tuple[Any | type, bool]
             Same signature as the function when torch is installed, but always returns
             the original object and False, as the conversion is not successful when
             torch is not installed.
@@ -153,7 +153,7 @@ def get_object_import_header(obj: Any) -> dict[str, Any]:
 
 def np_array_to_json(
     obj: _T,
-) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
+) -> tuple[dict[str, Any] | _T, bool]:
     """Convert a vector to a JSON-serializable object.
 
     Parameters
@@ -163,7 +163,7 @@ def np_array_to_json(
 
     Returns
     -------
-     tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]
+     tuple[dict[str, Any] | _T, bool]
         If the object is a numpy array, a tuple containing the JSON-serializable
         dictionary and True is returned.
         Else a tuple containing the original object and False is returned.
@@ -180,7 +180,7 @@ def np_array_to_json(
 
 def np_dtype_to_json(
     obj: _T,
-) -> tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]:
+) -> tuple[dict[str, Any] | _T, bool]:
     """Convert a numpy dtype to a JSON-serializable object.
 
     Parameters
@@ -190,7 +190,7 @@ def np_dtype_to_json(
 
     Returns
     -------
-    tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]
+    tuple[dict[str, Any] | _T, bool]
         If the object is a numpy dtype, a tuple containing the JSON-serializable
         dictionary and True is returned.
         Else a tuple containing the original object and False is returned.
