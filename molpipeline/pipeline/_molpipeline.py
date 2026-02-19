@@ -401,11 +401,6 @@ class _MolPipeline:
             return last_element.assemble_output(value_list)
         return list(value_list)
 
-    def _finish(self) -> None:
-        """Inform each pipeline element that the iterations have finished."""
-        for p_element in self._element_list:
-            p_element.finish()
-
     def _transform_iterator(self, x_input: Any) -> Any:
         """Transform the input according to the sequence of provided PipelineElements.
 
