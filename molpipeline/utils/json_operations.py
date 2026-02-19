@@ -1,12 +1,12 @@
 """Contains functions for loading and saving objects to/from json files."""
 
+import importlib
 import types
 import typing
 import warnings
 from typing import Any, TypeVar
 
 import numpy as np
-from typing_extensions import deprecated
 
 from molpipeline.pipeline import Pipeline
 
@@ -26,7 +26,7 @@ __all__ = [
 # torch is not installed, which comes as an extra-dependency via molpipeline[chemprop].
 # In case torch is not installed, the functions will just return the original object and
 # a boolean indicating that the conversion was not successful.
-try:
+if importlib.util.find_spec("torch") is not None:
     import torch
 
     def _tensor_to_json(
@@ -82,8 +82,7 @@ try:
             return torch.from_numpy(kwargs["data"]), True
         return obj, False
 
-
-except ImportError:
+else:
 
     def _tensor_to_json(
         obj: _T,
@@ -206,100 +205,12 @@ def np_dtype_to_json(
     return obj_dict, True
 
 
-_OBJECT_SPECIF_TO_JSON_FUNTIONS = [_tensor_to_json, np_array_to_json, np_dtype_to_json]
-_OBJECT_SPECIF_FROM_JSON_FUNCTIONS = [_tensor_from_json]
-
-
-@deprecated(
-    "`transform_functions2string` is deprecated and will be removed in a future"
-    " version. Please use `recursive_to_json` instead.",
-)
-def transform_functions2string(value: Any) -> Any:
-    """Transform functions to string representation.
-
-    If the value is a function, it is transformed to a dictionary containing the module
-    and the class name. If the value is a dictionary, the function is called recursively
-    for each value. If the value is a list, the function is called recursively for each
-    value. Else the value is returned as is.
-
-    Parameters
-    ----------
-    value : Any
-        Value which is transformed.
-
-    Returns
-    -------
-    Any
-        Json file containing the dictionary.
-
-    """
-    if callable(value):
-        out_dict = {
-            "load_from_constructor": True,
-            "__name__": value.__name__,
-            "__module__": value.__module__,
-        }
-        return out_dict
-
-    if isinstance(value, dict):
-        out_dict = {}
-        for dict_key, dict_value in value.items():
-            out_dict[dict_key] = transform_functions2string(dict_value)
-        return out_dict
-
-    if isinstance(value, list):
-        out_list = []
-        for list_value in value:
-            out_list.append(transform_functions2string(list_value))
-        return out_list
-
-    return value
-
-
-@deprecated(
-    "`transform_string2function` is deprecated and will be removed in a future version."
-    " Please use `recursive_from_json` instead.",
-)
-def transform_string2function(value: Any) -> Any:
-    """Transform string representation of functions to actual functions.
-
-    If the value is a dictionary containing the key "load_from_constructor" and the
-    value is True, the function is loaded from the module and class name.
-    If the value is a dictionary, the function is called recursively for each value.
-    If the value is a list, the function is called recursively for each value.
-    Else the value is returned as is.
-
-    Parameters
-    ----------
-    value: Any
-        Object to be transformed
-
-    Returns
-    -------
-    Any
-        Json file containing the dictionary.
-
-    """
-    if isinstance(value, dict):
-        if "load_from_constructor" in value:
-            if value["load_from_constructor"]:
-                module_str: str = value["__module__"]
-                class_str: str = value["__name__"]
-                class_module = __import__(module_str, fromlist=[class_str])
-                return getattr(class_module, class_str)
-            return value
-        out_dict = {}
-        for dict_key, dict_value in value.items():
-            out_dict[dict_key] = transform_string2function(dict_value)
-        return out_dict
-
-    if isinstance(value, list):
-        out_list = []
-        for list_value in value:
-            out_list.append(transform_string2function(list_value))
-        return out_list
-
-    return value
+_OBJECT_SPECIFIC_TO_JSON_FUNCTIONS = [
+    _tensor_to_json,
+    np_array_to_json,
+    np_dtype_to_json,
+]
+_OBJECT_SPECIFIC_FROM_JSON_FUNCTIONS = [_tensor_from_json]
 
 
 _U = typing.TypeVar("_U", str, int, float, bool, None, type)
@@ -466,7 +377,7 @@ def recursive_to_json(obj: Any) -> Any:
             for key, value in model_params.items():
                 object_dict[key] = recursive_to_json(value)
     else:
-        for to_json_function in _OBJECT_SPECIF_TO_JSON_FUNTIONS:
+        for to_json_function in _OBJECT_SPECIFIC_TO_JSON_FUNCTIONS:
             obj_dict, success = to_json_function(obj)
             if success:
                 return obj_dict
@@ -518,7 +429,7 @@ def decode_dict(obj: dict[str, Any]) -> Any:
         # If the object is a class, but has no parameters
         if obj_class is set:
             return set(converted_dict["__set_items__"])
-        for from_json_function in _OBJECT_SPECIF_FROM_JSON_FUNCTIONS:
+        for from_json_function in _OBJECT_SPECIFIC_FROM_JSON_FUNCTIONS:
             obj_class, success = from_json_function(obj_class, *args, **converted_dict)
             if success:
                 return obj_class
