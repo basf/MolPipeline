@@ -21,7 +21,10 @@ __all__ = [
     "transform_string2function",
 ]
 
-
+# The following functions are defined in a try-except block to avoid import errors if
+# torch is not installed, which comes as an extra-dependency via molpipeline[chemprop].
+# In case torch is not installed, the functions will just return the original object and
+# a boolean indicating that the conversion was not successful.
 try:
     import torch
 
