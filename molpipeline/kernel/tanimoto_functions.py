@@ -13,9 +13,9 @@ def tanimoto_similarity_sparse(
 
     Parameters
     ----------
-    matrix_a: sparse.csr_matrix
+    matrix_a : sparse.csr_matrix
         Feature matrix A.
-    matrix_b: sparse.csr_matrix
+    matrix_b : sparse.csr_matrix
         Feature matrix B.
 
     Returns
@@ -52,9 +52,9 @@ def tanimoto_distance_sparse(
 
     Parameters
     ----------
-    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_]
+    matrix_a : sparse.csr_matrix | npt.NDArray[np.int_]
         Feature matrix A.
-    matrix_b: sparse.csr_matrix | npt.NDArray[np.int_]
+    matrix_b : sparse.csr_matrix | npt.NDArray[np.int_]
         Feature matrix B.
 
     Returns
@@ -67,6 +67,70 @@ def tanimoto_distance_sparse(
     return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
 
 
+def pairwise_tanimoto_similarity(
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
+    matrix_b: sparse.csr_matrix | npt.NDArray[np.int_],
+) -> np.float64:
+    """Calculate the tanimoto similarity between singles rows of feature matrix a and b.
+
+    This function is required for sklean metrics which expect a single similarity value
+    between two instances. The input matrices must have exactly one row.
+
+    Parameters
+    ----------
+    matrix_a : sparse.csr_matrix | npt.NDArray[np.int_]
+        Feature matrix A.
+    matrix_b : sparse.csr_matrix | npt.NDArray[np.int_]
+        Feature matrix B.
+
+    Returns
+    -------
+    np.float64
+        Tanimoto similarity between the two rows.
+
+    Raises
+    ------
+    ValueError
+        If either matrix does not have exactly one row.
+
+    """
+    if isinstance(matrix_a, np.ndarray):
+        matrix_a = sparse.csr_matrix(matrix_a)
+    if isinstance(matrix_b, np.ndarray):
+        matrix_b = sparse.csr_matrix(matrix_b)
+    if matrix_a.shape[0] != 1 or matrix_b.shape[0] != 1:
+        raise ValueError("Both matrices must have exactly one row.")
+    return tanimoto_similarity_sparse(matrix_a, matrix_b)[0, 0]
+
+
+def pairwise_tanimoto_distance(
+    matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
+    matrix_b: sparse.csr_matrix | npt.NDArray[np.int_],
+) -> np.float64:
+    """Calculate the tanimoto distance between singles rows of feature matrix a and b.
+
+    Tanimoto distance is defined as 1-similarity.
+
+
+    This function is required for sklean metrics which expect a single similarity value
+    between two instances. The input matrices must have exactly one row.
+
+    Parameters
+    ----------
+    matrix_a : sparse.csr_matrix | npt.NDArray[np.int_]
+        Feature matrix A.
+    matrix_b : sparse.csr_matrix | npt.NDArray[np.int_]
+        Feature matrix B.
+
+    Returns
+    -------
+    np.float64
+        Tanimoto distance between the two rows.
+
+    """
+    return 1 - pairwise_tanimoto_similarity(matrix_a, matrix_b)
+
+
 def self_tanimoto_similarity(
     matrix_a: sparse.csr_matrix | npt.NDArray[np.int_],
 ) -> npt.NDArray[np.float64]:
@@ -74,7 +138,7 @@ def self_tanimoto_similarity(
 
     Parameters
     ----------
-    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]]
+    matrix_a : Union[sparse.csr_matrix, npt.NDArray[np.int_]]
         Feature matrix.
 
     Raises
@@ -104,7 +168,7 @@ def self_tanimoto_distance(
 
     Parameters
     ----------
-    matrix_a: Union[sparse.csr_matrix, npt.NDArray[np.int_]]
+    matrix_a : Union[sparse.csr_matrix, npt.NDArray[np.int_]]
         Feature matrix.
 
     Returns
