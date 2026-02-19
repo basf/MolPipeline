@@ -2,6 +2,7 @@
 
 import unittest
 
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
@@ -9,10 +10,7 @@ from molpipeline import Pipeline
 from molpipeline.utils.json_operations import (
     recursive_from_json,
     recursive_to_json,
-    transform_functions2string,
-    transform_string2function,
 )
-from molpipeline.utils.multi_proc import check_available_cores
 
 
 class JsonConversionTest(unittest.TestCase):
@@ -56,24 +54,40 @@ class JsonConversionTest(unittest.TestCase):
             self.assertEqual(type(orig_obj), type(recreated_obj))
         self.assertEqual(original_params, recreated_params)
 
-    def test_function_dict_json(self) -> None:
-        """Test if a dict with objects can be reconstructed from json."""
-        function_dict = {
-            "dummy1": {"check_available_cores": check_available_cores},
-            "dummy2": str,
-            "dummy3": 1,
-            "dummy4": [check_available_cores, check_available_cores, "test"],
-        }
-        function_json = transform_functions2string(function_dict)
-        recreated_function_dict = transform_string2function(function_json)
-        self.assertEqual(function_dict, recreated_function_dict)
-
     def test_set_transformation(self) -> None:
         """Test if a set can be reconstructed from json."""
         test_set = {1, "a", (1, "a")}
         test_set_json = recursive_to_json(test_set)
         recreated_set = recursive_from_json(test_set_json)
         self.assertEqual(test_set, recreated_set)
+
+    def test_numpy_dtype_roundtrip(self) -> None:
+        """Test if a numpy dtype can be reconstructed from json."""
+        dtype_dict = {
+            "int64": np.int64,
+            "float32": np.float32,
+            "object": np.object_,
+        }
+        for dtype_name, dtype in dtype_dict.items():
+            with self.subTest(dtype=dtype_name):
+                json_data = recursive_to_json(dtype)
+                deserialized_dtype = recursive_from_json(json_data)
+                self.assertEqual(dtype, deserialized_dtype)
+
+    def test_array_roundtrip(self) -> None:
+        """Test if a numpy array can be reconstructed from json."""
+        dtype_dict = {
+            "int64": np.int64,
+            "float32": np.float32,
+            "object": np.object_,
+        }
+        for dtype_name, dtype in dtype_dict.items():
+            with self.subTest(dtype=dtype_name):
+                original_array = np.array([[1, 2], [3, 4]], dtype=dtype)
+                json_data = recursive_to_json(original_array)
+                deserialized_array = recursive_from_json(json_data)
+                self.assertTrue(np.array_equal(original_array, deserialized_array))
+                self.assertEqual(original_array.dtype, deserialized_array.dtype)
 
 
 if __name__ == "__main__":

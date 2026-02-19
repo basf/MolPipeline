@@ -95,9 +95,11 @@ class Pipeline(_Pipeline):
             n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
         ]
         for step in self.steps:
-            if isinstance(step[1], PostPredictionWrapper):
-                if isinstance(step[1].wrapped_estimator, FilterReinserter):
-                    error_replacer_list.append(step[1].wrapped_estimator)
+            if isinstance(step[1], PostPredictionWrapper) and isinstance(
+                step[1].wrapped_estimator,
+                FilterReinserter,
+            ):
+                error_replacer_list.append(step[1].wrapped_estimator)
         for error_replacer in error_replacer_list:
             error_replacer.select_error_filter(error_filter_list)
 
@@ -195,9 +197,12 @@ class Pipeline(_Pipeline):
         if last_element is None:
             raise AssertionError("Pipeline needs to have at least one step!")
 
-        if with_final and last_element[2] is not None:
-            if last_element[2] != "passthrough":
-                yield last_element
+        if (
+            with_final
+            and last_element[2] is not None
+            and last_element[2] != "passthrough"
+        ):
+            yield last_element
 
     @property
     def _estimator_type(self) -> Any:

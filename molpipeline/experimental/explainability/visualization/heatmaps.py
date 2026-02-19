@@ -183,7 +183,8 @@ class ValueGrid(Grid2D):
             Resolution (number of cells) along x-axis.
         y_res: int
             Resolution (number of cells) along y-axis.
-        function_list: list[Callable[\
+        function_list: list[\
+         Callable[\
             [npt.NDArray[np.float64]],\
             npt.NDArray[np.float64]],\
         ], optional

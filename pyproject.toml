@@ -134,18 +134,12 @@ ignore = [
     "RUF100",  #  Unused noqa  # TO REMOVE
     "S101",   # Use of `assert` detected  # TO REMOVE
     "S311",  #  suspicious-non-cryptographic-random-usage
-    "SIM102",  # Use a single `if` statement instead of nested `if` statements # TO REMOVE
-    "SIM103",  # Return the condition directly  # TO REMOVE
-    "SIM105",  #  Use `contextlib.suppress(RuntimeError)` instead of `try`-`except`-`pass`  # TO REMOVE
-    "SIM110",  # Use return any() instead of `for` loop  # TO REMOVE
-    "SIM114",  # Combine `if` branches  # TO REMOVE
-    "SIM117",  # Use a single `with` statement with multiple contexts instead of nested `with` statements  # TO REMOVE
-    "SIM401",  # Use `xxx` instead of an `if` block  # TO REMOVE
     "SLF001",  # Private member accessed  # TO REMOVE
     "UP007",   # Use `X | Y` for type annotations  # TO REMOVE
 ]
  [tool.ruff.lint.per-file-ignores]
  "*.ipynb" = [
+     "E501",
      "PLE1142",
      "F704",
      "T201"

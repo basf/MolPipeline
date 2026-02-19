@@ -223,7 +223,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
             self.assertIs(subpipe_step, pipeline.steps[i])
 
     def test_get_subpipeline(self) -> None:
-        """Test extracting predefined subpipelines from the original pipeline."""
+        """Test extracting subpipeline as a certain interval."""
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
