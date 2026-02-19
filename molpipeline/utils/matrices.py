@@ -1,14 +1,13 @@
 """Functions to handle sparse matrices."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 
 from scipy import sparse
 
 
 def sparse_from_index_value_dicts(
-    row_index_lists: Iterable[dict[int, int]], n_columns: int
+    row_index_lists: Iterable[dict[int, int]],
+    n_columns: int,
 ) -> sparse.csr_matrix:
     """Create a sparse matrix from list of dicts.
 
@@ -26,6 +25,7 @@ def sparse_from_index_value_dicts(
     -------
     sparse.csr_matrix
         Has shape (len(row_index_lists), n_columns).
+
     """
     data: list[int] = []
     row_positions: list[int] = []
@@ -39,7 +39,8 @@ def sparse_from_index_value_dicts(
         return sparse.csr_matrix((0, n_columns))
 
     return sparse.csr_matrix(
-        (data, (row_positions, col_positions)), shape=(row_idx + 1, n_columns)
+        (data, (row_positions, col_positions)),
+        shape=(row_idx + 1, n_columns),
     )
 
 
@@ -57,7 +58,8 @@ def are_equal(matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix) -> bool:
     -------
     bool
         Whether the matrices are equal or not.
+
     """
-    is_unequal_matrix = matrix_a != matrix_b
+    is_unequal_matrix: sparse.csr_matrix = matrix_a != matrix_b  # type: ignore
     number_unequal_elements = int(is_unequal_matrix.nnz)
     return number_unequal_elements == 0

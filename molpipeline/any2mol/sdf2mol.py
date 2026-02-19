@@ -1,15 +1,7 @@
 """Class for Transforming SDF-strings to rdkit molecules."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
-
 import copy
+from typing import Any, Self
 
 from rdkit import Chem
 
@@ -17,9 +9,7 @@ from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     StringToMolPipelineElement as _StringToMolPipelineElement,
 )
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
-
-if TYPE_CHECKING:
-    from molpipeline.utils.molpipeline_types import OptionalMol
+from molpipeline.utils.molpipeline_types import OptionalMol
 
 
 class SDFToMol(_StringToMolPipelineElement):
@@ -48,7 +38,7 @@ class SDFToMol(_StringToMolPipelineElement):
         n_jobs: int, default=1
             Number of cores used for processing.
         uuid: str | None, optional
-            uuid of PipelineElement, by default None
+            UUID of PipelineElement, by default None
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)

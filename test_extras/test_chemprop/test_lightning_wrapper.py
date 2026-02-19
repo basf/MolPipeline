@@ -16,6 +16,7 @@ class TestLightningWrapper(unittest.TestCase):
     Notes
     -----
     These tests are not exhaustive.
+
     """
 
     def test_setting_deterministic(self) -> None:
@@ -31,7 +32,7 @@ class TestLightningWrapper(unittest.TestCase):
         self.assertTrue(trainer_params["deterministic"])
 
         trainer_params = get_non_default_params_trainer(pl.Trainer(deterministic=False))
-        # deterministic is by default False and hence will not be listed in the parameters
+        # deterministic is by default False and will not be listed in the parameters
         self.assertNotIn("deterministic", trainer_params)
 
 

@@ -1,7 +1,5 @@
 """Tests for the MolToPathFingerprint pipeline element."""
 
-from __future__ import annotations
-
 import unittest
 from typing import Any
 
@@ -39,9 +37,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
         smi2mol = SmilesToMol()
         sparse_path_fp = Mol2PathFP(n_bits=1024, return_as="sparse")
         dense_path_fp = Mol2PathFP(n_bits=1024, return_as="dense")
-        explicit_bit_vect_path_fp = Mol2PathFP(
-            n_bits=1024, return_as="explicit_bit_vect"
-        )
+        rdkit_vect_path_fp = Mol2PathFP(n_bits=1024, return_as="rdkit")
         sparse_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
@@ -54,26 +50,24 @@ class TestMol2PathFingerprint(unittest.TestCase):
                 ("dense_path_fp", dense_path_fp),
             ],
         )
-        explicit_bit_vect_pipeline = Pipeline(
+        rdkit_vect_pipeline = Pipeline(
             [
                 ("smi2mol", smi2mol),
-                ("explicit_bit_vect_path_fp", explicit_bit_vect_path_fp),
+                ("rdkit_vect_path_fp", rdkit_vect_path_fp),
             ],
         )
 
         sparse_output = sparse_pipeline.fit_transform(test_smiles)
         dense_output = dense_pipeline.fit_transform(test_smiles)
-        explicit_bit_vect_path_fp_output = explicit_bit_vect_pipeline.fit_transform(
-            test_smiles
-        )
+        rdkit_vect_path_fp_output = rdkit_vect_pipeline.fit_transform(test_smiles)
 
         self.assertTrue(np.all(sparse_output.toarray() == dense_output))
 
         self.assertTrue(
             np.equal(
                 dense_output,
-                np.array(explicit_bit_vect_path_fp_output),
-            ).all()
+                np.array(rdkit_vect_path_fp_output),
+            ).all(),
         )
 
     def test_counted_bits(self) -> None:
@@ -90,7 +84,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
         pipeline.set_params(mol_fp__counted=True)
         output_counted = pipeline.fit_transform(test_smiles)
         self.assertTrue(
-            np.all(np.flatnonzero(output_counted) == np.flatnonzero(output_binary))
+            np.all(np.flatnonzero(output_counted) == np.flatnonzero(output_binary)),
         )
         self.assertTrue(np.all(output_counted >= output_binary))
         self.assertTrue(np.any(output_counted > output_binary))
@@ -121,7 +115,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
         self.assertEqual(mol_fp.get_params()["n_bits"], 1024)
 
     def test_setter_getter_error_handling(self) -> None:
-        """Test if the setters and getters work as expected when errors are encountered."""
+        """Test the setters and getters work as expected when errors are encountered."""
         mol_fp = Mol2PathFP()
         params: dict[str, Any] = {
             "min_path": 2,

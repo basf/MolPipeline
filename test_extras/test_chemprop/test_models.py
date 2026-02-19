@@ -1,11 +1,13 @@
 """Test Chemprop component wrapper."""
 
 import logging
+import tempfile
 import unittest
 from collections.abc import Iterable
+from pathlib import Path
 
 import torch
-from chemprop.nn.loss import MSELoss
+from chemprop.nn.metrics import MSE
 from sklearn.base import clone
 
 from molpipeline.estimators.chemprop.component_wrapper import (
@@ -35,8 +37,11 @@ from test_extras.test_chemprop.chemprop_test_utils.constant_vars import (
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_chemprop_model_binary_classification_mpnn,
 )
+from test_extras.test_chemprop.chemprop_test_utils.randomization import (
+    randomize_state_dict_weights,
+)
 
-logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
+logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)  # pylint: disable=no-member
 
 
 class TestChempropModel(unittest.TestCase):
@@ -69,7 +74,9 @@ class TestChempropModel(unittest.TestCase):
                     raise ValueError(f"{param_name} should be a type.")
             else:
                 self.assertEqual(
-                    orig_params[param_name], param, f"Test failed for {param_name}"
+                    orig_params[param_name],
+                    param,
+                    f"Test failed for {param_name}",
                 )
 
         new_params = {
@@ -82,7 +89,7 @@ class TestChempropModel(unittest.TestCase):
         chemprop_model.set_params(**new_params)
         model_params = chemprop_model.get_params(deep=True)
         for param_name, param in new_params.items():
-            if param_name in {"model__agg"}:
+            if param_name == "model__agg":
                 self.assertIsInstance(model_params[param_name], type(param))
                 continue
             self.assertEqual(param, model_params[param_name])
@@ -98,8 +105,8 @@ class TestChempropModel(unittest.TestCase):
         """Test the classifier methods."""
         chemprop_model = get_chemprop_model_binary_classification_mpnn()
         # pylint: disable=protected-access
-        self.assertTrue(chemprop_model._is_binary_classifier())
-        self.assertFalse(chemprop_model._is_multiclass_classifier())
+        self.assertTrue(chemprop_model._is_binary_classifier())  # noqa: SLF001
+        self.assertFalse(chemprop_model._is_multiclass_classifier())  # noqa: SLF001
         # pylint: enable=protected-access
         self.assertTrue(hasattr(chemprop_model, "predict_proba"))
 
@@ -128,7 +135,8 @@ class TestChempropModel(unittest.TestCase):
         param_dict = chemprop_model_copy.get_params(deep=True)
 
         self.assertSetEqual(
-            set(param_dict.keys()), set(DEFAULT_BINARY_CLASSIFICATION_PARAMS.keys())
+            set(param_dict.keys()),
+            set(DEFAULT_BINARY_CLASSIFICATION_PARAMS.keys()),
         )
         for param_name, param in DEFAULT_BINARY_CLASSIFICATION_PARAMS.items():
             if param_name in NO_IDENTITY_CHECK:
@@ -144,7 +152,54 @@ class TestChempropModel(unittest.TestCase):
                 self.assertTrue(torch.allclose(param, param_dict[param_name]))
             else:
                 self.assertEqual(
-                    param_dict[param_name], param, f"Test failed for {param_name}"
+                    param_dict[param_name],
+                    param,
+                    f"Test failed for {param_name}",
+                )
+
+    def test_state_dict_forwarding(self) -> None:
+        """Test that the state_dict can be set.
+
+        Note:
+        ----
+        Testing that the predictions agree is done in test_chemprop_pipeline.py.
+
+        """
+        # Create a Chemprop model that is used to define the state_dict
+        chemprop_classifier = get_chemprop_model_binary_classification_mpnn()
+
+        random_state_dict = randomize_state_dict_weights(
+            chemprop_classifier.model.state_dict(),
+            random_state=20251204,
+        )
+
+        # Test passing the state_dict directly
+        new_model = ChempropModel(
+            model=get_chemprop_model_binary_classification_mpnn().model,
+            model__state_dict_ref=random_state_dict,
+        )
+        new_model_state_dict = new_model.model.state_dict()
+        self.assertEqual(random_state_dict.keys(), new_model_state_dict.keys())
+        for key, value in random_state_dict.items():
+            self.assertTrue(
+                torch.equal(value, new_model_state_dict[key]),
+                f"Mismatch for key {key}: {value} != {new_model_state_dict[key]}",
+            )
+
+        # Test passing the state_dict via a file
+        with tempfile.TemporaryDirectory() as tmpdir:
+            safe_path = Path(tmpdir) / "chemprop.pt"
+            torch.save(random_state_dict, safe_path)
+            new_model2 = ChempropModel(
+                model=get_chemprop_model_binary_classification_mpnn().model,
+                model__state_dict_ref=safe_path,
+            )
+            new_model2_state_dict = new_model2.model.state_dict()
+            self.assertEqual(random_state_dict.keys(), new_model2_state_dict.keys())
+            for key, value in random_state_dict.items():
+                self.assertTrue(
+                    torch.equal(value, new_model2_state_dict[key]),
+                    f"Mismatch for key {key}: {value} != {new_model2_state_dict[key]}",
                 )
 
 
@@ -163,6 +218,7 @@ class TestChempropClassifier(unittest.TestCase):
         chemprop_model = ChempropClassifier(lightning_trainer__accelerator="cpu")
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_BINARY_CLASSIFICATION_PARAMS)  # Shallow copy
+        expected_params["class_weight"] = None
         self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
         for param_name, param in expected_params.items():
             if param_name in NO_IDENTITY_CHECK:
@@ -176,7 +232,9 @@ class TestChempropClassifier(unittest.TestCase):
                     raise ValueError(f"{param_name} should be a type.")
             else:
                 self.assertEqual(
-                    param_dict[param_name], param, f"Test failed for {param_name}"
+                    param_dict[param_name],
+                    param,
+                    f"Test failed for {param_name}",
                 )
 
     def test_set_params(self) -> None:
@@ -204,7 +262,7 @@ class TestChempropRegressor(unittest.TestCase):
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_REGRESSION_PARAMS)
         expected_params["model__predictor"] = RegressionFFN
-        expected_params["model__predictor__criterion"] = MSELoss
+        expected_params["model__predictor__criterion"] = MSE
         self.assertSetEqual(set(param_dict.keys()), set(expected_params.keys()))
         for param_name, param in expected_params.items():
             if param_name in NO_IDENTITY_CHECK:
@@ -218,8 +276,40 @@ class TestChempropRegressor(unittest.TestCase):
                     raise ValueError(f"{param_name} should be a type.")
             else:
                 self.assertEqual(
-                    param_dict[param_name], param, f"Test failed for {param_name}"
+                    param_dict[param_name],
+                    param,
+                    f"Test failed for {param_name}",
                 )
+
+    def test_set_params(self) -> None:
+        """Test the set_params methods."""
+        chemprop_model = ChempropRegressor(
+            lightning_trainer__accelerator="cpu",
+        )
+        changed_params = {
+            "batch_size": 64,
+            "lightning_trainer__max_epochs": 15,
+            "model__message_passing__depth": 4,
+        }
+
+        chemprop_model.set_params(**changed_params)
+        current_params = chemprop_model.get_params(deep=True)
+        self.assertGreaterEqual(current_params.keys(), changed_params.keys())
+        for param, value in changed_params.items():
+            self.assertEqual(current_params[param], value)
+
+    def test_init_kwargs(self) -> None:
+        """Test that init kwargs are correctly set as parameters."""
+        non_default_kwargs = {
+            "batch_size": 128,
+            "lightning_trainer__max_epochs": 20,
+            "model__message_passing__depth": 5,
+        }
+        chemprop_model = ChempropRegressor(**non_default_kwargs)  # type: ignore
+        current_params = chemprop_model.get_params(deep=True)
+        self.assertGreaterEqual(current_params.keys(), non_default_kwargs.keys())
+        for param, value in non_default_kwargs.items():
+            self.assertEqual(current_params[param], value)
 
 
 class TestChempropMulticlassClassifier(unittest.TestCase):
@@ -236,7 +326,8 @@ class TestChempropMulticlassClassifier(unittest.TestCase):
         """
         n_classes = 3
         chemprop_model = ChempropMulticlassClassifier(
-            lightning_trainer__accelerator="cpu", n_classes=n_classes
+            lightning_trainer__accelerator="cpu",
+            n_classes=n_classes,
         )
         param_dict = chemprop_model.get_params(deep=True)
         expected_params = dict(DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS)  # Shallow copy
@@ -257,13 +348,16 @@ class TestChempropMulticlassClassifier(unittest.TestCase):
                 self.assertTrue(torch.allclose(param_dict[param_name], param))
             else:
                 self.assertEqual(
-                    param_dict[param_name], param, f"Test failed for {param_name}"
+                    param_dict[param_name],
+                    param,
+                    f"Test failed for {param_name}",
                 )
 
     def test_set_params(self) -> None:
         """Test the set_params methods."""
         chemprop_model = ChempropMulticlassClassifier(
-            lightning_trainer__accelerator="cpu", n_classes=3
+            lightning_trainer__accelerator="cpu",
+            n_classes=3,
         )
         chemprop_model.set_params(**DEFAULT_SET_PARAMS)
         params = {
@@ -278,7 +372,7 @@ class TestChempropMulticlassClassifier(unittest.TestCase):
             self.assertEqual(current_params[param], value)
 
     def test_error_for_multiclass_predictor(self) -> None:
-        """Test the error for using a multiclass predictor for a binary classification model."""
+        """Test error raised by using a multiclass predictor for bin. classification."""
         bond_encoder = BondMessagePassing()
         agg = SumAggregation()
         with self.assertRaises(ValueError):

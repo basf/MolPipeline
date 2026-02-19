@@ -1,12 +1,7 @@
 """Wrapper for Chemprop GraphFeaturizer."""
 
 from dataclasses import InitVar
-from typing import Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 from chemprop.featurizers.molgraph import (
     SimpleMoleculeMolGraphFeaturizer as _SimpleMoleculeMolGraphFeaturizer,
@@ -34,6 +29,7 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         -------
         dict[str, int]
             Parameters of the featurizer.
+
         """
         return {}
 
@@ -49,5 +45,6 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         -------
         Self
             This featurizer with the parameters set.
+
         """
         return self

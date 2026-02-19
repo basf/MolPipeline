@@ -1,23 +1,16 @@
 """Definition of types used in molpipeline."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from numbers import Number
 from typing import (
     Any,
     Literal,
-    Optional,
     Protocol,
+    Self,
     TypeAlias,
     TypeVar,
     Union,
 )
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt
@@ -49,8 +42,8 @@ _NT = TypeVar("_NT", bound=np.generic)
 TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_NT])  # type: ignore
 AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 
-FloatCountRange: TypeAlias = tuple[Optional[float], Optional[float]]
-IntCountRange: TypeAlias = tuple[Optional[int], Optional[int]]
+FloatCountRange: TypeAlias = tuple[float | None, float | None]
+IntCountRange: TypeAlias = tuple[int | None, int | None]
 
 # IntOrIntCountRange for Typing of count ranges
 # - a single int for an exact value match
@@ -74,6 +67,7 @@ class AnySklearnEstimator(Protocol):
         -------
         dict[str, Any]
             Parameter names mapped to their values.
+
         """
 
     def set_params(self, **params: Any) -> Self:
@@ -88,6 +82,7 @@ class AnySklearnEstimator(Protocol):
         -------
         Self
             Estimator with updated parameters.
+
         """
 
     def fit(
@@ -112,6 +107,7 @@ class AnySklearnEstimator(Protocol):
         -------
         Self
             Fitted estimator.
+
         """
 
 
@@ -139,6 +135,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
         -------
         npt.NDArray[Any]
             Predictions.
+
         """
 
 
@@ -167,6 +164,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         -------
         npt.NDArray[Any]
             Transformed array.
+
         """
 
     def transform(
@@ -187,10 +185,14 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         -------
         npt.NDArray[Any]
             Transformed array.
+
         """
 
 
 AnyElement = Union[
-    AnyTransformer, AnyPredictor, ABCPipelineElement, Literal["passthrough"]
+    AnyTransformer,
+    AnyPredictor,
+    ABCPipelineElement,
+    Literal["passthrough"],
 ]
 AnyStep = tuple[str, AnyElement]

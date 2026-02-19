@@ -26,26 +26,25 @@ class MolToBool(MolToAnyPipelineElement):
         -------
         str
             Binary representation of molecule.
+
         """
-        if isinstance(value, InvalidInstance):
-            return False
-        return True
+        return not isinstance(value, InvalidInstance)
 
     def transform_single(self, value: Any) -> Any:
         """Transform a single molecule to a bool representation.
 
         Valid molecules are passed as True, InvalidInstances are passed as False.
-        RemovedMolecule objects are passed without change, as no transformations are applicable.
 
         Parameters
         ----------
         value: Any
-            Current representation of the molecule. (Eg. SMILES, RDKit Mol, ...)
+            Current representation of the molecule.
 
         Returns
         -------
         Any
             Bool representation of the molecule.
+
         """
         pre_value = self.pretransform_single(value)
         return self.finalize_single(pre_value)

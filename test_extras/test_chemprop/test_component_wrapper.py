@@ -2,7 +2,7 @@
 
 import unittest
 
-from chemprop.nn.loss import LossFunction
+from chemprop.nn.metrics import ChempropMetric
 from sklearn.base import clone
 from torch import nn
 
@@ -94,10 +94,10 @@ class MPNNTest(unittest.TestCase):
         mpnn2.set_params(**params1)
         for param_name, param in mpnn1.get_params(deep=True).items():
             param2 = mpnn2.get_params(deep=True)[param_name]
-            # Classes are cloned, so they are not equal, but they should be the same class
-            # Since (here) objects are identical if their parameters are identical, and since all
-            # their parameters are listed flat in the params dicts, all objects are identical if
-            # param dicts are identical.
+            # Classes are cloned, so they are not equal, but they should be the same
+            # class. Since (here) objects are identical if their parameters are
+            # identical, and since all their parameters are listed flat in the params
+            # dicts, all objects are identical if param dicts are identical.
             if hasattr(param, "get_params"):
                 self.assertEqual(param.__class__, param2.__class__)
             else:
@@ -115,7 +115,7 @@ class MPNNTest(unittest.TestCase):
             clone_param = mpnn_clone.get_params(deep=True)[param_name]
             if hasattr(param, "get_params"):
                 self.assertEqual(param.__class__, clone_param.__class__)
-            elif isinstance(param, LossFunction):
+            elif isinstance(param, ChempropMetric):
                 self.assertEqual(
                     param.state_dict()["task_weights"],
                     clone_param.state_dict()["task_weights"],

@@ -1,17 +1,14 @@
 """Test construction of concatenated fingerprints."""
 
-from __future__ import annotations
-
 import itertools
 import unittest
-from typing import Any, Literal, get_args
+from typing import TYPE_CHECKING, Any, Literal, get_args
 
 import numpy as np
 from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
 
-from molpipeline import Pipeline
-from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
+from molpipeline import ErrorFilter, Pipeline
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import (
     Mol2PathFP,
@@ -24,9 +21,12 @@ from molpipeline.mol2any import (
 from tests.utils.fingerprints import fingerprints_to_numpy
 from tests.utils.logging import capture_logs
 
+if TYPE_CHECKING:
+    from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
+
 
 class TestConcatenatedFingerprint(unittest.TestCase):
-    """Unittest for MolToConcatenatedVector, which calculates concatenated fingerprints."""
+    """Unittest for MolToConcatenatedVector."""
 
     def test_generation(self) -> None:
         """Test if the feature concatenation works as expected."""
@@ -34,8 +34,8 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             Literal[
                 "sparse",
                 "dense",
-                "explicit_bit_vect",
-            ]
+                "rdkit",
+            ],
         )
 
         smiles = [
@@ -62,13 +62,13 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                         "MorganFP",
                         MolToMorganFP(return_as=fp_output_type),
                     ),
-                ]
+                ],
             )
             pipeline = Pipeline(
                 [
                     ("smi2mol", SmilesToMol()),
                     ("concat_vector_element", concat_vector_element),
-                ]
+                ],
             )
 
             output = pipeline.fit_transform(smiles)
@@ -79,9 +79,9 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                 [
                     concat_vector_element.element_list[0][1].transform(mol_list),
                     fingerprints_to_numpy(
-                        concat_vector_element.element_list[1][1].transform(mol_list)
+                        concat_vector_element.element_list[1][1].transform(mol_list),
                     ),
-                ]
+                ],
             )
             pyschem_component: MolToRDKitPhysChem
             pyschem_component = concat_vector_element.element_list[0][1]  # type: ignore
@@ -107,8 +107,8 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                 (
                     "RDKitPhysChem",
                     MolToRDKitPhysChem(),
-                )
-            ]
+                ),
+            ],
         )
         with self.assertRaises(ValueError):
             concat_elem.set_params(element_list=[])
@@ -147,7 +147,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         )
         self.assertEqual(
             MolToConcatenatedVector(
-                [net_charge_elem, morgan_elem, physchem_elem]
+                [net_charge_elem, morgan_elem, physchem_elem],
             ).n_features,
             net_charge_elem[1].n_features + 16 + physchem_elem[1].n_features,
         )
@@ -196,7 +196,8 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                 feature_names = conc_elem.feature_names
 
                 if use_feature_names_prefix:
-                    # test feature names are unique if prefix is used or only one element is used
+                    # test feature names are unique if prefix is used or only
+                    # one element is used
                     self.assertEqual(
                         len(feature_names),
                         len(set(feature_names)),
@@ -220,7 +221,11 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                     if use_feature_names_prefix:
                         # feature_names should be prefixed with element name
                         prefixes, feat_names = map(
-                            list, zip(*[name.split("__") for name in relevant_names])
+                            list,
+                            zip(
+                                *[name.split("__") for name in relevant_names],
+                                strict=True,
+                            ),
                         )
                         # test feature names are the same
                         self.assertListEqual(elem_feature_names, feat_names)
@@ -258,7 +263,8 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         self.assertEqual(len(output), 1)
         message = output[0]
         self.assertIn(
-            "Feature names in MolToConcatenatedVector are not unique", message
+            "Feature names in MolToConcatenatedVector are not unique",
+            message,
         )
         self.assertEqual(message.record["level"].name, "WARNING")
 
@@ -300,7 +306,8 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         self.assertEqual(concat_elem.get_params()["use_feature_names_prefix"], True)
         # test that there are no duplicates in feature names
         self.assertEqual(
-            len(concat_elem.feature_names), len(set(concat_elem.feature_names))
+            len(concat_elem.feature_names),
+            len(set(concat_elem.feature_names)),
         )
         params: dict[str, Any] = {
             "use_feature_names_prefix": False,
@@ -309,8 +316,38 @@ class TestConcatenatedFingerprint(unittest.TestCase):
         self.assertEqual(concat_elem.get_params()["use_feature_names_prefix"], False)
         # test that there are duplicates in feature names
         self.assertNotEqual(
-            len(concat_elem.feature_names), len(set(concat_elem.feature_names))
+            len(concat_elem.feature_names),
+            len(set(concat_elem.feature_names)),
         )
+
+    def test_empty_results(self) -> None:
+        """Test that an empty output doesn't crash the pipeline."""
+        concat_elem = MolToConcatenatedVector(
+            [
+                (
+                    "RDKitPhysChem",
+                    MolToRDKitPhysChem(standardizer=None),
+                ),
+                (
+                    "MorganFP",
+                    MolToMorganFP(return_as="dense"),
+                ),
+            ],
+        )
+        pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                ("concat_vector_element", concat_elem),
+                ("error_filter", ErrorFilter(filter_everything=True)),
+            ],
+        )
+
+        output = pipeline.fit_transform(
+            [
+                "C1=NC(N)=[Se]=C1",  # fails PhysChem calculation
+            ],
+        )
+        self.assertEqual(output.shape, (0, concat_elem.n_features))
 
 
 if __name__ == "__main__":

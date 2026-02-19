@@ -1,13 +1,11 @@
 """Utility functions for multiprocessing."""
 
-from __future__ import annotations
-
 import multiprocessing
 import warnings
 
 
 def check_available_cores(n_requested_cores: int) -> int:
-    """Compare number of requested cores with available cores and return a (corrected) number.
+    """Correct the number of requested cores.
 
     Parameters
     ----------
@@ -43,6 +41,6 @@ def check_available_cores(n_requested_cores: int) -> int:
         )
         return n_available_cores
     if n_requested_cores < 0:
-        return n_available_cores
+        return n_available_cores + 1 + n_requested_cores
 
     return n_requested_cores

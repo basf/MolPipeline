@@ -1,17 +1,10 @@
 """Mock PipelineElement for testing."""
 
-from __future__ import annotations
-
 import copy
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -45,6 +38,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
             Unique identifier of PipelineElement.
         n_jobs: int, default=1
             Number of jobs to run in parallel.
+
         """
         super().__init__(name=name, uuid=uuid, n_jobs=n_jobs)
         if invalid_values is None:
@@ -64,6 +58,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         -------
         dict[str, Any]
             Dictionary containing all parameters defining the object.
+
         """
         params = super().get_params(deep)
         if deep:
@@ -86,6 +81,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         -------
         Self
             MockTransformingPipelineElement with updated parameters.
+
         """
         super().set_params(**parameters)
         if "invalid_values" in parameters:
@@ -106,6 +102,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         -------
         Any
             Other value.
+
         """
         if value in self.invalid_values:
             return InvalidInstance(
@@ -118,8 +115,8 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
     def assemble_output(self, value_list: Iterable[Any]) -> Any:
         """Aggregate rows, which in most cases is just return the list.
 
-        Some representations might be better representd as a single object. For example a list of vectors can
-        be transformed to a matrix.
+        Some representations might be better representd as a single object.
+        For example a list of vectors can  be transformed to a matrix.
 
         Parameters
         ----------
@@ -130,6 +127,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         -------
         Any
             Aggregated output. This can also be the original input.
+
         """
         if self.return_as_numpy_array:
             return np.array(list(value_list))

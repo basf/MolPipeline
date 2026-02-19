@@ -43,7 +43,8 @@ def remove_irrelevant_params(params: _T) -> _T:
 
 
 def compare_recursive(  # pylint: disable=too-many-return-statements
-    value_a: Any, value_b: Any
+    value_a: Any,
+    value_b: Any,
 ) -> bool:
     """Compare two values recursively.
 
@@ -66,15 +67,12 @@ def compare_recursive(  # pylint: disable=too-many-return-statements
     if isinstance(value_a, dict):
         if set(value_a.keys()) != set(value_b.keys()):
             return False
-        for key in value_a:
-            if not compare_recursive(value_a[key], value_b[key]):
-                return False
-        return True
+        return all(compare_recursive(value_a[key], value_b[key]) for key in value_a)
 
     if isinstance(value_a, (list, tuple)):
         if len(value_a) != len(value_b):
             return False
-        for val_a, val_b in zip(value_a, value_b):
+        for val_a, val_b in zip(value_a, value_b, strict=True):
             if not compare_recursive(val_a, val_b):
                 return False
         return True

@@ -1,7 +1,5 @@
 """Module for explanation class."""
 
-from __future__ import annotations
-
 import abc
 import dataclasses
 
@@ -21,7 +19,7 @@ class _AbstractMoleculeExplanation(abc.ABC):
 
 @dataclasses.dataclass(kw_only=True)
 class FeatureInfoMixin:
-    """Mixin providing additional information about the features used in the explanation."""
+    """Mixin for additional information about the features used in the explanation."""
 
     feature_vector: npt.NDArray[np.float64] | None = None
     feature_names: list[str] | None = None
@@ -74,6 +72,7 @@ class SHAPFeatureExplanation(
         -------
         bool
             True if the explanation is valid, False otherwise.
+
         """
         return all(
             [
@@ -82,7 +81,7 @@ class SHAPFeatureExplanation(
                 self.molecule is not None,
                 self.prediction is not None,
                 self.feature_weights is not None,
-            ]
+            ],
         )
 
 
@@ -103,6 +102,7 @@ class SHAPFeatureAndAtomExplanation(
         -------
         bool
             True if the explanation is valid, False otherwise.
+
         """
         return all(
             [
@@ -112,5 +112,5 @@ class SHAPFeatureAndAtomExplanation(
                 self.prediction is not None,
                 self.feature_weights is not None,
                 self.atom_weights is not None,
-            ]
+            ],
         )

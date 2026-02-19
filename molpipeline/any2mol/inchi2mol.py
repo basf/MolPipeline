@@ -23,5 +23,6 @@ class InchiToMol(SimpleStringToMolElement):
         -------
         RDKitMol
             Rdkit molecule if valid Inchi, else None.
+
         """
         return Chem.MolFromInchi(value)

@@ -1,13 +1,6 @@
 """Classes for standardizing molecules."""
 
-from __future__ import annotations
-
-from typing import Any
-
-try:
-    from typing import Self  # pylint: disable=no-name-in-module
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold as RDKIT_MurckoScaffold
@@ -36,12 +29,13 @@ class MurckoScaffold(_MolToMolPipelineElement):
         -------
         OptionalMol
             Murco-scaffold of molecule if possible, else InvalidInstance.
+
         """
         return RDKIT_MurckoScaffold.GetScaffoldForMol(value)
 
 
 class MakeScaffoldGeneric(_MolToMolPipelineElement):
-    """MolToMol-PipelineElement which sets all atoms to carbon and all bonds to single bond.
+    """PipelineElement which sets all atoms to carbon and all bonds to single bond.
 
     Done to make scaffolds less speciffic.
     """
@@ -94,6 +88,7 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         OptionalMol
             Molecule where all atoms are carbon and all bonds are single bonds.
             If transformation failed, it returns InvalidInstance.
+
         """
         scaffold = RDKIT_MurckoScaffold.MakeScaffoldGeneric(value)
         if self.generic_atoms:
@@ -116,6 +111,7 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         -------
         dict[str, Any]
             Parameters of the pipeline element.
+
         """
         parent_params = super().get_params()
         if deep:
@@ -123,14 +119,14 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
                 {
                     "generic_atoms": bool(self.generic_atoms),
                     "generic_bonds": bool(self.generic_bonds),
-                }
+                },
             )
         else:
             parent_params.update(
                 {
                     "generic_atoms": self.generic_atoms,
                     "generic_bonds": self.generic_bonds,
-                }
+                },
             )
         return parent_params
 

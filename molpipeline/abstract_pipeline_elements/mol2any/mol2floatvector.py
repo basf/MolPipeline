@@ -1,15 +1,8 @@
 """Abstract classes for transforming rdkit molecules to float vectors."""
 
-from __future__ import annotations
-
 import abc
 from collections.abc import Iterable
-from typing import Any
-
-try:
-    from typing import Self  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -24,7 +17,7 @@ from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 
 
 class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
-    """PipelineElement which generates a matrix from descriptor-vectors of each molecule."""
+    """PipelineElement for descriptor-vectors of each molecule."""
 
     _standardizer: AnyTransformer | None
     _output_type = "float"
@@ -42,7 +35,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         standardizer: AnyTransformer | None default=StandardScaler()
-            The output is post_processed according to the standardizer if not None.
+            Used for post-processing the output, if not None.
         name: str, default='MolToDescriptorPipelineElement'
             Name of the PipelineElement.
         n_jobs: int, default=1
@@ -77,14 +70,19 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         value_list: Iterable[npt.NDArray[np.float64]]
-            List of numpy arrays with calculated descriptor values of each molecule.
+            List of descriptor arrays for each molecule.
 
         Returns
         -------
         npt.NDArray[np.float64]
             Matrix with descriptor values of each molecule.
+
         """
-        return np.vstack(list(value_list))
+        values = list(value_list)
+        if len(values) == 0:
+            # nothing to assemble
+            return np.empty((0, self.n_features), dtype=np.float64)
+        return np.vstack(values)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defined during object initialization.
@@ -97,7 +95,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Returns
         -------
         dict[str, Any]
-            Dictionary containing all parameters relevant to initialize the object with same properties.
+            Dictionary containing all relevant parameters.
+
         """
         params = super().get_params(deep)
         if deep:
@@ -121,6 +120,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         -------
         Self
             Object with updated parameters.
+
         """
         parameter_copy = dict(parameters)
         standardizer = parameter_copy.pop("standardizer", None)
@@ -134,21 +134,27 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        values: list[RDKitMol]
-            List of RDKit molecules to which the Pipeline element is fitted.
+        values: list[npt.NDArray[np.float64]]
+            List of float vectors to which the Pipeline element is fitted.
 
         Returns
         -------
         Self
             Fitted MolToDescriptorPipelineElement.
+
         """
-        value_matrix = np.vstack(list(values))
+        value_list = list(values)
+        if len(value_list) == 0:
+            # nothing to fit
+            return self
+        value_matrix = np.vstack(value_list)
         if self._standardizer is not None:
             self._standardizer.fit(value_matrix, None)
         return self
 
     def _normalize_matrix(
-        self, value_matrix: npt.NDArray[np.float64]
+        self,
+        value_matrix: npt.NDArray[np.float64],
     ) -> npt.NDArray[np.float64]:
         """Normalize matrix with descriptor values.
 
@@ -161,6 +167,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         -------
         npt.NDArray[np.float64]
             Normalized matrix with descriptor values of molecules.
+
         """
         if self._standardizer is not None:
             return self._standardizer.transform(value_matrix)
@@ -172,18 +179,20 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         Parameters
         ----------
         values: list[RDKitMol]
-            List of RDKit molecules for which the descriptor vectors are calculated.
+            List of RDKit molecules.
 
         Returns
         -------
         npt.NDArray[np.float64]
             Matrix with descriptor values of molecules.
+
         """
         descriptor_matrix: npt.NDArray[np.float64] = super().transform(values)
         return descriptor_matrix
 
     def finalize_single(
-        self, value: npt.NDArray[np.float64]
+        self,
+        value: npt.NDArray[np.float64],
     ) -> npt.NDArray[np.float64]:
         """Finalize single value. Here: standardize vector.
 
@@ -196,6 +205,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         -------
         Any
             Finalized value.
+
         """
         if self._standardizer is not None:
             standadized_value = self._standardizer.transform(value.reshape(1, -1))
@@ -204,9 +214,10 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
     @abc.abstractmethod
     def pretransform_single(
-        self, value: RDKitMol
+        self,
+        value: RDKitMol,
     ) -> npt.NDArray[np.float64] | InvalidInstance:
-        """Transform mol to dict, where items encode columns indices and values, respectively.
+        """Transform mol to the descriptor vector.
 
         Parameters
         ----------

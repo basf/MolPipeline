@@ -1,7 +1,5 @@
 """Test leader picker clustering estimator."""
 
-from __future__ import annotations
-
 import unittest
 from typing import Any
 
@@ -17,6 +15,8 @@ from molpipeline.mol2any import MolToMorganFP
 class TestLeaderPickerEstimator(unittest.TestCase):
     """Test LeaderPicker clustering estimator."""
 
+    # Remove if https://github.com/rdkit/rdkit/issues/9116 resolved
+    @unittest.expectedFailure
     def test_leader_picker_clustering_estimator(self) -> None:
         """Test LeaderPicker clustering estimator."""
         fingerprint_matrix = [
@@ -85,7 +85,10 @@ class TestLeaderPickerEstimator(unittest.TestCase):
         expected_centroids = [[0, 1, 2, 3, 4, 5], [0, 1, 2, 4]]
 
         for dist, exp_labels, exp_centroids in zip(
-            distances, expected_labels, expected_centroids
+            distances,
+            expected_labels,
+            expected_centroids,
+            strict=True,
         ):
             leader_picker = LeaderPickerClustering(distance_threshold=dist)
             pipeline = Pipeline(
@@ -93,9 +96,7 @@ class TestLeaderPickerEstimator(unittest.TestCase):
                     ("auto2mol", AutoToMol()),
                     (
                         "morgan2",
-                        MolToMorganFP(
-                            return_as="explicit_bit_vect", n_bits=1024, radius=2
-                        ),
+                        MolToMorganFP(return_as="rdkit", n_bits=1024, radius=2),
                     ),
                     ("leader_picker", leader_picker),
                 ],
