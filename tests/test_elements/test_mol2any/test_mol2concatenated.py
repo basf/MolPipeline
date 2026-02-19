@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Literal, get_args
 
 import numpy as np
 from rdkit import Chem
-from sklearn.preprocessing import StandardScaler
 
 from molpipeline import ErrorFilter, Pipeline
 from molpipeline.any2mol import SmilesToMol
@@ -26,7 +25,10 @@ if TYPE_CHECKING:
 
 
 class TestConcatenatedFingerprint(unittest.TestCase):
-    """Unittest for MolToConcatenatedVector."""
+    """Unittest for MolToConcatenatedVector.
+
+    The MolToConcatenatedVector calculates concatenated fingerprints.
+    """
 
     def test_generation(self) -> None:
         """Test if the feature concatenation works as expected."""
@@ -56,7 +58,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
                 [
                     (
                         "RDKitPhysChem",
-                        MolToRDKitPhysChem(standardizer=StandardScaler()),
+                        MolToRDKitPhysChem(),
                     ),
                     (
                         "MorganFP",
@@ -326,7 +328,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             [
                 (
                     "RDKitPhysChem",
-                    MolToRDKitPhysChem(standardizer=None),
+                    MolToRDKitPhysChem(),
                 ),
                 (
                     "MorganFP",

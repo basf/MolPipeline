@@ -4,7 +4,7 @@
 
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Literal, Self, TypeVar, Union
+from typing import Any, Literal, Self, TypeVar
 
 import joblib
 import numpy as np
@@ -49,7 +49,7 @@ _T = TypeVar("_T")
 
 _IndexedStep = tuple[int, str, AnyElement]
 _AggStep = tuple[list[int], list[str], _MolPipeline]
-_AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
+_AggregatedPipelineStep = _IndexedStep | _AggStep
 
 
 class Pipeline(_Pipeline):
@@ -70,7 +70,7 @@ class Pipeline(_Pipeline):
 
         Parameters
         ----------
-        steps: list[tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]]
+        steps: list[tuple[str, AnyTransformer | AnyPredictor | ABCPipelineElement]]
             List of (name, Estimator) tuples.
         memory: str | joblib.Memory | None, optional
             Path to cache transformers.

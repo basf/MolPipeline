@@ -77,7 +77,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         ----------
         X : npt.NDArray[Any]
             Input data.
-        y : Optional[npt.NDArray[Any]]
+        y : npt.NDArray[Any] | None, optional
             Target data.
         **params : Any
             Additional parameters for fitting.

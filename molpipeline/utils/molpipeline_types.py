@@ -2,15 +2,7 @@
 
 from collections.abc import Sequence
 from numbers import Number
-from typing import (
-    Any,
-    Literal,
-    Protocol,
-    Self,
-    TypeAlias,
-    TypeVar,
-    Union,
-)
+from typing import Any, Literal, Protocol, Self, TypeAlias, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -48,7 +40,7 @@ IntCountRange: TypeAlias = tuple[int | None, int | None]
 # - a single int for an exact value match
 # - a range given as a tuple with a lower and upper bound
 #   - both limits are optional
-IntOrIntCountRange: TypeAlias = Union[int, IntCountRange]
+IntOrIntCountRange: TypeAlias = int | IntCountRange
 
 
 class AnySklearnEstimator(Protocol):
@@ -188,10 +180,5 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         """
 
 
-AnyElement = Union[
-    AnyTransformer,
-    AnyPredictor,
-    ABCPipelineElement,
-    Literal["passthrough"],
-]
+AnyElement = AnyTransformer | AnyPredictor | ABCPipelineElement | Literal["passthrough"]
 AnyStep = tuple[str, AnyElement]

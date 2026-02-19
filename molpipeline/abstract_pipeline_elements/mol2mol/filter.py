@@ -36,9 +36,9 @@ def _within_boundaries(
 
     Parameters
     ----------
-    lower_bound: Optional[float]
+    lower_bound: float | None
         Lower boundary.
-    upper_bound: Optional[float]
+    upper_bound: float | None
         Upper boundary.
     property_value: float
         Property value to check.
@@ -91,27 +91,24 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         Parameters
         ----------
         filter_elements: Mapping[
-                Any,
-                FloatCountRange | IntCountRange | IntOrIntCountRange,
-            ]
-            | Sequence[Any]
-            | pd.Series
-            List of filter elements. Typically, can be a list of patterns or a
-            dictionary with patterns as keys and an int for exact count or a tuple of
-            minimum and maximum.
+                Any, FloatCountRange | IntCountRange | IntOrIntCountRange
+            ] | Sequence[Any]
+            List of filter elements. Typically can be a list of patterns or a dictionary
+            with patterns as keys and an int for exact count or a tuple of minimum and
+            maximum.
             NOTE: for each child class, the type of filter_elements must be specified by
-                  the filter_elements setter.
-        keep_matches: bool, optional (default: True)
+            the filter_elements setter.
+        keep_matches: bool, default=True
             If True, molecules containing the specified patterns are kept, else removed.
-        mode: FilterModeType, optional (default: "any")
+        mode: FilterModeType, default="any"
             If "any", at least one of the specified patterns must be present in the
             molecule.
             If "all", all of the specified patterns must be present in the molecule.
-        name: Optional[str], optional (default: None)
+        name: str | None, optional
             Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str, optional
             Unique identifier of the pipeline element.
 
         """
@@ -291,7 +288,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
 
     Attributes
     ----------
-    filter_elements: Union[Sequence[str], Mapping[str, IntOrIntCountRange]]
+    filter_elements: Mapping[str, IntCountRange]
         List of patterns to allow in molecules.
         Alternatively, a dictionary can be passed with patterns as keys
         and an int for exact count or a tuple of minimum and maximum.
