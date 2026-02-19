@@ -7,8 +7,8 @@ import numpy.typing as npt
 from scipy import sparse
 
 from molpipeline.kernel.tanimoto_functions import (
-    pairwise_tanimoto_similarity,
     pairwise_tanimoto_distance,
+    pairwise_tanimoto_similarity,
     self_tanimoto_distance,
     self_tanimoto_similarity,
     tanimoto_distance_sparse,
@@ -88,18 +88,23 @@ class TestPairwiseTanimotoSimilarity(ABCTanimotoTestCase):
         sim = pairwise_tanimoto_similarity(self.matrix_a_np[0], self.matrix_b_np[0])
         self.assertEqual(sim.dtype, float, msg=f"Unexpected dtype: {sim.dtype}")
         self.assertEqual(
-            sim.shape, (), msg=f"Expected scalar output, got shape: {sim.shape}",
+            sim.shape,
+            (),
+            msg=f"Expected scalar output, got shape: {sim.shape}",
         )
         self.assertTrue(np.isclose(sim, self.sim_a_b_expected[0, 0]))
 
     def test_pairwise_tanimoto_similarity_sparse(self) -> None:
         """Validate similarity for single row comparison with sparse CSR."""
         sim = pairwise_tanimoto_similarity(
-            self.matrix_a_sparse[0], self.matrix_b_sparse[0],
+            self.matrix_a_sparse[0],
+            self.matrix_b_sparse[0],
         )
         self.assertEqual(sim.dtype, float, msg=f"Unexpected dtype: {sim.dtype}")
         self.assertEqual(
-            sim.shape, (), msg=f"Expected scalar output, got shape: {sim.shape}",
+            sim.shape,
+            (),
+            msg=f"Expected scalar output, got shape: {sim.shape}",
         )
         self.assertTrue(np.isclose(sim, self.sim_a_b_expected[0, 0]))
 
