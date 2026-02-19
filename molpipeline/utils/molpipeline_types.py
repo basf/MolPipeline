@@ -27,7 +27,6 @@ __all__ = [
     "AnyNumpyElement",
     "AnyPredictor",
     "AnySklearnEstimator",
-    "AnySklearnEstimator",
     "AnyStep",
     "AnyTransformer",
     "Number",
