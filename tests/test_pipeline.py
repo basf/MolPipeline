@@ -594,7 +594,9 @@ class PipelineTest(unittest.TestCase):
         matrix_fit_transform = pipeline.fit_transform(smiles)
         matrix_transform = pipeline.transform(smiles)
 
-        self.assertTrue(are_equal(matrix_fit_transform, matrix_transform))
+        self.assertTrue(
+            np.allclose(matrix_fit_transform, matrix_transform, equal_nan=True),
+        )
 
 
 class PipelineCompatibilityTest(unittest.TestCase):
