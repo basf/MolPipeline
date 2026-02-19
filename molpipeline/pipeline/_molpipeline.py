@@ -27,12 +27,12 @@ class _MolPipeline:
     """Contains the PipeElements which describe the functionality of the pipeline."""
 
     _n_jobs: int
-    _element_list: list[ABCPipelineElement]
+    _element_list: list[ABCPipelineElement | FilterReinserter[Any]]
     _requires_fitting: bool
 
     def __init__(
         self,
-        element_list: list[ABCPipelineElement],
+        element_list: list[ABCPipelineElement | FilterReinserter[Any]],
         n_jobs: int = 1,
         name: str = "MolPipeline",
     ) -> None:
@@ -170,13 +170,13 @@ class _MolPipeline:
         return self
 
     @property
-    def element_list(self) -> list[ABCPipelineElement]:
+    def element_list(self) -> list[ABCPipelineElement | FilterReinserter[Any]]:
         """Get a shallow copy from the list of pipeline elements."""
         return self._element_list[:]  # [:] to create shallow copy.
 
     def _get_meta_element_list(
         self,
-    ) -> "list[ABCPipelineElement | _MolPipeline]":
+    ) -> "list[ABCPipelineElement | _MolPipeline | FilterReinserter[Any]]":
         """Merge elements which do not require fitting to a meta element.
 
         This improves parallelization of the pipeline.
@@ -187,8 +187,10 @@ class _MolPipeline:
             List of pipeline elements and meta elements.
 
         """
-        meta_element_list: list[ABCPipelineElement | _MolPipeline] = []
-        no_fit_element_list: list[ABCPipelineElement] = []
+        meta_element_list: list[
+            ABCPipelineElement | _MolPipeline | FilterReinserter[Any]
+        ] = []
+        no_fit_element_list: list[ABCPipelineElement | FilterReinserter[Any]] = []
         for element in self._element_list:
             if (
                 isinstance(element, TransformingPipelineElement)
@@ -309,7 +311,7 @@ class _MolPipeline:
                     error_filter.error_indices.append(new_idx)
             error_filter.n_total = len(iter_idx_array)
             iter_idx_array = error_filter.co_transform(iter_idx_array)
-        error_replacer_list = [
+        error_replacer_list: list[FilterReinserter[Any]] = [
             ele for ele in self._element_list if isinstance(ele, FilterReinserter)
         ]
         for error_replacer in error_replacer_list:

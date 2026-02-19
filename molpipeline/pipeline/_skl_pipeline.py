@@ -223,6 +223,7 @@ class Pipeline(_Pipeline):
         | AnyPredictor
         | _MolPipeline
         | ABCPipelineElement
+        | FilterReinserter[Any]
     ):
         """Return the lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())
@@ -463,7 +464,7 @@ class Pipeline(_Pipeline):
         """
         aggregated_transformer_list = []
         for i, (name_i, step_i) in enumerate(self._non_post_processing_steps()):
-            if isinstance(step_i, ABCPipelineElement):
+            if isinstance(step_i, (ABCPipelineElement, FilterReinserter)):
                 aggregated_transformer_list.append((i, name_i, step_i))
             else:
                 if aggregated_transformer_list:
