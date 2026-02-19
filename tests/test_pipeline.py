@@ -255,7 +255,6 @@ class PipelineTest(unittest.TestCase):
             for pred1, pred2 in combinations(prediction_list, 2):
                 self.assertTrue(np.allclose(pred1, pred2))
 
-
     def test_input_data_types_fit_transform(self) -> None:
         """Test the pipeline's fit_transform can handle different input data types."""
         smi2mol = SmilesToMol()
