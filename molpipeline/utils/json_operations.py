@@ -18,8 +18,6 @@ __all__ = [
     "decode_dict",
     "recursive_from_json",
     "recursive_to_json",
-    "transform_functions2string",
-    "transform_string2function",
 ]
 
 # The following functions are defined in a try-except block to avoid import errors if
