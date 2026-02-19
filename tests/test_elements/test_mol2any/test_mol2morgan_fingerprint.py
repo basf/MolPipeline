@@ -4,6 +4,7 @@ import unittest
 from typing import Any
 
 import numpy as np
+from sklearn import clone
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
@@ -24,7 +25,7 @@ class TestMol2MorganFingerprint(unittest.TestCase):
     def test_can_be_constructed(self) -> None:
         """Test the pipeline element can be constructed."""
         mol_fp = MolToMorganFP()
-        mol_fp_copy = mol_fp.copy()
+        mol_fp_copy = clone(mol_fp)
         self.assertTrue(mol_fp_copy is not mol_fp)
         for key, value in mol_fp.get_params().items():
             self.assertEqual(value, mol_fp_copy.get_params()[key])
