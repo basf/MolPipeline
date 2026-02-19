@@ -241,6 +241,10 @@ def transform_functions2string(value: Any) -> Any:
     return value
 
 
+@deprecated(
+    "`transform_string2function` is deprecated and will be removed in a future version."
+    " Please use `recursive_from_json` instead."
+)
 def transform_string2function(value: Any) -> Any:
     """Transform string representation of functions to actual functions.
 
