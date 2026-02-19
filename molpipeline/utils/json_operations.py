@@ -116,9 +116,9 @@ except ImportError:
         ----------
         obj : type
             The object to initialize.
-        args: Any
+        args : Any
             Positional arguments for initialization.
-        kwargs: Any
+        kwargs : Any
             Keyword arguments for initialization.
 
         Returns
@@ -222,7 +222,7 @@ def transform_functions2string(value: Any) -> Any:
 
     Parameters
     ----------
-    value: Any
+    value : Any
         Value which is transformed.
 
     Returns
@@ -314,7 +314,7 @@ def builtin_to_json(obj: _U) -> _U:
 
     Returns
     -------
-    str | int | float | bool | None
+    str | int | float | bool | None | type
         The same object as the input.
 
     """
@@ -362,13 +362,13 @@ def builtin_to_json(
 
     Parameters
     ----------
-    obj: types.FunctionType | set[Any] | dict[Any, Any]
+    obj : types.FunctionType | set[Any] | dict[Any, Any]
         Object which are encoded as a dictionary in order to be json compatible.
 
     Returns
     -------
-    tuple[Any]
-        Tuple of transformed objects.
+    dict[str, Any]
+        A dictionary containing the information to recreate the original object.
 
     """
 
@@ -378,7 +378,7 @@ def builtin_to_json(obj: Any) -> Any:
 
     Parameters
     ----------
-    obj: PythonNative
+    obj : PythonNative
         Object to be transformed.
         Can be a string, int, float, bool, list, tuple, dict, callable or a set.
 
@@ -423,15 +423,19 @@ def recursive_to_json(obj: Any) -> Any:
 
     Parameters
     ----------
-    obj: Any
+    obj : Any
         Object to be transformed. Can be a string, int, float, bool, list, tuple, dict,
         callable or a sklearn model.
         A sklearn model is defined as an object with a get_params method.
 
     Returns
     -------
-    dict[str, Any]
+    Any
         Json file containing the dictionary.
+        If the object cannot be transformed to a json file, a warning is raised and
+        the import header of the object is returned, which might not be sufficient to
+        recreate the object.
+        Build-in objects (str, int, float, ...) are returned as is.
 
     """
     if obj is None:
@@ -480,7 +484,7 @@ def decode_dict(obj: dict[str, Any]) -> Any:
 
     Parameters
     ----------
-    obj: dict[str, Any]
+    obj : dict[str, Any]
         Dictionary to be transformed
 
     Returns
@@ -527,7 +531,7 @@ def recursive_from_json(obj: Any) -> Any:
 
     Parameters
     ----------
-    obj: Any
+    obj : Any
         Object to be transformed
 
     Raises
