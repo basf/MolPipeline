@@ -10,8 +10,6 @@ from molpipeline import Pipeline
 from molpipeline.utils.json_operations import (
     recursive_from_json,
     recursive_to_json,
-    transform_functions2string,
-    transform_string2function,
 )
 from molpipeline.utils.multi_proc import check_available_cores
 
@@ -57,17 +55,6 @@ class JsonConversionTest(unittest.TestCase):
             self.assertEqual(type(orig_obj), type(recreated_obj))
         self.assertEqual(original_params, recreated_params)
 
-    def test_function_dict_json(self) -> None:
-        """Test if a dict with objects can be reconstructed from json."""
-        function_dict = {
-            "dummy1": {"check_available_cores": check_available_cores},
-            "dummy2": str,
-            "dummy3": 1,
-            "dummy4": [check_available_cores, check_available_cores, "test"],
-        }
-        function_json = transform_functions2string(function_dict)
-        recreated_function_dict = transform_string2function(function_json)
-        self.assertEqual(function_dict, recreated_function_dict)
 
     def test_set_transformation(self) -> None:
         """Test if a set can be reconstructed from json."""
