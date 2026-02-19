@@ -1,7 +1,7 @@
 """Class for Transforming SDF-strings to rdkit molecules."""
 
 import copy
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 from rdkit import Chem
 
@@ -15,12 +15,11 @@ from molpipeline.utils.molpipeline_types import OptionalMol
 class SDFToMol(_StringToMolPipelineElement):
     """PipelineElement transforming a list of SDF strings to mol_objects."""
 
-    identifier: str
-    mol_counter: int
+    identifier: Literal["smiles"] | None
 
     def __init__(
         self,
-        identifier: str = "enumerate",
+        identifier: Literal["smiles"] | None = "smiles",
         name: str = "SDF2Mol",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -29,10 +28,9 @@ class SDFToMol(_StringToMolPipelineElement):
 
         Parameters
         ----------
-        identifier: str, default='enumerate'
-            Method of assigning identifiers to molecules. Per default, an increasing
-            integer count is assigned to each molecule. If 'smiles' is chosen, the
-            identifier is the SMILES representation of the molecule.
+        identifier: Literal["smiles"] | None, default='smiles'
+            Method of assigning identifiers to molecules.
+            If None, no identifier is assigned.
         name: str, default='SDF2Mol'
             Name of PipelineElement
         n_jobs: int, default=1
@@ -43,7 +41,6 @@ class SDFToMol(_StringToMolPipelineElement):
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         self.identifier = identifier
-        self.mol_counter = 0
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
@@ -115,6 +112,5 @@ class SDFToMol(_StringToMolPipelineElement):
                 self.name,
             )
         if self.identifier == "smiles":
-            mol.SetProp("identifier", str(self.mol_counter))
-        self.mol_counter += 1
+            mol.SetProp("identifier", Chem.MolToSmiles(mol))
         return mol
