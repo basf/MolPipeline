@@ -6,11 +6,13 @@ from typing import Any, Generic, Self, TypeVar
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from loguru import logger
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
     InvalidInstance,
     RemovedInstance,
+    SingleInstanceTransformerMixin,
     TransformingPipelineElement,
 )
 from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
@@ -21,7 +23,7 @@ _T = TypeVar("_T")
 _S = TypeVar("_S")
 
 
-class ErrorFilter(ABCPipelineElement):
+class ErrorFilter(SingleInstanceTransformerMixin, TransformingPipelineElement):
     """Collects tracks and removes error values."""
 
     element_ids: set[str]
@@ -71,7 +73,6 @@ class ErrorFilter(ABCPipelineElement):
         self.element_ids = element_ids
         self.filter_everything = filter_everything
         self.n_total = 0
-        self._requires_fitting = True
 
     @classmethod
     def from_element_list(
@@ -179,7 +180,11 @@ class ErrorFilter(ABCPipelineElement):
             return False
         return self.filter_everything or value.element_id in self.element_ids
 
-    def fit(self, values: AnyVarSeq, labels: Any = None) -> Self:  # noqa: ARG002
+    def fit(
+        self,
+        values: AnyVarSeq,  # noqa: ARG002
+        labels: Any = None,  # noqa: ARG002
+    ) -> Self:
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
@@ -212,8 +217,8 @@ class ErrorFilter(ABCPipelineElement):
         ----------
         values: TypeFixedVarSeq
             Iterable to which element is fitted and which is subsequently transformed.
-        labels: Any
-            Label used for fitting. For compatibility with sklearn, not used.
+        labels: Any, optional
+            Label used for fitting.
 
         Returns
         -------
@@ -249,6 +254,9 @@ class ErrorFilter(ABCPipelineElement):
 
         """
         if self.n_total != len(values):
+            logger.error(
+                f"Expected {self.n_total} values, but got {len(values)}",
+            )
             raise ValueError("Length of values does not match length of values in fit")
         if isinstance(values, list):
             out_list = []
@@ -287,6 +295,8 @@ class ErrorFilter(ABCPipelineElement):
 
     def transform_single(self, value: Any) -> Any:
         """Transform a single value.
+
+        Overrides parent method to not skip InvalidInstances.
 
         Parameters
         ----------
@@ -688,8 +698,8 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         ----------
         values: TypeFixedVarSeq
             Iterable to which element is fitted and which is subsequently transformed.
-        labels: Any
-            Label used for fitting. For compatibility with sklearn, not used.
+        labels: Any, optional
+            Label used for fitting.
         **params: Any
             Additional keyword arguments. For compatibility with sklearn, not used.
 
@@ -702,47 +712,10 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         self.fit(values)
         return self.transform(values)
 
-    def transform_single(self, value: Any) -> Any:
-        """Transform a single value.
-
-        Parameters
-        ----------
-        value: Any
-            Value to be transformed.
-
-        Returns
-        -------
-        Any
-            Transformed value.
-
-        """
-        return self.pretransform_single(value)
-
-    def pretransform_single(self, value: Any) -> Any:
-        """Transform a single value.
-
-        Parameters
-        ----------
-        value: Any
-            Value to be transformed.
-
-        Returns
-        -------
-        Any
-            Transformed value.
-
-        """
-        if (
-            isinstance(value, RemovedInstance)
-            and value.filter_element_id == self.error_filter.uuid
-        ):
-            return self.fill_value
-        return value
-
     def transform(
         self,
         values: TypeFixedVarSeq,
-        **_params: Any,
+        **params: Any,
     ) -> TypeFixedVarSeq:
         """Transform iterable of values by removing invalid instances.
 
@@ -752,7 +725,7 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         ----------
         values: TypeFixedVarSeq
             Iterable of which according invalid instances are removed.
-        **_params: Any
+        **params: Any
             Additional keyword arguments.
 
         Raises
@@ -770,12 +743,14 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         if len(values) != self.error_filter.n_total - len(
             self.error_filter.error_indices,
         ):
-            expected_length = self.error_filter.n_total - len(
+            self.error_filter.n_total - len(
                 self.error_filter.error_indices,
             )
             raise ValueError(
-                "Length of values does not match length of values in fit. "
-                f"Expected: {expected_length} - Received :{len(values)}",
+                f"Length of values does not match length of values in fit. "
+                f"Expected: "
+                f"{self.error_filter.n_total - len(self.error_filter.error_indices)} "
+                f"- Received :{len(values)}",
             )
         return self.fill_with_dummy(values)
 

@@ -2,61 +2,70 @@
 
 # pylint: disable=too-many-lines
 
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable, Sequence
 from copy import deepcopy
-from typing import Any, Literal, Self, TypeVar
+from itertools import islice
+from typing import Any, Literal, Self, TypeIs
 
 import joblib
 import numpy as np
-import numpy.typing as npt
-from loguru import logger
-from sklearn.base import _fit_context, clone
-from sklearn.pipeline import Pipeline as _Pipeline
-from sklearn.pipeline import _final_estimator_has, _fit_transform_one
-from sklearn.utils import Bunch
-from sklearn.utils._tags import Tags, get_tags
-from sklearn.utils.metadata_routing import (
-    MetadataRouter,
-    MethodMapping,
-    _routing_enabled,
-    process_routing,
-)
+from joblib import Parallel, delayed
+from rdkit.Chem.rdchem import MolSanitizeException
+from rdkit.rdBase import BlockLogs
+from sklearn.base import _fit_context  # noqa: PLC2701
+from sklearn.utils._tags import Tags, get_tags  # noqa: PLC2701
 from sklearn.utils.metaestimators import available_if
-from sklearn.utils.validation import check_memory
 
-from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
-from molpipeline.error_handling import ErrorFilter, FilterReinserter
-from molpipeline.pipeline._molpipeline import _MolPipeline
-from molpipeline.post_prediction import (
-    PostPredictionTransformation,
-    PostPredictionWrapper,
+from molpipeline.abstract_pipeline_elements.core import (
+    ABCPipelineElement,
+    InvalidInstance,
+    RemovedInstance,
+    SingleInstanceTransformerMixin,
+    TransformingPipelineElement,
 )
-from molpipeline.utils.logging import print_elapsed_time
+from molpipeline.error_handling import (
+    ErrorFilter,
+    FilterReinserter,
+    _MultipleErrorFilter,
+)
+from molpipeline.pipeline._skl_adapter_pipeline import AdapterPipeline
 from molpipeline.utils.molpipeline_types import (
     AnyElement,
     AnyPredictor,
     AnyStep,
     AnyTransformer,
+    TypeFixedVarSeq,
 )
-from molpipeline.utils.value_checks import is_empty
 
 __all__ = ["Pipeline"]
 
-# Type definitions
-_T = TypeVar("_T")
-# Cannot be moved to utils.molpipeline_types due to circular imports
-
 
 _IndexedStep = tuple[int, str, AnyElement]
-_AggStep = tuple[list[int], list[str], _MolPipeline]
-_AggregatedPipelineStep = _IndexedStep | _AggStep
+_AggStep = tuple[list[int], list[str], "Pipeline"]
 
 
-class Pipeline(_Pipeline):
+class Pipeline(AdapterPipeline, TransformingPipelineElement):  # pylint: disable=too-many-ancestors
     """Defines the pipeline which handles pipeline elements."""
 
     steps: list[AnyStep]
-    #  * Adapted methods from sklearn.pipeline.Pipeline *
+
+    @property
+    def _filter_elements(self) -> list[ErrorFilter]:
+        """Get the elements which filter the input."""
+        return [step[1] for step in self.steps if isinstance(step[1], ErrorFilter)]
+
+    @property
+    def _filter_elements_agg(self) -> _MultipleErrorFilter:
+        """Get the aggregated filter element."""
+        return _MultipleErrorFilter(self._filter_elements)
+
+    @property
+    def supports_single_instance(self) -> bool:
+        """Check if the pipeline supports single instance."""
+        return all(
+            isinstance(step[1], SingleInstanceTransformerMixin)
+            for step in self._modified_steps
+        )
 
     def __init__(
         self,
@@ -84,78 +93,15 @@ class Pipeline(_Pipeline):
         self.n_jobs = n_jobs
         self._set_error_resinserter()
 
-    def _set_error_resinserter(self) -> None:
-        """Connect the error resinserters with the error filters."""
-        error_replacer_list = [
-            e_filler
-            for _, e_filler in self.steps
-            if isinstance(e_filler, FilterReinserter)
-        ]
-        error_filter_list = [
-            n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
-        ]
-        for step in self.steps:
-            if isinstance(step[1], PostPredictionWrapper) and isinstance(
-                step[1].wrapped_estimator,
-                FilterReinserter,
-            ):
-                error_replacer_list.append(step[1].wrapped_estimator)
-        for error_replacer in error_replacer_list:
-            error_replacer.select_error_filter(error_filter_list)
-
-    def _validate_steps(self) -> None:
-        """Validate the steps.
-
-        Raises
-        ------
-        TypeError
-            If the steps do not implement fit and transform or are not 'passthrough'.
-
-        """
-        names = [name for name, _ in self.steps]
-
-        # validate names
-        self._validate_names(names)
-
-        # validate estimators
-        non_post_processing_steps = [e for _, _, e in self._agg_non_postpred_steps()]
-        transformer_list = non_post_processing_steps[:-1]
-        estimator = non_post_processing_steps[-1]
-
-        for transformer in transformer_list:
-            if transformer is None or transformer == "passthrough":
-                continue
-            if not (
-                hasattr(transformer, "fit") or hasattr(transformer, "fit_transform")
-            ) or not hasattr(transformer, "transform"):
-                raise TypeError(
-                    f"All intermediate steps should be "
-                    f"transformers and implement fit and transform "
-                    f"or be the string 'passthrough' "
-                    f"'{transformer}' (type {type(transformer)}) doesn't",
-                )
-
-        # We allow last estimator to be None as an identity transformation
-        if (
-            estimator is not None
-            and estimator != "passthrough"
-            and not hasattr(estimator, "fit")
-        ):
-            raise TypeError(
-                f"Last step of Pipeline should implement fit "
-                f"or be the string 'passthrough'. "
-                f"'{estimator}' (type {type(estimator)}) doesn't",
-            )
-
-        # validate post-processing steps
-        # Calling steps automatically validates them
-        _ = self._post_processing_steps()
-
     def _iter(
         self,
         with_final: bool = True,
         filter_passthrough: bool = True,
-    ) -> Iterable[_AggregatedPipelineStep]:
+    ) -> Generator[
+        tuple[list[int], list[str], "Pipeline"] | tuple[int, str, AnyElement],
+        Any,
+        None,
+    ]:
         """Iterate over all non post-processing steps.
 
         Steps where children of a ABCPipelineElement are aggregated to a MolPipeline.
@@ -167,11 +113,6 @@ class Pipeline(_Pipeline):
         filter_passthrough: bool, optional
             If True, passthrough steps are filtered out.
 
-        Raises
-        ------
-        AssertionError
-            If the pipeline has no steps.
-
         Yields
         ------
         _AggregatedPipelineStep
@@ -179,323 +120,66 @@ class Pipeline(_Pipeline):
             transformer.
 
         """
-        last_element: _AggregatedPipelineStep | None = None
+        if self.supports_single_instance:
+            yield from super()._iter(
+                with_final=with_final,
+                filter_passthrough=filter_passthrough,
+            )
+            return
+        transformers_to_agg: list[tuple[int, str, AnyTransformer]]
+        transformers_to_agg = []
+        final_transformer_list: list[
+            tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]
+        ] = []
+        for i, (name_i, step_i) in enumerate(super()._modified_steps):
+            if isinstance(step_i, SingleInstanceTransformerMixin):
+                transformers_to_agg.append((i, name_i, step_i))
+            else:
+                if transformers_to_agg:
+                    if len(transformers_to_agg) == 1:
+                        final_transformer_list.append(transformers_to_agg[0])
+                    else:
+                        final_transformer_list.append(
+                            _agg_transformers(transformers_to_agg, self.n_jobs),
+                        )
+                    transformers_to_agg = []
+                final_transformer_list.append((i, name_i, step_i))
 
-        # This loop delays the output by one in order to identify the last step
-        for step in self._agg_non_postpred_steps():
-            # Only happens for the first step
-            if last_element is None:
-                last_element = step
-                continue
+        # yield last step if anything remains
+        if transformers_to_agg:
+            final_transformer_list.append(
+                _agg_transformers(transformers_to_agg, self.n_jobs),
+            )
+        stop = len(final_transformer_list)
+        if not with_final:
+            stop -= 1
+
+        for step in islice(final_transformer_list, 0, stop):
             if not filter_passthrough or (
                 step[2] is not None and step[2] != "passthrough"
             ):
-                yield last_element
-            last_element = step
-
-        # This can only happen if no steps are set.
-        if last_element is None:
-            raise AssertionError("Pipeline needs to have at least one step!")
-
-        if (
-            with_final
-            and last_element[2] is not None
-            and last_element[2] != "passthrough"
-        ):
-            yield last_element
-
-    @property
-    def _estimator_type(self) -> Any:
-        """Return the estimator type."""
-        if self._final_estimator is None or self._final_estimator == "passthrough":
-            return None
-        if hasattr(self._final_estimator, "_estimator_type"):
-            # pylint: disable=protected-access
-            return self._final_estimator._estimator_type
-        return None
+                yield step
 
     @property
     def _final_estimator(
         self,
-    ) -> (
-        Literal["passthrough"]
-        | AnyTransformer
-        | AnyPredictor
-        | _MolPipeline
-        | ABCPipelineElement
-    ):
+    ) -> Literal["passthrough"] | AnyTransformer | AnyPredictor | ABCPipelineElement:
         """Return the lst estimator which is not a PostprocessingTransformer."""
-        element_list = list(self._agg_non_postpred_steps())
-        last_element = element_list[-1]
+        element_list = list(self._iter(with_final=True))
+        steps = [s for s in element_list if not isinstance(s[2], ErrorFilter)]
+        last_element = steps[-1]
         return last_element[2]
-
-    # pylint: disable=too-many-locals,too-many-branches
-    def _fit(
-        self,
-        X: Any,
-        y: Any = None,
-        routed_params: dict[str, Any] | None = None,
-        raw_params: dict[str, Any] | None = None,
-    ) -> tuple[Any, Any]:
-        """Fit the model by fitting all transformers except the final estimator.
-
-        Data can be subsetted by the transformers.
-
-        Parameters
-        ----------
-        X : Any
-            Training data.
-        y : Any, optional (default=None)
-            Training objectives.
-        routed_params : dict[str, Any], optional
-            Parameters for each step as returned by process_routing.
-            Although this is marked as optional, it should not be None.
-            The awkward (argward?) typing is due to inheritance from sklearn.
-            Can be an empty dictionary.
-        raw_params : dict[str, Any], optional
-            Parameters passed by the user, used when `transform_input`
-
-        Raises
-        ------
-        AssertionError
-            If routed_params is None or if the transformer is 'passthrough'.
-        AssertionError
-            If the names are a list and the step is not a Pipeline.
-
-        Returns
-        -------
-        tuple[Any, Any]
-            The transformed data and the transformed objectives.
-
-        """
-        # shallow copy of steps - this should really be steps_
-        self.steps = list(self.steps)
-        self._validate_steps()
-        if routed_params is None:
-            raise AssertionError("routed_params should not be None.")
-
-        # Set up the memory
-        memory: joblib.Memory = check_memory(self.memory)
-
-        fit_transform_one_cached = memory.cache(_fit_transform_one)
-        for step in self._iter(with_final=False, filter_passthrough=False):
-            step_idx, name, transformer = step
-            if transformer is None or transformer == "passthrough":
-                with print_elapsed_time("Pipeline", self._log_message(step_idx)):
-                    continue
-
-            if hasattr(memory, "location") and memory.location is None:
-                # we do not clone when caching is disabled to
-                # preserve backward compatibility
-                cloned_transformer = transformer
-            else:
-                cloned_transformer = clone(transformer)
-            if isinstance(cloned_transformer, _MolPipeline):
-                if routed_params:
-                    step_params = {
-                        "element_parameters": [routed_params[n] for n in name],
-                    }
-                else:
-                    step_params = {}
-            elif isinstance(name, list):
-                raise AssertionError(
-                    "Names should not be a list, when the step is not a Pipeline",
-                )
-            else:
-                step_params = self._get_metadata_for_step(
-                    step_idx=step_idx,
-                    step_params=routed_params[name],
-                    all_params=raw_params,
-                )
-
-            # Fit or load from cache the current transformer
-            X, fitted_transformer = fit_transform_one_cached(
-                cloned_transformer,
-                X,
-                y,
-                None,
-                message_clsname="Pipeline",
-                message=self._log_message(step_idx),
-                params=step_params,
-            )
-            # Replace the transformer of the step with the fitted
-            # transformer. This is necessary when loading the transformer
-            # from the cache.
-            if isinstance(fitted_transformer, _MolPipeline):
-                ele_list = fitted_transformer.element_list
-                if not isinstance(name, list) or not isinstance(step_idx, list):
-                    raise AssertionError()
-                if not len(name) == len(step_idx) == len(ele_list):
-                    raise AssertionError()
-                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=True):
-                    self.steps[idx_i] = (name_i, ele_i)
-                if y is not None:
-                    y = fitted_transformer.co_transform(y)
-                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=True):
-                    self.steps[idx_i] = (name_i, ele_i)
-                self._set_error_resinserter()
-            elif isinstance(name, list) or isinstance(step_idx, list):
-                raise AssertionError()
-            else:
-                self.steps[step_idx] = (name, fitted_transformer)
-            if is_empty(X):
-                return np.array([]), np.array([])
-        return X, y
-
-    def _transform(
-        self,
-        X: Any,  # pylint: disable=invalid-name
-        routed_params: Bunch,
-    ) -> Any:
-        """Transform the data, and skip final estimator.
-
-        Call `transform` of each transformer in the pipeline except the last one,
-
-        Parameters
-        ----------
-        X : iterable
-            Data to predict on. Must fulfill input requirements of first step
-            of the pipeline.
-        routed_params: Bunch
-            Parameters for each step as returned by process_routing
-
-        Raises
-        ------
-        AssertionError
-            If one of the transformers is 'passthrough' or does not implement
-            `transform`.
-
-        Returns
-        -------
-        Any
-            Result of calling `transform` on the second last estimator.
-
-        """
-        iter_input = X
-        do_routing = _routing_enabled()
-        if do_routing:
-            logger.warning("Routing is enabled and NOT fully tested!")
-
-        for _, name, transform in self._iter(with_final=False):
-            if is_empty(iter_input):
-                if isinstance(transform, _MolPipeline):
-                    _ = transform.transform(iter_input)
-                iter_input = []
-                break
-            if transform == "passthrough":
-                raise AssertionError("Passthrough should have been filtered out.")
-            if hasattr(transform, "transform"):
-                if do_routing:
-                    iter_input = transform.transform(  # type: ignore[call-arg]
-                        iter_input,
-                        routed_params[name].transform,
-                    )
-                else:
-                    iter_input = transform.transform(iter_input)
-            else:
-                raise AssertionError(
-                    f"Non transformer ocurred in transformation step: {transform}.",
-                )
-        return iter_input
-
-    # * New implemented methods *
-    def _non_post_processing_steps(
-        self,
-    ) -> list[AnyStep]:
-        """Return all steps before the first PostPredictionTransformation.
-
-        Raises
-        ------
-        AssertionError
-            If a PostPredictionTransformation is found before the last step.
-
-        Returns
-        -------
-        list[AnyStep]
-            List of steps before the first PostPredictionTransformation.
-
-        """
-        non_post_processing_steps: list[AnyStep] = []
-        start_adding = False
-        for step_name, step_estimator in self.steps[::-1]:
-            if not isinstance(step_estimator, PostPredictionTransformation):
-                start_adding = True
-            if start_adding:
-                if isinstance(step_estimator, PostPredictionTransformation):
-                    raise AssertionError(
-                        "PipelineElement of type PostPredictionTransformation occured "
-                        "before the last step.",
-                    )
-                non_post_processing_steps.append((step_name, step_estimator))
-        return list(non_post_processing_steps[::-1])
-
-    def _post_processing_steps(self) -> list[tuple[str, PostPredictionTransformation]]:
-        """Return last steps which are PostPredictionTransformation.
-
-        Returns
-        -------
-        list[tuple[str, PostPredictionTransformation]]
-            List of tuples containing the name and the PostPredictionTransformation.
-
-        """
-        post_processing_steps = []
-        for step_name, step_estimator in self.steps[::-1]:
-            if isinstance(step_estimator, PostPredictionTransformation):
-                post_processing_steps.append((step_name, step_estimator))
-            else:
-                break
-        return list(post_processing_steps[::-1])
-
-    def _agg_non_postpred_steps(
-        self,
-    ) -> Iterable[_AggregatedPipelineStep]:
-        """Generate (idx, (name, trans)) tuples from self.steps.
-
-        When filter_passthrough is True, 'passthrough' and None transformers
-        are filtered out.
-
-        Yields
-        ------
-        _AggregatedPipelineStep
-            The _AggregatedPipelineStep is composed of the index, the name and the
-            transformer.
-
-        """
-        aggregated_transformer_list = []
-        for i, (name_i, step_i) in enumerate(self._non_post_processing_steps()):
-            if isinstance(step_i, ABCPipelineElement):
-                aggregated_transformer_list.append((i, name_i, step_i))
-            else:
-                if aggregated_transformer_list:
-                    index_list = [step[0] for step in aggregated_transformer_list]
-                    name_list = [step[1] for step in aggregated_transformer_list]
-                    transformer_list = [step[2] for step in aggregated_transformer_list]
-                    if len(aggregated_transformer_list) == 1:
-                        yield index_list[0], name_list[0], transformer_list[0]
-                    else:
-                        pipeline = _MolPipeline(transformer_list, n_jobs=self.n_jobs)
-                        yield index_list, name_list, pipeline
-                    aggregated_transformer_list = []
-                yield i, name_i, step_i
-
-        # yield last step if anything remains
-        if aggregated_transformer_list:
-            index_list = [step[0] for step in aggregated_transformer_list]
-            name_list = [step[1] for step in aggregated_transformer_list]
-            transformer_list = [step[2] for step in aggregated_transformer_list]
-
-            if len(aggregated_transformer_list) == 1:
-                yield index_list[0], name_list[0], transformer_list[0]
-
-            elif len(aggregated_transformer_list) > 1:
-                pipeline = _MolPipeline(transformer_list, n_jobs=self.n_jobs)
-                yield index_list, name_list, pipeline
 
     @_fit_context(
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False,
     )
-    def fit(self, X: Any, y: Any = None, **fit_params: Any) -> Self:
+    def fit(
+        self,
+        X: Any,  # noqa: N803
+        y: Any = None,
+        **fit_params: Any,
+    ) -> Self:
         """Fit the model.
 
         Fit all the transformers one after the other and transform the
@@ -522,22 +206,12 @@ class Pipeline(_Pipeline):
             Pipeline with fitted steps.
 
         """
-        routed_params = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, routed_params)  # pylint: disable=invalid-name
-        with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
-            if self._final_estimator != "passthrough":
-                if is_empty(Xt):
-                    logger.warning(
-                        "All input rows were filtered out! Model is not fitted!",
-                    )
-                else:
-                    fit_params_last_step = routed_params[
-                        self._non_post_processing_steps()[-1][0]
-                    ]
-                    self._final_estimator.fit(Xt, yt, **fit_params_last_step["fit"])
-
+        if self.supports_single_instance:
+            return self
+        super().fit(X, y, **fit_params)
         return self
 
+    # pylint: disable=duplicate-code
     def _can_fit_transform(self) -> bool:
         """Check if the final estimator can fit_transform or is passthrough.
 
@@ -553,23 +227,19 @@ class Pipeline(_Pipeline):
             or hasattr(self._final_estimator, "fit_transform")
         )
 
-    def _can_decision_function(self) -> bool:
-        """Check if the final estimator implements decision_function.
-
-        Returns
-        -------
-        bool
-            True if the final estimator implements decision_function.
-
-        """
-        return hasattr(self._final_estimator, "decision_function")
+    # pylint: enable=duplicate-code
 
     @available_if(_can_fit_transform)
     @_fit_context(
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False,
     )
-    def fit_transform(self, X: Any, y: Any = None, **params: Any) -> Any:
+    def fit_transform(
+        self,
+        X: Any,  # noqa: N803
+        y: Any = None,
+        **params: Any,
+    ) -> Any:
         """Fit the model and transform with the final estimator.
 
         Fits all the transformers one after the other and transform the
@@ -593,9 +263,10 @@ class Pipeline(_Pipeline):
 
         Raises
         ------
-        TypeError
-            If the last step does not implement `fit_transform` or `fit` and
-            `transform`.
+        AssertionError
+            If PipelineElement is not a SingleInstanceTransformerMixin or Pipeline.
+        AssertionError
+            If PipelineElement is not a TransformingPipelineElement.
 
         Returns
         -------
@@ -603,226 +274,55 @@ class Pipeline(_Pipeline):
             Transformed samples.
 
         """
-        routed_params = self._check_method_params(method="fit_transform", props=params)
-        iter_input, iter_label = self._fit(X, y, routed_params)
-        last_step = self._final_estimator
-        with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
-            if last_step == "passthrough":
-                pass
-            elif is_empty(iter_input):
-                logger.warning("All input rows were filtered out! Model is not fitted!")
-            else:
-                last_step_params = routed_params[
-                    self._non_post_processing_steps()[-1][0]
-                ]
-                if hasattr(last_step, "fit_transform"):
-                    iter_input = last_step.fit_transform(
-                        iter_input,
-                        iter_label,
-                        **last_step_params["fit_transform"],
-                    )
-                elif hasattr(last_step, "transform") and hasattr(last_step, "fit"):
-                    last_step.fit(iter_input, iter_label, **last_step_params["fit"])
-                    iter_input = last_step.transform(
-                        iter_input,
-                        **last_step_params["transform"],
-                    )
-                else:
-                    raise TypeError(
-                        f"fit_transform of the final estimator"
-                        f" {last_step.__class__.__name__} {last_step_params} does not "
-                        f"match fit_transform of Pipeline {self.__class__.__name__}",
-                    )
-            for _, post_element in self._post_processing_steps():
-                iter_input = post_element.fit_transform(iter_input, iter_label)
-        return iter_input
+        if not self.supports_single_instance:
+            return super().fit_transform(X, **params)
+        iter_input = X
+        removed_row_dict: dict[ErrorFilter, list[int]] = {
+            error_filter: [] for error_filter in self._filter_elements
+        }
+        iter_idx_array = np.arange(len(iter_input))
 
-    @available_if(_final_estimator_has("predict"))
-    def predict(self, X: Any, **params: Any) -> Any:
-        """Transform the data, and apply `predict` with the final estimator.
-
-        Call `transform` of each transformer in the pipeline. The transformed
-        data are finally passed to the final estimator that calls `predict`
-        method. Only valid if the final estimator implements `predict`.
-
-        Parameters
-        ----------
-        X : iterable
-            Data to predict on. Must fulfill input requirements of first step
-            of the pipeline.
-
-        **params : dict of string -> object
-            Parameters to the `predict` called at the end of all
-            transformations in the pipeline. Note that while this may be
-            used to return uncertainties from some models with return_std
-            or return_cov, uncertainties that are generated by the
-            transformations in the pipeline are not propagated to the
-            final estimator.
-
-        Raises
-        ------
-        AssertionError
-            If the final estimator does not implement `predict`.
-            In this case this function should not be available.
-
-        Returns
-        -------
-        y_pred : ndarray
-            Result of calling `predict` on the final estimator.
-
-        """
-        if _routing_enabled():
-            routed_params = process_routing(self, "predict", **params)
-        else:
-            routed_params = process_routing(self, "predict")
-
-        iter_input = self._transform(X, routed_params)
-
-        if self._final_estimator == "passthrough":
-            pass
-        elif is_empty(iter_input):
-            iter_input = []
-        elif hasattr(self._final_estimator, "predict"):
-            if _routing_enabled():
-                iter_input = self._final_estimator.predict(
-                    iter_input,
-                    **routed_params[self._non_post_processing_steps()[-1][0]].predict,
-                )
-            else:
-                iter_input = self._final_estimator.predict(iter_input, **params)
-        else:
-            raise AssertionError(
-                "Final estimator does not implement predict, hence this function "
-                "should not be available.",
-            )
-        for _, post_element in self._post_processing_steps():
-            iter_input = post_element.transform(iter_input)
-        return iter_input
-
-    @available_if(_final_estimator_has("fit_predict"))
-    @_fit_context(
-        # estimators in Pipeline.steps are not validated yet
-        prefer_skip_nested_validation=False,
-    )
-    def fit_predict(self, X: Any, y: Any = None, **params: Any) -> Any:
-        """Transform the data, and apply `fit_predict` with the final estimator.
-
-        Call `fit_transform` of each transformer in the pipeline. The
-        transformed data are finally passed to the final estimator that calls
-        `fit_predict` method. Only valid if the final estimator implements
-        `fit_predict`.
-
-        Parameters
-        ----------
-        X : iterable
-            Training data. Must fulfill input requirements of first step of
-            the pipeline.
-
-        y : iterable, default=None
-            Training targets. Must fulfill label requirements for all steps
-            of the pipeline.
-
-        **params : dict of string -> object
-            Parameters passed to the ``fit`` method of each step, where
-            each parameter name is prefixed such that parameter ``p`` for step
-            ``s`` has key ``s__p``.
-
-        Raises
-        ------
-        AssertionError
-            If the final estimator does not implement `fit_predict`.
-            In this case this function should not be available.
-
-        Returns
-        -------
-        y_pred : ndarray
-            Result of calling `fit_predict` on the final estimator.
-
-        """
-        routed_params = self._check_method_params(method="fit_predict", props=params)
-        iter_input, iter_label = self._fit(X, y, routed_params)
-
-        params_last_step = routed_params[self._non_post_processing_steps()[-1][0]]
-        with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
-            if self._final_estimator == "passthrough":
-                y_pred = iter_input
-            elif is_empty(iter_input):
-                logger.warning("All input rows were filtered out! Model is not fitted!")
-                iter_input = []
-                y_pred = []
-            elif hasattr(self._final_estimator, "fit_predict"):
-                y_pred = self._final_estimator.fit_predict(
-                    iter_input,
-                    iter_label,
-                    **params_last_step.get("fit_predict", {}),
-                )
-            else:
+        # The meta elements merge steps which do not require fitting
+        for idx, _, i_element in self._iter(with_final=True):
+            if not isinstance(i_element, TransformingPipelineElement):
                 raise AssertionError(
-                    "Final estimator does not implement fit_predict, "
-                    "hence this function should not be available.",
+                    "PipelineElement is not a TransformingPipelineElement.",
                 )
-            for _, post_element in self._post_processing_steps():
-                y_pred = post_element.fit_transform(y_pred, iter_label)
-        return y_pred
-
-    @available_if(_final_estimator_has("predict_proba"))
-    def predict_proba(self, X: Any, **params: Any) -> Any:
-        """Transform the data, and apply `predict_proba` with the final estimator.
-
-        Call `transform` of each transformer in the pipeline. The transformed
-        data are finally passed to the final estimator that calls `predict_proba`
-        method. Only valid if the final estimator implements `predict_proba`.
-
-        Parameters
-        ----------
-        X : iterable
-            Data to predict on. Must fulfill input requirements of first step
-            of the pipeline.
-
-        **params : dict of string -> object
-            Parameters to the ``predict`` called at the end of all
-            transformations in the pipeline. Note that while this may be
-            used to return uncertainties from some models with return_std
-            or return_cov, uncertainties that are generated by the
-            transformations in the pipeline are not propagated to the
-            final estimator.
-
-        Raises
-        ------
-        AssertionError
-            If the final estimator does not implement `predict_proba`.
-            In this case this function should not be available.
-
-        Returns
-        -------
-        y_pred : ndarray
-            Result of calling `predict_proba` on the final estimator.
-
-        """
-        routed_params = process_routing(self, "predict_proba", **params)
-        iter_input = self._transform(X, routed_params)
-
-        if self._final_estimator == "passthrough":
-            pass
-        elif is_empty(iter_input):
-            iter_input = []
-        elif hasattr(self._final_estimator, "predict_proba"):
-            if _routing_enabled():
-                iter_input = self._final_estimator.predict_proba(
-                    iter_input,
-                    **routed_params[
-                        self._non_post_processing_steps()[-1][0]
-                    ].predict_proba,
+            if not check_single_instance_support(i_element):
+                raise AssertionError(
+                    "PipelineElement is not a SingleInstanceTransformerMixin or"
+                    " Pipeline with signle instance support.",
                 )
-            else:
-                iter_input = self._final_estimator.predict_proba(iter_input, **params)
-        else:
-            raise AssertionError(
-                "Final estimator does not implement predict_proba, "
-                "hence this function should not be available.",
-            )
-        for _, post_element in self._post_processing_steps():
-            iter_input = post_element.transform(iter_input)
+            if isinstance(i_element, ErrorFilter):
+                continue
+            i_element.n_jobs = self.n_jobs
+            iter_input = i_element.pretransform(iter_input)
+            for error_filter in self._filter_elements:
+                iter_input = error_filter.transform(iter_input)
+                for idx in error_filter.error_indices:
+                    removed_row_dict[error_filter].append(int(iter_idx_array[idx]))
+                iter_idx_array = error_filter.co_transform(iter_idx_array)
+            iter_input = i_element.assemble_output(iter_input)
+            i_element.n_jobs = 1
+
+        # Set removed rows to filter elements to allow for correct co_transform
+        iter_idx_array = np.arange(len(X))
+        for error_filter in self._filter_elements:
+            removed_idx_list = removed_row_dict[error_filter]
+            error_filter.error_indices = []
+            for new_idx, idx_ in enumerate(iter_idx_array):
+                if idx_ in removed_idx_list:
+                    error_filter.error_indices.append(new_idx)
+            error_filter.n_total = len(iter_idx_array)
+            iter_idx_array = error_filter.co_transform(iter_idx_array)
+        error_replacer_list = [
+            ele for _, ele in self.steps if isinstance(ele, FilterReinserter)
+        ]
+        for error_replacer in error_replacer_list:
+            error_replacer.select_error_filter(self._filter_elements)
+            iter_input = error_replacer.transform(iter_input)
+        for _, post_element in self._post_processing_steps:
+            iter_input = post_element.fit_transform(iter_input, y)
         return iter_input
 
     def _can_transform(self) -> bool:
@@ -840,7 +340,11 @@ class Pipeline(_Pipeline):
         )
 
     @available_if(_can_transform)
-    def transform(self, X: Any, **params: Any) -> Any:
+    def transform(
+        self,
+        X: Any,  # noqa: N803
+        **params: Any,
+    ) -> Any:
         """Transform the data, and apply `transform` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -859,45 +363,38 @@ class Pipeline(_Pipeline):
         **params : Any
             Parameters to the ``transform`` method of each estimator.
 
-        Raises
-        ------
-        AssertionError
-            If the final estimator does not implement `transform` or
-            `fit_transform` or is passthrough.
-
         Returns
         -------
         Xt : ndarray of shape (n_samples, n_transformed_features)
             Transformed data.
 
         """
-        routed_params = process_routing(self, "transform", **params)
-        iter_input = X
-        for _, name, transform in self._iter():
-            if transform == "passthrough":
-                continue
-            if is_empty(iter_input):
-                # This is done to prime the error filters
-                if isinstance(transform, _MolPipeline):
-                    _ = transform.transform(iter_input)
-                iter_input = []
-                break
-            if hasattr(transform, "transform"):
-                iter_input = transform.transform(
-                    iter_input,
-                    **routed_params[name].transform,
-                )
-            else:
-                raise AssertionError(
-                    "Non transformer ocurred in transformation step."
-                    "This should have been caught in the validation step.",
-                )
-        for _, post_element in self._post_processing_steps():
+        if self.supports_single_instance:
+            output_generator = self._transform_iterator(X)
+            iter_input = self.assemble_output(output_generator)
+        else:
+            iter_input = super().transform(X, **params)
+        for _, post_element in self._post_processing_steps:
             iter_input = post_element.transform(iter_input, **params)
         return iter_input
 
+    def _can_decision_function(self) -> bool:
+        """Check if the final estimator implements decision_function.
+
+        Returns
+        -------
+        bool
+            True if the final estimator implements decision_function.
+
+        """
+        return hasattr(self._final_estimator, "decision_function")
+
     @available_if(_can_decision_function)
-    def decision_function(self, X: Any, **params: Any) -> Any:
+    def decision_function(
+        self,
+        X: Any,  # noqa: N803
+        **params: Any,
+    ) -> Any:
         """Transform the data, and apply `decision_function` with the final estimator.
 
         Parameters
@@ -908,72 +405,18 @@ class Pipeline(_Pipeline):
         **params : Any
             Parameters to the ``decision_function`` method of the final estimator.
 
-        Raises
-        ------
-        AssertionError
-            If the final estimator does not implement `decision_function`.
-
         Returns
         -------
         Any
             Result of calling `decision_function` on the final estimator.
 
         """
-        if _routing_enabled():
-            routed_params = process_routing(self, "decision_function", **params)
-        else:
-            routed_params = process_routing(self, "decision_function")
-
-        iter_input = self._transform(X, routed_params)
-        if self._final_estimator == "passthrough":
-            pass
-        elif is_empty(iter_input):
-            iter_input = []
-        elif hasattr(self._final_estimator, "decision_function"):
-            if _routing_enabled():
-                iter_input = self._final_estimator.decision_function(
-                    iter_input,
-                    **routed_params[self._final_estimator].predict,
-                )
-            else:
-                iter_input = self._final_estimator.decision_function(
-                    iter_input,
-                    **params,
-                )
-        else:
-            raise AssertionError(
-                "Final estimator does not implement `decision_function`, "
-                "hence this function should not be available.",
-            )
-        for _, post_element in self._post_processing_steps():
+        iter_input = super().decision_function(X, **params)
+        for _, post_element in self._post_processing_steps:
             iter_input = post_element.transform(iter_input)
         return iter_input
 
-    @property
-    def classes_(self) -> list[Any] | npt.NDArray[Any]:
-        """Return the classes of the last element.
-
-        PostPredictionTransformation elements are not considered as last element.
-
-        Raises
-        ------
-        ValueError
-            If the last step is passthrough or has no classes_ attribute.
-
-        """
-        check_last = [
-            step
-            for step in self.steps
-            if not isinstance(step[1], PostPredictionTransformation)
-        ]
-        last_step = check_last[-1][1]
-        if last_step == "passthrough":
-            raise ValueError("Last step is passthrough.")
-        if hasattr(last_step, "classes_"):
-            return last_step.classes_
-        raise ValueError("Last step has no classes_ attribute.")
-
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
         """Return the sklearn tags.
 
         Notes
@@ -1031,86 +474,185 @@ class Pipeline(_Pipeline):
 
         return tags
 
-    def get_metadata_routing(self) -> MetadataRouter:
-        """Get metadata routing of this object.
+    def transform_single(self, input_value: Any) -> Any:
+        """Transform a single input according to the sequence of PipelineElements.
 
-        Please check :ref:`User Guide <metadata_routing>` on how the routing
-        mechanism works.
+        Parameters
+        ----------
+        input_value: Any
+            Molecular representation which is subsequently transformed.
 
-        Notes
-        -----
-        This method is copied from the original sklearn implementation.
-        Changes are marked with a comment.
+        Raises
+        ------
+        AssertionError
+            If the PipelineElement is not a SingleInstanceTransformerMixin.
 
         Returns
         -------
-        MetadataRouter
-            A :class:`~sklearn.utils.metadata_routing.MetadataRouter` encapsulating
-            routing information.
+        Any
+            Transformed molecular representation.
 
         """
-        router = MetadataRouter(owner=self.__class__.__name__)
-
-        # first we add all steps except the last one
-        for _, name, trans in self._iter(with_final=False, filter_passthrough=True):
-            method_mapping = MethodMapping()
-            # fit, fit_predict, and fit_transform call fit_transform if it
-            # exists, or else fit and transform
-            if hasattr(trans, "fit_transform"):
-                (
-                    method_mapping.add(caller="fit", callee="fit_transform")
-                    .add(caller="fit_transform", callee="fit_transform")
-                    .add(caller="fit_predict", callee="fit_transform")
+        log_block = BlockLogs()
+        iter_value = input_value
+        for _, p_element in self._modified_steps:
+            if not isinstance(p_element, SingleInstanceTransformerMixin):
+                raise AssertionError(
+                    "PipelineElement is not a SingleInstanceTransformerMixin.",
                 )
-            else:
-                (
-                    method_mapping.add(caller="fit", callee="fit")
-                    .add(caller="fit", callee="transform")
-                    .add(caller="fit_transform", callee="fit")
-                    .add(caller="fit_transform", callee="transform")
-                    .add(caller="fit_predict", callee="fit")
-                    .add(caller="fit_predict", callee="transform")
+            if not isinstance(p_element, ABCPipelineElement):
+                raise AssertionError(
+                    "PipelineElement is not a ABCPipelineElement.",
                 )
+            try:
+                if not isinstance(iter_value, RemovedInstance) or isinstance(
+                    p_element,
+                    FilterReinserter,
+                ):
+                    iter_value = p_element.transform_single(iter_value)
+            except MolSanitizeException as err:
+                iter_value = InvalidInstance(
+                    p_element.uuid,
+                    f"RDKit MolSanitizeException: {err.args}",
+                    p_element.name,
+                )
+        del log_block
+        return iter_value
 
-            (
-                method_mapping.add(caller="predict", callee="transform")
-                .add(caller="predict", callee="transform")
-                .add(caller="predict_proba", callee="transform")
-                .add(caller="decision_function", callee="transform")
-                .add(caller="predict_log_proba", callee="transform")
-                .add(caller="transform", callee="transform")
-                .add(caller="inverse_transform", callee="inverse_transform")
-                .add(caller="score", callee="transform")
-            )
+    def pretransform(self, value_list: Any) -> Any:
+        """Transform the input according to the sequence without assemble_output step.
 
-            router.add(method_mapping=method_mapping, **{name: trans})
+        Parameters
+        ----------
+        value_list: Any
+            Molecular representations which are subsequently transformed.
 
-        # Only the _non_post_processing_steps is changed from the original
-        # implementation is changed in the following line
-        final_name, final_est = self._non_post_processing_steps()[-1]
-        if final_est is None or final_est == "passthrough":
-            return router
+        Returns
+        -------
+        Any
+            Transformed molecular representations.
 
-        # then we add the last step
-        method_mapping = MethodMapping()
-        if hasattr(final_est, "fit_transform"):
-            method_mapping.add(caller="fit_transform", callee="fit_transform")
-        else:
-            method_mapping.add(caller="fit", callee="fit").add(
-                caller="fit",
-                callee="transform",
-            )
-        (
-            method_mapping.add(caller="fit", callee="fit")
-            .add(caller="predict", callee="predict")
-            .add(caller="fit_predict", callee="fit_predict")
-            .add(caller="predict_proba", callee="predict_proba")
-            .add(caller="decision_function", callee="decision_function")
-            .add(caller="predict_log_proba", callee="predict_log_proba")
-            .add(caller="transform", callee="transform")
-            .add(caller="inverse_transform", callee="inverse_transform")
-            .add(caller="score", callee="score")
+        """
+        return list(self._transform_iterator(value_list))
+
+    def assemble_output(self, value_list: Iterable[Any]) -> Any:
+        """Assemble the output of the pipeline.
+
+        Parameters
+        ----------
+        value_list: Iterable[Any]
+            Generator which yields the output of the pipeline.
+
+        Returns
+        -------
+        Any
+            Assembled output.
+
+        """
+        final_estimator = self._final_estimator
+        if isinstance(final_estimator, TransformingPipelineElement):
+            return final_estimator.assemble_output(value_list)
+        return list(value_list)
+
+    def _transform_iterator(self, x_input: Any) -> Any:
+        """Transform the input according to the sequence of provided PipelineElements.
+
+        Parameters
+        ----------
+        x_input: Any
+            Molecular representations which are subsequently transformed.
+
+        Yields
+        ------
+        Any
+            Transformed molecular representations.
+
+        """
+        agg_filter = self._filter_elements_agg
+        for filter_element in self._filter_elements:
+            filter_element.error_indices = []
+        parallel = Parallel(
+            n_jobs=self.n_jobs,
+            return_as="generator",
+            batch_size="auto",
         )
+        output_generator = parallel(
+            delayed(self.transform_single)(value) for value in x_input
+        )
+        for i, transformed_value in enumerate(output_generator):
+            if isinstance(transformed_value, RemovedInstance):
+                agg_filter.register_removed(i, transformed_value)
+            else:
+                yield transformed_value
+        agg_filter.set_total(len(x_input))
 
-        router.add(method_mapping=method_mapping, **{final_name: final_est})
-        return router
+    def co_transform(self, x_input: TypeFixedVarSeq) -> TypeFixedVarSeq:
+        """Filter flagged rows from the input.
+
+        Parameters
+        ----------
+        x_input: Any
+            Molecular representations which are subsequently filtered.
+
+        Returns
+        -------
+        Any
+            Filtered molecular representations.
+
+        """
+        return self._filter_elements_agg.co_transform(x_input)
+
+
+def _agg_transformers(
+    transformer_list: Sequence[tuple[int, str, AnyElement]],
+    n_jobs: int = 1,
+) -> tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]:
+    """Aggregate transformers to a single step.
+
+    Parameters
+    ----------
+    transformer_list: list[tuple[int, str, AnyElement]]
+        List of transformers to aggregate.
+    n_jobs: int, optional
+        Number of cores used for aggregated steps.
+
+    Returns
+    -------
+    tuple[list[int], list[str], Pipeline] | tuple[int, str, AnyElement]
+        Aggregated transformer.
+        If the list contains only one transformer, it is returned as is.
+
+    """
+    index_list = [step[0] for step in transformer_list]
+    name_list = [step[1] for step in transformer_list]
+    if len(transformer_list) == 1:
+        return transformer_list[0]
+    return (
+        index_list,
+        name_list,
+        Pipeline(
+            [(step[1], step[2]) for step in transformer_list],
+            n_jobs=n_jobs,
+        ),
+    )
+
+
+def check_single_instance_support(
+    estimator: Any,
+) -> TypeIs[SingleInstanceTransformerMixin | Pipeline]:
+    """Check if the estimator supports single instance processing.
+
+    Parameters
+    ----------
+    estimator: Any
+        Estimator to check.
+
+    Returns
+    -------
+    TypeIs[SingleInstanceTransformerMixin | Pipeline]
+        True if the estimator supports single instance processing.
+
+    """
+    if isinstance(estimator, SingleInstanceTransformerMixin):
+        return True
+    return isinstance(estimator, Pipeline) and estimator.supports_single_instance

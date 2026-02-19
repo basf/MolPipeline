@@ -8,11 +8,15 @@ import numpy as np
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
+    SingleInstanceTransformerMixin,
     TransformingPipelineElement,
 )
 
 
-class MockTransformingPipelineElement(TransformingPipelineElement):
+class MockTransformingPipelineElement(
+    SingleInstanceTransformerMixin,
+    TransformingPipelineElement,
+):
     """Mock element for testing."""
 
     def __init__(
@@ -116,7 +120,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         """Aggregate rows, which in most cases is just return the list.
 
         Some representations might be better representd as a single object.
-        For example a list of vectors can  be transformed to a matrix.
+        For example a list of vectors can be transformed to a matrix.
 
         Parameters
         ----------
