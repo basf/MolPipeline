@@ -245,7 +245,8 @@ class NoneTest(unittest.TestCase):
         )
         pipeline2 = clone(pipeline)
 
-        expected_msg = "could not broadcast input array from shape (0,) into shape (3,)"
+        expected_msg = (r"could not broadcast input array from shape \(0,\) into shape"
+                        r"\(3,\)")
         with self.assertRaisesRegex(ValueError, expected_msg):
             pipeline.transform(test_values)
         with self.assertRaisesRegex(ValueError, expected_msg):
