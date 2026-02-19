@@ -15,12 +15,12 @@ from typing import (
 import numpy as np
 import numpy.typing as npt
 
-from molpipeline import FilterReinserter
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
     OptionalMol,
     RDKitMol,
 )
+from molpipeline.error_handling.filter_reinserter import FilterReinserter
 
 __all__ = [
     "AnyElement",
