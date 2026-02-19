@@ -28,7 +28,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
     def __init__(
         self,
         charge_method: MolToNetChargeMethod = "formal_charge",
-        standardizer: AnyTransformer | None = StandardScaler(),
+        standardizer: AnyTransformer | None = StandardScaler(),  # noqa: B008
         name: str = "MolToNetCharge",
         n_jobs: int = 1,
         uuid: str | None = None,
