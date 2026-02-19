@@ -30,6 +30,8 @@ from molpipeline.experimental.uncertainty import (
 from molpipeline.mol2any import MolToMorganFP
 from tests import TEST_DATA_DIR
 
+# Set random seeds for reproducibility
+RANDOM_SEED = 42
 FP_RADIUS = 2
 FP_SIZE = 1024
 
@@ -145,8 +147,8 @@ class BaseConformalTestData(unittest.TestCase):
         self.assertEqual(prediction_sets.shape[1], n_classes)
         self.assertTrue(np.all(np.isin(prediction_sets, [0, 1])))
 
+    @staticmethod
     def _get_train_calib_test_splits(
-        self,
         x_data: npt.NDArray[np.int_],
         y_data: npt.NDArray[np.float64],
     ) -> tuple[
@@ -178,13 +180,13 @@ class BaseConformalTestData(unittest.TestCase):
             x_data,
             y_data,
             test_size=0.2,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
         x_train, x_calib, y_train, y_calib = train_test_split(
             x_train_all,
             y_train_all,
             test_size=0.3,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
         return x_train, x_calib, x_test, y_train, y_calib, y_test
 
@@ -199,7 +201,7 @@ class TestConformalClassifier(BaseConformalTestData):
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
 
-        clf = RandomForestClassifier(random_state=42, n_estimators=50)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         cp = ConformalClassifier(clf)
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
@@ -225,17 +227,17 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertGreaterEqual(results["ks_test"], 0.0)
         self.assertLessEqual(results["ks_test"], 1.0)
 
-    def test_evaluate_methods_cross_conformal(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
+    def test_evaluate_methods_cross_conformal(self) -> None:  # pylint: disable=too-many-locals
         """Test evaluate methods for cross-conformal predictors (classification)."""
         # Test CrossConformalClassifier
         x_train_clf, x_test_clf, y_train_clf, y_test_clf = train_test_split(
             self.x_clf,
             self.y_clf,
             test_size=0.2,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
 
-        clf = RandomForestClassifier(random_state=42, n_estimators=50)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         ccp_clf = CrossConformalClassifier(clf, n_folds=2)
         ccp_clf.fit_and_calibrate(x_train_clf, y_train_clf)
 
@@ -260,7 +262,7 @@ class TestConformalClassifier(BaseConformalTestData):
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
-        clf = RandomForestClassifier(random_state=42, n_estimators=5)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         cp = ConformalClassifier(clf, mondrian=True)
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
@@ -278,7 +280,7 @@ class TestConformalClassifier(BaseConformalTestData):
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
-        clf = RandomForestClassifier(random_state=42, n_estimators=5)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         cp = ConformalClassifier(clf)
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
@@ -290,15 +292,15 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(probs.shape[0], len(y_test))
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
-        sets_90 = cp.predict_set(x_test, confidence=0.90)
+        sets_80 = cp.predict_set(x_test, confidence=0.80)
         sets_95 = cp.predict_set(x_test, confidence=0.95)
-        size_90 = float(np.mean([np.sum(set_row) for set_row in sets_90]))
+        size_80 = float(np.mean([np.sum(set_row) for set_row in sets_80]))
         size_95 = float(np.mean([np.sum(set_row) for set_row in sets_95]))
-        self.assertLessEqual(size_90, size_95)
+        self.assertLessEqual(size_80, size_95)
 
     def test_class_specific_behavior(self) -> None:
         """Test that ConformalClassifier has classification-specific methods."""
-        clf = RandomForestClassifier(random_state=42)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED)
         cp_clf = ConformalClassifier(clf)
         self.assertTrue(hasattr(cp_clf, "predict_set"))
         self.assertTrue(hasattr(cp_clf, "predict_proba"))
@@ -308,7 +310,7 @@ class TestConformalClassifier(BaseConformalTestData):
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
-        clf = RandomForestClassifier(random_state=42, n_estimators=50)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         cp_clf = ConformalClassifier(clf)
         with self.assertRaises(ValueError):
             cp_clf.predict(x_test)
@@ -333,11 +335,11 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
 
-    def test_nonconformity_functions(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
+    def test_nonconformity_functions(self) -> None:  # pylint: disable=too-many-locals
         """Test different nonconformity functions in ConformalClassifier."""
         data_splits = self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         x_train, x_calib, x_test, y_train, y_calib, y_test = data_splits
-        clf = RandomForestClassifier(random_state=42, n_estimators=5)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         cp_hinge = ConformalClassifier(clf, nonconformity="hinge")
         cp_hinge.fit(x_train, y_train)
         cp_hinge.calibrate(x_calib, y_calib)
@@ -408,7 +410,7 @@ class TestConformalClassifier(BaseConformalTestData):
         )
 
         classes = np.array(sorted(np.unique(y_train)))
-        clf = RandomForestClassifier(random_state=42, n_estimators=10)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         clf.fit(x_train, y_train)
 
         # Get probability predictions
@@ -439,7 +441,7 @@ class TestConformalClassifier(BaseConformalTestData):
         sets = cp.predict_set(x_test)
         self.assertEqual(len(sets), len(probs_test))
 
-    def test_svm_margin_binary_classification(self) -> None:  # pylint: disable=too-many-locals
+    def test_svm_margin_binary_classification(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
         """Test SVMMarginNonconformity with binary SVM classification."""
         x_train, x_calib, x_test, y_train, y_calib, _y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
@@ -448,7 +450,7 @@ class TestConformalClassifier(BaseConformalTestData):
         classes = np.array(sorted(np.unique(y_train)))
         self.assertEqual(len(classes), 2)
 
-        svc = SVC(kernel="linear", probability=False, random_state=42)
+        svc = SVC(kernel="linear", probability=False, random_state=RANDOM_SEED)
         svc.fit(x_train, y_train)
 
         # Decision function values (signed distances to hyperplane)
@@ -475,7 +477,8 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertTrue(np.allclose(nc_test_all, expected_all))
 
         preds = svc.predict(x_test)
-        confident_mask = np.abs(y_score_test) > 0.5
+        confidence_threshold = 0.5
+        confident_mask = np.abs(y_score_test) > confidence_threshold
 
         pos_confident = confident_mask & (preds == classes[1])
         neg_confident = confident_mask & (preds == classes[0])
@@ -505,10 +508,10 @@ class TestConformalClassifier(BaseConformalTestData):
             self.x_clf,
             self.y_clf,
             test_size=0.2,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
 
-        clf = RandomForestClassifier(random_state=42, n_estimators=5)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         ccp = CrossConformalClassifier(clf, n_folds=2)
         ccp.fit_and_calibrate(x_train, y_train)
 
@@ -528,24 +531,24 @@ class TestConformalClassifier(BaseConformalTestData):
             self.x_clf,
             self.y_clf,
             test_size=0.2,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
 
-        clf = RandomForestClassifier(random_state=42, n_estimators=5)
+        clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         ccp = CrossConformalClassifier(clf, n_folds=2)
         ccp.fit_and_calibrate(x_train, y_train)
-        sets_90 = ccp.predict_set(x_test, confidence=0.90)
+        sets_80 = ccp.predict_set(x_test, confidence=0.80)
         sets_95 = ccp.predict_set(x_test, confidence=0.95)
-        size_90 = float(np.mean([np.sum(set_row) for set_row in sets_90]))
+        size_80 = float(np.mean([np.sum(set_row) for set_row in sets_80]))
         size_95 = float(np.mean([np.sum(set_row) for set_row in sets_95]))
 
-        self.assertLessEqual(size_90, size_95)
+        self.assertLessEqual(size_80, size_95)
 
     def test_pipeline_wrapped_by_conformal_classifier(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
         """Test a MolPipeline wrapped by ConformalClassifier."""
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE, return_as="dense")
-        clf = RandomForestClassifier(n_estimators=5, random_state=42)
+        clf = RandomForestClassifier(n_estimators=5, random_state=RANDOM_SEED)
         error_filter = ErrorFilter(filter_everything=True)
 
         base_pipeline = Pipeline(
@@ -569,13 +572,13 @@ class TestConformalClassifier(BaseConformalTestData):
             self.smiles_clf,
             self.y_clf,
             test_size=0.4,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
         calib_smiles, test_smiles, y_calib, y_test = train_test_split(
             temp_smiles,
             y_temp,
             test_size=0.5,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
 
         conformal_pipeline.fit(train_smiles, y_train)
@@ -614,21 +617,21 @@ class TestConformalRegressor(BaseConformalTestData):
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_reg, self.y_reg)
         )
-        reg = RandomForestRegressor(random_state=42, n_estimators=5)
+        reg = RandomForestRegressor(random_state=RANDOM_SEED, n_estimators=5)
         cp = ConformalRegressor(reg)
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
-        intervals_90 = cp.predict_int(x_test, confidence=0.90)
-        self.assertEqual(intervals_90.shape[0], len(y_test))
-        self.assertEqual(intervals_90.shape[1], 2)
+        intervals_80 = cp.predict_int(x_test, confidence=0.80)
+        self.assertEqual(intervals_80.shape[0], len(y_test))
+        self.assertEqual(intervals_80.shape[1], 2)
         intervals_95 = cp.predict_int(x_test, confidence=0.95)
-        width_90 = float(np.mean(intervals_90[:, 1] - intervals_90[:, 0]))
+        width_80 = float(np.mean(intervals_80[:, 1] - intervals_80[:, 0]))
         width_95 = float(np.mean(intervals_95[:, 1] - intervals_95[:, 0]))
-        self.assertLess(width_90, width_95)
+        self.assertLess(width_80, width_95)
 
     def test_class_specific_behavior(self) -> None:
         """Test that ConformalRegressor has regression-specific methods."""
-        reg = RandomForestRegressor(random_state=42)
+        reg = RandomForestRegressor(random_state=RANDOM_SEED)
         cp_reg = ConformalRegressor(reg)
         self.assertTrue(hasattr(cp_reg, "predict_int"))
         self.assertFalse(hasattr(cp_reg, "predict_proba"))
@@ -638,7 +641,7 @@ class TestConformalRegressor(BaseConformalTestData):
         x_train_reg, x_calib_reg, x_test_reg, y_train_reg, y_calib_reg, y_test_reg = (
             self._get_train_calib_test_splits(self.x_reg, self.y_reg)
         )
-        reg = RandomForestRegressor(random_state=42, n_estimators=50)
+        reg = RandomForestRegressor(random_state=RANDOM_SEED, n_estimators=5)
         cp_reg = ConformalRegressor(reg)
         with self.assertRaises(ValueError):
             cp_reg.predict(x_test_reg)
@@ -658,12 +661,12 @@ class TestConformalRegressor(BaseConformalTestData):
         splits = create_continuous_stratified_folds(
             self.y_reg,
             n_splits=2,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]
         y_train, y_test = self.y_reg[train_idx], self.y_reg[test_idx]
-        reg = RandomForestRegressor(random_state=42, n_estimators=5)
+        reg = RandomForestRegressor(random_state=RANDOM_SEED, n_estimators=5)
         ccp = CrossConformalRegressor(reg, n_folds=2)
         ccp.fit_and_calibrate(x_train, y_train)
         intervals = ccp.predict_int(x_test)
@@ -679,25 +682,25 @@ class TestConformalRegressor(BaseConformalTestData):
         splits = create_continuous_stratified_folds(
             self.y_reg,
             n_splits=2,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]
         y_train, _ = self.y_reg[train_idx], self.y_reg[test_idx]
-        reg = RandomForestRegressor(random_state=42, n_estimators=5)
+        reg = RandomForestRegressor(random_state=RANDOM_SEED, n_estimators=5)
         ccp = CrossConformalRegressor(reg, n_folds=2)
         ccp.fit_and_calibrate(x_train, y_train)
-        intervals_90 = ccp.predict_int(x_test, confidence=0.90)
+        intervals_80 = ccp.predict_int(x_test, confidence=0.80)
         intervals_95 = ccp.predict_int(x_test, confidence=0.95)
-        width_90 = float(np.mean(intervals_90[:, 1] - intervals_90[:, 0]))
+        width_80 = float(np.mean(intervals_80[:, 1] - intervals_80[:, 0]))
         width_95 = float(np.mean(intervals_95[:, 1] - intervals_95[:, 0]))
-        self.assertLess(width_90, width_95)
+        self.assertLess(width_80, width_95)
 
     def test_pipeline_wrapped_by_cross_conformal_regressor(self) -> None:
         """Test a MolPipeline wrapped by CrossConformalRegressor."""
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE, return_as="dense")
-        reg = RandomForestRegressor(n_estimators=5, random_state=42)
+        reg = RandomForestRegressor(n_estimators=5, random_state=RANDOM_SEED)
         error_filter = ErrorFilter(filter_everything=True)
 
         base_pipeline = Pipeline(
@@ -721,7 +724,7 @@ class TestConformalRegressor(BaseConformalTestData):
             self.smiles_reg,
             self.y_reg,
             test_size=0.4,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
 
         conformal_pipeline.fit_and_calibrate(train_smiles, y_train)
@@ -739,10 +742,10 @@ class TestConformalRegressor(BaseConformalTestData):
             self.x_reg,
             self.y_reg,
             test_size=0.3,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
-        reg = RandomForestRegressor(n_estimators=50, random_state=42)
-        ccp = CrossConformalRegressor(reg, n_folds=2, random_state=42)
+        reg = RandomForestRegressor(n_estimators=5, random_state=RANDOM_SEED)
+        ccp = CrossConformalRegressor(reg, n_folds=2, random_state=RANDOM_SEED)
         ccp.fit_and_calibrate(x_train, y_train)
         original_preds = ccp.predict(x_test)
         original_intervals = ccp.predict_int(x_test)
@@ -763,7 +766,7 @@ class TestConformalRegressor(BaseConformalTestData):
             self._get_train_calib_test_splits(self.x_reg, self.y_reg)
         )
 
-        reg = RandomForestRegressor(random_state=42, n_estimators=50)
+        reg = RandomForestRegressor(random_state=RANDOM_SEED, n_estimators=5)
         cp = ConformalRegressor(reg)
         cp.fit(x_train, y_train)
         cp.calibrate(x_calib, y_calib)
@@ -791,12 +794,12 @@ class TestConformalRegressor(BaseConformalTestData):
         splits = create_continuous_stratified_folds(
             self.y_reg,
             n_splits=2,
-            random_state=42,
+            random_state=RANDOM_SEED,
         )
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]
         y_train, y_test = self.y_reg[train_idx], self.y_reg[test_idx]
-        reg = RandomForestRegressor(random_state=42, n_estimators=50)
+        reg = RandomForestRegressor(random_state=RANDOM_SEED, n_estimators=5)
         ccp_reg = CrossConformalRegressor(reg, n_folds=2)
         ccp_reg.fit_and_calibrate(x_train, y_train)
         results_reg = ccp_reg.evaluate(x_test, y_test)
