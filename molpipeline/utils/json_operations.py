@@ -6,6 +6,7 @@ import warnings
 from typing import Any, Literal, TypeVar
 
 import numpy as np
+from typing_extensions import deprecated
 
 from molpipeline.pipeline import Pipeline
 
@@ -49,13 +50,9 @@ try:
         if not isinstance(obj, torch.Tensor):
             return obj, False
 
-        object_dict: dict[str, Any] = {
-            "__name__": obj.__class__.__name__,
-            "__module__": obj.__class__.__module__,
-            "__init__": True,
-            "data": recursive_to_json(obj.cpu().numpy()),
-        }
-        return object_dict, True
+        obj_dict = get_object_import_header(obj)
+        obj_dict["data"] = recursive_to_json(obj.cpu().numpy())
+        return obj_dict, True
 
     def _tensor_from_json(  # pylint: disable=unused-argument
         obj: type,
@@ -134,6 +131,25 @@ except ImportError:
         """
         return obj, False
 
+def get_object_import_header(obj: Any) -> dict[str, Any]:
+    """Get the import header for an object.
+
+    Parameters
+    ----------
+    obj: Any
+        Object for which the import header is extracted.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing the module and class name of the object.
+
+    """
+    return {
+        "__name__": obj.__class__.__name__,
+        "__module__": obj.__class__.__module__,
+        "__init__": True,
+    }
 
 def np_array_to_json(
     obj: _T,
@@ -155,14 +171,10 @@ def np_array_to_json(
     """
     if not isinstance(obj, np.ndarray):
         return obj, False
-
-    obj_dict = {
-        "__name__": "array",
-        "__module__": obj.__class__.__module__,
-        "__init__": True,
-        "__args__": [recursive_to_json(obj.tolist())],
-        "dtype": recursive_to_json(obj.dtype),
-    }
+    obj_dict = get_object_import_header(obj)
+    obj_dict["__name__"] = "array"  # Override name to initialize as array
+    obj_dict["__args__"] = [recursive_to_json(obj.tolist())]
+    obj_dict["dtype"] = recursive_to_json(obj.dtype)
     return obj_dict, True
 
 
@@ -187,11 +199,8 @@ def np_dtype_to_json(
     if not isinstance(obj, np.dtype):
         return obj, False
 
-    obj_dict = {
-        "__name__": type(obj).__name__,
-        "__module__": obj.__class__.__module__,
-        "__init__": False,
-    }
+    obj_dict = get_object_import_header(obj)
+    obj_dict["__init__"] = False  # Numpy dtypes need no initialization
     return obj_dict, True
 
 
@@ -383,12 +392,6 @@ def builtin_to_json(obj: Any) -> Any:
     if isinstance(obj, (str, int, float, bool, type)) or obj is None:
         return obj
 
-    if isinstance(obj, types.FunctionType):
-        return {
-            "__name__": obj.__name__,
-            "__module__": obj.__module__,
-            "__init__": False,
-        }
     if isinstance(obj, dict):
         return {
             recursive_to_json(key): recursive_to_json(value)
@@ -399,15 +402,15 @@ def builtin_to_json(obj: Any) -> Any:
         iterable_type = type(obj)
         return iterable_type(iter_list)
 
-    object_dict: dict[str, Any] = {
-        "__name__": obj.__class__.__name__,
-        "__module__": obj.__class__.__module__,
-        "__init__": True,
-    }
+    obj_dict = get_object_import_header(obj)
+    if isinstance(obj, types.FunctionType):
+        obj_dict["__init__"] = False  # Functions need no initialization
+        return obj_dict
+
     # If the object is a sklearn model, the parameters for initialization are extracted.
     if isinstance(obj, set):
-        object_dict["__set_items__"] = [recursive_to_json(value) for value in obj]
-        return object_dict
+        obj_dict["__set_items__"] = [recursive_to_json(value) for value in obj]
+        return obj_dict
     raise TypeError(f"Unexpected Type: {type(obj)}")
 
 
@@ -437,11 +440,7 @@ def recursive_to_json(obj: Any) -> Any:
         return builtin_to_json(obj)
 
     # If neither of the above, it is assumed to be an object.
-    object_dict: dict[str, Any] = {
-        "__name__": obj.__class__.__name__,
-        "__module__": obj.__class__.__module__,
-        "__init__": True,
-    }
+    object_dict: dict[str, Any] = get_object_import_header(obj)
     # If the object is a sklearn model, the parameters for initialization are extracted.
     if hasattr(obj, "get_params"):
         if isinstance(obj, Pipeline):
