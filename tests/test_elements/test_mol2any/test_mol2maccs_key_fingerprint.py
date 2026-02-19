@@ -23,7 +23,7 @@ test_smiles = [
 class TestMolToMACCSFP(unittest.TestCase):
     """Unittest for MolToMACCSFP, which calculates MACCS Key Fingerprints."""
 
-    def test_can_be_constructed(self) -> None:
+    def test_clone(self) -> None:
         """Test if the MolToMACCSFP pipeline element can be constructed."""
         mol_fp = MolToMACCSFP()
         mol_fp_copy = clone(mol_fp)

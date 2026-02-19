@@ -22,7 +22,7 @@ test_smiles = [
 class TestMol2PathFingerprint(unittest.TestCase):
     """Unittest for Mol2PathFP, which calculates the RDKit Path Fingerprint."""
 
-    def test_can_be_constructed(self) -> None:
+    def test_clone(self) -> None:
         """Test if the Mol2PathFP pipeline element can be constructed."""
         mol_fp = Mol2PathFP()
         mol_fp_copy = clone(mol_fp)

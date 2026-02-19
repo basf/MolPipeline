@@ -22,7 +22,7 @@ test_smiles = [
 class TestMol2MorganFingerprint(unittest.TestCase):
     """Unittest for MolToFoldedMorganFingerprint."""
 
-    def test_can_be_constructed(self) -> None:
+    def test_clone(self) -> None:
         """Test the pipeline element can be constructed."""
         mol_fp = MolToMorganFP()
         mol_fp_copy = clone(mol_fp)
