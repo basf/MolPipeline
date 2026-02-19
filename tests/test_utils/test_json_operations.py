@@ -55,7 +55,6 @@ class JsonConversionTest(unittest.TestCase):
             self.assertEqual(type(orig_obj), type(recreated_obj))
         self.assertEqual(original_params, recreated_params)
 
-
     def test_set_transformation(self) -> None:
         """Test if a set can be reconstructed from json."""
         test_set = {1, "a", (1, "a")}
