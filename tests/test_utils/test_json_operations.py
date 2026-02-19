@@ -11,7 +11,6 @@ from molpipeline.utils.json_operations import (
     recursive_from_json,
     recursive_to_json,
 )
-from molpipeline.utils.multi_proc import check_available_cores
 
 
 class JsonConversionTest(unittest.TestCase):
