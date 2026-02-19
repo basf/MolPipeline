@@ -7,7 +7,6 @@ from collections.abc import Iterable
 from typing import Any, NamedTuple, Self, Union
 from uuid import uuid4
 
-import numpy as np
 from joblib import Parallel, delayed
 from loguru import logger
 from rdkit import Chem
