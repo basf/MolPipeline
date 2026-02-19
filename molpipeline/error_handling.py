@@ -445,7 +445,7 @@ class _MultipleErrorFilter:
             total -= len(error_filter.error_indices)
 
 
-class FilterReinserter(ABCPipelineElement, Generic[_T]):
+class FilterReinserter(Generic[_T]):
     """Fill None values with a Dummy value."""
 
     fill_value: _T
@@ -477,7 +477,9 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             UUID of the pipeline element.
 
         """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        self.name = name
+        self.n_jobs = n_jobs
+        self.uuid = uuid
         self.error_filter_id = error_filter_id
         self._error_filter = None
         self.fill_value = fill_value
