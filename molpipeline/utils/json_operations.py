@@ -40,8 +40,10 @@ try:
 
         Returns
         -------
-        object
-            The JSON-serializable object.
+        tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]
+            If the object is a PyTorch model, a tuple containing the JSON-serializable
+            dictionary and True is returned.
+            Else a tuple containing the original object and False is returned.
 
         """
         if not isinstance(obj, torch.Tensor):
@@ -66,15 +68,17 @@ try:
         ----------
         obj : type
             The object to initialize.
-        args: Any
+        args : Any
             Positional arguments for initialization.
-        kwargs: Any
+        kwargs : Any
             Keyword arguments for initialization.
 
         Returns
         -------
-        object
-            The PyTorch model.
+        tuple[Any, Literal[True]] | tuple[type, Literal[False]]
+            If the object is a JSON-serializable PyTorch model, a tuple containing the
+            PyTorch model and True is returned.
+            Else a tuple containing the original object and False is returned.
 
         """
         if obj is torch.Tensor:
@@ -96,8 +100,10 @@ except ImportError:
 
         Returns
         -------
-        object
-            The JSON-serializable object.
+        tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]
+            Same signature as the function when torch is installed, but always returns
+            the original object and False, as the conversion is not successful when
+            torch is not installed.
 
         """
         return obj, False
@@ -120,8 +126,10 @@ except ImportError:
 
         Returns
         -------
-        object
-            The PyTorch model.
+        tuple[Any, Literal[True]] | tuple[type, Literal[False]]
+            Same signature as the function when torch is installed, but always returns
+            the original object and False, as the conversion is not successful when
+            torch is not installed.
 
         """
         return obj, False
@@ -139,8 +147,10 @@ def np_array_to_json(
 
     Returns
     -------
-    dict[str, Any] | bool
-        The JSON-serializable object, or False if the object is not a vector.
+     tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]
+        If the object is a numpy array, a tuple containing the JSON-serializable
+        dictionary and True is returned.
+        Else a tuple containing the original object and False is returned.
 
     """
     if not isinstance(obj, np.ndarray):
@@ -168,9 +178,10 @@ def np_dtype_to_json(
 
     Returns
     -------
-    dict[str, Any] | bool
-        The JSON-serializable object and True if the object is a numpy dtype.
-        Else the original object and False.
+    tuple[dict[str, Any], Literal[True]] | tuple[_T, Literal[False]]
+        If the object is a numpy dtype, a tuple containing the JSON-serializable
+        dictionary and True is returned.
+        Else a tuple containing the original object and False is returned.
 
     """
     if not isinstance(obj, np.dtype):
@@ -184,8 +195,8 @@ def np_dtype_to_json(
     return obj_dict, True
 
 
-TO_JSON_FUNCTIONS = [_tensor_to_json, np_array_to_json, np_dtype_to_json]
-FROM_JSON_FUNCTIONS = [_tensor_from_json]
+_OBJECT_SPECIF_TO_JSON_FUNTIONS = [_tensor_to_json, np_array_to_json, np_dtype_to_json]
+_OBJECT_SPECIF_FROM_JSON_FUNCTIONS = [_tensor_from_json]
 
 
 def transform_functions2string(value: Any) -> Any:
@@ -442,7 +453,7 @@ def recursive_to_json(obj: Any) -> Any:
             for key, value in model_params.items():
                 object_dict[key] = recursive_to_json(value)
     else:
-        for to_json_function in TO_JSON_FUNCTIONS:
+        for to_json_function in _OBJECT_SPECIF_TO_JSON_FUNTIONS:
             obj_dict, success = to_json_function(obj)
             if success:
                 return obj_dict
@@ -494,7 +505,7 @@ def decode_dict(obj: dict[str, Any]) -> Any:
         # If the object is a class, but has no parameters
         if obj_class is set:
             return set(converted_dict["__set_items__"])
-        for from_json_function in FROM_JSON_FUNCTIONS:
+        for from_json_function in _OBJECT_SPECIF_FROM_JSON_FUNCTIONS:
             obj_class, success = from_json_function(obj_class, *args, **converted_dict)
             if success:
                 return obj_class
