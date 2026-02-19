@@ -3,7 +3,7 @@
 import types
 import typing
 import warnings
-from typing import Any, Literal, TypeVar
+from typing import Any, TypeVar
 
 import numpy as np
 from typing_extensions import deprecated
@@ -109,7 +109,7 @@ except ImportError:
         obj: type,
         *args: Any,  # noqa: ARG001
         **kwargs: Any,  # noqa: ARG001
-    ) ->tuple[Any | type, bool]:
+    ) -> tuple[Any | type, bool]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
 
         Parameters
@@ -131,6 +131,7 @@ except ImportError:
         """
         return obj, False
 
+
 def get_object_import_header(obj: Any) -> dict[str, Any]:
     """Get the import header for an object.
 
@@ -150,6 +151,7 @@ def get_object_import_header(obj: Any) -> dict[str, Any]:
         "__module__": obj.__class__.__module__,
         "__init__": True,
     }
+
 
 def np_array_to_json(
     obj: _T,
@@ -209,8 +211,8 @@ _OBJECT_SPECIF_FROM_JSON_FUNCTIONS = [_tensor_from_json]
 
 
 @deprecated(
-    "`transform_functions2string` is deprecated and will be removed in a future version."
-    " Please use `recursive_to_json` instead."
+    "`transform_functions2string` is deprecated and will be removed in a future"
+    " version. Please use `recursive_to_json` instead.",
 )
 def transform_functions2string(value: Any) -> Any:
     """Transform functions to string representation.
@@ -256,7 +258,7 @@ def transform_functions2string(value: Any) -> Any:
 
 @deprecated(
     "`transform_string2function` is deprecated and will be removed in a future version."
-    " Please use `recursive_from_json` instead."
+    " Please use `recursive_from_json` instead.",
 )
 def transform_string2function(value: Any) -> Any:
     """Transform string representation of functions to actual functions.
