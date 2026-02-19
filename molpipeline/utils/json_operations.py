@@ -208,6 +208,10 @@ _OBJECT_SPECIF_TO_JSON_FUNTIONS = [_tensor_to_json, np_array_to_json, np_dtype_t
 _OBJECT_SPECIF_FROM_JSON_FUNCTIONS = [_tensor_from_json]
 
 
+@deprecated(
+    "`transform_functions2string` is deprecated and will be removed in a future version."
+    " Please use `recursive_to_json` instead."
+)
 def transform_functions2string(value: Any) -> Any:
     """Transform functions to string representation.
 
