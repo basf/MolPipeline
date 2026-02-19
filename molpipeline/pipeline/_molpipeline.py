@@ -432,7 +432,6 @@ class _MolPipeline:
             else:
                 yield transformed_value
         agg_filter.set_total(len(x_input))
-        self._finish()
 
     def co_transform(self, x_input: TypeFixedVarSeq) -> TypeFixedVarSeq:
         """Filter flagged rows from the input.
