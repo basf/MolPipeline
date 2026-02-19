@@ -27,10 +27,7 @@ def get_enable_progress_bar(trainer: pl.Trainer) -> bool:
         If the progress bar is enabled in the lightning trainer.
 
     """
-    for callback in trainer.callbacks:  # type: ignore[attr-defined]
-        if isinstance(callback, ProgressBar):
-            return True
-    return False
+    return any(isinstance(callback, ProgressBar) for callback in trainer.callbacks)
 
 
 def get_device(trainer: pl.Trainer) -> str | Accelerator:
