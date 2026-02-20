@@ -32,6 +32,8 @@ from .chemprop_test_utils.default_models import (
     get_multiclass_classification_pipeline,
     get_regression_pipeline,
     get_smiles_checker_pipeline,
+)
+from .chemprop_test_utils.randomization import (
     randomize_state_dict_weights,
 )
 
