@@ -25,7 +25,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
     def __init__(
         self,
-        standardizer: AnyTransformer | None = StandardScaler(),
+        standardizer: AnyTransformer | None = StandardScaler(),  # noqa: B008
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
         uuid: str | None = None,
