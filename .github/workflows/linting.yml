@@ -202,9 +202,7 @@ jobs:
       - name: Run unit-tests for chemprop
         run: |
           # Run only the chemprop test suite.
-          uv run coverage run --source=molpipeline,tests -m unittest discover test_extras/test_chemprop
-          uv run coverage run --source=molpipeline,tests -m -a unittest discover test_extras/test_file_loading
-          uv run coverage run --source=molpipeline,tests -m -a unittest discover test_extras/test_utils
+          uv run coverage run --source=molpipeline,tests -m unittest discover test_extras/torch_dependent_tests
           # Create a coverage report. Fail if the coverage is below 85%. Include only chemprop files in the report.
           uv run coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*","*file_loading*"
 
@@ -221,4 +219,4 @@ jobs:
           uv sync --all-extras
       - name: Run unit-tests for notebooks
         run: |
-          uv run python test_extras/test_notebooks/test_notebooks.py --continue-on-failure
+          uv run python test_extras/jupyter_dependent_tests/test_notebooks/test_notebooks.py --continue-on-failure

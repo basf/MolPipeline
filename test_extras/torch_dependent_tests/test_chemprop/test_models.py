@@ -26,18 +26,18 @@ from molpipeline.estimators.chemprop.models import (
 )
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
-from test_extras.test_chemprop.chemprop_test_utils.compare_models import compare_params
-from test_extras.test_chemprop.chemprop_test_utils.constant_vars import (
+from torch_dependent_tests.test_chemprop.chemprop_test_utils.compare_models import compare_params
+from torch_dependent_tests.test_chemprop.chemprop_test_utils.constant_vars import (
     DEFAULT_BINARY_CLASSIFICATION_PARAMS,
     DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS,
     DEFAULT_REGRESSION_PARAMS,
     DEFAULT_SET_PARAMS,
     NO_IDENTITY_CHECK,
 )
-from test_extras.test_chemprop.chemprop_test_utils.default_models import (
+from torch_dependent_tests.test_chemprop.chemprop_test_utils.default_models import (
     get_chemprop_model_binary_classification_mpnn,
 )
-from test_extras.test_chemprop.chemprop_test_utils.randomization import (
+from torch_dependent_tests.test_chemprop.chemprop_test_utils.randomization import (
     randomize_state_dict_weights,
 )
 
