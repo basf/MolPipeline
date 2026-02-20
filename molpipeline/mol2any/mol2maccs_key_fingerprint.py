@@ -29,7 +29,7 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
         name: str = "MolToMACCSFP",
         n_jobs: int = 1,
         uuid: str | None = None,
-    ):
+    ) -> None:
         """Initialize MolToMACCSFP.
 
         Parameters

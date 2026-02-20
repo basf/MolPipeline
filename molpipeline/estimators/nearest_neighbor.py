@@ -56,7 +56,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         p: int = 2,
         metric_params: dict[str, Any] | None = None,
         n_jobs: int | None = None,
-    ):
+    ) -> None:
         """Initialize the nearest neighbor algorithm.
 
         Parameters
@@ -244,7 +244,7 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
         k: int | None,
         batch_size: int = 1000,
         n_jobs: int = 1,
-    ):
+    ) -> None:
         """Initialize TanimotoKNN.
 
         Parameters
