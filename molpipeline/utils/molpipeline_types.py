@@ -20,7 +20,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     OptionalMol,
     RDKitMol,
 )
-from molpipeline.error_handling.filter_reinserter import FilterReinserter
+from molpipeline.error_handling import FilterReinserter
 
 __all__ = [
     "AnyElement",
