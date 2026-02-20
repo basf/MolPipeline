@@ -6,7 +6,6 @@ from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
-import torch
 from chemprop.data import MoleculeDataset, build_dataloader
 from chemprop.models.model import MPNN
 from lightning import pytorch as pl
