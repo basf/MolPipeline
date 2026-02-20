@@ -223,6 +223,7 @@ class Pipeline(_Pipeline):
         | AnyPredictor
         | _MolPipeline
         | ABCPipelineElement
+        | FilterReinserter[Any]
     ):
         """Return the lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())

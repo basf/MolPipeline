@@ -16,7 +16,6 @@ from molpipeline.abstract_pipeline_elements.core import (
 )
 from molpipeline.error_handling import (
     ErrorFilter,
-    FilterReinserter,
     _MultipleErrorFilter,
 )
 from molpipeline.utils.molpipeline_types import TypeFixedVarSeq
@@ -309,12 +308,6 @@ class _MolPipeline:
                     error_filter.error_indices.append(new_idx)
             error_filter.n_total = len(iter_idx_array)
             iter_idx_array = error_filter.co_transform(iter_idx_array)
-        error_replacer_list = [
-            ele for ele in self._element_list if isinstance(ele, FilterReinserter)
-        ]
-        for error_replacer in error_replacer_list:
-            error_replacer.select_error_filter(self._filter_elements)
-            iter_input = error_replacer.transform(iter_input)
         return iter_input
 
     def transform_single(self, input_value: Any) -> Any:
@@ -335,11 +328,9 @@ class _MolPipeline:
         iter_value = input_value
         for p_element in self._element_list:
             try:
-                if not isinstance(iter_value, RemovedInstance) or isinstance(
-                    p_element,
-                    FilterReinserter,
-                ):
-                    iter_value = p_element.transform_single(iter_value)
+                if isinstance(iter_value, RemovedInstance):
+                    return iter_value
+                iter_value = p_element.transform_single(iter_value)
             except MolSanitizeException as err:
                 iter_value = InvalidInstance(
                     p_element.uuid,
