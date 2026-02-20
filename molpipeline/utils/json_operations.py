@@ -50,6 +50,7 @@ if importlib.util.find_spec("torch") is not None:
 
         obj_dict = get_object_import_header(obj)
         obj_dict["data"] = recursive_to_json(obj.cpu().numpy())
+        obj_dict["device"] = str(obj.device)
         return obj_dict, True
 
     def _tensor_from_json(  # pylint: disable=unused-argument
@@ -77,7 +78,9 @@ if importlib.util.find_spec("torch") is not None:
 
         """
         if obj is torch.Tensor:
-            return torch.from_numpy(kwargs["data"]), True
+            tensor = torch.from_numpy(kwargs["data"])
+            tensor = tensor.to(kwargs["device"])
+            return tensor, True
         return obj, False
 
 else:
