@@ -25,7 +25,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
     def __init__(
         self,
-        standardizer: AnyTransformer | None = StandardScaler(),
+        standardizer: AnyTransformer | None = StandardScaler(),  # noqa: B008
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -208,8 +208,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         """
         if self._standardizer is not None:
-            standadized_value = self._standardizer.transform(value.reshape(1, -1))
-            return standadized_value.reshape(-1)
+            standardized_value = self._standardizer.transform(value.reshape(1, -1))
+            return standardized_value.reshape(-1)
         return value
 
     @abc.abstractmethod

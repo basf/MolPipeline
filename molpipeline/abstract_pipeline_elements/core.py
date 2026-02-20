@@ -4,7 +4,7 @@ import abc
 import copy
 import inspect
 from collections.abc import Iterable
-from typing import Any, NamedTuple, Self, Union
+from typing import Any, NamedTuple, Self
 from uuid import uuid4
 
 import numpy as np
@@ -13,6 +13,7 @@ from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Mol as RDKitMol
 from sklearn.utils import Tags, TargetTags
+from typing_extensions import override
 
 from molpipeline.utils.multi_proc import check_available_cores
 
@@ -50,11 +51,11 @@ class InvalidInstance(NamedTuple):
         )
 
 
-OptionalMol = Union[RDKitMol, InvalidInstance]
+OptionalMol = RDKitMol | InvalidInstance
 
 
 class RemovedInstance:  # pylint: disable=too-few-public-methods
-    """Object which is returned by a ErrorFilter if an Invalid instance was removed."""
+    """Returned by an ErrorFilter if an Invalid instance was removed."""
 
     def __init__(self, filter_element_id: str, message: str | None = None) -> None:
         """Initialize RemovedInstance.
@@ -129,10 +130,9 @@ class ABCPipelineElement(abc.ABC):
         for key, value in self._get_non_default_parameters().items():
             parm_list.append(f"{key}={value}")
         parm_str = ", ".join(parm_list)
-        repr_str = f"{self.__class__.__name__}({parm_str})"
-        return repr_str
+        return f"{self.__class__.__name__}({parm_str})"
 
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
         """Return Tags for the Element.
 
         Returns
@@ -252,8 +252,8 @@ class ABCPipelineElement(abc.ABC):
         """Return whether the object requires fitting or not."""
         return self._requires_fitting
 
-    def finish(self) -> None:
-        """Inform object that iteration has been finished. Does in most cases nothing.
+    def finish(self) -> None:  # noqa: B027
+        """Inform object that iteration has been finished.
 
         Called after all transform singles have been processed.
         """
@@ -280,11 +280,11 @@ class ABCPipelineElement(abc.ABC):
         _ = self.fit_transform(values, labels)
         return self
 
-    def fit_to_result(self, values: Any) -> Self:  # pylint: disable=unused-argument
+    def fit_to_result(self, values: Any) -> Self:  # pylint: disable=unused-argument  # noqa: ARG002
         """Fit object to result of transformed values.
 
-        Fit object to the result of the transform function. This is useful for catching
-        invalid or removed molecules.
+        Fit object to the result of the transform function. This is useful for
+        catching invalid or removed molecules.
 
         Parameters
         ----------
@@ -460,6 +460,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         self._is_fitted = True
         return super().fit_to_result(values)
 
+    @override
     def fit_transform(
         self,
         values: Any,
@@ -512,7 +513,7 @@ class TransformingPipelineElement(ABCPipelineElement):
             return pre_value
         return self.finalize_single(pre_value)
 
-    def assemble_output(self, value_list: Iterable[Any]) -> Any:
+    def assemble_output(self, value_list: Iterable[Any]) -> Any:  # noqa: PLR6301
         """Aggregate rows, which in most cases is just return the list.
 
         Some representations might be better representd as a single object.
@@ -552,7 +553,7 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
 
-    def finalize_single(self, value: Any) -> Any:
+    def finalize_single(self, value: Any) -> Any:  # noqa: PLR6301
         """Apply parameters learned during fitting to a single instance.
 
         Parameters
@@ -583,13 +584,12 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
         parallel = Parallel(n_jobs=self.n_jobs)
-        output_values = parallel(
+        return parallel(
             delayed(self.pretransform_single)(value) for value in value_list
         )
-        return output_values
 
     def finalize_list(self, value_list: Iterable[Any]) -> list[Any]:
-        """Transform list of values according to parameters learned during fitting.
+        """Transform list of values according to learned parameters.
 
         Parameters
         ----------
@@ -603,10 +603,7 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
         parallel = Parallel(n_jobs=self.n_jobs)
-        output_values = parallel(
-            delayed(self.finalize_single)(value) for value in value_list
-        )
-        return output_values
+        return parallel(delayed(self.finalize_single)(value) for value in value_list)
 
     def transform(self, values: Any) -> Any:
         """Transform input_values according to object rules.
@@ -690,7 +687,8 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         Returns
         -------
         OptionalMol
-            Transformed molecule if transformation was successful, else InvalidInstance.
+            Transformed molecule.
+            InvalidInstance if the transformation was not successful.
 
         """
         try:
