@@ -111,7 +111,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         undirected: bool = False,
         d_vd: int | None = None,
         state_dict_ref: str | Path | dict[str, Any] | None = None,
-    ):
+    ) -> None:
         """Initialize the BondMessagePassing class.
 
         Parameters
@@ -240,7 +240,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         output_transform: UnscaleTransform | None = None,
         state_dict_ref: str | Path | dict[str, Any] | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the BinaryClassificationFFN class.
 
         Parameters
@@ -443,7 +443,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         threshold: float | None = None,
         output_transform: UnscaleTransform | None = None,
         state_dict_ref: str | Path | dict[str, Any] | None = None,
-    ):
+    ) -> None:
         """Initialize the MulticlassClassificationFFN class.
 
         Parameters
@@ -546,7 +546,7 @@ class MPNN(_MPNN, BaseEstimator):
         max_lr: float = 1e-3,
         final_lr: float = 1e-4,
         state_dict_ref: str | Path | dict[str, Any] | None = None,
-    ):
+    ) -> None:
         """Initialize the MPNN class.
 
         Parameters
@@ -652,7 +652,7 @@ class MPNN(_MPNN, BaseEstimator):
 class MeanAggregation(_MeanAggregation, BaseEstimator):
     """Aggregate the graph-level representation by averaging node representations."""
 
-    def __init__(self, dim: int = 0):
+    def __init__(self, dim: int = 0) -> None:
         """Initialize the MeanAggregation class.
 
         Parameters
@@ -668,7 +668,7 @@ class MeanAggregation(_MeanAggregation, BaseEstimator):
 class SumAggregation(_SumAggregation, BaseEstimator):
     """Aggregate the graph-level representation by summing the node representations."""
 
-    def __init__(self, dim: int = 0):
+    def __init__(self, dim: int = 0) -> None:
         """Initialize the SumAggregation class.
 
         Parameters
