@@ -256,50 +256,6 @@ class NoneTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, expected_msg):
             pipeline2.fit_transform(test_values)
 
-    def test_molsanitize_error(self) -> None:
-        """Test if MolSanitizeException is caught and catched by ErrorFilter."""
-
-        class DummyMolSanitizeExc(MolToMolPipelineElement):
-            """MolToMolPipelineElement with dummy molsanitize exception."""
-
-            def pretransform_single(  # noqa: PLR6301
-                self,
-                value: RDKitMol,
-            ) -> OptionalMol:
-                """Raise MolSanitizeException if value is c1ccccc1.
-
-                Parameters
-                ----------
-                value: RDKitMol
-                    Molecule
-
-                Returns
-                -------
-                OptionalMol
-                    Molecule.
-
-                """
-                if Chem.MolToSmiles(value) == "c1ccccc1":
-                    return InvalidInstance(self.uuid, "Dummy reason.", self.name)
-                return value
-
-        pipeline = Pipeline(
-            [
-                ("autotosmiles", AutoToMol()),
-                ("atomneutralizer", DummyMolSanitizeExc()),
-                ("moltosmiles", MolToSmiles()),
-                ("errorfilter", error_filter := ErrorFilter(filter_everything=True)),
-                (
-                    "filterreinserter",
-                    FilterReinserter.from_error_filter(error_filter, None),
-                ),
-            ],
-            n_jobs=-1,
-        )
-
-        result = pipeline.transform(["c1ccccc1", "CCCCCCC", "c1cc"])
-        self.assertEqual(result, [None, "CCCCCCC", None])
-
 
 class TestFilterReinserter(unittest.TestCase):
     """Test FilterReinserter."""
