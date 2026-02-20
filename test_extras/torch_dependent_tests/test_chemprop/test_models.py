@@ -37,6 +37,8 @@ from .chemprop_test_utils.constant_vars import (
 )
 from .chemprop_test_utils.default_models import (
     get_chemprop_model_binary_classification_mpnn,
+)
+from .chemprop_test_utils.randomization import (
     randomize_state_dict_weights,
 )
 
