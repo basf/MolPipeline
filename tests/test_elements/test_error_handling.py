@@ -4,11 +4,10 @@ import unittest
 from typing import Any
 
 import numpy as np
+from abstract_pipeline_elements.core import InvalidInstance
 from rdkit import Chem, RDLogger
-from rdkit.Chem.rdchem import MolSanitizeException
 from sklearn.base import clone
 
-from abstract_pipeline_elements.core import InvalidInstance
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
 from molpipeline.any2mol import SmilesToMol
@@ -271,11 +270,6 @@ class NoneTest(unittest.TestCase):
                 ----------
                 value: RDKitMol
                     Molecule
-
-                Raises
-                ------
-                MolSanitizeException
-                    Dummy exception used for testing.
 
                 Returns
                 -------
