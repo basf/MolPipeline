@@ -14,7 +14,7 @@ from molpipeline.mol2any import MolToMorganFP
 class CountingTransformerWrapper(BaseEstimator):
     """A transformer that counts the number of transformations."""
 
-    def __init__(self, element: ABCPipelineElement):
+    def __init__(self, element: ABCPipelineElement) -> None:
         """Initialize the wrapper.
 
         Parameters
