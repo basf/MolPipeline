@@ -8,6 +8,7 @@ from rdkit import Chem, RDLogger
 from rdkit.Chem.rdchem import MolSanitizeException
 from sklearn.base import clone
 
+from abstract_pipeline_elements.core import InvalidInstance
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
 from molpipeline.any2mol import SmilesToMol
@@ -278,7 +279,7 @@ class NoneTest(unittest.TestCase):
 
                 """
                 if Chem.MolToSmiles(value) == "c1ccccc1":
-                    raise MolSanitizeException("This is a dummy exception.")
+                    return InvalidInstance(self.uuid, "Dummy reason.", self.name)
                 return value
 
         pipeline = Pipeline(
@@ -286,7 +287,7 @@ class NoneTest(unittest.TestCase):
                 ("autotosmiles", AutoToMol()),
                 ("atomneutralizer", DummyMolSanitizeExc()),
                 ("moltosmiles", MolToSmiles()),
-                ("errorfilter", error_filter := ErrorFilter()),
+                ("errorfilter", error_filter := ErrorFilter(filter_everything=True)),
                 (
                     "filterreinserter",
                     FilterReinserter.from_error_filter(error_filter, None),
