@@ -328,8 +328,9 @@ class _MolPipeline:
         iter_value = input_value
         for p_element in self._element_list:
             try:
-                if not isinstance(iter_value, RemovedInstance):
-                    iter_value = p_element.transform_single(iter_value)
+                if isinstance(iter_value, RemovedInstance):
+                    return iter_value
+                iter_value = p_element.transform_single(iter_value)
             except MolSanitizeException as err:
                 iter_value = InvalidInstance(
                     p_element.uuid,
