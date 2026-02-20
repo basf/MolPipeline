@@ -7,8 +7,9 @@ from sklearn.base import clone
 
 from molpipeline.estimators.chemprop.neural_fingerprint import ChempropNeuralFP
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
-from torch_dependent_tests.test_chemprop.chemprop_test_utils.compare_models import compare_params
-from torch_dependent_tests.test_chemprop.chemprop_test_utils.default_models import (
+
+from .chemprop_test_utils.compare_models import compare_params
+from .chemprop_test_utils.default_models import (
     get_neural_fp_encoder,
 )
 

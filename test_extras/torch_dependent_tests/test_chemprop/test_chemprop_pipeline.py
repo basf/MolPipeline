@@ -22,19 +22,18 @@ from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
 from molpipeline.utils.file_loading.url_file_loading import URLFileLoader
 from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
-from torch_dependent_tests.test_chemprop.chemprop_test_utils.compare_models import compare_params
-from torch_dependent_tests.test_chemprop.chemprop_test_utils.default_models import (
+from tests import TEST_DATA_DIR
+
+from .chemprop_test_utils.compare_models import compare_params
+from .chemprop_test_utils.default_models import (
     get_classification_pipeline,
     get_model,
     get_model_pipeline,
     get_multiclass_classification_pipeline,
     get_regression_pipeline,
     get_smiles_checker_pipeline,
-)
-from torch_dependent_tests.test_chemprop.chemprop_test_utils.randomization import (
     randomize_state_dict_weights,
 )
-from tests import TEST_DATA_DIR
 
 _T = TypeVar("_T")
 
