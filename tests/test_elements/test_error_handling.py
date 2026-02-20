@@ -4,18 +4,12 @@ import unittest
 from typing import Any
 
 import numpy as np
-from rdkit import Chem, RDLogger
+from rdkit import RDLogger
 from sklearn.base import clone
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
-from molpipeline.abstract_pipeline_elements.core import (
-    InvalidInstance,
-    MolToMolPipelineElement,
-)
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.any2mol.auto2mol import AutoToMol
 from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
-from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 from tests.utils.mock_element import MockTransformingPipelineElement
 
 rdlog = RDLogger.logger()
