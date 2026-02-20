@@ -107,17 +107,9 @@ class ABCChemprop(BaseEstimator, abc.ABC):
 
         """
         state = dict(super().__getstate__())
-        state_dict = self.model.state_dict()
-        new_state_dict = {}
-        for key, value in state_dict.items():
-            if isinstance(value, torch.Tensor):
-                new_state_dict[key] = value.cpu().numpy()
-            else:
-                new_state_dict[key] = value
-
-        state["model_state_dict"] = new_state_dict
-        state["model"] = recursive_to_json(self.model)
-        state["lightning_trainer"] = get_params_trainer(self.lightning_trainer)
+        state["model_state_dict"] = recursive_to_json(self.model.state_dict())
+        state["model"] = recursive_to_json(state.pop("model"))
+        state["lightning_trainer"] = get_params_trainer(state.pop("lightning_trainer"))
         return state
 
     def __setstate__(self, state: dict[str, Any]) -> None:
@@ -131,15 +123,9 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         """
         state["model"] = recursive_from_json(state.pop("model"))
         state["lightning_trainer"] = pl.Trainer(**state.pop("lightning_trainer"))
-        model_state_dict = state.pop("model_state_dict")
-        torch_state_dict = {}
-        for key, value in model_state_dict.items():
-            if isinstance(value, np.ndarray):
-                torch_state_dict[key] = torch.from_numpy(value)
-            else:
-                torch_state_dict[key] = value
+        model_state_dict = recursive_from_json(state.pop("model_state_dict"))
         super().__setstate__(state)
-        self.model.load_state_dict(torch_state_dict)
+        self.model.load_state_dict(model_state_dict)
 
     def _update_trainer(self) -> None:
         """Update the trainer for the model."""
