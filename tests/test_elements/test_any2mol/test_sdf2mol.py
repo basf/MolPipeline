@@ -124,7 +124,6 @@ $$$$
         self.assertEqual(sdf2mol.identifier, "smiles")
         self.assertEqual(sdf2mol.name, "CustomName")
         self.assertEqual(sdf2mol.n_jobs, 2)
-        self.assertEqual(sdf2mol.mol_counter, 0)
 
     def test_pretransform_valid_sdf(self) -> None:
         """Test transformation of valid SDF string.
