@@ -131,7 +131,7 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
 class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
     """SplitEnsemble for classification tasks."""
 
-    def __int__(
+    def __init__(
         self,
         base_estimator: BaseEstimator,
         cv: int | BaseCrossValidator = 5,
