@@ -145,12 +145,12 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
         """
         base = MockEstimator(alpha=1)
         ensemble = SplitEnsembleRegressor(
-            base_estimator=base,
+            estimator=base,
             cv=3,
-            base_estimator__beta=2,
+            estimator__beta=2,
         )
-        ensemble.set_params(base_estimator__gamma=3)
-        base_est = ensemble.base_estimator
+        ensemble.set_params(estimator__gamma=3)
+        base_est = ensemble.estimator
         if not isinstance(base_est, MockEstimator):
             raise TypeError("Expected an instance of MockEstimator")
         self.assertEqual(base_est.alpha, 1)
@@ -169,7 +169,7 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
         features = np.array([[i, i, i, i] for i in range(10)])
         y = np.arange(10)
         base = MockEstimator()
-        ensemble = SplitEnsembleRegressor(base_estimator=base, cv=2)
+        ensemble = SplitEnsembleRegressor(estimator=base, cv=2)
         ensemble.fit(features, y)
         # Should have 2 estimators, each fit on a split
         self.assertEqual(len(ensemble.estimators_), 2)
@@ -194,7 +194,7 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
         features = [[i, i, i, i] for i in range(10)]
         y = [float(i) for i in range(10)]
         base = MockEstimator()
-        ensemble = SplitEnsembleRegressor(base_estimator=base, cv=2)
+        ensemble = SplitEnsembleRegressor(estimator=base, cv=2)
         ensemble.fit(features, y)
         self.assertEqual(len(ensemble.estimators_), 2)
 
@@ -223,12 +223,12 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
         """
         base = MockClassifier(alpha=1)
         ensemble = SplitEnsembleClassifier(
-            base_estimator=base,
+            estimator=base,
             cv=3,
-            base_estimator__beta=2,
+            estimator__beta=2,
         )
-        ensemble.set_params(base_estimator__gamma=3)
-        base_est = ensemble.base_estimator
+        ensemble.set_params(estimator__gamma=3)
+        base_est = ensemble.estimator
         if not isinstance(base_est, MockClassifier):
             raise TypeError("Expected an instance of MockClassifier")
         self.assertEqual(base_est.alpha, 1)
@@ -247,7 +247,7 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
         features = np.array([[i, i, i, i] for i in range(10)])
         y = np.arange(10) % 2
         base = MockClassifier()
-        ensemble = SplitEnsembleClassifier(base_estimator=base, cv=2)
+        ensemble = SplitEnsembleClassifier(estimator=base, cv=2)
         ensemble.fit(features, y)
         self.assertEqual(len(ensemble.estimators_), 2)
 
@@ -271,7 +271,7 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
         features = [[i, i, i, i] for i in range(10)]
         y = [i % 2 for i in range(10)]
         base = MockClassifier()
-        ensemble = SplitEnsembleClassifier(base_estimator=base, cv=2)
+        ensemble = SplitEnsembleClassifier(estimator=base, cv=2)
         ensemble.fit(features, y)
         self.assertEqual(len(ensemble.estimators_), 2)
 
@@ -291,7 +291,7 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
         features = np.array([[i, i, i, i] for i in range(6)])
         y = np.array([0, 1, 0, 1, 0, 1])
         base = MockClassifier()
-        ensemble = SplitEnsembleClassifier(base_estimator=base, cv=2, voting="hard")
+        ensemble = SplitEnsembleClassifier(estimator=base, cv=2, voting="hard")
         ensemble.fit(features, y)
         preds = ensemble.predict(features)
         # Since all estimators return alternating 0,1, the majority is always 0
@@ -302,7 +302,7 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
         features = np.array([[i, i, i, i] for i in range(6)])
         y = np.array([0, 1, 0, 1, 0, 1])
         base = MockClassifier()
-        ensemble = SplitEnsembleClassifier(base_estimator=base, cv=2, voting="soft")
+        ensemble = SplitEnsembleClassifier(estimator=base, cv=2, voting="soft")
         ensemble.fit(features, y)
         preds = ensemble.predict(features)
         # Since predict_proba always returns class 0 as most probable
