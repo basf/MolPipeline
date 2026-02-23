@@ -4,6 +4,7 @@ import unittest
 
 import numpy as np
 from rdkit.Chem import MolFromSmiles
+from sklearn import clone
 
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
@@ -49,7 +50,7 @@ class TestMolToElementCount(unittest.TestCase):
 
         """
         element_count = MolToElementCount(element_list=[6, 8], standardizer=None)
-        mol = MolFromSmiles("CCO")  # ethanol: 2 C, 1 O (implicit H not counted)
+        mol = MolFromSmiles("CCO")  # ethanol: 2 C, 1 O
         result = element_count.pretransform_single(mol)
         if not isinstance(result, np.ndarray):
             raise AssertionError(f"Expected np.ndarray, got {type(result)}")
@@ -57,7 +58,7 @@ class TestMolToElementCount(unittest.TestCase):
         self.assertEqual(result.dtype, np.float64)
 
         element_count = MolToElementCount(element_list=[8], standardizer=None)
-        mol = MolFromSmiles("CCO")  # ethanol: 2 C, 1 O (implicit H not counted)
+        mol = MolFromSmiles("CCO")  # ethanol: 2 C, 1 O
         result = element_count.pretransform_single(mol)
         if not isinstance(result, np.ndarray):
             raise AssertionError(f"Expected np.ndarray, got {type(result)}")
@@ -84,12 +85,12 @@ class TestMolToElementCount(unittest.TestCase):
         expected = np.array(
             [
                 #    H   C   N   O   S  Br
-                [0.0, 2.0, 0.0, 1.0, 0.0, 0.0],  # CCO: 2C, 1O
-                [0.0, 2.0, 1.0, 0.0, 0.0, 0.0],  # CCN: 2C, 1N
-                [0.0, 6.0, 0.0, 0.0, 0.0, 0.0],  # benzene: 6C
-                [0.0, 2.0, 0.0, 1.0, 1.0, 0.0],  # DMSO: 2C, 1O, 1S
-                [0.0, 1.0, 0.0, 0.0, 0.0, 1.0],  # CBr: 1C, 1Br
-                [0.0, 6.0, 0.0, 0.0, 1.0, 1.0],  # 4-bromothiophenol: 6C, 1S, 1Br
+                [6.0, 2.0, 0.0, 1.0, 0.0, 0.0],  # CCO: 6H, 2C, 1O
+                [7.0, 2.0, 1.0, 0.0, 0.0, 0.0],  # CCN: 7H, 2C, 1N
+                [6.0, 6.0, 0.0, 0.0, 0.0, 0.0],  # benzene: 6H, 6C
+                [6.0, 2.0, 0.0, 1.0, 1.0, 0.0],  # DMSO: 6H, 2C, 1O, 1S
+                [3.0, 1.0, 0.0, 0.0, 0.0, 1.0],  # CBr: 3H, 1C, 1Br
+                [5.0, 6.0, 0.0, 0.0, 1.0, 1.0],  # 4-bromothiophenol: 5H, 6C, 1S, 1Br
             ],
         )
         self.assertTrue(np.array_equal(result, expected))
@@ -112,7 +113,7 @@ class TestMolToElementCount(unittest.TestCase):
         count1 = element_count.pretransform_single(MolFromSmiles("CCO"))
         if not isinstance(count1, np.ndarray):
             raise AssertionError(f"Expected np.ndarray, got {type(count1)}")
-        self.assertTrue(np.array_equal(count1, [0.0, 2.0]))
+        self.assertTrue(np.array_equal(count1, [6.0, 2.0]))
 
         # set_params should update element_list and feature_names
         element_count.set_params(element_list=[8, 16])
@@ -129,7 +130,7 @@ class TestMolToElementCount(unittest.TestCase):
         Raises
         ------
         AssertionError
-            If pretransform_single does not return an np.ndarray.
+            If pretransform_single does not return a np.ndarray.
 
         """
         original = MolToElementCount(element_list=[6, 7, 8], standardizer=None)
@@ -162,6 +163,31 @@ class TestMolToElementCount(unittest.TestCase):
         returned = element_count.element_list
         returned.append(99)
         self.assertEqual(element_count.element_list, [1, 6])
+
+    def test_sklearn_clone(self) -> None:
+        """Test that the element can be cloned with sklearn's clone.
+
+        Raises
+        ------
+        AssertionError
+            If sklearn's clone does not produce an object of same type. Only for
+            typecheckers.
+
+        """
+        original = MolToElementCount(element_list=[6, 7, 8], standardizer=None)
+        counts_original = original.pretransform_single(MolFromSmiles("CCO"))
+        if not isinstance(counts_original, np.ndarray):
+            raise AssertionError(f"Expected np.ndarray, got {type(counts_original)}")
+        cloned = clone(original)
+        self.assertIsNot(original, cloned)
+        if not isinstance(cloned, type(original)):
+            raise AssertionError(f"Expected type {type(original)}, got {type(cloned)}")
+        self.assertIsNot(original.element_list, cloned.element_list)
+        self.assertIsNot(original.feature_names, cloned.feature_names)
+        counts_recreated = cloned.pretransform_single(MolFromSmiles("CCO"))
+        if not isinstance(counts_recreated, np.ndarray):
+            raise AssertionError(f"Expected np.ndarray, got {type(counts_recreated)}")
+        self.assertTrue(np.array_equal(counts_original, counts_recreated))
 
 
 if __name__ == "__main__":

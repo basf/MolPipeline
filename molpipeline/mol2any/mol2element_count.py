@@ -19,7 +19,6 @@ from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 # oganesson (118) are counted.
 _MAX_CHEMICAL_ELEMENT_NUMBER = 118
 _DEFAULT_ELEMENTS_TO_COUNT: list[int] = list(range(1, _MAX_CHEMICAL_ELEMENT_NUMBER + 1))
-_DEFAULT_STANDARDIZER: AnyTransformer = StandardScaler()  # type: ignore[assignment]
 
 
 class MolToElementCount(MolToDescriptorPipelineElement):
@@ -28,7 +27,7 @@ class MolToElementCount(MolToDescriptorPipelineElement):
     def __init__(
         self,
         element_list: list[int] | None = None,
-        standardizer: AnyTransformer | None = _DEFAULT_STANDARDIZER,
+        standardizer: AnyTransformer | None = StandardScaler(),  # noqa: B008
         name: str = "MolToElementCount",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -94,6 +93,7 @@ class MolToElementCount(MolToDescriptorPipelineElement):
             f"Count_{GetPeriodicTable().GetElementSymbol(atomic_num)}"
             for atomic_num in self._element_list
         ]
+        self._count_hydrogen = 1 in self._element_list
 
     @property
     def n_features(self) -> int:
@@ -119,6 +119,10 @@ class MolToElementCount(MolToDescriptorPipelineElement):
         """
         elements_list = [atom.GetAtomicNum() for atom in value.GetAtoms()]
         elements_counter = Counter(elements_list)
+        if self._count_hydrogen:
+            # Hydrogens are special because they can be implicit in the molecule
+            # datastructure. We need to count them separately.
+            elements_counter[1] = sum(a.GetTotalNumHs() for a in value.GetAtoms())
         return np.array(
             [elements_counter.get(x, 0) for x in self._element_list],
             dtype=np.float64,
