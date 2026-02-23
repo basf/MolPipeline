@@ -189,8 +189,10 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
         )
 
     @available_if(_can_predict_proba)
-    @override
-    def predict_proba(self, X: npt.ArrayLike) -> npt.NDArray[Any]:
+    def predict_proba(
+        self,
+        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+    ) -> npt.NDArray[Any]:
         """Predict class probabilities using the ensemble of estimators.
 
         Parameters
@@ -210,7 +212,10 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
         return np.mean(predictions, axis=0)
 
     @override
-    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:
+    def predict(
+        self,
+        X: npt.ArrayLike,
+    ) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.
 
         Parameters
