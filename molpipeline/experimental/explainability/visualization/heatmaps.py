@@ -6,7 +6,6 @@ Feldmann:
     https://github.com/c-feldmann/compchemkit
 """
 
-import abc
 from collections.abc import Callable, Sequence
 
 import numpy as np
@@ -16,7 +15,7 @@ from rdkit.Chem import Draw
 from rdkit.Geometry.rdGeometry import Point2D
 
 
-class Grid2D(abc.ABC):
+class Grid2D:
     """Metaclass for discrete 2-dimensional grids.
 
     This class holds a matrix of values accessed by index, where each cell is associated
