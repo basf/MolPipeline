@@ -54,10 +54,9 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
 
         """
 
-    @override
     def fit(
         self,
-        X: npt.ArrayLike,
+        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
         y: npt.NDArray[Any] | None = None,
         groups: npt.NDArray[Any] | None = None,
     ) -> Self:
@@ -89,8 +88,10 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
 
         return self
 
-    @override
-    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:
+    def predict(
+        self,
+        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+    ) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.
 
         Parameters
