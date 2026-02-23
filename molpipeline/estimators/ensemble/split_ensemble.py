@@ -41,7 +41,8 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
         self.base_estimator = base_estimator
         self.cv = cv
         self.estimators_ = []
-        super().__init__(**kwargs)
+        self.set_params(**kwargs)
+        super().__init__()
 
     @abc.abstractmethod
     def _get_splitter(self) -> BaseCrossValidator:
