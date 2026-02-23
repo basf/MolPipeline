@@ -189,6 +189,31 @@ class TestMolToElementCount(unittest.TestCase):
             raise AssertionError(f"Expected np.ndarray, got {type(counts_recreated)}")
         self.assertTrue(np.array_equal(counts_original, counts_recreated))
 
+    def test_hydrogen_counting(self) -> None:
+        """Test that hydrogen counting works correctly."""
+        pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                (
+                    "element_count",
+                    MolToElementCount(
+                        element_list=[1],
+                        standardizer=None,
+                    ),
+                ),
+            ],
+        )
+        smiles = ["C", "[H]C(-[H])(-[H])-[H]"]
+        result = pipeline.fit_transform(smiles)
+        self.assertEqual(result.shape, (2, 1))
+        expected = np.array(
+            [
+                [4.0],  # methane: 4 H
+                [4.0],  # methane with explicit hydrogens: 4 H
+            ],
+        )
+        self.assertTrue(np.array_equal(result, expected))
+
 
 if __name__ == "__main__":
     unittest.main()

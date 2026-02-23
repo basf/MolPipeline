@@ -2,12 +2,11 @@
 
 import copy
 from collections import Counter
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
 from rdkit.Chem import GetPeriodicTable
-from sklearn.preprocessing import StandardScaler  # type: ignore[import-untyped]
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
@@ -27,7 +26,7 @@ class MolToElementCount(MolToDescriptorPipelineElement):
     def __init__(
         self,
         element_list: list[int] | None = None,
-        standardizer: AnyTransformer | None = StandardScaler(),  # noqa: B008
+        standardizer: Literal["default"] | AnyTransformer | None = "default",
         name: str = "MolToElementCount",
         n_jobs: int = 1,
         uuid: str | None = None,
