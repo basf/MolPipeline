@@ -89,7 +89,7 @@ class MockClassifier(MockEstimator):
     def predict(
         self,
         X: npt.ArrayLike,  # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.int64]:
+    ) -> npt.NDArray[np.int64]:  # type: ignore
         """Return fixed class predictions.
 
         Parameters
