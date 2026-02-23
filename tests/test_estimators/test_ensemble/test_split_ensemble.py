@@ -86,10 +86,10 @@ class MockClassifier(MockEstimator):
     """A mock classifier that records fit arguments and returns fixed predictions."""
 
     @override
-    def predict(
+    def predict(  # type: ignore
         self,
         X: npt.ArrayLike,  # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.int64]:  # type: ignore
+    ) -> npt.NDArray[np.int64]:
         """Return fixed class predictions.
 
         Parameters
