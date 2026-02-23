@@ -177,7 +177,7 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
         kf = KFold(n_splits=2, shuffle=True, random_state=42)
         splits = list(kf.split(features, y))
         for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=True):
-            if not isinstance(est, MockClassifier):
+            if not isinstance(est, MockEstimator):
                 raise TypeError("Expected an instance of MockEstimator")
             self.assertTrue(np.array_equal(est.fit_args["X"], features[train_idx]))
             self.assertTrue(np.array_equal(est.fit_args["y"], y[train_idx]))
