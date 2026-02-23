@@ -1,0 +1,219 @@
+"""Unit tests for SplitEnsembleClassifier and SplitEnsembleRegressor."""
+
+import unittest
+from typing import Self
+
+import numpy as np
+import numpy.typing as npt
+from sklearn.base import BaseEstimator
+from sklearn.model_selection import KFold, StratifiedKFold
+from typing_extensions import override
+
+from molpipeline.estimators.ensemble.split_ensemble import (
+    SplitEnsembleClassifier,
+    SplitEnsembleRegressor,
+)
+
+
+class MockEstimator(BaseEstimator):
+    """A mock estimator that records fit arguments and returns fixed predictions."""
+
+    def __init__(self, alpha: int = 0, beta: int = 0, gamma: int = 0) -> None:
+        """Initialize the MockEstimator with dummy parameters.
+
+        Parameters
+        ----------
+        alpha : int, default=0
+            Dummy parameter alpha.
+        beta : int, default=0
+            Dummy parameter beta.
+        gamma : int, default=0
+            Dummy parameter gamma.
+
+        """
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
+        self.fit_args = {}
+
+    def fit(
+        self,
+        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
+        y: npt.ArrayLike,
+    ) -> Self:
+        """Fit the model and record the arguments.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Training data.
+        y : npt.ArrayLike
+            Target values.
+
+        Returns
+        -------
+        Self
+            The fitted estimator.
+
+        """
+        self.fit_args = {"X": X, "y": y}
+        return self
+
+    def predict(  # noqa: PLR6301
+        self,
+        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
+    ) -> npt.NDArray[np.float64]:
+        """Return fixed predictions.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Input data for prediction.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Predicted values, which are all zeros for this mock estimator.
+
+        """
+        return np.zeros(len(X), dtype=np.float64)
+
+
+class MockClassifier(MockEstimator):
+    """A mock classifier that records fit arguments and returns fixed predictions."""
+
+    @override
+    def predict(
+        self,
+        X: npt.ArrayLike,  # pylint: disable=invalid-name
+    ) -> npt.NDArray[np.int64]:
+        """Return fixed class predictions.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Input data for prediction.
+
+        Returns
+        -------
+        npt.NDArray[np.int64]
+            Predicted class labels.
+
+        """
+        return np.array([x[0] % 2 for x in X])
+
+    def predict_proba(  # noqa: PLR6301
+        self,
+        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
+    ) -> npt.NDArray[np.float64]:
+        """Return fake class probabilities.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Input data for probability prediction.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Predicted class probabilities, where class 0 has probability 0.7 and class
+            1 has probability 0.3 for all samples.
+
+        """
+        proba = np.zeros((len(X), 2))
+        proba[:, 0] = 0.7
+        proba[:, 1] = 0.3
+        return proba
+
+
+class TestSplitEnsembleRegressor(unittest.TestCase):
+    """Unit tests for SplitEnsembleRegressor."""
+
+    def test_param_forwarding(self) -> None:
+        """Test that parameters are correctly forwarded to the base estimator."""
+        base = MockEstimator(alpha=1)
+        ensemble = SplitEnsembleRegressor(
+            base_estimator=base,
+            cv=3,
+            base_estimator__beta=2,
+        )
+        ensemble.set_params(base_estimator__gamma=3)
+        self.assertEqual(ensemble.base_estimator.alpha, 1)
+        self.assertEqual(ensemble.base_estimator.beta, 2)
+        self.assertEqual(ensemble.base_estimator.gamma, 3)
+
+    def test_fit_sample_forwarding(self) -> None:
+        """Test that fit samples are correctly forwarded to each base estimator."""
+        features = np.array([[i, i, i, i] for i in range(10)])
+        y = np.arange(10)
+        base = MockEstimator()
+        ensemble = SplitEnsembleRegressor(base_estimator=base, cv=2)
+        ensemble.fit(features, y)
+        # Should have 2 estimators, each fit on a split
+        self.assertEqual(len(ensemble.estimators_), 2)
+        # Reconstruct the expected splits using KFold
+        kf = KFold(n_splits=2, shuffle=True, random_state=42)
+        splits = list(kf.split(features, y))
+        for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=False):
+            self.assertTrue(np.array_equal(est.fit_args["X"], features[train_idx]))
+            self.assertTrue(np.array_equal(est.fit_args["y"], y[train_idx]))
+
+
+class TestSplitEnsembleClassifier(unittest.TestCase):
+    """Unit tests for SplitEnsembleClassifier."""
+
+    def test_param_forwarding(self) -> None:
+        """Test that parameters are correctly forwarded to the base estimator."""
+        base = MockClassifier(alpha=1)
+        ensemble = SplitEnsembleClassifier(
+            base_estimator=base,
+            cv=3,
+            base_estimator__beta=2,
+        )
+        ensemble.set_params(base_estimator__gamma=3)
+        self.assertEqual(ensemble.base_estimator.alpha, 1)
+        self.assertEqual(ensemble.base_estimator.beta, 2)
+        self.assertEqual(ensemble.base_estimator.gamma, 3)
+
+    def test_fit_sample_forwarding(self) -> None:
+        """Test that fit samples are correctly forwarded to each base estimator."""
+        features = np.array([[i, i, i, i] for i in range(10)])
+        y = np.arange(10) % 2
+        base = MockClassifier()
+        ensemble = SplitEnsembleClassifier(base_estimator=base, cv=2)
+        ensemble.fit(features, y)
+        self.assertEqual(len(ensemble.estimators_), 2)
+
+        kf = StratifiedKFold(n_splits=2, shuffle=True, random_state=42)
+        splits = list(kf.split(features, y))
+        for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=False):
+            self.assertTrue(np.array_equal(est.fit_args["X"], features[train_idx]))
+            self.assertTrue(np.array_equal(est.fit_args["y"], y[train_idx]))
+
+    def test_predict_hard_voting(self) -> None:
+        """Test that hard voting prediction returns the majority class."""
+        features = np.array([[i, i, i, i] for i in range(6)])
+        y = np.array([0, 1, 0, 1, 0, 1])
+        base = MockClassifier()
+        ensemble = SplitEnsembleClassifier(base_estimator=base, cv=2, voting="hard")
+        ensemble.fit(features, y)
+        preds = ensemble.predict(features)
+        # Since all estimators return alternating 0,1, the majority is always 0
+        self.assertTrue(np.array_equal(preds, np.array([0, 1, 0, 1, 0, 1])))
+
+    def test_predict_soft_voting(self) -> None:
+        """Test that soft voting returns the class with highest average probability."""
+        features = np.array([[i, i, i, i] for i in range(6)])
+        y = np.array([0, 1, 0, 1, 0, 1])
+        base = MockClassifier()
+        ensemble = SplitEnsembleClassifier(base_estimator=base, cv=2, voting="soft")
+        ensemble.fit(features, y)
+        preds = ensemble.predict(features)
+        # Since predict_proba always returns class 0 as most probable
+        self.assertTrue(np.array_equal(preds, np.zeros(len(features))))
+        proba = ensemble.predict_proba(features)
+        self.assertTrue(np.array_equal(proba, np.tile([0.7, 0.3], (len(features), 1))))
+
+
+if __name__ == "__main__":
+    unittest.main()
