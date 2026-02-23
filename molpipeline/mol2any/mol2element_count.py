@@ -120,8 +120,8 @@ class MolToElementCount(MolToDescriptorPipelineElement):
         elements_counter = Counter(elements_list)
         if self._count_hydrogen:
             # Hydrogens are special because they can be implicit in the molecule
-            # datastructure. We need to count them separately.
-            elements_counter[1] = sum(a.GetTotalNumHs() for a in value.GetAtoms())
+            # datastructure. We need to add the implicit hydrogens to the count.
+            elements_counter[1] += sum(a.GetTotalNumHs() for a in value.GetAtoms())
         return np.array(
             [elements_counter.get(x, 0) for x in self._element_list],
             dtype=np.float64,

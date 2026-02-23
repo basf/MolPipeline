@@ -203,13 +203,14 @@ class TestMolToElementCount(unittest.TestCase):
                 ),
             ],
         )
-        smiles = ["C", "[H]C(-[H])(-[H])-[H]"]
+        smiles = ["C", "[H]C(-[H])(-[H])-[H]", "[2H]C(-[2H])(-[2H])-[2H]"]
         result = pipeline.fit_transform(smiles)
-        self.assertEqual(result.shape, (2, 1))
+        self.assertEqual(result.shape, (3, 1))
         expected = np.array(
             [
                 [4.0],  # methane: 4 H
                 [4.0],  # methane with explicit hydrogens: 4 H
+                [4.0],  # deuterated methane: 4 H
             ],
         )
         self.assertTrue(np.array_equal(result, expected))
