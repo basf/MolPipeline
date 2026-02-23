@@ -687,7 +687,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         n_folds: int = 5,
         mondrian: bool = False,
         nonconformity: (str | NonconformityFunctor | None) = None,
-        random_state: int | None = None,
+        random_state: Generator | int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize CrossConformalClassifier.
@@ -1246,7 +1246,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         difficulty_estimator: DifficultyEstimator | None = None,
         binning_bins: int = 10,
         nonconformity: (str | NonconformityFunctor | None) = None,
-        random_state: int | None = None,
+        random_state: Generator | int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize CrossConformalRegressor.
@@ -1309,11 +1309,12 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self.models_ = []
         self.cv_splits_ = []
 
+        seed = int(self.random_state.integers(np.iinfo(np.int32).max))
         splits = create_continuous_stratified_folds(
             np.asarray(y),
             n_splits=self.n_folds,
             n_groups=self.binning_bins,
-            random_state=self.random_state,
+            random_state=seed,
         )
 
         x_array = np.asarray(x)
