@@ -82,9 +82,11 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
         self.estimators_ = []
 
         splitter = self._get_splitter()
+        features = np.asarray(X)
         for train_idx, _ in splitter.split(X, y, groups):
+            target = np.asarray(y)[train_idx] if y is not None else None
             estimator = clone(self.base_estimator)
-            estimator.fit(X[train_idx], y[train_idx] if y is not None else None)  # type: ignore
+            estimator.fit(features[train_idx], target)  # type: ignore
             self.estimators_.append(estimator)
 
         return self

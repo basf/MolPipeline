@@ -182,6 +182,32 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
             self.assertTrue(np.array_equal(est.fit_args["X"], features[train_idx]))
             self.assertTrue(np.array_equal(est.fit_args["y"], y[train_idx]))
 
+    def test_fit_sample_forwarding_with_lists(self) -> None:
+        """Test that fit samples are correctly forwarded when X and y are lists.
+
+        Raises
+        ------
+        TypeError
+            If any of the fitted estimators is not an instance of MockEstimator.
+
+        """
+        features = [[i, i, i, i] for i in range(10)]
+        y = [float(i) for i in range(10)]
+        base = MockEstimator()
+        ensemble = SplitEnsembleRegressor(base_estimator=base, cv=2)
+        ensemble.fit(features, y)
+        self.assertEqual(len(ensemble.estimators_), 2)
+
+        features_arr = np.array(features)
+        y_arr = np.array(y)
+        kf = KFold(n_splits=2, shuffle=True, random_state=42)
+        splits = list(kf.split(features_arr, y_arr))
+        for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=True):
+            if not isinstance(est, MockEstimator):
+                raise TypeError("Expected an instance of MockEstimator")
+            self.assertTrue(np.array_equal(est.fit_args["X"], features_arr[train_idx]))
+            self.assertTrue(np.array_equal(est.fit_args["y"], y_arr[train_idx]))
+
 
 class TestSplitEnsembleClassifier(unittest.TestCase):
     """Unit tests for SplitEnsembleClassifier."""
@@ -227,11 +253,38 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
 
         kf = StratifiedKFold(n_splits=2, shuffle=True, random_state=42)
         splits = list(kf.split(features, y))
-        for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=False):
+        for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=True):
             if not isinstance(est, MockClassifier):
                 raise TypeError("Expected an instance of MockClassifier")
             self.assertTrue(np.array_equal(est.fit_args["X"], features[train_idx]))
             self.assertTrue(np.array_equal(est.fit_args["y"], y[train_idx]))
+
+    def test_fit_sample_forwarding_with_lists(self) -> None:
+        """Test that fit samples are correctly forwarded when X and y are lists.
+
+        Raises
+        ------
+        TypeError
+            If the fitted estimator is not an instance of MockClassifier.
+
+        """
+        features = [[i, i, i, i] for i in range(10)]
+        y = [i % 2 for i in range(10)]
+        base = MockClassifier()
+        ensemble = SplitEnsembleClassifier(base_estimator=base, cv=2)
+        ensemble.fit(features, y)
+        self.assertEqual(len(ensemble.estimators_), 2)
+
+        features_arr = np.array(features)
+        y_arr = np.array(y)
+        kf = StratifiedKFold(n_splits=2, shuffle=True, random_state=42)
+        splits = list(kf.split(features_arr, y_arr))
+        for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=True):
+            if not isinstance(est, MockClassifier):
+                raise TypeError("Expected an instance of MockClassifier")
+            # The estimator receives numpy arrays, so compare with arrays
+            self.assertTrue(np.array_equal(est.fit_args["X"], features_arr[train_idx]))
+            self.assertTrue(np.array_equal(est.fit_args["y"], y_arr[train_idx]))
 
     def test_predict_hard_voting(self) -> None:
         """Test that hard voting prediction returns the majority class."""
