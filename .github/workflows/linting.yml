@@ -219,4 +219,4 @@ jobs:
           uv sync --all-extras
       - name: Run unit-tests for notebooks
         run: |
-          uv run python test_notebooks/test_notebooks.py --continue-on-failure
+          uv run -m unittest test_notebooks/test_notebooks.py
