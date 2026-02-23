@@ -11,7 +11,7 @@ from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 NOTEBOOK_DIR = Path(__file__).parents[1] / "notebooks"
 
 # We mainly skip because some notebooks run too long.
-SKIP_NOTEBOOK_LIST = ["notebooks/advanced_01_hyperopt_on_bbbp.ipynb"]
+SKIP_NOTEBOOK_LIST = ["advanced_01_hyperopt_on_bbbp.ipynb"]
 
 
 def get_notebook_paths_from_dir(notebook_dir: Path) -> list[Path]:
@@ -75,7 +75,7 @@ class TestNotebooks(unittest.TestCase):
         """Test if all Jupyter notebooks run through with error code 0."""
         notebooks_paths_list = get_notebook_paths_from_dir(NOTEBOOK_DIR)
         for notebooks_path in notebooks_paths_list:
-            if str(notebooks_path) in SKIP_NOTEBOOK_LIST:
+            if notebooks_path.name in SKIP_NOTEBOOK_LIST:
                 logger.warning(f"Skipping notebook: {notebooks_path}")
                 continue
             with self.subTest(notebook=notebooks_path):
