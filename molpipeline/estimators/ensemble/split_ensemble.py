@@ -10,13 +10,17 @@ from sklearn.model_selection import BaseCrossValidator, KFold, StratifiedKFold
 from sklearn.utils.metaestimators import available_if
 from typing_extensions import override
 
+from molpipeline.utils.molpipeline_types import AnyPredictor
+
 
 class SplitEnsemble(abc.ABC, BaseEstimator):
     """Base class for ensemble models from sklearn splitters."""
 
+    estimators_: list[BaseEstimator | AnyPredictor]
+
     def __init__(
         self,
-        base_estimator: BaseEstimator,
+        base_estimator: BaseEstimator | AnyPredictor,
         cv: int | BaseCrossValidator = 5,
         **kwargs: Any,
     ) -> None:
@@ -53,7 +57,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
     @override
     def fit(
         self,
-        X: np.ArrayLike,
+        X: npt.ArrayLike,
         y: npt.NDArray[Any] | None = None,
         groups: npt.NDArray[Any] | None = None,
     ) -> Self:
@@ -80,13 +84,13 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
         splitter = self._get_splitter()
         for train_idx, _ in splitter.split(X, y, groups):
             estimator = clone(self.base_estimator)
-            estimator.fit(X[train_idx], y[train_idx] if y is not None else None)
+            estimator.fit(X[train_idx], y[train_idx] if y is not None else None)  # type: ignore
             self.estimators_.append(estimator)
 
         return self
 
     @override
-    def predict(self, X: np.ArrayLike) -> npt.NDArray[Any]:
+    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.
 
         Parameters
@@ -100,7 +104,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
             The predicted values.
 
         """
-        predictions = np.array([estimator.predict(X) for estimator in self.estimators_])
+        predictions = np.array([estimator.predict(X) for estimator in self.estimators_])  # type: ignore
         return np.mean(predictions, axis=0)
 
 
@@ -181,7 +185,7 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
 
     @available_if(_can_predict_proba)
     @override
-    def predict_proba(self, X: np.ArrayLike) -> npt.NDArray[Any]:
+    def predict_proba(self, X: npt.ArrayLike) -> npt.NDArray[Any]:
         """Predict class probabilities using the ensemble of estimators.
 
         Parameters
@@ -196,12 +200,12 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
 
         """
         predictions = np.array(
-            [estimator.predict_proba(X) for estimator in self.estimators_],
+            [estimator.predict_proba(X) for estimator in self.estimators_],  # type: ignore
         )
         return np.mean(predictions, axis=0)
 
     @override
-    def predict(self, X: np.ArrayLike) -> npt.NDArray[Any]:
+    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.
 
         Parameters
@@ -227,7 +231,7 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
                     "Estimators in the ensemble do not support probability prediction.",
                 )
             return np.argmax(self.predict_proba(X), axis=1)
-        predictions = np.array([estimator.predict(X) for estimator in self.estimators_])
+        predictions = np.array([estimator.predict(X) for estimator in self.estimators_])  # type: ignore
         return np.apply_along_axis(
             lambda x: np.bincount(x).argmax(),
             axis=0,
