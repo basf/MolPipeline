@@ -7,7 +7,7 @@ import nbformat
 from loguru import logger
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
-# list of directories containing notebooks
+# directory containing notebooks
 NOTEBOOK_DIR = Path(__file__).parents[1] / "notebooks"
 
 # We mainly skip because some notebooks run too long.
