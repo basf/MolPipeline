@@ -240,9 +240,20 @@ class TestConformalClassifier(BaseConformalTestData):
             random_state=RANDOM_SEED,
         )
 
+        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
+            x_train_clf,
+            y_train_clf,
+            test_size=0.25,
+            random_state=RANDOM_SEED,
+        )
+
         clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         ccp_clf = CrossConformalClassifier(clf, n_folds=2)
-        ccp_clf.fit(x_train_clf, y_train_clf).calibrate(x_train_clf, y_train_clf)
+        ccp_clf.fit(x_train_fit, y_train_fit)
+        ccp_clf.cv_splits_ = [
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
+        ] * len(ccp_clf.models_)
+        ccp_clf.calibrate(x_calib, y_calib)
 
         results_clf = ccp_clf.evaluate(x_test_clf, y_test_clf)
         expected_keys = {
@@ -513,9 +524,20 @@ class TestConformalClassifier(BaseConformalTestData):
             random_state=RANDOM_SEED,
         )
 
+        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
+            x_train,
+            y_train,
+            test_size=0.25,
+            random_state=RANDOM_SEED,
+        )
+
         clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         ccp = CrossConformalClassifier(clf, n_folds=2)
-        ccp.fit(x_train, y_train).calibrate(x_train, y_train)
+        ccp.fit(x_train_fit, y_train_fit)
+        ccp.cv_splits_ = [
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
+        ] * len(ccp.models_)
+        ccp.calibrate(x_calib, y_calib)
 
         preds = ccp.predict(x_test)
         probs = ccp.predict_proba(x_test)
@@ -535,7 +557,7 @@ class TestConformalClassifier(BaseConformalTestData):
         This is intentionally a light-weight behavioral test:
         - run a real `fit()` + `calibrate()`
         - assert the stored `cv_splits_` are preserved
-        - tamper with `cv_splits_` and ensure `calibrate()` fails (proves it uses the stored indices)
+        - tamper with `cv_splits_` and ensure `calibrate()` fails
         """
         x_train, _x_test, y_train, _y_test = train_test_split(
             self.x_clf,
@@ -564,7 +586,7 @@ class TestConformalClassifier(BaseConformalTestData):
         p_values = ccp.predict_p(x_train[:5])
         self.assertEqual(p_values.shape[0], 5)
 
-        # If `calibrate()` were to recompute splits internally, this tampering would be ignored.
+        # If `calibrate()` were to recompute splits internally, this would be ignored.
         bad_train_idx, _bad_calib_idx = ccp.cv_splits_[0]
         ccp.cv_splits_[0] = (
             bad_train_idx,
@@ -584,7 +606,17 @@ class TestConformalClassifier(BaseConformalTestData):
 
         clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         ccp = CrossConformalClassifier(clf, n_folds=2)
-        ccp.fit_and_calibrate(x_train, y_train)
+        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
+            x_train,
+            y_train,
+            test_size=0.25,
+            random_state=RANDOM_SEED,
+        )
+        ccp.fit(x_train_fit, y_train_fit)
+        ccp.cv_splits_ = [
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
+        ] * len(ccp.models_)
+        ccp.calibrate(x_calib, y_calib)
         sets_80 = ccp.predict_set(x_test, confidence=0.80)
         sets_95 = ccp.predict_set(x_test, confidence=0.95)
         size_80 = float(np.mean([np.sum(set_row) for set_row in sets_80]))
@@ -683,7 +715,7 @@ class TestConformalClassifier(BaseConformalTestData):
 
         Verifies that higher p-values lead to higher calibrated probabilities.
         In conformal prediction, a high p-value means the prediction is more conforming
-        (more likely), so it should result in higher calibrated probability. The antitonic
+        so it should result in higher calibrated probability. The antitonic
         mapping should preserve this monotonic relationship.
         """
         rng = np.random.default_rng(777)
@@ -724,7 +756,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertGreater(avg_prob_high_class0, avg_prob_low_class0)
 
     def test_cross_conformal_classifier_antitonic(self) -> None:
-        """Test basic functionality of antitonic calibration for CrossConformalClassifier."""
+        """Test basic functionality of antitonic calibration for CCC."""
         x_train, x_test, y_train, y_test = train_test_split(
             self.x_clf,
             self.y_clf,
@@ -735,7 +767,17 @@ class TestConformalClassifier(BaseConformalTestData):
         n_classes = len(np.unique(y_train))
         clf = RandomForestClassifier(random_state=42, n_estimators=5)
         model = CrossConformalClassifier(clf, n_folds=2)
-        model.fit(x_train, y_train).calibrate(x_train, y_train, calibrate_probs=True)
+        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
+            x_train,
+            y_train,
+            test_size=0.25,
+            random_state=RANDOM_SEED,
+        )
+        model.fit(x_train_fit, y_train_fit)
+        model.cv_splits_ = [
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
+        ] * len(model.models_)
+        model.calibrate(x_calib, y_calib, calibrate_probs=True)
 
         probs = model.predict_proba(x_test)
 
@@ -812,9 +854,19 @@ class TestConformalRegressor(BaseConformalTestData):
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]
         y_train, y_test = self.y_reg[train_idx], self.y_reg[test_idx]
+        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
+            x_train,
+            y_train,
+            test_size=0.25,
+            random_state=RANDOM_SEED,
+        )
         reg = RandomForestRegressor(random_state=RANDOM_SEED, n_estimators=5)
         ccp = CrossConformalRegressor(reg, n_folds=2)
-        ccp.fit(x_train, y_train).calibrate(x_train, y_train)
+        ccp.fit(x_train_fit, y_train_fit)
+        ccp.cv_splits_ = [
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
+        ] * len(ccp.models_)
+        ccp.calibrate(x_calib, y_calib)
         intervals = ccp.predict_int(x_test)
         for model in ccp.models_:
             model_intervals = model.predict_int(x_test)
@@ -833,9 +885,19 @@ class TestConformalRegressor(BaseConformalTestData):
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]
         y_train, _ = self.y_reg[train_idx], self.y_reg[test_idx]
+        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
+            x_train,
+            y_train,
+            test_size=0.25,
+            random_state=RANDOM_SEED,
+        )
         reg = RandomForestRegressor(random_state=RANDOM_SEED, n_estimators=5)
         ccp = CrossConformalRegressor(reg, n_folds=2)
-        ccp.fit_and_calibrate(x_train, y_train)
+        ccp.fit(x_train_fit, y_train_fit)
+        ccp.cv_splits_ = [
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
+        ] * len(ccp.models_)
+        ccp.calibrate(x_calib, y_calib)
         intervals_80 = ccp.predict_int(x_test, confidence=0.80)
         intervals_95 = ccp.predict_int(x_test, confidence=0.95)
         width_80 = float(np.mean(intervals_80[:, 1] - intervals_80[:, 0]))
@@ -872,8 +934,18 @@ class TestConformalRegressor(BaseConformalTestData):
             test_size=0.4,
             random_state=RANDOM_SEED,
         )
+        train_smiles_fit, calib_smiles, y_train_fit, y_calib = train_test_split(
+            train_smiles,
+            y_train,
+            test_size=0.25,
+            random_state=RANDOM_SEED,
+        )
 
-        conformal_pipeline.fit(train_smiles, y_train).calibrate(train_smiles, y_train)
+        conformal_pipeline.fit(train_smiles_fit, y_train_fit)
+        conformal_pipeline.cv_splits_ = [
+            (np.array([], dtype=int), np.arange(len(calib_smiles), dtype=int)),
+        ] * len(conformal_pipeline.models_)
+        conformal_pipeline.calibrate(calib_smiles, y_calib)
 
         preds = conformal_pipeline.predict(test_smiles)
         intervals = conformal_pipeline.predict_int(test_smiles)
@@ -892,7 +964,17 @@ class TestConformalRegressor(BaseConformalTestData):
         )
         reg = RandomForestRegressor(n_estimators=5, random_state=RANDOM_SEED)
         ccp = CrossConformalRegressor(reg, n_folds=2, random_state=RANDOM_SEED)
-        ccp.fit_and_calibrate(x_train, y_train)
+        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
+            x_train,
+            y_train,
+            test_size=0.25,
+            random_state=RANDOM_SEED,
+        )
+        ccp.fit(x_train_fit, y_train_fit)
+        ccp.cv_splits_ = [
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
+        ] * len(ccp.models_)
+        ccp.calibrate(x_calib, y_calib)
         original_preds = ccp.predict(x_test)
         original_intervals = ccp.predict_int(x_test)
 
@@ -945,9 +1027,19 @@ class TestConformalRegressor(BaseConformalTestData):
         (train_idx, test_idx) = splits[0]
         x_train, x_test = self.x_reg[train_idx], self.x_reg[test_idx]
         y_train, y_test = self.y_reg[train_idx], self.y_reg[test_idx]
+        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
+            x_train,
+            y_train,
+            test_size=0.25,
+            random_state=RANDOM_SEED,
+        )
         reg = RandomForestRegressor(random_state=RANDOM_SEED, n_estimators=5)
         ccp_reg = CrossConformalRegressor(reg, n_folds=2)
-        ccp_reg.fit(x_train, y_train).calibrate(x_train, y_train)
+        ccp_reg.fit(x_train_fit, y_train_fit)
+        ccp_reg.cv_splits_ = [
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
+        ] * len(ccp_reg.models_)
+        ccp_reg.calibrate(x_calib, y_calib)
         results_reg = ccp_reg.evaluate(x_test, y_test)
         expected_keys_reg = {
             "error_mean",
