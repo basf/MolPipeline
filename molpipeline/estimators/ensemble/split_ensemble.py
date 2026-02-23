@@ -20,7 +20,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
 
     def __init__(
         self,
-        base_estimator: BaseEstimator | AnyPredictor,
+        estimator: BaseEstimator | AnyPredictor,
         cv: int | BaseCrossValidator = 5,
         **kwargs: Any,
     ) -> None:
@@ -28,7 +28,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
 
         Parameters
         ----------
-        base_estimator : BaseEstimator
+        estimator : BaseEstimator
             The base estimator to be cloned for each split.
         cv : int, default=5
             The spliter to be used for creating the splits.
@@ -38,7 +38,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
             Additional keyword arguments to be passed to the base estimator.
 
         """
-        self.base_estimator = base_estimator
+        self.estimator = estimator
         self.cv = cv
         self.estimators_ = []
         self.set_params(**kwargs)
@@ -85,7 +85,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
         features = np.asarray(X)
         for train_idx, _ in splitter.split(X, y, groups):
             target = np.asarray(y)[train_idx] if y is not None else None
-            estimator = clone(self.base_estimator)
+            estimator = clone(self.estimator)
             estimator.fit(features[train_idx], target)  # type: ignore
             self.estimators_.append(estimator)
 
@@ -135,7 +135,7 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
 
     def __init__(
         self,
-        base_estimator: BaseEstimator,
+        estimator: BaseEstimator,
         cv: int | BaseCrossValidator = 5,
         voting: Literal["hard", "soft"] = "hard",
         **kwargs: Any,
@@ -144,7 +144,7 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
 
         Parameters
         ----------
-        base_estimator : BaseEstimator
+        estimator : BaseEstimator
             The base estimator to be cloned for each split.
         cv : int | BaseCrossValidator, default=5
             The spliter to be used for creating the splits.
@@ -160,7 +160,7 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
 
         """
         self.voting = voting
-        super().__init__(base_estimator=base_estimator, cv=cv, **kwargs)
+        super().__init__(estimator=estimator, cv=cv, **kwargs)
 
     def _get_splitter(self) -> BaseCrossValidator:
         """Return the splitter to be used for creating the splits.
