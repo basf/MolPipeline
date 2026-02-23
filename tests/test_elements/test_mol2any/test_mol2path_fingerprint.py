@@ -4,7 +4,7 @@ import unittest
 from typing import Any
 
 import numpy as np
-from sklearn.base import clone
+from sklearn import clone
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
@@ -24,7 +24,7 @@ class TestMol2PathFingerprint(unittest.TestCase):
     """Unittest for Mol2PathFP, which calculates the RDKit Path Fingerprint."""
 
     def test_clone(self) -> None:
-        """Test if the Mol2PathFP pipeline element can be cloned."""
+        """Test if the Mol2PathFP pipeline element can be constructed."""
         mol_fp = Mol2PathFP()
         mol_fp_copy = clone(mol_fp)
         self.assertTrue(mol_fp_copy is not mol_fp)

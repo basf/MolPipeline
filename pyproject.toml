@@ -89,10 +89,6 @@ select =  [
     "W",     # pycodestyle - warnings
 ]
 ignore = [
-    "ANN001",  # Missing type annotation for function argument `X`  # TO REMOVE
-    "ANN201",  # Missing return type annotation for public function  # TO REMOVE
-    "ANN202",  # Missing return type annotation for private function  # TO REMOVE
-    "ANN204",  #  Missing return type annotation for special method  # TO REMOVE
     "ANN401",  #  Allow  typing.Any
     "ARG002", #  Unused argument  # TO REMOVE
     "B008",   #  Do not perform function call `StandardScaler` in argument defaults  # TO REMOVE

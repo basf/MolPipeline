@@ -4,7 +4,7 @@ import unittest
 from typing import Any
 
 import numpy as np
-from sklearn.base import clone
+from sklearn import clone
 
 from molpipeline import Pipeline
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
@@ -22,7 +22,7 @@ test_smiles = [
 class TestMol2MorganFingerprint(unittest.TestCase):
     """Unittest for MolToFoldedMorganFingerprint."""
 
-    def test_can_be_constructed(self) -> None:
+    def test_clone(self) -> None:
         """Test the pipeline element can be constructed."""
         mol_fp = MolToMorganFP()
         mol_fp_copy = clone(mol_fp)
