@@ -18,6 +18,8 @@ from molpipeline.estimators.ensemble.split_ensemble import (
 class MockEstimator(BaseEstimator):
     """A mock estimator that records fit arguments and returns fixed predictions."""
 
+    fit_args: dict[str, npt.ArrayLike]
+
     def __init__(self, alpha: int = 0, beta: int = 0, gamma: int = 0) -> None:
         """Initialize the MockEstimator with dummy parameters.
 
@@ -76,7 +78,8 @@ class MockEstimator(BaseEstimator):
             Predicted values, which are all zeros for this mock estimator.
 
         """
-        return np.zeros(len(X), dtype=np.float64)
+        feature_arr = np.asarray(X)
+        return np.zeros(len(feature_arr), dtype=np.float64)
 
 
 class MockClassifier(MockEstimator):
@@ -100,7 +103,8 @@ class MockClassifier(MockEstimator):
             Predicted class labels.
 
         """
-        return np.array([x[0] % 2 for x in X])
+        feature_arr = np.asarray(X)
+        return np.array([x[0] % 2 for x in feature_arr], dtype=np.int64)
 
     def predict_proba(  # noqa: PLR6301
         self,
@@ -120,7 +124,8 @@ class MockClassifier(MockEstimator):
             1 has probability 0.3 for all samples.
 
         """
-        proba = np.zeros((len(X), 2))
+        feature_arr = np.asarray(X)
+        proba = np.zeros((len(feature_arr), 2))
         proba[:, 0] = 0.7
         proba[:, 1] = 0.3
         return proba
@@ -130,7 +135,14 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
     """Unit tests for SplitEnsembleRegressor."""
 
     def test_param_forwarding(self) -> None:
-        """Test that parameters are correctly forwarded to the base estimator."""
+        """Test that parameters are correctly forwarded to the base estimator.
+
+        Raises
+        ------
+        TypeError
+            If the base estimator is not an instance of MockEstimator.
+
+        """
         base = MockEstimator(alpha=1)
         ensemble = SplitEnsembleRegressor(
             base_estimator=base,
@@ -138,12 +150,22 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
             base_estimator__beta=2,
         )
         ensemble.set_params(base_estimator__gamma=3)
-        self.assertEqual(ensemble.base_estimator.alpha, 1)
-        self.assertEqual(ensemble.base_estimator.beta, 2)
-        self.assertEqual(ensemble.base_estimator.gamma, 3)
+        base_est = ensemble.base_estimator
+        if not isinstance(base_est, MockEstimator):
+            raise TypeError("Expected an instance of MockEstimator")
+        self.assertEqual(base_est.alpha, 1)
+        self.assertEqual(base_est.beta, 2)
+        self.assertEqual(base_est.gamma, 3)
 
     def test_fit_sample_forwarding(self) -> None:
-        """Test that fit samples are correctly forwarded to each base estimator."""
+        """Test that fit samples are correctly forwarded to each base estimator.
+
+        Raises
+        ------
+        TypeError
+            If any of the fitted estimators is not an instance of MockEstimator.
+
+        """
         features = np.array([[i, i, i, i] for i in range(10)])
         y = np.arange(10)
         base = MockEstimator()
@@ -154,7 +176,9 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
         # Reconstruct the expected splits using KFold
         kf = KFold(n_splits=2, shuffle=True, random_state=42)
         splits = list(kf.split(features, y))
-        for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=False):
+        for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=True):
+            if not isinstance(est, MockClassifier):
+                raise TypeError("Expected an instance of MockEstimator")
             self.assertTrue(np.array_equal(est.fit_args["X"], features[train_idx]))
             self.assertTrue(np.array_equal(est.fit_args["y"], y[train_idx]))
 
@@ -163,7 +187,14 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
     """Unit tests for SplitEnsembleClassifier."""
 
     def test_param_forwarding(self) -> None:
-        """Test that parameters are correctly forwarded to the base estimator."""
+        """Test that parameters are correctly forwarded to the base estimator.
+
+        Raises
+        ------
+        TypeError
+            If the base estimator is not an instance of MockClassifier.
+
+        """
         base = MockClassifier(alpha=1)
         ensemble = SplitEnsembleClassifier(
             base_estimator=base,
@@ -171,12 +202,22 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
             base_estimator__beta=2,
         )
         ensemble.set_params(base_estimator__gamma=3)
-        self.assertEqual(ensemble.base_estimator.alpha, 1)
-        self.assertEqual(ensemble.base_estimator.beta, 2)
-        self.assertEqual(ensemble.base_estimator.gamma, 3)
+        base_est = ensemble.base_estimator
+        if not isinstance(base_est, MockClassifier):
+            raise TypeError("Expected an instance of MockClassifier")
+        self.assertEqual(base_est.alpha, 1)
+        self.assertEqual(base_est.beta, 2)
+        self.assertEqual(base_est.gamma, 3)
 
     def test_fit_sample_forwarding(self) -> None:
-        """Test that fit samples are correctly forwarded to each base estimator."""
+        """Test that fit samples are correctly forwarded to each base estimator.
+
+        Raises
+        ------
+        TypeError
+            If the fitted estimator is not an instance of MockClassifier.
+
+        """
         features = np.array([[i, i, i, i] for i in range(10)])
         y = np.arange(10) % 2
         base = MockClassifier()
@@ -187,6 +228,8 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
         kf = StratifiedKFold(n_splits=2, shuffle=True, random_state=42)
         splits = list(kf.split(features, y))
         for est, (train_idx, _) in zip(ensemble.estimators_, splits, strict=False):
+            if not isinstance(est, MockClassifier):
+                raise TypeError("Expected an instance of MockClassifier")
             self.assertTrue(np.array_equal(est.fit_args["X"], features[train_idx]))
             self.assertTrue(np.array_equal(est.fit_args["y"], y[train_idx]))
 
