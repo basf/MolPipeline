@@ -22,6 +22,8 @@ rdlog.setLevel(RDLogger.CRITICAL)
 TEST_SMILES = ["NCCCO", "abc", "c1ccccc1"]
 EXPECTED_OUTPUT = ["NCCCO", None, "c1ccccc1"]
 
+TOLERANCE = 0.000001
+
 
 class NoneTest(unittest.TestCase):
     """Unittest for None Handling."""
@@ -108,6 +110,7 @@ class NoneTest(unittest.TestCase):
                 ("mol2physchem", mol2physchem),
                 ("remove_none", remove_none),
             ],
+            n_jobs=1,
         )
         pipeline2 = clone(pipeline)
         pipeline.fit(TEST_SMILES)
@@ -245,7 +248,7 @@ class NoneTest(unittest.TestCase):
         )
         pipeline2 = clone(pipeline)
 
-        self.assertRaises(ValueError, pipeline.fit, test_values)
+        pipeline.fit(test_values)
         self.assertRaises(ValueError, pipeline.transform, test_values)
         self.assertRaises(ValueError, pipeline2.fit_transform, test_values)
 

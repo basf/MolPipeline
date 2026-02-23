@@ -85,7 +85,6 @@ class ABCPipelineElement(abc.ABC):
     """Ancestor of all PipelineElements."""
 
     name: str
-    _requires_fitting: bool = False
     uuid: str
 
     def __init__(
@@ -128,8 +127,7 @@ class ABCPipelineElement(abc.ABC):
         for key, value in self._get_non_default_parameters().items():
             parm_list.append(f"{key}={value}")
         parm_str = ", ".join(parm_list)
-        repr_str = f"{self.__class__.__name__}({parm_str})"
-        return repr_str
+        return f"{self.__class__.__name__}({parm_str})"
 
     def __sklearn_tags__(self) -> Tags:
         """Return Tags for the Element.
@@ -241,12 +239,11 @@ class ABCPipelineElement(abc.ABC):
         """
         self._n_jobs = check_available_cores(n_jobs)
 
-    @property
-    def requires_fitting(self) -> bool:
-        """Return whether the object requires fitting or not."""
-        return self._requires_fitting
-
-    def fit(self, values: Any, labels: Any = None) -> Self:
+    def fit(
+        self,
+        values: Any,  # noqa: ARG002  # pylint: disable=unused-argument
+        labels: Any = None,  # noqa: ARG002  # pylint: disable=unused-argument
+    ) -> Self:
         """Fit object to input_values.
 
         Most objects might not need fitting, but it is implemented for
@@ -256,28 +253,8 @@ class ABCPipelineElement(abc.ABC):
         ----------
         values: Any
             List of molecule representations.
-        labels: Any
+        labels: Any, optional
             Optional label for fitting.
-
-        Returns
-        -------
-        Self
-            Fitted object.
-
-        """
-        _ = self.fit_transform(values, labels)
-        return self
-
-    def fit_to_result(self, values: Any) -> Self:  # pylint: disable=unused-argument
-        """Fit object to result of transformed values.
-
-        Fit object to the result of the transform function. This is useful for catching
-        invalid or removed molecules.
-
-        Parameters
-        ----------
-        values: Any
-            List of molecule representations.
 
         Returns
         -------
@@ -298,7 +275,7 @@ class ABCPipelineElement(abc.ABC):
         Parameters
         ----------
         values: Any
-            Apply transformation specified in transform_single to the value_list.
+            Apply transform_single to the value_list.
         labels: Any
             Optional label for fitting.
 
@@ -317,29 +294,14 @@ class ABCPipelineElement(abc.ABC):
         ----------
         values: Any
             Iterable of instances to be transformed.
-            Could be list of molecule representations (SMILES, Molecules, PhysChem
+            Could be list of molecule representations (SMILES, Molecules,
+            PhysChem
             vectors etc.).
 
         Returns
         -------
         Any
             Transformed input_values.
-
-        """
-
-    @abc.abstractmethod
-    def transform_single(self, value: Any) -> Any:
-        """Transform a single value.
-
-        Parameters
-        ----------
-        value: Any
-            Value to be transformed.
-
-        Returns
-        -------
-        Any
-            Transformed value.
 
         """
 
@@ -378,11 +340,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         return self._input_type
 
     @property
-    def is_fitted(self) -> bool:
-        """Return whether the object is fitted or not."""
-        return self._is_fitted
-
-    @property
     def output_type(self) -> str:
         """Return the output type."""
         return self._output_type
@@ -404,26 +361,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         """
         self.set_params(**parameters)
 
-    def fit_to_result(self, values: Any) -> Self:
-        """Fit object to result of transformed values.
-
-        Fit object to the result of the transform function. This is useful
-        catching invalid or removed molecules.
-
-        Parameters
-        ----------
-        values: Any
-            List of molecule representations.
-
-        Returns
-        -------
-        Self
-            Fitted object.
-
-        """
-        self._is_fitted = True
-        return super().fit_to_result(values)
-
     def fit_transform(
         self,
         values: Any,
@@ -434,7 +371,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         Parameters
         ----------
         values: Any
-            Apply transformation specified in transform_single to the value_list.
+            Apply transform_single to the value_list.
         labels: Any
             Optional label for fitting.
 
@@ -444,37 +381,8 @@ class TransformingPipelineElement(ABCPipelineElement):
             List of molecules in new representation.
 
         """
-        self._is_fitted = True
-        if self.requires_fitting:
-            pre_value_list = self.pretransform(values)
-            self.fit_to_result(pre_value_list)
-            output_list = self.finalize_list(pre_value_list)
-            if hasattr(self, "assemble_output"):
-                return self.assemble_output(output_list)
+        self.fit(values, labels)
         return self.transform(values)
-
-    def transform_single(self, value: Any) -> Any:
-        """Transform a single molecule to the new representation.
-
-        RemovedMolecule objects are passed without change.
-
-        Parameters
-        ----------
-        value: Any
-            Current representation of the molecule.
-
-        Returns
-        -------
-        Any
-            New representation of the molecule.
-
-        """
-        if isinstance(value, InvalidInstance):
-            return value
-        pre_value = self.pretransform_single(value)
-        if isinstance(pre_value, InvalidInstance):
-            return pre_value
-        return self.finalize_single(pre_value)
 
     def assemble_output(self, value_list: Iterable[Any]) -> Any:
         """Aggregate rows, which in most cases is just return the list.
@@ -496,44 +404,8 @@ class TransformingPipelineElement(ABCPipelineElement):
         return list(value_list)
 
     @abc.abstractmethod
-    def pretransform_single(self, value: Any) -> Any:
-        """Transform the instance, but skips parameters learned during fitting.
-
-        This is the first step for the full transformation. It is followed by the
-        finalize_single method and assemble output which collects all single
-        transformations. These functions are split as they need to be accessed
-        separately from outside the object.
-
-        Parameters
-        ----------
-        value: Any
-            Value to be pretransformed.
-
-        Returns
-        -------
-        Any
-            Pretransformed value.
-
-        """
-
-    def finalize_single(self, value: Any) -> Any:
-        """Apply parameters learned during fitting to a single instance.
-
-        Parameters
-        ----------
-        value: Any
-            Value obtained from pretransform_single.
-
-        Returns
-        -------
-        Any
-            Finalized value.
-
-        """
-        return value
-
     def pretransform(self, value_list: Iterable[Any]) -> list[Any]:
-        """Transform without using fitting specific parameters.
+        """Transform input_values according to object rules.
 
         Parameters
         ----------
@@ -546,31 +418,6 @@ class TransformingPipelineElement(ABCPipelineElement):
             Transformed input_values.
 
         """
-        parallel = Parallel(n_jobs=self.n_jobs)
-        output_values = parallel(
-            delayed(self.pretransform_single)(value) for value in value_list
-        )
-        return output_values
-
-    def finalize_list(self, value_list: Iterable[Any]) -> list[Any]:
-        """Transform list of values according to parameters learned during fitting.
-
-        Parameters
-        ----------
-        value_list:  Iterable[Any]
-            List of values to be transformed.
-
-        Returns
-        -------
-        list[Any]
-            List of transformed values.
-
-        """
-        parallel = Parallel(n_jobs=self.n_jobs)
-        output_values = parallel(
-            delayed(self.finalize_single)(value) for value in value_list
-        )
-        return output_values
 
     def transform(self, values: Any) -> Any:
         """Transform input_values according to object rules.
@@ -578,9 +425,9 @@ class TransformingPipelineElement(ABCPipelineElement):
         Parameters
         ----------
         values: Any
-            Iterable of instances to be transformed.
-            Could be list of molecule representations (SMILES, Molecules, PhysChem
-            vectors etc.).
+            Iterable of molecule representations (SMILES, MolBlocks RDKit Molecules,
+            PhysChem vectors etc.).
+            Input depends on the concrete PipelineElement.
 
         Returns
         -------
@@ -588,13 +435,92 @@ class TransformingPipelineElement(ABCPipelineElement):
             Transformed input_values.
 
         """
-        output_rows = self.pretransform(values)
-        output_rows = self.finalize_list(output_rows)
-        output = self.assemble_output(output_rows)
-        return output
+        output_values = self.pretransform(values)
+        return self.assemble_output(output_values)
 
 
-class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
+class SingleInstanceTransformerMixin(abc.ABC):
+    """Mixin for single instance processing."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize SingleInstanceTransformerMixin.
+
+        Parameters
+        ----------
+        args: Any
+            Arguments for the object.
+        kwargs: Any
+            Keyword arguments for the object.
+
+        """
+        super().__init__(*args, **kwargs)
+
+    def pretransform(self, value_list: Iterable[Any]) -> list[Any]:
+        """Transform input_values according to object rules.
+
+        Parameters
+        ----------
+        value_list: Iterable[Any]
+            Iterable of instances to be pretransformed.
+
+        Returns
+        -------
+        list[Any]
+            Transformed input_values.
+
+        """
+        parallel = Parallel(n_jobs=self.n_jobs)  # type: ignore[attr-defined]
+        return parallel(
+            delayed(self.pretransform_single)(value) for value in value_list
+        )
+
+    def transform_single(self, value: Any) -> Any:
+        """Transform a single molecule to the new representation.
+
+        RemovedMolecule objects are passed without change.
+
+        Parameters
+        ----------
+        value: Any
+            Current representation of the molecule.
+
+        Returns
+        -------
+        Any
+            New representation of the molecule.
+
+        """
+        if isinstance(value, InvalidInstance):
+            return value
+        return self.pretransform_single(value)
+
+    @abc.abstractmethod
+    def pretransform_single(self, value: Any) -> Any:
+        """Transform the instance.
+
+        This is the first step for the full transformation.
+        It is followed by the finalize_single method and assemble output which collects
+        all single transformations. These functions are split as they need to be
+        accessed separately from outside the object.
+
+        Parameters
+        ----------
+        value: Any
+            Value to be pretransformed.
+
+        Returns
+        -------
+        Any
+            Pretransformed value. (Skips applying parameters learned during fitting)
+
+        """
+
+
+class MolToMolPipelineElement(
+    SingleInstanceTransformerMixin,
+    TransformingPipelineElement,
+    abc.ABC,
+):
     """Abstract PipelineElement where input and outputs are molecules."""
 
     _input_type = "RDKitMol"
@@ -632,18 +558,22 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
             Transformed molecule if transformation was successful, else InvalidInstance.
 
         """
+        if isinstance(value, InvalidInstance):
+            return value
         try:
             return super().transform_single(value)
         except Exception as exc:
             if isinstance(value, Chem.Mol):
                 logger.error(
                     f"Failed to process: {Chem.MolToSmiles(value)} | "
-                    f"({self.name}) ({self.uuid})",
+                    f"({self.name}) "
+                    f"({self.uuid})",
                 )
             else:
                 logger.error(
                     f"Failed to process: {value} ({type(value)}) | "
-                    f"({self.name}) ({self.uuid})",
+                    f"({self.name}) "
+                    f"({self.uuid})",
                 )
             raise exc
 
@@ -666,7 +596,11 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         """
 
 
-class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
+class AnyToMolPipelineElement(
+    SingleInstanceTransformerMixin,
+    TransformingPipelineElement,
+    abc.ABC,
+):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
     _output_type = "RDKitMol"
@@ -709,14 +643,18 @@ class AnyToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         """
 
 
-class MolToAnyPipelineElement(TransformingPipelineElement, abc.ABC):
+class MolToAnyPipelineElement(
+    SingleInstanceTransformerMixin,
+    TransformingPipelineElement,
+    abc.ABC,
+):
     """Abstract PipelineElement which creates molecules from different inputs."""
 
     _input_type = "RDKitMol"
 
     @abc.abstractmethod
     def pretransform_single(self, value: RDKitMol) -> Any:
-        """Transform the molecule, but skip parameters learned during fitting.
+        """Transform the molecule.
 
         Parameters
         ----------

@@ -146,8 +146,7 @@ def color_tuple_to_colormap(
     half_to_one = col1 * linspace4d + col2 * (1 - linspace4d)
 
     # Creating new colormap from
-    color_map = ListedColormap(np.vstack([zero_to_half, half_to_one]))
-    return color_map
+    return ListedColormap(np.vstack([zero_to_half, half_to_one]))
 
 
 def to_png(data: bytes) -> Image.Image:
@@ -165,8 +164,7 @@ def to_png(data: bytes) -> Image.Image:
 
     """
     bio = io.BytesIO(data)
-    img = Image.open(bio)
-    return img
+    return Image.open(bio)
 
 
 def plt_to_pil(figure: plt.Figure) -> Image.Image:
@@ -186,8 +184,7 @@ def plt_to_pil(figure: plt.Figure) -> Image.Image:
     bio = io.BytesIO()
     figure.savefig(bio, format="png")
     bio.seek(0)
-    img = Image.open(bio)
-    return img
+    return Image.open(bio)
 
 
 def get_atom_coords_of_bond(
