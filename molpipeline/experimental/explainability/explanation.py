@@ -1,6 +1,5 @@
 """Module for explanation class."""
 
-import abc
 import dataclasses
 
 import numpy as np
@@ -10,7 +9,7 @@ from molpipeline.abstract_pipeline_elements.core import RDKitMol
 
 
 @dataclasses.dataclass(kw_only=True)
-class _AbstractMoleculeExplanation(abc.ABC):
+class _AbstractMoleculeExplanation:
     """Abstract class representing an explanation for a prediction for a molecule."""
 
     molecule: RDKitMol | None = None
