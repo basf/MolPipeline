@@ -45,7 +45,7 @@ repos:
           - json
 
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.398
+    rev: v1.1.408
     hooks:
       - id: pyright
         args: [-p, pyproject.toml]
