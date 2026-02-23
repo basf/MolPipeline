@@ -4,6 +4,7 @@ import unittest
 from typing import Any
 
 import numpy as np
+from sklearn import clone
 
 from molpipeline import Pipeline
 from molpipeline.any2mol import SmilesToMol
@@ -22,10 +23,10 @@ test_smiles = [
 class TestMolToMACCSFP(unittest.TestCase):
     """Unittest for MolToMACCSFP, which calculates MACCS Key Fingerprints."""
 
-    def test_can_be_constructed(self) -> None:
+    def test_clone(self) -> None:
         """Test if the MolToMACCSFP pipeline element can be constructed."""
         mol_fp = MolToMACCSFP()
-        mol_fp_copy = mol_fp.copy()
+        mol_fp_copy = clone(mol_fp)
         self.assertTrue(mol_fp_copy is not mol_fp)
         for key, value in mol_fp.get_params().items():
             self.assertEqual(value, mol_fp_copy.get_params()[key])
