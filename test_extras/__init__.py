@@ -1,1 +1,1 @@
-"""Captures all tests which require the extra dependencies."""
+"""Captures all tests which require extra dependencies."""
