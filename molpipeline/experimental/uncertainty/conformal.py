@@ -7,14 +7,14 @@ from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+from numpy.random import default_rng
 from crepes import WrapClassifier, WrapRegressor
 from crepes.extras import DifficultyEstimator, MondrianCategorizer
-from numpy.random import RandomState  # pylint: disable=no-name-in-module
+from numpy.random import Generator
 from scipy.stats import mode
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.isotonic import IsotonicRegression
 from sklearn.model_selection import StratifiedKFold
-from sklearn.utils import check_random_state
 
 from molpipeline.experimental.model_selection.splitter import (
     create_continuous_stratified_folds,
@@ -688,7 +688,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         n_folds: int = 5,
         mondrian: bool = False,
         nonconformity: (str | NonconformityFunctor | None) = None,
-        random_state: int | RandomState | None = None,
+        random_state: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize CrossConformalClassifier.
@@ -703,8 +703,8 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Whether to use Mondrian conformal prediction (default: False).
         nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use for all individual classifiers.
-        random_state : int | RandomState | None, optional
-            Random state for reproducibility (default: None).
+        random_state : int | None, optional
+            Seed for reproducibility (default: None).
         **kwargs : Any
             Additional keyword arguments.
 
@@ -712,7 +712,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.n_folds = n_folds
         self.mondrian = mondrian
-        self.random_state = check_random_state(random_state)
+        self.random_state: Generator = default_rng(random_state)
         self.models_: list[ConformalClassifier] = []
         self.cv_splits_: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]] = []
         self.n_classes_: int | None = None
@@ -1267,7 +1267,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use for all individual regressors.
         random_state : int | None, optional
-            Random state for reproducibility (default: None).
+            Seed for reproducibility (default: None).
         **kwargs : Any
             Additional keyword arguments.
 
@@ -1277,7 +1277,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self.mondrian = mondrian
         self.difficulty_estimator = difficulty_estimator
         self.binning_bins = binning_bins
-        self.random_state = random_state
+        self.random_state: Generator = default_rng(random_state)
         self.models_: list[ConformalRegressor] = []
         self.cv_splits_: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]] = []
 
