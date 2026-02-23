@@ -50,7 +50,7 @@ class MolToElementCount(MolToDescriptorPipelineElement):
             UUID of the PipelineElement.
 
         """
-        super().__init__(
+        super().__init__(  # pylint: disable=duplicate-code
             standardizer=standardizer,
             name=name,
             n_jobs=n_jobs,
