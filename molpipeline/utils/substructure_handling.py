@@ -12,7 +12,7 @@ from rdkit import Chem
 class AtomEnvironment:
     """A Class to store environment-information for fingerprint features."""
 
-    def __init__(self, environment_atoms: set[int]):
+    def __init__(self, environment_atoms: set[int]) -> None:
         """Initialize AtomEnvironment.
 
         Parameters
@@ -28,7 +28,12 @@ class AtomEnvironment:
 class CircularAtomEnvironment(AtomEnvironment):
     """A Class to store environment-information for morgan-fingerprint features."""
 
-    def __init__(self, central_atom: int, radius: int, environment_atoms: set[int]):
+    def __init__(
+        self,
+        central_atom: int,
+        radius: int,
+        environment_atoms: set[int],
+    ) -> None:
         """Initialize CircularAtomEnvironment.
 
         Parameters
@@ -61,7 +66,7 @@ class CircularAtomEnvironment(AtomEnvironment):
         Returns
         -------
         Self
-            Encoded the atoms which are within the radius of the central atom and are part of the feature.
+            Encoded the atoms which are within the radius of the central atom.
 
         """
         if radius == 0:

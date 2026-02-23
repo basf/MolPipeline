@@ -85,7 +85,6 @@ def fingerprint_shap_to_atomweights(
     )  # MyPy invariants make me do this.
     atom_weight_dict = assign_prediction_importance(bit_atom_env_dict, shap_mat)
     atom_weight_list = [
-        atom_weight_dict[a_idx] if a_idx in atom_weight_dict else 0
-        for a_idx in range(mol.GetNumAtoms())
+        atom_weight_dict.get(a_idx, 0) for a_idx in range(mol.GetNumAtoms())
     ]
     return atom_weight_list

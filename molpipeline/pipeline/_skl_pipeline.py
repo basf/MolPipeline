@@ -65,7 +65,7 @@ class Pipeline(_Pipeline):
         memory: str | joblib.Memory | None = None,
         verbose: bool = False,
         n_jobs: int = 1,
-    ):
+    ) -> None:
         """Initialize Pipeline.
 
         Parameters
@@ -95,9 +95,11 @@ class Pipeline(_Pipeline):
             n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
         ]
         for step in self.steps:
-            if isinstance(step[1], PostPredictionWrapper):
-                if isinstance(step[1].wrapped_estimator, FilterReinserter):
-                    error_replacer_list.append(step[1].wrapped_estimator)
+            if isinstance(step[1], PostPredictionWrapper) and isinstance(
+                step[1].wrapped_estimator,
+                FilterReinserter,
+            ):
+                error_replacer_list.append(step[1].wrapped_estimator)
         for error_replacer in error_replacer_list:
             error_replacer.select_error_filter(error_filter_list)
 
@@ -156,7 +158,7 @@ class Pipeline(_Pipeline):
     ) -> Iterable[_AggregatedPipelineStep]:
         """Iterate over all non post-processing steps.
 
-        Steps which are children of a ABCPipelineElement were aggregated to a MolPipeline.
+        Steps where children of a ABCPipelineElement are aggregated to a MolPipeline.
 
         Parameters
         ----------
@@ -185,9 +187,9 @@ class Pipeline(_Pipeline):
             if last_element is None:
                 last_element = step
                 continue
-            if not filter_passthrough:
-                yield last_element
-            elif step[2] is not None and step[2] != "passthrough":
+            if not filter_passthrough or (
+                step[2] is not None and step[2] != "passthrough"
+            ):
                 yield last_element
             last_element = step
 
@@ -195,9 +197,12 @@ class Pipeline(_Pipeline):
         if last_element is None:
             raise AssertionError("Pipeline needs to have at least one step!")
 
-        if with_final and last_element[2] is not None:
-            if last_element[2] != "passthrough":
-                yield last_element
+        if (
+            with_final
+            and last_element[2] is not None
+            and last_element[2] != "passthrough"
+        ):
+            yield last_element
 
     @property
     def _estimator_type(self) -> Any:
@@ -687,7 +692,8 @@ class Pipeline(_Pipeline):
                 iter_input = self._final_estimator.predict(iter_input, **params)
         else:
             raise AssertionError(
-                "Final estimator does not implement predict, hence this function should not be available.",
+                "Final estimator does not implement predict, hence this function "
+                "should not be available.",
             )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)
@@ -1006,7 +1012,8 @@ class Pipeline(_Pipeline):
             pass
 
         try:
-            # Only the _final_estimator is changed from the original implementation is changed in the following 2 lines
+            # Only the _final_estimator is changed from the original implementation is
+            # changed in the following 2 lines
             if (
                 self._final_estimator is not None
                 and self._final_estimator != "passthrough"
@@ -1078,7 +1085,8 @@ class Pipeline(_Pipeline):
 
             router.add(method_mapping=method_mapping, **{name: trans})
 
-        # Only the _non_post_processing_steps is changed from the original implementation is changed in the following line
+        # Only the _non_post_processing_steps is changed from the original
+        # implementation is changed in the following line
         final_name, final_est = self._non_post_processing_steps()[-1]
         if final_est is None or final_est == "passthrough":
             return router

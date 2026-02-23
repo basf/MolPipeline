@@ -37,7 +37,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         make_generic: bool = False,
         n_jobs: int = 1,
         linear_molecules_strategy: Literal["ignore", "own_cluster"] = "ignore",
-    ):
+    ) -> None:
         """Initialize Murcko scaffold clustering estimator.
 
         Parameters
@@ -102,7 +102,8 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
 
         elif self.linear_molecules_strategy == "own_cluster":
             # Create error filter for all errors except empty_mol_filter2
-            # This is needed to give linear molecules (empty scaffold) a valid cluster label
+            # This is needed to give linear molecules (empty scaffold) a valid cluster
+            # label
             filter_ele_list = [auto2mol, empty_mol_filter1, murcko_scaffold]
             if scaffold_generic_elem is not None:
                 filter_ele_list.append(scaffold_generic_elem)

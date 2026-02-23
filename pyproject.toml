@@ -88,10 +88,6 @@ select =  [
     "W",     # pycodestyle - warnings
 ]
 ignore = [
-    "ANN001",  # Missing type annotation for function argument `X`  # TO REMOVE
-    "ANN201",  # Missing return type annotation for public function  # TO REMOVE
-    "ANN202",  # Missing return type annotation for private function  # TO REMOVE
-    "ANN204",  #  Missing return type annotation for special method  # TO REMOVE
     "ANN401",  #  Allow  typing.Any
     "ARG002", #  Unused argument  # TO REMOVE
     "B008",   #  Do not perform function call `StandardScaler` in argument defaults  # TO REMOVE
@@ -101,7 +97,6 @@ ignore = [
     "D203", # incorrect-blank-line-before-class
     "D213", # blank-line-before-class-docstring
     "D418", # Function decorated with `@overload` shouldn't contain a docstring"  # TO REMOVE
-    "E501", # line-too-long # TO REMOVE
     "ERA001",  # Found commented-out code  # TO REMOVE
     "FA102",  # Missing `from __future__ import annotations`
     "FURB113", # Use `xxx.extend(...)` instead of repeatedly calling `xxx.append()  # TO REMOVE
@@ -135,18 +130,12 @@ ignore = [
     "RUF100",  #  Unused noqa  # TO REMOVE
     "S101",   # Use of `assert` detected  # TO REMOVE
     "S311",  #  suspicious-non-cryptographic-random-usage
-    "SIM102",  # Use a single `if` statement instead of nested `if` statements # TO REMOVE
-    "SIM103",  # Return the condition directly  # TO REMOVE
-    "SIM105",  #  Use `contextlib.suppress(RuntimeError)` instead of `try`-`except`-`pass`  # TO REMOVE
-    "SIM110",  # Use return any() instead of `for` loop  # TO REMOVE
-    "SIM114",  # Combine `if` branches  # TO REMOVE
-    "SIM117",  # Use a single `with` statement with multiple contexts instead of nested `with` statements  # TO REMOVE
-    "SIM401",  # Use `xxx` instead of an `if` block  # TO REMOVE
     "SLF001",  # Private member accessed  # TO REMOVE
     "UP007",   # Use `X | Y` for type annotations  # TO REMOVE
 ]
  [tool.ruff.lint.per-file-ignores]
  "*.ipynb" = [
+     "E501",
      "PLE1142",
      "F704",
      "T201"
