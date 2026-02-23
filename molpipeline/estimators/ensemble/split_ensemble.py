@@ -58,18 +58,18 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
     def fit(
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
-        y: npt.NDArray[Any] | None = None,
-        groups: npt.NDArray[Any] | None = None,
+        y: npt.ArrayLike | None = None,
+        groups: npt.ArrayLike | None = None,
     ) -> Self:
         """Fit the ensemble of estimators on the data.
 
         Parameters
         ----------
-        X : array-like
+        X : npt.ArrayLike
             The input data.
-        y : array-like, optional
+        y : npt.ArrayLikee, optional
             The target values.
-        groups : array-like, optional
+        groups : npt.ArrayLike, optional
             Group labels for the samples used while splitting the dataset into
             train/test.
 
