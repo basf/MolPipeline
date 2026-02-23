@@ -59,7 +59,7 @@ class TestNotebooks(unittest.TestCase):
         """
         logger.info(f"Running notebook: {notebook_path}")
 
-        with notebook_path.open() as f:
+        with notebook_path.open(encoding="UTF-8") as f:
             nb = nbformat.read(f, as_version=4)
 
         ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
