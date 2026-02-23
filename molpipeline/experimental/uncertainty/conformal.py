@@ -7,10 +7,9 @@ from typing import Any
 
 import numpy as np
 import numpy.typing as npt
-from numpy.random import default_rng
 from crepes import WrapClassifier, WrapRegressor
 from crepes.extras import DifficultyEstimator, MondrianCategorizer
-from numpy.random import Generator
+from numpy.random import Generator, default_rng
 from scipy.stats import mode
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.isotonic import IsotonicRegression
