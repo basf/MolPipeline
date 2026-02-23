@@ -122,9 +122,10 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
             The splitter to be used for creating the splits.
 
         """
-        if isinstance(self.cv, int):
-            return KFold(n_splits=self.cv, shuffle=True, random_state=42)
-        return self.cv
+        cv = self.cv
+        if isinstance(cv, int):
+            return KFold(n_splits=cv, shuffle=True, random_state=42)
+        return cv
 
 
 class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
@@ -168,9 +169,10 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
             The splitter to be used for creating the splits.
 
         """
-        if isinstance(self.cv, int):
-            return StratifiedKFold(n_splits=self.cv, shuffle=True, random_state=42)
-        return self.cv
+        cv = self.cv
+        if isinstance(cv, int):
+            return StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
+        return cv
 
     def _can_predict_proba(self) -> bool:
         """Check if all estimators in the ensemble support probability prediction.
