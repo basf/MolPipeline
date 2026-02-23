@@ -147,9 +147,10 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
             If an integer is provided, the splitter is a StratifiedKFold with the
             given number of splits.
         voting : Literal["hard"] | Literal["soft"], default="hard"
-            The voting strategy to use for prediction.
-            "hard" uses majority voting
-            "soft" uses the average predicted probabilities.
+            Voting strategy to use for the prediction.
+            The param "hard" results in majority voting.
+            The param "soft" returns the class with the highest average predicted
+            probability.
         kwargs : Any
             Additional keyword arguments to be passed to the base estimator.
 
