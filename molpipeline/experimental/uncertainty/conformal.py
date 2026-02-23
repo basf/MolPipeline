@@ -711,7 +711,10 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.n_folds = n_folds
         self.mondrian = mondrian
-        self.random_state: Generator = default_rng(random_state)
+        self.random_state: Generator = (random_state
+                                        if isinstance(random_state, Generator)
+                                        else default_rng(random_state)
+        )
         self.models_: list[ConformalClassifier] = []
         self.cv_splits_: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]] = []
         self.n_classes_: int | None = None
@@ -746,10 +749,11 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self.cv_splits_ = []
         self.n_classes_ = len(np.unique(y))
 
+        seed = int(self.random_state.integers(np.iinfo(np.int32).max))
         splitter = StratifiedKFold(
             n_splits=self.n_folds,
             shuffle=True,
-            random_state=self.random_state,
+            random_state=seed,
         )
 
         for train_idx, calib_idx in splitter.split(x, y):
@@ -1276,7 +1280,10 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self.mondrian = mondrian
         self.difficulty_estimator = difficulty_estimator
         self.binning_bins = binning_bins
-        self.random_state: Generator = default_rng(random_state)
+        self.random_state: Generator = (random_state
+                                        if isinstance(random_state, Generator)
+                                        else default_rng(random_state)
+        )
         self.models_: list[ConformalRegressor] = []
         self.cv_splits_: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]] = []
 
