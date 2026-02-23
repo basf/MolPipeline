@@ -48,7 +48,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         if standardizer == "default":
             standardizer = StandardScaler()
-        self._standardizer = standardizer
+        self._standardizer = standardizer  # type: ignore[assignment]
         if self._standardizer is not None:
             self._requires_fitting = True
         self._mean = None
