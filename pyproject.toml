@@ -28,6 +28,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+mordred = [
+    "mordredcommunity>=2.0.7",
+]
 chemprop = [
     "chemprop>=2.2.0,<2.3.0",
     "dvc>=3.64.1",

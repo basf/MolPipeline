@@ -1,0 +1,207 @@
+"""Pipeline element to calculate Mordred descriptors."""
+
+import copy
+import warnings
+from typing import Any, Literal, Self
+
+import numpy as np
+import numpy.typing as npt
+from loguru import logger
+
+try:
+    from mordred import Calculator, descriptors
+
+    # TODO also multiple of the default descriptors just fail for most basic molecules. Maybe remove them from the default list?
+    MORDRED_DESCRIPTOR_DICT = {
+        str(desc): desc for desc in Calculator(descriptors, ignore_3D=True).descriptors
+    }
+
+except ImportError:
+    warnings.warn(
+        "mordredcommunity not installed. MolToMordred will not work.",
+        ImportWarning,
+        stacklevel=2,
+    )
+    MORDRED_DESCRIPTOR_DICT = {}
+
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
+from molpipeline.abstract_pipeline_elements.mol2any import (
+    MolToDescriptorPipelineElement,
+)
+from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
+
+MORDRED_DESCRIPTORS = list(MORDRED_DESCRIPTOR_DICT.keys())
+DEFAULT_DESCRIPTORS = MORDRED_DESCRIPTORS
+
+
+class MolToMordred(MolToDescriptorPipelineElement):
+    """Pipeline element to calculate Mordred descriptors."""
+
+    _descriptor_list: list[str]
+
+    def __init__(
+        self,
+        descriptor_list: list[str] | None = None,
+        return_with_errors: bool = False,
+        standardizer: Literal["default"] | AnyTransformer | None = "default",
+        log_exceptions: bool = True,
+        name: str = "MolToMordred",
+        n_jobs: int = 1,
+        uuid: str | None = None,
+    ) -> None:
+        """Initialize the MolToMordred pipeline element.
+
+        Parameters
+        ----------
+        descriptor_list: list[str] | None
+            List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are
+            used.
+        return_with_errors: bool
+            If True, return descriptor vectors even if some descriptors failed to
+            calculate. Failed descriptors will be set to NaN.
+        standardizer: AnyTransformer | None
+            Standardizer to apply to the descriptor vectors. If None, no standardization
+            is applied. If "default", a StandardScaler is used.
+        log_exceptions: bool
+            If True, log exceptions that occur during descriptor calculation.
+        name: str
+            Name of the pipeline element.
+        n_jobs: int
+            Number of jobs to use for descriptor calculation.
+        uuid: str | None
+            UUID of the pipeline element.
+
+        """
+        self.descriptor_list = descriptor_list  # type: ignore
+        self._feature_names = self._descriptor_list
+        self._return_with_errors = return_with_errors
+        self._log_exceptions = log_exceptions
+        super().__init__(
+            standardizer=standardizer,
+            name=name,
+            n_jobs=n_jobs,
+            uuid=uuid,
+        )
+
+    @property
+    def n_features(self) -> int:
+        """Return the number of features."""
+        return len(self._descriptor_list)
+
+    @property
+    def descriptor_list(self) -> list[str]:
+        """Return a copy of the descriptor list. Alias of `feature_names`."""
+        return self._descriptor_list[:]
+
+    @descriptor_list.setter
+    def descriptor_list(self, descriptor_list: list[str] | None) -> None:
+        """Set the descriptor list.
+
+        Parameters
+        ----------
+        descriptor_list: list[str] | None
+            List of descriptor names to calculate. If None, DEFAULT_DESCRIPTORS are
+            used.
+
+        Raises
+        ------
+        ValueError
+            If an unknown descriptor name is used.
+        ValueError
+            If an empty descriptor_list is used.
+
+        """
+        if descriptor_list is None or descriptor_list is DEFAULT_DESCRIPTORS:
+            # if None or DEFAULT_DESCRIPTORS are used, set the default descriptors
+            self._descriptor_list = DEFAULT_DESCRIPTORS
+        elif len(descriptor_list) == 0:
+            raise ValueError(
+                "Empty descriptor_list is not allowed."
+                " Use None for default descriptors.",
+            )
+        else:
+            # check all user defined descriptors are valid
+            for descriptor_name in descriptor_list:
+                if descriptor_name not in MORDRED_DESCRIPTORS:
+                    raise ValueError(
+                        f"Unknown descriptor function with name: {descriptor_name}",
+                    )
+            self._descriptor_list = descriptor_list
+
+    def pretransform_single(
+        self,
+        value: RDKitMol,
+    ) -> npt.NDArray[np.float64] | InvalidInstance:
+        """Transform a single molecule to a descriptor vector.
+
+        Parameters
+        ----------
+        value: RDKitMol
+            RDKit molecule to transform.
+
+        Returns
+        -------
+        npt.NDArray[np.float64] | InvalidInstance
+            Descriptor vector for given molecule.
+            Failure is indicated by an InvalidInstance.
+
+        """
+        vec = np.full((len(self._descriptor_list),), np.nan)
+        for i, name in enumerate(self._descriptor_list):
+            descriptor_func = MORDRED_DESCRIPTOR_DICT[name]
+            try:
+                vec[i] = descriptor_func(value)
+            except Exception:  # pylint: disable=broad-except
+                if self._log_exceptions:
+                    logger.exception(f"Failed calculating descriptor: {name}")
+        if not self._return_with_errors and np.any(np.isnan(vec)):
+            return InvalidInstance(self.uuid, "NaN in descriptor vector", self.name)
+        return vec
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get the parameters of the pipeline element.
+
+        Parameters
+        ----------
+        deep: bool
+            If true create a deep copy of the parameters
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameter of the pipeline element.
+
+        """
+        parent_dict = dict(super().get_params(deep=deep))
+        if deep:
+            parent_dict["descriptor_list"] = copy.deepcopy(self._descriptor_list)
+            parent_dict["return_with_errors"] = copy.deepcopy(self._return_with_errors)
+            parent_dict["log_exceptions"] = copy.deepcopy(self._log_exceptions)
+        else:
+            parent_dict["descriptor_list"] = self._descriptor_list
+            parent_dict["return_with_errors"] = self._return_with_errors
+            parent_dict["log_exceptions"] = self._log_exceptions
+        return parent_dict
+
+    def set_params(self, **parameters: Any) -> Self:
+        """Set parameters.
+
+        Parameters
+        ----------
+        parameters: Any
+            Parameters to set
+
+        Returns
+        -------
+        Self
+            Self
+
+        """
+        parameters_shallow_copy = dict(parameters)
+        params_list = ["descriptor_list", "return_with_errors", "log_exceptions"]
+        for param_name in params_list:
+            if param_name in parameters:
+                setattr(self, f"_{param_name}", parameters[param_name])
+                parameters_shallow_copy.pop(param_name)
+        super().set_params(**parameters_shallow_copy)
+        return self
