@@ -4,9 +4,11 @@ from collections.abc import Iterator
 
 import numpy as np
 import numpy.typing as npt
+from sklearn.model_selection import BaseCrossValidator
+from typing_extensions import override
 
 
-class GroupAdditionSplit:
+class GroupAdditionSplit(BaseCrossValidator):
     """Add sequentially one group to the training set.
 
     The ordinal value of the groups is used to determine the order of addition.
@@ -48,10 +50,11 @@ class GroupAdditionSplit:
         self.n_skip = n_skip
         self.max_splits = max_splits
 
+    @override
     def split(
         self,
-        X: npt.ArrayLike,  # noqa: ARG002,N803  # pylint: disable=invalid-name,unused-argument
-        y: npt.ArrayLike | None = None,  # noqa: ARG002# pylint: disable=unused-argument
+        X: npt.ArrayLike,
+        y: npt.ArrayLike | None = None,
         groups: npt.ArrayLike | None = None,
     ) -> Iterator[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]]:
         """Get the group split.
