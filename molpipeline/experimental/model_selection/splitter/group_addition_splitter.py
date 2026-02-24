@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 
-class AddOneGroupSplit:
+class GroupAdditionSplit:
     """Add sequentially one group to the training set.
 
     Splitting strategy:

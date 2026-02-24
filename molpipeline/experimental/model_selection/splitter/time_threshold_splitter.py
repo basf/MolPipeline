@@ -8,8 +8,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from molpipeline.experimental.model_selection.splitter.add_one_group_split import (
-    AddOneGroupSplit,
+from molpipeline.experimental.model_selection.splitter.group_addition_splitter import (
+    GroupAdditionSplit,
 )
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 FinalThresholdStr = Literal["now", "Q1", "Q2", "Q3", "Q4"]
 
 
-class TimeThresholdSplitter(AddOneGroupSplit):
+class TimeThresholdSplitter(GroupAdditionSplit):
     """Split data based on time thresholds using AddOneGroupSplit strategy.
 
     This splitter converts time-based data into group indices and applies

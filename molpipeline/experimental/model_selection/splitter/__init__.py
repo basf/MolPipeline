@@ -1,7 +1,7 @@
 """Initialize module for data splitting."""
 
-from molpipeline.experimental.model_selection.splitter.add_one_group_split import (
-    AddOneGroupSplit,
+from molpipeline.experimental.model_selection.splitter.group_addition_splitter import (
+    GroupAdditionSplit,
 )
 from molpipeline.experimental.model_selection.splitter.group_shuffle_splitter import (
     GroupShuffleSplit,
@@ -13,7 +13,7 @@ from molpipeline.experimental.model_selection.splitter.time_threshold_splitter i
 )
 
 __all__ = [
-    "AddOneGroupSplit",
+    "GroupAdditionSplit",
     "GroupShuffleSplit",
     "SplitModeOption",
     "TimeThresholdSplitter",
