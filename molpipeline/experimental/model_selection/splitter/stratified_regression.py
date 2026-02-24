@@ -10,8 +10,12 @@ from sklearn.model_selection import StratifiedKFold
 from typing_extensions import override
 
 
-class StratifiedRegressionKFold(StratifiedKFold):
-    """Stratified K-Fold splitter for regression tasks using quantile-based binning."""
+class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-method
+    """Stratified K-Fold splitter for regression tasks using quantile-based binning.
+
+    The pylint disable comment catches a false positive coming from sklearn.
+
+    """
 
     def __init__(
         self,
