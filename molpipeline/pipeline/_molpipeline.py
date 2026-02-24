@@ -326,7 +326,7 @@ class _MolPipeline:
         iter_value = input_value
         for p_element in self._element_list:
             if isinstance(iter_value, RemovedInstance):
-                    return iter_value
+                return iter_value
             iter_value = p_element.transform_single(iter_value)
         del log_block
         return iter_value
