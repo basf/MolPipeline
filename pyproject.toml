@@ -90,9 +90,6 @@ select =  [
 ignore = [
     "ANN401",  #  Allow  typing.Any
     "ARG002", #  Unused argument  # TO REMOVE
-    "B008",   #  Do not perform function call `StandardScaler` in argument defaults  # TO REMOVE
-    "B024",   #  `xxx` is an abstract base class, but it has no abstract methods or properties  # TO REMOVE
-    "B027",   #  `xxx` is an empty method in an abstract base class, but has no abstract decorator  # TO REMOVE
     "DOC202", # Docstring should not have a returns section because the function doesn't return anything  # TO REMOVE
     "D203", # incorrect-blank-line-before-class
     "D213", # blank-line-before-class-docstring
