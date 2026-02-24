@@ -1,7 +1,9 @@
 """Classes and functions for detecting and handling None values."""
 
-from collections.abc import Iterable, Sequence
-from typing import Any, Generic, Self, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
+from uuid import uuid4
 
 import numpy as np
 import numpy.typing as npt
@@ -13,7 +15,11 @@ from molpipeline.abstract_pipeline_elements.core import (
     RemovedInstance,
     TransformingPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from molpipeline.utils.molpipeline_types import AnyVarSeq, TypeFixedVarSeq
 
 __all__ = ["ErrorFilter", "FilterReinserter", "_MultipleErrorFilter"]
 
@@ -445,13 +451,18 @@ class _MultipleErrorFilter:
             total -= len(error_filter.error_indices)
 
 
-class FilterReinserter(ABCPipelineElement, Generic[_T]):
+class FilterReinserter(Generic[_T]):
     """Fill None values with a Dummy value."""
 
     fill_value: _T
     error_filter_id: str
     _error_filter: ErrorFilter | None
     n_total: int
+
+    @property
+    def requires_fitting(self) -> bool:
+        """Whether this element requires fitting."""
+        return False
 
     def __init__(
         self,
@@ -477,7 +488,9 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             UUID of the pipeline element.
 
         """
-        super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
+        self.name = name
+        self.n_jobs = n_jobs
+        self.uuid = uuid if uuid is not None else str(uuid4())
         self.error_filter_id = error_filter_id
         self._error_filter = None
         self.fill_value = fill_value
@@ -536,7 +549,11 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             Parameter names mapped to their values.
 
         """
-        params = super().get_params(deep=deep)
+        params = {
+            "name": self.name,
+            "n_jobs": self.n_jobs,
+            "uuid": self.uuid,
+        }
         if deep:
             params["error_filter_id"] = str(self.error_filter_id)
             if self.fill_value is not None:
@@ -567,7 +584,12 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
             self.error_filter_id = str(parameter_copy.pop("error_filter_id"))
         if "fill_value" in parameter_copy:
             self.fill_value = parameter_copy.pop("fill_value")
-        super().set_params(**parameter_copy)
+        if "name" in parameter_copy:
+            self.name = parameter_copy.pop("name")
+        if "n_jobs" in parameter_copy:
+            self.n_jobs = int(parameter_copy.pop("n_jobs"))
+        if "uuid" in parameter_copy:
+            self.uuid = parameter_copy.pop("uuid")
         return self
 
     @property
@@ -622,6 +644,9 @@ class FilterReinserter(ABCPipelineElement, Generic[_T]):
         else:
             raise ValueError(f"ErrorFilter with id {self.error_filter_id} not found")
         return self
+
+    def finish(self) -> None:
+        """Finish fitting by checking that the ErrorFilter is set."""
 
     @staticmethod
     def _validate_input_values(values: TypeFixedVarSeq) -> None:

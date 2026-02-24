@@ -36,7 +36,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
         Parameters
         ----------
-        charge_method: MolToNetChargeMethod, optional (default="formal_charge")
+        charge_method: MolToNetChargeMethod, default="formal_charge"
             Policy how to compute the net charge of a molecule.
             Can be "formal_charge" which uses sum of the formal charges assigned to
             each atom. The setting "gasteiger" computes the Gasteiger partial
@@ -97,7 +97,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         if np.any(np.isnan(atoms_contributions)):
             return InvalidInstance(self.uuid, "NaN in Gasteiger charges", self.name)
         # sum up the charges and round to the nearest integer.
-        return np.round(np.sum(atoms_contributions, keepdims=True))
+        return np.round(np.sum(atoms_contributions, keepdims=True)).astype(np.float64)
 
     def pretransform_single(
         self,
