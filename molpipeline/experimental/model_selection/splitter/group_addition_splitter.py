@@ -103,10 +103,11 @@ class GroupAdditionSplit(BaseCrossValidator):
             test_idx = np.where(groups == group)[0]
             yield train_idx, test_idx
 
+    @override
     def get_n_splits(
         self,
-        X: npt.ArrayLike,  # noqa: ARG002,N803  # pylint: disable=invalid-name,unused-argument
-        y: npt.ArrayLike | None = None,  # noqa: ARG002# pylint: disable=unused-argument
+        X: npt.ArrayLike,
+        y: npt.ArrayLike | None = None,
         groups: npt.ArrayLike | None = None,
     ) -> int:
         """Get the number of splits.
