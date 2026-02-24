@@ -121,13 +121,13 @@ class PipelineTest(unittest.TestCase):
                 ("mol2smi", mol2smi),
             ],
         )
-        generated_smiles = salt_remover_pipeline.transform(smiles_with_salt_list)
-        for generated_smi, smiles_without_salt in zip(
-            generated_smiles,
+        generated_smiles_list = salt_remover_pipeline.transform(smiles_with_salt_list)
+        for generated_smiles, smiles_without_salt in zip(
+            generated_smiles_list,
             smiles_without_salt_list,
             strict=True,
         ):
-            self.assertEqual(generated_smi, smiles_without_salt)
+            self.assertEqual(generated_smiles, smiles_without_salt)
 
     def test_json_generation(self) -> None:
         """Test that the json representation of a pipeline can be loaded back.
@@ -562,6 +562,41 @@ class PipelineTest(unittest.TestCase):
             (len(test_smiles_only_faulty)),
         )
         self.assertTrue(np.isnan(predictions_series_only_faulty).all())
+
+    def test_transform_and_fit_transform_produce_same_results_with_error_handling(
+        self,
+    ) -> None:
+        """Test transform/fit_transform produce the same results with error handling.
+
+        There was an issue when the descriptor calculation fails for a molecule, then
+        the fit_transform method would be executed correctly, but the transform method
+        fails, because the Reinserter will be applied before the assembly step, leading
+        to shape mismatches in the numpy matrix construction.
+        """
+        error_filter = ErrorFilter(filter_everything=True)
+        error_replacer = FilterReinserter.from_error_filter(error_filter, np.nan)
+
+        pipeline = Pipeline(
+            [
+                ("smi2mol", SmilesToMol()),
+                ("physchem", MolToRDKitPhysChem(standardizer=None)),
+                ("error_filter", error_filter),
+                ("error_replacer", error_replacer),
+            ],
+        )
+
+        smiles = [
+            "CCC",
+            "C1=NC(N)=[Se]=C1",  # fails physchem calculation
+        ]
+
+        # Run pipeline
+        matrix_fit_transform = pipeline.fit_transform(smiles)
+        matrix_transform = pipeline.transform(smiles)
+
+        self.assertTrue(
+            np.allclose(matrix_fit_transform, matrix_transform, equal_nan=True),
+        )
 
 
 class PipelineCompatibilityTest(unittest.TestCase):
