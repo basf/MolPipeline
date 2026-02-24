@@ -204,7 +204,7 @@ jobs:
           # Run only the chemprop test suite.
           uv run coverage run --source=molpipeline,test_extras -m unittest discover test_extras
           # Create a coverage report. Fail if the coverage is below 85%. Include only chemprop files in the report.
-          uv run coverage report --fail-under=85 --include="*chemprop*","*file_loading*","test_extras/**"
+          uv run coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*,"*file_loading*","test_extras/**"
 
   test_notebooks:
     needs:
