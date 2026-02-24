@@ -1,8 +1,8 @@
 """Model selection module."""
 
+from molpipeline.experimental.model_selection import create_continuous_stratified_folds
 from molpipeline.experimental.model_selection.splitter import (
     GroupShuffleSplit,
-    create_continuous_stratified_folds,
 )
 from molpipeline.experimental.model_selection.splitter.group_addition_splitter import (
     GroupAdditionSplit,

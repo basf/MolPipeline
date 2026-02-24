@@ -6,6 +6,8 @@ from molpipeline.experimental.model_selection.splitter.group_addition_splitter i
 from molpipeline.experimental.model_selection.splitter.group_shuffle_splitter import (
     GroupShuffleSplit,
     SplitModeOption,
+)
+from molpipeline.experimental.model_selection.splitter.stratified_regression import (
     create_continuous_stratified_folds,
 )
 from molpipeline.experimental.model_selection.splitter.time_threshold_splitter import (
