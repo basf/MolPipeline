@@ -66,7 +66,8 @@ class StratifiedRegressionKFold(StratifiedKFold):
         """
         n_effective_groups = min(self.n_groups, len(np.unique(y)))
         rng = np.random.default_rng(self.random_state)
-        y_mod = np.asarray(y) + rng.random(len(y)) * 1e-9
+        y_mod = np.asarray(y)
+        y_mod += rng.random(len(y_mod)) * 1e-9
         # Use pandas qcut for quantile binning
         y_binned = pd.qcut(y_mod, n_effective_groups, labels=False, duplicates="drop")
 
