@@ -4,7 +4,7 @@
 
 import copy
 from collections.abc import Callable
-from typing import Any, Literal, Self
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt

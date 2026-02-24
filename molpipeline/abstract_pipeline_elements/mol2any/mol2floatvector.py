@@ -2,7 +2,6 @@
 
 import abc
 from collections.abc import Iterable
-from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
