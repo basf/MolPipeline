@@ -11,7 +11,7 @@ import pandas as pd
 from molpipeline.experimental.model_selection.splitter.group_addition_splitter import (
     GroupAdditionSplit,
 )
-from molpipeline.utils.time_utils import round_timestamp
+from molpipeline.utils.time_utils import floor_timestamp
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -173,7 +173,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             )
             for split in range(splits_per_year):
                 threshold = year_start - split * time_delta
-                threshold = round_timestamp(threshold, round_to)
+                threshold = floor_timestamp(threshold, round_to)
                 constructed_thresholds.append(threshold)
 
         return constructed_thresholds

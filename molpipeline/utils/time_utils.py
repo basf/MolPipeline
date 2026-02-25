@@ -5,11 +5,11 @@ from typing import Literal
 import pandas as pd
 
 
-def round_timestamp(
+def floor_timestamp(
     time_stamp: pd.Timestamp,
     round_to: Literal["day", "month", "hour"] | None,
 ) -> pd.Timestamp:
-    """Round a timestamp to the requested precision.
+    """Round a timestamp down to the requested precision.
 
     Parameters
     ----------
