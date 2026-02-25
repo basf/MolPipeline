@@ -1,6 +1,7 @@
 """Unit tests for AddOneGroupSplit splitter."""
 
 import unittest
+from itertools import product
 
 import numpy as np
 
@@ -65,6 +66,16 @@ class TestAddOneGroupSplit(unittest.TestCase):
 
         self._assert_splits_equal(splits, expected)
 
+        shuffled_groups = np.array([2, 0, 1, 0, 2, 1])
+        shuffled_splits = list(
+            splitter.split(X=np.ones_like(shuffled_groups), groups=shuffled_groups),
+        )
+        expected = [
+            (np.array([1, 3]), np.array([2, 5])),
+            (np.array([1, 2, 3, 5]), np.array([0, 4])),
+        ]
+        self._assert_splits_equal(shuffled_splits, expected)
+
     def test_n_skip(self) -> None:
         """Verify initial splits can be skipped via n_skip."""
         groups = np.array([0, 0, 1, 1, 2, 2, 3, 3])
@@ -88,12 +99,40 @@ class TestAddOneGroupSplit(unittest.TestCase):
 
         self._assert_splits_equal(splits, expected)
 
+        # Given the 4 groups and max_splits=1, n_skip<3 should yield the same split
+        for n_skip in range(3):
+            splitter = GroupAdditionSplit(max_splits=1, n_skip=n_skip)
+            splits = list(splitter.split(X=np.ones_like(groups), groups=groups))
+            self._assert_splits_equal(splits, expected)
+
     def test_no_test_data_raise_error(self) -> None:
         """Check get_n_splits accounts for n_skip and max_splits."""
         groups = np.array([0, 0, 1, 1])
         splitter = GroupAdditionSplit(n_skip=2)
         with self.assertRaisesRegex(ValueError, "Not enough groups to create"):
             list(splitter.split(X=np.ones_like(groups), groups=groups))
+
+        splitter = GroupAdditionSplit(max_splits=1, n_skip=2)
+        with self.assertRaisesRegex(ValueError, "Not enough groups to create"):
+            list(splitter.split(X=np.ones_like(groups), groups=groups))
+
+    def test_get_n_splits(self) -> None:
+        """Verify get_n_splits returns the correct number of splits."""
+        groups = np.array([0, 0, 1, 1, 2, 2, 3, 3])
+        unique_groups = np.unique(groups)
+
+        max_split_list = [None, 1, 2, 3, 4]
+        n_skip_list = [0, 1, 2, 3, 4]
+
+        for max_split, n_skip in product(max_split_list, n_skip_list):
+            splitter = GroupAdditionSplit(n_skip=n_skip, max_splits=max_split)
+            n_splits = splitter.get_n_splits(X=np.ones_like(groups), groups=groups)
+
+            if max_split is None:
+                self.assertEqual(n_splits, len(unique_groups) - n_skip)
+            else:
+                self.assertLessEqual(n_splits, max_split)
+                self.assertEqual(n_splits, min(len(unique_groups) - n_skip, max_split))
 
 
 if __name__ == "__main__":
