@@ -1,0 +1,118 @@
+"""Stratified K-Fold splitter for regression tasks using quantile-based binning."""
+
+from collections.abc import Iterator
+from typing import Any
+
+import numpy as np
+import pandas as pd
+from numpy import typing as npt
+from sklearn.model_selection import StratifiedKFold
+from typing_extensions import override
+
+
+class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-method
+    """Stratified K-Fold splitter for regression tasks using quantile-based binning.
+
+    The pylint disable comment catches a false positive coming from sklearn.
+
+    """
+
+    def __init__(
+        self,
+        n_splits: int = 5,
+        *,
+        n_groups: int = 10,
+        shuffle: bool = True,
+        random_state: int | None = None,
+    ) -> None:
+        """Initialize the StratifiedRegressionKFold.
+
+        Parameters
+        ----------
+        n_splits : int, default=5
+            Number of folds for cross-validation.
+        n_groups : int, default=10
+            Number of quantile groups to create for stratification.
+        shuffle : bool, default=True
+            Whether to shuffle the data before splitting into batches.
+        random_state : int | None, optional
+            Random state for reproducibility.
+
+        """
+        self.n_groups = n_groups
+        super().__init__(n_splits=n_splits, shuffle=shuffle, random_state=random_state)
+
+    @override
+    def split(
+        self,
+        X: npt.ArrayLike,
+        y: npt.ArrayLike,
+        groups: npt.ArrayLike | None = None,
+    ) -> Iterator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]:
+        """Generate indices to split data into training and test set.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            The model input data.
+        y : npt.ArrayLike
+            The target data.
+        groups : npt.ArrayLike | None, optional
+            The group data, by default None.
+
+        Yields
+        ------
+        npt.NDArray[np.int_]
+            The training indices.
+        npt.NDArray[np.int_]
+            The test indices.
+
+        """
+        n_effective_groups = min(self.n_groups, len(np.unique(y)))
+        rng = np.random.default_rng(self.random_state)
+        y_mod = np.asarray(y)
+        y_mod += rng.random(len(y_mod)) * 1e-9
+        # Use pandas qcut for quantile binning
+        y_binned = pd.qcut(y_mod, n_effective_groups, labels=False, duplicates="drop")
+
+        yield from super().split(y, y_binned)
+
+
+def create_continuous_stratified_folds(
+    y: npt.NDArray[Any],
+    n_splits: int,
+    n_groups: int = 10,
+    random_state: int | None = None,
+) -> list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]:
+    """Create stratified folds for continuous targets using quantile-based binning.
+
+    This method creates stratified cross-validation folds for regression by:
+    1. Binning continuous targets into quantile-based groups
+    2. Using stratified sampling to ensure balanced target distribution
+    3. Returning train/validation index pairs
+
+    Parameters
+    ----------
+    y : npt.NDArray[Any]
+        Continuous target values to stratify.
+    n_splits : int
+        Number of cross-validation folds.
+    n_groups : int, optional
+        Number of quantile groups to create for stratification (default: 10).
+    random_state : int | None, optional
+        Random state for reproducibility.
+
+    Returns
+    -------
+    list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]
+        List of (train_indices, validation_indices) tuples for each fold.
+
+    """
+    splitter = StratifiedRegressionKFold(
+        n_splits=n_splits,
+        n_groups=n_groups,
+        shuffle=True,
+        random_state=random_state,
+    )
+
+    return list(splitter.split(X=np.zeros(len(y)), y=y))
