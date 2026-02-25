@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 FinalThresholdStr = Literal["now", "Q1", "Q2", "Q3", "Q4"]
 
 
-class TimeThresholdSplitter(GroupAdditionSplit):
+class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-method
     """Split data based on time thresholds using AddOneGroupSplit strategy.
 
     This splitter converts time-based data into group indices and applies
