@@ -15,7 +15,7 @@ from typing_extensions import override
 SplitModeOption = Literal["groups", "samples"]
 
 
-class GroupShuffleSplit(BaseShuffleSplit):
+class GroupShuffleSplit(BaseShuffleSplit):  # pylint: disable=abstract-method
     """Creates a shuffle split while considering groups.
 
     This is a modified version of sklearn's GroupShuffleSplit which can control with

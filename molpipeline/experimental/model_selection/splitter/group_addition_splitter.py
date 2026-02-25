@@ -8,7 +8,7 @@ from sklearn.model_selection import BaseCrossValidator
 from typing_extensions import override
 
 
-class GroupAdditionSplit(BaseCrossValidator):
+class GroupAdditionSplit(BaseCrossValidator):  # pylint: disable=abstract-method
     """Add sequentially one group to the training set.
 
     The ordinal value of the groups is used to determine the order of addition.
@@ -106,7 +106,7 @@ class GroupAdditionSplit(BaseCrossValidator):
             yield train_idx, test_idx
 
     @override
-    def get_n_splits(
+    def get_n_splits(  # pylint: disable=signature-differs
         self,
         X: npt.ArrayLike,
         y: npt.ArrayLike | None = None,
