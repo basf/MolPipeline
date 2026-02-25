@@ -1,1 +1,1 @@
-"""Module for testing the extras packages."""
+"""Captures all tests which require extra dependencies."""
