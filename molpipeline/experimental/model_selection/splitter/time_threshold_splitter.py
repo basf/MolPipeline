@@ -11,6 +11,7 @@ import pandas as pd
 from molpipeline.experimental.model_selection.splitter.group_addition_splitter import (
     GroupAdditionSplit,
 )
+from molpipeline.utils.time_utils import round_timestamp
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -172,7 +173,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):
             )
             for split in range(splits_per_year):
                 threshold = year_start - split * time_delta
-                threshold = self._round_threshold(threshold, round_to)
+                threshold = round_timestamp(threshold, round_to)
                 constructed_thresholds.append(threshold)
 
         return constructed_thresholds
@@ -326,45 +327,3 @@ class TimeThresholdSplitter(GroupAdditionSplit):
 
         # Use parent class get_n_splits method with converted groups
         return super().get_n_splits(X=X, y=y, groups=group_indices)
-
-    @staticmethod
-    def _round_threshold(
-        threshold: pd.Timestamp,
-        round_to: Literal["day", "month", "hour"] | None,
-    ) -> pd.Timestamp:
-        """Round a timestamp to the requested precision.
-
-        Parameters
-        ----------
-        threshold : pd.Timestamp
-            Timestamp to round.
-        round_to : {"day", "month", "hour"} or None
-            Target precision. If ``None``, the timestamp is returned unchanged.
-
-        Returns
-        -------
-        pd.Timestamp
-            Rounded timestamp.
-
-        Raises
-        ------
-        ValueError
-            If round_to is not one of the valid options.
-
-        """
-        if round_to is not None and round_to not in {"day", "month", "hour"}:
-            raise ValueError(
-                f"round_to must be 'day', 'month', 'hour', or None, got '{round_to}'",
-            )
-
-        if round_to == "day":
-            return threshold.normalize()
-        if round_to == "hour":
-            return threshold.floor("h")
-        if round_to == "month":
-            return pd.Timestamp(
-                year=threshold.year,
-                month=threshold.month,
-                day=1,
-            )
-        return threshold
