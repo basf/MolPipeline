@@ -15,9 +15,10 @@ class GroupAdditionSplit(BaseCrossValidator):
     This means that the group with the lowest value is would be the first test set
     before it is added to the training set. Then the next lowest group serves as  test
     set before it is added to the training set. The parameter n_skip allows to skip a
-    certain number of  groups as test set, forming the initial training set. The highest
-    group is always used as test set, and the intermediate groups serve once as test
-    set, then join the training set.
+    certain number of groups as test set, forming the initial training set. The default
+    value for n_skip is 1, as is almost all cases a training set is required. The
+    highest group is always used as test set, and the intermediate groups serve once as
+    test set, then join the training set.
 
     To summarize the splitting strategy:
     - The groups are ordered by their ordinal value.
