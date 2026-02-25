@@ -18,6 +18,7 @@ class GroupAdditionSplit(BaseCrossValidator):
     certain number of  groups as test set, forming the initial training set. The highest
     group is always used as test set, and the intermediate groups serve once as test
     set, then join the training set.
+
     To summarize the splitting strategy:
     - The groups are ordered by their ordinal value.
     - Groups ≤ n_skip: Always in training set
