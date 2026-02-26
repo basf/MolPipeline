@@ -4,7 +4,7 @@
 
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Literal, Self, TypeVar, Union
+from typing import Any, Literal, Self
 
 import joblib
 import numpy as np
@@ -43,13 +43,12 @@ from molpipeline.utils.value_checks import is_empty
 __all__ = ["Pipeline"]
 
 # Type definitions
-_T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
 
 
 _IndexedStep = tuple[int, str, AnyElement]
 _AggStep = tuple[list[int], list[str], _MolPipeline]
-_AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
+_AggregatedPipelineStep = _IndexedStep | _AggStep
 
 
 class Pipeline(_Pipeline):
@@ -211,7 +210,7 @@ class Pipeline(_Pipeline):
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
             # pylint: disable=protected-access
-            return self._final_estimator._estimator_type
+            return self._final_estimator._estimator_type  # noqa: SLF001
         return None
 
     @property
