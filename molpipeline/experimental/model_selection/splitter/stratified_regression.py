@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from numpy import typing as npt
 from sklearn.model_selection import StratifiedKFold
-from typing_extensions import override
+from typing_extensions import deprecated, override
 
 
 class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-method
@@ -78,6 +78,7 @@ class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-me
         yield from super().split(y, y_binned)
 
 
+@deprecated
 def create_continuous_stratified_folds(
     y: npt.NDArray[Any],
     n_splits: int,
