@@ -587,8 +587,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         """
         output_rows = self.pretransform(values)
         output_rows = self.finalize_list(output_rows)
-        output = self.assemble_output(output_rows)
-        return output
+        return self.assemble_output(output_rows)
 
 
 class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):

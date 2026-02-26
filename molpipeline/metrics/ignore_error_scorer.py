@@ -36,10 +36,10 @@ def ignored_value_scorer(
     if isinstance(scorer, str):
         scorer = metrics.get_scorer(scorer)
 
-    score_func = scorer._score_func  # pylint: disable=protected-access
-    response_method = scorer._response_method  # pylint: disable=protected-access
-    scorer_kwargs = scorer._kwargs  # pylint: disable=protected-access
-    if scorer._sign < 0:  # pylint: disable=protected-access
+    score_func = scorer._score_func  # noqa: SLF001  # pylint: disable=protected-access
+    response_method = scorer._response_method  # noqa: SLF001  # pylint: disable=protected-access
+    scorer_kwargs = scorer._kwargs  # noqa: SLF001  # pylint: disable=protected-access
+    if scorer._sign < 0:  # noqa: SLF001  # pylint: disable=protected-access
         scorer_kwargs["greater_is_better"] = False
 
     def newscore(

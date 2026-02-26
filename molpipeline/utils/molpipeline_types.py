@@ -9,7 +9,6 @@ from typing import (
     Self,
     TypeAlias,
     TypeVar,
-    Union,
 )
 
 import numpy as np
@@ -20,6 +19,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     OptionalMol,
     RDKitMol,
 )
+from molpipeline.error_handling import FilterReinserter
 
 __all__ = [
     "AnyElement",
@@ -188,10 +188,11 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         """
 
 
-AnyElement = Union[
-    AnyTransformer,
-    AnyPredictor,
-    ABCPipelineElement,
-    Literal["passthrough"],
-]
+AnyElement = (
+    AnyTransformer
+    | AnyPredictor
+    | ABCPipelineElement
+    | Literal["passthrough"]
+    | FilterReinserter[Any]
+)
 AnyStep = tuple[str, AnyElement]
