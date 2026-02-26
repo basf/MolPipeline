@@ -58,6 +58,14 @@ class TestStratifiedRegressionKFold(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, expected_error_msg):
             list(splitter.split(x, y))
 
+    def test_many_identical_y_values(self) -> None:
+        """Test that the splitter can handle many identical y values."""
+        y = np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0] + [3.0] * 100)
+        x = np.random.default_rng(42).random((106, 2))
+        splitter = StratifiedRegressionKFold(n_splits=5, n_groups=3)
+        splits = list(splitter.split(x, y))
+        self.assertEqual(len(splits), 5)
+
     def test_nan_handling(self) -> None:
         """Test that NaN values in y are handled appropriately."""
         y = np.array([1.0, 2.0, np.nan, 4.0, 5.0])
