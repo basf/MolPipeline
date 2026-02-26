@@ -106,7 +106,7 @@ def get_trainer_path(trainer: pl.Trainer) -> str | None:
         None if the path is the current path.
 
     """
-    curr_path = str(Path().resolve())
+    curr_path = str(Path.cwd())
     trainer_path: str | None = trainer.default_root_dir
     if trainer_path == curr_path:
         trainer_path = None
@@ -139,7 +139,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
     else:
         enable_progress_model_summary = False
 
-    trainer_dict = {
+    return {
         "accelerator": get_device(trainer),
         "strategy": "auto",  # trainer.strategy, # collides with accelerator
         "devices": "auto",  # trainer._accelerator_connector._devices_flag does not work
@@ -180,7 +180,6 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,  # type: ignore[attr-defined]
         "default_root_dir": get_trainer_path(trainer),
     }
-    return trainer_dict
 
 
 def get_non_default_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
@@ -198,9 +197,8 @@ def get_non_default_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
 
     """
     trainer_dict = get_params_trainer(trainer)
-    non_default_values = {
+    return {
         key: value
         for key, value in trainer_dict.items()
         if key not in TRAINER_DEFAULT_PARAMS or value != TRAINER_DEFAULT_PARAMS[key]
     }
-    return non_default_values
