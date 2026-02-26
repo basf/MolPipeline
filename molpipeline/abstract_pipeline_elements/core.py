@@ -4,7 +4,7 @@ import abc
 import copy
 import inspect
 from collections.abc import Iterable
-from typing import Any, NamedTuple, Self, Union
+from typing import Any, NamedTuple, Self
 from uuid import uuid4
 
 from joblib import Parallel, delayed
@@ -49,7 +49,7 @@ class InvalidInstance(NamedTuple):
         )
 
 
-OptionalMol = Union[RDKitMol, InvalidInstance]
+OptionalMol = RDKitMol | InvalidInstance
 
 
 class RemovedInstance:  # pylint: disable=too-few-public-methods
@@ -128,8 +128,7 @@ class ABCPipelineElement(abc.ABC):
         for key, value in self._get_non_default_parameters().items():
             parm_list.append(f"{key}={value}")
         parm_str = ", ".join(parm_list)
-        repr_str = f"{self.__class__.__name__}({parm_str})"
-        return repr_str
+        return f"{self.__class__.__name__}({parm_str})"
 
     def __sklearn_tags__(self) -> Tags:
         """Return Tags for the Element.
@@ -547,10 +546,9 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
         parallel = Parallel(n_jobs=self.n_jobs)
-        output_values = parallel(
+        return parallel(
             delayed(self.pretransform_single)(value) for value in value_list
         )
-        return output_values
 
     def finalize_list(self, value_list: Iterable[Any]) -> list[Any]:
         """Transform list of values according to parameters learned during fitting.
@@ -567,10 +565,7 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
         parallel = Parallel(n_jobs=self.n_jobs)
-        output_values = parallel(
-            delayed(self.finalize_single)(value) for value in value_list
-        )
-        return output_values
+        return parallel(delayed(self.finalize_single)(value) for value in value_list)
 
     def transform(self, values: Any) -> Any:
         """Transform input_values according to object rules.
@@ -590,8 +585,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         """
         output_rows = self.pretransform(values)
         output_rows = self.finalize_list(output_rows)
-        output = self.assemble_output(output_rows)
-        return output
+        return self.assemble_output(output_rows)
 
 
 class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
