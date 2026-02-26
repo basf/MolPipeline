@@ -210,7 +210,7 @@ class Pipeline(_Pipeline):
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
             # pylint: disable=protected-access
-            return self._final_estimator._estimator_type
+            return self._final_estimator._estimator_type  # noqa: SLF001
         return None
 
     @property

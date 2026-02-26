@@ -171,9 +171,9 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "deterministic": torch.are_deterministic_algorithms_enabled(),
         "benchmark": torch.backends.cudnn.benchmark,
         "inference_mode": trainer.predict_loop.inference_mode,
-        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # pylint: disable=protected-access  # noqa: E501
+        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # noqa: SLF001,E501  # pylint: disable=protected-access
         # "profiler": trainer.profiler,  # type: ignore[attr-defined]
-        "detect_anomaly": trainer._detect_anomaly,  # pylint: disable=protected-access
+        "detect_anomaly": trainer._detect_anomaly,  # noqa: SLF001  # pylint: disable=protected-access
         "barebones": trainer.barebones,
         # "plugins": trainer.plugins,  # can not be exctracted
         # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related  # noqa: E501
