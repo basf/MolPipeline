@@ -35,3 +35,34 @@ class TestStratifiedRegressionKFold(unittest.TestCase):
             # Ensure that all counts are 2
             expected_counts = np.full(10, 2)
             self.assertTrue(np.array_equal(counts, expected_counts))
+
+    def test_get_n_splits(self) -> None:
+        """Test that the get_n_splits method returns the correct number of splits."""
+        splitter = StratifiedRegressionKFold(n_splits=42, n_groups=10)
+        self.assertEqual(splitter.get_n_splits(), 42)
+
+    def test_error_too_few_unique_y_values(self) -> None:
+        """Test that a Error is raised if n_groups is too large for y.
+
+        There can be at most as many groups as there are unique target values, otherwise
+        the stratification cannot be performed.
+
+        """
+        y = np.array([1.0, 2.0, 3.0, 1.0, 2.0, 3.0])
+        x = np.random.default_rng(42).random((6, 2))
+        splitter = StratifiedRegressionKFold(n_splits=2, n_groups=10)
+        expected_error_msg = (
+            r"n_groups \(10\) is greater than the number of unique "
+            r"target values \(3\)"
+        )
+        with self.assertRaisesRegex(ValueError, expected_error_msg):
+            list(splitter.split(x, y))
+
+    def test_nan_handling(self) -> None:
+        """Test that NaN values in y are handled appropriately."""
+        y = np.array([1.0, 2.0, np.nan, 4.0, 5.0])
+        x = np.random.default_rng(42).random((5, 2))
+        splitter = StratifiedRegressionKFold(n_splits=2, n_groups=3)
+        expected_error_msg = "Input y contains NaN"
+        with self.assertRaisesRegex(ValueError, expected_error_msg):
+            list(splitter.split(x, y))

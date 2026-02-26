@@ -67,18 +67,28 @@ class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-me
         npt.NDArray[np.int_]
             The test indices.
 
+        Raises
+        ------
+        ValueError
+            If n_groups is greater than the number of unique target values.
+
         """
-        n_effective_groups = min(self.n_groups, len(np.unique(y)))
-        rng = np.random.default_rng(self.random_state)
-        y_mod = np.asarray(y)
-        y_mod += rng.random(len(y_mod)) * 1e-9
-        # Use pandas qcut for quantile binning
-        y_binned = pd.qcut(y_mod, n_effective_groups, labels=False, duplicates="drop")
+        n_groups = self.n_groups
+        y = np.asarray(y, dtype=np.float64)
+        if self.n_groups > len(np.unique(y)):
+            raise ValueError(
+                f"n_groups ({self.n_groups}) is greater than the number of unique "
+                f"target values ({len(np.unique(y))})!",
+            )
 
-        yield from super().split(y, y_binned)
+        y_binned = pd.qcut(y, n_groups, labels=False, duplicates="drop")
+
+        yield from super().split(X, y_binned)
 
 
-@deprecated
+@deprecated(
+    "Use the StratifiedRegressionKFold class directly instead of this helper function.",
+)
 def create_continuous_stratified_folds(
     y: npt.NDArray[Any],
     n_splits: int,
