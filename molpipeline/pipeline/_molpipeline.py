@@ -5,12 +5,10 @@ from typing import Any, Self
 
 import numpy as np
 from joblib import Parallel, delayed
-from rdkit.Chem.rdchem import MolSanitizeException
 from rdkit.rdBase import BlockLogs
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
-    InvalidInstance,
     RemovedInstance,
     TransformingPipelineElement,
 )
@@ -327,16 +325,9 @@ class _MolPipeline:
         log_block = BlockLogs()
         iter_value = input_value
         for p_element in self._element_list:
-            try:
-                if isinstance(iter_value, RemovedInstance):
-                    return iter_value
-                iter_value = p_element.transform_single(iter_value)
-            except MolSanitizeException as err:
-                iter_value = InvalidInstance(
-                    p_element.uuid,
-                    f"RDKit MolSanitizeException: {err.args}",
-                    p_element.name,
-                )
+            if isinstance(iter_value, RemovedInstance):
+                return iter_value
+            iter_value = p_element.transform_single(iter_value)
         del log_block
         return iter_value
 

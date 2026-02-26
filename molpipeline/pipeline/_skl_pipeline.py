@@ -94,12 +94,15 @@ class Pipeline(_Pipeline):
         error_filter_list = [
             n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
         ]
-        for step in self.steps:
-            if isinstance(step[1], PostPredictionWrapper) and isinstance(
+        error_replacer_list.extend(
+            step[1].wrapped_estimator
+            for step in self.steps
+            if isinstance(step[1], PostPredictionWrapper)
+            and isinstance(
                 step[1].wrapped_estimator,
                 FilterReinserter,
-            ):
-                error_replacer_list.append(step[1].wrapped_estimator)
+            )
+        )
         for error_replacer in error_replacer_list:
             error_replacer.select_error_filter(error_filter_list)
 

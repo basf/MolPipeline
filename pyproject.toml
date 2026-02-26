@@ -103,8 +103,6 @@ ignore = [
     "N813",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
     "PGH003",  # Blanket type ignore for types
     "PGH004",  # Use specific rule codes when using `noqa`  # TO REMOVE
-    "PERF203",  # `try`-`except` within a loop incurs performance overhead  # TO REMOVE
-    "PERF401", # Use a list comprehension to create a transformed list  # TO REMOVE
     "PLC1901", # `rest == ""` can be simplified to `not rest` as an empty string is falsey  # TO REMOVE
     "PLR0911", # Too many return statements (8 > 6)  # TO REMOVE
     "PLR0912", # Too many branches (19 > 12)  # TO REMOVE
