@@ -96,18 +96,14 @@ ignore = [
     "D213", # blank-line-before-class-docstring
     "D418", # Function decorated with `@overload` shouldn't contain a docstring"  # TO REMOVE
     "ERA001",  # Found commented-out code  # TO REMOVE
-    "FA102",  # Missing `from __future__ import annotations`
     "FURB113", # Use `xxx.extend(...)` instead of repeatedly calling `xxx.append()  # TO REMOVE
-    "FURB177", #  Prefer `Path.cwd()` over `Path().resolve()  # TO REMOVE
     "N803",  #  Argument name should be lowercase  # TO REMOVE
     "N806",  #  Variable in function should be lowercase  # TO REMOVE
     "N813",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
     "PGH003",  # Blanket type ignore for types
-    "PGH004",  # Use specific rule codes when using `noqa`  # TO REMOVE
     "PERF203",  # `try`-`except` within a loop incurs performance overhead  # TO REMOVE
     "PERF401", # Use a list comprehension to create a transformed list  # TO REMOVE
     "PLC1901", # `rest == ""` can be simplified to `not rest` as an empty string is falsey  # TO REMOVE
-    "PLR0911", # Too many return statements (8 > 6)  # TO REMOVE
     "PLR0912", # Too many branches (19 > 12)  # TO REMOVE
     "PLR0913", # too-many-arguments
     "PLR0914", # too-many-locals    # TO REMOVE
@@ -119,17 +115,13 @@ ignore = [
     "PLW3201", #  Dunder method `xxxx` has no special meaning  # TO REMOVE
     "PTH123",  # `open()` should be replaced by `Path.open()`  # TO REMOVE
     "PTH201",  # Do not pass the current directory explicitly to `Path`  # TO REMOVE
-    "PYI018",  # Private TypeVar `_T` is never used  # TO REMOVE
     "PYI056",  # Calling `.append()` on `__all__` may not be supported by all type checkers # TO REMOVE
-    "RET504",  # Unnecessary assignment  # TO REMOVE
     "RUF005",  # Consider iterable unpacking instead of concatenation  # TO REMOVE
     "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`  # TO REMOVE
     "RUF067",  # `__init__` module should only contain docstrings and re-exports
     "RUF100",  #  Unused noqa  # TO REMOVE
     "S101",   # Use of `assert` detected  # TO REMOVE
     "S311",  #  suspicious-non-cryptographic-random-usage
-    "SLF001",  # Private member accessed  # TO REMOVE
-    "UP007",   # Use `X | Y` for type annotations  # TO REMOVE
 ]
  [tool.ruff.lint.per-file-ignores]
  "*.ipynb" = [
@@ -142,7 +134,8 @@ ignore = [
      "S101",
      "S404",
      "S603",
-     "S607"
+     "S607",
+     "SLF001",  # Private member accessed
  ]
 
 [tool.ruff.lint.pylint]

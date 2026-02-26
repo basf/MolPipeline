@@ -4,7 +4,7 @@
 
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Literal, Self, TypeVar
+from typing import Any, Literal, Self
 
 import joblib
 import numpy as np
@@ -43,7 +43,6 @@ from molpipeline.utils.value_checks import is_empty
 __all__ = ["Pipeline"]
 
 # Type definitions
-_T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
 
 
@@ -211,7 +210,7 @@ class Pipeline(_Pipeline):
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
             # pylint: disable=protected-access
-            return self._final_estimator._estimator_type
+            return self._final_estimator._estimator_type  # noqa: SLF001
         return None
 
     @property
