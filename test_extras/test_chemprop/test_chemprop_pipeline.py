@@ -17,6 +17,7 @@ from molpipeline.error_handling import ErrorFilter, FilterReinserter
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import BondMessagePassing
 from molpipeline.estimators.chemprop.metric_wrapper import BCELoss
+from molpipeline.estimators.ensemble.split_ensemble import SplitEnsembleClassifier
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
@@ -478,6 +479,30 @@ class TestClassificationPipeline(unittest.TestCase):
         self.assertEqual(
             predicted_proba_array.shape,
             (len(self.molecule_net_bbbp_df["smiles"].tolist()), 2),
+        )
+
+    def test_split_ensemble_classifier(self) -> None:
+        """Test if the pipeline can be used with a SplitEnsembleClassifier.
+
+        To ensure compatibility with SplitEnsemble classes which use joblib for
+        parallelization.
+
+        """
+        ensemble_pipeline = SplitEnsembleClassifier(
+            estimator=get_classification_pipeline(),
+            cv=2,
+        )
+        ensemble_pipeline.fit(
+            self.molecule_net_bbbp_df["smiles"].tolist(),
+            self.molecule_net_bbbp_df["p_np"].to_numpy(),
+        )
+        predicted_value_array = ensemble_pipeline.predict(
+            self.molecule_net_bbbp_df["smiles"].tolist(),
+        )
+        self.assertIsInstance(predicted_value_array, np.ndarray)
+        self.assertEqual(
+            predicted_value_array.shape,
+            (len(self.molecule_net_bbbp_df["smiles"].tolist()),),
         )
 
 
