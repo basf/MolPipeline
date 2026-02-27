@@ -10,10 +10,8 @@ from sklearn.model_selection import StratifiedKFold
 from typing_extensions import deprecated, override
 
 
-class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-method
-    """Stratified K-Fold splitter for regression tasks using quantile-based binning.
-
-    The pylint disable comment catches a false positive coming from sklearn.
+class PercentileStratifiedKFold(StratifiedKFold):  # pylint: disable=abstract-method
+    """Stratified K-Fold splitter for regression tasks using percentile-based binning.
 
     """
 
@@ -25,7 +23,7 @@ class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-me
         shuffle: bool = True,
         random_state: int | None = None,
     ) -> None:
-        """Initialize the StratifiedRegressionKFold.
+        """Initialize the PercentileStratifiedRegressionKFold.
 
         Parameters
         ----------
@@ -119,7 +117,7 @@ def create_continuous_stratified_folds(
         List of (train_indices, validation_indices) tuples for each fold.
 
     """
-    splitter = StratifiedRegressionKFold(
+    splitter = PercentileStratifiedKFold(
         n_splits=n_splits,
         n_groups=n_groups,
         shuffle=True,
