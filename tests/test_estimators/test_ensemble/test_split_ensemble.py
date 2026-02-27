@@ -131,6 +131,54 @@ class MockClassifier(MockEstimator):
         return proba
 
 
+class MockClassiferWithFloatLabels(MockClassifier):
+    """A mock classifier that returns float class labels instead of integers."""
+
+    @override
+    def predict(  # type: ignore
+        self,
+        X: npt.ArrayLike,  # pylint: disable=invalid-name
+    ) -> npt.NDArray[np.float64]:
+        """Return fixed class predictions as floats.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Input data for prediction.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Predicted class labels as floats.
+
+        """
+        return super().predict(X).astype(np.float64)
+
+
+class MockClassifierWithTrueFloatLabels(MockClassifier):
+    """A mock classifier that returns true float class labels instead of integers."""
+
+    @override
+    def predict(  # type: ignore
+        self,
+        X: npt.ArrayLike,  # pylint: disable=invalid-name
+    ) -> npt.NDArray[np.float64]:
+        """Return fixed class predictions plus 0.5 so they are not integers.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Input data for prediction.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Predicted class labels as floats that cannot be interpreted as integers.
+
+        """
+        return super().predict(X).astype(np.float64) + 0.5
+
+
 class TestSplitEnsembleRegressor(unittest.TestCase):
     """Unit tests for SplitEnsembleRegressor."""
 
@@ -296,6 +344,42 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
         preds = ensemble.predict(features)
         # Since all estimators return alternating 0,1, the majority is always 0
         self.assertTrue(np.array_equal(preds, np.array([0, 1, 0, 1, 0, 1])))
+
+    def test_predict_hard_voting_float_type(self) -> None:
+        """Test that hard voting prediction works when y is provided as floats.
+
+        The MockClassiferWithFloatLabels returns the same values as MockClassifier but
+        as floats. The hard voting should still work and return the correct class
+        labels, since they can be interpreted as integers.
+
+        """
+        features = np.array([[i, i, i, i] for i in range(6)])
+        y = np.array([0, 1, 0, 1, 0, 1])
+        base = MockClassiferWithFloatLabels()
+        ensemble = SplitEnsembleClassifier(estimator=base, cv=2, voting="hard")
+        ensemble.fit(features, y)
+        preds = ensemble.predict(features)
+        self.assertTrue(np.array_equal(preds, np.array([0, 1, 0, 1, 0, 1])))
+
+    def test_predict_hard_voting_true_floats_raises_error(self) -> None:
+        """Test that hard voting prediction raises an error when y has float values.
+
+        If y contains float values that cannot be transformed to integers, the hard
+        voting cannot determine the majority class and should not attempt to vote, but
+        instead raise a ValueError.
+
+        The MockClassifierWithTrueFloatLabels returns the same values as MockClassifier
+        but adds 0.5, so they cannot be interpreted as integers.
+
+        """
+        features = np.array([[i, i, i, i] for i in range(6)])
+        y = np.array([0, 1, 0, 1, 0, 1])
+        base = MockClassifierWithTrueFloatLabels()
+        ensemble = SplitEnsembleClassifier(estimator=base, cv=2, voting="hard")
+        ensemble.fit(features, y)
+        expected_msg = "Predictions are not integer values, cannot perform hard voting."
+        with self.assertRaisesRegex(ValueError, expected_msg):
+            ensemble.predict(features)
 
     def test_predict_soft_voting(self) -> None:
         """Test that soft voting returns the class with highest average probability."""
