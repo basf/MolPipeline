@@ -52,9 +52,8 @@ class TestPercentileStratifiedKFold(unittest.TestCase):
         for _, test_idx in splits:
             groups_test = expected_groups[test_idx]
             values, counts = np.unique(groups_test, return_counts=True)
-            # Check that all groups are represented
+            # Check that all groups are represented and are only represented once
             self.assertListEqual(sorted(values.tolist()), list(range(5)))
-            # Ensure that all counts are either 2 or 3
             self.assertTrue(np.all(counts == 1))
 
         # Explicitly check the indices
