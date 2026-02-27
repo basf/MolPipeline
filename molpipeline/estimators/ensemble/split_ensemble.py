@@ -1,8 +1,9 @@
 """Ensemble Models where each model is trained on a different subset of the data."""
 
 import abc
-from typing import Any, Literal, Self
+from typing import Any, Literal, Self, TypeVar
 
+import joblib
 import numpy as np
 import numpy.typing as npt
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
@@ -11,6 +12,8 @@ from sklearn.utils.metaestimators import available_if
 from typing_extensions import override
 
 from molpipeline.utils.molpipeline_types import AnyPredictor
+
+_T = TypeVar("_T", BaseEstimator, AnyPredictor)
 
 
 class SplitEnsemble(abc.ABC, BaseEstimator):
@@ -22,6 +25,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
         self,
         estimator: BaseEstimator | AnyPredictor,
         cv: int | BaseCrossValidator = 5,
+        n_jobs: int = 1,
         **kwargs: Any,
     ) -> None:
         """Initialize the SplitEnsemble.
@@ -34,6 +38,8 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
             The spliter to be used for creating the splits.
             If an integer is provided, the splitter is a (Stratified)KFold with the
             given number of splits.
+        n_jobs : int, default=1
+            The number of jobs to run in parallel when fitting the estimators.
         kwargs : Any
             Additional keyword arguments to be passed to the base estimator.
 
@@ -41,6 +47,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
         self.estimator = estimator
         self.cv = cv
         self.estimators_ = []
+        self.n_jobs = n_jobs
         self.set_params(**kwargs)
         super().__init__()
 
@@ -55,11 +62,41 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
 
         """
 
+    @staticmethod
+    def _fit_clone(
+        model: _T,
+        model_input: npt.NDArray[Any],
+        y: npt.NDArray[Any],
+        **kwargs: Any,
+    ) -> BaseEstimator:
+        """Clone the model and fit it on the given data.
+
+        Parameters
+        ----------
+        model : BaseEstimator
+            The model to be fitted.
+        model_input : npt.NDArray[Any]
+            The input data.
+        y : npt.NDArray[Any]
+            The target values.
+        kwargs : Any
+            Additional keyword arguments to be passed to the fit method of the model.
+
+        Returns
+        -------
+        _T
+            The fitted model.
+
+        """
+        model_clone: _T = clone(model)  # type: ignore
+        return model_clone.fit(model_input, y, **kwargs)
+
     def fit(
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
         y: npt.ArrayLike | None = None,
         groups: npt.ArrayLike | None = None,
+        **kwargs: Any,
     ) -> Self:
         """Fit the ensemble of estimators on the data.
 
@@ -72,6 +109,9 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
         groups : npt.ArrayLike, optional
             Group labels for the samples used while splitting the dataset into
             train/test.
+        kwargs : Any
+            Additional keyword arguments to be passed to the fit method of the base
+            estimator.
 
         Returns
         -------
@@ -79,16 +119,21 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
             The fitted SplitEnsemble instance.
 
         """
-        self.estimators_ = []
-
         splitter = self._get_splitter()
         features = np.asarray(X)
-        for train_idx, _ in splitter.split(X, y, groups):
-            target = np.asarray(y)[train_idx] if y is not None else None
-            estimator = clone(self.estimator)
-            estimator.fit(features[train_idx], target)  # type: ignore
-            self.estimators_.append(estimator)
 
+        parallel = joblib.Parallel(n_jobs=self.n_jobs)
+        fit_clone_parallel = joblib.delayed(self._fit_clone)
+
+        self.estimators_ = parallel(
+            fit_clone_parallel(
+                self.estimator,
+                features[train_index],
+                np.asarray(y)[train_index] if y is not None else None,
+                **kwargs,
+            )
+            for train_index, _ in splitter.split(X, y, groups)
+        )
         return self
 
     def predict(
