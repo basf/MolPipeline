@@ -9,7 +9,6 @@ from typing import (
     Self,
     TypeAlias,
     TypeVar,
-    Union,
 )
 
 import numpy as np
@@ -20,6 +19,7 @@ from molpipeline.abstract_pipeline_elements.core import (
     OptionalMol,
     RDKitMol,
 )
+from molpipeline.error_handling import FilterReinserter
 
 __all__ = [
     "AnyElement",
@@ -48,7 +48,7 @@ IntCountRange: TypeAlias = tuple[int | None, int | None]
 # - a single int for an exact value match
 # - a range given as a tuple with a lower and upper bound
 #   - both limits are optional
-IntOrIntCountRange: TypeAlias = Union[int, IntCountRange]
+IntOrIntCountRange: TypeAlias = int | IntCountRange
 
 
 class AnySklearnEstimator(Protocol):
@@ -188,10 +188,11 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
         """
 
 
-AnyElement = Union[
-    AnyTransformer,
-    AnyPredictor,
-    ABCPipelineElement,
-    Literal["passthrough"],
-]
+AnyElement = (
+    AnyTransformer
+    | AnyPredictor
+    | ABCPipelineElement
+    | Literal["passthrough"]
+    | FilterReinserter[Any]
+)
 AnyStep = tuple[str, AnyElement]

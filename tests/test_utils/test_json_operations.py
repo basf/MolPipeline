@@ -4,6 +4,7 @@ import unittest
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import balanced_accuracy_score
 from sklearn.svm import SVC
 
 from molpipeline import Pipeline
@@ -88,6 +89,12 @@ class JsonConversionTest(unittest.TestCase):
                 deserialized_array = recursive_from_json(json_data)
                 self.assertTrue(np.array_equal(original_array, deserialized_array))
                 self.assertEqual(original_array.dtype, deserialized_array.dtype)
+
+    def test_function_roundtrip(self) -> None:
+        """Test if a function can be reconstructed from json."""
+        json_data = recursive_to_json(balanced_accuracy_score)
+        deserialized_function = recursive_from_json(json_data)
+        self.assertIs(deserialized_function, balanced_accuracy_score)
 
 
 if __name__ == "__main__":
