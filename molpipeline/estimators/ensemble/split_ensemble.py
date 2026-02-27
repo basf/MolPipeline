@@ -280,6 +280,9 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
         AttributeError
             If voting is "soft" but not all estimators in the ensemble support
             probability prediction.
+        ValueError
+            If voting is "hard" but the predictions of the estimators are not integer
+            values.
 
         """
         if self.voting == "soft":
@@ -289,6 +292,14 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
                 )
             return np.argmax(self.predict_proba(X), axis=1)
         predictions = np.array([estimator.predict(X) for estimator in self.estimators_])  # type: ignore
+        if not np.issubdtype(predictions.dtype, np.integer):
+            converted_predictions = predictions.astype(int)
+            if not np.allclose(converted_predictions, predictions):
+                raise ValueError(
+                    "Predictions are not integer values, cannot perform hard voting.",
+                )
+            predictions = converted_predictions
+
         return np.apply_along_axis(
             lambda x: np.bincount(x).argmax(),
             axis=0,
