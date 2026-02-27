@@ -16,8 +16,8 @@ from chemprop.nn.predictors import BinaryClassificationFFNBase
 from lightning import pytorch as pl
 from sklearn.base import clone
 from sklearn.utils._tags import (
-    ClassifierTags,  # noqa: PLC2701
-    RegressorTags,  # noqa: PLC2701
+    ClassifierTags,
+    RegressorTags,
     Tags,
 )
 from sklearn.utils.class_weight import compute_sample_weight

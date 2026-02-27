@@ -32,12 +32,12 @@ from sklearn.utils import (
     indexable,
 )
 from sklearn.utils._array_api import (
-    get_namespace_and_device,  # noqa: PLC2701
-    move_to,  # noqa: PLC2701
+    get_namespace_and_device,
+    move_to,
 )
 from sklearn.utils._response import (
-    _get_response_values,  # noqa: PLC2701
-    _process_predict_proba,  # noqa: PLC2701
+    _get_response_values,
+    _process_predict_proba,
 )
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metadata_routing import (
