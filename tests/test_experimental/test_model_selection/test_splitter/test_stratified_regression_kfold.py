@@ -43,20 +43,19 @@ class TestPercentileStratifiedKFold(unittest.TestCase):
         Using n_splits=2, results in each fold containing 1 value from each group.
 
         """
-        y = np.array([1., 3., 5., 7., 9., 2., 4., 6., 8., 10.])
+        y = np.array([1.0, 3.0, 5.0, 7.0, 9.0, 2.0, 4.0, 6.0, 8.0, 10.0])
         expected_groups = np.array([0, 1, 2, 3, 4, 0, 1, 2, 3, 4])
         rng = np.random.default_rng(42)
         feature_mat = rng.random(size=(10, 10))
         splitter = PercentileStratifiedKFold(n_splits=2, n_groups=5, random_state=42)
         splits = list(splitter.split(feature_mat, y))
-        print(splits)
-        for train_idx, test_idx in splits:
+        for _, test_idx in splits:
             groups_test = expected_groups[test_idx]
             values, counts = np.unique(groups_test, return_counts=True)
             # Check that all groups are represented
             self.assertListEqual(sorted(values.tolist()), list(range(5)))
             # Ensure that all counts are either 2 or 3
-            self.assertTrue(np.all((counts == 1)))
+            self.assertTrue(np.all(counts == 1))
 
         # Explicitly check the indices
         expected_splits = [

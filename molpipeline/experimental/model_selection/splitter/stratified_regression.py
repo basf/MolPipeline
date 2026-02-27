@@ -1,4 +1,4 @@
-"""Stratified K-Fold splitter for regression tasks using quantile-based binning."""
+"""Stratified K-Fold splitter for regression tasks."""
 
 from collections.abc import Iterator
 from typing import Any
@@ -12,6 +12,10 @@ from typing_extensions import deprecated, override
 
 class PercentileStratifiedKFold(StratifiedKFold):  # pylint: disable=abstract-method
     """Stratified K-Fold splitter for regression tasks using percentile-based binning.
+
+    This splitter bins continuous target values into percentiles, which by definition
+    are equally sized groups, and then applies stratified sampling to ensure that each
+    fold has a balanced distribution of target values across the percentiles.
 
     """
 
@@ -30,7 +34,7 @@ class PercentileStratifiedKFold(StratifiedKFold):  # pylint: disable=abstract-me
         n_splits : int, default=5
             Number of folds for cross-validation.
         n_groups : int, default=10
-            Number of quantile groups to create for stratification.
+            Number of percentile groups to create for stratification.
         shuffle : bool, default=True
             Whether to shuffle the data before splitting into batches.
         random_state : int | None, optional
@@ -93,10 +97,10 @@ def create_continuous_stratified_folds(
     n_groups: int = 10,
     random_state: int | None = None,
 ) -> list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]:
-    """Create stratified folds for continuous targets using quantile-based binning.
+    """Create stratified folds for continuous targets using percentile-based binning.
 
     This method creates stratified cross-validation folds for regression by:
-    1. Binning continuous targets into quantile-based groups
+    1. Binning continuous targets into percentile-based groups
     2. Using stratified sampling to ensure balanced target distribution
     3. Returning train/validation index pairs
 
@@ -107,7 +111,7 @@ def create_continuous_stratified_folds(
     n_splits : int
         Number of cross-validation folds.
     n_groups : int, optional
-        Number of quantile groups to create for stratification (default: 10).
+        Number of percentile groups to create for stratification (default: 10).
     random_state : int | None, optional
         Random state for reproducibility.
 
