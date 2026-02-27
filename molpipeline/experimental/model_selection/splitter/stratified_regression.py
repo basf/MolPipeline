@@ -83,7 +83,12 @@ class PercentileStratifiedKFold(StratifiedKFold):  # pylint: disable=abstract-me
                 f"target values ({len(np.unique(y))})!",
             )
 
-        y_binned = pd.qcut(y, n_groups, labels=False, duplicates="drop")
+        try:
+            y_binned = pd.qcut(y, n_groups, labels=False, duplicates="raise")
+        except ValueError as e:
+            raise ValueError(
+                "Too many identical values in y for the specified number of groups!",
+            ) from e
 
         yield from super().split(X, y_binned)
 
