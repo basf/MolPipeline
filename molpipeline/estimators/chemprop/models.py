@@ -162,6 +162,11 @@ class ChempropModel(ABCChemprop):
         X : MoleculeDataset
             The input data.
 
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            The predictions for the input data.
+
         Raises
         ------
         AssertionError
@@ -169,11 +174,6 @@ class ChempropModel(ABCChemprop):
         ValueError
             If the model is a binary classifier and the predictions do not have the
             correct shape.
-
-        Returns
-        -------
-        npt.NDArray[np.float64]
-            The predictions for the input data.
 
         """
         self.model.eval()
@@ -379,15 +379,15 @@ class ChempropClassifier(ChempropModel):
         **params
             The parameters to set.
 
-        Raises
-        ------
-        ValueError
-            If the model's predictor is not a binary classifier.
-
         Returns
         -------
         Self
             The model with the new parameters.
+
+        Raises
+        ------
+        ValueError
+            If the model's predictor is not a binary classifier.
 
         """
         super().set_params(**params)
@@ -568,15 +568,15 @@ class ChempropMulticlassClassifier(ChempropModel):
         **params
             The parameters to set.
 
-        Raises
-        ------
-        ValueError
-            If the model's predictor or the number of classes are invalid.
-
         Returns
         -------
         Self
             The model with the new parameters.
+
+        Raises
+        ------
+        ValueError
+            If the model's predictor or the number of classes are invalid.
 
         """
         super().set_params(**params)

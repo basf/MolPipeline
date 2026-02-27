@@ -141,15 +141,15 @@ def self_tanimoto_similarity(
     matrix_a : Union[sparse.csr_matrix, npt.NDArray[np.int_]]
         Feature matrix.
 
-    Raises
-    ------
-    TypeError
-        If the matrix is not a sparse matrix or a numpy array.
-
     Returns
     -------
     npt.NDArray[np.float64]
         Square matrix of similarity values between all instances in the matrix.
+
+    Raises
+    ------
+    TypeError
+        If the matrix is not a sparse matrix or a numpy array.
 
     """
     if isinstance(matrix_a, np.ndarray):

@@ -257,16 +257,16 @@ class _MolPipeline:
         fit_params: Any
             Parameters. Only for SKlearn compatibility.
 
+        Returns
+        -------
+        Any
+            Transformed molecules.
+
         Raises
         ------
         AssertionError
             If a subpipeline requires fitting, which by definition should not be the
             case.
-
-        Returns
-        -------
-        Any
-            Transformed molecules.
 
         """
         iter_input = x_input

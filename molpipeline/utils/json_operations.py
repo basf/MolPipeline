@@ -299,15 +299,15 @@ def builtin_to_json(obj: Any) -> Any:
         Object to be transformed.
         Can be a string, int, float, bool, list, tuple, dict, callable or a set.
 
-    Raises
-    ------
-    TypeError
-        If the object is not a string, int, float, bool, list, tuple or dict.
-
     Returns
     -------
     Any
         Json file containing the dictionary.
+
+    Raises
+    ------
+    TypeError
+        If the object is not a string, int, float, bool, list, tuple or dict.
 
     """
     if isinstance(obj, (str, int, float, bool, type)) or obj is None:
@@ -451,15 +451,15 @@ def recursive_from_json(obj: Any) -> Any:
     obj : Any
         Object to be transformed
 
-    Raises
-    ------
-    TypeError
-        If the object is not a string, int, float, bool, list, tuple or dict.
-
     Returns
     -------
     Any
         Object specified in the json file.
+
+    Raises
+    ------
+    TypeError
+        If the object is not a string, int, float, bool, list, tuple or dict.
 
     """
     if isinstance(obj, (str, int, float, bool, type)) or obj is None:

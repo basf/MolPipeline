@@ -107,15 +107,15 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         X : npt.NDArray[np.float64] | csr_matrix
             Feature matrix to which the similarity matrix is computed.
 
-        Raises
-        ------
-        ValueError
-            If the transformer has not been fitted yet.
-
         Returns
         -------
         npt.NDArray[np.float64]
             Similarity matrix of X to the training matrix.
+
+        Raises
+        ------
+        ValueError
+            If the transformer has not been fitted yet.
 
         """
         if self.training_matrix is None:
