@@ -121,15 +121,15 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             If False, only the feature names are used. This can lead to duplicate
             feature names.
 
-        Raises
-        ------
-        ValueError
-            If element does not have feature_names attribute.
-
         Returns
         -------
         list[str]
             List of feature names.
+
+        Raises
+        ------
+        ValueError
+            If element does not have feature_names attribute.
 
         """
         feature_names = []
@@ -225,15 +225,15 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         parameters: Any
             Original parameters.
 
-        Raises
-        ------
-        ValueError
-            If element_list is empty.
-
         Returns
         -------
         tuple[dict[str, Any], dict[str, Any]]
             Updated parameter_copy and parameters.
+
+        Raises
+        ------
+        ValueError
+            If element_list is empty.
 
         """
         element_list = parameter_copy.pop("element_list", None)

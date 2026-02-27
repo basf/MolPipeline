@@ -203,15 +203,15 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         value: RDKitMol
             Molecule to check.
 
-        Raises
-        ------
-        ValueError
-            If the mode is not "any" or "all".
-
         Returns
         -------
         OptionalMol
             Molecule that matches defined filter elements, else InvalidInstance.
+
+        Raises
+        ------
+        ValueError
+            If the mode is not "any" or "all".
 
         """
         for filter_element, (lower_limit, upper_limit) in self.filter_elements.items():
@@ -289,14 +289,6 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     """Filter to keep or remove molecules based on patterns.
 
-    Attributes
-    ----------
-    filter_elements: Union[Sequence[str], Mapping[str, IntOrIntCountRange]]
-        List of patterns to allow in molecules.
-        Alternatively, a dictionary can be passed with patterns as keys
-        and an int for exact count or a tuple of minimum and maximum.
-    [...]
-
     Notes
     -----
     There are four possible scenarios:
@@ -304,6 +296,13 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     - mode = "any" & keep_matches = False: Must not match any filter element.
     - mode = "all" & keep_matches = True: Needs to match all filter elements.
     - mode = "all" & keep_matches = False: Must not match all filter elements.
+
+    Attributes
+    ----------
+    filter_elements: Union[Sequence[str], Mapping[str, IntOrIntCountRange]]
+        List of patterns to allow in molecules.
+        Alternatively, a dictionary can be passed with patterns as keys
+        and an int for exact count or a tuple of minimum and maximum.
 
     """
 

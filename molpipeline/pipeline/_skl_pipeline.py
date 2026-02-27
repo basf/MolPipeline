@@ -166,16 +166,16 @@ class Pipeline(_Pipeline):
         filter_passthrough: bool, optional
             If True, passthrough steps are filtered out.
 
-        Raises
-        ------
-        AssertionError
-            If the pipeline has no steps.
-
         Yields
         ------
         _AggregatedPipelineStep
             The _AggregatedPipelineStep is composed of the index, the name and the
             transformer.
+
+        Raises
+        ------
+        AssertionError
+            If the pipeline has no steps.
 
         """
         last_element: _AggregatedPipelineStep | None = None
@@ -255,17 +255,17 @@ class Pipeline(_Pipeline):
         raw_params : dict[str, Any], optional
             Parameters passed by the user, used when `transform_input`
 
+        Returns
+        -------
+        tuple[Any, Any]
+            The transformed data and the transformed objectives.
+
         Raises
         ------
         AssertionError
             If routed_params is None or if the transformer is 'passthrough'.
         AssertionError
             If the names are a list and the step is not a Pipeline.
-
-        Returns
-        -------
-        tuple[Any, Any]
-            The transformed data and the transformed objectives.
 
         """
         # shallow copy of steps - this should really be steps_
@@ -359,16 +359,16 @@ class Pipeline(_Pipeline):
         routed_params: Bunch
             Parameters for each step as returned by process_routing
 
+        Returns
+        -------
+        Any
+            Result of calling `transform` on the second last estimator.
+
         Raises
         ------
         AssertionError
             If one of the transformers is 'passthrough' or does not implement
             `transform`.
-
-        Returns
-        -------
-        Any
-            Result of calling `transform` on the second last estimator.
 
         """
         iter_input = X
@@ -404,15 +404,15 @@ class Pipeline(_Pipeline):
     ) -> list[AnyStep]:
         """Return all steps before the first PostPredictionTransformation.
 
-        Raises
-        ------
-        AssertionError
-            If a PostPredictionTransformation is found before the last step.
-
         Returns
         -------
         list[AnyStep]
             List of steps before the first PostPredictionTransformation.
+
+        Raises
+        ------
+        AssertionError
+            If a PostPredictionTransformation is found before the last step.
 
         """
         non_post_processing_steps: list[AnyStep] = []
@@ -591,16 +591,16 @@ class Pipeline(_Pipeline):
             each parameter name is prefixed such that parameter ``p`` for step
             ``s`` has key ``s__p``.
 
+        Returns
+        -------
+        Xt : ndarray of shape (n_samples, n_transformed_features)
+            Transformed samples.
+
         Raises
         ------
         TypeError
             If the last step does not implement `fit_transform` or `fit` and
             `transform`.
-
-        Returns
-        -------
-        Xt : ndarray of shape (n_samples, n_transformed_features)
-            Transformed samples.
 
         """
         routed_params = self._check_method_params(method="fit_transform", props=params)
@@ -659,16 +659,16 @@ class Pipeline(_Pipeline):
             transformations in the pipeline are not propagated to the
             final estimator.
 
+        Returns
+        -------
+        y_pred : ndarray
+            Result of calling `predict` on the final estimator.
+
         Raises
         ------
         AssertionError
             If the final estimator does not implement `predict`.
             In this case this function should not be available.
-
-        Returns
-        -------
-        y_pred : ndarray
-            Result of calling `predict` on the final estimator.
 
         """
         if _routing_enabled():
@@ -727,16 +727,16 @@ class Pipeline(_Pipeline):
             each parameter name is prefixed such that parameter ``p`` for step
             ``s`` has key ``s__p``.
 
+        Returns
+        -------
+        y_pred : ndarray
+            Result of calling `fit_predict` on the final estimator.
+
         Raises
         ------
         AssertionError
             If the final estimator does not implement `fit_predict`.
             In this case this function should not be available.
-
-        Returns
-        -------
-        y_pred : ndarray
-            Result of calling `fit_predict` on the final estimator.
 
         """
         routed_params = self._check_method_params(method="fit_predict", props=params)
@@ -787,16 +787,16 @@ class Pipeline(_Pipeline):
             transformations in the pipeline are not propagated to the
             final estimator.
 
+        Returns
+        -------
+        y_pred : ndarray
+            Result of calling `predict_proba` on the final estimator.
+
         Raises
         ------
         AssertionError
             If the final estimator does not implement `predict_proba`.
             In this case this function should not be available.
-
-        Returns
-        -------
-        y_pred : ndarray
-            Result of calling `predict_proba` on the final estimator.
 
         """
         routed_params = process_routing(self, "predict_proba", **params)
@@ -859,16 +859,16 @@ class Pipeline(_Pipeline):
         **params : Any
             Parameters to the ``transform`` method of each estimator.
 
+        Returns
+        -------
+        Xt : ndarray of shape (n_samples, n_transformed_features)
+            Transformed data.
+
         Raises
         ------
         AssertionError
             If the final estimator does not implement `transform` or
             `fit_transform` or is passthrough.
-
-        Returns
-        -------
-        Xt : ndarray of shape (n_samples, n_transformed_features)
-            Transformed data.
 
         """
         routed_params = process_routing(self, "transform", **params)
@@ -908,15 +908,15 @@ class Pipeline(_Pipeline):
         **params : Any
             Parameters to the ``decision_function`` method of the final estimator.
 
-        Raises
-        ------
-        AssertionError
-            If the final estimator does not implement `decision_function`.
-
         Returns
         -------
         Any
             Result of calling `decision_function` on the final estimator.
+
+        Raises
+        ------
+        AssertionError
+            If the final estimator does not implement `decision_function`.
 
         """
         if _routing_enabled():
@@ -976,15 +976,15 @@ class Pipeline(_Pipeline):
     def __sklearn_tags__(self) -> Tags:
         """Return the sklearn tags.
 
-        Notes
-        -----
-        This method is copied from the original sklearn implementation.
-        Changes are marked with a comment.
-
         Returns
         -------
         Tags
             The sklearn tags.
+
+        Notes
+        -----
+        This method is copied from the original sklearn implementation.
+        Changes are marked with a comment.
 
         """
         tags = super().__sklearn_tags__()
@@ -1037,16 +1037,16 @@ class Pipeline(_Pipeline):
         Please check :ref:`User Guide <metadata_routing>` on how the routing
         mechanism works.
 
-        Notes
-        -----
-        This method is copied from the original sklearn implementation.
-        Changes are marked with a comment.
-
         Returns
         -------
         MetadataRouter
             A :class:`~sklearn.utils.metadata_routing.MetadataRouter` encapsulating
             routing information.
+
+        Notes
+        -----
+        This method is copied from the original sklearn implementation.
+        Changes are marked with a comment.
 
         """
         router = MetadataRouter(owner=self.__class__.__name__)

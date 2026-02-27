@@ -145,15 +145,15 @@ class ErrorFilter(ABCPipelineElement):
         parameters: Any
             Dict of arameters to set.
 
-        Raises
-        ------
-        TypeError
-            If element_ids is not a set.
-
         Returns
         -------
         Self
             Self with updated parameters.
+
+        Raises
+        ------
+        TypeError
+            If element_ids is not a set.
 
         """
         param_copy = dict(parameters)
@@ -241,17 +241,17 @@ class ErrorFilter(ABCPipelineElement):
         values: TypeFixedVarSeq
             Values to be transformed.
 
+        Returns
+        -------
+        TypeFixedVarSeq
+            Input where rows are removed.
+
         Raises
         ------
         ValueError
             If the length of the values does not match the length of the values in fit.
         TypeError
             If the type of values is not a list or numpy array.
-
-        Returns
-        -------
-        TypeFixedVarSeq
-            Input where rows are removed.
 
         """
         if self.n_total != len(values):
@@ -626,15 +626,15 @@ class FilterReinserter(Generic[_T]):
         error_filter_list: list[ErrorFilter]
             List of ErrorFilters to select from.
 
-        Raises
-        ------
-        ValueError
-            If the ErrorFilter with the given id is not found in the list.
-
         Returns
         -------
         Self
             FilterReinserter with updated ErrorFilter.
+
+        Raises
+        ------
+        ValueError
+            If the ErrorFilter with the given id is not found in the list.
 
         """
         for error_filter in error_filter_list:
@@ -780,15 +780,15 @@ class FilterReinserter(Generic[_T]):
         **_params: Any
             Additional keyword arguments.
 
-        Raises
-        ------
-        ValueError
-            If the length of the values does not match the length of the values in fit.
-
         Returns
         -------
         TypeFixedVarSeq
             Iterable where invalid instances were removed.
+
+        Raises
+        ------
+        ValueError
+            If the length of the values does not match the length of the values in fit.
 
         """
         self._validate_input_values(values)
@@ -812,16 +812,16 @@ class FilterReinserter(Generic[_T]):
         list_to_fill: list[Number]
             List to fill with dummy values.
 
-        Raises
-        ------
-        AssertionError
-            If the length of the list does not match the expected length.
-
         Returns
         -------
         list[Number]
             List where dummy values were inserted to replace instances which could not
             be processed.
+
+        Raises
+        ------
+        AssertionError
+            If the length of the list does not match the expected length.
 
         """
         filled_list: list[_S | _T] = []
@@ -879,15 +879,15 @@ class FilterReinserter(Generic[_T]):
         value_container: TypeFixedVarSeq
             Iterable to fill with dummy values.
 
-        Raises
-        ------
-        TypeError
-            If value_container is not a list or numpy array.
-
         Returns
         -------
         AnyVarSeq
             Iterable where unprocessable values are replaced by dummy values.
+
+        Raises
+        ------
+        TypeError
+            If value_container is not a list or numpy array.
 
         """
         if isinstance(value_container, list):

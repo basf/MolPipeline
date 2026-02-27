@@ -85,15 +85,15 @@ def fingerprints_to_numpy(
     fingerprints: FPAssembleOutputOutputType
         Fingerprint matrix.
 
-    Raises
-    ------
-    ValueError
-        If the fingerprints are not in a supported format.
-
     Returns
     -------
     npt.NDArray
         Numpy fingerprint matrix.
+
+    Raises
+    ------
+    ValueError
+        If the fingerprints are not in a supported format.
 
     """
     if all(isinstance(fp, ExplicitBitVect) for fp in fingerprints):

@@ -59,15 +59,15 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         uuid: str | None, optional
             UUID of the PipelineElement.
 
-        References
-        ----------
-            [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
-            [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
-
         Raises
         ------
         ValueError
             If n_bits is not a positive integer.
+
+        References
+        ----------
+            [1] https://rdkit.org/docs/GettingStartedInPython.html#morgan-fingerprints-circular-fingerprints
+            [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
 
         """
         # pylint: disable=R0801
