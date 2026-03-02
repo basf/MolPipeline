@@ -200,12 +200,14 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
 
         """
 
-
     def predict(
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
         return_std: bool = False,
-    ) -> npt.NDArray[np.float64] | tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    ) -> (
+        npt.NDArray[np.float64]
+        | tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
+    ):
         """Predict using the ensemble of estimators.
 
         Parameters
