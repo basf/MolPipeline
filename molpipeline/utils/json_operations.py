@@ -143,6 +143,12 @@ def get_object_import_header(obj: Any) -> dict[str, Any]:
         Dictionary containing the module and class name of the object.
 
     """
+    if isinstance(obj, types.FunctionType):
+        return {
+            "__name__": obj.__name__,
+            "__module__": obj.__module__,
+            "__init__": False,
+        }
     return {
         "__name__": obj.__class__.__name__,
         "__module__": obj.__class__.__module__,

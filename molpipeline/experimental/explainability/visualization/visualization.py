@@ -88,8 +88,7 @@ def _make_grid_from_mol(
 
     xl = list(pad(xl, padding[0]))  # Increasing size of x-axis
     yl = list(pad(yl, padding[1]))  # Increasing size of y-axis
-    v_map = ValueGrid(xl, yl, grid_resolution[0], grid_resolution[1])
-    return v_map
+    return ValueGrid(xl, yl, grid_resolution[0], grid_resolution[1])
 
 
 def _add_gaussians_for_atoms(
@@ -537,8 +536,7 @@ def structure_heatmap(
         color_limits,
     )
     figure_bytes = drawer.GetDrawingText()
-    image = to_png(figure_bytes)
-    return image
+    return to_png(figure_bytes)
 
 
 def structure_heatmap_shap(  # pylint: disable=too-many-locals
