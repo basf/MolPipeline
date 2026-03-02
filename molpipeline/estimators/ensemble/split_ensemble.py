@@ -1,7 +1,7 @@
 """Ensemble Models where each model is trained on a different subset of the data."""
 
 import abc
-from typing import Any, Literal, Self, TypeVar
+from typing import Any, Literal, Self, TypeVar, overload
 
 import joblib
 import numpy as np
@@ -136,26 +136,6 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
         )
         return self
 
-    def predict(
-        self,
-        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
-    ) -> npt.NDArray[Any]:
-        """Predict using the ensemble of estimators.
-
-        Parameters
-        ----------
-        X : array-like
-            The input data.
-
-        Returns
-        -------
-        np.ndarray
-            The predicted values.
-
-        """
-        predictions = np.array([estimator.predict(X) for estimator in self.estimators_])  # type: ignore
-        return np.mean(predictions, axis=0)
-
 
 class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
     """SplitEnsemble for regression tasks."""
@@ -173,6 +153,78 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
         if isinstance(cv, int):
             return KFold(n_splits=cv, shuffle=True, random_state=42)
         return cv
+
+    @overload
+    def predict(
+        self,
+        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        return_std: Literal[False],
+    ) -> npt.NDArray[np.float64]:
+        """Predict using the ensemble of estimators.
+
+        Parameters
+        ----------
+        X : array-like
+            The input data.
+        return_std : bool, default=False
+            Whether to return the standard deviation of the predictions.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            The predicted values.
+
+        """
+
+    @overload
+    def predict(
+        self,
+        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        return_std: Literal[True],
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+        """Predict using the ensemble of estimators.
+
+        Parameters
+        ----------
+        X : array-like
+            The input data.
+        return_std : bool, default=False
+            Whether to return the standard deviation of the predictions.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            The predicted values.
+        npt.NDArray[np.float64]
+            The standard deviation of the predictions, if return_std is True.
+
+        """
+
+
+    def predict(
+        self,
+        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        return_std: bool = False,
+    ) -> npt.NDArray[np.float64] | tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+        """Predict using the ensemble of estimators.
+
+        Parameters
+        ----------
+        X : array-like
+            The input data.
+        return_std : bool, default=False
+            Whether to return the standard deviation of the predictions.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            The predicted values.
+
+        """
+        predictions = np.array([estimator.predict(X) for estimator in self.estimators_])  # type: ignore
+        if return_std:
+            return np.mean(predictions, axis=0), np.std(predictions, axis=0)
+        return np.mean(predictions, axis=0)
 
 
 class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
