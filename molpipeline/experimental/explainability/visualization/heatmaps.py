@@ -288,8 +288,7 @@ def get_color_normalizer_from_data(
 
     """
     abs_max = np.max(np.abs(values))
-    normalizer = colors.Normalize(vmin=-abs_max, vmax=abs_max)
-    return normalizer
+    return colors.Normalize(vmin=-abs_max, vmax=abs_max)
 
 
 def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:

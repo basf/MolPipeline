@@ -176,7 +176,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         else:
             self._output_type = "mixed"
         self._requires_fitting = any(
-            element[1]._requires_fitting  # pylint: disable=protected-access
+            element[1]._requires_fitting  # noqa: SLF001  # pylint: disable=protected-access
             for element in element_list
         )
 

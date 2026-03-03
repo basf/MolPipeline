@@ -42,7 +42,7 @@ def remove_irrelevant_params(params: _T) -> _T:
     return params
 
 
-def compare_recursive(  # pylint: disable=too-many-return-statements
+def compare_recursive(  # noqa: PLR0911  # pylint: disable=too-many-return-statements
     value_a: Any,
     value_b: Any,
 ) -> bool:
