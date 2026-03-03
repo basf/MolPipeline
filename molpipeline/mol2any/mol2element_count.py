@@ -12,7 +12,7 @@ from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
     MolToDescriptorPipelineElement,
 )
-from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 # Element numbers to count. Per default, all elements in the periodic table up to
 # oganesson (118) are counted.
