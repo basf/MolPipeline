@@ -2,7 +2,7 @@
 
 import abc
 from collections.abc import Iterable
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -25,7 +25,7 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
     def __init__(
         self,
-        standardizer: AnyTransformer | None = StandardScaler(),
+        standardizer: Literal["default"] | AnyTransformer | None = "default",
         name: str = "MolToDescriptorPipelineElement",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -34,8 +34,9 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         Parameters
         ----------
-        standardizer: AnyTransformer | None default=StandardScaler()
-            Used for post-processing the output, if not None.
+        standardizer: Literal["default"] | AnyTransformer | None, default="default"
+            Used for post-processing the output, if not None. If "default", a
+            StandardScaler is used.
         name: str, default='MolToDescriptorPipelineElement'
             Name of the PipelineElement.
         n_jobs: int, default=1
@@ -45,7 +46,9 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-        self._standardizer = standardizer
+        if standardizer == "default":
+            standardizer = StandardScaler()
+        self._standardizer = standardizer  # type: ignore[assignment]
         if self._standardizer is not None:
             self._requires_fitting = True
         self._mean = None

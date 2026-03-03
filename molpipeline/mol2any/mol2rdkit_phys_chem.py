@@ -4,14 +4,13 @@
 
 import copy
 from collections.abc import Callable
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
 from rdkit import Chem, rdBase
 from rdkit.Chem import Descriptors
-from sklearn.preprocessing import StandardScaler
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
@@ -38,7 +37,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         self,
         descriptor_list: list[str] | None = None,
         return_with_errors: bool = False,
-        standardizer: AnyTransformer | None = StandardScaler(),
+        standardizer: Literal["default"] | AnyTransformer | None = "default",
         log_exceptions: bool = True,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
@@ -54,8 +53,9 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         return_with_errors: bool, default=False
             False: Returns an InvalidInstance if any error occurs during calculations.
             True: Returns a vector with NaN values for failed descriptor calculations.
-        standardizer: AnyTransformer | None, default=StandardScaler()
-            Standardizer to use.
+        standardizer: Literal["default"] | AnyTransformer | None
+            Standardizer to use. If None, no standardization is applied. If "default", a
+            StandardScaler is used.
         log_exceptions: bool, default=True
             Log traceback of exceptions occurring during descriptor calculation.
         name: str, default="Mol2RDKitPhysChem"

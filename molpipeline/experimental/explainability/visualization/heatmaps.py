@@ -6,7 +6,6 @@ Feldmann:
     https://github.com/c-feldmann/compchemkit
 """
 
-import abc
 from collections.abc import Callable, Sequence
 
 import numpy as np
@@ -16,7 +15,7 @@ from rdkit.Chem import Draw
 from rdkit.Geometry.rdGeometry import Point2D
 
 
-class Grid2D(abc.ABC):
+class Grid2D:
     """Metaclass for discrete 2-dimensional grids.
 
     This class holds a matrix of values accessed by index, where each cell is associated
@@ -289,8 +288,7 @@ def get_color_normalizer_from_data(
 
     """
     abs_max = np.max(np.abs(values))
-    normalizer = colors.Normalize(vmin=-abs_max, vmax=abs_max)
-    return normalizer
+    return colors.Normalize(vmin=-abs_max, vmax=abs_max)
 
 
 def color_canvas(canvas: Draw.MolDraw2D, color_grid: ColorGrid) -> None:

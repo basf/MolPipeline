@@ -4,10 +4,9 @@ import abc
 import copy
 import inspect
 from collections.abc import Iterable
-from typing import Any, NamedTuple, Self, Union
+from typing import Any, NamedTuple, Self
 from uuid import uuid4
 
-import numpy as np
 from joblib import Parallel, delayed
 from loguru import logger
 from rdkit import Chem
@@ -50,7 +49,7 @@ class InvalidInstance(NamedTuple):
         )
 
 
-OptionalMol = Union[RDKitMol, InvalidInstance]
+OptionalMol = RDKitMol | InvalidInstance
 
 
 class RemovedInstance:  # pylint: disable=too-few-public-methods
@@ -129,8 +128,7 @@ class ABCPipelineElement(abc.ABC):
         for key, value in self._get_non_default_parameters().items():
             parm_list.append(f"{key}={value}")
         parm_str = ", ".join(parm_list)
-        repr_str = f"{self.__class__.__name__}({parm_str})"
-        return repr_str
+        return f"{self.__class__.__name__}({parm_str})"
 
     def __sklearn_tags__(self) -> Tags:
         """Return Tags for the Element.
@@ -226,11 +224,6 @@ class ABCPipelineElement(abc.ABC):
         return self
 
     @property
-    def additional_attributes(self) -> dict[str, Any]:
-        """Attribute relevant for reinitializing, which is not a parameter."""
-        return {}
-
-    @property
     def n_jobs(self) -> int:
         """Get the number of cores."""
         return self._n_jobs
@@ -251,12 +244,6 @@ class ABCPipelineElement(abc.ABC):
     def requires_fitting(self) -> bool:
         """Return whether the object requires fitting or not."""
         return self._requires_fitting
-
-    def finish(self) -> None:
-        """Inform object that iteration has been finished. Does in most cases nothing.
-
-        Called after all transform singles have been processed.
-        """
 
     def fit(self, values: Any, labels: Any = None) -> Self:
         """Fit object to input_values.
@@ -416,30 +403,6 @@ class TransformingPipelineElement(ABCPipelineElement):
         """
         self.set_params(**parameters)
 
-    def copy(self) -> Self:
-        """Copy the object.
-
-        Raises
-        ------
-        AssertionError
-            If the object cannot be copied.
-
-        Returns
-        -------
-        Self
-            Copy of the object.
-
-        """
-        recreated_object = self.__class__(**self.parameters)
-        for key, value in self.additional_attributes.items():
-            if not hasattr(recreated_object, key):
-                raise AssertionError(
-                    f"Cannot set attribute {key} on {self.__class__.__name__}. "
-                    f"This should not happen!",
-                )
-            setattr(recreated_object, key, copy.copy(value))
-        return recreated_object
-
     def fit_to_result(self, values: Any) -> Self:
         """Fit object to result of transformed values.
 
@@ -583,10 +546,9 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
         parallel = Parallel(n_jobs=self.n_jobs)
-        output_values = parallel(
+        return parallel(
             delayed(self.pretransform_single)(value) for value in value_list
         )
-        return output_values
 
     def finalize_list(self, value_list: Iterable[Any]) -> list[Any]:
         """Transform list of values according to parameters learned during fitting.
@@ -603,10 +565,7 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
         parallel = Parallel(n_jobs=self.n_jobs)
-        output_values = parallel(
-            delayed(self.finalize_single)(value) for value in value_list
-        )
-        return output_values
+        return parallel(delayed(self.finalize_single)(value) for value in value_list)
 
     def transform(self, values: Any) -> Any:
         """Transform input_values according to object rules.
@@ -626,33 +585,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         """
         output_rows = self.pretransform(values)
         output_rows = self.finalize_list(output_rows)
-        output = self.assemble_output(output_rows)
-        self.finish()
-        return output
-
-    def to_json(self) -> dict[str, Any]:
-        """Return all defining attributes of object as dict.
-
-        Returns
-        -------
-        dict[str, Any]
-            A dictionary with all attributes necessary to recreate the object.
-
-        """
-        json_dict: dict[str, Any] = {
-            "__name__": self.__class__.__name__,
-            "__module__": self.__class__.__module__,
-        }
-        json_dict.update(self.parameters)
-        if self.additional_attributes:
-            adittional_attributes = {}
-            for key, value in self.additional_attributes.items():
-                if isinstance(value, np.ndarray):
-                    adittional_attributes[key] = value.tolist()
-                else:
-                    adittional_attributes[key] = value
-            json_dict["additional_attributes"] = adittional_attributes
-        return json_dict
+        return self.assemble_output(output_rows)
 
 
 class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):

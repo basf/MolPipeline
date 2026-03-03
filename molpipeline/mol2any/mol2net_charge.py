@@ -6,7 +6,6 @@ from typing import Any, Literal, Self, TypeAlias
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
-from sklearn.preprocessing import StandardScaler
 
 from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.abstract_pipeline_elements.mol2any.mol2floatvector import (
@@ -28,7 +27,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
     def __init__(
         self,
         charge_method: MolToNetChargeMethod = "formal_charge",
-        standardizer: AnyTransformer | None = StandardScaler(),
+        standardizer: Literal["default"] | AnyTransformer | None = "default",
         name: str = "MolToNetCharge",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -37,13 +36,14 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
         Parameters
         ----------
-        charge_method: MolToNetChargeMethod, optional (default="formal_charge")
+        charge_method: MolToNetChargeMethod, default="formal_charge"
             Policy how to compute the net charge of a molecule.
             Can be "formal_charge" which uses sum of the formal charges assigned to
             each atom. The setting "gasteiger" computes the Gasteiger partial
             charges and returns the rounded sum over the atoms.
-        standardizer: AnyTransformer, optional
-            Standardizer to use, by default StandardScaler()
+        standardizer: Literal["default"] | AnyTransformer | None, default="default"
+            Standardizer to use. If None, no standardization is applied. If "default", a
+            StandardScaler is used.
         name: str, optional
             Name of the pipeline element, by default "MolToNetCharge"
         n_jobs: int, optional
@@ -101,8 +101,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         if np.any(np.isnan(atoms_contributions)):
             return InvalidInstance(self.uuid, "NaN in Gasteiger charges", self.name)
         # sum up the charges and round to the nearest integer.
-        net_charge = np.round(np.sum(atoms_contributions, keepdims=True))
-        return net_charge
+        return np.round(np.sum(atoms_contributions, keepdims=True)).astype(np.float64)
 
     def pretransform_single(
         self,
