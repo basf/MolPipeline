@@ -205,6 +205,23 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
         self.assertEqual(base_est.beta, 2)
         self.assertEqual(base_est.gamma, 3)
 
+    def test_get_params(self) -> None:
+        """Test that get_params returns the correct parameters."""
+        base = MockEstimator(alpha=1)
+        ensemble = SplitEnsembleRegressor(
+            estimator=base,
+            cv=3,
+            estimator__beta=2,
+        )
+        ensemble.set_params(estimator__gamma=3)
+        params = ensemble.get_params(deep=True)
+        self.assertIn("estimator__alpha", params)
+        self.assertIn("estimator__beta", params)
+        self.assertIn("estimator__gamma", params)
+        self.assertEqual(params["estimator__alpha"], 1)
+        self.assertEqual(params["estimator__beta"], 2)
+        self.assertEqual(params["estimator__gamma"], 3)
+
     def test_fit_sample_forwarding(self) -> None:
         """Test that fit samples are correctly forwarded to each base estimator.
 
