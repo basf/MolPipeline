@@ -204,6 +204,7 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
         return_std: bool = False,
+        **params: Any,
     ) -> (
         npt.NDArray[np.float64]
         | tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
@@ -216,6 +217,9 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
             The input data.
         return_std : bool, default=False
             Whether to return the standard deviation of the predictions.
+        params : Any
+            Additional keyword arguments to be passed to the predict method of the
+            individual estimators.
 
         Returns
         -------
@@ -223,7 +227,9 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
             The predicted values.
 
         """
-        predictions = np.array([estimator.predict(X) for estimator in self.estimators_])  # type: ignore
+        predictions = np.array(
+            [estimator.predict(X, **params) for estimator in self.estimators_]  # type: ignore
+        )
         if return_std:
             return np.mean(predictions, axis=0), np.std(predictions, axis=0)
         return np.mean(predictions, axis=0)
@@ -293,6 +299,7 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
     def predict_proba(
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        **params: Any,
     ) -> npt.NDArray[Any]:
         """Predict class probabilities using the ensemble of estimators.
 
@@ -300,6 +307,9 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
         ----------
         X : array-like
             The input data.
+        params: Any
+            Additional keyword arguments to be passed to the predict_proba method of the
+            individual estimators.
 
         Returns
         -------
@@ -312,10 +322,10 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
         )
         return np.mean(predictions, axis=0)
 
-    @override
     def predict(
         self,
-        X: npt.ArrayLike,
+        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        **params: Any,
     ) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.
 
@@ -323,6 +333,10 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
         ----------
         X : array-like
             The input data.
+        params: Any
+            Additional keyword arguments to be passed to the predict method
+            (hard voting) or predict_proba method (soft voting) of the individual
+            estimators.
 
         Returns
         -------
@@ -344,8 +358,10 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
                 raise AttributeError(
                     "Estimators in the ensemble do not support probability prediction.",
                 )
-            return np.argmax(self.predict_proba(X), axis=1)
-        predictions = np.array([estimator.predict(X) for estimator in self.estimators_])  # type: ignore
+            return np.argmax(self.predict_proba(X, **params), axis=1)
+        predictions = np.array(
+            [estimator.predict(X, **params) for estimator in self.estimators_]  # type: ignore
+        )
         if not np.issubdtype(predictions.dtype, np.integer):
             converted_predictions = predictions.astype(int)
             if not np.allclose(converted_predictions, predictions):
