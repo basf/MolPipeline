@@ -579,7 +579,7 @@ class PipelineTest(unittest.TestCase):
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                ("physchem", MolToRDKitPhysChem(standardizer=None)),
+                ("physchem", MolToRDKitPhysChem()),
                 ("error_filter", error_filter),
                 ("error_replacer", error_replacer),
             ],

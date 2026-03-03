@@ -2,7 +2,7 @@
 
 import copy
 from collections import Counter
-from typing import Any, Literal, Self
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -26,7 +26,6 @@ class MolToElementCount(MolToDescriptorPipelineElement):
     def __init__(
         self,
         element_list: list[int] | None = None,
-        standardizer: Literal["default"] | AnyTransformer | None = "default",
         name: str = "MolToElementCount",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -38,8 +37,6 @@ class MolToElementCount(MolToDescriptorPipelineElement):
         element_list: list[int] | None, default=None
             List of atomic numbers to count. If None, all elements from
             hydrogen (1) to oganesson (118) are counted.
-        standardizer: AnyTransformer | None, default=StandardScaler()
-            Used for post-processing the output, if not None.
         name: str, default="MolToElementCount"
             Name of the PipelineElement.
         n_jobs: int, default=1
@@ -49,7 +46,6 @@ class MolToElementCount(MolToDescriptorPipelineElement):
 
         """
         super().__init__(  # pylint: disable=duplicate-code
-            standardizer=standardizer,
             name=name,
             n_jobs=n_jobs,
             uuid=uuid,
