@@ -23,13 +23,23 @@ class TestPercentileStratifiedKFold(unittest.TestCase):
 
         splitter = PercentileStratifiedKFold(n_splits=5, n_groups=10, random_state=42)
 
-        for _, test_idx in splitter.split(feature_mat, y):
+        for train_idx, test_idx in splitter.split(feature_mat, y):
+            index_overlap = np.intersect1d(train_idx, test_idx)
+            self.assertEqual(index_overlap.size, 0, "Train and test indices overlap!")
+            index_union = set(np.union1d(train_idx, test_idx).tolist())
+            self.assertEqual(
+                index_union,
+                set(range(len(y))),
+                "Train and test indices do not cover all samples",
+            )
+
             y_test = y[test_idx]
+
             # Check that y contains values from all quantile groups in the test set
             # Since there are 10 groups for 10 orders of magnitude, which are split
             # into 5 folds, we expect each fold to contain values from 2 groups.
-            magintues = np.ceil(np.log10(y_test))
-            values, counts = np.unique(magintues, return_counts=True)
+            magnitudes = np.ceil(np.log10(y_test))
+            values, counts = np.unique(magnitudes, return_counts=True)
             # Check that all groups are represented
             self.assertListEqual(sorted(values.tolist()), list(range(10)))
             # Ensure that all counts are 2
