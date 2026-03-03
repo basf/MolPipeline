@@ -1,4 +1,4 @@
-"""Stratified K-Fold splitter for regression tasks using quantile-based binning."""
+"""Stratified K-Fold splitter for regression tasks."""
 
 from collections.abc import Iterator
 from typing import Any
@@ -7,13 +7,15 @@ import numpy as np
 import pandas as pd
 from numpy import typing as npt
 from sklearn.model_selection import StratifiedKFold
-from typing_extensions import override
+from typing_extensions import deprecated, override
 
 
-class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-method
-    """Stratified K-Fold splitter for regression tasks using quantile-based binning.
+class PercentileStratifiedKFold(StratifiedKFold):  # pylint: disable=abstract-method
+    """Stratified K-Fold splitter for regression tasks using percentile-based binning.
 
-    The pylint disable comment catches a false positive coming from sklearn.
+    This splitter bins continuous target values into percentiles, which by definition
+    are equally sized groups, and then applies stratified sampling to ensure that each
+    fold has a balanced distribution of target values across the percentiles.
 
     """
 
@@ -25,14 +27,14 @@ class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-me
         shuffle: bool = True,
         random_state: int | None = None,
     ) -> None:
-        """Initialize the StratifiedRegressionKFold.
+        """Initialize the PercentileStratifiedRegressionKFold.
 
         Parameters
         ----------
         n_splits : int, default=5
             Number of folds for cross-validation.
         n_groups : int, default=10
-            Number of quantile groups to create for stratification.
+            Number of percentile groups to create for stratification.
         shuffle : bool, default=True
             Whether to shuffle the data before splitting into batches.
         random_state : int | None, optional
@@ -67,27 +69,43 @@ class StratifiedRegressionKFold(StratifiedKFold):  # pylint: disable=abstract-me
         npt.NDArray[np.int_]
             The test indices.
 
+        Raises
+        ------
+        ValueError
+            If n_groups is greater than the number of unique target values.
+
         """
-        n_effective_groups = min(self.n_groups, len(np.unique(y)))
-        rng = np.random.default_rng(self.random_state)
-        y_mod = np.asarray(y)
-        y_mod += rng.random(len(y_mod)) * 1e-9
-        # Use pandas qcut for quantile binning
-        y_binned = pd.qcut(y_mod, n_effective_groups, labels=False, duplicates="drop")
+        n_groups = self.n_groups
+        y = np.asarray(y, dtype=np.float64)
+        if self.n_groups > len(np.unique(y)):
+            raise ValueError(
+                f"n_groups ({self.n_groups}) is greater than the number of unique "
+                f"target values ({len(np.unique(y))})!",
+            )
 
-        yield from super().split(y, y_binned)
+        try:
+            y_binned = pd.qcut(y, n_groups, labels=False, duplicates="raise")
+        except ValueError as e:
+            raise ValueError(
+                "Too many identical values in y for the specified number of groups!",
+            ) from e
+
+        yield from super().split(X, y_binned)
 
 
+@deprecated(
+    "Use the StratifiedRegressionKFold class directly instead of this helper function.",
+)
 def create_continuous_stratified_folds(
     y: npt.NDArray[Any],
     n_splits: int,
     n_groups: int = 10,
     random_state: int | None = None,
 ) -> list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]:
-    """Create stratified folds for continuous targets using quantile-based binning.
+    """Create stratified folds for continuous targets using percentile-based binning.
 
     This method creates stratified cross-validation folds for regression by:
-    1. Binning continuous targets into quantile-based groups
+    1. Binning continuous targets into percentile-based groups
     2. Using stratified sampling to ensure balanced target distribution
     3. Returning train/validation index pairs
 
@@ -98,7 +116,7 @@ def create_continuous_stratified_folds(
     n_splits : int
         Number of cross-validation folds.
     n_groups : int, optional
-        Number of quantile groups to create for stratification (default: 10).
+        Number of percentile groups to create for stratification (default: 10).
     random_state : int | None, optional
         Random state for reproducibility.
 
@@ -108,7 +126,7 @@ def create_continuous_stratified_folds(
         List of (train_indices, validation_indices) tuples for each fold.
 
     """
-    splitter = StratifiedRegressionKFold(
+    splitter = PercentileStratifiedKFold(
         n_splits=n_splits,
         n_groups=n_groups,
         shuffle=True,
