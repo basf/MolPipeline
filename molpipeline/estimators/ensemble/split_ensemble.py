@@ -68,7 +68,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
         model_input: npt.NDArray[Any],
         y: npt.NDArray[Any],
         **kwargs: Any,
-    ) -> BaseEstimator:
+    ) -> _T:
         """Clone the model and fit it on the given data.
 
         Parameters
@@ -315,7 +315,7 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
     @override
     def predict(
         self,
-        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        X: npt.ArrayLike,
     ) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.
 
