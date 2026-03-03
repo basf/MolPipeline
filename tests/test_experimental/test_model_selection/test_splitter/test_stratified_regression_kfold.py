@@ -79,7 +79,7 @@ class TestPercentileStratifiedKFold(unittest.TestCase):
         self.assertEqual(splitter.get_n_splits(), 42)
 
     def test_error_too_few_unique_y_values(self) -> None:
-        """Test that a Error is raised if n_groups is too large for y.
+        """Test that an Error is raised if n_groups is too large for y.
 
         There can be at most as many groups as there are unique target values, otherwise
         the stratification cannot be performed.
@@ -87,16 +87,16 @@ class TestPercentileStratifiedKFold(unittest.TestCase):
         """
         y = np.array([1.0, 2.0, 3.0, 1.0, 2.0, 3.0])
         x = np.random.default_rng(42).random((6, 2))
-        splitter = PercentileStratifiedKFold(n_splits=2, n_groups=10)
+        splitter = PercentileStratifiedKFold(n_splits=2, n_groups=4)
         expected_error_msg = (
-            r"n_groups \(10\) is greater than the number of unique "
+            r"n_groups \(4\) is greater than the number of unique "
             r"target values \(3\)"
         )
         with self.assertRaisesRegex(ValueError, expected_error_msg):
             list(splitter.split(x, y))
 
     def test_many_identical_y_values(self) -> None:
-        """Test that an error is raised if there are too manz identical y values."""
+        """Test that an error is raised if there are too many identical y values."""
         y = np.array([1.0, 2.0, 3.0, 4.0, 5.0] + [6.0] * 5)
         x = np.random.default_rng(42).random((10, 2))
         splitter = PercentileStratifiedKFold(n_splits=5, n_groups=3)
