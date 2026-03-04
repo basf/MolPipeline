@@ -232,19 +232,8 @@ class TestConformalClassifier(BaseConformalTestData):
 
     def test_evaluate_methods_cross_conformal(self) -> None:  # pylint: disable=too-many-locals
         """Test evaluate methods for cross-conformal predictors (classification)."""
-        # Test CrossConformalClassifier
-        x_train_clf, x_test_clf, y_train_clf, y_test_clf = train_test_split(
-            self.x_clf,
-            self.y_clf,
-            test_size=0.2,
-            random_state=RANDOM_SEED,
-        )
-
-        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
-            x_train_clf,
-            y_train_clf,
-            test_size=0.25,
-            random_state=RANDOM_SEED,
+        x_train_fit, x_calib, x_test_clf, y_train_fit, y_calib, y_test_clf = (
+            self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
 
         clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
@@ -517,18 +506,8 @@ class TestConformalClassifier(BaseConformalTestData):
 
     def test_cross_conformal_classifier(self) -> None:
         """Test CrossConformalClassifier."""
-        x_train, x_test, y_train, y_test = train_test_split(
-            self.x_clf,
-            self.y_clf,
-            test_size=0.2,
-            random_state=RANDOM_SEED,
-        )
-
-        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
-            x_train,
-            y_train,
-            test_size=0.25,
-            random_state=RANDOM_SEED,
+        x_train_fit, x_calib, x_test, y_train_fit, y_calib, y_test = (
+            self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
 
         clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
@@ -597,21 +576,12 @@ class TestConformalClassifier(BaseConformalTestData):
 
     def test_cross_conformal_confidence_effect_classification(self) -> None:
         """Test confidence level effect in cross-conformal classification."""
-        x_train, x_test, y_train, _y_test = train_test_split(
-            self.x_clf,
-            self.y_clf,
-            test_size=0.2,
-            random_state=RANDOM_SEED,
+        x_train_fit, x_calib, x_test, y_train_fit, y_calib, _y_test = (
+            self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
 
         clf = RandomForestClassifier(random_state=RANDOM_SEED, n_estimators=5)
         ccp = CrossConformalClassifier(clf, n_folds=2)
-        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
-            x_train,
-            y_train,
-            test_size=0.25,
-            random_state=RANDOM_SEED,
-        )
         ccp.fit(x_train_fit, y_train_fit)
         ccp.cv_splits_ = [
             (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
@@ -757,22 +727,13 @@ class TestConformalClassifier(BaseConformalTestData):
 
     def test_cross_conformal_classifier_antitonic(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
         """Test basic functionality of antitonic calibration for CCC."""
-        x_train, x_test, y_train, y_test = train_test_split(
-            self.x_clf,
-            self.y_clf,
-            test_size=0.2,
-            random_state=42,
+        x_train_fit, x_calib, x_test, y_train_fit, y_calib, y_test = (
+            self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         )
 
-        n_classes = len(np.unique(y_train))
+        n_classes = len(np.unique(y_train_fit))
         clf = RandomForestClassifier(random_state=42, n_estimators=5)
         model = CrossConformalClassifier(clf, n_folds=2)
-        x_train_fit, x_calib, y_train_fit, y_calib = train_test_split(
-            x_train,
-            y_train,
-            test_size=0.25,
-            random_state=RANDOM_SEED,
-        )
         model.fit(x_train_fit, y_train_fit)
         model.cv_splits_ = [
             (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),

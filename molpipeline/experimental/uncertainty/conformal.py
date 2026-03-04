@@ -3,7 +3,7 @@
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -319,6 +319,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         estimator: BaseEstimator,
         *,
         mondrian: bool = False,
+        calibrate_probs: bool = False,
         nonconformity: (str | NonconformityFunctor | None) = None,
         **kwargs: Any,
     ) -> None:
@@ -331,6 +332,10 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         mondrian : bool, optional
             Whether to use Mondrian (class-conditional) conformal prediction
             (default: False).
+        calibrate_probs : bool, optional
+            Default behavior for probability calibration during `calibrate()`.
+            If True, antitonic probability calibration is applied unless
+            overridden in `calibrate()` (default: False).
         nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use. Can be:
             - String: 'hinge', 'margin' (built-in functions)
@@ -347,6 +352,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         """
         super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.mondrian = mondrian
+        self.calibrate_probs = calibrate_probs
         if not (self.nonconformity_func is None or callable(self.nonconformity_func)):
             raise TypeError(
                 f"nonconformity_func must be a NonconformityFunctor or None, got "
@@ -361,7 +367,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
         **fit_params: Any,
-    ) -> "ConformalClassifier":
+    ) -> Self:
         """Fit the conformal classifier.
 
         Parameters
@@ -397,9 +403,9 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
-        calibrate_probs: bool = False,
+        calibrate_probs: bool | None = None,
         **calib_params: Any,
-    ) -> "ConformalClassifier":
+    ) -> Self:
         """Calibrate the conformal classifier.
 
         Parameters
@@ -408,9 +414,10 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Calibration features.
         y: npt.NDArray[Any]
             Calibration targets.
-        calibrate_probs : bool, optional
+        calibrate_probs : bool | None, optional
             If True, also calibrate probabilities via antitonic mapping using
-            isotonic regression (default: False).
+            isotonic regression. If None, uses the value configured in `__init__`
+            (default: None).
         **calib_params : Any
             Additional calibration parameters.
 
@@ -439,6 +446,9 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self._crepes_wrapper.calibrate(x, y, **kwargs)
         # Store number of classes
         self.n_classes_ = len(np.unique(y))
+
+        if calibrate_probs is None:
+            calibrate_probs = self.calibrate_probs
 
         # Optionally calibrate probabilities via isotonic regression
         if calibrate_probs:
@@ -686,6 +696,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         *,
         n_folds: int = 5,
         mondrian: bool = False,
+        calibrate_probs: bool = False,
         nonconformity: (str | NonconformityFunctor | None) = None,
         random_state: Generator | int | None = None,
         **kwargs: Any,
@@ -700,6 +711,10 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Number of cross-validation folds (default: 5).
         mondrian : bool, optional
             Whether to use Mondrian conformal prediction (default: False).
+        calibrate_probs : bool, optional
+            Default behavior for probability calibration in each fold during
+            `calibrate()`. If True, antitonic probability calibration is applied
+            unless overridden in `calibrate()` (default: False).
         nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use for all individual classifiers.
         random_state : int | None, optional
@@ -711,6 +726,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         super().__init__(estimator, nonconformity=nonconformity, **kwargs)
         self.n_folds = n_folds
         self.mondrian = mondrian
+        self.calibrate_probs = calibrate_probs
         self.random_state: Generator = (
             random_state
             if isinstance(random_state, Generator)
@@ -725,7 +741,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
         **fit_params: Any,
-    ) -> "CrossConformalClassifier":
+    ) -> Self:
         """Fit cross-conformal models (without calibration).
 
         This method trains one underlying estimator per fold on the respective
@@ -764,6 +780,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             model = ConformalClassifier(
                 clone(self.estimator),
                 mondrian=self.mondrian,
+                calibrate_probs=self.calibrate_probs,
                 nonconformity=self.nonconformity_func,
                 **self.kwargs,
             )
@@ -777,9 +794,9 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
-        calibrate_probs: bool = False,
+        calibrate_probs: bool | None = None,
         **calib_params: Any,
-    ) -> "CrossConformalClassifier":
+    ) -> Self:
         """Calibrate already-fitted cross-conformal models.
 
         Parameters
@@ -788,9 +805,10 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Features used to extract per-fold calibration splits.
         y: npt.NDArray[Any]
             Labels used to extract per-fold calibration splits.
-        calibrate_probs : bool, optional
+        calibrate_probs : bool | None, optional
             If True, also calibrate probabilities via antitonic mapping using
-            isotonic regression for each fold (default: False).
+            isotonic regression for each fold. If None, uses the value
+            configured in `__init__` (default: None).
         **calib_params : Any
             Additional parameters passed to each fold's `ConformalClassifier.calibrate`.
 
@@ -810,6 +828,9 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         if len(self.models_) != len(self.cv_splits_):
             raise ValueError("Internal error: models_ and cv_splits_ mismatch")
+
+        if calibrate_probs is None:
+            calibrate_probs = self.calibrate_probs
 
         for model, (_, calib_idx) in zip(self.models_, self.cv_splits_, strict=True):
             x_calib = x[calib_idx]
@@ -1045,7 +1066,7 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
         **fit_params: Any,
-    ) -> "ConformalRegressor":
+    ) -> Self:
         """Fit the conformal regressor.
 
         Parameters
@@ -1081,7 +1102,7 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
         **calib_params: Any,
-    ) -> "ConformalRegressor":
+    ) -> Self:
         """Calibrate the conformal regressor.
 
         Parameters
@@ -1294,7 +1315,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
         **fit_params: Any,
-    ) -> "CrossConformalRegressor":
+    ) -> Self:
         """Fit cross-conformal models (without calibration).
 
         This method trains one underlying estimator per fold on the respective
@@ -1330,8 +1351,8 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         y_array = np.asarray(y)
 
         for train_idx, calib_idx in splits:
-            x_train, _ = x_array[train_idx], x_array[calib_idx]
-            y_train, _ = y_array[train_idx], y_array[calib_idx]
+            x_train = x_array[train_idx]
+            y_train = y_array[train_idx]
 
             model = ConformalRegressor(
                 clone(self.estimator),
@@ -1352,7 +1373,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],
         **calib_params: Any,
-    ) -> "CrossConformalRegressor":
+    ) -> Self:
         """Calibrate already-fitted cross-conformal models.
 
         Parameters
