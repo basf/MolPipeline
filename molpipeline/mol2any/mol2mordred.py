@@ -6,12 +6,13 @@ from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
-from loguru import logger
 
 try:
     from mordred import Calculator, descriptors
+    from mordred._base.util import (
+        is_missing,  # noqa: PLC2701  T
+    )
 
-    # TODO also multiple of the default descriptors just fail for most basic molecules. Maybe remove them from the default list?
     MORDRED_DESCRIPTOR_DICT = {
         str(desc): desc for desc in Calculator(descriptors, ignore_3D=True).descriptors
     }
@@ -31,7 +32,115 @@ from molpipeline.abstract_pipeline_elements.mol2any import (
 from molpipeline.utils.molpipeline_types import AnyTransformer, RDKitMol
 
 MORDRED_DESCRIPTORS = list(MORDRED_DESCRIPTOR_DICT.keys())
-DEFAULT_DESCRIPTORS = MORDRED_DESCRIPTORS
+
+# Exclude descriptors which are usually nan for >95% of molecules.
+EXCLUDE_DESCRIPTORS = {
+    "MAXssBe",
+    "MAXsLi",
+    "MAXssssBe",
+    "MINssssGe",
+    "MINsssGeH",
+    "MINssGeH2",
+    "MINsAsH2",
+    "MINsssdAs",
+    "MINsssAs",
+    "MINssAsH",
+    "MINsGeH3",
+    "MINsssssAs",
+    "MINssPbH2",
+    "MINsssPbH",
+    "MAXsGeH3",
+    "MAXssGeH2",
+    "MINssBe",
+    "MINsLi",
+    "MAXssssPb",
+    "MAXsssPbH",
+    "MAXsssdAs",
+    "MAXsssAs",
+    "MAXsSnH3",
+    "MAXsssssAs",
+    "MAXsssSnH",
+    "MAXssSnH2",
+    "MINsSnH3",
+    "MINssssPb",
+    "MAXssPbH2",
+    "MAXssAsH",
+    "MINsPbH3",
+    "MINssssSn",
+    "MINsssSnH",
+    "MINssSnH2",
+    "MAXsPbH3",
+    "MAXssssSn",
+    "MINssssBe",
+    "MAXsssGeH",
+    "MAXsAsH2",
+    "MAXssssGe",
+    "MAXddssSe",
+    "MINddssSe",
+    "MAXsSeH",
+    "MINsSeH",
+    "MINsSiH3",
+    "MAXsSiH3",
+    "MINssSiH2",
+    "MAXssSiH2",
+    "MINsNH3",
+    "MINdssSe",
+    "MAXsNH3",
+    "MAXdssSe",
+    "MINsPH2",
+    "MAXsPH2",
+    "MINssBH",
+    "MAXssBH",
+    "MINssPH",
+    "MAXssPH",
+    "MAXdSe",
+    "MINdSe",
+    "MAXssNH2",
+    "MINssNH2",
+    "MAXsssSiH",
+    "MINsssSiH",
+    "MINsssssP",
+    "MAXsssssP",
+    "MAXsssNH",
+    "MINsssNH",
+    "MAXaaSe",
+    "MINaaSe",
+    "MAXssSe",
+    "MINssSe",
+    "MAXssssB",
+    "MINssssB",
+    "MAXsssP",
+    "MINsssP",
+    "MAXddC",
+    "MINddC",
+    "MINsssB",
+    "MAXsssB",
+    "MINsSH",
+    "MAXsSH",
+    "MAXssssSi",
+    "MINssssSi",
+    "MAXssssN",
+    "MINssssN",
+    "MAXdssS",
+    "MINdssS",
+    "MINsI",
+    "MAXsI",
+    "MAXtCH",
+    "MINtCH",
+    "MAXdNH",
+    "MINdNH",
+    "MAXdsssP",
+    "MINdsssP",
+    "MAXdCH2",
+    "MINdCH2",
+    "MDEN-11",
+    "MINdS",
+    "MAXdS",
+}
+
+DEFAULT_DESCRIPTORS = [
+    desc for desc in MORDRED_DESCRIPTORS if desc not in EXCLUDE_DESCRIPTORS
+]
 
 
 class MolToMordred(MolToDescriptorPipelineElement):
@@ -44,7 +153,7 @@ class MolToMordred(MolToDescriptorPipelineElement):
         descriptor_list: list[str] | None = None,
         return_with_errors: bool = False,
         standardizer: Literal["default"] | AnyTransformer | None = "default",
-        log_exceptions: bool = True,
+        return_dtype: type = np.float64,
         name: str = "MolToMordred",
         n_jobs: int = 1,
         uuid: str | None = None,
@@ -62,8 +171,8 @@ class MolToMordred(MolToDescriptorPipelineElement):
         standardizer: AnyTransformer | None
             Standardizer to apply to the descriptor vectors. If None, no standardization
             is applied. If "default", a StandardScaler is used.
-        log_exceptions: bool
-            If True, log exceptions that occur during descriptor calculation.
+        return_dtype: type
+            Data type of the returned descriptor vectors. Default is np.float64.
         name: str
             Name of the pipeline element.
         n_jobs: int
@@ -71,11 +180,18 @@ class MolToMordred(MolToDescriptorPipelineElement):
         uuid: str | None
             UUID of the pipeline element.
 
+        Raises
+        ------
+        ValueError
+            If return_dtype is not np.float64 or np.float32.
+
         """
         self.descriptor_list = descriptor_list  # type: ignore
         self._feature_names = self._descriptor_list
         self._return_with_errors = return_with_errors
-        self._log_exceptions = log_exceptions
+        if return_dtype not in {np.float64, np.float32}:
+            raise ValueError("return_dtype must be np.float64 or np.float32")
+        self._return_dtype = return_dtype
         super().__init__(
             standardizer=standardizer,
             name=name,
@@ -127,6 +243,11 @@ class MolToMordred(MolToDescriptorPipelineElement):
                         f"Unknown descriptor function with name: {descriptor_name}",
                     )
             self._descriptor_list = descriptor_list
+        # set calculator with the new descriptor list
+        self._calc = Calculator(
+            [MORDRED_DESCRIPTOR_DICT[d] for d in self._descriptor_list],
+            ignore_3D=False,
+        )
 
     def pretransform_single(
         self,
@@ -146,14 +267,15 @@ class MolToMordred(MolToDescriptorPipelineElement):
             Failure is indicated by an InvalidInstance.
 
         """
-        vec = np.full((len(self._descriptor_list),), np.nan)
-        for i, name in enumerate(self._descriptor_list):
-            descriptor_func = MORDRED_DESCRIPTOR_DICT[name]
-            try:
-                vec[i] = descriptor_func(value)
-            except Exception:  # pylint: disable=broad-except
-                if self._log_exceptions:
-                    logger.exception(f"Failed calculating descriptor: {name}")
+        # TODO set _Name to "" attribute in mol? Otherwise mordred will do an expensive
+        #  MolToSmiles(RemoveHs(…)) internally just to add some name.
+        # TODO having a Calculator for each worker might lead to RAM issues when n_jobs
+        #  is large. But with the sklearn logic there is no way around that, I think.
+        result = self._calc(value)
+        vec = np.array(
+            [np.nan if is_missing(v) else v for v in result],
+            dtype=self._return_dtype,
+        )
         if not self._return_with_errors and np.any(np.isnan(vec)):
             return InvalidInstance(self.uuid, "NaN in descriptor vector", self.name)
         return vec
@@ -176,11 +298,11 @@ class MolToMordred(MolToDescriptorPipelineElement):
         if deep:
             parent_dict["descriptor_list"] = copy.deepcopy(self._descriptor_list)
             parent_dict["return_with_errors"] = copy.deepcopy(self._return_with_errors)
-            parent_dict["log_exceptions"] = copy.deepcopy(self._log_exceptions)
+            parent_dict["return_dtype"] = self._return_dtype
         else:
             parent_dict["descriptor_list"] = self._descriptor_list
             parent_dict["return_with_errors"] = self._return_with_errors
-            parent_dict["log_exceptions"] = self._log_exceptions
+            parent_dict["return_dtype"] = self._return_dtype
         return parent_dict
 
     def set_params(self, **parameters: Any) -> Self:
@@ -198,7 +320,11 @@ class MolToMordred(MolToDescriptorPipelineElement):
 
         """
         parameters_shallow_copy = dict(parameters)
-        params_list = ["descriptor_list", "return_with_errors", "log_exceptions"]
+        if "descriptor_list" in parameters:
+            # use the setter to validate the descriptor list and update the calculator
+            self.descriptor_list = parameters["descriptor_list"]
+            parameters_shallow_copy.pop("descriptor_list")
+        params_list = ["return_with_errors", "return_dtype"]
         for param_name in params_list:
             if param_name in parameters:
                 setattr(self, f"_{param_name}", parameters[param_name])

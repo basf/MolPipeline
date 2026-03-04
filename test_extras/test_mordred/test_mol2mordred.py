@@ -84,22 +84,38 @@ class TestMolToMordred(unittest.TestCase):
         mol2mordred = MolToMordred(descriptor_list=descriptors, standardizer=None)
         params = mol2mordred.get_params(deep=True)
         self.assertEqual(params["descriptor_list"], descriptors)
+        self.assertEqual(params["return_dtype"], np.float64)
+        self.assertFalse(params["return_with_errors"])
 
         # Deep copy: modifying returned params should not affect original
         params["descriptor_list"].append("nHeavyAtom")
         self.assertEqual(mol2mordred.descriptor_list, descriptors)
-        mol2mordred2 = MolToMordred(**params)
+
+        # Use set_params to update descriptor_list, return_dtype, and return_with_errors
+        old_calc = mol2mordred._calc  # noqa: SLF001
+        mol2mordred.set_params(
+            descriptor_list=["MW", "nAtom", "nHeavyAtom"],
+            return_dtype=np.float32,
+            return_with_errors=True,
+        )
+        self.assertEqual(mol2mordred.descriptor_list, ["MW", "nAtom", "nHeavyAtom"])
+        # Verify that the internal Calculator was rebuilt
+        self.assertIsNot(mol2mordred._calc, old_calc)  # noqa: SLF001
+        self.assertEqual(len(mol2mordred._calc.descriptors), 3)  # noqa: SLF001
+        updated_params = mol2mordred.get_params(deep=True)
+        self.assertEqual(
+            updated_params["descriptor_list"],
+            ["MW", "nAtom", "nHeavyAtom"],
+        )
+        self.assertEqual(updated_params["return_dtype"], np.float32)
+        self.assertTrue(updated_params["return_with_errors"])
 
         mol = MolFromSmiles("CCO")
         result = mol2mordred.pretransform_single(mol)
-        result2 = mol2mordred2.pretransform_single(mol)
         if not isinstance(result, np.ndarray):
             raise AssertionError(f"Expected np.ndarray, got {type(result)}")
-        if not isinstance(result2, np.ndarray):
-            raise AssertionError(f"Expected np.ndarray, got {type(result2)}")
-        self.assertEqual(len(result), 2)
-        self.assertEqual(len(result2), 3)
-        self.assertTrue(np.array_equal(result, result2[:2]))
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result.dtype, np.float32)
 
     def test_descriptor_list_getter_returns_copy(self) -> None:
         """Test that the getter returns a copy, not the internal list."""
@@ -154,7 +170,6 @@ class TestMolToMordred(unittest.TestCase):
             descriptor_list=descriptors,
             return_with_errors=False,
             standardizer=None,
-            log_exceptions=False,
         )
         result_strict = mol2mordred_strict.pretransform_single(mol)
         self.assertIsInstance(result_strict, InvalidInstance)
@@ -163,7 +178,6 @@ class TestMolToMordred(unittest.TestCase):
             descriptor_list=descriptors,
             return_with_errors=True,
             standardizer=None,
-            log_exceptions=False,
         )
         result_lenient = mol2mordred_lenient.pretransform_single(mol)
         if not isinstance(result_lenient, np.ndarray):
@@ -173,6 +187,43 @@ class TestMolToMordred(unittest.TestCase):
         self.assertEqual(result_lenient.shape, (len(descriptors),))
         # should have some NaNs for failed descriptors
         self.assertGreater(np.isnan(result_lenient).sum(), 0)
+
+    def test_return_dtype_default(self) -> None:
+        """Test that default return_dtype is float64."""
+        descriptors = ["MW", "nAtom", "nHeavyAtom"]
+        mol2mordred = MolToMordred(descriptor_list=descriptors, standardizer=None)
+        mol = MolFromSmiles("CCO")
+        result = mol2mordred.pretransform_single(mol)
+        self.assertIsInstance(result, np.ndarray)
+        self.assertEqual(result.dtype, np.float64)
+
+    def test_return_dtype_float32(self) -> None:
+        """Test that return_dtype=np.float32 produces float32 output."""
+        descriptors = ["MW", "nAtom", "nHeavyAtom"]
+        mol2mordred = MolToMordred(
+            descriptor_list=descriptors,
+            standardizer=None,
+            return_dtype=np.float32,
+        )
+        mol = MolFromSmiles("CCO")
+        result = mol2mordred.pretransform_single(mol)
+        self.assertIsInstance(result, np.ndarray)
+        self.assertEqual(result.dtype, np.float32)
+
+    def test_return_dtype_invalid(self) -> None:
+        """Test that an invalid return_dtype raises ValueError."""
+        with self.assertRaises(ValueError):
+            MolToMordred(descriptor_list=["MW"], return_dtype=np.int32)
+
+    def test_return_dtype_in_params(self) -> None:
+        """Test that return_dtype is included in get_params."""
+        mol2mordred = MolToMordred(
+            descriptor_list=["MW"],
+            standardizer=None,
+            return_dtype=np.float32,
+        )
+        params = mol2mordred.get_params(deep=True)
+        self.assertEqual(params["return_dtype"], np.float32)
 
 
 if __name__ == "__main__":
