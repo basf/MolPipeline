@@ -287,7 +287,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             final_threshold=final_ts,
             n_years=1,
             splits_per_year=2,
-            round_to="day",
+            round_to="d",
         )
 
         self.assertGreaterEqual(len(splitter.threshold_list), 2)
@@ -308,19 +308,6 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             splitter_quarter = TimeThresholdSplitter(final_threshold=quarter)  # type: ignore
             self.assertIsInstance(splitter_quarter.threshold_list, list)
 
-    def test_round_threshold_validation(self) -> None:
-        """Ensure invalid round_to raises a clear ValueError."""
-        with self.assertRaisesRegex(
-            ValueError,
-            "round_to must be 'day', 'month', 'hour', or None",
-        ):
-            TimeThresholdSplitter(
-                final_threshold=pd.Timestamp("2022-12-31"),
-                splits_per_year=1,
-                n_years=1,
-                round_to="invalid",  # type: ignore[arg-type]
-            )
-
     def test_final_threshold_now_uses_current_year(self) -> None:
         """Ensure final_threshold='now' uses the current year as reference.
 
@@ -338,7 +325,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         self.assertEqual(len(splitter.threshold_list), 2)
         self.assertEqual(splitter.threshold_list[-1].year, now.year)
         self.assertEqual(splitter.threshold_list[-1].month, now.month)
-        self.assertEqual(splitter.threshold_list[-1].day, now.day)
+        self.assertEqual(splitter.threshold_list[-1].day, now.round("d").day)
         self.assertEqual(splitter.threshold_list[-1].hour, 0)
         self.assertEqual(splitter.threshold_list[-1].minute, 0)
         self.assertEqual(splitter.threshold_list[-1].second, 0)

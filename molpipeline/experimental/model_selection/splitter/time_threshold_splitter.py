@@ -11,7 +11,7 @@ import pandas as pd
 from molpipeline.experimental.model_selection.splitter.group_addition_splitter import (
     GroupAdditionSplit,
 )
-from molpipeline.utils.time_utils import floor_timestamp
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -45,7 +45,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         final_threshold: pd.Timestamp | FinalThresholdStr | None = None,
         n_years: int = 5,
         splits_per_year: int = 1,
-        round_to: Literal["day", "month", "hour"] | None = "day",
+        round_to: str | None = "d",
         # Generic AddOneGroupSplit parameters
         n_skip: int = 1,
         max_splits: int | None = None,
@@ -69,11 +69,9 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         splits_per_year : int, default=1
             Number of splits per year. Must be at least 1 if provided. Used only
             when ``threshold_list`` is None.
-        round_to : {"day", "month", "hour"} or None, default="day"
-            Rounding precision for threshold timestamps when constructing them
-            from ``final_threshold``. Options: "day" (midnight), "month"
-            (start of month), "hour" (start of hour). If ``None``, keep exact
-            fractional timestamps.
+        round_to : str | None, default="d"
+            Rounding precision for generated thresholds when ``threshold_list`` is
+            None. For options please refer to pandas.Timestamp.round.html [1].
         n_skip : int, default=1
             Number of initial groups to skip as test sets. These groups are
             always part of the training set.
@@ -93,6 +91,10 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             If ``threshold_list`` is empty after resolution.
         ValueError
             If ``splits_per_year`` is provided and is less than 1.
+
+        References
+        ----------
+        [1] https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.round.html
 
         """
         super().__init__(n_skip=n_skip, max_splits=max_splits)
@@ -158,7 +160,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         resolved_final = self._resolve_final_threshold(final_threshold)
         constructed_thresholds: list[pd.Timestamp] = []
 
-        time_delta = pd.Timedelta(days=365.25 / splits_per_year)
+        time_delta = pd.Timedelta(days=365.2425 / splits_per_year)
 
         # We go backwards in time from the resolved final threshold over n_years
         for year_offset in range(n_years):
@@ -173,7 +175,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             )
             for split in range(splits_per_year):
                 threshold = year_start - split * time_delta
-                threshold = floor_timestamp(threshold, round_to)
+                threshold = threshold.round(round_to) if round_to else threshold
                 constructed_thresholds.append(threshold)
 
         return constructed_thresholds
