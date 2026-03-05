@@ -45,7 +45,7 @@ class TestThresholdsForNYears(unittest.TestCase):
             final_threshold=final_threshold,
             n_years=n_years,
             splits_per_year=splits_per_year,
-            date_precision="normalize",
+            date_precision="D",
         )
         expected_thresholds = [
             pd.Timestamp("2024-01-01 00:00:00"),

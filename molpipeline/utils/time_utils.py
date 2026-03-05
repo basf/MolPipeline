@@ -115,9 +115,7 @@ def thresholds_for_n_years(
         # Split intervals does not include start or end
         threshold_list.append(end)
 
-    if date_precision == "normalize":
-        threshold_list = [ts.normalize() for ts in threshold_list]
-    elif date_precision is not None:
+    if date_precision is not None:
         threshold_list = [floor_date(ts, date_precision) for ts in threshold_list]
 
     if len(threshold_list) != len(set(threshold_list)):

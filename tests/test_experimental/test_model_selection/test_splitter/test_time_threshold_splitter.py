@@ -289,7 +289,6 @@ class TestTimeThresholdSplitter(unittest.TestCase):
 
         # The following tests check the round_to parameter for "today".
         today_results_dict = {
-            "normalize": pd.Timestamp.now().normalize(),
             "D": pd.Timestamp.now().floor("D"),
             None: pd.Timestamp.now(),
         }

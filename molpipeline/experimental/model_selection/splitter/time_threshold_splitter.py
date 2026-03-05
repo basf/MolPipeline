@@ -41,7 +41,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         final_threshold: pd.Timestamp | str | None = None,
         n_years: int = 5,
         splits_per_year: int = 1,
-        date_precision: str | None = "normalize",
+        date_precision: str | None = "D",
     ) -> None:
         """Initialize the TimeThresholdSplitter.
 
@@ -60,7 +60,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             related parameters.
         final_threshold : pd.Timestamp | str, optional
             The upper bound for generating thresholds when `threshold_list` is
-            not provided. `today` uses the current timestamp. `Q1`-`Q4`
+            not provided. "today" uses the current timestamp. "Q1"-"Q4"
             use the start of the respective quarter in the current year.
         n_years : int, default=5
             Number of years to create the splits for when constructing thresholds
@@ -68,9 +68,9 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         splits_per_year : int, default=1
             Number of splits per year. Must be at least 1 if provided. Used only
             when `threshold_list` is None.
-        date_precision : str | None, default="normalize"
-            The default "normalize" rounds to the beginning of the day.
-            If None, no rounding is applied. Other options can be used as described in
+        date_precision : str | None, default="D"
+            The default "D" rounds to the beginning of the day.
+            If `None`, no rounding is applied. Other options can be used as described in
             the pandas documentation [1].
 
         Raises
