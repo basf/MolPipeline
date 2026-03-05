@@ -78,14 +78,11 @@ class TestThresholdsForNYears(unittest.TestCase):
 
     def test_thresholds_for_n_years_full_year_splits(self) -> None:
         """Test generating thresholds for 2 years with yearly splits."""
-        final_threshold = "2024-0-01 00:00:00"
-        n_years = 2
-        splits_per_year = 1
         thresholds = thresholds_for_n_years(
-            final_threshold=final_threshold,
-            n_years=n_years,
-            splits_per_year=splits_per_year,
-            date_precision="normalize",
+            final_threshold="2024-01-01 00:00:00",
+            n_years=3,
+            splits_per_year=1,
+            date_precision="D",
         )
         expected_thresholds = [
             pd.Timestamp("2024-01-01 00:00:00"),
@@ -95,18 +92,18 @@ class TestThresholdsForNYears(unittest.TestCase):
         self.assertTrue(np.array_equal(thresholds, expected_thresholds))  # type: ignore
 
     def test_non_unique_thresholds_for_n_years(self) -> None:
-        """Test that non-unique thresholds are handled correctly."""
-        final_threshold = "2024-01-01 00:00:00"
-        n_years = 2
-        splits_per_year = (
-            2  # This will create duplicate thresholds at the year boundary
-        )
+        """Test that non-unique thresholds are handled correctly.
+
+        Requiring at least 2 splits per year with yearly precision for a 2-year range
+        will lead to duplicate thresholds, which should raise a ValueError.
+
+        """
         msg = "Generated thresholds are not unique. Consider adjusting the "
         with self.assertRaisesRegex(ValueError, msg):
             thresholds_for_n_years(
-                final_threshold=final_threshold,
-                n_years=n_years,
-                splits_per_year=splits_per_year,
+                final_threshold="2024-01-01 00:00:00",
+                n_years=2,
+                splits_per_year=2,
                 date_precision="Y",
             )
 
