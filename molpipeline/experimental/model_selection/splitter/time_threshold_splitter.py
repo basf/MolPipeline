@@ -35,21 +35,25 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
 
     def __init__(
         self,
+        n_skip: int = 1,
+        max_splits: int | None = None,
         threshold_list: list[pd.Timestamp] | None = None,
         *,
-        # Parameters for time-based construction when threshold_list is not provided
         final_threshold: pd.Timestamp | NamedTimeStamps | None = None,
         n_years: int = 5,
         splits_per_year: int = 1,
         round_to: str | None = "d",
-        # Generic AddOneGroupSplit parameters
-        n_skip: int = 1,
-        max_splits: int | None = None,
     ) -> None:
         """Initialize the TimeThresholdSplitter.
 
         Parameters
         ----------
+        n_skip : int, default=1
+            Number of initial groups to skip as test sets. These groups are
+            always part of the training set.
+        max_splits : int | None, optional
+            Maximum number of splits to create, by default ``None``. If more
+            splits are possible, only the last ones are returned.
         threshold_list : list[pd.Timestamp] | None, optional
             Explicit list of time thresholds to partition the data into groups.
             Data points are assigned to groups based on which threshold they exceed.
@@ -68,12 +72,6 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         round_to : str | None, default="d"
             Rounding precision for generated thresholds when ``threshold_list`` is
             None. For options please refer to pandas.Timestamp.round.html [1].
-        n_skip : int, default=1
-            Number of initial groups to skip as test sets. These groups are
-            always part of the training set.
-        max_splits : int | None, optional
-            Maximum number of splits to create, by default ``None``. If more
-            splits are possible, only the last ones are returned.
 
         Raises
         ------
