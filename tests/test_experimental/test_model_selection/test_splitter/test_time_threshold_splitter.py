@@ -9,6 +9,7 @@ import pandas as pd
 from molpipeline.experimental.model_selection.splitter.time_threshold_splitter import (
     TimeThresholdSplitter,
 )
+from molpipeline.utils.time_utils import resolve_named_time_stamps
 
 
 class TestTimeThresholdSplitter(unittest.TestCase):
@@ -151,7 +152,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             (np.array([0, 1, 2, 3]), np.array([4, 5])),
             (np.array([0, 1, 2, 3, 4, 5]), np.array([6, 7])),
         ]
-        self.assertEqual(n_splits, len(threshold_list)- n_skip)
+        self.assertEqual(n_splits, len(threshold_list) - n_skip)
         self.assertEqual(n_splits, len(expected))
         self._assert_splits_equal(splits, expected)
 
@@ -163,7 +164,10 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             pd.Timestamp("2022-06-01"),
         ]
         max_splits = 1
-        splitter = TimeThresholdSplitter(threshold_list=threshold_list, max_splits=max_splits)
+        splitter = TimeThresholdSplitter(
+            threshold_list=threshold_list,
+            max_splits=max_splits,
+        )
 
         time_data = pd.Series(
             [
@@ -291,13 +295,44 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             self.assertEqual(threshold.microsecond, 0)
 
     def test_resolve_final_threshold_special_strings(self) -> None:
-        """Test that "now" and quarter strings are accepted as final_threshold."""
-        splitter_now = TimeThresholdSplitter(final_threshold="now")
-        self.assertIsInstance(splitter_now.threshold_list, list)
+        """Test that special time strings are accepted as final_threshold."""
+        for time_str in ["now", "today", "Q1", "Q2", "Q3", "Q4"]:
+            splitter = TimeThresholdSplitter(final_threshold=time_str)
+            threshold_list = splitter.threshold_list
+            self.assertIsInstance(threshold_list, list)
+            expected_date = resolve_named_time_stamps(time_str)
+            if time_str == "now":
+                self.assertEqual(threshold_list[-1], expected_date.normalize())
+            else:
+                self.assertEqual(threshold_list[-1], expected_date)
 
-        for quarter in ["Q1", "Q2", "Q3", "Q4"]:
-            splitter_quarter = TimeThresholdSplitter(final_threshold=quarter)  # type: ignore
-            self.assertIsInstance(splitter_quarter.threshold_list, list)
+        # The following tests check the round_to parameter for "now" and "today".
+        now_results_dict = {
+            "normalize": pd.Timestamp.now().normalize(),
+            "D": pd.Timestamp.now().round("D"),
+            None: pd.Timestamp.now(),
+        }
+        for round_to, expected_now in now_results_dict.items():
+            splitter = TimeThresholdSplitter(
+                final_threshold="now",
+                n_years=1,
+                splits_per_year=1,
+                round_to=round_to,
+            )
+            time_delta = abs(splitter.threshold_list[-1] - expected_now)
+            self.assertLessEqual(time_delta, pd.Timedelta(seconds=1))
+
+        for round_to in ["normalize", "D", None]:
+            splitter = TimeThresholdSplitter(
+                final_threshold="today",
+                n_years=1,
+                splits_per_year=1,
+                round_to=round_to,
+            )
+            self.assertEqual(
+                splitter.threshold_list[-1],
+                pd.Timestamp.now().normalize(),
+            )
 
     def test_final_threshold_now_uses_current_year(self) -> None:
         """Ensure final_threshold='now' uses the current year as reference.
