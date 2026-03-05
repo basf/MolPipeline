@@ -7,6 +7,28 @@ import numpy.typing as npt
 import pandas as pd
 
 
+def floor_date(
+    timestamp: pd.Timestamp,
+    precision: str,
+) -> pd.Timestamp:
+    """Round a timestamp down to a specified precision.
+
+    Parameters
+    ----------
+    timestamp : pd.Timestamp
+        The timestamp to round.
+    precision : str
+        The precision to round to.
+
+    Returns
+    -------
+    pd.Timestamp
+        The rounded timestamp.
+
+    """
+    return timestamp.to_period(precision).start_time
+
+
 def split_intervals(
     start: pd.Timestamp,
     end: pd.Timestamp,
@@ -50,7 +72,7 @@ def thresholds_for_n_years(
     final_threshold: pd.Timestamp | str,
     n_years: int,
     splits_per_year: int,
-    round_to: str | None,
+    date_precision: str | None,
 ) -> list[pd.Timestamp]:
     """Generate a threshold list from a final threshold and a nof. years to go back.
 
@@ -62,7 +84,7 @@ def thresholds_for_n_years(
         Number of years to create the splits for.
     splits_per_year : int
         Number of splits per year. Must be at least 1.
-    round_to : str | None
+    date_precision : str | None
         Rounding precision for threshold timestamps.
 
     Returns
@@ -74,6 +96,9 @@ def thresholds_for_n_years(
     ------
     ValueError
         If required parameters are missing or invalid.
+    ValueError
+        If generated thresholds are not unique, which can happen if date_precision is
+        too coarse or splits per year is too low.
 
     """
     if splits_per_year < 1:
@@ -90,12 +115,16 @@ def thresholds_for_n_years(
         # Split intervals does not include start or end
         threshold_list.append(end)
 
-    threshold_list = [pd.Timestamp(ts) for ts in threshold_list]
-
-    if round_to == "normalize":
+    if date_precision == "normalize":
         threshold_list = [ts.normalize() for ts in threshold_list]
-    elif round_to is not None:
-        threshold_list = [ts.round(round_to) for ts in threshold_list]
+    elif date_precision is not None:
+        threshold_list = [floor_date(ts, date_precision) for ts in threshold_list]
+
+    if len(threshold_list) != len(set(threshold_list)):
+        raise ValueError(
+            "Generated thresholds are not unique. "
+            "Consider adjusting the date_precision or splits_per_year.",
+        )
 
     return sorted(threshold_list, reverse=True)
 

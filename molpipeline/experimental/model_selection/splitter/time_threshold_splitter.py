@@ -41,7 +41,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         final_threshold: pd.Timestamp | str | None = None,
         n_years: int = 5,
         splits_per_year: int = 1,
-        round_to: str | None = "normalize",
+        date_precision: str | None = "normalize",
     ) -> None:
         """Initialize the TimeThresholdSplitter.
 
@@ -68,10 +68,10 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         splits_per_year : int, default=1
             Number of splits per year. Must be at least 1 if provided. Used only
             when ``threshold_list`` is None.
-        round_to : str | None, default="normalize"
+        date_precision : str | None, default="normalize"
             The default "normalize" rounds to the beginning of the day.
             If None, no rounding is applied. Other options can be used as described in
-            pandas.Timestamp.round.html [1].
+            pandas.Timestamp.floor.html [1].
 
         Raises
         ------
@@ -88,7 +88,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
 
         References
         ----------
-        [1] https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.round.html
+        [1] https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.floor.html
 
         """
         super().__init__(n_skip=n_skip, max_splits=max_splits)
@@ -108,7 +108,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
                 final_threshold=final_threshold,
                 n_years=n_years,
                 splits_per_year=splits_per_year,
-                round_to=round_to,
+                date_precision=date_precision,
             )
 
         if len(threshold_list) == 0:

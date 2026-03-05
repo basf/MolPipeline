@@ -263,7 +263,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             final_threshold=final_ts,
             n_years=1,
             splits_per_year=2,
-            round_to="D",
+            date_precision="D",
         )
 
         self.assertGreaterEqual(len(splitter.threshold_list), 2)
@@ -290,7 +290,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         # The following tests check the round_to parameter for "today".
         today_results_dict = {
             "normalize": pd.Timestamp.now().normalize(),
-            "D": pd.Timestamp.now().round("D"),
+            "D": pd.Timestamp.now().floor("D"),
             None: pd.Timestamp.now(),
         }
         for round_to, expected_now in today_results_dict.items():
@@ -298,7 +298,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
                 final_threshold="today",
                 n_years=1,
                 splits_per_year=1,
-                round_to=round_to,
+                date_precision=round_to,
             )
             time_delta = abs(splitter.threshold_list[-1] - expected_now)
             self.assertLessEqual(time_delta, pd.Timedelta(seconds=1))

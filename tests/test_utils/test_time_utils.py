@@ -41,12 +41,11 @@ class TestThresholdsForNYears(unittest.TestCase):
         final_threshold = "2024-01-01 00:00:00"
         n_years = 2
         splits_per_year = 4
-        round_to = "normalize"
         thresholds = thresholds_for_n_years(
             final_threshold=final_threshold,
             n_years=n_years,
             splits_per_year=splits_per_year,
-            round_to=round_to,
+            date_precision="normalize",
         )
         expected_thresholds = [
             pd.Timestamp("2024-01-01 00:00:00"),
@@ -59,6 +58,57 @@ class TestThresholdsForNYears(unittest.TestCase):
             pd.Timestamp("2022-04-02 00:00:00"),
         ]
         self.assertTrue(np.array_equal(thresholds, expected_thresholds))
+
+    def test_thresholds_for_n_years_to_month(self) -> None:
+        """Test generating thresholds for 2 years with quarterly splits."""
+        final_threshold = "2024-07-07 00:08:41"  # Somewhere in the middle of the month
+        thresholds = thresholds_for_n_years(
+            final_threshold=final_threshold,
+            n_years=4,
+            splits_per_year=1,
+            date_precision="Y",
+        )
+        expected_thresholds = [
+            pd.Timestamp("2024-01-01 00:00:00"),
+            pd.Timestamp("2023-01-01 00:00:00"),
+            pd.Timestamp("2022-01-01 00:00:00"),
+            pd.Timestamp("2021-01-01 00:00:00"),
+        ]
+        self.assertTrue(np.array_equal(thresholds, expected_thresholds))
+
+    def test_thresholds_for_n_years_full_year_splits(self) -> None:
+        """Test generating thresholds for 2 years with yearly splits."""
+        final_threshold = "2024-0-01 00:00:00"
+        n_years = 2
+        splits_per_year = 1
+        thresholds = thresholds_for_n_years(
+            final_threshold=final_threshold,
+            n_years=n_years,
+            splits_per_year=splits_per_year,
+            date_precision="normalize",
+        )
+        expected_thresholds = [
+            pd.Timestamp("2024-01-01 00:00:00"),
+            pd.Timestamp("2023-01-01 00:00:00"),
+            pd.Timestamp("2022-01-01 00:00:00"),
+        ]
+        self.assertTrue(np.array_equal(thresholds, expected_thresholds))
+
+    def test_non_unique_thresholds_for_n_years(self) -> None:
+        """Test that non-unique thresholds are handled correctly."""
+        final_threshold = "2024-01-01 00:00:00"
+        n_years = 2
+        splits_per_year = (
+            2  # This will create duplicate thresholds at the year boundary
+        )
+        msg = "Generated thresholds are not unique. Consider adjusting the "
+        with self.assertRaisesRegex(ValueError, msg):
+            thresholds_for_n_years(
+                final_threshold=final_threshold,
+                n_years=n_years,
+                splits_per_year=splits_per_year,
+                date_precision="Y",
+            )
 
 
 class TestTimestampToGroup(unittest.TestCase):
