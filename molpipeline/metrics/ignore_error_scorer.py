@@ -11,7 +11,7 @@ from sklearn import metrics
 from sklearn.metrics._scorer import _BaseScorer
 
 
-class _IgnoreValueScoreFunc:
+class _IgnoreValueScoreFunc:  # pylint: disable=too-few-public-methods
     """Callable score function that filters out a given ignore value before scoring.
 
     This class wraps a score function so that it can be pickled.
