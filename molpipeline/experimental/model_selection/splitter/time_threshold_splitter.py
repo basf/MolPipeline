@@ -10,7 +10,6 @@ from molpipeline.experimental.model_selection.splitter.group_addition_splitter i
     GroupAdditionSplit,
 )
 from molpipeline.utils.time_utils import (
-    NamedTimeStamps,
     thresholds_for_n_years,
     timestamp_to_group,
 )
@@ -39,7 +38,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         max_splits: int | None = None,
         threshold_list: list[pd.Timestamp] | None = None,
         *,
-        final_threshold: pd.Timestamp | NamedTimeStamps | None = None,
+        final_threshold: pd.Timestamp | str | None = None,
         n_years: int = 5,
         splits_per_year: int = 1,
         round_to: str | None = "normalize",
@@ -59,7 +58,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             Data points are assigned to groups based on which threshold they exceed.
             If None, thresholds are constructed from ``final_threshold`` and
             related parameters.
-        final_threshold : pd.Timestamp or {"today", "Q1", "Q2", "Q3", "Q4"}, optional
+        final_threshold : pd.Timestamp | str, optional
             The upper bound for generating thresholds when ``threshold_list`` is
             not provided. ``"today"`` uses the current timestamp. ``"Q1"``-""Q4"``
             use the start of the respective quarter in the current year.

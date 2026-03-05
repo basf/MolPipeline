@@ -1,13 +1,10 @@
 """Wibbly wobbly, timey wimey ... stuff."""
 
 import contextlib
-from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-
-NamedTimeStamps = Literal["today", "Q1", "Q2", "Q3", "Q4"]
 
 
 def split_intervals(
@@ -50,7 +47,7 @@ def split_intervals(
 
 
 def thresholds_for_n_years(
-    final_threshold: pd.Timestamp | NamedTimeStamps,
+    final_threshold: pd.Timestamp | str,
     n_years: int,
     splits_per_year: int,
     round_to: str | None,
@@ -59,7 +56,7 @@ def thresholds_for_n_years(
 
     Parameters
     ----------
-    final_threshold : pandas.Timestamp or {"today", "Q1", "Q2", "Q3", "Q4"}
+    final_threshold : pandas.Timestamp, date-str, or {"today", "Q1", "Q2", "Q3", "Q4"}
         The upper bound for the generated thresholds.
     n_years : int
         Number of years to create the splits for.
@@ -131,14 +128,14 @@ def timestamp_to_group(
 
 
 def resolve_named_time_stamps(
-    time_stamp: NamedTimeStamps | pd.Timestamp,
+    time_stamp: str | pd.Timestamp,
 ) -> pd.Timestamp:
     """Convert special time strings to pd.Timestamp.
 
     Parameters
     ----------
-    time_stamp : FinalThresholdStr | pd.Timestamp
-        Can be a pd.Timestamp, "today", or one of "Q1", "Q2", "Q3", "Q4".
+    time_stamp : str | pd.Timestamp
+        Can be a pd.Timestamp, date-str, "today", or one of "Q1", "Q2", "Q3", "Q4".
 
     Returns
     -------
