@@ -117,5 +117,5 @@ def resolve_named_time_stamps(
 
     raise ValueError(
         "Unsupported final_threshold value. "
-        "Use a Timestamp, 'now', or one of 'Q1', 'Q2', 'Q3', 'Q4'.",
+        "Use a Timestamp, 'now', 'today', or one of 'Q1', 'Q2', 'Q3', 'Q4'.",
     )
