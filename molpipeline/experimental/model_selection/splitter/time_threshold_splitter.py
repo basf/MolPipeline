@@ -11,7 +11,7 @@ from molpipeline.experimental.model_selection.splitter.group_addition_splitter i
 )
 from molpipeline.utils.time_utils import (
     NamedTimeStamps,
-    resolve_named_time_stamps,
+    thresholds_for_n_years,
     timestamp_to_group,
 )
 
@@ -59,9 +59,9 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             Data points are assigned to groups based on which threshold they exceed.
             If None, thresholds are constructed from ``final_threshold`` and
             related parameters.
-        final_threshold : pandas.Timestamp or {"now", "Q1", "Q2", "Q3", "Q4"}, optional
+        final_threshold : pd.Timestamp or {"today", "Q1", "Q2", "Q3", "Q4"}, optional
             The upper bound for generating thresholds when ``threshold_list`` is
-            not provided. ``"now"`` uses the current timestamp. ``"Q1"``-""Q4"``
+            not provided. ``"today"`` uses the current timestamp. ``"Q1"``-""Q4"``
             use the start of the respective quarter in the current year.
         n_years : int, default=5
             Number of years to create the splits for when constructing thresholds
@@ -105,10 +105,10 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
                     "Either 'threshold_list' must be provided or "
                     "'final_threshold' must be specified to generate thresholds.",
                 )
-            threshold_list = self._build_thresholds_from_years(
-                splits_per_year=splits_per_year,
+            threshold_list = thresholds_for_n_years(
                 final_threshold=final_threshold,
                 n_years=n_years,
+                splits_per_year=splits_per_year,
                 round_to=round_to,
             )
 
@@ -116,68 +116,6 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             raise ValueError("threshold_list must contain at least one timestamp.")
 
         self.threshold_list = sorted(threshold_list)
-
-    @staticmethod
-    def _build_thresholds_from_years(
-        *,
-        splits_per_year: int,
-        final_threshold: pd.Timestamp | NamedTimeStamps,
-        n_years: int,
-        round_to: str | None,
-    ) -> list[pd.Timestamp]:
-        """Construct a threshold list from year-based configuration.
-
-        Parameters
-        ----------
-        splits_per_year : int
-            Number of splits per year. Must be at least 1.
-        final_threshold : pandas.Timestamp or {"now", "today", "Q1", "Q2", "Q3", "Q4"}
-            The upper bound for the generated thresholds.
-        n_years : int
-            Number of years to create the splits for.
-        round_to : str | None
-            Rounding precision for threshold timestamps.
-
-        Returns
-        -------
-        list[pd.Timestamp]
-            A list of constructed threshold timestamps.
-
-        Raises
-        ------
-        ValueError
-            If required parameters are missing or invalid.
-
-        """
-        if splits_per_year < 1:
-            raise ValueError("splits_per_year must be at least 1.")
-
-        resolved_final = resolve_named_time_stamps(final_threshold)
-        constructed_thresholds: list[pd.Timestamp] = []
-
-        time_delta = pd.Timedelta(days=365.2425 / splits_per_year)
-
-        # We go backwards in time from the resolved final threshold over n_years
-        for year_offset in range(n_years):
-            year_start = pd.Timestamp(
-                year=resolved_final.year - year_offset,
-                month=resolved_final.month,
-                day=resolved_final.day,
-                hour=resolved_final.hour,
-                minute=resolved_final.minute,
-                second=resolved_final.second,
-                microsecond=resolved_final.microsecond,
-            )
-            for split in range(splits_per_year):
-                threshold = year_start - split * time_delta
-
-                if round_to == "normalize":
-                    threshold = threshold.normalize()
-                elif round_to is not None:
-                    threshold = threshold.round(round_to)
-                constructed_thresholds.append(threshold)
-
-        return constructed_thresholds
 
     def split(
         self,
