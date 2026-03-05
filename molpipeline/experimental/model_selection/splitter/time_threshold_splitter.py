@@ -1,7 +1,6 @@
 """TimeThresholdSplitter implementation."""
 
 from collections.abc import Iterator
-from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -125,7 +124,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         splits_per_year: int,
         final_threshold: pd.Timestamp | NamedTimeStamps,
         n_years: int,
-        round_to: Literal["day", "month", "hour"] | None,
+        round_to: str | None,
     ) -> list[pd.Timestamp]:
         """Construct a threshold list from year-based configuration.
 
@@ -137,7 +136,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             The upper bound for the generated thresholds.
         n_years : int
             Number of years to create the splits for.
-        round_to : {"day", "month", "hour"} or None
+        round_to : str | None
             Rounding precision for threshold timestamps.
 
         Returns
