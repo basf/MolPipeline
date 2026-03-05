@@ -30,6 +30,9 @@ class _IgnoreValueScoreFunc:  # pylint: disable=too-few-public-methods
         """
         self.score_func = score_func
         self.ignore_value = ignore_value
+        # Forward the name of the wrapped score function because sklearn GridSearchCV's
+        # multimetric scoring calls __name__ on the score function for its __repr__
+        self.__name__ = getattr(score_func, "__name__", type(score_func).__name__)
 
     def __call__(
         self,

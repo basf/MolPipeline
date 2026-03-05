@@ -8,6 +8,8 @@ import joblib
 import numpy as np
 from sklearn import linear_model
 from sklearn.metrics import get_scorer
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
 
 from molpipeline.metrics import ignored_value_scorer
 
@@ -117,3 +119,66 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         original_score = original_f(estimator, x, y_true)
         unpickled_score = unpickled_f(estimator, x, y_true)
         self.assertAlmostEqual(original_score, unpickled_score)
+
+    def test_grid_search_cv(self) -> None:
+        """Test that ignored_value_scorer works as scoring in GridSearchCV."""
+        rng = np.random.default_rng(42)
+        x = rng.standard_normal((50, 5))
+        y = (x[:, 0] > 0).astype(int)
+
+        scorer = ignored_value_scorer("balanced_accuracy", np.nan)
+
+        grid_search = GridSearchCV(
+            estimator=SVC(),
+            param_grid={"C": [0.1, 1.0]},
+            scoring=scorer,
+            cv=2,
+            n_jobs=1,
+        )
+        grid_search.fit(x, y)
+
+        self.assertIn("mean_test_score", grid_search.cv_results_)
+        self.assertIsNotNone(grid_search.best_score_)
+        self.assertGreater(grid_search.best_score_, 0.0)
+
+    def test_grid_search_cv_multimetric(self) -> None:
+        """Test that ignored_value_scorer works in multimetric GridSearchCV.
+
+        There was a bug with multimetric scoring because GridSearchCV will call
+        __name__ on the scorer for its __repr__, and if the scorer is an instance of
+        ignored_value_scorer, then _IgnoreValueScoreFunc must have a __name__ attribute.
+        """
+        rng = np.random.default_rng(42)
+        x = rng.standard_normal((50, 5))
+        y = (x[:, 0] > 0).astype(int)
+
+        scoring = {
+            "ba": ignored_value_scorer("balanced_accuracy", np.nan),
+            "f1": ignored_value_scorer("f1", np.nan),
+        }
+
+        grid_search = GridSearchCV(
+            estimator=SVC(),
+            param_grid={"C": [0.1, 1.0]},
+            scoring=scoring,
+            refit="ba",
+            cv=2,
+            n_jobs=1,
+        )
+        grid_search.fit(x, y)
+
+        # Verify that __name__ is correctly forwarded through GridSearchCV's
+        # public scorer_ attribute
+        self.assertEqual(
+            grid_search.scorer_["ba"]._score_func.__name__,  # noqa: SLF001
+            scoring["ba"]._score_func.__name__,  # noqa: SLF001
+        )
+        self.assertEqual(
+            grid_search.scorer_["f1"]._score_func.__name__,  # noqa: SLF001
+            scoring["f1"]._score_func.__name__,  # noqa: SLF001
+        )
+
+        self.assertIn("mean_test_ba", grid_search.cv_results_)
+        self.assertIn("mean_test_f1", grid_search.cv_results_)
+        self.assertIsNotNone(grid_search.best_score_)
+        self.assertGreater(grid_search.best_score_, 0.0)
