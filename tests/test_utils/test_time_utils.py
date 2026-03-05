@@ -30,7 +30,7 @@ class TestSplitIntervals(unittest.TestCase):
         ]
         # Fencepost error: 4 thresholds -> 5 intervals
         self.assertEqual(n_intervals, len(thresholds) + 1)
-        self.assertTrue(np.array_equal(thresholds, pd.to_datetime(expected_thresholds)))
+        self.assertTrue(np.array_equal(thresholds, pd.to_datetime(expected_thresholds)))  # type: ignore
 
 
 class TestThresholdsForNYears(unittest.TestCase):
@@ -57,7 +57,7 @@ class TestThresholdsForNYears(unittest.TestCase):
             pd.Timestamp("2022-07-02 00:00:00"),
             pd.Timestamp("2022-04-02 00:00:00"),
         ]
-        self.assertTrue(np.array_equal(thresholds, expected_thresholds))
+        self.assertTrue(np.array_equal(thresholds, expected_thresholds))  # type: ignore
 
     def test_thresholds_for_n_years_to_month(self) -> None:
         """Test generating thresholds for 2 years with quarterly splits."""
@@ -74,7 +74,7 @@ class TestThresholdsForNYears(unittest.TestCase):
             pd.Timestamp("2022-01-01 00:00:00"),
             pd.Timestamp("2021-01-01 00:00:00"),
         ]
-        self.assertTrue(np.array_equal(thresholds, expected_thresholds))
+        self.assertTrue(np.array_equal(thresholds, expected_thresholds))  # type: ignore
 
     def test_thresholds_for_n_years_full_year_splits(self) -> None:
         """Test generating thresholds for 2 years with yearly splits."""
@@ -92,7 +92,7 @@ class TestThresholdsForNYears(unittest.TestCase):
             pd.Timestamp("2023-01-01 00:00:00"),
             pd.Timestamp("2022-01-01 00:00:00"),
         ]
-        self.assertTrue(np.array_equal(thresholds, expected_thresholds))
+        self.assertTrue(np.array_equal(thresholds, expected_thresholds))  # type: ignore
 
     def test_non_unique_thresholds_for_n_years(self) -> None:
         """Test that non-unique thresholds are handled correctly."""
