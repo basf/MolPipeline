@@ -283,7 +283,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             self.assertIsInstance(threshold_list, list)
             expected_date = resolve_named_time_stamps(time_str)
             if time_str == "today":
-                self.assertEqual(threshold_list[-1], expected_date.normalize())
+                self.assertEqual(threshold_list[-1], expected_date.floor("D"))
             else:
                 self.assertEqual(threshold_list[-1], expected_date)
 
@@ -309,7 +309,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         current year and be rounded according to the default `round_to='day'`.
 
         """
-        now = pd.Timestamp.now().normalize()
+        now = pd.Timestamp.now().floor("D")
         splitter = TimeThresholdSplitter(
             final_threshold="today",
             n_years=1,
