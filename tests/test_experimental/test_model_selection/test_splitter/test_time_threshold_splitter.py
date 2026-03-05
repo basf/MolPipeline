@@ -104,6 +104,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         )
 
         features = np.ones(len(time_data))
+        n_splits = splitter.get_n_splits(X=features, groups=time_data)
         splits = list(splitter.split(X=features, groups=time_data))
 
         expected = [
@@ -112,7 +113,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             # Train: Groups 0,1, Test: Group 2
             (np.array([0, 1, 2, 3]), np.array([4, 5])),
         ]
-
+        self.assertEqual(n_splits, len(threshold_list))
+        self.assertEqual(n_splits, len(expected))
         self._assert_splits_equal(splits, expected)
 
     def test_n_skip(self) -> None:
@@ -122,7 +124,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             pd.Timestamp("2021-06-01"),
             pd.Timestamp("2022-06-01"),
         ]
-        splitter = TimeThresholdSplitter(threshold_list=threshold_list, n_skip=2)
+        n_skip = 2
+        splitter = TimeThresholdSplitter(threshold_list=threshold_list, n_skip=n_skip)
 
         time_data = pd.Series(
             [
@@ -138,6 +141,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         )
 
         features = np.ones(len(time_data))
+        n_splits = splitter.get_n_splits(X=features, groups=time_data)
         splits = list(splitter.split(X=features, groups=time_data))
 
         # Skip group 0 and 1, start test from group 2
@@ -147,7 +151,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             (np.array([0, 1, 2, 3]), np.array([4, 5])),
             (np.array([0, 1, 2, 3, 4, 5]), np.array([6, 7])),
         ]
-
+        self.assertEqual(n_splits, len(threshold_list)- n_skip)
+        self.assertEqual(n_splits, len(expected))
         self._assert_splits_equal(splits, expected)
 
     def test_applies_max_splits_from_end(self) -> None:
@@ -157,7 +162,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             pd.Timestamp("2021-06-01"),
             pd.Timestamp("2022-06-01"),
         ]
-        splitter = TimeThresholdSplitter(threshold_list=threshold_list, max_splits=1)
+        max_splits = 1
+        splitter = TimeThresholdSplitter(threshold_list=threshold_list, max_splits=max_splits)
 
         time_data = pd.Series(
             [
@@ -173,31 +179,16 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         )
 
         features = np.ones(len(time_data))
+        n_splits = splitter.get_n_splits(X=features, groups=time_data)
         splits = list(splitter.split(X=features, groups=time_data))
 
         # Train: Groups 0,1,2, Test: Group 3
         expected = [
             (np.array([0, 1, 2, 3, 4, 5]), np.array([6, 7])),
         ]
-
+        self.assertEqual(n_splits, max_splits)
+        self.assertEqual(n_splits, len(expected))
         self._assert_splits_equal(splits, expected)
-
-    def test_get_n_splits(self) -> None:
-        """Check get_n_splits returns correct number of splits."""
-        threshold_list = [pd.Timestamp("2020-06-01"), pd.Timestamp("2021-06-01")]
-        splitter = TimeThresholdSplitter(threshold_list=threshold_list)
-
-        time_data = pd.Series(
-            [
-                pd.Timestamp("2020-01-01"),  # Group 0
-                pd.Timestamp("2020-09-01"),  # Group 1
-                pd.Timestamp("2021-09-01"),  # Group 2
-            ],
-        )
-
-        n_splits = splitter.get_n_splits(X=np.ones(len(time_data)), groups=time_data)
-        # 3 groups created (0, 1, 2), with n_skip=0, all 3 serve as test sets
-        self.assertEqual(n_splits, 2)
 
     def test_all_data_in_same_group(self) -> None:
         """Test when all data falls into the same group."""
