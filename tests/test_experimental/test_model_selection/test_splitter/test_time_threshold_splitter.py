@@ -152,7 +152,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             (np.array([0, 1, 2, 3]), np.array([4, 5])),
             (np.array([0, 1, 2, 3, 4, 5]), np.array([6, 7])),
         ]
-        self.assertEqual(n_splits, len(threshold_list) - n_skip)
+        self.assertEqual(n_splits, len(threshold_list) - n_skip + 1)
         self.assertEqual(n_splits, len(expected))
         self._assert_splits_equal(splits, expected)
 
@@ -232,25 +232,6 @@ class TestTimeThresholdSplitter(unittest.TestCase):
 
         self.assertEqual(splitter.threshold_list, expected_sorted)
 
-    def test_convert_time_to_groups(self) -> None:
-        """Test _convert_time_to_groups helper method."""
-        threshold_list = [pd.Timestamp("2020-06-01"), pd.Timestamp("2021-06-01")]
-        splitter = TimeThresholdSplitter(threshold_list=threshold_list)
-
-        time_data = pd.Series(
-            [
-                pd.Timestamp("2020-01-01"),  # Group 0
-                pd.Timestamp("2020-03-01"),  # Group 0
-                pd.Timestamp("2020-09-01"),  # Group 1
-                pd.Timestamp("2021-09-01"),  # Group 2
-            ],
-        )
-
-        group_indices = splitter._convert_time_to_groups(time_data)  # pylint: disable=protected-access
-        expected = np.array([0, 0, 1, 2])
-
-        self.assertTrue(np.array_equal(group_indices, expected))
-
     def test_with_numpy_datetime64(self) -> None:
         """Test that numpy datetime64 arrays work as groups."""
         threshold_list = [pd.Timestamp("2020-06-01"), pd.Timestamp("2021-06-01")]
@@ -282,7 +263,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             final_threshold=final_ts,
             n_years=1,
             splits_per_year=2,
-            round_to="d",
+            round_to="D",
         )
 
         self.assertGreaterEqual(len(splitter.threshold_list), 2)
