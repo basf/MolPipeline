@@ -307,7 +307,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         """Ensure final_threshold='now' uses the current year as reference.
 
         The constructed thresholds should all lie in a window that includes the
-        current year and be rounded according to the default ``round_to='day'``.
+        current year and be rounded according to the default `round_to='day'`.
 
         """
         now = pd.Timestamp.now().normalize()

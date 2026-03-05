@@ -51,23 +51,23 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             Number of initial groups to skip as test sets. These groups are
             always part of the training set.
         max_splits : int | None, optional
-            Maximum number of splits to create, by default ``None``. If more
+            Maximum number of splits to create, by default `None`. If more
             splits are possible, only the last ones are returned.
         threshold_list : list[pd.Timestamp] | None, optional
             Explicit list of time thresholds to partition the data into groups.
             Data points are assigned to groups based on which threshold they exceed.
-            If None, thresholds are constructed from ``final_threshold`` and
+            If None, thresholds are constructed from `final_threshold` and
             related parameters.
         final_threshold : pd.Timestamp | str, optional
-            The upper bound for generating thresholds when ``threshold_list`` is
-            not provided. ``"today"`` uses the current timestamp. ``"Q1"``-""Q4"``
+            The upper bound for generating thresholds when `threshold_list` is
+            not provided. `today` uses the current timestamp. `Q1`-`Q4`
             use the start of the respective quarter in the current year.
         n_years : int, default=5
             Number of years to create the splits for when constructing thresholds
-            from ``final_threshold``.
+            from `final_threshold`.
         splits_per_year : int, default=1
             Number of splits per year. Must be at least 1 if provided. Used only
-            when ``threshold_list`` is None.
+            when `threshold_list` is None.
         date_precision : str | None, default="normalize"
             The default "normalize" rounds to the beginning of the day.
             If None, no rounding is applied. Other options can be used as described in
@@ -76,15 +76,15 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         Raises
         ------
         ValueError
-            If both ``threshold_list`` and ``final_threshold`` parameters are
+            If both `threshold_list` and `final_threshold` parameters are
             provided.
         ValueError
-            If neither ``threshold_list`` nor ``final_threshold`` are
+            If neither `threshold_list` nor `final_threshold` are
             provided.
         ValueError
-            If ``threshold_list`` is empty after resolution.
+            If `threshold_list` is empty after resolution.
         ValueError
-            If ``splits_per_year`` is provided and is less than 1.
+            If `splits_per_year` is provided and is less than 1.
 
         References
         ----------
