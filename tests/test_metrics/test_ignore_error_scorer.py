@@ -170,12 +170,20 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         # Verify that __name__ is correctly forwarded through GridSearchCV's
         # public scorer_ attribute
         self.assertEqual(
-            grid_search.scorer_["ba"]._score_func.__name__,  # noqa: SLF001
-            scoring["ba"]._score_func.__name__,  # noqa: SLF001
+            grid_search.scorer_["ba"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
+            scoring["ba"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
         )
         self.assertEqual(
-            grid_search.scorer_["f1"]._score_func.__name__,  # noqa: SLF001
-            scoring["f1"]._score_func.__name__,  # noqa: SLF001
+            grid_search.scorer_["ba"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
+            "balanced_accuracy_score",
+        )
+        self.assertEqual(
+            grid_search.scorer_["f1"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
+            scoring["f1"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
+        )
+        self.assertEqual(
+            grid_search.scorer_["f1"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
+            "f1_score",
         )
 
         self.assertIn("mean_test_ba", grid_search.cv_results_)
