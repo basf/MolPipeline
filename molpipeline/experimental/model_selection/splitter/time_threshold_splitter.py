@@ -71,7 +71,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         date_precision : str | None, default="normalize"
             The default "normalize" rounds to the beginning of the day.
             If None, no rounding is applied. Other options can be used as described in
-            pandas.Timestamp.floor.html [1].
+            the pandas documentation [1].
 
         Raises
         ------
@@ -88,7 +88,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
 
         References
         ----------
-        [1] https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.floor.html
+        [1] https://pandas.pydata.org/docs/user_guide/timeseries.html#period-aliases
 
         """
         super().__init__(n_skip=n_skip, max_splits=max_splits)
