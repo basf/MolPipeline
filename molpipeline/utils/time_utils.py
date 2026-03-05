@@ -49,6 +49,60 @@ def split_intervals(
     return [start + i * time_delta for i in range(1, n_intervals)]
 
 
+def thresholds_for_n_years(
+    final_threshold: pd.Timestamp | NamedTimeStamps,
+    n_years: int,
+    splits_per_year: int,
+    round_to: str | None,
+) -> list[pd.Timestamp]:
+    """Generate a threshold list from a final threshold and a nof. years to go back.
+
+    Parameters
+    ----------
+    final_threshold : pandas.Timestamp or {"today", "Q1", "Q2", "Q3", "Q4"}
+        The upper bound for the generated thresholds.
+    n_years : int
+        Number of years to create the splits for.
+    splits_per_year : int
+        Number of splits per year. Must be at least 1.
+    round_to : str | None
+        Rounding precision for threshold timestamps.
+
+    Returns
+    -------
+    list[pd.Timestamp]
+        A list of constructed threshold timestamps.
+
+    Raises
+    ------
+    ValueError
+        If required parameters are missing or invalid.
+
+    """
+    if splits_per_year < 1:
+        raise ValueError("splits_per_year must be at least 1.")
+
+    resolved_final = resolve_named_time_stamps(final_threshold)
+    threshold_list: list[pd.Timestamp] = []
+
+    # We go backwards in time from the resolved final threshold over n_years
+    for year_offset in range(n_years):
+        end = resolved_final - pd.DateOffset(years=year_offset)
+        start = end - pd.DateOffset(years=1)
+        threshold_list.extend(split_intervals(start, end, splits_per_year))
+        # Split intervals does not include start or end
+        threshold_list.append(end)
+
+    threshold_list = [pd.Timestamp(ts) for ts in threshold_list]
+
+    if round_to == "normalize":
+        threshold_list = [ts.normalize() for ts in threshold_list]
+    elif round_to is not None:
+        threshold_list = [ts.round(round_to) for ts in threshold_list]
+
+    return sorted(threshold_list, reverse=True)
+
+
 def timestamp_to_group(
     groups: npt.ArrayLike,
     threshold_list: list[pd.Timestamp] | pd.Series | pd.DatetimeIndex,

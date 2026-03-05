@@ -8,6 +8,7 @@ import pandas as pd
 from molpipeline.utils.time_utils import (
     resolve_named_time_stamps,
     split_intervals,
+    thresholds_for_n_years,
     timestamp_to_group,
 )
 
@@ -30,6 +31,34 @@ class TestSplitIntervals(unittest.TestCase):
         # Fencepost error: 4 thresholds -> 5 intervals
         self.assertEqual(n_intervals, len(thresholds) + 1)
         self.assertTrue(np.array_equal(thresholds, pd.to_datetime(expected_thresholds)))
+
+
+class TestThresholdsForNYears(unittest.TestCase):
+    """Tests for thresholds_for_n_years function."""
+
+    def test_thresholds_for_n_years(self) -> None:
+        """Test generating thresholds for 2 years with quarterly splits."""
+        final_threshold = "2024-01-01 00:00:00"
+        n_years = 2
+        splits_per_year = 4
+        round_to = "normalize"
+        thresholds = thresholds_for_n_years(
+            final_threshold=final_threshold,
+            n_years=n_years,
+            splits_per_year=splits_per_year,
+            round_to=round_to,
+        )
+        expected_thresholds = [
+            pd.Timestamp("2024-01-01 00:00:00"),
+            pd.Timestamp("2023-10-01 00:00:00"),
+            pd.Timestamp("2023-07-02 00:00:00"),
+            pd.Timestamp("2023-04-02 00:00:00"),
+            pd.Timestamp("2023-01-01 00:00:00"),
+            pd.Timestamp("2022-10-01 00:00:00"),
+            pd.Timestamp("2022-07-02 00:00:00"),
+            pd.Timestamp("2022-04-02 00:00:00"),
+        ]
+        self.assertTrue(np.array_equal(thresholds, expected_thresholds))
 
 
 class TestTimestampToGroup(unittest.TestCase):
