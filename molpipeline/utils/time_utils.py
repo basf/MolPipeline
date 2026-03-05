@@ -1,12 +1,13 @@
 """Wibbly wobbly, timey wimey ... stuff."""
 
+import contextlib
 from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-NamedTimeStamps = Literal["now", "today", "Q1", "Q2", "Q3", "Q4"]
+NamedTimeStamps = Literal["today", "Q1", "Q2", "Q3", "Q4"]
 
 
 def split_intervals(
@@ -83,7 +84,7 @@ def resolve_named_time_stamps(
     Parameters
     ----------
     time_stamp : FinalThresholdStr | pd.Timestamp
-        Can be a pd.Timestamp, "now", "today", or one of "Q1", "Q2", "Q3", "Q4".
+        Can be a pd.Timestamp, "today", or one of "Q1", "Q2", "Q3", "Q4".
 
     Returns
     -------
@@ -96,15 +97,13 @@ def resolve_named_time_stamps(
         If the input string is not recognized.
 
     """
+    if isinstance(time_stamp, str):
+        with contextlib.suppress(ValueError):
+            time_stamp = pd.Timestamp(time_stamp)
     if isinstance(time_stamp, pd.Timestamp):
         return time_stamp
 
     now = pd.Timestamp.now()
-    if time_stamp == "now":
-        return now
-    if time_stamp == "today":
-        return now.normalize()
-
     quarter_start_map = {
         "Q1": pd.Timestamp(year=now.year, month=1, day=1),
         "Q2": pd.Timestamp(year=now.year, month=4, day=1),
@@ -116,6 +115,6 @@ def resolve_named_time_stamps(
         return mapped_threshold
 
     raise ValueError(
-        "Unsupported final_threshold value. "
-        "Use a Timestamp, 'now', 'today', or one of 'Q1', 'Q2', 'Q3', 'Q4'.",
+        f"Unsupported final_threshold value: {time_stamp} "
+        "Use a Timestamp, or one of 'Q1', 'Q2', 'Q3', 'Q4'.",
     )

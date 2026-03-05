@@ -90,17 +90,18 @@ class TestResolveSpecialTimeStrings(unittest.TestCase):
         """Test that special time strings are resolved correctly."""
         now = pd.Timestamp.now()
         test_cases = {
-            "now": now,
-            "today": now.normalize(),
+            "today": now,
             "Q1": pd.Timestamp(year=now.year, month=1, day=1),
             "Q2": pd.Timestamp(year=now.year, month=4, day=1),
             "Q3": pd.Timestamp(year=now.year, month=7, day=1),
             "Q4": pd.Timestamp(year=now.year, month=10, day=1),
+            "2024-01-01 00:00:00": pd.Timestamp("2024-01-01 00:00:00"),
         }
         for input_str, expected in test_cases.items():
             resolved = resolve_named_time_stamps(input_str)  # type: ignore
-            if input_str == "now":
-                # Allow for a small time difference due to execution time
-                self.assertTrue(abs(resolved - expected) < pd.Timedelta(seconds=1))
-            else:
-                self.assertEqual(resolved, expected)
+            with self.subTest(input_str):
+                if input_str == "today":
+                    # Allow for a small time difference due to execution time
+                    self.assertTrue(abs(resolved - expected) < pd.Timedelta(seconds=1))
+                else:
+                    self.assertEqual(resolved, expected)

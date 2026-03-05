@@ -296,43 +296,31 @@ class TestTimeThresholdSplitter(unittest.TestCase):
 
     def test_resolve_final_threshold_special_strings(self) -> None:
         """Test that special time strings are accepted as final_threshold."""
-        for time_str in ["now", "today", "Q1", "Q2", "Q3", "Q4"]:
+        for time_str in ["today", "Q1", "Q2", "Q3", "Q4"]:
             splitter = TimeThresholdSplitter(final_threshold=time_str)
             threshold_list = splitter.threshold_list
             self.assertIsInstance(threshold_list, list)
             expected_date = resolve_named_time_stamps(time_str)
-            if time_str == "now":
+            if time_str == "today":
                 self.assertEqual(threshold_list[-1], expected_date.normalize())
             else:
                 self.assertEqual(threshold_list[-1], expected_date)
 
-        # The following tests check the round_to parameter for "now" and "today".
-        now_results_dict = {
+        # The following tests check the round_to parameter for "today".
+        today_results_dict = {
             "normalize": pd.Timestamp.now().normalize(),
             "D": pd.Timestamp.now().round("D"),
             None: pd.Timestamp.now(),
         }
-        for round_to, expected_now in now_results_dict.items():
-            splitter = TimeThresholdSplitter(
-                final_threshold="now",
-                n_years=1,
-                splits_per_year=1,
-                round_to=round_to,
-            )
-            time_delta = abs(splitter.threshold_list[-1] - expected_now)
-            self.assertLessEqual(time_delta, pd.Timedelta(seconds=1))
-
-        for round_to in ["normalize", "D", None]:
+        for round_to, expected_now in today_results_dict.items():
             splitter = TimeThresholdSplitter(
                 final_threshold="today",
                 n_years=1,
                 splits_per_year=1,
                 round_to=round_to,
             )
-            self.assertEqual(
-                splitter.threshold_list[-1],
-                pd.Timestamp.now().normalize(),
-            )
+            time_delta = abs(splitter.threshold_list[-1] - expected_now)
+            self.assertLessEqual(time_delta, pd.Timedelta(seconds=1))
 
     def test_final_threshold_now_uses_current_year(self) -> None:
         """Ensure final_threshold='now' uses the current year as reference.
@@ -341,9 +329,9 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         current year and be rounded according to the default ``round_to='day'``.
 
         """
-        now = pd.Timestamp.now()
+        now = pd.Timestamp.now().normalize()
         splitter = TimeThresholdSplitter(
-            final_threshold="now",
+            final_threshold="today",
             n_years=1,
             splits_per_year=2,
         )
@@ -351,7 +339,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         self.assertEqual(len(splitter.threshold_list), 2)
         self.assertEqual(splitter.threshold_list[-1].year, now.year)
         self.assertEqual(splitter.threshold_list[-1].month, now.month)
-        self.assertEqual(splitter.threshold_list[-1].day, now.round("d").day)
+        self.assertEqual(splitter.threshold_list[-1].day, now.day)
         self.assertEqual(splitter.threshold_list[-1].hour, 0)
         self.assertEqual(splitter.threshold_list[-1].minute, 0)
         self.assertEqual(splitter.threshold_list[-1].second, 0)
