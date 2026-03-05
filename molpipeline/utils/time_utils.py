@@ -1,5 +1,7 @@
 """Wibbly wobbly, timey wimey ... stuff."""
 
+import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 
@@ -40,3 +42,31 @@ def split_intervals(
 
     time_delta = (end - start) / n_intervals
     return [start + i * time_delta for i in range(1, n_intervals)]
+
+
+def timestamp_to_group(
+    groups: npt.ArrayLike,
+    threshold_list: list[pd.Timestamp] | pd.Series | pd.DatetimeIndex,
+) -> npt.NDArray[np.int64]:
+    """Convert time data to group indices.
+
+    Parameters
+    ----------
+    groups : npt.ArrayLike
+        Time data to convert to group indices. Should be datetime-like values.
+    threshold_list : list[pd.Timestamp]
+        List of timestamp thresholds that define the group boundaries.
+
+    Returns
+    -------
+    npt.NDArray[np.int64]
+        Group indices for each data point.
+
+    """
+    # Convert to pandas Series if it's not already to handle comparisons uniformly
+    groups = np.asarray(groups, dtype=np.datetime64)
+
+    split_index = np.zeros(len(groups), dtype=np.int64)
+    for threshold in threshold_list:
+        split_index[groups >= threshold] += 1
+    return split_index

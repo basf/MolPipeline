@@ -1,8 +1,7 @@
 """TimeThresholdSplitter implementation."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Literal
+from collections.abc import Iterator
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -11,11 +10,7 @@ import pandas as pd
 from molpipeline.experimental.model_selection.splitter.group_addition_splitter import (
     GroupAdditionSplit,
 )
-
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
-
+from molpipeline.utils.time_utils import timestamp_to_group
 
 FinalThresholdStr = Literal["now", "Q1", "Q2", "Q3", "Q4"]
 
@@ -224,32 +219,6 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             "Use a Timestamp, 'now', or one of 'Q1', 'Q2', 'Q3', 'Q4'.",
         )
 
-    def _convert_time_to_groups(
-        self,
-        groups: npt.ArrayLike,
-    ) -> npt.NDArray[np.int64]:
-        """Convert time data to group indices.
-
-        Parameters
-        ----------
-        groups : npt.ArrayLike
-            Time data to convert to group indices. Should be datetime-like values.
-
-        Returns
-        -------
-        npt.NDArray[np.int64]
-            Group indices for each data point.
-
-        """
-        # Convert to pandas Series if it's not already to handle comparisons uniformly
-        if not isinstance(groups, pd.Series):
-            groups = pd.Series(groups)  # type: ignore[call-overload]
-
-        split_index = np.zeros(len(groups), dtype=np.int64)
-        for threshold in self.threshold_list:
-            split_index[groups >= threshold] += 1
-        return split_index
-
     def split(
         self,
         X: npt.ArrayLike,  # noqa: N803
@@ -287,7 +256,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             raise ValueError("The groups parameter is required.")
 
         # Convert time data to group indices
-        group_indices = self._convert_time_to_groups(groups)
+        group_indices = timestamp_to_group(groups, self.threshold_list)
 
         # Use parent class split method with converted groups
         yield from super().split(X=X, y=y, groups=group_indices)
@@ -325,7 +294,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
             raise ValueError("The groups parameter is required.")
 
         # Convert time data to group indices
-        group_indices = self._convert_time_to_groups(groups)
+        group_indices = timestamp_to_group(groups, self.threshold_list)
 
         # Use parent class get_n_splits method with converted groups
         return super().get_n_splits(X=X, y=y, groups=group_indices)
