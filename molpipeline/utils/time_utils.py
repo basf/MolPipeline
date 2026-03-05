@@ -67,7 +67,6 @@ def timestamp_to_group(
         Group indices for each data point.
 
     """
-    # Convert to pandas Series if it's not already to handle comparisons uniformly
     groups = np.asarray(groups, dtype=np.datetime64)
 
     split_index = np.zeros(len(groups), dtype=np.int64)
