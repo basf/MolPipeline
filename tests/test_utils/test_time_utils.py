@@ -5,7 +5,11 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from molpipeline.utils.time_utils import split_intervals, timestamp_to_group
+from molpipeline.utils.time_utils import (
+    resolve_named_time_stamps,
+    split_intervals,
+    timestamp_to_group,
+)
 
 
 class TestSplitIntervals(unittest.TestCase):
@@ -77,3 +81,26 @@ class TestTimestampToGroup(unittest.TestCase):
         shuffled_threshold_list = self.threshold_list[threshold_shuffle_order]
         group_indices = timestamp_to_group(shuffled_groups, shuffled_threshold_list)
         self.assertTrue(np.array_equal(group_indices, np.array(group_shuffle_order)))
+
+
+class TestResolveSpecialTimeStrings(unittest.TestCase):
+    """Tests for resolve_special_time_strings function."""
+
+    def test_resolve_special_time_strings(self) -> None:
+        """Test that special time strings are resolved correctly."""
+        now = pd.Timestamp.now()
+        test_cases = {
+            "now": now,
+            "today": now.normalize(),
+            "Q1": pd.Timestamp(year=now.year, month=1, day=1),
+            "Q2": pd.Timestamp(year=now.year, month=4, day=1),
+            "Q3": pd.Timestamp(year=now.year, month=7, day=1),
+            "Q4": pd.Timestamp(year=now.year, month=10, day=1),
+        }
+        for input_str, expected in test_cases.items():
+            resolved = resolve_named_time_stamps(input_str)  # type: ignore
+            if input_str == "now":
+                # Allow for a small time difference due to execution time
+                self.assertTrue(abs(resolved - expected) < pd.Timedelta(seconds=1))
+            else:
+                self.assertEqual(resolved, expected)

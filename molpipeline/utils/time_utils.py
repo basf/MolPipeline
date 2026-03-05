@@ -1,8 +1,12 @@
 """Wibbly wobbly, timey wimey ... stuff."""
 
+from typing import Literal
+
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+
+NamedTimeStamps = Literal["now", "today", "Q1", "Q2", "Q3", "Q4"]
 
 
 def split_intervals(
@@ -70,3 +74,49 @@ def timestamp_to_group(
     for threshold in threshold_list:
         split_index[groups >= threshold] += 1
     return split_index
+
+
+def resolve_named_time_stamps(
+    time_stamp: NamedTimeStamps | pd.Timestamp,
+) -> pd.Timestamp:
+    """Convert special time strings to pd.Timestamp.
+
+    Parameters
+    ----------
+    time_stamp : FinalThresholdStr | pd.Timestamp
+        Can be a pd.Timestamp, "now", "today", or one of "Q1", "Q2", "Q3", "Q4".
+
+    Returns
+    -------
+    pd.Timestamp
+        Resolved timestamp.
+
+    Raises
+    ------
+    ValueError
+        If the input string is not recognized.
+
+    """
+    if isinstance(time_stamp, pd.Timestamp):
+        return time_stamp
+
+    now = pd.Timestamp.now()
+    if time_stamp == "now":
+        return now
+    if time_stamp == "today":
+        return now.normalize()
+
+    quarter_start_map = {
+        "Q1": pd.Timestamp(year=now.year, month=1, day=1),
+        "Q2": pd.Timestamp(year=now.year, month=4, day=1),
+        "Q3": pd.Timestamp(year=now.year, month=7, day=1),
+        "Q4": pd.Timestamp(year=now.year, month=10, day=1),
+    }
+    mapped_threshold = quarter_start_map.get(time_stamp)
+    if mapped_threshold is not None:
+        return mapped_threshold
+
+    raise ValueError(
+        "Unsupported final_threshold value. "
+        "Use a Timestamp, 'now', or one of 'Q1', 'Q2', 'Q3', 'Q4'.",
+    )

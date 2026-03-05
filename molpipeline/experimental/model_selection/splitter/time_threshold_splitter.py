@@ -10,9 +10,11 @@ import pandas as pd
 from molpipeline.experimental.model_selection.splitter.group_addition_splitter import (
     GroupAdditionSplit,
 )
-from molpipeline.utils.time_utils import timestamp_to_group
-
-FinalThresholdStr = Literal["now", "Q1", "Q2", "Q3", "Q4"]
+from molpipeline.utils.time_utils import (
+    NamedTimeStamps,
+    resolve_named_time_stamps,
+    timestamp_to_group,
+)
 
 
 class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-method
@@ -37,7 +39,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         threshold_list: list[pd.Timestamp] | None = None,
         *,
         # Parameters for time-based construction when threshold_list is not provided
-        final_threshold: pd.Timestamp | FinalThresholdStr | None = None,
+        final_threshold: pd.Timestamp | NamedTimeStamps | None = None,
         n_years: int = 5,
         splits_per_year: int = 1,
         round_to: str | None = "d",
@@ -117,11 +119,11 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
 
         self.threshold_list = sorted(threshold_list)
 
+    @staticmethod
     def _build_thresholds_from_years(
-        self,
         *,
         splits_per_year: int,
-        final_threshold: pd.Timestamp | FinalThresholdStr,
+        final_threshold: pd.Timestamp | NamedTimeStamps,
         n_years: int,
         round_to: Literal["day", "month", "hour"] | None,
     ) -> list[pd.Timestamp]:
@@ -131,7 +133,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         ----------
         splits_per_year : int
             Number of splits per year. Must be at least 1.
-        final_threshold : pandas.Timestamp or {"now", "Q1", "Q2", "Q3", "Q4"}
+        final_threshold : pandas.Timestamp or {"now", "today", "Q1", "Q2", "Q3", "Q4"}
             The upper bound for the generated thresholds.
         n_years : int
             Number of years to create the splits for.
@@ -152,7 +154,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         if splits_per_year < 1:
             raise ValueError("splits_per_year must be at least 1.")
 
-        resolved_final = self._resolve_final_threshold(final_threshold)
+        resolved_final = resolve_named_time_stamps(final_threshold)
         constructed_thresholds: list[pd.Timestamp] = []
 
         time_delta = pd.Timedelta(days=365.2425 / splits_per_year)
@@ -174,50 +176,6 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
                 constructed_thresholds.append(threshold)
 
         return constructed_thresholds
-
-    @staticmethod
-    def _resolve_final_threshold(
-        final_threshold: pd.Timestamp | FinalThresholdStr,
-    ) -> pd.Timestamp:
-        """Resolve a flexible ``final_threshold`` specification.
-
-        Parameters
-        ----------
-        final_threshold : pandas.Timestamp or {"now", "Q1", "Q2", "Q3", "Q4"}
-            Specification of the final threshold.
-
-        Returns
-        -------
-        pandas.Timestamp
-            Resolved timestamp value.
-
-        Raises
-        ------
-        ValueError
-            If the string specifier is not one of the supported values.
-
-        """
-        if isinstance(final_threshold, pd.Timestamp):
-            return final_threshold
-
-        now = pd.Timestamp.now()
-        if final_threshold == "now":
-            return now
-
-        quarter_start_map = {
-            "Q1": pd.Timestamp(year=now.year, month=1, day=1),
-            "Q2": pd.Timestamp(year=now.year, month=4, day=1),
-            "Q3": pd.Timestamp(year=now.year, month=7, day=1),
-            "Q4": pd.Timestamp(year=now.year, month=10, day=1),
-        }
-        mapped_threshold = quarter_start_map.get(final_threshold)
-        if mapped_threshold is not None:
-            return mapped_threshold
-
-        raise ValueError(
-            "Unsupported final_threshold value. "
-            "Use a Timestamp, 'now', or one of 'Q1', 'Q2', 'Q3', 'Q4'.",
-        )
 
     def split(
         self,
