@@ -1,7 +1,10 @@
 """Test the ignore error scorer wrapper."""
 
+import tempfile
 import unittest
+from pathlib import Path
 
+import joblib
 import numpy as np
 from sklearn import linear_model
 from sklearn.metrics import get_scorer
@@ -17,7 +20,7 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         y_true = np.array([1, 0, 0, 1, 0])
         y_pred = np.array([1, 0, 0, 1, np.nan])
         ba_score = ignored_value_scorer("balanced_accuracy", np.nan)
-        value = ba_score._score_func(y_true, y_pred)  # pylint: disable=protected-access
+        value = ba_score._score_func(y_true, y_pred)  # pylint: disable=protected-access # noqa: SLF001
         self.assertAlmostEqual(value, 1.0)
 
     def test_filter_none(self) -> None:
@@ -25,7 +28,7 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         y_true = np.array([1, 0, 0, 1, 0])
         y_pred = np.array([1, 0, 0, 1, None])
         ba_score = ignored_value_scorer("balanced_accuracy", None)
-        value = ba_score._score_func(y_true, y_pred)  # pylint: disable=protected-access
+        value = ba_score._score_func(y_true, y_pred)  # pylint: disable=protected-access # noqa: SLF001
         self.assertAlmostEqual(value, 1.0)
 
     def test_filter_nan_with_none(self) -> None:
@@ -34,7 +37,7 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         y_pred = np.array([1, 0, 0, 1, None])
         ba_score = ignored_value_scorer("balanced_accuracy", np.nan)
         self.assertAlmostEqual(
-            ba_score._score_func(y_true, y_pred),  # pylint: disable=protected-access
+            ba_score._score_func(y_true, y_pred),  # pylint: disable=protected-access # noqa: SLF001
             1.0,
         )
 
@@ -44,7 +47,7 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         y_pred = np.array([1, 0, 0, 1, np.nan])
         ba_score = ignored_value_scorer("balanced_accuracy", None)
         self.assertAlmostEqual(
-            ba_score._score_func(y_true, y_pred),  # pylint: disable=protected-access
+            ba_score._score_func(y_true, y_pred),  # pylint: disable=protected-access # noqa: SLF001
             1.0,
         )
 
@@ -98,3 +101,19 @@ class IgnoreErrorScorerTest(unittest.TestCase):
             cix_scorer(regr, x_train, y_train),
             scikit_scorer(regr, x_train, y_train),
         )
+
+    def test_pickle_roundtrip(self) -> None:
+        """Test that ignored_value_scorer result can be pickled and unpickled."""
+        original_f = ignored_value_scorer(get_scorer("balanced_accuracy"), np.nan)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = Path(tmp_dir) / "scorer.joblib"
+            joblib.dump(original_f, path)
+            unpickled_f = joblib.load(path)
+
+        x = np.ones((5, 1))
+        y_true = np.array([1, 0, 0, 1, 0])
+        estimator = linear_model.LogisticRegression()
+        estimator.fit(x, y_true)
+        original_score = original_f(estimator, x, y_true)
+        unpickled_score = unpickled_f(estimator, x, y_true)
+        self.assertAlmostEqual(original_score, unpickled_score)
