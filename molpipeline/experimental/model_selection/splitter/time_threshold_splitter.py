@@ -48,26 +48,26 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         Parameters
         ----------
         n_skip : int, default=1
-            Number of initial groups to skip as test sets. These groups are
-            always part of the training set.
+            Number of initial groups to skip as test sets. These groups are always part
+            of the training set.
         max_splits : int | None, optional
-            Maximum number of splits to create, by default `None`. If more
-            splits are possible, only the last ones are returned.
+            Maximum number of splits to create, by default `None`. If more splits are
+            possible, only the last ones are returned.
         threshold_list : list[pd.Timestamp] | None, optional
             Explicit list of time thresholds to partition the data into groups.
             Data points are assigned to groups based on which threshold they exceed.
-            If None, thresholds are constructed from `final_threshold` and
-            related parameters.
+            If None, thresholds are constructed from `final_threshold` and related
+            parameters.
         final_threshold : pd.Timestamp | str, optional
-            The upper bound for generating thresholds when `threshold_list` is
-            not provided. "today" uses the current timestamp. "Q1"-"Q4"
-            use the start of the respective quarter in the current year.
+            The upper bound for generating thresholds when `threshold_list` is not
+            provided. The str "today" uses the current timestamp, while "Q1"-"Q4" use
+            the start of the respective quarter in the current year.
         n_years : int, default=5
             Number of years to create the splits for when constructing thresholds
             from `final_threshold`.
         splits_per_year : int, default=1
-            Number of splits per year. Must be at least 1 if provided. Used only
-            when `threshold_list` is None.
+            Number of splits per year. Must be at least 1 if provided. Used only when
+            `threshold_list` is None.
         date_precision : str | None, default="D"
             The default "D" rounds to the beginning of the day.
             If `None`, no rounding is applied. Other options can be used as described in
