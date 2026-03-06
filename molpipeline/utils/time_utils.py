@@ -1,4 +1,8 @@
-"""Wibbly wobbly, timey wimey ... stuff."""
+"""Function to help with time-based data.
+
+As experts might say: 'Wibbly wobbly, timey wimey ... stuff'
+
+"""
 
 import contextlib
 
