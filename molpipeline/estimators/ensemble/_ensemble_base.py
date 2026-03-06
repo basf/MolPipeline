@@ -151,6 +151,8 @@ class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
 class EnsembleRegressorMixIn(abc.ABC, RegressorMixin):
     """Base class for regression ensemble models."""
 
+    estimators_: list[BaseEstimator | AnyPredictor]
+
     @overload
     def predict(
         self,
@@ -202,6 +204,8 @@ class EnsembleRegressorMixIn(abc.ABC, RegressorMixin):
 
 class EnsembleClassifierMixIn(abc.ABC, ClassifierMixin):
     """Base class for classification ensemble models."""
+
+    estimators_: list[BaseEstimator | AnyPredictor]
 
     def _can_predict_proba(self) -> bool:
         """Check if all estimators in the ensemble support probability prediction.
