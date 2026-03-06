@@ -145,13 +145,12 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             n_jobs=self.n_jobs,
         )
 
-    # pylint: disable=W0613
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
         X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],  # noqa: N803
-        y: npt.NDArray[np.float64] | None = None,
-        **params: Any,
+        y: npt.NDArray[np.float64] | None = None,  # noqa: ARG002
+        **params: Any,  # noqa: ARG002
     ) -> Self:
         """Fit Murcko scaffold clustering estimator.
 
@@ -173,7 +172,6 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         X = validate_data(self, X=X, ensure_min_samples=2, ensure_2d=False, dtype=None)  # noqa: N806
         return self._fit(X)
 
-    # pylint: disable=W0613
     def _fit(
         self,
         X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],  # noqa: N803

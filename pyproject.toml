@@ -89,7 +89,6 @@ select =  [
 ]
 ignore = [
     "ANN401",  #  Allow  typing.Any
-    "ARG002", #  Unused argument  # TO REMOVE
     "D203", # incorrect-blank-line-before-class
     "D213", # blank-line-before-class-docstring
     "ERA001",  # Found commented-out code  # TO REMOVE

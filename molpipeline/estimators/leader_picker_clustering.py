@@ -41,12 +41,11 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         # centroid indices
         self.centroids_: npt.NDArray[np.int32] | None = None
 
-    # pylint: disable=W0613
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
         X: list[ExplicitBitVect],  # noqa: N803
-        y: npt.NDArray[np.float64] | None = None,
+        y: npt.NDArray[np.float64] | None = None,  # noqa: ARG002
     ) -> Self:
         """Fit leader picker clustering estimator.
 
@@ -99,7 +98,6 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
 
         return np.unique(labels).shape[0], labels
 
-    # pylint: disable=W0613
     def _fit(self, X: list[ExplicitBitVect]) -> Self:  # noqa: N803
         """Fit leader picker clustering estimator.
 

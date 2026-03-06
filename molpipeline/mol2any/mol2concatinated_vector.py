@@ -7,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 from loguru import logger
 from sklearn.base import clone
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -180,6 +181,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             for element in element_list
         )
 
+    @override
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Return all parameters defining the object.
 
@@ -265,6 +267,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             step_dict[step].set_params(**params)
         return parameter_copy, parameters
 
+    @override
     def set_params(self, **parameters: Any) -> Self:
         """Set parameters.
 
@@ -301,6 +304,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         super().set_params(**parameter_copy)
         return self
 
+    @override
     def assemble_output(
         self,
         value_list: Iterable[npt.NDArray[np.float64]],
@@ -324,6 +328,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             return np.empty((0, self.n_features), dtype=np.float64)
         return np.vstack(values)
 
+    @override
     def transform(self, values: list[RDKitMol]) -> npt.NDArray[np.float64]:
         """Transform the list of molecules to sparse matrix.
 
@@ -341,6 +346,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         output: npt.NDArray[np.float64] = super().transform(values)
         return output
 
+    @override
     def fit(
         self,
         values: list[RDKitMol],
@@ -365,6 +371,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             pipeline_element[1].fit(values)
         return self
 
+    @override
     def pretransform_single(
         self,
         value: RDKitMol,
@@ -396,6 +403,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             return final_vector
         return InvalidInstance(self.uuid, error_message, self.name)
 
+    @override
     def finalize_single(self, value: Any) -> Any:
         """Finalize the output of transform_single.
 
@@ -425,6 +433,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             final_vector_list.append(final_value)
         return np.hstack(final_vector_list)
 
+    @override
     def fit_to_result(self, values: Any) -> Self:
         """Fit the pipeline element to the result of transform_single.
 
