@@ -2630,6 +2630,9 @@ chemprop = [
     { name = "lightning" },
     { name = "requests" },
 ]
+mordred = [
+    { name = "mordredcommunity" },
+]
 notebooks = [
     { name = "jupyterlab" },
     { name = "seaborn" },
@@ -2677,6 +2680,7 @@ requires-dist = [
     { name = "lightning", marker = "extra == 'chemprop'", specifier = ">=2.5.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "matplotlib", specifier = ">=3.10.1" },
+    { name = "mordredcommunity", marker = "extra == 'mordred'", specifier = ">=2.0.7" },
     { name = "numpy", specifier = ">=1.26.4" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "rdkit", specifier = ">=2023.9.1" },
@@ -2687,7 +2691,7 @@ requires-dist = [
     { name = "shap", specifier = ">=0.47.1" },
     { name = "typing-extensions", specifier = ">=4.13.1" },
 ]
-provides-extras = ["chemprop", "notebooks"]
+provides-extras = ["mordred", "chemprop", "notebooks"]
 
 [package.metadata.requires-dev]
 dev = [
