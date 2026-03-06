@@ -1,136 +1,19 @@
 """Unit tests for CloneEnsembleClassifier and CloneEnsembleRegressor."""
 
 import unittest
-from typing import Self
 
 import numpy as np
-import numpy.typing as npt
 import scipy.sparse as sp
-from sklearn.base import BaseEstimator
 from sklearn.linear_model import LinearRegression, LogisticRegression
-from typing_extensions import override
 
 from molpipeline.estimators.ensemble.model_clone_ensemble import (
     CloneEnsembleClassifier,
     CloneEnsembleRegressor,
 )
-
-
-class MockEstimator(BaseEstimator):
-    """A mock estimator that records fit arguments and returns fixed predictions."""
-
-    fit_args: dict[str, npt.ArrayLike]
-
-    def __init__(self, alpha: int = 0, beta: int = 0, gamma: int = 0) -> None:
-        """Initialize the MockEstimator with dummy parameters.
-
-        Parameters
-        ----------
-        alpha : int, default=0
-            A dummy parameter to test parameter forwarding.
-        beta : int, default=0
-            A dummy parameter to test parameter forwarding.
-        gamma : int, default=0
-            A dummy parameter to test parameter forwarding.
-
-        """
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
-        self.fit_args = {}
-
-    def fit(
-        self,
-        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
-        y: npt.ArrayLike,
-    ) -> Self:
-        """Fit the model and record the arguments.
-
-        Parameters
-        ----------
-        X : npt.ArrayLike
-            The feature matrix used for fitting.
-        y : npt.ArrayLike
-            The target vector used for fitting.
-
-        Returns
-        -------
-        Self
-            The fitted estimator with recorded fit arguments.
-
-        """
-        self.fit_args = {"X": X, "y": y}
-        return self
-
-    def predict(  # noqa: PLR6301
-        self,
-        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.float64]:
-        """Return fixed predictions.
-
-        Parameters
-        ----------
-        X : npt.ArrayLike
-            The feature matrix used for prediction.
-
-        Returns
-        -------
-        npt.NDArray[np.float64]
-            An array of zeros with the same length as the number of samples in X.
-
-        """
-        feature_arr = np.asarray(X)
-        return np.zeros(len(feature_arr), dtype=np.float64)
-
-
-class MockClassifier(MockEstimator):
-    """A mock classifier that returns deterministic class predictions."""
-
-    @override
-    def predict(  # type: ignore
-        self,
-        X: npt.ArrayLike,  # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.int64]:
-        """Return alternating class predictions.
-
-        Parameters
-        ----------
-        X : npt.ArrayLike
-            The feature matrix used for prediction.
-
-        Returns
-        -------
-        npt.NDArray[np.int64]
-            An array of class predictions (0 or 1) based on the first feature of X,
-            alternating between 0 and 1.
-
-        """
-        feature_arr = np.asarray(X)
-        return np.array([x[0] % 2 for x in feature_arr], dtype=np.int64)
-
-    def predict_proba(  # noqa: PLR6301
-        self,
-        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
-    ) -> npt.NDArray[np.float64]:
-        """Return fixed class probabilities.
-
-        Parameters
-        ----------
-        X : npt.ArrayLike
-            The feature matrix used for probability prediction.
-
-        Returns
-        -------
-        npt.NDArray[np.float64]
-            An array of shape (n_samples, 2) where the first column is 0.7 and the
-            second column is 0.3 for all samples.
-
-        """
-        feature_arr = np.asarray(X)
-        proba = np.zeros((len(feature_arr), 2))
-        proba[:, 0] = 0.7
-        proba[:, 1] = 0.3
-        return proba
+from tests.utils.mock_estimators import (
+    MockClassifier,
+    MockEstimator,
+)
 
 
 class TestCloneEnsembleRegressor(unittest.TestCase):
