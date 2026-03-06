@@ -22,7 +22,7 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         y_true = np.array([1, 0, 0, 1, 0])
         y_pred = np.array([1, 0, 0, 1, np.nan])
         ba_score = ignored_value_scorer("balanced_accuracy", np.nan)
-        value = ba_score._score_func(y_true, y_pred)  # pylint: disable=protected-access # noqa: SLF001
+        value = ba_score._score_func(y_true, y_pred)
         self.assertAlmostEqual(value, 1.0)
 
     def test_filter_none(self) -> None:
@@ -30,7 +30,7 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         y_true = np.array([1, 0, 0, 1, 0])
         y_pred = np.array([1, 0, 0, 1, None])
         ba_score = ignored_value_scorer("balanced_accuracy", None)
-        value = ba_score._score_func(y_true, y_pred)  # pylint: disable=protected-access # noqa: SLF001
+        value = ba_score._score_func(y_true, y_pred)
         self.assertAlmostEqual(value, 1.0)
 
     def test_filter_nan_with_none(self) -> None:
@@ -38,20 +38,14 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         y_true = np.array([1, 0, 0, 1, 0])
         y_pred = np.array([1, 0, 0, 1, None])
         ba_score = ignored_value_scorer("balanced_accuracy", np.nan)
-        self.assertAlmostEqual(
-            ba_score._score_func(y_true, y_pred),  # pylint: disable=protected-access # noqa: SLF001
-            1.0,
-        )
+        self.assertAlmostEqual(ba_score._score_func(y_true, y_pred), 1.0)
 
     def test_filter_none_with_nan(self) -> None:
         """Test that filtering None with NaN works."""
         y_true = np.array([1, 0, 0, 1, 0])
         y_pred = np.array([1, 0, 0, 1, np.nan])
         ba_score = ignored_value_scorer("balanced_accuracy", None)
-        self.assertAlmostEqual(
-            ba_score._score_func(y_true, y_pred),  # pylint: disable=protected-access # noqa: SLF001
-            1.0,
-        )
+        self.assertAlmostEqual(ba_score._score_func(y_true, y_pred), 1.0)
 
     def test_correct_init_mse(self) -> None:
         """Test that initialization is correct as we access via protected vars."""
@@ -170,21 +164,17 @@ class IgnoreErrorScorerTest(unittest.TestCase):
         # Verify that __name__ is correctly forwarded through GridSearchCV's
         # public scorer_ attribute
         self.assertEqual(
-            grid_search.scorer_["ba"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
-            scoring["ba"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
+            grid_search.scorer_["ba"]._score_func.__name__,
+            scoring["ba"]._score_func.__name__,
         )
         self.assertEqual(
-            grid_search.scorer_["ba"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
-            "balanced_accuracy_score",
+            grid_search.scorer_["ba"]._score_func.__name__, "balanced_accuracy_score",
         )
         self.assertEqual(
-            grid_search.scorer_["f1"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
-            scoring["f1"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
+            grid_search.scorer_["f1"]._score_func.__name__,
+            scoring["f1"]._score_func.__name__,
         )
-        self.assertEqual(
-            grid_search.scorer_["f1"]._score_func.__name__,  # pylint: disable=protected-access # noqa: SLF001
-            "f1_score",
-        )
+        self.assertEqual(grid_search.scorer_["f1"]._score_func.__name__, "f1_score")
 
         self.assertIn("mean_test_ba", grid_search.cv_results_)
         self.assertIn("mean_test_f1", grid_search.cv_results_)

@@ -209,7 +209,6 @@ class Pipeline(_Pipeline):
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
-            # pylint: disable=protected-access
             return self._final_estimator._estimator_type  # noqa: SLF001
         return None
 
