@@ -86,7 +86,7 @@ class AnySklearnEstimator(Protocol):
 
     def fit(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],  # noqa: N803
         y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> Self:
@@ -115,7 +115,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
 
     def fit_predict(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],  # noqa: N803
         y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
@@ -143,7 +143,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
 
     def fit_transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],  # noqa: N803
         y: npt.NDArray[Any] | None,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
@@ -168,7 +168,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
 
     def transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],  # noqa: N803
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Transform and return X according to object protocol.

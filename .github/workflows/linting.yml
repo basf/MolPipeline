@@ -21,7 +21,7 @@ jobs:
         uv pip install torch --index-url https://download.pytorch.org/whl/cpu
     - name: Analysing the code with pylint
       run: |
-        uv run pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
+        uv run pylint -d C0103,C0301,R0913,W0212,W0613,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
   mypy:
     runs-on: ubuntu-latest
     steps:

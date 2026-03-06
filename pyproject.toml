@@ -89,13 +89,10 @@ select =  [
 ]
 ignore = [
     "ANN401",  #  Allow  typing.Any
-    "ARG002", #  Unused argument  # TO REMOVE
     "D203", # incorrect-blank-line-before-class
     "D213", # blank-line-before-class-docstring
     "ERA001",  # Found commented-out code  # TO REMOVE
     "FURB113", # Use `xxx.extend(...)` instead of repeatedly calling `xxx.append()  # TO REMOVE
-    "N803",  #  Argument name should be lowercase  # TO REMOVE
-    "N806",  #  Variable in function should be lowercase  # TO REMOVE
     "N813",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
     "PGH003",  # Blanket type ignore for types
     "PERF203",  # `try`-`except` within a loop incurs performance overhead  # TO REMOVE
