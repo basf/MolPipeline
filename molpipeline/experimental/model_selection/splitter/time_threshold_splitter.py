@@ -1,6 +1,7 @@
 """TimeThresholdSplitter implementation."""
 
 from collections.abc import Iterator
+from typing import Self
 
 import numpy as np
 import numpy.typing as npt
@@ -34,30 +35,53 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
 
     def __init__(
         self,
+        threshold_list: list[pd.Timestamp],
         n_skip: int = 1,
         max_splits: int | None = None,
-        threshold_list: list[pd.Timestamp] | None = None,
-        *,
-        final_threshold: pd.Timestamp | str | None = None,
-        n_years: int = 5,
-        splits_per_year: int = 1,
-        date_precision: str | None = "D",
     ) -> None:
         """Initialize the TimeThresholdSplitter.
 
         Parameters
         ----------
+        threshold_list : list[pd.Timestamp] | None, optional
+            Explicit list of time thresholds to partition the data into groups.
+            Data points are assigned to groups based on which threshold they exceed.
+            If None, thresholds are constructed from `final_threshold` and related
+            parameters.
         n_skip : int, default=1
             Number of initial groups to skip as test sets. These groups are always part
             of the training set.
         max_splits : int | None, optional
             Maximum number of splits to create, by default `None`. If more splits are
             possible, only the last ones are returned.
-        threshold_list : list[pd.Timestamp] | None, optional
-            Explicit list of time thresholds to partition the data into groups.
-            Data points are assigned to groups based on which threshold they exceed.
-            If None, thresholds are constructed from `final_threshold` and related
-            parameters.
+
+        Raises
+        ------
+        ValueError
+            If `splits_per_year` is provided and is less than 1.
+
+        """
+        super().__init__(n_skip=n_skip, max_splits=max_splits)
+
+        if len(threshold_list) == 0:
+            raise ValueError("threshold_list must contain at least one timestamp.")
+
+        self.threshold_list = sorted(threshold_list)
+
+    @classmethod
+    def from_final_threshold(
+        cls,
+        final_threshold: pd.Timestamp | str = "today",
+        n_years: int = 5,
+        splits_per_year: int = 1,
+        n_skip: int = 1,
+        max_splits: int | None = None,
+        date_precision: str | None = "D",
+    ) -> Self:
+        """Initialize the TimeThresholdSplitter.
+
+        Parameters
+        ----------
         final_threshold : pd.Timestamp | str, optional
             The upper bound for generating thresholds when `threshold_list` is not
             provided. The str "today" uses the current timestamp, while "Q1"-"Q4" use
@@ -68,53 +92,35 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         splits_per_year : int, default=1
             Number of splits per year. Must be at least 1 if provided. Used only when
             `threshold_list` is None.
+        n_skip : int, default=1
+            Number of initial groups to skip as test sets. These groups are always part
+            of the training set.
+        max_splits : int | None, optional
+            Maximum number of splits to create, by default `None`. If more splits are
+            possible, only the last ones are returned.
         date_precision : str | None, default="D"
             The default "D" rounds to the beginning of the day.
             If `None`, no rounding is applied. Other options can be used as described in
             the pandas documentation [1].
 
-        Raises
-        ------
-        ValueError
-            If both `threshold_list` and `final_threshold` parameters are
-            provided.
-        ValueError
-            If neither `threshold_list` nor `final_threshold` are
-            provided.
-        ValueError
-            If `threshold_list` is empty after resolution.
-        ValueError
-            If `splits_per_year` is provided and is less than 1.
+        Returns
+        -------
+        TimeThresholdSplitter
+            An instance of TimeThresholdSplitter initialized with a threshold_list
+            generated from the provided parameters.
 
         References
         ----------
         [1] https://pandas.pydata.org/docs/user_guide/timeseries.html#period-aliases
 
         """
-        super().__init__(n_skip=n_skip, max_splits=max_splits)
-
-        if threshold_list is not None and final_threshold is not None:
-            raise ValueError(
-                "Provide either 'threshold_list' or 'final_threshold', not both.",
-            )
-
-        if threshold_list is None:
-            if final_threshold is None:
-                raise ValueError(
-                    "Either 'threshold_list' must be provided or "
-                    "'final_threshold' must be specified to generate thresholds.",
-                )
-            threshold_list = thresholds_for_n_years(
-                final_threshold=final_threshold,
-                n_years=n_years,
-                splits_per_year=splits_per_year,
-                date_precision=date_precision,
-            )
-
-        if len(threshold_list) == 0:
-            raise ValueError("threshold_list must contain at least one timestamp.")
-
-        self.threshold_list = sorted(threshold_list)
+        threshold_list = thresholds_for_n_years(
+            final_threshold=final_threshold,
+            n_years=n_years,
+            splits_per_year=splits_per_year,
+            date_precision=date_precision,
+        )
+        return cls(n_skip=n_skip, max_splits=max_splits, threshold_list=threshold_list)
 
     def split(
         self,

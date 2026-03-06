@@ -52,26 +52,6 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         ):
             TimeThresholdSplitter(threshold_list=[])
 
-        # Neither threshold_list nor final_threshold provided
-        with self.assertRaisesRegex(
-            ValueError,
-            "Either 'threshold_list' must be provided or 'final_threshold' must be",
-        ):
-            TimeThresholdSplitter()
-
-        # Both threshold_list and final_threshold provided
-        with self.assertRaisesRegex(
-            ValueError,
-            "Provide either 'threshold_list' or 'final_threshold', not both.",
-        ):
-            TimeThresholdSplitter(
-                threshold_list=[
-                    pd.Timestamp("2020-01-01"),
-                    pd.Timestamp("2021-01-01"),
-                ],
-                final_threshold=pd.Timestamp("2022-01-01"),
-            )
-
     def test_split_raises_without_groups(self) -> None:
         """Ensure split raises when groups are missing."""
         threshold_list = [pd.Timestamp("2020-01-01"), pd.Timestamp("2021-01-01")]
@@ -259,7 +239,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
     def test_builds_thresholds_from_final_threshold_timestamp(self) -> None:
         """Construct thresholds using a concrete Timestamp final_threshold."""
         final_ts = pd.Timestamp("2022-12-31")
-        splitter = TimeThresholdSplitter(
+        splitter = TimeThresholdSplitter.from_final_threshold(
             final_threshold=final_ts,
             n_years=1,
             splits_per_year=2,
@@ -278,7 +258,9 @@ class TestTimeThresholdSplitter(unittest.TestCase):
     def test_resolve_final_threshold_special_strings(self) -> None:
         """Test that special time strings are accepted as final_threshold."""
         for time_str in ["today", "Q1", "Q2", "Q3", "Q4"]:
-            splitter = TimeThresholdSplitter(final_threshold=time_str)
+            splitter = TimeThresholdSplitter.from_final_threshold(
+                final_threshold=time_str,
+            )
             threshold_list = splitter.threshold_list
             self.assertIsInstance(threshold_list, list)
             expected_date = resolve_named_time_stamps(time_str)
@@ -293,7 +275,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
             None: pd.Timestamp.now(),
         }
         for round_to, expected_now in today_results_dict.items():
-            splitter = TimeThresholdSplitter(
+            splitter = TimeThresholdSplitter.from_final_threshold(
                 final_threshold="today",
                 n_years=1,
                 splits_per_year=1,
@@ -310,7 +292,7 @@ class TestTimeThresholdSplitter(unittest.TestCase):
 
         """
         now = pd.Timestamp.now().floor("D")
-        splitter = TimeThresholdSplitter(
+        splitter = TimeThresholdSplitter.from_final_threshold(
             final_threshold="today",
             n_years=1,
             splits_per_year=2,
@@ -344,8 +326,8 @@ class TestTimeThresholdSplitter(unittest.TestCase):
         quarter_month_map = {"Q1": 1, "Q2": 4, "Q3": 7, "Q4": 10}
 
         for quarter, month in quarter_month_map.items():
-            splitter = TimeThresholdSplitter(
-                final_threshold=quarter,  # type: ignore
+            splitter = TimeThresholdSplitter.from_final_threshold(
+                final_threshold=quarter,
                 n_years=1,
                 splits_per_year=1,
             )
