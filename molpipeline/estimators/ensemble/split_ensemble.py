@@ -22,6 +22,11 @@ from molpipeline.utils.molpipeline_types import (
     YVarType,
 )
 
+__all__ = [
+    "SplitEnsembleClassifier",
+    "SplitEnsembleRegressor",
+]
+
 
 class BaseSplitEnsemble(MolPipelineBaseEnsemble):
     """Base class for ensemble models from sklearn splitters."""
