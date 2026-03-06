@@ -5,7 +5,9 @@ from typing import Self
 
 import numpy as np
 import numpy.typing as npt
+import scipy.sparse as sp
 from sklearn.base import BaseEstimator
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import KFold, StratifiedKFold
 from typing_extensions import override
 
@@ -273,6 +275,24 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
             self.assertTrue(np.array_equal(est.fit_args["X"], features_arr[train_idx]))
             self.assertTrue(np.array_equal(est.fit_args["y"], y_arr[train_idx]))
 
+    def test_linear_regression_dense_and_sparse(self) -> None:
+        """Regressor works with both dense arrays and CSR sparse matrices."""
+        features = np.array([[0, 1], [1, 1], [1, 0], [0, 0], [1, 2], [2, 1]])
+        y = np.array([0.0, 1.0, 1.0, 0.0, 2.0, 1.0])
+
+        # Dense array
+        reg = SplitEnsembleRegressor(estimator=LinearRegression(), cv=2)
+        reg.fit(features, y)
+        preds = reg.predict(features)
+        self.assertEqual(preds.shape, (features.shape[0],))
+
+        # Sparse matrix
+        x_sparse = sp.csr_matrix(features)
+        reg_sparse = SplitEnsembleRegressor(estimator=LinearRegression(), cv=2)
+        reg_sparse.fit(x_sparse, y)
+        preds_sparse = reg_sparse.predict(x_sparse)
+        self.assertEqual(preds_sparse.shape, (x_sparse.shape[0],))
+
 
 class TestSplitEnsembleClassifier(unittest.TestCase):
     """Unit tests for SplitEnsembleClassifier."""
@@ -410,6 +430,29 @@ class TestSplitEnsembleClassifier(unittest.TestCase):
         self.assertTrue(np.array_equal(preds, np.zeros(len(features))))
         proba = ensemble.predict_proba(features)
         self.assertTrue(np.array_equal(proba, np.tile([0.7, 0.3], (len(features), 1))))
+
+    def test_logistic_regression_dense_and_sparse(self) -> None:
+        """Classifier works with both dense arrays and CSR sparse matrices."""
+        features = np.array([[0, 1], [1, 1], [1, 0], [0, 0], [1, 2], [2, 1]])
+        y = np.array([0, 1, 1, 0, 1, 0])
+
+        # Dense array
+        clf = SplitEnsembleClassifier(
+            estimator=LogisticRegression(solver="liblinear"),
+            cv=2,
+        )
+        clf.fit(features, y)
+        preds = clf.predict(features)
+        self.assertEqual(preds.shape, (features.shape[0],))
+        # Sparse matrix
+        x_sparse = sp.csr_matrix(features)
+        clf_sparse = SplitEnsembleClassifier(
+            estimator=LogisticRegression(solver="liblinear"),
+            cv=2,
+        )
+        clf_sparse.fit(x_sparse, y)
+        preds_sparse = clf_sparse.predict(x_sparse)
+        self.assertEqual(preds_sparse.shape, (x_sparse.shape[0],))
 
 
 if __name__ == "__main__":
