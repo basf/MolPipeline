@@ -11,14 +11,17 @@ from typing_extensions import override
 class GroupAdditionSplit(BaseCrossValidator):  # pylint: disable=abstract-method
     """Add sequentially one group to the training set.
 
-    The ordinal value of the groups is used to determine the order of addition.
-    This means that the group with the lowest value is would be the first test set
-    before it is added to the training set. Then the next lowest group serves as  test
-    set before it is added to the training set. The parameter n_skip allows to skip a
-    certain number of groups as test set, forming the initial training set. The default
-    value for n_skip is 1, as is almost all cases a training set is required. The
-    highest group is always used as test set, and the intermediate groups serve once as
-    test set, then join the training set.
+    The ordinal value of the groups is used to determine the order of addition. The
+    parameter n_skip determines how many of the groups are part of the initial training
+    set, where the group with the next higher value is used as the first test set. All
+    other groups are not used in this split. After that, the group which formerly served
+    as the test set is added to the training set, and the next higher group is used as
+    the new test set. This process is repeated until all groups have been used as test
+    set. The highest group is never part of the training set. Setting n_skip to 0 means
+    that no training set is used for the first split, but since this is not a common use
+    case, the default value for n_skip is 1. The parameter max_splits can be used to
+    limit the number of splits from the end, meaning that only the last max_splits
+    groups are used as test sets.
 
     To summarize the splitting strategy:
     - The groups are ordered by their ordinal value.
