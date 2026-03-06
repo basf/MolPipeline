@@ -43,11 +43,9 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
 
         Parameters
         ----------
-        threshold_list : list[pd.Timestamp] | None, optional
+        threshold_list : list[pd.Timestamp]
             Explicit list of time thresholds to partition the data into groups.
             Data points are assigned to groups based on which threshold they exceed.
-            If None, thresholds are constructed from `final_threshold` and related
-            parameters.
         n_skip : int, default=1
             Number of initial groups to skip as test sets. These groups are always part
             of the training set.
@@ -58,7 +56,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         Raises
         ------
         ValueError
-            If `splits_per_year` is provided and is less than 1.
+            If `threshold_list` does not contain at least one element.
 
         """
         super().__init__(n_skip=n_skip, max_splits=max_splits)
