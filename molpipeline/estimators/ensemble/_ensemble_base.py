@@ -2,7 +2,7 @@
 
 import abc
 from collections.abc import Iterator
-from typing import Any, Literal, Self, TypeVar, overload
+from typing import Any, Literal, Self, TypeVar
 
 import joblib
 import numpy as np
@@ -13,9 +13,7 @@ from sklearn.utils.metaestimators import available_if
 from molpipeline.utils.molpipeline_types import (
     AnyPredictor,
     XType,
-    XVarType,
     YType,
-    YVarType,
 )
 
 _T = TypeVar("_T", BaseEstimator, AnyPredictor)
@@ -124,10 +122,10 @@ class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
     @abc.abstractmethod
     def _iter_model_inputs(
         self,
-        X: XVarType,  # noqa: N803,  # pylint: disable=invalid-name
-        y: YVarType,
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        y: YType,
         groups: npt.ArrayLike | None = None,
-    ) -> Iterator[tuple[XVarType, YVarType]]:
+    ) -> Iterator[tuple[XType, YType]]:
         """Iterate over the model inputs for each estimator in the ensemble.
 
         Parameters
@@ -152,20 +150,6 @@ class EnsembleRegressorMixIn(abc.ABC, RegressorMixin):
     """Base class for regression ensemble models."""
 
     estimators_: list[BaseEstimator | AnyPredictor]
-
-    @overload
-    def predict(
-        self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
-        return_std: Literal[False],
-    ) -> npt.NDArray[np.float64]: ...
-
-    @overload
-    def predict(
-        self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
-        return_std: Literal[True],
-    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 
     def predict(
         self,

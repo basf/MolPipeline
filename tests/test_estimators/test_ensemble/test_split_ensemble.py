@@ -87,7 +87,14 @@ class TestSplitEnsembleRegressor(WrappedEstimatorBaseTestMixIn, unittest.TestCas
             self.assertTrue(np.array_equal(est.fit_args["y"], y_arr[train_idx]))
 
     def test_linear_regression_dense_and_sparse(self) -> None:
-        """Regressor works with both dense arrays and CSR sparse matrices."""
+        """Regressor works with both dense arrays and CSR sparse matrices.
+
+        Raises
+        ------
+        TypeError
+            If the predictions are not returned as numpy arrays.
+
+        """
         features = np.array([[0, 1], [1, 1], [1, 0], [0, 0], [1, 2], [2, 1]])
         y = np.array([0.0, 1.0, 1.0, 0.0, 2.0, 1.0])
 
@@ -95,6 +102,9 @@ class TestSplitEnsembleRegressor(WrappedEstimatorBaseTestMixIn, unittest.TestCas
         reg = SplitEnsembleRegressor(estimator=LinearRegression(), cv=2)
         reg.fit(features, y)
         preds = reg.predict(features)
+        self.assertIsInstance(preds, np.ndarray)
+        if not isinstance(preds, np.ndarray):
+            raise TypeError("Expected predictions to be a numpy array")
         self.assertEqual(preds.shape, (features.shape[0],))
 
         # Sparse matrix
@@ -102,6 +112,8 @@ class TestSplitEnsembleRegressor(WrappedEstimatorBaseTestMixIn, unittest.TestCas
         reg_sparse = SplitEnsembleRegressor(estimator=LinearRegression(), cv=2)
         reg_sparse.fit(x_sparse, y)
         preds_sparse = reg_sparse.predict(x_sparse)
+        if not isinstance(preds, np.ndarray):
+            raise TypeError("Expected predictions to be a numpy array")
         self.assertEqual(preds_sparse.shape, (x_sparse.shape[0],))
 
 

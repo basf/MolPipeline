@@ -18,8 +18,9 @@ from molpipeline.estimators.ensemble._ensemble_base import (
 )
 from molpipeline.utils.molpipeline_types import (
     AnyPredictor,
-    XVarType,
-    YVarType,
+    SparseMatrix,
+    XType,
+    YType,
 )
 
 __all__ = [
@@ -71,10 +72,10 @@ class BaseSplitEnsemble(MolPipelineBaseEnsemble):
     @override
     def _iter_model_inputs(
         self,
-        X: XVarType,
-        y: YVarType,
+        X: XType,
+        y: YType,
         groups: npt.ArrayLike | None = None,
-    ) -> Iterator[tuple[XVarType, YVarType]]:
+    ) -> Iterator[tuple[npt.NDArray[Any] | SparseMatrix, YType]]:
         """Iterate over the model inputs for each split.
 
         Parameters
@@ -95,12 +96,11 @@ class BaseSplitEnsemble(MolPipelineBaseEnsemble):
         """
         splitter = self._get_splitter()
         x: npt.NDArray[Any] | csr_matrix | coo_matrix | csc_matrix
+        y_train: npt.NDArray[Any] | None
         x = X if isinstance(X, (csr_matrix, coo_matrix, csc_matrix)) else np.asarray(X)
         for train_index, _ in splitter.split(X, y, groups):
-            yield (
-                x[train_index],
-                np.asarray(y)[train_index] if y is not None else None,
-            )
+            y_train = np.asarray(y)[train_index] if y is not None else None
+            yield x[train_index], y_train
 
 
 class SplitEnsembleRegressor(BaseSplitEnsemble, EnsembleRegressorMixIn):
