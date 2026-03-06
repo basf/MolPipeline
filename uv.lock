@@ -1183,7 +1183,7 @@ wheels = [
 
 [[package]]
 name = "docsig"
-version = "0.78.0"
+version = "0.79.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astroid" },
@@ -1192,9 +1192,9 @@ dependencies = [
     { name = "tomli" },
     { name = "wcmatch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/3a/81437c9a0c891e669289e057aaa6f4d4f5109f69767167ead115449ef0b1/docsig-0.78.0.tar.gz", hash = "sha256:9329b221657f51492b52df5bb0ac45b2d0d63e1ce4f488a043cf0aadea07de16", size = 27882 }
+sdist = { url = "https://files.pythonhosted.org/packages/5f/1a/1da374e8e131500185d1c5324d19adcd952388508ba172b50361ce768216/docsig-0.79.0.tar.gz", hash = "sha256:be08f0ef485e270255d9921443d7e5d1842d8784e8ba7557e2a29412410d4282", size = 27831 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/47/12/cc1fce8cfc48b8442ea585962132f10b722ed09c652ec26033dddb9adb53/docsig-0.78.0-py3-none-any.whl", hash = "sha256:9afd35d40f0fdafb07b75369e57aeb9c0ac778d556b650c3846c4b5fa614c7e2", size = 31872 },
+    { url = "https://files.pythonhosted.org/packages/c4/a7/282c6eead5112ea20c55fe7b2b6324f624fd635e56f2337f01a9385eae99/docsig-0.79.0-py3-none-any.whl", hash = "sha256:941bd33f3ac1cd62ea62dc636358bc89d12df0eb49d490c7d9e9548b5ca4e7f4", size = 31840 },
 ]
 
 [[package]]
@@ -2694,7 +2694,7 @@ dev = [
     { name = "bandit", specifier = ">=1.8.3" },
     { name = "black", extras = ["jupyter"], specifier = ">=25.1.0" },
     { name = "coverage", specifier = ">=7.8.0" },
-    { name = "docsig", specifier = ">=0.69.3" },
+    { name = "docsig", specifier = ">=0.79.0" },
     { name = "flake8", specifier = ">=7.2.0" },
     { name = "interrogate", specifier = ">=1.7.0" },
     { name = "isort", specifier = ">=6.0.1" },
