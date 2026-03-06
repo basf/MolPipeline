@@ -9,6 +9,7 @@ import numpy.typing as npt
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator, KFold, StratifiedKFold
 from sklearn.utils.metaestimators import available_if
+from typing_extensions import override
 
 from molpipeline.utils.molpipeline_types import AnyPredictor
 
@@ -139,6 +140,7 @@ class SplitEnsemble(abc.ABC, BaseEstimator):
 class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
     """SplitEnsemble for regression tasks."""
 
+    @override
     def _get_splitter(self) -> BaseCrossValidator:
         """Return the splitter to be used for creating the splits.
 
@@ -158,14 +160,14 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
         return_std: Literal[False],
-    ) -> npt.NDArray[np.float64]:  ...
+    ) -> npt.NDArray[np.float64]: ...
 
     @overload
     def predict(
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
         return_std: Literal[True],
-    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:  ...
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 
     def predict(
         self,
@@ -195,7 +197,7 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
 
         """
         predictions = np.array(
-            [estimator.predict(X, **params) for estimator in self.estimators_]  # type: ignore
+            [estimator.predict(X, **params) for estimator in self.estimators_],  # type: ignore
         )
         if return_std:
             return np.mean(predictions, axis=0), np.std(predictions, axis=0)
