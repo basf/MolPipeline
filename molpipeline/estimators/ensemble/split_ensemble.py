@@ -4,8 +4,9 @@ import abc
 from collections.abc import Iterator
 from typing import Any, Literal
 
+import numpy as np
 import numpy.typing as npt
-from estimators.ensemble._ensemble_base import _X, _Y
+from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, KFold, StratifiedKFold
 from typing_extensions import override
@@ -15,7 +16,11 @@ from molpipeline.estimators.ensemble._ensemble_base import (
     EnsembleRegressorMixIn,
     MolPipelineBaseEnsemble,
 )
-from molpipeline.utils.molpipeline_types import AnyPredictor
+from molpipeline.utils.molpipeline_types import (
+    AnyPredictor,
+    XVarType,
+    YVarType,
+)
 
 
 class BaseSplitEnsemble(MolPipelineBaseEnsemble):
@@ -61,10 +66,10 @@ class BaseSplitEnsemble(MolPipelineBaseEnsemble):
     @override
     def _iter_model_inputs(
         self,
-        X: _X,
-        y: _Y = None,
+        X: XVarType,
+        y: YVarType,
         groups: npt.ArrayLike | None = None,
-    ) -> Iterator[tuple[_X, _Y]]:
+    ) -> Iterator[tuple[XVarType, YVarType]]:
         """Iterate over the model inputs for each split.
 
         Parameters
@@ -84,8 +89,13 @@ class BaseSplitEnsemble(MolPipelineBaseEnsemble):
 
         """
         splitter = self._get_splitter()
+        x: npt.NDArray[Any] | csr_matrix | coo_matrix | csc_matrix
+        x = X if isinstance(X, (csr_matrix, coo_matrix, csc_matrix)) else np.asarray(X)
         for train_index, _ in splitter.split(X, y, groups):
-            yield X[train_index], y[train_index] if y is not None else None
+            yield (
+                x[train_index],
+                np.asarray(y)[train_index] if y is not None else None,
+            )
 
 
 class SplitEnsembleRegressor(BaseSplitEnsemble, EnsembleRegressorMixIn):

@@ -13,7 +13,7 @@ from typing import (
 
 import numpy as np
 import numpy.typing as npt
-from scipy.sparse import spmatrix
+from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
@@ -44,10 +44,11 @@ _NT = TypeVar("_NT", bound=np.generic)
 TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_NT])  # type: ignore
 AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 
-XType = npt.ArrayLike | spmatrix
-YType = npt.ArrayLike | None
-XVarType = TypeVar("XVarType", bound=npt.ArrayLike | spmatrix)
-YVarType = TypeVar("YVarType", bound=npt.ArrayLike | None)
+SparseMatrix = csc_matrix | coo_matrix | csr_matrix
+XType = npt.ArrayLike | npt.NDArray[Any] | SparseMatrix
+YType = npt.ArrayLike | npt.NDArray[Any] | None
+XVarType = TypeVar("XVarType", bound=npt.ArrayLike | npt.NDArray[Any] | SparseMatrix)
+YVarType = TypeVar("YVarType", bound=npt.ArrayLike | npt.NDArray[Any] | None)
 
 FloatCountRange: TypeAlias = tuple[float | None, float | None]
 IntCountRange: TypeAlias = tuple[int | None, int | None]
