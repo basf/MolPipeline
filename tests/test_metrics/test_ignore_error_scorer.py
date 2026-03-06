@@ -168,7 +168,8 @@ class IgnoreErrorScorerTest(unittest.TestCase):
             scoring["ba"]._score_func.__name__,
         )
         self.assertEqual(
-            grid_search.scorer_["ba"]._score_func.__name__, "balanced_accuracy_score",
+            grid_search.scorer_["ba"]._score_func.__name__,
+            "balanced_accuracy_score",
         )
         self.assertEqual(
             grid_search.scorer_["f1"]._score_func.__name__,
