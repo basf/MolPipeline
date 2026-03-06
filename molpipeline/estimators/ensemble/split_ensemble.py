@@ -158,46 +158,14 @@ class SplitEnsembleRegressor(SplitEnsemble, RegressorMixin):
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
         return_std: Literal[False],
-    ) -> npt.NDArray[np.float64]:
-        """Predict using the ensemble of estimators.
-
-        Parameters
-        ----------
-        X : array-like
-            The input data.
-        return_std : bool, default=False
-            Whether to return the standard deviation of the predictions.
-
-        Returns
-        -------
-        npt.NDArray[np.float64]
-            The predicted values.
-
-        """
+    ) -> npt.NDArray[np.float64]:  ...
 
     @overload
     def predict(
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
         return_std: Literal[True],
-    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
-        """Predict using the ensemble of estimators.
-
-        Parameters
-        ----------
-        X : array-like
-            The input data.
-        return_std : bool, default=False
-            Whether to return the standard deviation of the predictions.
-
-        Returns
-        -------
-        npt.NDArray[np.float64]
-            The predicted values.
-        npt.NDArray[np.float64]
-            The standard deviation of the predictions, if return_std is True.
-
-        """
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:  ...
 
     def predict(
         self,
