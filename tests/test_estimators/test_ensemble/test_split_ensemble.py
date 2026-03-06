@@ -11,6 +11,7 @@ from molpipeline.estimators.ensemble.split_ensemble import (
     SplitEnsembleClassifier,
     SplitEnsembleRegressor,
 )
+from tests.templates.test_wrapped_estimators import WrappedEstimatorBaseTestMixIn
 from tests.utils.mock_estimators import (
     MockClassiferWithFloatLabels,
     MockClassifier,
@@ -19,48 +20,20 @@ from tests.utils.mock_estimators import (
 )
 
 
-class TestSplitEnsembleRegressor(unittest.TestCase):
+class TestSplitEnsembleRegressor(WrappedEstimatorBaseTestMixIn, unittest.TestCase):
     """Unit tests for SplitEnsembleRegressor."""
 
-    def test_param_forwarding(self) -> None:
-        """Test that parameters are correctly forwarded to the base estimator.
+    @staticmethod
+    def get_wrapped_estimator_type() -> type:
+        """Return the SplitEnsembleRegressor class.
 
-        Raises
-        ------
-        TypeError
-            If the base estimator is not an instance of MockEstimator.
+        Returns
+        -------
+        type[SplitEnsembleRegressor]
+            The SplitEnsembleRegressor class.
 
         """
-        base = MockEstimator(alpha=1)
-        ensemble = SplitEnsembleRegressor(
-            estimator=base,
-            cv=3,
-            estimator__beta=2,
-        )
-        ensemble.set_params(estimator__gamma=3)
-        base_est = ensemble.estimator
-        if not isinstance(base_est, MockEstimator):
-            raise TypeError("Expected an instance of MockEstimator")
-        self.assertEqual(base_est.alpha, 1)
-        self.assertEqual(base_est.beta, 2)
-        self.assertEqual(base_est.gamma, 3)
-
-    def test_get_params(self) -> None:
-        """Test that get_params returns the correct parameters."""
-        base = MockEstimator(alpha=1)
-        ensemble = SplitEnsembleRegressor(
-            estimator=base,
-            cv=3,
-            estimator__beta=2,
-        )
-        ensemble.set_params(estimator__gamma=3)
-        params = ensemble.get_params(deep=True)
-        self.assertIn("estimator__alpha", params)
-        self.assertIn("estimator__beta", params)
-        self.assertIn("estimator__gamma", params)
-        self.assertEqual(params["estimator__alpha"], 1)
-        self.assertEqual(params["estimator__beta"], 2)
-        self.assertEqual(params["estimator__gamma"], 3)
+        return SplitEnsembleRegressor
 
     def test_fit_sample_forwarding(self) -> None:
         """Test that fit samples are correctly forwarded to each base estimator.
@@ -132,31 +105,20 @@ class TestSplitEnsembleRegressor(unittest.TestCase):
         self.assertEqual(preds_sparse.shape, (x_sparse.shape[0],))
 
 
-class TestSplitEnsembleClassifier(unittest.TestCase):
+class TestSplitEnsembleClassifier(WrappedEstimatorBaseTestMixIn, unittest.TestCase):
     """Unit tests for SplitEnsembleClassifier."""
 
-    def test_param_forwarding(self) -> None:
-        """Test that parameters are correctly forwarded to the base estimator.
+    @staticmethod
+    def get_wrapped_estimator_type() -> type:
+        """Return the SplitEnsembleClassifier class.
 
-        Raises
-        ------
-        TypeError
-            If the base estimator is not an instance of MockClassifier.
+        Returns
+        -------
+        type[SplitEnsembleClassifier]
+            The SplitEnsembleClassifier class.
 
         """
-        base = MockClassifier(alpha=1)
-        ensemble = SplitEnsembleClassifier(
-            estimator=base,
-            cv=3,
-            estimator__beta=2,
-        )
-        ensemble.set_params(estimator__gamma=3)
-        base_est = ensemble.estimator
-        if not isinstance(base_est, MockClassifier):
-            raise TypeError("Expected an instance of MockClassifier")
-        self.assertEqual(base_est.alpha, 1)
-        self.assertEqual(base_est.beta, 2)
-        self.assertEqual(base_est.gamma, 3)
+        return SplitEnsembleClassifier
 
     def test_fit_sample_forwarding(self) -> None:
         """Test that fit samples are correctly forwarded to each base estimator.

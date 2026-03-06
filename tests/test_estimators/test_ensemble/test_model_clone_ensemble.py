@@ -10,54 +10,27 @@ from molpipeline.estimators.ensemble.model_clone_ensemble import (
     CloneEnsembleClassifier,
     CloneEnsembleRegressor,
 )
+from tests.templates.test_wrapped_estimators import WrappedEstimatorBaseTestMixIn
 from tests.utils.mock_estimators import (
     MockClassifier,
     MockEstimator,
 )
 
 
-class TestCloneEnsembleRegressor(unittest.TestCase):
+class TestCloneEnsembleRegressor(WrappedEstimatorBaseTestMixIn, unittest.TestCase):
     """Unit tests for CloneEnsembleRegressor."""
 
-    def test_param_forwarding(self) -> None:
-        """Parameters are forwarded to the wrapped estimator.
+    @staticmethod
+    def get_wrapped_estimator_type() -> type:
+        """Return the CloneEnsembleRegressor class.
 
-        Raises
-        ------
-        TypeError
-            If the base estimator is not an instance of MockClassifier.
+        Returns
+        -------
+        type[CloneEnsembleRegressor]
+                The class of the wrapped estimator to be tested.
 
         """
-        base = MockEstimator(alpha=1)
-        ensemble = CloneEnsembleRegressor(
-            estimator=base,
-            n_estimators=3,
-            estimator__beta=2,
-        )
-        ensemble.set_params(estimator__gamma=3)
-        base_est = ensemble.estimator
-        if not isinstance(base_est, MockEstimator):
-            raise TypeError("Expected an instance of MockEstimator")
-        self.assertEqual(base_est.alpha, 1)
-        self.assertEqual(base_est.beta, 2)
-        self.assertEqual(base_est.gamma, 3)
-
-    def test_get_params(self) -> None:
-        """get_params exposes nested estimator parameters."""
-        base = MockEstimator(alpha=1)
-        ensemble = CloneEnsembleRegressor(
-            estimator=base,
-            n_estimators=3,
-            estimator__beta=2,
-        )
-        ensemble.set_params(estimator__gamma=3)
-        params = ensemble.get_params(deep=True)
-        self.assertIn("estimator__alpha", params)
-        self.assertIn("estimator__beta", params)
-        self.assertIn("estimator__gamma", params)
-        self.assertEqual(params["estimator__alpha"], 1)
-        self.assertEqual(params["estimator__beta"], 2)
-        self.assertEqual(params["estimator__gamma"], 3)
+        return CloneEnsembleRegressor
 
     def test_fit_sample_forwarding(self) -> None:
         """Each clone receives the full feature matrix and target vector.
@@ -125,31 +98,20 @@ class TestCloneEnsembleRegressor(unittest.TestCase):
         self.assertEqual(preds_sparse.shape, (x_sparse.shape[0],))
 
 
-class TestCloneEnsembleClassifier(unittest.TestCase):
+class TestCloneEnsembleClassifier(WrappedEstimatorBaseTestMixIn, unittest.TestCase):
     """Unit tests for CloneEnsembleClassifier."""
 
-    def test_param_forwarding(self) -> None:
-        """Parameters are forwarded to the wrapped estimator.
+    @staticmethod
+    def get_wrapped_estimator_type() -> type:
+        """Return the CloneEnsembleRegressor class.
 
-        Raises
-        ------
-        TypeError
-            If the base estimator is not an instance of MockClassifier.
+        Returns
+        -------
+        type[CloneEnsembleRegressor]
+            The class of the wrapped estimator to be tested.
 
         """
-        base = MockClassifier(alpha=1)
-        ensemble = CloneEnsembleClassifier(
-            estimator=base,
-            n_estimators=3,
-            estimator__beta=2,
-        )
-        ensemble.set_params(estimator__gamma=3)
-        base_est = ensemble.estimator
-        if not isinstance(base_est, MockClassifier):
-            raise TypeError("Expected an instance of MockClassifier")
-        self.assertEqual(base_est.alpha, 1)
-        self.assertEqual(base_est.beta, 2)
-        self.assertEqual(base_est.gamma, 3)
+        return CloneEnsembleRegressor
 
     def test_fit_sample_forwarding(self) -> None:
         """Each classifier clone receives the full training set.
