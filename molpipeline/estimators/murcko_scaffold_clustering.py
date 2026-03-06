@@ -206,7 +206,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     @override
     def fit_predict(
         self,
-        X: (npt.NDArray[np.str_] | list[str] | list[OptionalMol]),  # pylint: disable=C0103
+        X: (npt.NDArray[np.str_] | list[str] | list[OptionalMol]),
         y: npt.NDArray[np.float64] | None = None,
         **params: Any,  # pylint: disable=unused-argument
     ) -> npt.NDArray[np.float64]:

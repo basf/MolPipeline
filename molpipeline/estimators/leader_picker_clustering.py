@@ -41,7 +41,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         # centroid indices
         self.centroids_: npt.NDArray[np.int32] | None = None
 
-    # pylint: disable=C0103,W0613
+    # pylint: disable=W0613
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
@@ -137,7 +137,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
     @override
     def fit_predict(
         self,
-        X: list[ExplicitBitVect],  # pylint: disable=C0103
+        X: list[ExplicitBitVect],
         y: npt.NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> npt.NDArray[np.int32]:
