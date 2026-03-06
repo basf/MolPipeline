@@ -92,9 +92,8 @@ class GroupAdditionSplit(BaseCrossValidator):  # pylint: disable=abstract-method
         if groups is None:
             raise ValueError("The groups parameter is required.")
 
-        unique_groups = sorted(np.unique(groups))
         n_skip = self.n_skip
-        test_groups = unique_groups[n_skip:]
+        test_groups = np.unique(groups)[n_skip:]
         # If max_splits is set, limit the number of splits from the end
         if self.max_splits is not None and len(test_groups) > self.max_splits:
             test_groups = test_groups[-self.max_splits :]
