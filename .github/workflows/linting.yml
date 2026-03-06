@@ -138,7 +138,6 @@ jobs:
     needs:
         - pylint
         - mypy
-        - pydocstyle
         - docsig
         - flake8
         - interrogate
