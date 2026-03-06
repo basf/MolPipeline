@@ -19,7 +19,7 @@ class PostPredictionTransformation(BaseEstimator, TransformerMixin, abc.ABC):
     """
 
     @abc.abstractmethod
-    def transform(self, X: Any, **params: Any) -> Any:  # pylint: disable=invalid-name
+    def transform(self, X: Any, **params: Any) -> Any:    # noqa: N803
         """Transform data.
 
         Parameters
@@ -67,7 +67,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
 
     def fit(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],    # noqa: N803
         y: npt.NDArray[Any] | None = None,
         **params: Any,
     ) -> Self:
@@ -169,7 +169,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
 
     def inverse_transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],    # noqa: N803
     ) -> npt.NDArray[Any]:
         """Inverse transform data.
 

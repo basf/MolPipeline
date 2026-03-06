@@ -97,7 +97,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     def transform(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name  # noqa: N803
+        X: MoleculeDataset,    # noqa: N803
     ) -> npt.NDArray[np.float64]:
         """Transform the input.
 
@@ -118,7 +118,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     def fit_transform(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name  # noqa: N803
+        X: MoleculeDataset,    # noqa: N803
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
         *,
         sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,

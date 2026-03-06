@@ -27,7 +27,7 @@ class GPKernelTestMixin(abc.ABC):
     smiles_list: list[str]
     label: list[int]
 
-    def setUp(self) -> None:  # pylint: disable=invalid-name
+    def setUp(self) -> None:    # noqa: N803
         """Create small integer fingerprint matrices."""
         self.feature_matrix_a = np.array(
             [

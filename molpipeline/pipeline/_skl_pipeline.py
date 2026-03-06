@@ -343,7 +343,7 @@ class Pipeline(_Pipeline):
 
     def _transform(
         self,
-        X: Any,  # pylint: disable=invalid-name
+        X: Any,    # noqa: N803
         routed_params: Bunch,
     ) -> Any:
         """Transform the data, and skip final estimator.
@@ -522,7 +522,7 @@ class Pipeline(_Pipeline):
 
         """
         routed_params = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, routed_params)  # pylint: disable=invalid-name
+        Xt, yt = self._fit(X, y, routed_params)    # noqa: N803
         with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 if is_empty(Xt):
