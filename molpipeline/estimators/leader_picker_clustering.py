@@ -12,6 +12,7 @@ from rdkit.DataStructs import ExplicitBitVect
 from rdkit.SimDivFilters import rdSimDivPickers
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.utils._param_validation import Interval
+from typing_extensions import override
 
 
 class LeaderPickerClustering(ClusterMixin, BaseEstimator):
@@ -44,7 +45,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
-        X: list[ExplicitBitVect],
+        X: list[ExplicitBitVect],  # noqa: N803
         y: npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit leader picker clustering estimator.
@@ -98,8 +99,8 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
 
         return np.unique(labels).shape[0], labels
 
-    # pylint: disable=C0103,W0613
-    def _fit(self, X: list[ExplicitBitVect]) -> Self:
+    # pylint: disable=W0613
+    def _fit(self, X: list[ExplicitBitVect]) -> Self:  # noqa: N803
         """Fit leader picker clustering estimator.
 
         Parameters
@@ -133,6 +134,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         self.centroids_ = np.array(picks)
         return self
 
+    @override
     def fit_predict(
         self,
         X: list[ExplicitBitVect],  # pylint: disable=C0103
