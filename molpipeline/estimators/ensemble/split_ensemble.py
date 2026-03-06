@@ -9,7 +9,6 @@ import numpy.typing as npt
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator, KFold, StratifiedKFold
 from sklearn.utils.metaestimators import available_if
-from typing_extensions import override
 
 from molpipeline.utils.molpipeline_types import AnyPredictor
 
@@ -299,7 +298,7 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
     def predict_proba(
         self,
         X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
-        **params: Any,
+        **params: Any,  # noqa: ARG002  # pylint: disable=unused-argument
     ) -> npt.NDArray[Any]:
         """Predict class probabilities using the ensemble of estimators.
 
@@ -360,7 +359,7 @@ class SplitEnsembleClassifier(SplitEnsemble, ClassifierMixin):
                 )
             return np.argmax(self.predict_proba(X, **params), axis=1)
         predictions = np.array(
-            [estimator.predict(X, **params) for estimator in self.estimators_]  # type: ignore
+            [estimator.predict(X, **params) for estimator in self.estimators_],  # type: ignore
         )
         if not np.issubdtype(predictions.dtype, np.integer):
             converted_predictions = predictions.astype(int)
