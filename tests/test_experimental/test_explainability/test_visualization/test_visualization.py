@@ -38,15 +38,15 @@ def _get_test_morgan_rf_pipeline(task: str = "classification") -> Pipeline:
     task : str, optional (default="classification")
         Task of the pipeline. Either "classification" or "regression".
 
-    Raises
-    ------
-    ValueError
-        If the task is not "classification" or "regression".
-
     Returns
     -------
     Pipeline
         Pipeline with Morgan fingerprints and a random forest classifier.
+
+    Raises
+    ------
+    ValueError
+        If the task is not "classification" or "regression".
 
     """
     if task == "classification":

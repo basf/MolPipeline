@@ -204,15 +204,15 @@ class ABCPipelineElement(abc.ABC):
         parameters: Any
             Parameters to be set.
 
-        Raises
-        ------
-        ValueError
-            If the parameter is not a valid parameter of the object.
-
         Returns
         -------
         Self
             Self with updated parameters.
+
+        Raises
+        ------
+        ValueError
+            If the parameter is not a valid parameter of the object.
 
         """
         for att_name, att_value in parameters.items():

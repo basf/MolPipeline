@@ -16,17 +16,17 @@ def assure_range(value: VarNumber | Sequence[VarNumber]) -> tuple[VarNumber, Var
     value: VarNumber | Sequence[VarNumber]
         Count value. Can be a single int | float or a Sequence of two values.
 
+    Returns
+    -------
+    IntCountRange
+        Tuple of count values.
+
     Raises
     ------
     ValueError
         If the count is a sequence of length other than 2.
     TypeError
         If the count is not an int or a sequence.
-
-    Returns
-    -------
-    IntCountRange
-        Tuple of count values.
 
     """
     if isinstance(value, (float, int)):

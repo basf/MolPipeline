@@ -61,15 +61,15 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     def _generate_pipeline(self) -> Pipeline:
         """Generate the pipeline for the Murcko scaffold clustering estimator.
 
-        Raises
-        ------
-        ValueError
-            If linear_molecules_strategy is not "ignore" or "own_cluster".
-
         Returns
         -------
         Pipeline
             Pipeline for the Murcko scaffold clustering estimator.
+
+        Raises
+        ------
+        ValueError
+            If linear_molecules_strategy is not "ignore" or "own_cluster".
 
         """
         auto2mol = AutoToMol()
@@ -184,15 +184,15 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         X : array-like of shape (n_samples,)
             Smiles or molecule list or array.
 
-        Raises
-        ------
-        AssertionError
-            If self.labels_ is None.
-
         Returns
         -------
         Self
             Fitted estimator.
+
+        Raises
+        ------
+        AssertionError
+            If self.labels_ is None.
 
         """
         cluster_pipeline = self._generate_pipeline()

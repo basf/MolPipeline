@@ -69,15 +69,15 @@ def _get_prediction_function(
     pipeline : Pipeline
         The pipeline containing the model.
 
-    Raises
-    ------
-    ValueError
-        If no prediction function could be found.
-
     Returns
     -------
     Any
         The prediction function.
+
+    Raises
+    ------
+    ValueError
+        If no prediction function could be found.
 
     """
     if hasattr(pipeline, "predict_proba"):
@@ -135,17 +135,17 @@ def _convert_shap_feature_weights_to_atom_weights(
     feature_vector : npt.NDArray[np.float64]
         The feature vector.
 
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        The atom weights.
+
     Raises
     ------
     ValueError
         If the molecule is None.
     ValueError
         If the feature weights have an unsupported number of dimensions.
-
-    Returns
-    -------
-    npt.NDArray[np.float64]
-        The atom weights.
 
     """
     if isinstance(molecule, InvalidInstance):
@@ -300,15 +300,15 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
         kwargs : Any
             Additional keyword arguments for SHAP's TreeExplainer.shap_values.
 
-        Raises
-        ------
-        ValueError
-            If the featurization element does not have a get_feature_names method.
-
         Returns
         -------
         list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]
             List of explanations corresponding to the input data.
+
+        Raises
+        ------
+        ValueError
+            If the featurization element does not have a get_feature_names method.
 
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
