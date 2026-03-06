@@ -10,11 +10,15 @@ import numpy.typing as npt
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.utils.metaestimators import available_if
 
-from molpipeline.utils.molpipeline_types import AnyPredictor
+from molpipeline.utils.molpipeline_types import (
+    AnyPredictor,
+    XType,
+    XVarType,
+    YType,
+    YVarType,
+)
 
 _T = TypeVar("_T", BaseEstimator, AnyPredictor)
-_X = TypeVar("_X", bound=npt.ArrayLike)
-_Y = TypeVar("_Y", npt.ArrayLike, None)
 
 
 class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
@@ -54,8 +58,8 @@ class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
     @staticmethod
     def _fit_clone(
         model: _T,
-        model_input: npt.NDArray[Any],
-        y: npt.NDArray[Any],
+        model_input: XType,
+        y: YType,
         **kwargs: Any,
     ) -> _T:
         """Clone the model and fit it on the given data.
@@ -64,9 +68,9 @@ class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
         ----------
         model : BaseEstimator
             The model to be fitted.
-        model_input : npt.NDArray[Any]
+        model_input : XType
             The input data.
-        y : npt.NDArray[Any]
+        y : YType
             The target values.
         kwargs : Any
             Additional keyword arguments to be passed to the fit method of the model.
@@ -82,9 +86,9 @@ class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
 
     def fit(
         self,
-        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
-        y: npt.ArrayLike | None = None,
-        groups: npt.ArrayLike | None = None,
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        y: YType = None,
+        groups: YType = None,
         **kwargs: Any,
     ) -> Self:
         """Fit the ensemble of estimators on the data.
@@ -108,30 +112,22 @@ class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
             The fitted SplitEnsemble instance.
 
         """
-        self._get_splitter()
-        features = np.asarray(X)
-
         parallel = joblib.Parallel(n_jobs=self.n_jobs)
         fit_clone_parallel = joblib.delayed(self._fit_clone)
 
         self.estimators_ = parallel(
-            fit_clone_parallel(
-                self.estimator,
-                features[train_index],
-                np.asarray(y)[train_index] if y is not None else None,
-                **kwargs,
-            )
-            for train_index, _ in self._iter_model_inputs(X, y, groups)
+            fit_clone_parallel(self.estimator, feat_mat, target, **kwargs)
+            for feat_mat, target in self._iter_model_inputs(X, y, groups)
         )
         return self
 
     @abc.abstractmethod
     def _iter_model_inputs(
         self,
-        X: _X,  # noqa: N803,  # pylint: disable=invalid-name
-        y: _Y = None,
+        X: XVarType,  # noqa: N803,  # pylint: disable=invalid-name
+        y: YVarType,
         groups: npt.ArrayLike | None = None,
-    ) -> Iterator[tuple[_X, _Y]]:
+    ) -> Iterator[tuple[XVarType, YVarType]]:
         """Iterate over the model inputs for each estimator in the ensemble.
 
         Parameters
@@ -158,20 +154,20 @@ class EnsembleRegressorMixIn(abc.ABC, RegressorMixin):
     @overload
     def predict(
         self,
-        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
         return_std: Literal[False],
     ) -> npt.NDArray[np.float64]: ...
 
     @overload
     def predict(
         self,
-        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
         return_std: Literal[True],
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 
     def predict(
         self,
-        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
         return_std: bool = False,
         **params: Any,
     ) -> (
@@ -224,7 +220,7 @@ class EnsembleClassifierMixIn(abc.ABC, ClassifierMixin):
     @available_if(_can_predict_proba)
     def predict_proba(
         self,
-        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
         **params: Any,  # noqa: ARG002  # pylint: disable=unused-argument
     ) -> npt.NDArray[Any]:
         """Predict class probabilities using the ensemble of estimators.
@@ -250,7 +246,7 @@ class EnsembleClassifierMixIn(abc.ABC, ClassifierMixin):
 
     def predict(
         self,
-        X: npt.ArrayLike,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.

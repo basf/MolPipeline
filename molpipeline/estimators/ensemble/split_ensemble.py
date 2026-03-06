@@ -44,12 +44,8 @@ class BaseSplitEnsemble(MolPipelineBaseEnsemble):
             Additional keyword arguments to be passed to the base estimator.
 
         """
-        self.estimator = estimator
         self.cv = cv
-        self.estimators_ = []
-        self.n_jobs = n_jobs
-        self.set_params(**kwargs)
-        super().__init__()
+        super().__init__(estimator=estimator, n_jobs=n_jobs, **kwargs)
 
     @abc.abstractmethod
     def _get_splitter(self) -> BaseCrossValidator:
