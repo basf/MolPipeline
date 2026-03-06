@@ -170,7 +170,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             Fitted estimator.
 
         """
-        X = validate_data(self, X=X, ensure_min_samples=2, ensure_2d=False, dtype=None)
+        X = validate_data(self, X=X, ensure_min_samples=2, ensure_2d=False, dtype=None)  # noqa: N806
         return self._fit(X)
 
     # pylint: disable=W0613

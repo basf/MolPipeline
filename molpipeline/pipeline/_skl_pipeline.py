@@ -310,7 +310,7 @@ class Pipeline(_Pipeline):
                 )
 
             # Fit or load from cache the current transformer
-            X, fitted_transformer = fit_transform_one_cached(
+            X, fitted_transformer = fit_transform_one_cached(  # noqa: N806
                 cloned_transformer,
                 X,
                 y,
@@ -525,7 +525,7 @@ class Pipeline(_Pipeline):
 
         """
         routed_params = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, routed_params)
+        Xt, yt = self._fit(X, y, routed_params)  # noqa: N806
         with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 if is_empty(Xt):
