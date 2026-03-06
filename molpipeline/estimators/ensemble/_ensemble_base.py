@@ -206,6 +206,7 @@ class EnsembleClassifierMixIn(abc.ABC, ClassifierMixin):
     """Base class for classification ensemble models."""
 
     estimators_: list[BaseEstimator | AnyPredictor]
+    voting: Literal["hard", "soft"]
 
     def _can_predict_proba(self) -> bool:
         """Check if all estimators in the ensemble support probability prediction.
