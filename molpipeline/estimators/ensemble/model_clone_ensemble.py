@@ -6,7 +6,7 @@ due to random initialization or stochasticity in the training process.
 """
 
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, Literal
 
 import numpy.typing as npt
 from sklearn.base import BaseEstimator
@@ -90,6 +90,30 @@ class BaseCloneEnsemble(MolPipelineBaseEnsemble):
 
 class CloneEnsembleClassifier(EnsembleClassifierMixIn, BaseCloneEnsemble):
     """Ensemble classifier that creates clones of the same estimator."""
+
+    def __init__(
+        self,
+        estimator: BaseEstimator,
+        n_estimators: int = 5,
+        voting: Literal["hard", "soft"] = "hard",
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the CloneEnsembleClassifier.
+
+        Parameters
+        ----------
+        estimator : BaseEstimator
+            The base estimator to be cloned for each model.
+        n_estimators : int, default=5
+            The number of cloned estimators.
+        voting : Literal["hard", "soft"], default="hard"
+            Voting strategy used during prediction.
+        kwargs : Any
+            Additional keyword arguments forwarded to the base class.
+
+        """
+        self.voting = voting
+        super().__init__(estimator=estimator, n_estimators=n_estimators, **kwargs)
 
 
 class CloneEnsembleRegressor(EnsembleRegressorMixIn, BaseCloneEnsemble):
