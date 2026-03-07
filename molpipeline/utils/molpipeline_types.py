@@ -77,6 +77,7 @@ class AnySklearnEstimator(Protocol):
             Parameter names mapped to their values.
 
         """
+        ...
 
     def set_params(self, **params: Any) -> Self:
         """Set the parameters of this estimator.
@@ -92,6 +93,7 @@ class AnySklearnEstimator(Protocol):
             Estimator with updated parameters.
 
         """
+        ...
 
     def fit(
         self,
@@ -117,6 +119,7 @@ class AnySklearnEstimator(Protocol):
             Fitted estimator.
 
         """
+        ...
 
 
 class AnyPredictor(AnySklearnEstimator, Protocol):
@@ -145,6 +148,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
             Predictions.
 
         """
+        ...
 
 
 class AnyTransformer(AnySklearnEstimator, Protocol):
@@ -174,6 +178,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
             Transformed array.
 
         """
+        ...
 
     def transform(
         self,
@@ -195,6 +200,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
             Transformed array.
 
         """
+        ...
 
 
 AnyElement = (
