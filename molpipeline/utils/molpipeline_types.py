@@ -77,7 +77,7 @@ class AnySklearnEstimator(Protocol):
             Parameter names mapped to their values.
 
         """
-        ...
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def set_params(self, **params: Any) -> Self:
         """Set the parameters of this estimator.
@@ -93,7 +93,7 @@ class AnySklearnEstimator(Protocol):
             Estimator with updated parameters.
 
         """
-        ...
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def fit(
         self,
@@ -119,7 +119,7 @@ class AnySklearnEstimator(Protocol):
             Fitted estimator.
 
         """
-        ...
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 class AnyPredictor(AnySklearnEstimator, Protocol):
@@ -148,7 +148,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
             Predictions.
 
         """
-        ...
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 class AnyTransformer(AnySklearnEstimator, Protocol):
@@ -178,7 +178,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
             Transformed array.
 
         """
-        ...
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def transform(
         self,
@@ -200,7 +200,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
             Transformed array.
 
         """
-        ...
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 AnyElement = (
