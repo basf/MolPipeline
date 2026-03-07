@@ -13,6 +13,7 @@ from typing import (
 
 import numpy as np
 import numpy.typing as npt
+from scipy.sparse import coo_matrix, csc_matrix, csr_matrix, spmatrix
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
@@ -31,6 +32,8 @@ __all__ = [
     "Number",
     "OptionalMol",
     "RDKitMol",
+    "XVar",
+    "YVar",
 ]
 # One liner type definitions
 
@@ -40,6 +43,12 @@ _T = TypeVar("_T")
 _NT = TypeVar("_NT", bound=np.generic)
 TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_NT])  # type: ignore
 AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
+
+SparseMatrix = csc_matrix[Any] | coo_matrix[Any] | csr_matrix[Any]
+XType = npt.ArrayLike | npt.NDArray[Any] | spmatrix
+YType = npt.ArrayLike | npt.NDArray[Any] | None
+XVar = TypeVar("XVar", bound=npt.ArrayLike | npt.NDArray[Any] | spmatrix)
+YVar = TypeVar("YVar", bound=npt.ArrayLike | npt.NDArray[Any] | None)
 
 FloatCountRange: TypeAlias = tuple[float | None, float | None]
 IntCountRange: TypeAlias = tuple[int | None, int | None]
@@ -68,6 +77,7 @@ class AnySklearnEstimator(Protocol):
             Parameter names mapped to their values.
 
         """
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def set_params(self, **params: Any) -> Self:
         """Set the parameters of this estimator.
@@ -83,11 +93,12 @@ class AnySklearnEstimator(Protocol):
             Estimator with updated parameters.
 
         """
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def fit(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: npt.NDArray[Any] | None,
+        X: XType,  # noqa: N803  # pylint: disable=invalid-name
+        y: YType,
         **fit_params: Any,
     ) -> Self:
         """Fit the model with X.
@@ -108,6 +119,7 @@ class AnySklearnEstimator(Protocol):
             Fitted estimator.
 
         """
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 class AnyPredictor(AnySklearnEstimator, Protocol):
@@ -115,8 +127,8 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
 
     def fit_predict(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: npt.NDArray[Any] | None,
+        X: XType,  # noqa: N803  # pylint: disable=invalid-name
+        y: YType,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return predictions.
@@ -136,6 +148,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
             Predictions.
 
         """
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 class AnyTransformer(AnySklearnEstimator, Protocol):
@@ -143,8 +156,8 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
 
     def fit_transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
-        y: npt.NDArray[Any] | None,
+        X: XType,  # noqa: N803  # pylint: disable=invalid-name
+        y: YType,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return the transformed array.
@@ -165,10 +178,11 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
             Transformed array.
 
         """
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: XType,  # pylint: disable=invalid-name  # noqa: N803
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Transform and return X according to object protocol.
@@ -186,6 +200,7 @@ class AnyTransformer(AnySklearnEstimator, Protocol):
             Transformed array.
 
         """
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 AnyElement = (

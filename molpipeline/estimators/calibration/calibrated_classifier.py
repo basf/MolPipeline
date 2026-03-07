@@ -439,6 +439,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         n_jobs: int | None = None,
         ensemble: Literal["auto"] | bool = "auto",
         class_weight: dict[Any, float] | Literal["balanced"] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize the CalibratedClassifierCV instance.
 
@@ -469,6 +470,8 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             If a dict, it must be provided in this form: ``{class_label: weight}``.
             Those weights won't be used for the underlying estimator training.
             See :term:`Glossary <class_weight>` for more details.
+        **kwargs : Any
+            Addition parameters set via ``set_params``.
 
         """
         if method == "temperature" and class_weight is not None:
@@ -484,6 +487,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             ensemble=ensemble,
         )
         self.class_weight = class_weight
+        self.set_params(**kwargs)
 
     @override
     @_fit_context(

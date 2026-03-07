@@ -4,6 +4,7 @@ Tests use a small imbalanced dataset.
 """
 
 import unittest
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -19,6 +20,7 @@ from sklearn.utils.class_weight import compute_class_weight
 from molpipeline.estimators.calibration.calibrated_classifier import (
     CalibratedClassifierCV,
 )
+from tests.templates.test_wrapped_estimators import WrappedEstimatorBaseTestMixIn
 from tests.utils.logging import capture_logs
 
 # Parameters for the tests
@@ -109,11 +111,40 @@ def make_specific_classification(  # pylint: disable=too-many-locals
     return x, y
 
 
-class TestCalibratedClassifierCV(unittest.TestCase):  # pylint: disable=too-many-instance-attributes
+class TestCalibratedClassifierCV(unittest.TestCase, WrappedEstimatorBaseTestMixIn):  # pylint: disable=too-many-instance-attributes
     """Unit tests for CalibratedClassifierCV with emphasis on class_weight.
 
     Tests use a small imbalanced dataset.
     """
+
+    @staticmethod
+    def get_wrapped_estimator_type() -> type:
+        """Return the CalibratedClassifierCV class.
+
+        Returns
+        -------
+        type[CalibratedClassifierCV]
+            The class of the wrapped estimator to be tested.
+
+        """
+        return CalibratedClassifierCV
+
+    @staticmethod
+    def get_test_parameters() -> dict[str, list[Any]]:
+        """Return a dictionary of parameters to be used for testing.
+
+        Returns
+        -------
+        dict[str, list]
+            A dictionary of parameters to be used for testing.
+
+        """
+        return {
+            "ensemble": [True, False, "auto"],
+            "method": ["isotonic", "sigmoid", "temperature"],
+            "estimator": [LogisticRegression(random_state=SEED, class_weight=None)],
+            "class_weight": ["balanced", None],
+        }
 
     def setUp(self) -> None:
         """Set up any necessary components before each test."""
