@@ -1,6 +1,7 @@
 """Unit tests for CloneEnsembleClassifier and CloneEnsembleRegressor."""
 
 import unittest
+from typing import TYPE_CHECKING
 
 import numpy as np
 import scipy.sparse as sp
@@ -15,6 +16,9 @@ from tests.utils.mock_estimators import (
     MockClassifier,
     MockEstimator,
 )
+
+if TYPE_CHECKING:
+    from sklearn.base import BaseEstimator
 
 
 class TestCloneEnsembleRegressor(WrappedEstimatorBaseTestMixIn, unittest.TestCase):
@@ -137,7 +141,7 @@ class TestCloneEnsembleClassifier(WrappedEstimatorBaseTestMixIn, unittest.TestCa
         """
         features = np.array([[i, i, i, i] for i in range(10)])
         y = np.arange(10) % 2
-        base = MockClassifier()
+        base: BaseEstimator = MockClassifier()
         ensemble = CloneEnsembleClassifier(estimator=base, n_estimators=3)
         ensemble.fit(features, y)
 
@@ -152,7 +156,7 @@ class TestCloneEnsembleClassifier(WrappedEstimatorBaseTestMixIn, unittest.TestCa
         """Hard voting returns the most frequent class per sample."""
         features = np.array([[i, i, i, i] for i in range(6)])
         y = np.array([0, 1, 0, 1, 0, 1])
-        base = MockClassifier()
+        base: BaseEstimator = MockClassifier()
         ensemble = CloneEnsembleClassifier(
             estimator=base,
             n_estimators=3,

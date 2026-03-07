@@ -9,16 +9,15 @@ from collections.abc import Iterator
 from typing import Any, Literal
 
 import numpy.typing as npt
-from sklearn.base import BaseEstimator
 from typing_extensions import override
 
 from molpipeline.estimators.ensemble._ensemble_base import (
     EnsembleClassifierMixIn,
     EnsembleRegressorMixIn,
     MolPipelineBaseEnsemble,
+    _ModelVar,
 )
 from molpipeline.utils.molpipeline_types import (
-    AnyPredictor,
     XVarType,
     YVarType,
 )
@@ -29,12 +28,12 @@ __all__ = [
 ]
 
 
-class BaseCloneEnsemble(MolPipelineBaseEnsemble):
+class BaseCloneEnsemble(MolPipelineBaseEnsemble[_ModelVar]):
     """Base class for ensemble models with cloned models."""
 
     def __init__(
         self,
-        estimator: BaseEstimator | AnyPredictor,
+        estimator: _ModelVar,
         n_estimators: int = 5,
         n_jobs: int = 1,
         **kwargs: Any,
@@ -88,12 +87,15 @@ class BaseCloneEnsemble(MolPipelineBaseEnsemble):
             yield X, y
 
 
-class CloneEnsembleClassifier(EnsembleClassifierMixIn, BaseCloneEnsemble):
+class CloneEnsembleClassifier(
+    EnsembleClassifierMixIn[_ModelVar],
+    BaseCloneEnsemble[_ModelVar],
+):
     """Ensemble classifier that creates clones of the same estimator."""
 
     def __init__(
         self,
-        estimator: BaseEstimator,
+        estimator: _ModelVar,
         n_estimators: int = 5,
         voting: Literal["hard", "soft"] = "hard",
         **kwargs: Any,
@@ -116,5 +118,8 @@ class CloneEnsembleClassifier(EnsembleClassifierMixIn, BaseCloneEnsemble):
         super().__init__(estimator=estimator, n_estimators=n_estimators, **kwargs)
 
 
-class CloneEnsembleRegressor(EnsembleRegressorMixIn, BaseCloneEnsemble):
+class CloneEnsembleRegressor(
+    EnsembleRegressorMixIn[_ModelVar],
+    BaseCloneEnsemble[_ModelVar],
+):
     """Ensemble regressor that creates clones of the same estimator."""

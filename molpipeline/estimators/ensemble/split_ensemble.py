@@ -7,7 +7,6 @@ from typing import Any, Literal
 import numpy as np
 import numpy.typing as npt
 from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
-from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, KFold, StratifiedKFold
 from typing_extensions import override
 
@@ -15,9 +14,9 @@ from molpipeline.estimators.ensemble._ensemble_base import (
     EnsembleClassifierMixIn,
     EnsembleRegressorMixIn,
     MolPipelineBaseEnsemble,
+    _ModelVar,
 )
 from molpipeline.utils.molpipeline_types import (
-    AnyPredictor,
     SparseMatrix,
     XType,
     YType,
@@ -29,12 +28,12 @@ __all__ = [
 ]
 
 
-class BaseSplitEnsemble(MolPipelineBaseEnsemble):
+class BaseSplitEnsemble(MolPipelineBaseEnsemble[_ModelVar]):
     """Base class for ensemble models from sklearn splitters."""
 
     def __init__(
         self,
-        estimator: BaseEstimator | AnyPredictor,
+        estimator: _ModelVar,
         cv: int | BaseCrossValidator = 5,
         n_jobs: int = 1,
         **kwargs: Any,
@@ -103,7 +102,10 @@ class BaseSplitEnsemble(MolPipelineBaseEnsemble):
             yield x[train_index], y_train
 
 
-class SplitEnsembleRegressor(BaseSplitEnsemble, EnsembleRegressorMixIn):
+class SplitEnsembleRegressor(
+    BaseSplitEnsemble[_ModelVar],
+    EnsembleRegressorMixIn[_ModelVar],
+):
     """SplitEnsemble for regression tasks."""
 
     @override
@@ -122,12 +124,15 @@ class SplitEnsembleRegressor(BaseSplitEnsemble, EnsembleRegressorMixIn):
         return cv
 
 
-class SplitEnsembleClassifier(BaseSplitEnsemble, EnsembleClassifierMixIn):
+class SplitEnsembleClassifier(
+    BaseSplitEnsemble[_ModelVar],
+    EnsembleClassifierMixIn[_ModelVar],
+):
     """SplitEnsemble for classification tasks."""
 
     def __init__(
         self,
-        estimator: BaseEstimator,
+        estimator: _ModelVar,
         cv: int | BaseCrossValidator = 5,
         voting: Literal["hard", "soft"] = "hard",
         **kwargs: Any,
@@ -136,7 +141,7 @@ class SplitEnsembleClassifier(BaseSplitEnsemble, EnsembleClassifierMixIn):
 
         Parameters
         ----------
-        estimator : BaseEstimator
+        estimator : _ModelVar
             The base estimator to be cloned for each split.
         cv : int | BaseCrossValidator, default=5
             The spliter to be used for creating the splits.

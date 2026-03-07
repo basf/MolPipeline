@@ -2,7 +2,7 @@
 
 import abc
 from collections.abc import Iterator
-from typing import Any, Literal, Self, TypeVar
+from typing import Any, Generic, Literal, Self, TypeVar, overload
 
 import joblib
 import numpy as np
@@ -18,8 +18,10 @@ from molpipeline.utils.molpipeline_types import (
 
 _T = TypeVar("_T", BaseEstimator, AnyPredictor)
 
+_ModelVar = TypeVar("_ModelVar", bound=BaseEstimator | AnyPredictor)
 
-class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
+
+class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
     """Base class for ensemble models.
 
     The class is named "MolPipelineBaseEnsemble" to avoid confusion with the sklearn
@@ -27,11 +29,12 @@ class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
 
     """
 
-    estimators_: list[BaseEstimator | AnyPredictor]
+    estimator: _ModelVar
+    estimators_: list[_ModelVar]
 
     def __init__(
         self,
-        estimator: BaseEstimator | AnyPredictor,
+        estimator: _ModelVar,
         n_jobs: int = 1,
         **kwargs: Any,
     ) -> None:
@@ -146,10 +149,37 @@ class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator):
         """
 
 
-class EnsembleRegressorMixIn(abc.ABC, RegressorMixin):
+class EnsembleRegressorMixIn(abc.ABC, RegressorMixin, Generic[_ModelVar]):
     """Base class for regression ensemble models."""
 
-    estimators_: list[BaseEstimator | AnyPredictor]
+    estimators_: list[_ModelVar]
+
+    @overload
+    def predict(
+        self,
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        return_std: Literal[False] = False,
+        **params: Any,
+    ) -> npt.NDArray[np.float64]: ...
+
+    @overload
+    def predict(
+        self,
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        return_std: Literal[True],
+        **params: Any,
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
+
+    @overload
+    def predict(
+        self,
+        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        return_std: bool = False,
+        **params: Any,
+    ) -> (
+        npt.NDArray[np.float64]
+        | tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
+    ): ...
 
     def predict(
         self,
@@ -186,10 +216,10 @@ class EnsembleRegressorMixIn(abc.ABC, RegressorMixin):
         return np.mean(predictions, axis=0)
 
 
-class EnsembleClassifierMixIn(abc.ABC, ClassifierMixin):
+class EnsembleClassifierMixIn(abc.ABC, ClassifierMixin, Generic[_ModelVar]):
     """Base class for classification ensemble models."""
 
-    estimators_: list[BaseEstimator | AnyPredictor]
+    estimators_: list[_ModelVar]
     voting: Literal["hard", "soft"]
 
     def _can_predict_proba(self) -> bool:
