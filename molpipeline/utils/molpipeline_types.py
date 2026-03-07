@@ -32,8 +32,8 @@ __all__ = [
     "Number",
     "OptionalMol",
     "RDKitMol",
-    "XVarType",
-    "YVarType",
+    "XVar",
+    "YVar",
 ]
 # One liner type definitions
 
@@ -47,8 +47,8 @@ AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 SparseMatrix = csc_matrix[Any] | coo_matrix[Any] | csr_matrix[Any]
 XType = npt.ArrayLike | npt.NDArray[Any] | spmatrix
 YType = npt.ArrayLike | npt.NDArray[Any] | None
-XVarType = TypeVar("XVarType", bound=npt.ArrayLike | npt.NDArray[Any] | spmatrix)
-YVarType = TypeVar("YVarType", bound=npt.ArrayLike | npt.NDArray[Any] | None)
+XVar = TypeVar("XVar", bound=npt.ArrayLike | npt.NDArray[Any] | spmatrix)
+YVar = TypeVar("YVar", bound=npt.ArrayLike | npt.NDArray[Any] | None)
 
 FloatCountRange: TypeAlias = tuple[float | None, float | None]
 IntCountRange: TypeAlias = tuple[int | None, int | None]

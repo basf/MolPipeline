@@ -18,8 +18,8 @@ from molpipeline.estimators.ensemble._ensemble_base import (
     _ModelVar,
 )
 from molpipeline.utils.molpipeline_types import (
-    XVarType,
-    YVarType,
+    XVar,
+    YVar,
 )
 
 __all__ = [
@@ -58,10 +58,10 @@ class BaseCloneEnsemble(MolPipelineBaseEnsemble[_ModelVar]):
     @override
     def _iter_model_inputs(
         self,
-        X: XVarType,
-        y: YVarType,
+        X: XVar,
+        y: YVar,
         groups: npt.ArrayLike | None = None,
-    ) -> Iterator[tuple[XVarType, YVarType]]:
+    ) -> Iterator[tuple[XVar, YVar]]:
         """Iterate over the model inputs and targets.
 
         Returns the same data, over and over, for each clone.
@@ -87,7 +87,7 @@ class BaseCloneEnsemble(MolPipelineBaseEnsemble[_ModelVar]):
             yield X, y
 
 
-class CloneEnsembleClassifier(
+class CloneEnsembleClassifier(  # pylint: disable=too-many-ancestors
     EnsembleClassifierMixIn[_ModelVar],
     BaseCloneEnsemble[_ModelVar],
 ):
@@ -118,7 +118,7 @@ class CloneEnsembleClassifier(
         super().__init__(estimator=estimator, n_estimators=n_estimators, **kwargs)
 
 
-class CloneEnsembleRegressor(
+class CloneEnsembleRegressor(  # pylint: disable=too-many-ancestors
     EnsembleRegressorMixIn[_ModelVar],
     BaseCloneEnsemble[_ModelVar],
 ):

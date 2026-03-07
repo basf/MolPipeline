@@ -102,7 +102,7 @@ class BaseSplitEnsemble(MolPipelineBaseEnsemble[_ModelVar]):
             yield x[train_index], y_train
 
 
-class SplitEnsembleRegressor(
+class SplitEnsembleRegressor(  # pylint: disable=too-many-ancestors
     BaseSplitEnsemble[_ModelVar],
     EnsembleRegressorMixIn[_ModelVar],
 ):
@@ -124,7 +124,7 @@ class SplitEnsembleRegressor(
         return cv
 
 
-class SplitEnsembleClassifier(
+class SplitEnsembleClassifier(  # pylint: disable=too-many-ancestors
     BaseSplitEnsemble[_ModelVar],
     EnsembleClassifierMixIn[_ModelVar],
 ):

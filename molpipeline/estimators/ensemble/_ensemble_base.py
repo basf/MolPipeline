@@ -240,7 +240,7 @@ class EnsembleClassifierMixIn(abc.ABC, ClassifierMixin, Generic[_ModelVar]):
     def predict_proba(
         self,
         X: XType,  # noqa: N803,  # pylint: disable=invalid-name
-        **params: Any,  # noqa: ARG002  # pylint: disable=unused-argument
+        **params: Any,  # pylint: disable=unused-argument
     ) -> npt.NDArray[Any]:
         """Predict class probabilities using the ensemble of estimators.
 
@@ -259,7 +259,7 @@ class EnsembleClassifierMixIn(abc.ABC, ClassifierMixin, Generic[_ModelVar]):
 
         """
         predictions = np.array(
-            [estimator.predict_proba(X) for estimator in self.estimators_],  # type: ignore
+            [estimator.predict_proba(X, **params) for estimator in self.estimators_],  # type: ignore
         )
         return np.mean(predictions, axis=0)
 
