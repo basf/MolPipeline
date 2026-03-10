@@ -240,8 +240,9 @@ class TestConformalClassifier(BaseConformalTestData):
         ccp_clf = CrossConformalClassifier(clf, n_folds=2)
         ccp_clf.fit(x_train_fit, y_train_fit)
         ccp_clf.cv_splits_ = [
-            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
-        ] * len(ccp_clf.models_)
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int))
+            for _ in range(len(ccp_clf.models_))
+        ]
         ccp_clf.calibrate(x_calib, y_calib)
 
         results_clf = ccp_clf.evaluate(x_test_clf, y_test_clf)
@@ -514,8 +515,9 @@ class TestConformalClassifier(BaseConformalTestData):
         ccp = CrossConformalClassifier(clf, n_folds=2)
         ccp.fit(x_train_fit, y_train_fit)
         ccp.cv_splits_ = [
-            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
-        ] * len(ccp.models_)
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int))
+            for _ in range(len(ccp.models_))
+        ]
         ccp.calibrate(x_calib, y_calib)
 
         preds = ccp.predict(x_test)
@@ -584,8 +586,9 @@ class TestConformalClassifier(BaseConformalTestData):
         ccp = CrossConformalClassifier(clf, n_folds=2)
         ccp.fit(x_train_fit, y_train_fit)
         ccp.cv_splits_ = [
-            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
-        ] * len(ccp.models_)
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int))
+            for _ in range(len(ccp.models_))
+        ]
         ccp.calibrate(x_calib, y_calib)
         sets_80 = ccp.predict_set(x_test, confidence=0.80)
         sets_95 = ccp.predict_set(x_test, confidence=0.95)
@@ -736,8 +739,9 @@ class TestConformalClassifier(BaseConformalTestData):
         model = CrossConformalClassifier(clf, n_folds=2)
         model.fit(x_train_fit, y_train_fit)
         model.cv_splits_ = [
-            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
-        ] * len(model.models_)
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int))
+            for _ in range(len(model.models_))
+        ]
         model.calibrate(x_calib, y_calib, calibrate_probs=True)
 
         probs = model.predict_proba(x_test)
@@ -825,8 +829,9 @@ class TestConformalRegressor(BaseConformalTestData):
         ccp = CrossConformalRegressor(reg, n_folds=2)
         ccp.fit(x_train_fit, y_train_fit)
         ccp.cv_splits_ = [
-            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
-        ] * len(ccp.models_)
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int))
+            for _ in range(len(ccp.models_))
+        ]
         ccp.calibrate(x_calib, y_calib)
         intervals = ccp.predict_int(x_test)
         for model in ccp.models_:
@@ -856,8 +861,9 @@ class TestConformalRegressor(BaseConformalTestData):
         ccp = CrossConformalRegressor(reg, n_folds=2)
         ccp.fit(x_train_fit, y_train_fit)
         ccp.cv_splits_ = [
-            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
-        ] * len(ccp.models_)
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int))
+            for _ in range(len(ccp.models_))
+        ]
         ccp.calibrate(x_calib, y_calib)
         intervals_80 = ccp.predict_int(x_test, confidence=0.80)
         intervals_95 = ccp.predict_int(x_test, confidence=0.95)
@@ -904,8 +910,9 @@ class TestConformalRegressor(BaseConformalTestData):
 
         conformal_pipeline.fit(train_smiles_fit, y_train_fit)
         conformal_pipeline.cv_splits_ = [
-            (np.array([], dtype=int), np.arange(len(calib_smiles), dtype=int)),
-        ] * len(conformal_pipeline.models_)
+            (np.array([], dtype=int), np.arange(len(calib_smiles), dtype=int))
+            for _ in range(len(conformal_pipeline.models_))
+        ]
         conformal_pipeline.calibrate(calib_smiles, y_calib)
 
         preds = conformal_pipeline.predict(test_smiles)
@@ -933,8 +940,9 @@ class TestConformalRegressor(BaseConformalTestData):
         )
         ccp.fit(x_train_fit, y_train_fit)
         ccp.cv_splits_ = [
-            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
-        ] * len(ccp.models_)
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int))
+            for _ in range(len(ccp.models_))
+        ]
         ccp.calibrate(x_calib, y_calib)
         original_preds = ccp.predict(x_test)
         original_intervals = ccp.predict_int(x_test)
@@ -998,8 +1006,9 @@ class TestConformalRegressor(BaseConformalTestData):
         ccp_reg = CrossConformalRegressor(reg, n_folds=2)
         ccp_reg.fit(x_train_fit, y_train_fit)
         ccp_reg.cv_splits_ = [
-            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int)),
-        ] * len(ccp_reg.models_)
+            (np.array([], dtype=int), np.arange(len(x_calib), dtype=int))
+            for _ in range(len(ccp_reg.models_))
+        ]
         ccp_reg.calibrate(x_calib, y_calib)
         results_reg = ccp_reg.evaluate(x_test, y_test)
         expected_keys_reg = {
