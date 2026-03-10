@@ -23,6 +23,7 @@ from sklearn.utils.metadata_routing import (
 )
 from sklearn.utils.metaestimators import available_if
 from sklearn.utils.validation import check_memory
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
@@ -209,7 +210,6 @@ class Pipeline(_Pipeline):
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
-            # pylint: disable=protected-access
             return self._final_estimator._estimator_type  # noqa: SLF001
         return None
 
@@ -230,6 +230,7 @@ class Pipeline(_Pipeline):
         return last_element[2]
 
     # pylint: disable=too-many-locals,too-many-branches
+    @override
     def _fit(
         self,
         X: Any,
@@ -309,7 +310,7 @@ class Pipeline(_Pipeline):
                 )
 
             # Fit or load from cache the current transformer
-            X, fitted_transformer = fit_transform_one_cached(
+            X, fitted_transformer = fit_transform_one_cached(  # noqa: N806
                 cloned_transformer,
                 X,
                 y,
@@ -344,7 +345,7 @@ class Pipeline(_Pipeline):
 
     def _transform(
         self,
-        X: Any,  # pylint: disable=invalid-name
+        X: Any,  # noqa: N803
         routed_params: Bunch,
     ) -> Any:
         """Transform the data, and skip final estimator.
@@ -495,6 +496,7 @@ class Pipeline(_Pipeline):
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False,
     )
+    @override
     def fit(self, X: Any, y: Any = None, **fit_params: Any) -> Self:
         """Fit the model.
 
@@ -523,7 +525,7 @@ class Pipeline(_Pipeline):
 
         """
         routed_params = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, routed_params)  # pylint: disable=invalid-name
+        Xt, yt = self._fit(X, y, routed_params)  # noqa: N806
         with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 if is_empty(Xt):
@@ -538,6 +540,7 @@ class Pipeline(_Pipeline):
 
         return self
 
+    @override
     def _can_fit_transform(self) -> bool:
         """Check if the final estimator can fit_transform or is passthrough.
 
@@ -569,6 +572,7 @@ class Pipeline(_Pipeline):
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False,
     )
+    @override
     def fit_transform(self, X: Any, y: Any = None, **params: Any) -> Any:
         """Fit the model and transform with the final estimator.
 
@@ -638,6 +642,7 @@ class Pipeline(_Pipeline):
         return iter_input
 
     @available_if(_final_estimator_has("predict"))
+    @override
     def predict(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `predict` with the final estimator.
 
@@ -704,6 +709,7 @@ class Pipeline(_Pipeline):
         # estimators in Pipeline.steps are not validated yet
         prefer_skip_nested_validation=False,
     )
+    @override
     def fit_predict(self, X: Any, y: Any = None, **params: Any) -> Any:
         """Transform the data, and apply `fit_predict` with the final estimator.
 
@@ -766,6 +772,7 @@ class Pipeline(_Pipeline):
         return y_pred
 
     @available_if(_final_estimator_has("predict_proba"))
+    @override
     def predict_proba(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `predict_proba` with the final estimator.
 
@@ -825,6 +832,7 @@ class Pipeline(_Pipeline):
             iter_input = post_element.transform(iter_input)
         return iter_input
 
+    @override
     def _can_transform(self) -> bool:
         """Check if the final estimator can transform or is passthrough.
 
@@ -840,6 +848,7 @@ class Pipeline(_Pipeline):
         )
 
     @available_if(_can_transform)
+    @override
     def transform(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `transform` with the final estimator.
 
@@ -897,6 +906,7 @@ class Pipeline(_Pipeline):
         return iter_input
 
     @available_if(_can_decision_function)
+    @override
     def decision_function(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `decision_function` with the final estimator.
 

@@ -100,8 +100,8 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
     # pylint: disable=arguments-differ, signature-differs
     def fit(
         self,
-        X: (npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any]),  # pylint: disable=invalid-name # noqa: N803
-        y: Sequence[Any],  # pylint: disable=invalid-name
+        X: (npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any]),  # noqa: N803
+        y: Sequence[Any],
     ) -> Self:
         """Fit the model using X as training data.
 
@@ -136,7 +136,6 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         super().fit(X)
         return self
 
-    # pylint: disable=invalid-name
     def predict(
         self,
         X: npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any],  # noqa: N803
@@ -188,7 +187,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
 
     def fit_predict(
         self,
-        X: (npt.NDArray[Any] | sparse.csr_matrix),  # pylint: disable=invalid-name # noqa: N803
+        X: (npt.NDArray[Any] | sparse.csr_matrix),  # noqa: N803
         y: Sequence[Any],
         return_distance: bool = False,
         n_neighbors: int | None = None,
@@ -264,8 +263,8 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
 
     def fit(
         self,
-        X: sparse.csr_matrix,  # pylint: disable=invalid-name # noqa: N803
-        y: Sequence[Any] | None = None,  # pylint: disable=invalid-name
+        X: sparse.csr_matrix,  # noqa: N803
+        y: Sequence[Any] | None = None,
     ) -> Self:
         """Fit the estimator using X as target fingerprint data set.
 
