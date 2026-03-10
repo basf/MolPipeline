@@ -52,11 +52,11 @@ repos:
         verbose: true
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.3.0
     hooks:
       - id: flake8
         additional_dependencies:
-          - docsig==0.69.3
+          - docsig==0.79.0
         args:
           - --extend-ignore=D203,E203,E501,F401,W5
           - "--sig-check-class-constructor"

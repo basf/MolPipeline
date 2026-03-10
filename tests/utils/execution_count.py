@@ -26,7 +26,7 @@ class CountingTransformerWrapper(BaseEstimator):
         self.element = element
         self.n_transformations = 0
 
-    def fit(self, X: Any, y: Any) -> Self:  # pylint: disable=invalid-name
+    def fit(self, X: Any, y: Any) -> Self:  # noqa: N803
         """Fit the data.
 
         Parameters
@@ -45,7 +45,7 @@ class CountingTransformerWrapper(BaseEstimator):
         self.element.fit(X, y)
         return self
 
-    def transform(self, X: Any) -> Any:  # pylint: disable=invalid-name
+    def transform(self, X: Any) -> Any:  # noqa: N803
         """Transform the data.
 
         Transform is called during prediction, which is not cached.
@@ -64,7 +64,7 @@ class CountingTransformerWrapper(BaseEstimator):
         """
         return self.element.transform(X)
 
-    def fit_transform(self, X: Any, y: Any) -> Any:  # pylint: disable=invalid-name
+    def fit_transform(self, X: Any, y: Any) -> Any:  # noqa: N803
         """Fit and transform the data.
 
         Parameters

@@ -2693,7 +2693,7 @@ dev = [
     { name = "bandit", specifier = ">=1.8.3" },
     { name = "black", extras = ["jupyter"], specifier = ">=25.1.0" },
     { name = "coverage", specifier = ">=7.8.0" },
-    { name = "docsig", specifier = ">=0.69.3" },
+    { name = "docsig", specifier = ">=0.79.0" },
     { name = "flake8", specifier = ">=7.2.0" },
     { name = "interrogate", specifier = ">=1.7.0" },
     { name = "isort", specifier = ">=6.0.1" },

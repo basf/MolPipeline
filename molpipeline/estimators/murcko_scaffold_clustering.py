@@ -8,6 +8,7 @@ import numpy.typing as npt
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from sklearn.utils.validation import validate_data
+from typing_extensions import override
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import AutoToMol
@@ -144,13 +145,12 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             n_jobs=self.n_jobs,
         )
 
-    # pylint: disable=C0103,W0613
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
-        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],
-        y: npt.NDArray[np.float64] | None = None,
-        **params: Any,
+        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],  # noqa: N803
+        y: npt.NDArray[np.float64] | None = None,  # noqa: ARG002
+        **params: Any,  # noqa: ARG002
     ) -> Self:
         """Fit Murcko scaffold clustering estimator.
 
@@ -169,13 +169,12 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             Fitted estimator.
 
         """
-        X = validate_data(self, X=X, ensure_min_samples=2, ensure_2d=False, dtype=None)
+        X = validate_data(self, X=X, ensure_min_samples=2, ensure_2d=False, dtype=None)  # noqa: N806
         return self._fit(X)
 
-    # pylint: disable=C0103,W0613
     def _fit(
         self,
-        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],
+        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],  # noqa: N803
     ) -> Self:
         """Fit Murcko scaffold clustering estimator.
 
@@ -202,9 +201,10 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         self.n_clusters_ = len(np.unique(self.labels_[~np.isnan(self.labels_)]))
         return self
 
+    @override
     def fit_predict(
         self,
-        X: (npt.NDArray[np.str_] | list[str] | list[OptionalMol]),  # pylint: disable=C0103
+        X: (npt.NDArray[np.str_] | list[str] | list[OptionalMol]),
         y: npt.NDArray[np.float64] | None = None,
         **params: Any,  # pylint: disable=unused-argument
     ) -> npt.NDArray[np.float64]:

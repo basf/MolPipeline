@@ -111,7 +111,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     @override
     def fit(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
+        X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
         *,
         sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,
