@@ -14,7 +14,7 @@ from typing_extensions import override
 from molpipeline.estimators.ensemble._ensemble_base import (
     EnsembleClassifierMixIn,
     EnsembleRegressorMixIn,
-    MolPipelineBaseEnsemble,
+    HomogeneousEnsemble,
     _ModelVar,
 )
 from molpipeline.utils.molpipeline_types import (
@@ -28,7 +28,7 @@ __all__ = [
 ]
 
 
-class BaseCloneEnsemble(MolPipelineBaseEnsemble[_ModelVar]):
+class BaseCloneEnsemble(HomogeneousEnsemble[_ModelVar]):
     """Base class for ensemble models with cloned models."""
 
     def __init__(

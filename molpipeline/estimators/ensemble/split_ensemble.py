@@ -13,7 +13,7 @@ from typing_extensions import override
 from molpipeline.estimators.ensemble._ensemble_base import (
     EnsembleClassifierMixIn,
     EnsembleRegressorMixIn,
-    MolPipelineBaseEnsemble,
+    HomogeneousEnsemble,
     _ModelVar,
 )
 from molpipeline.utils.molpipeline_types import (
@@ -28,7 +28,7 @@ __all__ = [
 ]
 
 
-class BaseSplitEnsemble(MolPipelineBaseEnsemble[_ModelVar]):
+class BaseSplitEnsemble(HomogeneousEnsemble[_ModelVar]):
     """Base class for ensemble models from sklearn splitters."""
 
     def __init__(

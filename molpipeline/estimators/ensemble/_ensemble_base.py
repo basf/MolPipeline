@@ -21,11 +21,11 @@ _T = TypeVar("_T", BaseEstimator, AnyPredictor)
 _ModelVar = TypeVar("_ModelVar", bound=BaseEstimator | AnyPredictor)
 
 
-class MolPipelineBaseEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
-    """Base class for ensemble models.
+class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
+    """Base class for ensemble models composed of the same type of model.
 
-    The class is named "MolPipelineBaseEnsemble" to avoid confusion with the sklearn
-    "BaseEnsemble" class, which is not compatible with the here used design.
+    This class does not inherit from sklearn's BaseEnsemble which is designed for
+    bagging ensembles, which would be a special case of the here implemented design.
 
     """
 
