@@ -31,13 +31,13 @@ from sklearn.utils import (
     _safe_indexing,  # noqa: PLC2701
     indexable,
 )
-from sklearn.utils._array_api import (
-    get_namespace_and_device,  # noqa: PLC2701
-    move_to,  # noqa: PLC2701
+from sklearn.utils._array_api import (  # noqa: PLC2701
+    get_namespace_and_device,
+    move_to,
 )
-from sklearn.utils._response import (
-    _get_response_values,  # noqa: PLC2701
-    _process_predict_proba,  # noqa: PLC2701
+from sklearn.utils._response import (  # noqa: PLC2701
+    _get_response_values,
+    _process_predict_proba,
 )
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metadata_routing import (
@@ -94,7 +94,7 @@ def merge_class_and_sample_weights(
 
 def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R0917
     estimator: BaseEstimator,
-    X: npt.ArrayLike,  # noqa: N803  # pylint: disable=C0103
+    X: npt.ArrayLike,  # noqa: N803
     y: npt.ArrayLike,
     train: npt.NDArray[np.int_],
     test: npt.NDArray[np.int_],
@@ -158,8 +158,8 @@ def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R
 
     """
     fit_params_train = _check_method_params(X, params=fit_params, indices=train)
-    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # noqa: N806  # pylint: disable=C0103
-    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # noqa: N806  # pylint: disable=C0103
+    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # noqa: N806
+    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # noqa: N806
 
     estimator.fit(X_train, y_train, **fit_params_train)
 
@@ -328,34 +328,6 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         If both `class_weight` and `sample_weight` are provided during
         :meth:`fit`, the sample weights are multiplied by the class weights.
 
-    Attributes
-    ----------
-    classes_ : ndarray of shape (n_classes,)
-        The class labels.
-
-    n_features_in_ : int
-        Number of features seen during :term:`fit`. Only defined if the
-        underlying estimator exposes such an attribute when fit.
-
-        .. versionadded:: 0.24
-
-    feature_names_in_ : ndarray of shape (`n_features_in_`,)
-        Names of features seen during :term:`fit`. Only defined if the
-        underlying estimator exposes such an attribute when fit.
-
-        .. versionadded:: 1.0
-
-    calibrated_classifiers_ : list (len() equal to cv or 1 if `ensemble=False`)
-        The list of classifier and calibrator pairs.
-
-        - When `ensemble=True`, `n_cv` fitted `estimator` and calibrator pairs.
-          `n_cv` is the number of cross-validation folds.
-        - When `ensemble=False`, the `estimator`, fitted on all the data, and fitted
-          calibrator.
-
-        .. versionchanged:: 0.24
-            Single calibrated classifier case when `ensemble=False`.
-
     See Also
     --------
     calibration_curve : Compute true and predicted probabilities
@@ -425,6 +397,34 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
     1
     >>> calibrated_clf.predict_proba([[-0.5, 0.5]])
     array([[0.936, 0.063]])
+
+    Attributes
+    ----------
+    classes_ : ndarray of shape (n_classes,)
+        The class labels.
+
+    n_features_in_ : int
+        Number of features seen during :term:`fit`. Only defined if the
+        underlying estimator exposes such an attribute when fit.
+
+        .. versionadded:: 0.24
+
+    feature_names_in_ : ndarray of shape (`n_features_in_`,)
+        Names of features seen during :term:`fit`. Only defined if the
+        underlying estimator exposes such an attribute when fit.
+
+        .. versionadded:: 1.0
+
+    calibrated_classifiers_ : list (len() equal to cv or 1 if `ensemble=False`)
+        The list of classifier and calibrator pairs.
+
+        - When `ensemble=True`, `n_cv` fitted `estimator` and calibrator pairs.
+          `n_cv` is the number of cross-validation folds.
+        - When `ensemble=False`, the `estimator`, fitted on all the data, and fitted
+          calibrator.
+
+        .. versionchanged:: 0.24
+            Single calibrated classifier case when `ensemble=False`.
 
     """
 
@@ -496,7 +496,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
     )
     def fit(  # noqa: PLR0912, PLR0914, PLR0915  # pylint: disable=R0912,R0914,R0915
         self,
-        X: npt.ArrayLike,  # pylint: disable=C0103
+        X: npt.ArrayLike,
         y: npt.ArrayLike,
         sample_weight: npt.ArrayLike | None = None,
         **fit_params: Any,

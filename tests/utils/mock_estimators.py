@@ -87,7 +87,7 @@ class MockClassifier(MockEstimator):
         self,
         X: npt.ArrayLike,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.int64]:
-        """Return fixed class predictions.
+        """Predicts whether the first feature is equal to 1 for each sample.
 
         Parameters
         ----------
@@ -101,7 +101,7 @@ class MockClassifier(MockEstimator):
 
         """
         feature_arr = np.asarray(X)
-        return np.array([x[0] % 2 for x in feature_arr], dtype=np.int64)
+        return np.array([x[0] == 1 for x in feature_arr], dtype=np.int64)
 
     def predict_proba(  # noqa: PLR6301
         self,
@@ -117,14 +117,15 @@ class MockClassifier(MockEstimator):
         Returns
         -------
         npt.NDArray[np.float64]
-            Predicted class probabilities, where class 0 has probability 0.7 and class
-            1 has probability 0.3 for all samples.
+            Predicted class probabilities, where the probability of class 1 is 0.7 if
+            the first feature is 1, and 0.3 otherwise.
 
         """
         feature_arr = np.asarray(X)
         proba = np.zeros((len(feature_arr), 2))
-        proba[:, 0] = 0.7
-        proba[:, 1] = 0.3
+        equal_one = feature_arr[:, 0] == 1
+        proba[equal_one, 0] = 0.3
+        proba[equal_one, 1] = 0.7
         return proba
 
 

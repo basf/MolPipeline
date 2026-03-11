@@ -3,12 +3,16 @@
 import unittest
 
 from molpipeline.estimators.ensemble.model_clone_ensemble import (
+    CloneEnsembleClassifier,
     CloneEnsembleRegressor,
 )
-from tests.templates.test_wrapped_estimators import WrappedEstimatorBaseTestMixIn
+from tests.templates.test_wrapped_estimators import (
+    WrappedClassifierBaseTestMixIn,
+    WrappedRegressorBaseTestMixIn,
+)
 
 
-class TestCloneEnsembleRegressor(unittest.TestCase, WrappedEstimatorBaseTestMixIn):
+class TestCloneEnsembleRegressor(unittest.TestCase, WrappedRegressorBaseTestMixIn):
     """Unit tests for CloneEnsembleRegressor."""
 
     @staticmethod
@@ -24,7 +28,7 @@ class TestCloneEnsembleRegressor(unittest.TestCase, WrappedEstimatorBaseTestMixI
         return CloneEnsembleRegressor
 
     @staticmethod
-    def get_test_parameters() -> dict[str, int]:
+    def get_test_parameters() -> dict[str, list[int]]:
         """Return a dictionary of parameters to be used for testing.
 
         Returns
@@ -33,10 +37,10 @@ class TestCloneEnsembleRegressor(unittest.TestCase, WrappedEstimatorBaseTestMixI
             A dictionary of parameters to be used for testing.
 
         """
-        return {"n_estimators": 3}
+        return {"n_estimators": [3]}
 
 
-class TestCloneEnsembleClassifier(unittest.TestCase, WrappedEstimatorBaseTestMixIn):
+class TestCloneEnsembleClassifier(unittest.TestCase, WrappedClassifierBaseTestMixIn):
     """Unit tests for CloneEnsembleClassifier."""
 
     @staticmethod
@@ -49,10 +53,10 @@ class TestCloneEnsembleClassifier(unittest.TestCase, WrappedEstimatorBaseTestMix
             The class of the wrapped estimator to be tested.
 
         """
-        return CloneEnsembleRegressor
+        return CloneEnsembleClassifier
 
     @staticmethod
-    def get_test_parameters() -> dict[str, int]:
+    def get_test_parameters() -> dict[str, list[int]]:
         """Return a dictionary of parameters to be used for testing.
 
         Returns
@@ -61,7 +65,10 @@ class TestCloneEnsembleClassifier(unittest.TestCase, WrappedEstimatorBaseTestMix
             A dictionary of parameters to be used for testing.
 
         """
-        return {"n_estimators": 3}
+        return {
+            "n_estimators": [3],
+            "voting": ["soft", "hard"],
+        }
 
 
 if __name__ == "__main__":

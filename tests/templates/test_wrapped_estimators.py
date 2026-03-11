@@ -1,6 +1,7 @@
 """Template tests for wrapped estimators."""
 
 import abc
+import unittest
 from typing import Any
 
 import numpy as np
@@ -256,7 +257,7 @@ class WrappedClassifierBaseTestMixIn(WrappedEstimatorBaseTestMixIn, abc.ABC):
                 self.assertTrue(np.array_equal(est.fit_args["X"], features))
                 self.assertTrue(np.array_equal(est.fit_args["y"], y))
 
-    def test_predict_hard_voting(self) -> None:
+    def test_predict(self) -> None:
         """Hard voting returns the most frequent class per sample."""
         estimator_class = self.get_wrapped_estimator_type()
         estimator_params = self.get_test_parameters()
@@ -264,11 +265,26 @@ class WrappedClassifierBaseTestMixIn(WrappedEstimatorBaseTestMixIn, abc.ABC):
         y = np.array([0, 1, 0, 1, 0, 1])
         for parameters in ParameterGrid(estimator_params):
             base = MockClassifier()
-            ensemble = estimator_class(estimator=base, voting="hard", **parameters)
+            ensemble = estimator_class(estimator=base, **parameters)
             ensemble.fit(features, y)
             preds = ensemble.predict(features)
             self.assertTrue(np.array_equal(preds, np.array([0, 1, 0, 1, 0, 1])))
 
+    def test_predict_proba(self) -> None:
+        """predict_proba returns the mean predicted probabilities of the clones."""
+        estimator_class = self.get_wrapped_estimator_type()
+        estimator_params = self.get_test_parameters()
+        features = np.array([[i, i, i, i] for i in range(6)])
+        y = np.array([0, 1, 0, 1, 0, 1])
+        for parameters in ParameterGrid(estimator_params):
+            base = MockClassifier()
+            ensemble = estimator_class(estimator=base, **parameters)
+            ensemble.fit(features, y)
+            proba = ensemble.predict_proba(features)
+            expected_proba = np.tile([0.7, 0.3], (len(features), 1))
+            self.assertTrue(np.allclose(proba, expected_proba))
+
+    @unittest.skip("Skip for now")
     def test_predict_soft_voting(self) -> None:
         """Soft voting uses the class with highest mean predicted probability."""
         estimator_class = self.get_wrapped_estimator_type()

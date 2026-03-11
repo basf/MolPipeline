@@ -16,8 +16,8 @@ from chemprop.nn.predictors import BinaryClassificationFFNBase
 from lightning import pytorch as pl
 from sklearn.base import clone
 from sklearn.utils._tags import (
-    ClassifierTags,  # noqa: PLC2701
-    RegressorTags,  # noqa: PLC2701
+    ClassifierTags,
+    RegressorTags,
     Tags,
 )
 from sklearn.utils.class_weight import compute_sample_weight
@@ -153,7 +153,7 @@ class ChempropModel(ABCChemprop):
 
     def _predict(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name  # noqa: N803
+        X: MoleculeDataset,  # noqa: N803
     ) -> npt.NDArray[np.float64]:
         """Predict the labels.
 
@@ -162,6 +162,11 @@ class ChempropModel(ABCChemprop):
         X : MoleculeDataset
             The input data.
 
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            The predictions for the input data.
+
         Raises
         ------
         AssertionError
@@ -169,11 +174,6 @@ class ChempropModel(ABCChemprop):
         ValueError
             If the model is a binary classifier and the predictions do not have the
             correct shape.
-
-        Returns
-        -------
-        npt.NDArray[np.float64]
-            The predictions for the input data.
 
         """
         self.model.eval()
@@ -227,7 +227,7 @@ class ChempropModel(ABCChemprop):
     @override
     def predict(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
+        X: MoleculeDataset,
     ) -> npt.NDArray[np.float64]:
         """Predict the output.
 
@@ -257,7 +257,7 @@ class ChempropModel(ABCChemprop):
     @available_if(_is_classifier)
     def predict_proba(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
+        X: MoleculeDataset,
     ) -> npt.NDArray[np.float64]:
         """Predict the probabilities.
 
@@ -379,15 +379,15 @@ class ChempropClassifier(ChempropModel):
         **params
             The parameters to set.
 
-        Raises
-        ------
-        ValueError
-            If the model's predictor is not a binary classifier.
-
         Returns
         -------
         Self
             The model with the new parameters.
+
+        Raises
+        ------
+        ValueError
+            If the model's predictor is not a binary classifier.
 
         """
         super().set_params(**params)
@@ -568,15 +568,15 @@ class ChempropMulticlassClassifier(ChempropModel):
         **params
             The parameters to set.
 
-        Raises
-        ------
-        ValueError
-            If the model's predictor or the number of classes are invalid.
-
         Returns
         -------
         Self
             The model with the new parameters.
+
+        Raises
+        ------
+        ValueError
+            If the model's predictor or the number of classes are invalid.
 
         """
         super().set_params(**params)

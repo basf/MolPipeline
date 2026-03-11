@@ -138,16 +138,15 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         parameters: dict[str, Any]
             Parameters to set.
 
+        Returns
+        -------
+        Self
+            Pipeline element with set parameters.
 
         Raises
         ------
         ValueError
             If parameters are not valid.
-
-        Returns
-        -------
-        Self
-            Pipeline element with set parameters.
 
         """
         param_copy = parameters.copy()

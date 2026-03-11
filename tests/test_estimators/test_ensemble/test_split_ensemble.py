@@ -6,10 +6,13 @@ from molpipeline.estimators.ensemble.split_ensemble import (
     SplitEnsembleClassifier,
     SplitEnsembleRegressor,
 )
-from tests.templates.test_wrapped_estimators import WrappedEstimatorBaseTestMixIn
+from tests.templates.test_wrapped_estimators import (
+    WrappedClassifierBaseTestMixIn,
+    WrappedRegressorBaseTestMixIn,
+)
 
 
-class TestSplitEnsembleRegressor(unittest.TestCase, WrappedEstimatorBaseTestMixIn):
+class TestSplitEnsembleRegressor(unittest.TestCase, WrappedRegressorBaseTestMixIn):
     """Unit tests for SplitEnsembleRegressor."""
 
     @staticmethod
@@ -25,7 +28,7 @@ class TestSplitEnsembleRegressor(unittest.TestCase, WrappedEstimatorBaseTestMixI
         return SplitEnsembleRegressor
 
     @staticmethod
-    def get_test_parameters() -> dict[str, int]:
+    def get_test_parameters() -> dict[str, list[int]]:
         """Return a dictionary of parameters to be used for testing.
 
         Returns
@@ -34,10 +37,10 @@ class TestSplitEnsembleRegressor(unittest.TestCase, WrappedEstimatorBaseTestMixI
             A dictionary of parameters to be used for testing.
 
         """
-        return {"cv": 2}
+        return {"cv": [3]}
 
 
-class TestSplitEnsembleClassifier(unittest.TestCase, WrappedEstimatorBaseTestMixIn):
+class TestSplitEnsembleClassifier(unittest.TestCase, WrappedClassifierBaseTestMixIn):
     """Unit tests for SplitEnsembleClassifier."""
 
     @staticmethod
@@ -53,7 +56,7 @@ class TestSplitEnsembleClassifier(unittest.TestCase, WrappedEstimatorBaseTestMix
         return SplitEnsembleClassifier
 
     @staticmethod
-    def get_test_parameters() -> dict[str, int]:
+    def get_test_parameters() -> dict[str, list[int]]:
         """Return a dictionary of parameters to be used for testing.
 
         Returns
@@ -62,7 +65,10 @@ class TestSplitEnsembleClassifier(unittest.TestCase, WrappedEstimatorBaseTestMix
             A dictionary of parameters to be used for testing.
 
         """
-        return {"cv": 2}
+        return {
+            "cv": [3],
+            "voting": ["soft", "hard"],
+        }
 
 
 if __name__ == "__main__":

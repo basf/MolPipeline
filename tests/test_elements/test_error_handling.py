@@ -271,15 +271,15 @@ class NoneTest(unittest.TestCase):
                 value: RDKitMol
                     Molecule
 
-                Raises
-                ------
-                MolSanitizeException
-                    Dummy exception used for testing.
-
                 Returns
                 -------
                 OptionalMol
                     Molecule.
+
+                Raises
+                ------
+                MolSanitizeException
+                    Dummy exception used for testing.
 
                 """
                 if Chem.MolToSmiles(value) == "c1ccccc1":

@@ -43,10 +43,6 @@ _T = TypeVar("_T")
 def joblib_dump_load(obj: _T) -> _T:
     """Dump and load an object using joblib.
 
-    Notes
-    -----
-    The object is not dumped to disk but to a BytesIO object.
-
     Parameters
     ----------
     obj : _T
@@ -56,6 +52,10 @@ def joblib_dump_load(obj: _T) -> _T:
     -------
     _T
         The loaded object.
+
+    Notes
+    -----
+    The object is not dumped to disk but to a BytesIO object.
 
     """
     bytes_container = BytesIO()
