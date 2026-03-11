@@ -213,9 +213,9 @@ class WrappedRegressorBaseTestMixIn(WrappedEstimatorBaseTestMixIn, abc.ABC):
         for parameters in ParameterGrid(estimator_params):
             reg = estimator_class(estimator=LinearRegression(), **parameters)
             reg.fit(features, y)
-            preds = reg.predict(features)
-            self.assertIsInstance(preds, np.ndarray)
-            self.assertEqual(preds.shape, (features.shape[0],))
+            preds_dense = reg.predict(features)
+            self.assertIsInstance(preds_dense, np.ndarray)
+            self.assertEqual(preds_dense.shape, (features.shape[0],))
 
             # Sparse matrix
             x_sparse = csr_matrix(features)
@@ -227,6 +227,8 @@ class WrappedRegressorBaseTestMixIn(WrappedEstimatorBaseTestMixIn, abc.ABC):
             preds_sparse = reg_sparse.predict(x_sparse)
             self.assertIsInstance(preds_sparse, np.ndarray)
             self.assertEqual(preds_sparse.shape, (x_sparse.shape[0],))
+
+            self.assertTrue(np.array_equal(preds_dense, preds_sparse))
 
 
 class WrappedClassifierBaseTestMixIn(WrappedEstimatorBaseTestMixIn, abc.ABC):
@@ -315,8 +317,8 @@ class WrappedClassifierBaseTestMixIn(WrappedEstimatorBaseTestMixIn, abc.ABC):
                 **parameters,
             )
             clf.fit(features, y)
-            preds = clf.predict(features)
-            self.assertEqual(preds.shape, (features.shape[0],))
+            preds_dense = clf.predict(features)
+            self.assertEqual(preds_dense.shape, (features.shape[0],))
 
             # Sparse matrix
             x_sparse = csr_matrix(features)
@@ -327,3 +329,5 @@ class WrappedClassifierBaseTestMixIn(WrappedEstimatorBaseTestMixIn, abc.ABC):
             clf_sparse.fit(x_sparse, y)
             preds_sparse = clf_sparse.predict(x_sparse)
             self.assertEqual(preds_sparse.shape, (x_sparse.shape[0],))
+
+            self.assertTrue(np.array_equal(preds_dense, preds_sparse))
