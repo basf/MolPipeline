@@ -10,7 +10,7 @@ from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
 from sklearn.model_selection import BaseCrossValidator, KFold, StratifiedKFold
 from typing_extensions import override
 
-from molpipeline.estimators.ensemble._ensemble_base import (
+from molpipeline.estimators.ensemble.ensemble_base import (
     EnsembleClassifierMixIn,
     EnsembleRegressorMixIn,
     HomogeneousEnsemble,

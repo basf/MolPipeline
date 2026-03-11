@@ -11,7 +11,7 @@ from typing import Any, Literal
 import numpy.typing as npt
 from typing_extensions import override
 
-from molpipeline.estimators.ensemble._ensemble_base import (
+from molpipeline.estimators.ensemble.ensemble_base import (
     EnsembleClassifierMixIn,
     EnsembleRegressorMixIn,
     HomogeneousEnsemble,
