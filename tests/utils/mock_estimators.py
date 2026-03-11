@@ -1,6 +1,6 @@
 """Shared mock estimators used by ensemble estimator unit tests.
 
-A normal mock cannot be used because cloning does not preserve the mocked methods.
+A normal mock cannot be used because sklearn.clone does not preserve the mocked methods.
 
 """
 
