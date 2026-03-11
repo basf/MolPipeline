@@ -421,15 +421,15 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         **calib_params : Any
             Additional calibration parameters.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         ConformalClassifier
             Self.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if self._crepes_wrapper is None:
@@ -464,15 +464,15 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         x: npt.NDArray[Any]
             Features to predict.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         npt.NDArray[Any]
             Predictions.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if self._crepes_wrapper is None:
@@ -490,15 +490,15 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         x: npt.NDArray[Any]
             Features to predict.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         npt.NDArray[Any]
             Predicted probabilities (calibrated if isotonic regressors were fitted).
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if self._crepes_wrapper is None:
@@ -527,15 +527,15 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         **kwargs : Any
             Additional parameters passed to crepes.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted or confidence level is invalid.
-
         Returns
         -------
         npt.NDArray[np.int_]
             Conformal prediction sets as binary array of shape (n_samples, n_classes).
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted or confidence level is invalid.
 
         """
         if self._crepes_wrapper is None:
@@ -555,15 +555,15 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         **kwargs : Any
             Additional parameters passed to crepes.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         npt.NDArray[Any]
             p-values.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if self._crepes_wrapper is None:
@@ -847,15 +847,15 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         x: npt.NDArray[Any]
             Features to predict.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         npt.NDArray[Any]
             Aggregated predictions.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if not self.models_:
@@ -872,15 +872,15 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         x: npt.NDArray[Any]
             Features to predict.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         npt.NDArray[Any]
             Aggregated probability predictions.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if not self.models_:
@@ -906,15 +906,15 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         **kwargs : Any
             Additional parameters.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted or confidence level is invalid.
-
         Returns
         -------
         npt.NDArray[np.int_]
             Aggregated conformal prediction sets.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted or confidence level is invalid.
 
         """
         if not self.models_:
@@ -937,15 +937,15 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         **kwargs : Any
             Additional parameters.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         npt.NDArray[Any]
             Aggregated p-values.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if not self.models_:
@@ -1109,15 +1109,15 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         **calib_params : Any
             Additional calibration parameters.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         ConformalRegressor
             Self.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if self._crepes_wrapper is None:
@@ -1147,15 +1147,15 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         x: npt.NDArray[Any]
             Features to predict.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         npt.NDArray[Any]
             Predictions.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if self._crepes_wrapper is None:
@@ -1179,15 +1179,15 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
         **kwargs : Any
             Additional parameters passed to crepes.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted or confidence level is invalid.
-
         Returns
         -------
         npt.NDArray[Any]
             Prediction intervals of shape (n_samples, 2) with columns [lower, upper].
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted or confidence level is invalid.
 
         """
         if self._crepes_wrapper is None:
@@ -1410,15 +1410,15 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         x: npt.NDArray[Any]
             Features to predict.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
         Returns
         -------
         npt.NDArray[Any]
             Aggregated predictions.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
 
         """
         if not self.models_:
@@ -1444,15 +1444,15 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         **kwargs : Any
             Additional parameters.
 
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted or confidence level is invalid.
-
         Returns
         -------
         npt.NDArray[Any]
             Aggregated prediction intervals.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted or confidence level is invalid.
 
         """
         if not self.models_:
