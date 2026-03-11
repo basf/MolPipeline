@@ -113,13 +113,12 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
             The fitted SplitEnsemble instance.
 
         """
-        parallel = joblib.Parallel(n_jobs=self.n_jobs)
         fit_clone_parallel = joblib.delayed(self._fit_clone)
-
-        self.estimators_ = parallel(
-            fit_clone_parallel(self.estimator, feat_mat, target, **kwargs)
-            for feat_mat, target in self._iter_model_inputs(X, y, groups)
-        )
+        with joblib.Parallel(n_jobs=self.n_jobs) as parallel:
+            self.estimators_ = parallel(
+                fit_clone_parallel(self.estimator, feat_mat, target, **kwargs)
+                for feat_mat, target in self._iter_model_inputs(X, y, groups)
+            )
         return self
 
     @abc.abstractmethod
