@@ -1,4 +1,5 @@
 """Regression-focused tests for conformal prediction wrappers and integration."""
+# pylint: disable=duplicate-code
 
 import tempfile
 import unittest

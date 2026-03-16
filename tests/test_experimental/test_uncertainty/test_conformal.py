@@ -1,5 +1,5 @@
 """Comprehensive tests for conformal prediction wrappers and pipeline integration."""
-# pylint: disable=too-many-lines
+# pylint: disable=duplicate-code
 
 import unittest
 

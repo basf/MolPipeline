@@ -1,4 +1,5 @@
 """Conformal prediction wrappers for regression using crepes."""
+# pylint: disable=duplicate-code
 
 from typing import Any
 

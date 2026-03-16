@@ -1,4 +1,5 @@
 """Conformal prediction wrappers for classification using crepes."""
+# pylint: disable=duplicate-code
 
 from typing import TYPE_CHECKING, Any
 
