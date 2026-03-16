@@ -5,6 +5,7 @@ from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+from scipy import sparse
 from sklearn.model_selection import BaseCrossValidator
 from typing_extensions import override
 
@@ -51,7 +52,7 @@ class BootstrapSplit(BaseCrossValidator):
             The training indices and test indices for each split.
 
         """
-        n_samples = len(np.asarray(X))
+        n_samples = X.shape[0] if sparse.issparse(X) else len(np.asarray(X))
         rng = np.random.RandomState(self.random_state)
         for _ in range(self.n_splits):
             train_indices = rng.choice(n_samples, size=n_samples, replace=True)
