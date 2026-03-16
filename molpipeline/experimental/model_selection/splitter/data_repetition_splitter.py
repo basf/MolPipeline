@@ -4,7 +4,8 @@ This is not meant to be used for model validation but for ensembling purposes.
 
 """
 
-from collections.abc import Iterator
+from collections.abc import Generator
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -36,7 +37,7 @@ class DataRepetitionSplit(BaseCrossValidator):
         X: npt.ArrayLike,
         y: npt.ArrayLike | None = None,
         groups: npt.ArrayLike | None = None,
-    ) -> Iterator[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]]:
+    ) -> Generator[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]], Any, None]:
         """Get the bootstrap split.
 
         Parameters
@@ -55,7 +56,7 @@ class DataRepetitionSplit(BaseCrossValidator):
             The training indices and test indices for each split.
 
         """
-        n_samples = len(X)
+        n_samples = len(np.asarray(X))
         for _ in range(self.n_splits):
             train_indices = np.arange(n_samples)
             test_indices = np.array([], dtype=np.int64)
