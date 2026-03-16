@@ -1,12 +1,15 @@
 """Contains functions for loading and saving objects to/from json files."""
 
 import importlib
+import inspect
 import types
 import typing
 import warnings
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 
+import joblib
 import numpy as np
+from loguru import logger
 
 from molpipeline.pipeline import Pipeline
 
@@ -422,3 +425,73 @@ def recursive_from_json(obj: Any) -> Any:
         return iterable_type(iter_list)
 
     raise TypeError(f"Unexpected Type: {type(obj)}")
+
+
+def get_init_params(
+    obj: Any,
+    validation: Literal["raise", "warn", "skip", "return_none"],
+) -> dict[str, Any] | None:
+    """Get the parameters for initialization of an object.
+
+    Parameters
+    ----------
+    obj : Any
+        The object to get the parameters for.
+    validation : Literal["raise", "warn", "skip", "return_none"]
+        The validation strategy.
+
+    Returns
+    -------
+    dict[str, Any] | None
+        The parameters for initialization of the object, or None if the validation
+        strategy is "return_none" and the object cannot be initialized with the
+        extracted parameters.
+
+    Raises
+    ------
+    ValueError
+
+
+    """
+    if hasattr(obj, "get_params"):
+        return obj.get_params(deep=False)
+    state_dict = obj.__getstate__()
+    init_params = dict(inspect.signature(obj.__init__).parameters)
+    init_params = {k: v for k, v in init_params.items() if k != "self"}
+    allowed_params = init_params.keys()
+    required_params = [
+        key for key, param in init_params.items() if param.default is param.empty
+    ]
+
+    obj_params = {k: v for k, v in state_dict.items() if k in allowed_params}
+
+    if validation == "skip":
+        return obj_params
+
+    missing_params = set(required_params) - set(obj_params.keys())
+    if missing_params:
+        msg = f"Missing required parameters: {missing_params}"
+        if validation == "raise":
+            raise ValueError(msg)
+        if validation == "warn":
+            logger.warning(msg)
+            return obj_params
+        if validation == "return_none":
+            return None
+
+    expected_state_hash = joblib.hash(recursive_to_json(state_dict))
+
+    reconstructed_obj = obj.__class__(**obj_params)
+    reconstructed_state = recursive_to_json(reconstructed_obj.__getstate__())
+    reconstructed_state_hash = joblib.hash(reconstructed_state)
+
+    if expected_state_hash != reconstructed_state_hash:
+        msg = "Reconstructing the object failed."
+        if validation == "raise":
+            raise ValueError(msg)
+        if validation == "warn":
+            logger.warning(msg)
+        if validation == "return_none":
+            obj_params = None
+
+    return obj_params
