@@ -1,5 +1,11 @@
 """Initialize module for data splitting."""
 
+from molpipeline.experimental.model_selection.splitter.bootstrap_splitter import (
+    BootstrapSplit,
+)
+from molpipeline.experimental.model_selection.splitter.data_repetition_splitter import (
+    DataRepetitionSplit,
+)
 from molpipeline.experimental.model_selection.splitter.group_addition_splitter import (
     GroupAdditionSplit,
 )
@@ -15,6 +21,8 @@ from molpipeline.experimental.model_selection.splitter.time_threshold_splitter i
 )
 
 __all__ = [
+    "BootstrapSplit",
+    "DataRepetitionSplit",
     "GroupAdditionSplit",
     "GroupShuffleSplit",
     "SplitModeOption",
