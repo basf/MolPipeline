@@ -50,7 +50,7 @@ class BootstrapSplit(BaseCrossValidator):
             The training indices and test indices for each split.
 
         """
-        n_samples = len(X)
+        n_samples = len(np.asarray(X))
         rng = np.random.RandomState(self.random_state)
         for _ in range(self.n_splits):
             train_indices = rng.choice(n_samples, size=n_samples, replace=True)
