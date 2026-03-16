@@ -97,8 +97,8 @@ class AnySklearnEstimator(Protocol):
 
     def fit(
         self,
-        X: npt.NDArray[Any],  # noqa: N803
-        y: npt.NDArray[Any] | None,
+        X: XType,  # noqa: N803
+        y: YType,
         **fit_params: Any,
     ) -> Self:
         """Fit the model with X.
@@ -127,8 +127,8 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
 
     def fit_predict(
         self,
-        X: npt.NDArray[Any],  # noqa: N803
-        y: npt.NDArray[Any] | None,
+        X: XType,  # noqa: N803
+        y: YType,
         **fit_params: Any,
     ) -> npt.NDArray[Any]:
         """Fit the model with X and return predictions.

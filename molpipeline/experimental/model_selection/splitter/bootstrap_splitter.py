@@ -9,6 +9,8 @@ from scipy import sparse
 from sklearn.model_selection import BaseCrossValidator
 from typing_extensions import override
 
+from molpipeline.utils.molpipeline_types import XType, YType
+
 
 class BootstrapSplit(BaseCrossValidator):
     """Splitter where the training set is a bootstrap sample."""
@@ -30,9 +32,9 @@ class BootstrapSplit(BaseCrossValidator):
     @override
     def split(
         self,
-        X: npt.ArrayLike,
-        y: npt.ArrayLike | None = None,
-        groups: npt.ArrayLike | None = None,
+        X: XType,
+        y: YType = None,
+        groups: YType = None,
     ) -> Generator[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]], Any, None]:
         """Get the bootstrap split.
 
@@ -62,9 +64,9 @@ class BootstrapSplit(BaseCrossValidator):
     @override
     def get_n_splits(  # type: ignore
         self,
-        X: npt.ArrayLike,
-        y: npt.ArrayLike | None = None,
-        groups: npt.ArrayLike | None = None,
+        X: XType,
+        y: YType = None,
+        groups: YType | None = None,
     ) -> int:
         """Get the number of splits.
 

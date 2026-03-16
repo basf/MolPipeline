@@ -5,7 +5,7 @@ import inspect
 import types
 import typing
 import warnings
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal, TypeVar, overload
 
 import joblib
 import numpy as np
@@ -427,9 +427,30 @@ def recursive_from_json(obj: Any) -> Any:
     raise TypeError(f"Unexpected Type: {type(obj)}")
 
 
+@overload
+def get_init_params(
+    obj: Any,
+    validation: Literal["return_none"],
+) -> dict[str, Any] | None: ...
+
+
+@overload
+def get_init_params(
+    obj: Any,
+    validation: Literal["raise", "warn", "skip"] = "raise",
+) -> dict[str, Any]: ...
+
+
+@overload
 def get_init_params(
     obj: Any,
     validation: Literal["raise", "warn", "skip", "return_none"],
+) -> dict[str, Any] | None: ...
+
+
+def get_init_params(
+    obj: Any,
+    validation: Literal["raise", "warn", "skip", "return_none"] = "raise",
 ) -> dict[str, Any] | None:
     """Get the parameters for initialization of an object.
 
@@ -437,7 +458,7 @@ def get_init_params(
     ----------
     obj : Any
         The object to get the parameters for.
-    validation : Literal["raise", "warn", "skip", "return_none"]
+    validation : Literal["raise", "warn", "skip", "return_none"], default="raise"
         The validation strategy.
 
     Returns
@@ -462,7 +483,6 @@ def get_init_params(
     required_params = [
         key for key, param in init_params.items() if param.default is param.empty
     ]
-
     obj_params = {k: v for k, v in state_dict.items() if k in allowed_params}
 
     if validation == "skip":
@@ -487,6 +507,6 @@ def get_init_params(
         if validation == "warn":
             logger.warning(msg)
         if validation == "return_none":
-            obj_params = None
+            return None
 
     return obj_params
