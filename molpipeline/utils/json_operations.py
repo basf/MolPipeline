@@ -479,14 +479,9 @@ def get_init_params(
         if validation == "return_none":
             return None
 
-    expected_state_hash = joblib.hash(recursive_to_json(state_dict))
-
     reconstructed_obj = obj.__class__(**obj_params)
-    reconstructed_state = recursive_to_json(reconstructed_obj.__getstate__())
-    reconstructed_state_hash = joblib.hash(reconstructed_state)
-
-    if expected_state_hash != reconstructed_state_hash:
-        msg = "Reconstructing the object failed."
+    if joblib.hash(obj) != joblib.hash(reconstructed_obj):
+        msg = "Reconstruction of the object failed."
         if validation == "raise":
             raise ValueError(msg)
         if validation == "warn":
