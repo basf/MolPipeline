@@ -62,6 +62,13 @@ class TestBootstrapSplit(unittest.TestCase):
             self.assertTrue(np.array_equal(train_a_i, train_b_i))
             self.assertTrue(np.array_equal(test_a_i, test_b_i))
 
+    def test_no_random_state(self) -> None:
+        """Verify that a None is a valid random state."""
+        n_splits = 5
+        splitter = BootstrapSplit(n_splits=n_splits, random_state=None)
+        splits = list(splitter.split(np.ones(30)))
+        self.assertEqual(len(splits), n_splits)
+
 
 if __name__ == "__main__":
     unittest.main()

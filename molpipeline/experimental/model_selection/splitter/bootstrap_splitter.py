@@ -11,14 +11,14 @@ from typing_extensions import override
 class BootstrapSplit(BaseCrossValidator):
     """Splitter where the training set is a bootstrap sample."""
 
-    def __init__(self, n_splits: int, random_state: int) -> None:
+    def __init__(self, n_splits: int, random_state: int | None = None) -> None:
         """Initialize the bootstrap split.
 
         Parameters
         ----------
         n_splits : int
             Number of splits to create.
-        random_state : int
+        random_state : int | None, optional
             Random state to use.
 
         """
