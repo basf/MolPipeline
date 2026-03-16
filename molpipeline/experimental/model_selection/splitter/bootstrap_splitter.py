@@ -1,6 +1,7 @@
 """Bootstrap split."""
 
-from collections.abc import Iterator
+from collections.abc import Generator
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -31,7 +32,7 @@ class BootstrapSplit(BaseCrossValidator):
         X: npt.ArrayLike,
         y: npt.ArrayLike | None = None,
         groups: npt.ArrayLike | None = None,
-    ) -> Iterator[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]]:
+    ) -> Generator[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]], Any, None]:
         """Get the bootstrap split.
 
         Parameters
@@ -58,12 +59,12 @@ class BootstrapSplit(BaseCrossValidator):
             yield train_indices, test_indices
 
     @override
-    def get_n_splits(
+    def get_n_splits(  # type: ignore
         self,
         X: npt.ArrayLike,
         y: npt.ArrayLike | None = None,
         groups: npt.ArrayLike | None = None,
-    ) -> int:  # type: ignore
+    ) -> int:
         """Get the number of splits.
 
         Parameters
