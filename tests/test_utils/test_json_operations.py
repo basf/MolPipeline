@@ -100,7 +100,7 @@ class JsonConversionTest(unittest.TestCase):
         self.assertIs(deserialized_function, balanced_accuracy_score)
 
 
-class ReconstructibleObject:
+class ReconstructibleObject:  # pylint: disable=too-few-public-methods
     """Simple class with stable reconstruction state."""
 
     def __init__(self, required: int, optional: int = 2) -> None:
@@ -119,7 +119,7 @@ class ReconstructibleObject:
         self.sum = required + optional
 
 
-class MissingRequiredStateParamObj(ReconstructibleObject):
+class MissingRequiredStateParamObj(ReconstructibleObject):  # pylint: disable=too-few-public-methods
     """Class that omits a required init parameter from state."""
 
     def __getstate__(self) -> dict[str, Any]:
@@ -136,7 +136,7 @@ class MissingRequiredStateParamObj(ReconstructibleObject):
         return state_dict
 
 
-class ModifiedParamObj(ReconstructibleObject):
+class ModifiedParamObj(ReconstructibleObject):  # pylint: disable=too-few-public-methods
     """Class that modifies a required init parameter in state."""
 
     def __init__(self, required: int, optional: int = 2) -> None:

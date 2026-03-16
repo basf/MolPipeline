@@ -245,7 +245,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         """
 
 
-class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixin):
+class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixin):  # pylint: disable=too-many-ancestors
     """Ensemble regressor that averages the predictions of the individual estimators."""
 
     estimators_: list[_ModelVar]
@@ -262,7 +262,7 @@ class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixi
     def predict(
         self,
         X: XType,  # noqa: N803,  # pylint: disable=invalid-name
-        return_std: Literal[True],
+        return_std: Literal[True] = True,
         **params: Any,
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 
@@ -312,7 +312,7 @@ class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixi
         return np.mean(predictions, axis=0)
 
 
-class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMixin):
+class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMixin):  # pylint: disable=too-many-ancestors
     """Ensemble classifier that supports both hard and soft voting."""
 
     voting: Literal["hard", "soft"]

@@ -12,7 +12,7 @@ from typing_extensions import override
 from molpipeline.utils.molpipeline_types import XType, YType
 
 
-class BootstrapSplit(BaseCrossValidator):
+class BootstrapSplit(BaseCrossValidator):  # pylint: disable=abstract-method
     """Splitter where the training set is a bootstrap sample."""
 
     def __init__(self, n_splits: int, random_state: int | None = None) -> None:
@@ -55,14 +55,14 @@ class BootstrapSplit(BaseCrossValidator):
 
         """
         n_samples = X.shape[0] if sparse.issparse(X) else len(np.asarray(X))
-        rng = np.random.RandomState(self.random_state)
+        rng = np.random.default_rng(self.random_state)
         for _ in range(self.n_splits):
             train_indices = rng.choice(n_samples, size=n_samples, replace=True)
             test_indices = np.setdiff1d(np.arange(n_samples), train_indices)
             yield train_indices, test_indices
 
     @override
-    def get_n_splits(  # type: ignore
+    def get_n_splits(  # type: ignore  # pylint: disable=signature-differs
         self,
         X: XType,
         y: YType = None,
