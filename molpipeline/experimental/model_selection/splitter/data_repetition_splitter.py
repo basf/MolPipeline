@@ -14,7 +14,7 @@ from sklearn.model_selection import BaseCrossValidator
 from typing_extensions import override
 
 
-class DataRepetitionSplit(BaseCrossValidator):  # pylint disable=abstract-method
+class DataRepetitionSplit(BaseCrossValidator):  # pylint: disable=abstract-method
     """The DataRepetitionSplit returns only the training set indices.
 
     This is not meant to be used for model validation but for ensembling purposes.
