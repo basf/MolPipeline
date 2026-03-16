@@ -11,7 +11,7 @@ from sklearn.utils import check_random_state
 from typing_extensions import Self
 
 from molpipeline.experimental.model_selection.splitter import (
-    create_continuous_stratified_folds,
+    PercentileStratifiedKFold,
 )
 from molpipeline.experimental.uncertainty.utils import (
     BaseConformalPredictor,
@@ -334,15 +334,16 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self.models_ = []
         self.cv_splits_ = []
 
-        splits = create_continuous_stratified_folds(
-            np.asarray(y),
+        y_array = np.asarray(y)
+        splitter = PercentileStratifiedKFold(
             n_splits=self.n_folds,
             n_groups=self.binning_bins,
+            shuffle=True,
             random_state=self.random_state,
         )
 
         x_array = np.asarray(x)
-        y_array = np.asarray(y)
+        splits = splitter.split(X=np.zeros(len(y_array)), y=y_array)
 
         for train_idx, calib_idx in splits:
             x_train = x_array[train_idx]

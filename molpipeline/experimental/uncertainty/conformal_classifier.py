@@ -11,15 +11,15 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import check_random_state
 from typing_extensions import Self
 
-if TYPE_CHECKING:
-    from sklearn.isotonic import IsotonicRegression
-
 from molpipeline.experimental.uncertainty.utils import (
     BaseConformalPredictor,
     NonconformityFunctor,
     _apply_antitonic_regressors,
     _fit_antitonic_regressors,
 )
+
+if TYPE_CHECKING:
+    from sklearn.isotonic import IsotonicRegression
 
 
 class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
