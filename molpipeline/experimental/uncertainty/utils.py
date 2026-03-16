@@ -1,11 +1,14 @@
-"""Conformal prediction utils."""
+"""Conformal prediction wrappers for classification and regression using crepes."""
 
+import warnings
 from abc import ABC, abstractmethod
 from typing import Any
 
 import numpy as np
 import numpy.typing as npt
 from crepes.extras import hinge, margin
+from sklearn.base import BaseEstimator
+from sklearn.isotonic import IsotonicRegression
 from typing_extensions import override
 
 
@@ -372,3 +375,287 @@ def create_nonconformity_function(
         f"Invalid nonconformity specification: {type(nonconformity)}. "
         "Expected str, NonconformityFunctor, or None.",
     )
+
+
+def _fit_antitonic_regressors(
+    p_values_calib: npt.NDArray[np.float64],
+    *,
+    epsilon: float = 1e-10,
+) -> list[IsotonicRegression]:
+    """Fit per-class antitonic (decreasing) isotonic regressors.
+
+    Parameters
+    ----------
+    p_values_calib : npt.NDArray[np.float64]
+        Conformal p-values for calibration samples, shape (n_calib, n_classes).
+    epsilon : float, optional
+        Small constant for numerical stability (default: 1e-10).
+
+    Returns
+    -------
+    list[IsotonicRegression]
+        One fitted regressor per class.
+
+    """
+    n_classes = p_values_calib.shape[1]
+    regressors: list[IsotonicRegression] = []
+    for y_class in range(n_classes):
+        p_y_calib = p_values_calib[:, y_class]
+        targets = 1.0 / (p_y_calib + epsilon)
+        iso = IsotonicRegression(increasing=False, out_of_bounds="clip")
+        iso.fit(p_y_calib, targets)
+        regressors.append(iso)
+    return regressors
+
+
+def _apply_antitonic_regressors(
+    p_values_test: npt.NDArray[np.float64],
+    regressors: list[IsotonicRegression],
+    *,
+    epsilon: float = 1e-10,
+) -> npt.NDArray[np.float64]:
+    """Apply fitted antitonic isotonic regressors to p-values.
+
+    Parameters
+    ----------
+    p_values_test : npt.NDArray[np.float64]
+        Conformal p-values for test samples, shape (n_test, n_classes).
+    regressors : list[IsotonicRegression]
+        Fitted per-class isotonic regressors.
+    epsilon : float, optional
+        Small constant for numerical stability (default: 1e-10).
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        Calibrated probabilities of shape (n_test, n_classes), normalized to sum to 1.
+
+    Raises
+    ------
+    ValueError
+        If number of regressors does not match number of classes.
+
+    """
+    n_classes = p_values_test.shape[1]
+    if len(regressors) != n_classes:
+        raise ValueError(
+            "Number of regressors must match number of classes. "
+            f"Got {len(regressors)} and {n_classes}",
+        )
+
+    calibrated_probs_unnorm = np.zeros_like(p_values_test)
+    for y_class in range(n_classes):
+        p_y_test = p_values_test[:, y_class]
+        iso = regressors[y_class]
+
+        g_test = iso.predict(p_y_test)
+        g_1 = iso.predict([1.0])[0]
+        calibrated_probs_unnorm[:, y_class] = g_1 / (g_test + epsilon)
+
+    prob_sum = calibrated_probs_unnorm.sum(axis=1, keepdims=True)
+    return calibrated_probs_unnorm / (prob_sum + epsilon)
+
+
+class BaseConformalPredictor(BaseEstimator, ABC):
+    """Base class for conformal predictors providing common functionality."""
+
+    def __init__(
+        self,
+        estimator: BaseEstimator,
+        nonconformity: str | NonconformityFunctor | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize BaseConformalPredictor.
+
+        Parameters
+        ----------
+        estimator : BaseEstimator
+            The base estimator to wrap.
+        nonconformity : str | NonconformityFunctor | None, optional
+            Nonconformity function to use.
+        **kwargs : Any
+            Additional keyword arguments for configuration.
+
+        """
+        self.estimator = estimator
+        self.nonconformity = nonconformity
+        self.kwargs = kwargs
+
+    @property
+    def nonconformity(self) -> str | NonconformityFunctor | None:
+        """Get the nonconformity parameter value.
+
+        This property is needed for sklearn's get_params/set_params compatibility.
+        """
+        if self.nonconformity_func is None:
+            return None
+        if isinstance(self.nonconformity_func, NonconformityFunctor):
+            return self.nonconformity_func.get_name()
+        return self.nonconformity_func
+
+    @nonconformity.setter
+    def nonconformity(self, value: str | NonconformityFunctor | None) -> None:
+        """Set the nonconformity function.
+
+        Parameters
+        ----------
+        value : str | NonconformityFunctor | None
+            The nonconformity function to set.
+
+        """
+        self.nonconformity_func = create_nonconformity_function(value)
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Handle unpickling with backward compatibility.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The object's state dictionary.
+
+        """
+        if "nonconformity_func" not in state:
+            warnings.warn(
+                "Loading a model with the old 'nonconformity' attribute format. "
+                "This backward compatibility will be removed in version 0.13.0. "
+                "Please re-save your models with the current version.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            fixed_state = dict(state)  # Shallow Copy
+            if "nonconformity" in state:
+                fixed_state["nonconformity_func"] = create_nonconformity_function(
+                    fixed_state.pop("nonconformity"),
+                )
+            else:
+                fixed_state["nonconformity_func"] = None
+            return super().__setstate__(fixed_state)
+        return super().__setstate__(state)
+
+    @abstractmethod
+    def evaluate(
+        self,
+        x: npt.NDArray[Any],
+        y: npt.NDArray[Any],
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Evaluate the conformal predictor. Must be implemented by subclasses.
+
+        Parameters
+        ----------
+        x: np.ndarray
+            Features to evaluate.
+        y: np.ndarray
+            True labels/targets.
+        **kwargs : Any
+            Additional parameters for evaluation.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary of evaluation metrics.
+
+        """
+
+    @staticmethod
+    def _validate_confidence_level(confidence_level: float) -> float:
+        """Validate confidence level parameter.
+
+        Parameters
+        ----------
+        confidence_level : float
+            Confidence level to validate.
+
+        Returns
+        -------
+        float
+            Validated confidence level.
+
+        Raises
+        ------
+        ValueError
+            If confidence level is not between 0 (exclusive) and 1 (inclusive).
+
+        """
+        if not isinstance(confidence_level, (int, float)):
+            raise ValueError(
+                f"confidence_level must be a number, got "
+                f"{type(confidence_level).__name__}",
+            )
+
+        if not 0 < confidence_level <= 1:
+            raise ValueError(
+                f"confidence_level must be between 0 (exclusive) and 1 (inclusive), "
+                f"got {confidence_level}",
+            )
+
+        if confidence_level < 0.5:
+            warnings.warn(
+                f"Confidence level {confidence_level} is less than 0.5 (50%). "
+                "This represents weak confidence and may produce unreliable prediction "
+                "sets/intervals.",
+                UserWarning,
+                stacklevel=3,
+            )
+
+        return confidence_level
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters for this estimator.
+
+        Parameters
+        ----------
+        deep : bool, optional
+            Whether to return parameters of sub-estimators (default: True).
+
+        Returns
+        -------
+        dict[str, Any]
+            Parameter dictionary.
+
+        """
+        params = {
+            "estimator": self.estimator,
+            "nonconformity": self.nonconformity,
+        }
+
+        # Get other parameters from parent class (exclude handled keys)
+        parent_params = {
+            k: v
+            for k, v in super().get_params(deep=deep).items()
+            if k not in {"estimator", "kwargs", "nonconformity_func"}
+        }
+        params.update(parent_params)
+
+        params.update(self.kwargs)
+
+        if deep and hasattr(self.estimator, "get_params"):
+            estimator_params = self.estimator.get_params(deep=True)
+            params.update({f"estimator__{k}": v for k, v in estimator_params.items()})
+
+        return params
+
+    def set_params(self, **params: Any) -> "BaseConformalPredictor":
+        """Set the parameters of this estimator.
+
+        Parameters
+        ----------
+        **params : Any
+            Parameters to set.
+
+        Returns
+        -------
+        BaseConformalPredictor
+            Self.
+
+        """
+        # Make a copy to avoid modifying the input dictionary
+        params_copy = params.copy()
+
+        # Convert nonconformity parameter to nonconformity_func attribute
+        if "nonconformity" in params_copy:
+            params_copy["nonconformity_func"] = create_nonconformity_function(
+                params_copy.pop("nonconformity"),  # Remove original key
+            )
+        super().set_params(**params_copy)
+        return self
