@@ -8,8 +8,12 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
+from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.metaestimators import available_if
 
+from molpipeline.experimental.model_selection.splitter.bootstrap_splitter import (
+    BootstrapSplit,
+)
 from molpipeline.utils.molpipeline_types import (
     AnyPredictor,
     XType,
@@ -35,6 +39,8 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
     def __init__(
         self,
         estimator: _ModelVar,
+        sampler: int | BaseCrossValidator = 100,
+        random_state: int | None = None,
         n_jobs: int = 1,
         **kwargs: Any,
     ) -> None:
@@ -44,6 +50,11 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         ----------
         estimator : BaseEstimator
             The base estimator to be cloned for each split.
+        sampler: int | BaseCrossValidator, default=100
+            The sampler to be used for creating the splits.
+            If an int is passed, a bootstrap sample is used.
+        random_state: int | None, optional
+            The random state to be used for the sampler if it is an int.
         n_jobs : int, default=1
             The number of jobs to run in parallel when fitting the estimators.
         kwargs : Any
@@ -51,6 +62,8 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
 
         """
         self.estimator = estimator
+        self.sampler = sampler
+        self.random_state = random_state
         self.estimators_ = []
         self.n_jobs = n_jobs
         self.set_params(**kwargs)
@@ -69,9 +82,9 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         ----------
         model : BaseEstimator
             The model to be fitted.
-        model_input : XType
+        model_input : npt.NDArray | scipy.sparse.csr_matrix
             The input data.
-        y : YType
+        y : npt.NDArray | None
             The target values.
         kwargs : Any
             Additional keyword arguments to be passed to the fit method of the model.
@@ -96,11 +109,11 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
 
         Parameters
         ----------
-        X : npt.ArrayLike
+        X :  npt.NDArray | scipy.sparse.csr_matrix
             The input data.
-        y : npt.ArrayLikee, optional
+        y :  npt.NDArray | None, optional
             The target values.
-        groups : npt.ArrayLike, optional
+        groups: npt.ArrayLike | None, optional
             Group labels for the samples used while splitting the dataset into
             train/test.
         kwargs : Any
@@ -121,7 +134,6 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
             )
         return self
 
-    @abc.abstractmethod
     def _iter_model_inputs(
         self,
         X: XType,  # noqa: N803,  # pylint: disable=invalid-name
@@ -132,11 +144,11 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
 
         Parameters
         ----------
-        X : _X
+        X :  npt.NDArray | scipy.sparse.csr_matrix
             The input data.
-        y : _Y, optional
+        y :  npt.NDArray | None, optional
             The target values.
-        groups: npt.ArrayLike, optional
+        groups: npt.ArrayLike | None, optional
             Group labels for the samples used while splitting the dataset into
             the datasets for the individual estimators.
 
@@ -146,17 +158,44 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
             An iterator over the model inputs for each estimator in the ensemble.
 
         """
+        sampler = self.sampler
+        if isinstance(sampler, int):
+            sampler = BootstrapSplit(sampler, random_state=self.random_state)
+        yield from sampler.split(X, y, groups)
+
+    @abc.abstractmethod
+    def predict(
+        self,
+        X: XType,  # noqa: N803
+        **params: Any,
+    ) -> npt.NDArray[Any]:
+        """Predict using the ensemble of estimators.
+
+        Parameters
+        ----------
+        X : npt.NDArray | scipy.sparse.csr_matrix
+            The input data to predict.
+        params : Any
+            Additional keyword arguments to be passed to the predict method of the
+            individual estimators.
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            The predicted values.
+
+        """
 
 
-class EnsembleRegressorMixIn(abc.ABC, RegressorMixin, Generic[_ModelVar]):
-    """Base class for regression ensemble models."""
+class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixin):
+    """Ensemble regressor that averages the predictions of the individual estimators."""
 
     estimators_: list[_ModelVar]
 
     @overload
     def predict(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # noqa: N803
         return_std: Literal[False] = False,
         **params: Any,
     ) -> npt.NDArray[np.float64]: ...
@@ -193,7 +232,7 @@ class EnsembleRegressorMixIn(abc.ABC, RegressorMixin, Generic[_ModelVar]):
 
         Parameters
         ----------
-        X : array-like
+        X : npt.NDArray | scipy.sparse.csr_matrix
             The input data.
         return_std : bool, default=False
             Whether to return the standard deviation of the predictions.
@@ -215,11 +254,48 @@ class EnsembleRegressorMixIn(abc.ABC, RegressorMixin, Generic[_ModelVar]):
         return np.mean(predictions, axis=0)
 
 
-class EnsembleClassifierMixIn(abc.ABC, ClassifierMixin, Generic[_ModelVar]):
-    """Base class for classification ensemble models."""
+class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMixin):
+    """Ensemble classifier that supports both hard and soft voting."""
 
-    estimators_: list[_ModelVar]
     voting: Literal["hard", "soft"]
+
+    def __init__(
+        self,
+        estimator: _ModelVar,
+        sampler: int | BaseCrossValidator = 100,
+        voting: Literal["hard", "soft"] = "hard",
+        random_state: int | None = None,
+        n_jobs: int = 1,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the SplitEnsembleClassifier.
+
+        Parameters
+        ----------
+        estimator : BaseEstimator
+            The base estimator to be cloned for each split.
+        sampler: int | BaseCrossValidator, default=100
+            The sampler to be used for creating the splits.
+            If an int is passed, a bootstrap sample is used.
+        voting: Literal["hard", "soft"], default="hard"
+            The voting strategy to be used in the ensemble.
+        random_state: int | None, optional
+            The random state to be used for the sampler if it is an int.
+        n_jobs : int, default=1
+            The number of jobs to run in parallel when fitting the estimators.
+        kwargs : Any
+            Additional keyword arguments to be passed to the base estimator.
+
+
+        """
+        self.voting = voting
+        super().__init__(
+            estimator=estimator,
+            sampler=sampler,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
 
     def _can_predict_proba(self) -> bool:
         """Check if all estimators in the ensemble support probability prediction.
