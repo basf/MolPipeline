@@ -15,6 +15,7 @@ from sklearn.utils.metaestimators import available_if
 from molpipeline.experimental.model_selection.splitter.bootstrap_splitter import (
     BootstrapSplit,
 )
+from molpipeline.utils.json_operations import get_init_params
 from molpipeline.utils.molpipeline_types import (
     AnyPredictor,
     XType,
@@ -98,6 +99,59 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         """
         model_clone: _T = clone(model)  # type: ignore
         return model_clone.fit(model_input, y, **kwargs)
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get the parameters for the estimator.
+
+        Parameters
+        ----------
+        deep: bool, default=True
+            If True, will return the parameters for this estimator and its subobjects.
+
+        Returns
+        -------
+        dict[str, Any]
+            The parameters of the estimator.
+
+        """
+        params = super().get_params(deep=deep)
+        sampler = self.sampler
+        if not deep or isinstance(sampler, int):
+            return params
+
+        sampler_params = get_init_params(sampler, validation="raise")
+        sampler_params = {f"sampler__{k}": v for k, v in sampler_params.items()}
+        params.update(sampler_params)
+        return params
+
+    def set_params(self, **params: Any) -> Self:
+        """Set the parameters for this estimator.
+
+        Parameters
+        ----------
+        **params: Any
+            The parameters to be set.
+
+        Returns
+        -------
+        Self
+            The updated estimator.
+
+        """
+        sampler_keys = {k for k in params if str(k).startswith("sampler__")}
+        if not sampler_keys:
+            return super().set_params(**params)
+
+        params = dict(params)
+        sampler_params = {
+            k.replace("sampler__", ""): params.pop(k) for k in sampler_keys
+        }
+
+        sampler = params.pop("sampler", self.sampler)
+        sampler_new_params = get_init_params(sampler, validation="raise")
+        sampler_new_params.update(sampler_params)
+        self.sampler = sampler.__class__(**sampler_new_params)
+        return super().set_params(**params)
 
     def fit(
         self,

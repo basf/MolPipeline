@@ -4,6 +4,7 @@ import unittest
 
 import numpy as np
 from scipy.sparse import csr_matrix
+from sklearn.base import clone
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import ParameterGrid
@@ -60,6 +61,7 @@ class TestHomogeneousEnsembleRegressor(unittest.TestCase):
         base = MockEstimator(alpha=1)
         ensemble = HomogeneousEnsembleRegressor(
             estimator=base,
+            sampler=BootstrapSplit(3, random_state=11),
             estimator__beta=2,
         )
         ensemble.set_params(estimator__gamma=3)
@@ -67,9 +69,67 @@ class TestHomogeneousEnsembleRegressor(unittest.TestCase):
         self.assertIn("estimator__alpha", params)
         self.assertIn("estimator__beta", params)
         self.assertIn("estimator__gamma", params)
+        self.assertIn("sampler__n_splits", params)
+        self.assertIn("sampler__random_state", params)
         self.assertEqual(params["estimator__alpha"], 1)
         self.assertEqual(params["estimator__beta"], 2)
         self.assertEqual(params["estimator__gamma"], 3)
+        self.assertEqual(params["sampler__n_splits"], 3)
+        self.assertEqual(params["sampler__random_state"], 11)
+
+    def test_set_params_sampler_updates_regressor_sampler(self) -> None:
+        """set_params updates sampler parameters and preserves sampler type.
+
+        Raises
+        ------
+        TypeError
+            If the sampler is not a BootstrapSplit instance.
+
+        """
+        ensemble = HomogeneousEnsembleRegressor(
+            estimator=MockEstimator(),
+            sampler=BootstrapSplit(2, random_state=5),
+        )
+
+        ensemble.set_params(sampler__n_splits=7)
+
+        sampler = ensemble.sampler
+        self.assertIsInstance(sampler, BootstrapSplit)
+        if not isinstance(sampler, BootstrapSplit):
+            raise TypeError("Expected BootstrapSplit sampler")
+        self.assertEqual(sampler.n_splits, 7)
+        self.assertEqual(sampler.random_state, 5)
+
+    def test_clone_regressor(self) -> None:
+        """Cloning keeps hyperparameters while creating fresh nested objects.
+
+        Raises
+        ------
+        TypeError
+            If the type is not preserved by clone.
+
+        """
+        ensemble = HomogeneousEnsembleRegressor(
+            estimator=MockEstimator(alpha=1, beta=2, gamma=3),
+            sampler=BootstrapSplit(3, random_state=13),
+            n_jobs=2,
+            estimator__beta=2,
+        )
+
+        ensemble_clone = clone(ensemble)
+        if not isinstance(ensemble_clone, HomogeneousEnsembleRegressor):
+            raise TypeError("Expected an instance of HomogeneousEnsembleRegressor")
+        params = ensemble_clone.get_params(deep=True)
+
+        self.assertIsNot(ensemble_clone, ensemble)
+        self.assertIsNot(ensemble_clone.estimator, ensemble.estimator)
+        self.assertIsNot(ensemble_clone.sampler, ensemble.sampler)
+        self.assertEqual(params["estimator__alpha"], 1)
+        self.assertEqual(params["estimator__beta"], 2)
+        self.assertEqual(params["estimator__gamma"], 3)
+        self.assertEqual(params["sampler__n_splits"], 3)
+        self.assertEqual(params["sampler__random_state"], 13)
+        self.assertEqual(ensemble_clone.n_jobs, 2)
 
     def test_fit_sample_forwarding(self) -> None:
         """Each clone receives the full feature matrix and target vector.
@@ -175,7 +235,7 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
             If the base estimator is not an instance of MockClassifier.
 
         """
-        base = MockEstimator(alpha=1)
+        base = MockClassifier(alpha=1)
         ensemble = HomogeneousEnsembleClassifier(
             estimator=base,
             estimator__beta=2,
@@ -193,16 +253,80 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
         base = MockEstimator(alpha=1)
         ensemble = HomogeneousEnsembleClassifier(
             estimator=base,
+            sampler=BootstrapSplit(4, random_state=19),
             estimator__beta=2,
         )
-        ensemble.set_params(estimator__gamma=3)
+        ensemble.set_params(estimator__gamma=3, voting="soft")
         params = ensemble.get_params(deep=True)
         self.assertIn("estimator__alpha", params)
         self.assertIn("estimator__beta", params)
         self.assertIn("estimator__gamma", params)
+        self.assertIn("sampler__n_splits", params)
+        self.assertIn("sampler__random_state", params)
+        self.assertIn("voting", params)
         self.assertEqual(params["estimator__alpha"], 1)
         self.assertEqual(params["estimator__beta"], 2)
         self.assertEqual(params["estimator__gamma"], 3)
+        self.assertEqual(params["sampler__n_splits"], 4)
+        self.assertEqual(params["sampler__random_state"], 19)
+        self.assertEqual(params["voting"], "soft")
+
+    def test_set_params_sampler_updates_classifier_sampler(self) -> None:
+        """set_params updates classifier sampler parameters and voting.
+
+        Raises
+        ------
+        TypeError
+            If the sampler is not a BootstrapSplit instance.
+
+        """
+        ensemble = HomogeneousEnsembleClassifier(
+            estimator=MockClassifier(),
+            sampler=BootstrapSplit(3, random_state=21),
+            voting="hard",
+        )
+
+        ensemble.set_params(sampler__n_splits=6, voting="soft")
+
+        sampler = ensemble.sampler
+        self.assertIsInstance(sampler, BootstrapSplit)
+        if not isinstance(sampler, BootstrapSplit):
+            raise TypeError("Expected BootstrapSplit sampler")
+        self.assertEqual(sampler.n_splits, 6)
+        self.assertEqual(sampler.random_state, 21)
+        self.assertEqual(ensemble.voting, "soft")
+
+    def test_clone_classifier(self) -> None:
+        """Cloning keeps classifier params and voting with fresh nested objects.
+
+        Raises
+        ------
+        TypeError
+            If the type is not preserved by clone.
+
+        """
+        ensemble = HomogeneousEnsembleClassifier(
+            estimator=MockClassifier(alpha=4, gamma=8),
+            sampler=BootstrapSplit(5, random_state=17),
+            voting="soft",
+            n_jobs=3,
+            estimator__beta=6,
+        )
+        ensemble_clone = clone(ensemble)
+        if not isinstance(ensemble_clone, HomogeneousEnsembleClassifier):
+            raise TypeError("Expected an instance of HomogeneousEnsembleClassifier")
+        params = ensemble_clone.get_params(deep=True)
+
+        self.assertIsNot(ensemble_clone, ensemble)
+        self.assertIsNot(ensemble_clone.estimator, ensemble.estimator)
+        self.assertIsNot(ensemble_clone.sampler, ensemble.sampler)
+        self.assertEqual(params["estimator__alpha"], 4)
+        self.assertEqual(params["estimator__beta"], 6)
+        self.assertEqual(params["estimator__gamma"], 8)
+        self.assertEqual(params["sampler__n_splits"], 5)
+        self.assertEqual(params["sampler__random_state"], 17)
+        self.assertEqual(params["voting"], "soft")
+        self.assertEqual(ensemble_clone.n_jobs, 3)
 
     def test_fit_sample_forwarding(self) -> None:
         """Each classifier clone receives the full training set.
