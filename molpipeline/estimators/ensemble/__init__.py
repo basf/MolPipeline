@@ -1,8 +1,8 @@
 """Module for ensemble models."""
 
-from molpipeline.estimators.ensemble.split_ensemble import (
-    SplitEnsembleClassifier,
-    SplitEnsembleRegressor,
+from molpipeline.estimators.ensemble.homogeneous_ensemble import (
+    HomogeneousEnsembleClassifier,
+    HomogeneousEnsembleRegressor,
 )
 
-__all__ = ["SplitEnsembleClassifier", "SplitEnsembleRegressor"]
+__all__ = ["HomogeneousEnsembleClassifier", "HomogeneousEnsembleRegressor"]
