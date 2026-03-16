@@ -7,6 +7,7 @@ from typing import Any, Generic, Literal, Self, TypeVar, overload
 import joblib
 import numpy as np
 import numpy.typing as npt
+from scipy import sparse
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.metaestimators import available_if
@@ -161,7 +162,10 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         sampler = self.sampler
         if isinstance(sampler, int):
             sampler = BootstrapSplit(sampler, random_state=self.random_state)
-        yield from sampler.split(X, y, groups)
+        features = X if sparse.issparse(X) else np.asarray(X)
+        for train_idx, _ in sampler.split(X, y, groups):
+            y_iter = np.asarray(y)[train_idx] if y is not None else None
+            yield features[train_idx], y_iter
 
     @abc.abstractmethod
     def predict(

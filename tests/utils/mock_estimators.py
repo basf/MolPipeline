@@ -125,7 +125,9 @@ class MockClassifier(MockEstimator):
         proba = np.zeros((len(feature_arr), 2))
         equal_one = feature_arr[:, 0] == 1
         proba[equal_one, 0] = 0.3
+        proba[~equal_one, 0] = 0.7
         proba[equal_one, 1] = 0.7
+        proba[~equal_one, 1] = 0.3
         return proba
 
 

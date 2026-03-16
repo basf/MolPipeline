@@ -17,7 +17,9 @@ from molpipeline.error_handling import ErrorFilter, FilterReinserter
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import BondMessagePassing
 from molpipeline.estimators.chemprop.metric_wrapper import BCELoss
-from molpipeline.estimators.ensemble.split_ensemble import SplitEnsembleClassifier
+from molpipeline.estimators.ensemble.homogeneous_ensemble import (
+    HomogeneousEnsembleClassifier,
+)
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
@@ -481,16 +483,16 @@ class TestClassificationPipeline(unittest.TestCase):
             (len(self.molecule_net_bbbp_df["smiles"].tolist()), 2),
         )
 
-    def test_split_ensemble_classifier(self) -> None:
-        """Test if the pipeline can be used with a SplitEnsembleClassifier.
+    def test_homogeneous_ensemble_classifier(self) -> None:
+        """Test if the pipeline can be used with a HomogeneousEnsembleClassifier.
 
-        To ensure compatibility with SplitEnsemble classes which use joblib for
-        parallelization.
+        To ensure compatibility with HomogeneousEnsembleClassifier classes which use
+        joblib for parallelization.
 
         """
-        ensemble_pipeline = SplitEnsembleClassifier(
+        ensemble_pipeline = HomogeneousEnsembleClassifier(
             estimator=get_classification_pipeline(),
-            cv=2,
+            sampler=2,
         )
         ensemble_pipeline.fit(
             self.molecule_net_bbbp_df["smiles"].tolist(),
