@@ -8,13 +8,12 @@ import numpy.typing as npt
 from crepes import WrapRegressor
 from crepes.extras import DifficultyEstimator, MondrianCategorizer
 from sklearn.base import BaseEstimator, RegressorMixin, clone
-from sklearn.utils import check_random_state
 from typing_extensions import Self
 
 from molpipeline.experimental.model_selection.splitter import (
     PercentileStratifiedKFold,
 )
-from molpipeline.experimental.uncertainty.utils import (
+from molpipeline.experimental.uncertainty.conformal_base import (
     BaseConformalPredictor,
     NonconformityFunctor,
 )
@@ -143,29 +142,6 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
 
         self._crepes_wrapper.calibrate(x, y, **kwargs)
         return self
-
-    def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
-        """Predict using the conformal regressor.
-
-        Parameters
-        ----------
-        x: npt.NDArray[Any]
-            Features to predict.
-
-        Returns
-        -------
-        npt.NDArray[Any]
-            Predictions.
-
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
-        """
-        if self._crepes_wrapper is None:
-            raise ValueError("Must fit before predicting")
-        return self._crepes_wrapper.predict(x)
 
     def predict_int(
         self,
@@ -297,14 +273,16 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
             Additional keyword arguments.
 
         """
-        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
-        self.n_folds = n_folds
-        self.mondrian = mondrian
+        super().__init__(
+            estimator,
+            nonconformity=nonconformity,
+            n_folds=n_folds,
+            mondrian=mondrian,
+            random_state=random_state,
+            **kwargs,
+        )
         self.difficulty_estimator = difficulty_estimator
         self.binning_bins = binning_bins
-        self.random_state = check_random_state(random_state)
-        self.models_: list[ConformalRegressor] = []
-        self.cv_splits_: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]] = []
 
     def fit(  # pylint: disable=too-many-locals
         self,
@@ -407,31 +385,6 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
             model.calibrate(x_calib, y_calib, **calib_params)
 
         return self
-
-    def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
-        """Predict using aggregated models.
-
-        Parameters
-        ----------
-        x: npt.NDArray[Any]
-            Features to predict.
-
-        Returns
-        -------
-        npt.NDArray[Any]
-            Aggregated predictions.
-
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
-        """
-        if not self.models_:
-            raise ValueError("Must fit before predicting")
-
-        predictions = np.array([model.predict(x) for model in self.models_])
-        return np.mean(predictions, axis=0)
 
     def predict_int(
         self,

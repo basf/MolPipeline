@@ -10,17 +10,8 @@ All classes use composition with crepes and provide full sklearn compatibility.
 """
 
 # Import the four main conformal prediction classes
-from molpipeline.experimental.uncertainty.conformal_classifier import (
-    ConformalClassifier,
-    CrossConformalClassifier,
-)
-from molpipeline.experimental.uncertainty.conformal_regressor import (
-    ConformalRegressor,
-    CrossConformalRegressor,
-)
-
-# Import nonconformity functions from utils
-from molpipeline.experimental.uncertainty.utils import (
+# Import nonconformity functions from conformal_base
+from molpipeline.experimental.uncertainty.conformal_base import (
     HingeNonconformity,
     LogNonconformity,
     MarginNonconformity,
@@ -29,6 +20,14 @@ from molpipeline.experimental.uncertainty.utils import (
     _apply_antitonic_regressors,
     _fit_antitonic_regressors,
     create_nonconformity_function,
+)
+from molpipeline.experimental.uncertainty.conformal_classifier import (
+    ConformalClassifier,
+    CrossConformalClassifier,
+)
+from molpipeline.experimental.uncertainty.conformal_regressor import (
+    ConformalRegressor,
+    CrossConformalRegressor,
 )
 
 # Export all the important classes

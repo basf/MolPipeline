@@ -9,6 +9,7 @@ import numpy.typing as npt
 from crepes.extras import hinge, margin
 from sklearn.base import BaseEstimator
 from sklearn.isotonic import IsotonicRegression
+from sklearn.utils import check_random_state
 from typing_extensions import override
 
 
@@ -456,13 +457,20 @@ def _apply_antitonic_regressors(
     return calibrated_probs_unnorm / (prob_sum + epsilon)
 
 
-class BaseConformalPredictor(BaseEstimator, ABC):
+class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-instance-attributes
     """Base class for conformal predictors providing common functionality."""
+
+    models_: list[BaseEstimator]
+    cv_splits_: list[tuple[npt.NDArray[np.intp], npt.NDArray[np.intp]]]
 
     def __init__(
         self,
         estimator: BaseEstimator,
         nonconformity: str | NonconformityFunctor | None = None,
+        *,
+        n_folds: int | None = None,
+        mondrian: bool | None = None,
+        random_state: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize BaseConformalPredictor.
@@ -473,6 +481,12 @@ class BaseConformalPredictor(BaseEstimator, ABC):
             The base estimator to wrap.
         nonconformity : str | NonconformityFunctor | None, optional
             Nonconformity function to use.
+        n_folds : int | None, optional
+            Number of folds used for cross-conformal prediction.
+        mondrian : bool | None, optional
+            Whether to use Mondrian (class or group conditional) conformal prediction.
+        random_state : int | None, optional
+            Random seed used for generating cross-validation splits.
         **kwargs : Any
             Additional keyword arguments for configuration.
 
@@ -480,6 +494,13 @@ class BaseConformalPredictor(BaseEstimator, ABC):
         self.estimator = estimator
         self.nonconformity = nonconformity
         self.kwargs = kwargs
+        self.mondrian = bool(mondrian) if mondrian is not None else False
+
+        if n_folds is not None:
+            self.n_folds = n_folds
+            self.random_state = check_random_state(random_state)
+            self.models_ = []
+            self.cv_splits_ = []
 
     @property
     def nonconformity(self) -> str | NonconformityFunctor | None:
@@ -531,6 +552,36 @@ class BaseConformalPredictor(BaseEstimator, ABC):
                 fixed_state["nonconformity_func"] = None
             return super().__setstate__(fixed_state)
         return super().__setstate__(state)
+
+    def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
+        """Predict using wrapped or cross-conformal models.
+
+        Parameters
+        ----------
+        x: npt.NDArray[Any]
+            Features to predict.
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Predictions.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted.
+
+        """
+        wrapper = getattr(self, "_crepes_wrapper", None)
+        if wrapper is not None:
+            return wrapper.predict(x)
+
+        models = getattr(self, "models_", None)
+        if not models:
+            raise ValueError("Must fit before predicting")
+
+        predictions = np.array([model.predict(x) for model in models])
+        return np.mean(predictions, axis=0)
 
     @abstractmethod
     def evaluate(

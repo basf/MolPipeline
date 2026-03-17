@@ -1,18 +1,15 @@
 """Conformal prediction wrappers for classification using crepes."""
-# pylint: disable=duplicate-code
 
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import numpy.typing as npt
 from crepes import WrapClassifier
-from scipy.stats import mode
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import StratifiedKFold
-from sklearn.utils import check_random_state
 from typing_extensions import Self
 
-from molpipeline.experimental.uncertainty.utils import (
+from molpipeline.experimental.uncertainty.conformal_base import (
     BaseConformalPredictor,
     NonconformityFunctor,
     _apply_antitonic_regressors,
@@ -170,29 +167,6 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             self._fit_isotonic_regressors(x)
 
         return self
-
-    def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
-        """Predict using the conformal classifier.
-
-        Parameters
-        ----------
-        x: npt.NDArray[Any]
-            Features to predict.
-
-        Returns
-        -------
-        npt.NDArray[Any]
-            Predictions.
-
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
-        """
-        if self._crepes_wrapper is None:
-            raise ValueError("Must fit before predicting")
-        return self._crepes_wrapper.predict(x)
 
     def predict_proba(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Predict probabilities using the conformal classifier.
@@ -438,13 +412,15 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Additional keyword arguments.
 
         """
-        super().__init__(estimator, nonconformity=nonconformity, **kwargs)
-        self.n_folds = n_folds
-        self.mondrian = mondrian
+        super().__init__(
+            estimator,
+            nonconformity=nonconformity,
+            n_folds=n_folds,
+            mondrian=mondrian,
+            random_state=random_state,
+            **kwargs,
+        )
         self.calibrate_probs = calibrate_probs
-        self.random_state = check_random_state(random_state)
-        self.models_: list[ConformalClassifier] = []
-        self.cv_splits_: list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]] = []
         self.n_classes_: int | None = None
 
     def fit(
@@ -553,31 +529,6 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             )
 
         return self
-
-    def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
-        """Predict using aggregated models.
-
-        Parameters
-        ----------
-        x: npt.NDArray[Any]
-            Features to predict.
-
-        Returns
-        -------
-        npt.NDArray[Any]
-            Aggregated predictions.
-
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted.
-
-        """
-        if not self.models_:
-            raise ValueError("Must fit before predicting")
-
-        predictions = np.array([model.predict(x) for model in self.models_])
-        return mode(predictions, axis=0, keepdims=False)[0]
 
     def predict_proba(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Predict probabilities using aggregated models.
