@@ -248,8 +248,6 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
 class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixin):  # pylint: disable=too-many-ancestors
     """Ensemble regressor that averages the predictions of the individual estimators."""
 
-    estimators_: list[_ModelVar]
-
     @overload
     def predict(
         self,
