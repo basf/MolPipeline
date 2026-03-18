@@ -15,18 +15,38 @@ from molpipeline.utils.molpipeline_types import XType, YType
 class BootstrapSplit(BaseCrossValidator):  # pylint: disable=abstract-method
     """Splitter where the training set is a bootstrap sample."""
 
-    def __init__(self, n_splits: int, random_state: int | None = None) -> None:
+    def __init__(
+        self,
+        n_splits: int,
+        max_samples: float | None = None,
+        random_state: int | None = None,
+    ) -> None:
         """Initialize the bootstrap split.
 
         Parameters
         ----------
         n_splits : int
             Number of splits to create.
+        max_samples: int | float | None, optional
+            The number of samples to draw for each split.
+            If int, then max_samples defines the exact number of samples to draw.
+            If float, then max_samples defines the proportion of samples to draw.
+            If None, all samples are drawn.
         random_state : int | None, optional
             Random state to use.
 
+        Raises
+        ------
+        ValueError
+            If max_samples is a float and not in the range (0.0, 1.0].
+
         """
         self.n_splits = n_splits
+        if isinstance(max_samples, float) and not (0.0 < max_samples <= 1.0):
+            raise ValueError(
+                "If max_samples is a float, it must be in the range (0.0, 1.0].",
+            )
+        self.max_samples = max_samples
         self.random_state = random_state
 
     @override
@@ -55,6 +75,10 @@ class BootstrapSplit(BaseCrossValidator):  # pylint: disable=abstract-method
 
         """
         n_samples = X.shape[0] if sparse.issparse(X) else len(np.asarray(X))
+        if isinstance(self.max_samples, int):
+            n_samples = min(self.max_samples, n_samples)
+        elif isinstance(self.max_samples, float):
+            n_samples = int(n_samples * self.max_samples)
         rng = np.random.default_rng(self.random_state)
         for _ in range(self.n_splits):
             train_indices = rng.choice(n_samples, size=n_samples, replace=True)

@@ -12,6 +12,19 @@ from molpipeline.experimental.model_selection.splitter.bootstrap_splitter import
 class TestBootstrapSplit(unittest.TestCase):
     """Tests for BootstrapSplit."""
 
+    def test_invalid_max_samples(self) -> None:
+        """Verify that max_samples cannot be set with invalid value."""
+        forbidden_values = [-0.5, 0.0, 1.5]
+        for value in forbidden_values:
+            with (
+                self.subTest(max_samples=value),
+                self.assertRaisesRegex(
+                    ValueError,
+                    r"If max_samples is a float, it must be in the range \(0.0, 1.0].",
+                ),
+            ):
+                BootstrapSplit(n_splits=3, max_samples=1.5)
+
     def test_get_n_splits(self) -> None:
         """Verify get_n_splits returns the configured number of splits."""
         splitter = BootstrapSplit(n_splits=4, random_state=0)
@@ -68,6 +81,27 @@ class TestBootstrapSplit(unittest.TestCase):
         splitter = BootstrapSplit(n_splits=n_splits, random_state=None)
         splits = list(splitter.split(np.ones(30)))
         self.assertEqual(len(splits), n_splits)
+
+    def test_split_with_integer_max_samples(self) -> None:
+        """Verify integer max_samples controls sampled population and draw size."""
+        max_samples = 7
+        splitter = BootstrapSplit(n_splits=3, max_samples=max_samples, random_state=17)
+
+        for train_indices, _test_indices in splitter.split(X=np.arange(20)):
+            self.assertEqual(train_indices.shape[0], max_samples)
+
+        sample_size = 5
+        for train_indices, _test_indices in splitter.split(X=np.arange(sample_size)):
+            self.assertEqual(train_indices.shape[0], sample_size)
+
+    def test_split_with_float_max_samples(self) -> None:
+        """Verify float max_samples uses the corresponding fraction of samples."""
+        x = np.arange(25)
+        max_samples = 0.4
+        expected_n_samples = int(len(x) * max_samples)
+        splitter = BootstrapSplit(n_splits=4, max_samples=max_samples, random_state=9)
+        for train_indices, _test_indices in splitter.split(X=x):
+            self.assertEqual(train_indices.shape[0], expected_n_samples)
 
 
 if __name__ == "__main__":
