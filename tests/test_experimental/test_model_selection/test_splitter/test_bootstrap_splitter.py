@@ -14,8 +14,8 @@ class TestBootstrapSplit(unittest.TestCase):
 
     def test_invalid_max_samples(self) -> None:
         """Verify that max_samples cannot be set with invalid value."""
-        forbidden_values = [-0.5, 0.0, 1.5]
-        for value in forbidden_values:
+        invalid_values = [-0.5, 0.0, 1.5]
+        for value in invalid_values:
             with (
                 self.subTest(max_samples=value),
                 self.assertRaisesRegex(
