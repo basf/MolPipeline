@@ -1,4 +1,4 @@
-"""The no test set splitter returns only the training set indices.
+"""The DataRepetitionSplit returns only the training set indices.
 
 This is not meant to be used for model validation but for ensembling purposes.
 
