@@ -39,7 +39,7 @@ class DataRepetitionSplit(BaseCrossValidator):  # pylint: disable=abstract-metho
         y: npt.ArrayLike | None = None,
         groups: npt.ArrayLike | None = None,
     ) -> Generator[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]], Any, None]:
-        """Get the bootstrap split.
+        """Get the data repetition split.
 
         Parameters
         ----------

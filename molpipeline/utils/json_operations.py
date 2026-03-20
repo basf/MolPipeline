@@ -468,6 +468,8 @@ def get_init_params(
     validation : Literal["raise", "warn", "skip", "return_none"], default="raise"
         The validation strategy applied when required parameters are missing from the
         object's state or when a reconstructed object does not hash-equal the original.
+        ``"skip"`` bypasses the reconstruction check entirely and returns whatever
+        parameters could be extracted.
 
     Returns
     -------
@@ -482,6 +484,11 @@ def get_init_params(
         If ``validation="raise"`` and required parameters are missing from the object's
         state, or the object reconstructed from those parameters does not hash-equal the
         original.
+
+    Notes
+    -----
+    The reconstruction check compares ``joblib.hash(obj)`` with
+    ``joblib.hash(reconstructed_obj)``.
 
     """
     init_params = dict(inspect.signature(obj.__init__).parameters)
