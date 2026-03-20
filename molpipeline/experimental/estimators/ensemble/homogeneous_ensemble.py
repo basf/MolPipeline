@@ -87,8 +87,8 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         self.random_state = random_state
         self.estimators_ = []
         self.n_jobs = n_jobs
-        self.set_params(**kwargs)
         super().__init__()
+        self.set_params(**kwargs)
 
     @staticmethod
     def _fit_clone(
