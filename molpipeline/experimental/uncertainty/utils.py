@@ -15,10 +15,10 @@ from molpipeline.experimental.uncertainty.conformal_base import (
 )
 
 __all__ = [
-    "NonconformityFunctor",
     "HingeNonconformity",
-    "MarginNonconformity",
     "LogNonconformity",
+    "MarginNonconformity",
+    "NonconformityFunctor",
     "SVMMarginNonconformity",
     "create_nonconformity_function",
 ]

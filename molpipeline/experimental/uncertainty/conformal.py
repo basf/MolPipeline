@@ -22,9 +22,9 @@ from molpipeline.experimental.uncertainty.conformal_regressor import (
 __all__ = [
     "BaseConformalPredictor",
     "ConformalClassifier",
-    "CrossConformalClassifier",
     "ConformalRegressor",
+    "CrossConformalClassifier",
     "CrossConformalRegressor",
-    "_fit_antitonic_regressors",
     "_apply_antitonic_regressors",
+    "_fit_antitonic_regressors",
 ]
