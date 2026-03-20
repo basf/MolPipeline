@@ -9,25 +9,22 @@ This module provides a unified interface for conformal prediction with 4 main cl
 All classes use composition with crepes and provide full sklearn compatibility.
 """
 
-# Import the four main conformal prediction classes
-# Import nonconformity functions from conformal_base
-from molpipeline.experimental.uncertainty.conformal_base import (
+# Import the four main conformal prediction classes via the legacy module path.
+from molpipeline.experimental.uncertainty.conformal import (
+    ConformalClassifier,
+    ConformalRegressor,
+    CrossConformalClassifier,
+    CrossConformalRegressor,
+)
+
+# Import nonconformity functions via the legacy utils module path.
+from molpipeline.experimental.uncertainty.utils import (
     HingeNonconformity,
     LogNonconformity,
     MarginNonconformity,
     NonconformityFunctor,
     SVMMarginNonconformity,
-    _apply_antitonic_regressors,
-    _fit_antitonic_regressors,
     create_nonconformity_function,
-)
-from molpipeline.experimental.uncertainty.conformal_classifier import (
-    ConformalClassifier,
-    CrossConformalClassifier,
-)
-from molpipeline.experimental.uncertainty.conformal_regressor import (
-    ConformalRegressor,
-    CrossConformalRegressor,
 )
 
 # Export all the important classes
@@ -41,7 +38,5 @@ __all__ = [
     "MarginNonconformity",
     "NonconformityFunctor",
     "SVMMarginNonconformity",
-    "_apply_antitonic_regressors",
-    "_fit_antitonic_regressors",
     "create_nonconformity_function",
 ]
