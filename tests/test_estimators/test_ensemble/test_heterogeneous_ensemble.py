@@ -2,6 +2,7 @@
 
 import unittest
 
+import joblib
 import numpy as np
 from scipy.sparse import csr_matrix
 from sklearn.base import clone
@@ -17,6 +18,7 @@ from molpipeline.experimental.model_selection.splitter import (
     BootstrapSplit,
     DataRepetitionSplit,
 )
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 from tests.utils.mock_estimators import (
     MockClassifier,
     MockEstimator,
@@ -130,6 +132,17 @@ class TestHomogeneousEnsembleRegressor(unittest.TestCase):
         self.assertEqual(params["sampler__n_splits"], 3)
         self.assertEqual(params["sampler__random_state"], 13)
         self.assertEqual(ensemble_clone.n_jobs, 2)
+
+    def test_serialization_roundtrip(self) -> None:
+        """Test the serialization with recursive_to_json and recursive_from_json."""
+        ensemble = HomogeneousEnsembleRegressor(
+            estimator=MockEstimator(alpha=1, beta=2, gamma=3),
+            sampler=BootstrapSplit(3, random_state=13),
+            n_jobs=2,
+            estimator__beta=2,
+        )
+        reconstructed_ensemble = recursive_from_json(recursive_to_json(ensemble))
+        self.assertEqual(joblib.hash(ensemble), joblib.hash(reconstructed_ensemble))
 
     def test_fit_sample_forwarding(self) -> None:
         """Each clone receives the full feature matrix and target vector.
