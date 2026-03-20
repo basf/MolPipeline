@@ -463,7 +463,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-in
     models_: list[BaseEstimator]
     cv_splits_: list[tuple[npt.NDArray[np.intp], npt.NDArray[np.intp]]]
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         estimator: BaseEstimator,
         nonconformity: str | NonconformityFunctor | None = None,

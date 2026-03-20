@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import StratifiedKFold
 from typing_extensions import Self
 
-from molpipeline.experimental.uncertainty.conformal_base import (
+from molpipeline.experimental.uncertainty.conformal.conformal_base import (
     BaseConformalPredictor,
     NonconformityFunctor,
     _apply_antitonic_regressors,
@@ -379,7 +379,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
     and aggregates their predictions.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         estimator: BaseEstimator,
         *,

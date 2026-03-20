@@ -1,11 +1,11 @@
-"""Backward-compatible utilities module for conformal prediction.
+"""Nonconformity utilities for conformal prediction.
 
-This module preserves the legacy import path
-`molpipeline.experimental.uncertainty.utils` by re-exporting nonconformity
-utilities from `conformal_base`.
+Re-exports nonconformity functors from the conformal subpackage for
+convenient access at the uncertainty package level.
 """
 
-from molpipeline.experimental.uncertainty.conformal_base import (
+# pylint: disable=unused-import
+from molpipeline.experimental.uncertainty.conformal.conformal_base import (  # noqa: F401
     HingeNonconformity,
     LogNonconformity,
     MarginNonconformity,
@@ -13,12 +13,3 @@ from molpipeline.experimental.uncertainty.conformal_base import (
     SVMMarginNonconformity,
     create_nonconformity_function,
 )
-
-__all__ = [
-    "HingeNonconformity",
-    "LogNonconformity",
-    "MarginNonconformity",
-    "NonconformityFunctor",
-    "SVMMarginNonconformity",
-    "create_nonconformity_function",
-]

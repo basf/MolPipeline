@@ -13,7 +13,7 @@ from typing_extensions import Self
 from molpipeline.experimental.model_selection.splitter import (
     PercentileStratifiedKFold,
 )
-from molpipeline.experimental.uncertainty.conformal_base import (
+from molpipeline.experimental.uncertainty.conformal.conformal_base import (
     BaseConformalPredictor,
     NonconformityFunctor,
 )
@@ -25,7 +25,7 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
     This class uses composition with crepes to provide full sklearn compatibility.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         estimator: BaseEstimator,
         *,
@@ -239,7 +239,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
     and aggregates their predictions.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         estimator: BaseEstimator,
         *,
