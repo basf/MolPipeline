@@ -9,7 +9,7 @@ from sklearn.datasets import make_classification
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import ParameterGrid
 
-from molpipeline.estimators.ensemble.homogeneous_ensemble import (
+from molpipeline.experimental.estimators.ensemble.homogeneous_ensemble import (
     HomogeneousEnsembleClassifier,
     HomogeneousEnsembleRegressor,
 )

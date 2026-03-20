@@ -1,6 +1,6 @@
 """Module for ensemble models."""
 
-from molpipeline.estimators.ensemble.homogeneous_ensemble import (
+from molpipeline.experimental.estimators.ensemble.homogeneous_ensemble import (
     HomogeneousEnsembleClassifier,
     HomogeneousEnsembleRegressor,
 )

@@ -17,7 +17,7 @@ from molpipeline.error_handling import ErrorFilter, FilterReinserter
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import BondMessagePassing
 from molpipeline.estimators.chemprop.metric_wrapper import BCELoss
-from molpipeline.estimators.ensemble.homogeneous_ensemble import (
+from molpipeline.experimental.estimators.ensemble.homogeneous_ensemble import (
     HomogeneousEnsembleClassifier,
 )
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
