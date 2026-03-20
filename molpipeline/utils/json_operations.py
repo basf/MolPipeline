@@ -484,16 +484,16 @@ def get_init_params(
         original.
 
     """
+    init_params = dict(inspect.signature(obj.__init__).parameters)
+    init_params = {k: v for k, v in init_params.items() if k != "self"}
+    allowed_params = init_params.keys()
+    required_params = [
+        key for key, param in init_params.items() if param.default is param.empty
+    ]
     if hasattr(obj, "get_params"):
         obj_params = obj.get_params(deep=False)
     else:
         state_dict = obj.__getstate__() or {}
-        init_params = dict(inspect.signature(obj.__init__).parameters)
-        init_params = {k: v for k, v in init_params.items() if k != "self"}
-        allowed_params = init_params.keys()
-        required_params = [
-            key for key, param in init_params.items() if param.default is param.empty
-        ]
         obj_params = {k: v for k, v in state_dict.items() if k in allowed_params}
 
     if validation == "skip":
