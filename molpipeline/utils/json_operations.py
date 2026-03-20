@@ -468,8 +468,12 @@ def get_init_params(
     validation : Literal["raise", "warn", "skip", "return_none"], default="raise"
         The validation strategy applied when required parameters are missing from the
         object's state or when a reconstructed object does not hash-equal the original.
+        ``"raise"`` raises an error when the validation failed. See Raises section.
+        ``"warn"`` warns when the validation failed.
         ``"skip"`` bypasses the reconstruction check entirely and returns whatever
         parameters could be extracted.
+        ``"return_none"`` returns ``None`` when the validation failed, instead of
+        raising an error.
 
     Returns
     -------
