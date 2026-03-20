@@ -379,18 +379,16 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
         )
 
     def _can_predict_proba(self) -> bool:
-        """Check if all estimators in the ensemble support probability prediction.
+        """Check if the base-estimators in the ensemble support probability prediction.
 
         Returns
         -------
         bool
-            True if all estimators in the ensemble support probability prediction
+            True if the base-estimator in the ensemble supports probability prediction.
             False otherwise.
 
         """
-        return all(
-            hasattr(estimator, "predict_proba") for estimator in self.estimators_
-        )
+        return hasattr(self.estimator, "predict_proba")
 
     @available_if(_can_predict_proba)
     def predict_proba(
