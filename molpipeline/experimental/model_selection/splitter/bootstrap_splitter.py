@@ -42,7 +42,7 @@ class BootstrapSplit(BaseCrossValidator):  # pylint: disable=abstract-method
 
         """
         self.n_splits = n_splits
-        if isinstance(max_samples, float) and not (0.0 < max_samples <= 1.0):
+        if isinstance(max_samples, float) and not 0.0 < max_samples <= 1.0:
             raise ValueError(
                 "If max_samples is a float, it must be in the range (0.0, 1.0].",
             )
