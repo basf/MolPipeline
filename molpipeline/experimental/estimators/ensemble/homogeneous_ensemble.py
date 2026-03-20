@@ -279,7 +279,7 @@ class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixi
     def predict(
         self,
         X: XType,  # noqa: N803,  # pylint: disable=invalid-name
-        return_std: Literal[True] = True,
+        return_std: Literal[True],
         **params: Any,
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 
