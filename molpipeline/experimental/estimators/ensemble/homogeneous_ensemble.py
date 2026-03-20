@@ -367,9 +367,6 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
             If voting is not "hard" or "soft".
 
         """
-        if voting not in {"hard", "soft"}:
-            raise ValueError("voting must be either 'hard' or 'soft'")
-        self.voting = voting
         super().__init__(
             estimator=estimator,
             sampler=sampler,
@@ -377,6 +374,9 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
             n_jobs=n_jobs,
             **kwargs,
         )
+        if voting not in {"hard", "soft"}:
+            raise ValueError("voting must be either 'hard' or 'soft'")
+        self.voting = voting
 
     def _can_predict_proba(self) -> bool:
         """Check if the base-estimators in the ensemble support probability prediction.
@@ -459,7 +459,7 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
         )
         if not np.issubdtype(predictions.dtype, np.integer):
             converted_predictions = predictions.astype(int)
-            if not np.allclose(converted_predictions, predictions):
+            if not np.array_equal(converted_predictions, predictions, equal_nan=True):
                 raise ValueError(
                     "Predictions are not integer values, cannot perform hard voting.",
                 )
