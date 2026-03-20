@@ -35,7 +35,7 @@ __all__ = [
     "XVar",
     "YVar",
 ]
-# One liner type definitions
+# One-liner type definitions
 
 AnyNumpyElement = TypeVar("AnyNumpyElement", bound=np.generic)
 
@@ -45,12 +45,17 @@ TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_N
 AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 
 SparseMatrix = csc_matrix[Any] | coo_matrix[Any] | csr_matrix[Any]
-XType = npt.ArrayLike | npt.NDArray[Any] | spmatrix
-YType = npt.ArrayLike | npt.NDArray[Any] | None
+XType = npt.ArrayLike | npt.NDArray[Any] | spmatrix  # Generic model input features
+YType = npt.ArrayLike | npt.NDArray[Any] | None  # Generic model target values
+# XVar is for the case the input has the same type bis is modified in other ways
+# e.g. row removal or value manipulations. Defines parameter AND return type!
 XVar = TypeVar("XVar", bound=npt.ArrayLike | npt.NDArray[Any] | spmatrix)
+# Same as XVar but for target values.
 YVar = TypeVar("YVar", bound=npt.ArrayLike | npt.NDArray[Any] | None)
 
+# FloatCountRange needs renaming to FloatRange
 FloatCountRange: TypeAlias = tuple[float | None, float | None]
+# IntCountRange needs renaming to IntRange
 IntCountRange: TypeAlias = tuple[int | None, int | None]
 
 # IntOrIntCountRange for Typing of count ranges
