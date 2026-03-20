@@ -65,7 +65,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         n_jobs: int = 1,
         **kwargs: Any,
     ) -> None:
-        """Initialize the SplitEnsemble.
+        """Initialize the HomogeneousEnsemble.
 
         Parameters
         ----------
@@ -197,7 +197,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         Returns
         -------
         self
-            The fitted SplitEnsemble instance.
+            The fitted HomogeneousEnsemble instance.
 
         """
         fit_clone_parallel = joblib.delayed(self._fit_clone)
@@ -343,7 +343,7 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
         n_jobs: int = 1,
         **kwargs: Any,
     ) -> None:
-        """Initialize the SplitEnsembleClassifier.
+        """Initialize the HomogeneousEnsembleClassifier.
 
         Parameters
         ----------
