@@ -23,7 +23,7 @@ from molpipeline.utils.molpipeline_types import (
 )
 
 _T = TypeVar("_T", BaseEstimator, AnyPredictor)
-
+# Not identical to _T, as a bit more flexible, which is required for inheritance.
 _ModelVar = TypeVar("_ModelVar", bound=BaseEstimator | AnyPredictor)
 
 
