@@ -9,7 +9,7 @@ from molpipeline.experimental.model_selection.splitter.data_repetition_splitter 
 )
 
 
-class DataRepetitionSplitSplitter(unittest.TestCase):
+class TestDataRepetitionSplit(unittest.TestCase):
     """Tests for DataRepetitionSplit."""
 
     def test_get_n_splits_returns_configured_value(self) -> None:
