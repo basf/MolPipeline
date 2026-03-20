@@ -76,12 +76,14 @@ class BootstrapSplit(BaseCrossValidator):  # pylint: disable=abstract-method
         """
         n_samples = X.shape[0] if sparse.issparse(X) else len(np.asarray(X))
         if isinstance(self.max_samples, int):
-            n_samples = min(self.max_samples, n_samples)
+            n_draw = min(self.max_samples, n_samples)
         elif isinstance(self.max_samples, float):
-            n_samples = int(n_samples * self.max_samples)
+            n_draw = int(n_samples * self.max_samples)
+        else:
+            n_draw = n_samples
         rng = np.random.default_rng(self.random_state)
         for _ in range(self.n_splits):
-            train_indices = rng.choice(n_samples, size=n_samples, replace=True)
+            train_indices = rng.choice(n_samples, size=n_draw, replace=True)
             test_indices = np.setdiff1d(np.arange(n_samples), train_indices)
             yield train_indices, test_indices
 
