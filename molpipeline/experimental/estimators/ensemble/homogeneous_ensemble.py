@@ -17,6 +17,7 @@ from molpipeline.experimental.model_selection.splitter.bootstrap_splitter import
 )
 from molpipeline.utils.json_operations import get_init_params
 from molpipeline.utils.molpipeline_types import (
+    AnyNumpyElement,
     AnyPredictor,
     XType,
     YType,
@@ -25,6 +26,24 @@ from molpipeline.utils.molpipeline_types import (
 _T = TypeVar("_T", BaseEstimator, AnyPredictor)
 # Not identical to _T, as a bit more flexible, which is required for inheritance.
 _ModelVar = TypeVar("_ModelVar", bound=BaseEstimator | AnyPredictor)
+
+
+def _most_frequent(a: npt.NDArray[AnyNumpyElement]) -> AnyNumpyElement:
+    """Get the most frequent values in an array.
+
+    Parameters
+    ----------
+    a: npt.NDArray[AnyNumpyElement]
+        The array to get the most frequent values.
+
+    Returns
+    -------
+    AnyNumpyElement
+        The most frequent value.
+
+    """
+    labels, counts = np.unique(a, return_counts=True)
+    return labels[np.argmax(counts)]
 
 
 class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
@@ -342,8 +361,14 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
         kwargs : Any
             Additional keyword arguments to be passed to the base estimator.
 
+        Raises
+        ------
+        ValueError
+            If voting is not "hard" or "soft".
 
         """
+        if voting not in {"hard", "soft"}:
+            raise ValueError("voting must be either 'hard' or 'soft'")
         self.voting = voting
         super().__init__(
             estimator=estimator,
@@ -442,8 +467,4 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
                 )
             predictions = converted_predictions
 
-        return np.apply_along_axis(
-            lambda x: np.bincount(x).argmax(),
-            axis=0,
-            arr=predictions,
-        )
+        return np.apply_along_axis(_most_frequent, axis=0, arr=predictions)
