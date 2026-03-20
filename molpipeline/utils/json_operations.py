@@ -466,31 +466,35 @@ def get_init_params(
     obj : Any
         The object to get the parameters for.
     validation : Literal["raise", "warn", "skip", "return_none"], default="raise"
-        The validation strategy.
+        The validation strategy applied when required parameters are missing from the
+        object's state or when a reconstructed object does not hash-equal the original.
 
     Returns
     -------
     dict[str, Any] | None
-        The parameters for initialization of the object, or None if the validation
-        strategy is "return_none" and the object cannot be initialized with the
-        extracted parameters.
+        The extracted initialization parameters, or ``None`` when ``validation`` is
+        ``"return_none"`` and required parameters are missing from the object's state
+        or the hash-equality reconstruction check fails.
 
     Raises
     ------
     ValueError
-
+        If ``validation="raise"`` and required parameters are missing from the object's
+        state, or the object reconstructed from those parameters does not hash-equal the
+        original.
 
     """
     if hasattr(obj, "get_params"):
-        return obj.get_params(deep=False)
-    state_dict = obj.__getstate__()
-    init_params = dict(inspect.signature(obj.__init__).parameters)
-    init_params = {k: v for k, v in init_params.items() if k != "self"}
-    allowed_params = init_params.keys()
-    required_params = [
-        key for key, param in init_params.items() if param.default is param.empty
-    ]
-    obj_params = {k: v for k, v in state_dict.items() if k in allowed_params}
+        obj_params = obj.get_params(deep=False)
+    else:
+        state_dict = obj.__getstate__() or {}
+        init_params = dict(inspect.signature(obj.__init__).parameters)
+        init_params = {k: v for k, v in init_params.items() if k != "self"}
+        allowed_params = init_params.keys()
+        required_params = [
+            key for key, param in init_params.items() if param.default is param.empty
+        ]
+        obj_params = {k: v for k, v in state_dict.items() if k in allowed_params}
 
     if validation == "skip":
         return obj_params
