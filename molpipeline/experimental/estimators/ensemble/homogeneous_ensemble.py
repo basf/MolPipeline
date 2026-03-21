@@ -10,6 +10,7 @@ import numpy.typing as npt
 from scipy import sparse
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.utils import ClassifierTags, RegressorTags, Tags
 from sklearn.utils.metaestimators import available_if
 
 from molpipeline.experimental.model_selection.splitter.bootstrap_splitter import (
@@ -267,6 +268,20 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
 class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixin):  # pylint: disable=too-many-ancestors
     """Ensemble regressor that averages the predictions of the individual estimators."""
 
+    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
+        """Return the sklearn tags for the regressor.
+
+        Returns
+        -------
+        Tags
+            The sklearn tags identifying this as a regressor.
+
+        """
+        tags = super().__sklearn_tags__()
+        tags.estimator_type = "regressor"
+        tags.regressor_tags = RegressorTags()
+        return tags
+
     @overload
     def predict(
         self,
@@ -334,6 +349,20 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
 
     voting: Literal["hard", "soft"]
 
+    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
+        """Return the sklearn tags for the classifier.
+
+        Returns
+        -------
+        Tags
+            The sklearn tags identifying this as a classifier.
+
+        """
+        tags = super().__sklearn_tags__()
+        tags.estimator_type = "classifier"
+        tags.classifier_tags = ClassifierTags()
+        return tags
+
     def __init__(
         self,
         estimator: _ModelVar,
@@ -367,6 +396,9 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
             If voting is not "hard" or "soft".
 
         """
+        if voting not in {"hard", "soft"}:
+            raise ValueError("voting must be either 'hard' or 'soft'")
+        self.voting = voting
         super().__init__(
             estimator=estimator,
             sampler=sampler,
@@ -374,9 +406,39 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
             n_jobs=n_jobs,
             **kwargs,
         )
-        if voting not in {"hard", "soft"}:
-            raise ValueError("voting must be either 'hard' or 'soft'")
-        self.voting = voting
+
+    def fit(
+        self,
+        X: XType,  # noqa: N803
+        y: YType = None,
+        groups: YType = None,
+        **kwargs: Any,
+    ) -> Self:
+        """Fit the ensemble of classifiers on the data.
+
+        Parameters
+        ----------
+        X :  npt.NDArray | scipy.sparse.csr_matrix
+            The input data.
+        y :  npt.NDArray | None, optional
+            The target values.
+        groups: npt.ArrayLike | None, optional
+            Group labels for the samples used while splitting the dataset into
+            train/test.
+        kwargs : Any
+            Additional keyword arguments to be passed to the fit method of the base
+            estimator.
+
+        Returns
+        -------
+        Self
+            The fitted HomogeneousEnsembleClassifier instance.
+
+        """
+        super().fit(X, y, groups, **kwargs)
+        if y is not None:
+            self.classes_ = np.unique(np.asarray(y))
+        return self
 
     def _can_predict_proba(self) -> bool:
         """Check if the base-estimators in the ensemble support probability prediction.
