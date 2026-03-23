@@ -309,9 +309,17 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         CrossConformalRegressor
             Self.
 
+        Raises
+        ------
+        ValueError
+            If n_folds is None.
+
         """
         self.models_ = []
         self.cv_splits_ = []
+
+        if self.n_folds is None:
+            raise ValueError("n_folds must be set before fitting.")
 
         y_array = np.asarray(y)
         splitter = PercentileStratifiedKFold(

@@ -493,7 +493,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-in
         self.kwargs = kwargs
         self.mondrian = bool(mondrian) if mondrian is not None else False
         self.n_folds = n_folds
-        check_random_state(random_state)  #for sklearn clone() compatibility
+        check_random_state(random_state)  # for sklearn clone() compatibility
         self.random_state = random_state
         self.models_: list[BaseEstimator] = []
         self.cv_splits_: list[tuple[npt.NDArray[np.intp], npt.NDArray[np.intp]]] = []

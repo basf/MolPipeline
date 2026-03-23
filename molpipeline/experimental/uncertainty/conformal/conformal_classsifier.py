@@ -448,10 +448,18 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         CrossConformalClassifier
             Self.
 
+        Raises
+        ------
+        ValueError
+            If n_folds is None.
+
         """
         self.models_ = []
         self.cv_splits_ = []
         self.n_classes_ = len(np.unique(y))
+
+        if self.n_folds is None:
+            raise ValueError("n_folds must be set before fitting.")
 
         splitter = StratifiedKFold(
             n_splits=self.n_folds,
