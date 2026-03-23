@@ -268,7 +268,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
 
-    def test_confidence_level_effect_classification(self) -> None:  # noqa: PLR0914
+    def test_confidence_level_effect_classification(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test effect of confidence level on prediction sets in ConformalClassifier."""
         x_train, x_calib, x_test, y_train, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
@@ -328,7 +328,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
 
-    def test_nonconformity_functions(self) -> None:
+    def test_nonconformity_functions(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test different nonconformity functions in ConformalClassifier."""
         data_splits = self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         x_train, x_calib, x_test, y_train, y_calib, y_test = data_splits
@@ -396,7 +396,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertTrue(np.all(np.isfinite(scores_small)))
         self.assertTrue(np.all(scores_small >= -np.log(1.0)))
 
-    def test_log_nonconformity_class(self) -> None:
+    def test_log_nonconformity_class(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test LogNonconformity functor class."""
         x_train, x_calib, x_test, y_train, y_calib, _y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
@@ -434,7 +434,7 @@ class TestConformalClassifier(BaseConformalTestData):
         sets = cp.predict_set(x_test)
         self.assertEqual(len(sets), len(probs_test))
 
-    def test_svm_margin_binary_classification(self) -> None:  # noqa: PLR0914
+    def test_svm_margin_binary_classification(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test SVMMarginNonconformity with binary SVM classification."""
         x_train, x_calib, x_test, y_train, y_calib, _y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
@@ -587,7 +587,7 @@ class TestConformalClassifier(BaseConformalTestData):
 
         self.assertLessEqual(size_80, size_95)
 
-    def test_pipeline_wrapped_by_conformal_classifier(self) -> None:  # noqa: PLR0914
+    def test_pipeline_wrapped_by_conformal_classifier(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test a MolPipeline wrapped by ConformalClassifier."""
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE, return_as="dense")

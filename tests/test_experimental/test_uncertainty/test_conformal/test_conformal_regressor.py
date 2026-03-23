@@ -73,7 +73,7 @@ class TestConformalRegressor(BaseConformalTestData):
         intervals = cp_reg.predict_int(x_test_reg)
         self.assertEqual(intervals.shape, (len(y_test_reg), 2))
 
-    def test_cross_conformal_regressor(self) -> None:  # noqa: PLR0914
+    def test_cross_conformal_regressor(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test CrossConformalRegressor with stratified folds for regression."""
         splitter = PercentileStratifiedKFold(
             n_splits=2,
@@ -106,7 +106,7 @@ class TestConformalRegressor(BaseConformalTestData):
         self.assertEqual(intervals.shape[0], len(y_test))
         self.assertEqual(intervals.shape[1], 2)
 
-    def test_cross_conformal_confidence_effect_regression(self) -> None:  # noqa: PLR0914
+    def test_cross_conformal_confidence_effect_regression(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test confidence level effect in cross-conformal regression."""
         splitter = PercentileStratifiedKFold(
             n_splits=2,
@@ -137,7 +137,7 @@ class TestConformalRegressor(BaseConformalTestData):
         width_95 = float(np.mean(intervals_95[:, 1] - intervals_95[:, 0]))
         self.assertLess(width_80, width_95)
 
-    def test_pipeline_wrapped_by_cross_conformal_regressor(self) -> None:  # noqa: PLR0914
+    def test_pipeline_wrapped_by_cross_conformal_regressor(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test a MolPipeline wrapped by CrossConformalRegressor."""
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=FP_RADIUS, n_bits=FP_SIZE, return_as="dense")
@@ -188,7 +188,7 @@ class TestConformalRegressor(BaseConformalTestData):
         self.assertEqual(intervals.shape[0], len(y_test))
         self.assertEqual(intervals.shape[1], 2)
 
-    def test_joblib_serialization_cross_conformal(self) -> None:  # noqa: PLR0914
+    def test_joblib_serialization_cross_conformal(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test joblib serialization of CrossConformalRegressor."""
         x_train, x_test, y_train, _y_test = train_test_split(
             self.x_reg,
@@ -252,7 +252,7 @@ class TestConformalRegressor(BaseConformalTestData):
         self.assertGreaterEqual(results["ks_test"], 0.0)
         self.assertLessEqual(results["ks_test"], 1.0)
 
-    def test_evaluate_methods_cross_conformal_regressor(self) -> None:  # noqa: PLR0914
+    def test_evaluate_methods_cross_conformal_regressor(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
         """Test evaluate methods for cross-conformal predictors (regression)."""
         splitter = PercentileStratifiedKFold(
             n_splits=2,
