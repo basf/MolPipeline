@@ -460,9 +460,6 @@ def _apply_antitonic_regressors(
 class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-instance-attributes
     """Base class for conformal predictors providing common functionality."""
 
-    models_: list[BaseEstimator]
-    cv_splits_: list[tuple[npt.NDArray[np.intp], npt.NDArray[np.intp]]]
-
     def __init__(  # pylint: disable=too-many-arguments
         self,
         estimator: BaseEstimator,
@@ -495,12 +492,11 @@ class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-in
         self.nonconformity = nonconformity
         self.kwargs = kwargs
         self.mondrian = bool(mondrian) if mondrian is not None else False
-
-        if n_folds is not None:
-            self.n_folds = n_folds
-            self.random_state = check_random_state(random_state)
-            self.models_ = []
-            self.cv_splits_ = []
+        self.n_folds = n_folds
+        check_random_state(random_state)  #for sklearn clone() compatibility
+        self.random_state = random_state
+        self.models_: list[BaseEstimator] = []
+        self.cv_splits_: list[tuple[npt.NDArray[np.intp], npt.NDArray[np.intp]]] = []
 
     @property
     def nonconformity(self) -> str | NonconformityFunctor | None:
@@ -525,33 +521,6 @@ class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-in
 
         """
         self.nonconformity_func = create_nonconformity_function(value)
-
-    def __setstate__(self, state: dict[str, Any]) -> None:
-        """Handle unpickling with backward compatibility.
-
-        Parameters
-        ----------
-        state : dict[str, Any]
-            The object's state dictionary.
-
-        """
-        if "nonconformity_func" not in state:
-            warnings.warn(
-                "Loading a model with the old 'nonconformity' attribute format. "
-                "This backward compatibility will be removed in version 0.13.0. "
-                "Please re-save your models with the current version.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            fixed_state = dict(state)  # Shallow Copy
-            if "nonconformity" in state:
-                fixed_state["nonconformity_func"] = create_nonconformity_function(
-                    fixed_state.pop("nonconformity"),
-                )
-            else:
-                fixed_state["nonconformity_func"] = None
-            return super().__setstate__(fixed_state)
-        return super().__setstate__(state)
 
     def predict(self, x: npt.NDArray[Any]) -> npt.NDArray[Any]:
         """Predict using wrapped or cross-conformal models.
