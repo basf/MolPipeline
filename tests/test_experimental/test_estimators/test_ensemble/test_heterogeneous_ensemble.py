@@ -256,38 +256,6 @@ class TestHomogeneousEnsembleRegressor(unittest.TestCase):
         grid.fit(features, y)
         self.assertFalse(np.isnan(grid.best_score_))
 
-    def test_classifier_grid_search_multimetric(self) -> None:
-        """Multimetric GridSearchCV works (roc_auc requires predict_proba + tags)."""
-        features, y = make_classification(
-            n_samples=50,
-            n_features=5,
-            random_state=42,
-        )
-        clf = HomogeneousEnsembleClassifier(
-            estimator=LogisticRegression(solver="liblinear"),
-            sampler=BootstrapSplit(3, random_state=42),
-        )
-        scoring = {
-            "ba": "balanced_accuracy",
-            "roc_auc": "roc_auc",
-        }
-        grid = GridSearchCV(
-            clf,
-            param_grid={"voting": ["hard", "soft"]},
-            scoring=scoring,
-            refit="ba",
-            cv=3,
-        )
-        grid.fit(features, y)
-        self.assertIn("mean_test_ba", grid.cv_results_)
-        self.assertIn("mean_test_roc_auc", grid.cv_results_)
-        self.assertFalse(
-            np.any(np.isnan(grid.cv_results_["mean_test_ba"])),
-        )
-        self.assertFalse(
-            np.any(np.isnan(grid.cv_results_["mean_test_roc_auc"])),
-        )
-
 
 class TestHomogeneousEnsembleClassifier(unittest.TestCase):
     """Unit tests for wrapped regressors."""
@@ -557,6 +525,38 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
         )
         grid.fit(features, y)
         self.assertFalse(np.isnan(grid.best_score_))
+
+    def test_classifier_grid_search_multimetric(self) -> None:
+        """Multimetric GridSearchCV works (roc_auc requires predict_proba + tags)."""
+        features, y = make_classification(
+            n_samples=50,
+            n_features=5,
+            random_state=42,
+        )
+        clf = HomogeneousEnsembleClassifier(
+            estimator=LogisticRegression(solver="liblinear"),
+            sampler=BootstrapSplit(3, random_state=42),
+        )
+        scoring = {
+            "ba": "balanced_accuracy",
+            "roc_auc": "roc_auc",
+        }
+        grid = GridSearchCV(
+            clf,
+            param_grid={"voting": ["hard", "soft"]},
+            scoring=scoring,
+            refit="ba",
+            cv=3,
+        )
+        grid.fit(features, y)
+        self.assertIn("mean_test_ba", grid.cv_results_)
+        self.assertIn("mean_test_roc_auc", grid.cv_results_)
+        self.assertFalse(
+            np.any(np.isnan(grid.cv_results_["mean_test_ba"])),
+        )
+        self.assertFalse(
+            np.any(np.isnan(grid.cv_results_["mean_test_roc_auc"])),
+        )
 
 
 if __name__ == "__main__":
