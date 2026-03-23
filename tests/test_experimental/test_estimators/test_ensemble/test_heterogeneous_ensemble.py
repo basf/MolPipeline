@@ -37,6 +37,13 @@ class TestHomogeneousEnsembleRegressor(unittest.TestCase):
             "sampler": sampler_list,
         }
 
+    def test_regressor_has_regressor_estimator_type(self) -> None:
+        """HomogeneousEnsembleRegressor is tagged as a regressor by sklearn."""
+        reg = HomogeneousEnsembleRegressor(estimator=MockEstimator())
+        tags = get_tags(reg)
+        self.assertEqual(tags.estimator_type, "regressor")
+        self.assertIsNotNone(tags.regressor_tags)
+
     def test_param_forwarding(self) -> None:
         """Parameters are forwarded to the wrapped estimator.
 
@@ -229,6 +236,58 @@ class TestHomogeneousEnsembleRegressor(unittest.TestCase):
 
             self.assertTrue(np.allclose(preds_dense, preds_sparse))
 
+    def test_regressor_grid_search(self) -> None:
+        """GridSearchCV works for the regressor with r2 scoring."""
+        features, y = make_regression(
+            n_samples=50,
+            n_features=5,
+            random_state=42,
+        )
+        reg = HomogeneousEnsembleRegressor(
+            estimator=LinearRegression(),
+            sampler=BootstrapSplit(3, random_state=42),
+        )
+        grid = GridSearchCV(
+            reg,
+            param_grid={"sampler__n_splits": [2, 3]},
+            scoring="r2",
+            cv=3,
+        )
+        grid.fit(features, y)
+        self.assertFalse(np.isnan(grid.best_score_))
+
+    def test_classifier_grid_search_multimetric(self) -> None:
+        """Multimetric GridSearchCV works (roc_auc requires predict_proba + tags)."""
+        features, y = make_classification(
+            n_samples=50,
+            n_features=5,
+            random_state=42,
+        )
+        clf = HomogeneousEnsembleClassifier(
+            estimator=LogisticRegression(solver="liblinear"),
+            sampler=BootstrapSplit(3, random_state=42),
+        )
+        scoring = {
+            "ba": "balanced_accuracy",
+            "roc_auc": "roc_auc",
+        }
+        grid = GridSearchCV(
+            clf,
+            param_grid={"voting": ["hard", "soft"]},
+            scoring=scoring,
+            refit="ba",
+            cv=3,
+        )
+        grid.fit(features, y)
+        self.assertIn("mean_test_ba", grid.cv_results_)
+        self.assertIn("mean_test_roc_auc", grid.cv_results_)
+        self.assertFalse(
+            np.any(np.isnan(grid.cv_results_["mean_test_ba"])),
+        )
+        self.assertFalse(
+            np.any(np.isnan(grid.cv_results_["mean_test_roc_auc"])),
+        )
+
 
 class TestHomogeneousEnsembleClassifier(unittest.TestCase):
     """Unit tests for wrapped regressors."""
@@ -239,6 +298,13 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
             "sampler": sampler_list,
             "voting": ["hard", "soft"],
         }
+
+    def test_classifier_has_classifier_estimator_type(self) -> None:
+        """HomogeneousEnsembleClassifier is tagged as a classifier by sklearn."""
+        clf = HomogeneousEnsembleClassifier(estimator=MockClassifier())
+        tags = get_tags(clf)
+        self.assertEqual(tags.estimator_type, "classifier")
+        self.assertIsNotNone(tags.classifier_tags)
 
     def test_param_forwarding(self) -> None:
         """Parameters are forwarded to the wrapped estimator.
@@ -452,28 +518,6 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
         self.assertTrue(hasattr(clf, "classes_"))
         self.assertTrue(np.array_equal(clf.classes_, np.array([0, 1])))
 
-
-class TestHomogeneousEnsembleSklearnTags(unittest.TestCase):
-    """Tests that sklearn correctly identifies ensemble estimator types via tags."""
-
-    def test_classifier_has_classifier_estimator_type(self) -> None:
-        """HomogeneousEnsembleClassifier is tagged as a classifier by sklearn."""
-        clf = HomogeneousEnsembleClassifier(estimator=MockClassifier())
-        tags = get_tags(clf)
-        self.assertEqual(tags.estimator_type, "classifier")
-        self.assertIsNotNone(tags.classifier_tags)
-
-    def test_regressor_has_regressor_estimator_type(self) -> None:
-        """HomogeneousEnsembleRegressor is tagged as a regressor by sklearn."""
-        reg = HomogeneousEnsembleRegressor(estimator=MockEstimator())
-        tags = get_tags(reg)
-        self.assertEqual(tags.estimator_type, "regressor")
-        self.assertIsNotNone(tags.regressor_tags)
-
-
-class TestHomogeneousEnsembleGridSearchCV(unittest.TestCase):
-    """Tests that HomogeneousEnsemble estimators work with GridSearchCV."""
-
     def test_classifier_grid_search_with_roc_auc(self) -> None:
         """GridSearchCV with roc_auc scoring works (requires predict_proba + tags)."""
         features, y = make_classification(
@@ -513,58 +557,6 @@ class TestHomogeneousEnsembleGridSearchCV(unittest.TestCase):
         )
         grid.fit(features, y)
         self.assertFalse(np.isnan(grid.best_score_))
-
-    def test_regressor_grid_search(self) -> None:
-        """GridSearchCV works for the regressor with r2 scoring."""
-        features, y = make_regression(
-            n_samples=50,
-            n_features=5,
-            random_state=42,
-        )
-        reg = HomogeneousEnsembleRegressor(
-            estimator=LinearRegression(),
-            sampler=BootstrapSplit(3, random_state=42),
-        )
-        grid = GridSearchCV(
-            reg,
-            param_grid={"sampler__n_splits": [2, 3]},
-            scoring="r2",
-            cv=3,
-        )
-        grid.fit(features, y)
-        self.assertFalse(np.isnan(grid.best_score_))
-
-    def test_classifier_grid_search_multimetric(self) -> None:
-        """Multimetric GridSearchCV works (roc_auc requires predict_proba + tags)."""
-        features, y = make_classification(
-            n_samples=50,
-            n_features=5,
-            random_state=42,
-        )
-        clf = HomogeneousEnsembleClassifier(
-            estimator=LogisticRegression(solver="liblinear"),
-            sampler=BootstrapSplit(3, random_state=42),
-        )
-        scoring = {
-            "ba": "balanced_accuracy",
-            "roc_auc": "roc_auc",
-        }
-        grid = GridSearchCV(
-            clf,
-            param_grid={"voting": ["hard", "soft"]},
-            scoring=scoring,
-            refit="ba",
-            cv=3,
-        )
-        grid.fit(features, y)
-        self.assertIn("mean_test_ba", grid.cv_results_)
-        self.assertIn("mean_test_roc_auc", grid.cv_results_)
-        self.assertFalse(
-            np.any(np.isnan(grid.cv_results_["mean_test_ba"])),
-        )
-        self.assertFalse(
-            np.any(np.isnan(grid.cv_results_["mean_test_roc_auc"])),
-        )
 
 
 if __name__ == "__main__":
