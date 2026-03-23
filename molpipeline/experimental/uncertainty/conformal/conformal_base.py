@@ -322,6 +322,8 @@ class SVMMarginNonconformity(NonconformityFunctor):
 
 
 # Registry for built-in nonconformity functions
+_MIN_RECOMMENDED_CONFIDENCE: float = 0.5
+
 NONCONFORMITY_REGISTRY = {
     "hinge": HingeNonconformity,
     "margin": MarginNonconformity,
@@ -609,7 +611,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-in
                 f"got {confidence_level}",
             )
 
-        if confidence_level < 0.5:
+        if confidence_level < _MIN_RECOMMENDED_CONFIDENCE:
             warnings.warn(
                 f"Confidence level {confidence_level} is less than 0.5 (50%). "
                 "This represents weak confidence and may produce unreliable prediction "

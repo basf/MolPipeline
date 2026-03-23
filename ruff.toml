@@ -50,6 +50,7 @@ ignore = [
     "D203", # 1 blank line required before class docstring
     "D213", # blank-line-before-class-docstring
     "PLR0913", # too-many-arguments
+    "PLR0914", # too-many-locals
     "PGH003",  # Blanket type ignore for types
     "PLW2901", # Redefined loop variable
     "S311",  #  suspicious-non-cryptographic-random-usage
@@ -61,7 +62,7 @@ ignore = [
      "F704",
      "T201"
  ]
- "test_*" = [
+ "**/test_*" = [
      "S101",
      "S404",
      "S603",

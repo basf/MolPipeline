@@ -124,7 +124,8 @@ ignore = [
      "F704",
      "T201"
  ]
- "test_*" = [
+ "**/test_*" = [
+     "PLR0914",  # too-many-locals in test methods
      "S101",
      "S404",
      "S603",

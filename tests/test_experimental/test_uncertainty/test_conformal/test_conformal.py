@@ -17,8 +17,8 @@ from molpipeline.experimental.uncertainty import (
     CrossConformalClassifier,
     LogNonconformity,
     SVMMarginNonconformity,
-    _apply_antitonic_regressors,
-    _fit_antitonic_regressors,
+    _apply_antitonic_regressors,  # noqa: PLC2701
+    _fit_antitonic_regressors,  # noqa: PLC2701
     create_nonconformity_function,
 )
 from molpipeline.mol2any import MolToMorganFP
@@ -718,7 +718,7 @@ class TestConformalClassifier(BaseConformalTestData):
 
         self.assertGreater(avg_prob_high_class0, avg_prob_low_class0)
 
-    def test_cross_conformal_classifier_antitonic(self) -> None:  # pylint: disable=too-many-locals  # noqa: PLR0914
+    def test_cross_conformal_classifier_antitonic(self) -> None:  # pylint: disable=too-many-locals
         """Test basic functionality of antitonic calibration for CCC."""
         x_train_fit, x_calib, x_test, y_train_fit, y_calib, y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)
