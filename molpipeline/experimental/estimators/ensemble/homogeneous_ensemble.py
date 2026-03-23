@@ -11,6 +11,7 @@ from scipy import sparse
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.metaestimators import available_if
+from typing_extensions import override
 
 from molpipeline.experimental.model_selection.splitter.bootstrap_splitter import (
     BootstrapSplit,
@@ -264,7 +265,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         """
 
 
-class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixin):  # pylint: disable=too-many-ancestors
+class HomogeneousEnsembleRegressor(RegressorMixin, HomogeneousEnsemble[_ModelVar]):  # pylint: disable=too-many-ancestors
     """Ensemble regressor that averages the predictions of the individual estimators."""
 
     @overload
@@ -279,7 +280,7 @@ class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixi
     def predict(
         self,
         X: XType,  # noqa: N803,  # pylint: disable=invalid-name
-        return_std: Literal[True],
+        return_std: Literal[True] = ...,
         **params: Any,
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 
@@ -294,9 +295,10 @@ class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixi
         | tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
     ): ...
 
+    @override
     def predict(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,
         return_std: bool = False,
         **params: Any,
     ) -> (
@@ -329,7 +331,7 @@ class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixi
         return np.mean(predictions, axis=0)
 
 
-class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMixin):  # pylint: disable=too-many-ancestors
+class HomogeneousEnsembleClassifier(ClassifierMixin, HomogeneousEnsemble[_ModelVar]):  # pylint: disable=too-many-ancestors
     """Ensemble classifier that supports both hard and soft voting."""
 
     voting: Literal["hard", "soft"]
@@ -367,6 +369,9 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
             If voting is not "hard" or "soft".
 
         """
+        if voting not in {"hard", "soft"}:
+            raise ValueError("voting must be either 'hard' or 'soft'")
+        self.voting = voting
         super().__init__(
             estimator=estimator,
             sampler=sampler,
@@ -374,9 +379,41 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
             n_jobs=n_jobs,
             **kwargs,
         )
-        if voting not in {"hard", "soft"}:
-            raise ValueError("voting must be either 'hard' or 'soft'")
-        self.voting = voting
+        self.classes_: npt.NDArray[Any] = np.array([])
+
+    @override
+    def fit(
+        self,
+        X: XType,
+        y: YType = None,
+        groups: YType = None,
+        **kwargs: Any,
+    ) -> Self:
+        """Fit the ensemble of classifiers on the data.
+
+        Parameters
+        ----------
+        X :  npt.NDArray | scipy.sparse.csr_matrix
+            The input data.
+        y :  npt.NDArray | None, optional
+            The target values.
+        groups: npt.ArrayLike | None, optional
+            Group labels for the samples used while splitting the dataset into
+            train/test.
+        kwargs : Any
+            Additional keyword arguments to be passed to the fit method of the base
+            estimator.
+
+        Returns
+        -------
+        Self
+            The fitted HomogeneousEnsembleClassifier instance.
+
+        """
+        super().fit(X, y, groups, **kwargs)
+        if y is not None:
+            self.classes_ = np.unique(np.asarray(y))
+        return self
 
     def _can_predict_proba(self) -> bool:
         """Check if the base-estimators in the ensemble support probability prediction.
@@ -417,9 +454,10 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
         )
         return np.mean(predictions, axis=0)
 
+    @override
     def predict(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.
