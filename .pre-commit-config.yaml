@@ -24,7 +24,7 @@ repos:
         stages: [commit-msg]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.2
+    rev: v0.15.4
     hooks:
       - id: ruff-format
         types_or: [python, pyi, jupyter]
@@ -45,18 +45,18 @@ repos:
           - json
 
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.398
+    rev: v1.1.408
     hooks:
       - id: pyright
         args: [-p, pyproject.toml]
         verbose: true
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.3.0
     hooks:
       - id: flake8
         additional_dependencies:
-          - docsig==0.69.3
+          - docsig==0.79.0
         args:
           - --extend-ignore=D203,E203,E501,F401,W5
           - "--sig-check-class-constructor"
