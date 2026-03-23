@@ -295,9 +295,10 @@ class HomogeneousEnsembleRegressor(RegressorMixin, HomogeneousEnsemble[_ModelVar
         | tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
     ): ...
 
+    @override
     def predict(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,
         return_std: bool = False,
         **params: Any,
     ) -> (
@@ -453,9 +454,10 @@ class HomogeneousEnsembleClassifier(ClassifierMixin, HomogeneousEnsemble[_ModelV
         )
         return np.mean(predictions, axis=0)
 
+    @override
     def predict(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.
