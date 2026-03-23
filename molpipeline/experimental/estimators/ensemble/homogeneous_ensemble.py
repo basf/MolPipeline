@@ -10,8 +10,8 @@ import numpy.typing as npt
 from scipy import sparse
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils import ClassifierTags, RegressorTags, Tags
 from sklearn.utils.metaestimators import available_if
+from typing_extensions import override
 
 from molpipeline.experimental.model_selection.splitter.bootstrap_splitter import (
     BootstrapSplit,
@@ -265,22 +265,8 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         """
 
 
-class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixin):  # pylint: disable=too-many-ancestors
+class HomogeneousEnsembleRegressor(RegressorMixin, HomogeneousEnsemble[_ModelVar]):  # pylint: disable=too-many-ancestors
     """Ensemble regressor that averages the predictions of the individual estimators."""
-
-    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
-        """Return the sklearn tags for the regressor.
-
-        Returns
-        -------
-        Tags
-            The sklearn tags identifying this as a regressor.
-
-        """
-        tags = super().__sklearn_tags__()
-        tags.estimator_type = "regressor"
-        tags.regressor_tags = RegressorTags()
-        return tags
 
     @overload
     def predict(
@@ -344,24 +330,10 @@ class HomogeneousEnsembleRegressor(HomogeneousEnsemble[_ModelVar], RegressorMixi
         return np.mean(predictions, axis=0)
 
 
-class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMixin):  # pylint: disable=too-many-ancestors
+class HomogeneousEnsembleClassifier(ClassifierMixin, HomogeneousEnsemble[_ModelVar]):  # pylint: disable=too-many-ancestors
     """Ensemble classifier that supports both hard and soft voting."""
 
     voting: Literal["hard", "soft"]
-
-    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
-        """Return the sklearn tags for the classifier.
-
-        Returns
-        -------
-        Tags
-            The sklearn tags identifying this as a classifier.
-
-        """
-        tags = super().__sklearn_tags__()
-        tags.estimator_type = "classifier"
-        tags.classifier_tags = ClassifierTags()
-        return tags
 
     def __init__(
         self,
@@ -406,10 +378,12 @@ class HomogeneousEnsembleClassifier(HomogeneousEnsemble[_ModelVar], ClassifierMi
             n_jobs=n_jobs,
             **kwargs,
         )
+        self.classes_: npt.NDArray[Any] = np.array([])
 
+    @override
     def fit(
         self,
-        X: XType,  # noqa: N803
+        X: XType,
         y: YType = None,
         groups: YType = None,
         **kwargs: Any,
