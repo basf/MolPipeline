@@ -1,7 +1,5 @@
 """Test connected component clustering algorithm."""
 
-from __future__ import annotations
-
 import unittest
 from typing import Any
 
@@ -38,7 +36,7 @@ class TestConnectedComponentClusteringAlgorithm(unittest.TestCase):
                 [0, 1, 1],  # 13
                 [0, 0, 1],  # 14
                 [1, 1, 1],  # 15
-            ]
+            ],
         )
 
         eps: float = 1e-10
@@ -105,7 +103,8 @@ class TestConnectedComponentClusteringAlgorithm(unittest.TestCase):
             self.assertEqual(fingerprint_matrix.shape[0], len(expected_clustering))
 
             nof_cc, cc_labels = connected_components_iterative_algorithm(
-                fingerprint_matrix, threshold
+                fingerprint_matrix,
+                threshold,
             )
 
             exp_nof_clusters = np.unique(expected_clustering).shape[0]
@@ -114,41 +113,52 @@ class TestConnectedComponentClusteringAlgorithm(unittest.TestCase):
             self.assertTrue(np.equal(cc_labels, expected_clustering).all())
 
     def test_connected_components_iterative_chunking(self) -> None:
-        """Test the chunking of the iterative connected component clustering algorithm."""
-        # test standard case: two samples with a similarity of >=0.5 group into the same cluster
+        """Test the chunking of the iterative connected component clustering."""
+        # test standard case:
+        # two samples with a similarity of >=0.5 group into the same cluster
 
         fingerprint_matrix = csr_matrix([[1, 0, 1], [0, 1, 0], [1, 0, 1]])
 
         nof_cc, cc_labels = connected_components_iterative_algorithm(
-            fingerprint_matrix, 0.5, 2
+            fingerprint_matrix,
+            0.5,
+            2,
         )
         self.assertEqual(nof_cc, 2)
         self.assertTrue(np.equal(cc_labels, [0, 1, 0]).all())
 
-        # test equals case: two samples with a similarity of 1 group into the same cluster
+        # test equals case: two samples with a sim of 1 group into the same cluster
         nof_cc, cc_labels = connected_components_iterative_algorithm(
-            fingerprint_matrix, 1.0, 2
+            fingerprint_matrix,
+            1.0,
+            2,
         )
         self.assertEqual(nof_cc, 2)
         self.assertTrue(np.equal(cc_labels, [0, 1, 0]).all())
 
         # test chunk size 1
         nof_cc, cc_labels = connected_components_iterative_algorithm(
-            fingerprint_matrix, 0.5, 1
+            fingerprint_matrix,
+            0.5,
+            1,
         )
         self.assertEqual(nof_cc, 2)
         self.assertTrue(np.equal(cc_labels, [0, 1, 0]).all())
 
         # test chunk size 3
         nof_cc, cc_labels = connected_components_iterative_algorithm(
-            fingerprint_matrix, 0.5, 3
+            fingerprint_matrix,
+            0.5,
+            3,
         )
         self.assertEqual(nof_cc, 2)
         self.assertTrue(np.equal(cc_labels, [0, 1, 0]).all())
 
         # test chunk size 4
         nof_cc, cc_labels = connected_components_iterative_algorithm(
-            fingerprint_matrix, 0.5, 4
+            fingerprint_matrix,
+            0.5,
+            4,
         )
         self.assertEqual(nof_cc, 2)
         self.assertTrue(np.equal(cc_labels, [0, 1, 0]).all())
@@ -246,7 +256,10 @@ class TestConnectedComponentClusteringAlgorithm(unittest.TestCase):
         # test memory cutoff larger than matrix: chunk size contains all rows
         self.assertEqual(
             calc_chunk_size_from_memory_requirement(
-                matrix.shape[0], matrix.shape[1], matrix.dtype.itemsize, 0.5
+                matrix.shape[0],
+                matrix.shape[1],
+                matrix.dtype.itemsize,
+                0.5,
             ),  # 500mb
             3,
         )

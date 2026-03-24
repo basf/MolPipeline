@@ -1,7 +1,5 @@
 """Unit tests for Gaussian process kernels using the Tanimoto similarity."""
 
-from __future__ import annotations
-
 import abc
 import unittest
 
@@ -29,7 +27,7 @@ class GPKernelTestMixin(abc.ABC):
     smiles_list: list[str]
     label: list[int]
 
-    def setUp(self) -> None:  # pylint: disable=invalid-name
+    def setUp(self) -> None:
         """Create small integer fingerprint matrices."""
         self.feature_matrix_a = np.array(
             [

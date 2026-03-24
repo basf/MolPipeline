@@ -1,7 +1,5 @@
 """Classes to transform given input to a RDKit molecule."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from molpipeline.abstract_pipeline_elements.core import (
@@ -46,6 +44,7 @@ class AutoToMol(AnyToMolPipelineElement):
             - InchiToMol
             - BinaryToMol
             - SDFToMol
+
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
         # pipeline elements for transforming the input to a molecule
@@ -70,6 +69,7 @@ class AutoToMol(AnyToMolPipelineElement):
         -------
         OptionalMol
             Rdkit molecule if the input can be transformed, else None.
+
         """
         if value is None:
             return InvalidInstance(
@@ -81,7 +81,7 @@ class AutoToMol(AnyToMolPipelineElement):
         if isinstance(value, RDKitMol):
             return value
 
-        # sequentially try to transform the input to a molecule using predefined elements
+        # transform input sequentially using the elements
         for element in self.elements:
             mol = element.pretransform_single(value)
             if not isinstance(mol, InvalidInstance):

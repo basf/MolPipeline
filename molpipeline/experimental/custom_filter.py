@@ -1,8 +1,7 @@
 """Module for custom filter functionality."""
 
-from __future__ import annotations
-
-from typing import Any, Callable, Self
+from collections.abc import Callable
+from typing import Any, Self
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -14,7 +13,10 @@ from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
 
 
 class CustomFilter(_MolToMolPipelineElement):
-    """Filters molecules based on a custom boolean function. Elements not passing the filter will be set to InvalidInstances."""
+    """Filters molecules based on a custom boolean function.
+
+    Elements not passing the filter will be set to InvalidInstances.
+    """
 
     def __init__(
         self,
@@ -76,6 +78,7 @@ class CustomFilter(_MolToMolPipelineElement):
         -------
         dict[str, Any]
             Parameters of CustomFilter.
+
         """
         params = super().get_params(deep=deep)
         if deep:
@@ -96,6 +99,7 @@ class CustomFilter(_MolToMolPipelineElement):
         -------
         Self
             Self.
+
         """
         parameter_copy = dict(parameters)
         if "func" in parameter_copy:

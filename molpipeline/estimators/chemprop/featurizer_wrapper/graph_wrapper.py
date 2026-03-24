@@ -16,7 +16,7 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
 
     def get_params(
         self,
-        deep: bool = True,  # pylint: disable=unused-argument
+        deep: bool = True,  # noqa: ARG002
     ) -> dict[str, InitVar[int]]:
         """Get parameters for the featurizer.
 
@@ -29,10 +29,11 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         -------
         dict[str, int]
             Parameters of the featurizer.
+
         """
         return {}
 
-    def set_params(self, **parameters: Any) -> Self:  # pylint: disable=unused-argument
+    def set_params(self, **parameters: Any) -> Self:  # noqa: ARG002
         """Set the parameters of the featurizer.
 
         Parameters
@@ -44,5 +45,6 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         -------
         Self
             This featurizer with the parameters set.
+
         """
         return self

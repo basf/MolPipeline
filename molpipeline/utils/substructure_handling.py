@@ -3,7 +3,7 @@
 This is only relevant for explainable AI, where atoms need to be mapped to features.
 """
 
-from __future__ import annotations
+from typing import Self
 
 from rdkit import Chem
 
@@ -12,13 +12,14 @@ from rdkit import Chem
 class AtomEnvironment:
     """A Class to store environment-information for fingerprint features."""
 
-    def __init__(self, environment_atoms: set[int]):
+    def __init__(self, environment_atoms: set[int]) -> None:
         """Initialize AtomEnvironment.
 
         Parameters
         ----------
         environment_atoms: set[int]
             Indices of atoms encoded by environment.
+
         """
         self.environment_atoms = environment_atoms  # set of all atoms within radius
 
@@ -27,7 +28,12 @@ class AtomEnvironment:
 class CircularAtomEnvironment(AtomEnvironment):
     """A Class to store environment-information for morgan-fingerprint features."""
 
-    def __init__(self, central_atom: int, radius: int, environment_atoms: set[int]):
+    def __init__(
+        self,
+        central_atom: int,
+        radius: int,
+        environment_atoms: set[int],
+    ) -> None:
         """Initialize CircularAtomEnvironment.
 
         Parameters
@@ -38,15 +44,14 @@ class CircularAtomEnvironment(AtomEnvironment):
             Radius of feature.
         environment_atoms: set[int]
             All indices of atoms within radius of central atom.
+
         """
         super().__init__(environment_atoms)
         self.central_atom = central_atom
         self.radius = radius
 
     @classmethod
-    def from_mol(
-        cls, mol: Chem.Mol, central_atom_index: int, radius: int
-    ) -> CircularAtomEnvironment:
+    def from_mol(cls, mol: Chem.Mol, central_atom_index: int, radius: int) -> Self:
         """Generate class from mol, using location (central_atom_index) and the radius.
 
         Parameters
@@ -60,16 +65,15 @@ class CircularAtomEnvironment(AtomEnvironment):
 
         Returns
         -------
-        CircularAtomEnvironment
-            Encoded the atoms which are within the radius of the central atom and are part of the feature.
+        Self
+            Encoded the atoms which are within the radius of the central atom.
+
         """
         if radius == 0:
-            return CircularAtomEnvironment(
-                central_atom_index, radius, {central_atom_index}
-            )
+            return cls(central_atom_index, radius, {central_atom_index})
 
         env = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, central_atom_index)
         amap: dict[int, int] = {}
         _ = Chem.PathToSubmol(mol, env, atomMap=amap)
         env_atoms = amap.keys()
-        return CircularAtomEnvironment(central_atom_index, radius, set(env_atoms))
+        return cls(central_atom_index, radius, set(env_atoms))

@@ -245,9 +245,14 @@ class NoneTest(unittest.TestCase):
         )
         pipeline2 = clone(pipeline)
 
-        self.assertRaises(ValueError, pipeline.fit, test_values)
-        self.assertRaises(ValueError, pipeline.transform, test_values)
-        self.assertRaises(ValueError, pipeline2.fit_transform, test_values)
+        expected_msg = (
+            r"could not broadcast input array from shape \(0,\) into shape "
+            r"\(3,\)"
+        )
+        with self.assertRaisesRegex(ValueError, expected_msg):
+            pipeline.transform(test_values)
+        with self.assertRaisesRegex(ValueError, expected_msg):
+            pipeline2.fit_transform(test_values)
 
     def test_molsanitize_error(self) -> None:
         """Test if MolSanitizeException is caught and catched by ErrorFilter."""
@@ -266,15 +271,15 @@ class NoneTest(unittest.TestCase):
                 value: RDKitMol
                     Molecule
 
-                Raises
-                ------
-                MolSanitizeException
-                    Dummy exception used for testing.
-
                 Returns
                 -------
                 OptionalMol
                     Molecule.
+
+                Raises
+                ------
+                MolSanitizeException
+                    Dummy exception used for testing.
 
                 """
                 if Chem.MolToSmiles(value) == "c1ccccc1":

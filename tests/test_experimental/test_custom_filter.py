@@ -32,8 +32,9 @@ class TestCustomFilter(unittest.TestCase):
                 ("auto_to_mol", AutoToMol()),
                 ("custom_filter", CustomFilter(lambda x: x.GetNumAtoms() == 2)),
                 ("mol_to_bool", MolToBool()),
-            ]
+            ],
         )
         self.assertEqual(
-            pipeline.transform(self.smiles_list), [True, False, False, True]
+            pipeline.transform(self.smiles_list),
+            [True, False, False, True],
         )

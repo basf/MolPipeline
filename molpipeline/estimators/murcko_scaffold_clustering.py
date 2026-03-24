@@ -1,7 +1,5 @@
 """Murcko scaffold clustering estimator."""
 
-from __future__ import annotations
-
 from numbers import Integral
 from typing import Any, Literal, Self
 
@@ -10,6 +8,7 @@ import numpy.typing as npt
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from sklearn.utils.validation import validate_data
+from typing_extensions import override
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import AutoToMol
@@ -39,7 +38,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         make_generic: bool = False,
         n_jobs: int = 1,
         linear_molecules_strategy: Literal["ignore", "own_cluster"] = "ignore",
-    ):
+    ) -> None:
         """Initialize Murcko scaffold clustering estimator.
 
         Parameters
@@ -63,15 +62,15 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     def _generate_pipeline(self) -> Pipeline:
         """Generate the pipeline for the Murcko scaffold clustering estimator.
 
-        Raises
-        ------
-        ValueError
-            If linear_molecules_strategy is not "ignore" or "own_cluster".
-
         Returns
         -------
         Pipeline
             Pipeline for the Murcko scaffold clustering estimator.
+
+        Raises
+        ------
+        ValueError
+            If linear_molecules_strategy is not "ignore" or "own_cluster".
 
         """
         auto2mol = AutoToMol()
@@ -104,7 +103,8 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
 
         elif self.linear_molecules_strategy == "own_cluster":
             # Create error filter for all errors except empty_mol_filter2
-            # This is needed to give linear molecules (empty scaffold) a valid cluster label
+            # This is needed to give linear molecules (empty scaffold) a valid cluster
+            # label
             filter_ele_list = [auto2mol, empty_mol_filter1, murcko_scaffold]
             if scaffold_generic_elem is not None:
                 filter_ele_list.append(scaffold_generic_elem)
@@ -140,19 +140,17 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             ],
         )
 
-        cluster_pipeline = Pipeline(
+        return Pipeline(
             pipeline_step_list,
             n_jobs=self.n_jobs,
         )
-        return cluster_pipeline
 
-    # pylint: disable=C0103,W0613
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
-        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],
-        y: npt.NDArray[np.float64] | None = None,
-        **params: Any,
+        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],  # noqa: N803
+        y: npt.NDArray[np.float64] | None = None,  # noqa: ARG002
+        **params: Any,  # noqa: ARG002
     ) -> Self:
         """Fit Murcko scaffold clustering estimator.
 
@@ -171,13 +169,12 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             Fitted estimator.
 
         """
-        X = validate_data(self, X=X, ensure_min_samples=2, ensure_2d=False, dtype=None)
+        X = validate_data(self, X=X, ensure_min_samples=2, ensure_2d=False, dtype=None)  # noqa: N806
         return self._fit(X)
 
-    # pylint: disable=C0103,W0613
     def _fit(
         self,
-        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],
+        X: npt.NDArray[np.str_] | list[str] | list[OptionalMol],  # noqa: N803
     ) -> Self:
         """Fit Murcko scaffold clustering estimator.
 
@@ -186,15 +183,15 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         X : array-like of shape (n_samples,)
             Smiles or molecule list or array.
 
-        Raises
-        ------
-        AssertionError
-            If self.labels_ is None.
-
         Returns
         -------
         Self
             Fitted estimator.
+
+        Raises
+        ------
+        AssertionError
+            If self.labels_ is None.
 
         """
         cluster_pipeline = self._generate_pipeline()
@@ -204,9 +201,10 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         self.n_clusters_ = len(np.unique(self.labels_[~np.isnan(self.labels_)]))
         return self
 
+    @override
     def fit_predict(
         self,
-        X: (npt.NDArray[np.str_] | list[str] | list[OptionalMol]),  # pylint: disable=C0103
+        X: (npt.NDArray[np.str_] | list[str] | list[OptionalMol]),
         y: npt.NDArray[np.float64] | None = None,
         **params: Any,  # pylint: disable=unused-argument
     ) -> npt.NDArray[np.float64]:

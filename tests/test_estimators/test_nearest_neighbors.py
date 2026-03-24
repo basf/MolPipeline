@@ -10,7 +10,7 @@ from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionW
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators import NamedNearestNeighbors, TanimotoToTraining
 from molpipeline.estimators.nearest_neighbor import TanimotoKNN
-from molpipeline.kernel.tanimoto_functions import tanimoto_distance_sparse
+from molpipeline.kernel.tanimoto_functions import pairwise_tanimoto_distance
 from molpipeline.mol2any import MolToMorganFP
 
 TEST_SMILES = [
@@ -145,7 +145,7 @@ class TestNamedNearestNeighbors(TestCase):
                     "lookup",
                     NamedNearestNeighbors(
                         n_neighbors=2,
-                        metric=tanimoto_distance_sparse,
+                        metric=pairwise_tanimoto_distance,
                     ),
                 ),
             ],

@@ -7,6 +7,8 @@ import numpy.typing as npt
 from scipy import sparse
 
 from molpipeline.kernel.tanimoto_functions import (
+    pairwise_tanimoto_distance,
+    pairwise_tanimoto_similarity,
     self_tanimoto_distance,
     self_tanimoto_similarity,
     tanimoto_distance_sparse,
@@ -29,6 +31,8 @@ class ABCTanimotoTestCase(unittest.TestCase):
         )
         self.matrix_a_sparse: sparse.csr_matrix = sparse.csr_matrix(self.matrix_a_np)
         self.matrix_b_sparse: sparse.csr_matrix = sparse.csr_matrix(self.matrix_b_np)
+        self.sim_a_b_expected = np.array([[2 / 3, 0.0], [0.25, 1 / 3]])
+        self.sim_a_a_expected = np.array([[1.0, 1 / 3], [1 / 3, 1.0]])
 
 
 class TestTanimotoSimilaritySparse(ABCTanimotoTestCase):
@@ -38,22 +42,19 @@ class TestTanimotoSimilaritySparse(ABCTanimotoTestCase):
         """Validate correct similarity for dense NumPy inputs."""
         sim = tanimoto_similarity_sparse(self.matrix_a_np, self.matrix_b_np)
         self.assertEqual(sim.dtype, float, msg=f"Unexpected dtype: {sim.dtype}")
-        expected = np.array([[2 / 3, 0.0], [0.25, 1 / 3]])
-        self.assertTrue(np.allclose(sim, expected))
+        self.assertTrue(np.allclose(sim, self.sim_a_b_expected))
 
     def test_tanimoto_similarity_sparse_inputs(self) -> None:
         """Validate correct similarity for sparse CSR inputs."""
         sim = tanimoto_similarity_sparse(self.matrix_a_sparse, self.matrix_b_sparse)
         self.assertEqual(sim.dtype, float, msg=f"Unexpected dtype: {sim.dtype}")
-        expected = np.array([[2 / 3, 0.0], [0.25, 1 / 3]])
-        self.assertTrue(np.allclose(sim, expected))
+        self.assertTrue(np.allclose(sim, self.sim_a_b_expected))
 
     def test_tanimoto_similarity_same_object_path(self) -> None:
         """Ensure identity branch (matrix compared to itself) reuses norms."""
         sim = tanimoto_similarity_sparse(self.matrix_a_sparse, self.matrix_a_sparse)
         self.assertEqual(sim.dtype, float, msg=f"Unexpected dtype: {sim.dtype}")
-        expected = np.array([[1.0, 1 / 3], [1 / 3, 1.0]])
-        self.assertTrue(np.allclose(sim, expected))
+        self.assertTrue(np.allclose(sim, self.sim_a_a_expected))
 
     def test_zero_vector_handling_indirect(self) -> None:
         """Test behavior with zero rows (similarity should remain finite)."""
@@ -79,20 +80,82 @@ class TestTanimotoDistanceSparse(ABCTanimotoTestCase):
         self.assertTrue(np.allclose(dist, 1 - sim))
 
 
+class TestPairwiseTanimotoSimilarity(ABCTanimotoTestCase):
+    """Tests for `pairwise_tanimoto_similarity` including edge cases."""
+
+    def test_pairwise_tanimoto_similarity_numpy(self) -> None:
+        """Validate similarity for single row comparison with dense NumPy."""
+        sim = pairwise_tanimoto_similarity(self.matrix_a_np[0], self.matrix_b_np[0])
+        self.assertEqual(sim.dtype, float, msg=f"Unexpected dtype: {sim.dtype}")
+        self.assertEqual(
+            sim.shape,
+            (),
+            msg=f"Expected scalar output, got shape: {sim.shape}",
+        )
+        self.assertTrue(np.isclose(sim, self.sim_a_b_expected[0, 0]))
+
+    def test_pairwise_tanimoto_similarity_sparse(self) -> None:
+        """Validate similarity for single row comparison with sparse CSR."""
+        sim = pairwise_tanimoto_similarity(
+            self.matrix_a_sparse[0],
+            self.matrix_b_sparse[0],
+        )
+        self.assertEqual(sim.dtype, float, msg=f"Unexpected dtype: {sim.dtype}")
+        self.assertEqual(
+            sim.shape,
+            (),
+            msg=f"Expected scalar output, got shape: {sim.shape}",
+        )
+        self.assertTrue(np.isclose(sim, self.sim_a_b_expected[0, 0]))
+
+    def test_too_many_rows_in_pairwise_similarity(self) -> None:
+        """Input with more than one row should raise ValueError."""
+        expected_message = "Both matrices must have exactly one row."
+
+        # Test various combinations of multi-row inputs for both matrices
+        # Test dense inputs
+        with self.assertRaisesRegex(ValueError, expected_message):
+            pairwise_tanimoto_similarity(self.matrix_a_np, self.matrix_b_np[0])
+
+        with self.assertRaisesRegex(ValueError, expected_message):
+            pairwise_tanimoto_similarity(self.matrix_a_np[0], self.matrix_b_np)
+
+        with self.assertRaisesRegex(ValueError, expected_message):
+            pairwise_tanimoto_similarity(self.matrix_a_np, self.matrix_a_np)
+
+        # Test sparse inputs
+        with self.assertRaisesRegex(ValueError, expected_message):
+            pairwise_tanimoto_similarity(self.matrix_a_sparse, self.matrix_b_sparse[0])
+
+        with self.assertRaisesRegex(ValueError, expected_message):
+            pairwise_tanimoto_similarity(self.matrix_a_sparse[0], self.matrix_b_sparse)
+
+        with self.assertRaisesRegex(ValueError, expected_message):
+            pairwise_tanimoto_similarity(self.matrix_a_sparse, self.matrix_a_sparse)
+
+
+class TestTanimotoDistance(ABCTanimotoTestCase):
+    """Tests for `pairwise_tanimoto_distance` ensuring complementarity."""
+
+    def test_pairwise_tanimoto_distance(self) -> None:
+        """Distance should be (1 - similarity)."""
+        sim = pairwise_tanimoto_similarity(self.matrix_a_np[0], self.matrix_b_np[0])
+        dist = pairwise_tanimoto_distance(self.matrix_a_np[0], self.matrix_b_np[0])
+        self.assertTrue(np.isclose(dist, 1 - sim))
+
+
 class TestSelfTanimotoSimilarity(ABCTanimotoTestCase):
     """Tests for `self_tanimoto_similarity` including input validation."""
 
     def test_self_tanimoto_similarity_numpy(self) -> None:
         """Validate similarity for dense NumPy self-comparison."""
         sim = self_tanimoto_similarity(self.matrix_a_np)
-        expected = np.array([[1.0, 1 / 3], [1 / 3, 1.0]])
-        self.assertTrue(np.allclose(sim, expected))
+        self.assertTrue(np.allclose(sim, self.sim_a_a_expected))
 
     def test_self_tanimoto_similarity_sparse(self) -> None:
         """Validate similarity for sparse self-comparison."""
         sim = self_tanimoto_similarity(self.matrix_a_sparse)
-        expected = np.array([[1.0, 1 / 3], [1 / 3, 1.0]])
-        self.assertTrue(np.allclose(sim, expected))
+        self.assertTrue(np.allclose(sim, self.sim_a_a_expected))
 
     def test_zero_vector_handling(self) -> None:
         """Ensure zero vectors produce zeros."""

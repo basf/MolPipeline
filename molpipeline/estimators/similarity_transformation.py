@@ -1,22 +1,18 @@
 """Sklearn estimators for computing similarity and distance matrices."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any, Self
+from typing import Any, Self
 
 try:
     from typing import override  # type: ignore
 except ImportError:
     from typing_extensions import override
 
+import numpy as np
+import numpy.typing as npt
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
-
-if TYPE_CHECKING:
-    import numpy as np
-    import numpy.typing as npt
 
 
 class TanimotoToTraining(BaseEstimator, TransformerMixin):
@@ -78,7 +74,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
     @override
     def fit(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
+        X: npt.NDArray[np.float64] | csr_matrix,
         y: npt.NDArray[np.float64] | None = None,  # pylint: disable=unused-argument
     ) -> Self:
         """Fit the model.
@@ -102,7 +98,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
     @override
     def transform(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
+        X: npt.NDArray[np.float64] | csr_matrix,
     ) -> npt.NDArray[np.float64]:
         """Transform the data.
 
@@ -111,15 +107,15 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         X : npt.NDArray[np.float64] | csr_matrix
             Feature matrix to which the similarity matrix is computed.
 
-        Raises
-        ------
-        ValueError
-            If the transformer has not been fitted yet.
-
         Returns
         -------
         npt.NDArray[np.float64]
             Similarity matrix of X to the training matrix.
+
+        Raises
+        ------
+        ValueError
+            If the transformer has not been fitted yet.
 
         """
         if self.training_matrix is None:

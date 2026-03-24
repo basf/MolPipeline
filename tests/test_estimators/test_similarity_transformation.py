@@ -1,15 +1,13 @@
 """Unit tests for the TanimotoToTraining estimator."""
 
-from __future__ import annotations
-
 import unittest
-from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit.DataStructs import BulkTanimotoSimilarity
+from scipy import sparse
 from sklearn.neighbors import KNeighborsClassifier
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
@@ -18,8 +16,6 @@ from molpipeline.estimators import TanimotoToTraining
 from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
 from molpipeline.mol2any import MolToMorganFP
 
-if TYPE_CHECKING:
-    from scipy import sparse
 COMPOUND_LIST = [
     "CCC",
     "CCOCC",

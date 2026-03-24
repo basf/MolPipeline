@@ -1,7 +1,5 @@
 """Classes for transforming rdkit molecules to inchi."""
 
-from __future__ import annotations
-
 from rdkit import Chem
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
@@ -25,6 +23,7 @@ class MolToInchi(_MolToStringPipelineElement):
         -------
         str
             INCHI string
+
         """
         return str(Chem.MolToInchi(value))
 
@@ -37,7 +36,7 @@ class MolToInchiKey(_MolToStringPipelineElement):
         name: str = "MolToInchiKey",
         n_jobs: int = 1,
         uuid: str | None = None,
-    ):
+    ) -> None:
         """Initialize MolToInchiKey.
 
         Parameters
@@ -64,5 +63,6 @@ class MolToInchiKey(_MolToStringPipelineElement):
         -------
         str
             INCHI-key of molecule.
+
         """
         return str(Chem.MolToInchiKey(value))

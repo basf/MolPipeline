@@ -1,28 +1,26 @@
 """Utility functions for multiprocessing."""
 
-from __future__ import annotations
-
 import multiprocessing
 import warnings
 
 
 def check_available_cores(n_requested_cores: int) -> int:
-    """Compare number of requested cores with available cores and return a (corrected) number.
+    """Correct the number of requested cores.
 
     Parameters
     ----------
     n_requested_cores: int
         Number of requested cores.
 
-    Raises
-    ------
-    TypeError
-        If n_requested_cores is not an integer.
-
     Returns
     -------
     int
         Number of used cores.
+
+    Raises
+    ------
+    TypeError
+        If n_requested_cores is not an integer.
 
     """
     if not isinstance(n_requested_cores, int):

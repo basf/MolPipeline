@@ -2,11 +2,9 @@
 
 # pylint: disable=too-many-lines
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Literal, Self, TypeVar, Union
+from typing import Any, Literal, Self
 
 import joblib
 import numpy as np
@@ -25,6 +23,7 @@ from sklearn.utils.metadata_routing import (
 )
 from sklearn.utils.metaestimators import available_if
 from sklearn.utils.validation import check_memory
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
@@ -45,13 +44,12 @@ from molpipeline.utils.value_checks import is_empty
 __all__ = ["Pipeline"]
 
 # Type definitions
-_T = TypeVar("_T")
 # Cannot be moved to utils.molpipeline_types due to circular imports
 
 
 _IndexedStep = tuple[int, str, AnyElement]
 _AggStep = tuple[list[int], list[str], _MolPipeline]
-_AggregatedPipelineStep = Union[_IndexedStep, _AggStep]
+_AggregatedPipelineStep = _IndexedStep | _AggStep
 
 
 class Pipeline(_Pipeline):
@@ -67,7 +65,7 @@ class Pipeline(_Pipeline):
         memory: str | joblib.Memory | None = None,
         verbose: bool = False,
         n_jobs: int = 1,
-    ):
+    ) -> None:
         """Initialize Pipeline.
 
         Parameters
@@ -80,6 +78,7 @@ class Pipeline(_Pipeline):
             If True, print additional information.
         n_jobs: int, optional
             Number of cores used for aggregated steps.
+
         """
         super().__init__(steps, memory=memory, verbose=verbose)
         self.n_jobs = n_jobs
@@ -96,9 +95,11 @@ class Pipeline(_Pipeline):
             n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
         ]
         for step in self.steps:
-            if isinstance(step[1], PostPredictionWrapper):
-                if isinstance(step[1].wrapped_estimator, FilterReinserter):
-                    error_replacer_list.append(step[1].wrapped_estimator)
+            if isinstance(step[1], PostPredictionWrapper) and isinstance(
+                step[1].wrapped_estimator,
+                FilterReinserter,
+            ):
+                error_replacer_list.append(step[1].wrapped_estimator)
         for error_replacer in error_replacer_list:
             error_replacer.select_error_filter(error_filter_list)
 
@@ -131,7 +132,7 @@ class Pipeline(_Pipeline):
                     f"All intermediate steps should be "
                     f"transformers and implement fit and transform "
                     f"or be the string 'passthrough' "
-                    f"'{transformer}' (type {type(transformer)}) doesn't"
+                    f"'{transformer}' (type {type(transformer)}) doesn't",
                 )
 
         # We allow last estimator to be None as an identity transformation
@@ -143,7 +144,7 @@ class Pipeline(_Pipeline):
             raise TypeError(
                 f"Last step of Pipeline should implement fit "
                 f"or be the string 'passthrough'. "
-                f"'{estimator}' (type {type(estimator)}) doesn't"
+                f"'{estimator}' (type {type(estimator)}) doesn't",
             )
 
         # validate post-processing steps
@@ -151,11 +152,13 @@ class Pipeline(_Pipeline):
         _ = self._post_processing_steps()
 
     def _iter(
-        self, with_final: bool = True, filter_passthrough: bool = True
+        self,
+        with_final: bool = True,
+        filter_passthrough: bool = True,
     ) -> Iterable[_AggregatedPipelineStep]:
         """Iterate over all non post-processing steps.
 
-        Steps which are children of a ABCPipelineElement were aggregated to a MolPipeline.
+        Steps where children of a ABCPipelineElement are aggregated to a MolPipeline.
 
         Parameters
         ----------
@@ -164,16 +167,16 @@ class Pipeline(_Pipeline):
         filter_passthrough: bool, optional
             If True, passthrough steps are filtered out.
 
-        Raises
-        ------
-        AssertionError
-            If the pipeline has no steps.
-
         Yields
         ------
         _AggregatedPipelineStep
             The _AggregatedPipelineStep is composed of the index, the name and the
             transformer.
+
+        Raises
+        ------
+        AssertionError
+            If the pipeline has no steps.
 
         """
         last_element: _AggregatedPipelineStep | None = None
@@ -184,9 +187,9 @@ class Pipeline(_Pipeline):
             if last_element is None:
                 last_element = step
                 continue
-            if not filter_passthrough:
-                yield last_element
-            elif step[2] is not None and step[2] != "passthrough":
+            if not filter_passthrough or (
+                step[2] is not None and step[2] != "passthrough"
+            ):
                 yield last_element
             last_element = step
 
@@ -194,9 +197,12 @@ class Pipeline(_Pipeline):
         if last_element is None:
             raise AssertionError("Pipeline needs to have at least one step!")
 
-        if with_final and last_element[2] is not None:
-            if last_element[2] != "passthrough":
-                yield last_element
+        if (
+            with_final
+            and last_element[2] is not None
+            and last_element[2] != "passthrough"
+        ):
+            yield last_element
 
     @property
     def _estimator_type(self) -> Any:
@@ -204,8 +210,7 @@ class Pipeline(_Pipeline):
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
-            # pylint: disable=protected-access
-            return self._final_estimator._estimator_type
+            return self._final_estimator._estimator_type  # noqa: SLF001
         return None
 
     @property
@@ -217,6 +222,7 @@ class Pipeline(_Pipeline):
         | AnyPredictor
         | _MolPipeline
         | ABCPipelineElement
+        | FilterReinserter[Any]
     ):
         """Return the lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())
@@ -224,6 +230,7 @@ class Pipeline(_Pipeline):
         return last_element[2]
 
     # pylint: disable=too-many-locals,too-many-branches
+    @override
     def _fit(
         self,
         X: Any,
@@ -249,17 +256,17 @@ class Pipeline(_Pipeline):
         raw_params : dict[str, Any], optional
             Parameters passed by the user, used when `transform_input`
 
+        Returns
+        -------
+        tuple[Any, Any]
+            The transformed data and the transformed objectives.
+
         Raises
         ------
         AssertionError
             If routed_params is None or if the transformer is 'passthrough'.
         AssertionError
             If the names are a list and the step is not a Pipeline.
-
-        Returns
-        -------
-        tuple[Any, Any]
-            The transformed data and the transformed objectives.
 
         """
         # shallow copy of steps - this should really be steps_
@@ -287,13 +294,13 @@ class Pipeline(_Pipeline):
             if isinstance(cloned_transformer, _MolPipeline):
                 if routed_params:
                     step_params = {
-                        "element_parameters": [routed_params[n] for n in name]
+                        "element_parameters": [routed_params[n] for n in name],
                     }
                 else:
                     step_params = {}
             elif isinstance(name, list):
                 raise AssertionError(
-                    "Names should not be a list, when the step is not a Pipeline"
+                    "Names should not be a list, when the step is not a Pipeline",
                 )
             else:
                 step_params = self._get_metadata_for_step(
@@ -303,7 +310,7 @@ class Pipeline(_Pipeline):
                 )
 
             # Fit or load from cache the current transformer
-            X, fitted_transformer = fit_transform_one_cached(
+            X, fitted_transformer = fit_transform_one_cached(  # noqa: N806
                 cloned_transformer,
                 X,
                 y,
@@ -321,11 +328,11 @@ class Pipeline(_Pipeline):
                     raise AssertionError()
                 if not len(name) == len(step_idx) == len(ele_list):
                     raise AssertionError()
-                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list):
+                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=True):
                     self.steps[idx_i] = (name_i, ele_i)
                 if y is not None:
                     y = fitted_transformer.co_transform(y)
-                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list):
+                for idx_i, name_i, ele_i in zip(step_idx, name, ele_list, strict=True):
                     self.steps[idx_i] = (name_i, ele_i)
                 self._set_error_resinserter()
             elif isinstance(name, list) or isinstance(step_idx, list):
@@ -338,7 +345,7 @@ class Pipeline(_Pipeline):
 
     def _transform(
         self,
-        X: Any,  # pylint: disable=invalid-name
+        X: Any,  # noqa: N803
         routed_params: Bunch,
     ) -> Any:
         """Transform the data, and skip final estimator.
@@ -353,16 +360,17 @@ class Pipeline(_Pipeline):
         routed_params: Bunch
             Parameters for each step as returned by process_routing
 
+        Returns
+        -------
+        Any
+            Result of calling `transform` on the second last estimator.
+
         Raises
         ------
         AssertionError
             If one of the transformers is 'passthrough' or does not implement
             `transform`.
 
-        Returns
-        -------
-        Any
-            Result of calling `transform` on the second last estimator.
         """
         iter_input = X
         do_routing = _routing_enabled()
@@ -380,13 +388,14 @@ class Pipeline(_Pipeline):
             if hasattr(transform, "transform"):
                 if do_routing:
                     iter_input = transform.transform(  # type: ignore[call-arg]
-                        iter_input, routed_params[name].transform
+                        iter_input,
+                        routed_params[name].transform,
                     )
                 else:
                     iter_input = transform.transform(iter_input)
             else:
                 raise AssertionError(
-                    f"Non transformer ocurred in transformation step: {transform}."
+                    f"Non transformer ocurred in transformation step: {transform}.",
                 )
         return iter_input
 
@@ -396,15 +405,16 @@ class Pipeline(_Pipeline):
     ) -> list[AnyStep]:
         """Return all steps before the first PostPredictionTransformation.
 
+        Returns
+        -------
+        list[AnyStep]
+            List of steps before the first PostPredictionTransformation.
+
         Raises
         ------
         AssertionError
             If a PostPredictionTransformation is found before the last step.
 
-        Returns
-        -------
-        list[AnyStep]
-            List of steps before the first PostPredictionTransformation.
         """
         non_post_processing_steps: list[AnyStep] = []
         start_adding = False
@@ -415,7 +425,7 @@ class Pipeline(_Pipeline):
                 if isinstance(step_estimator, PostPredictionTransformation):
                     raise AssertionError(
                         "PipelineElement of type PostPredictionTransformation occured "
-                        "before the last step."
+                        "before the last step.",
                     )
                 non_post_processing_steps.append((step_name, step_estimator))
         return list(non_post_processing_steps[::-1])
@@ -427,6 +437,7 @@ class Pipeline(_Pipeline):
         -------
         list[tuple[str, PostPredictionTransformation]]
             List of tuples containing the name and the PostPredictionTransformation.
+
         """
         post_processing_steps = []
         for step_name, step_estimator in self.steps[::-1]:
@@ -483,8 +494,9 @@ class Pipeline(_Pipeline):
 
     @_fit_context(
         # estimators in Pipeline.steps are not validated yet
-        prefer_skip_nested_validation=False
+        prefer_skip_nested_validation=False,
     )
+    @override
     def fit(self, X: Any, y: Any = None, **fit_params: Any) -> Self:
         """Fit the model.
 
@@ -510,14 +522,15 @@ class Pipeline(_Pipeline):
         -------
         self : object
             Pipeline with fitted steps.
+
         """
         routed_params = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, routed_params)  # pylint: disable=invalid-name
+        Xt, yt = self._fit(X, y, routed_params)  # noqa: N806
         with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 if is_empty(Xt):
                     logger.warning(
-                        "All input rows were filtered out! Model is not fitted!"
+                        "All input rows were filtered out! Model is not fitted!",
                     )
                 else:
                     fit_params_last_step = routed_params[
@@ -527,6 +540,7 @@ class Pipeline(_Pipeline):
 
         return self
 
+    @override
     def _can_fit_transform(self) -> bool:
         """Check if the final estimator can fit_transform or is passthrough.
 
@@ -534,6 +548,7 @@ class Pipeline(_Pipeline):
         -------
         bool
             True if the final estimator can fit_transform or is passthrough.
+
         """
         return (
             self._final_estimator == "passthrough"
@@ -548,14 +563,16 @@ class Pipeline(_Pipeline):
         -------
         bool
             True if the final estimator implements decision_function.
+
         """
         return hasattr(self._final_estimator, "decision_function")
 
     @available_if(_can_fit_transform)
     @_fit_context(
         # estimators in Pipeline.steps are not validated yet
-        prefer_skip_nested_validation=False
+        prefer_skip_nested_validation=False,
     )
+    @override
     def fit_transform(self, X: Any, y: Any = None, **params: Any) -> Any:
         """Fit the model and transform with the final estimator.
 
@@ -578,16 +595,16 @@ class Pipeline(_Pipeline):
             each parameter name is prefixed such that parameter ``p`` for step
             ``s`` has key ``s__p``.
 
+        Returns
+        -------
+        Xt : ndarray of shape (n_samples, n_transformed_features)
+            Transformed samples.
+
         Raises
         ------
         TypeError
             If the last step does not implement `fit_transform` or `fit` and
             `transform`.
-
-        Returns
-        -------
-        Xt : ndarray of shape (n_samples, n_transformed_features)
-            Transformed samples.
 
         """
         routed_params = self._check_method_params(method="fit_transform", props=params)
@@ -604,24 +621,28 @@ class Pipeline(_Pipeline):
                 ]
                 if hasattr(last_step, "fit_transform"):
                     iter_input = last_step.fit_transform(
-                        iter_input, iter_label, **last_step_params["fit_transform"]
+                        iter_input,
+                        iter_label,
+                        **last_step_params["fit_transform"],
                     )
                 elif hasattr(last_step, "transform") and hasattr(last_step, "fit"):
                     last_step.fit(iter_input, iter_label, **last_step_params["fit"])
                     iter_input = last_step.transform(
-                        iter_input, **last_step_params["transform"]
+                        iter_input,
+                        **last_step_params["transform"],
                     )
                 else:
                     raise TypeError(
                         f"fit_transform of the final estimator"
                         f" {last_step.__class__.__name__} {last_step_params} does not "
-                        f"match fit_transform of Pipeline {self.__class__.__name__}"
+                        f"match fit_transform of Pipeline {self.__class__.__name__}",
                     )
             for _, post_element in self._post_processing_steps():
                 iter_input = post_element.fit_transform(iter_input, iter_label)
         return iter_input
 
     @available_if(_final_estimator_has("predict"))
+    @override
     def predict(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `predict` with the final estimator.
 
@@ -643,21 +664,22 @@ class Pipeline(_Pipeline):
             transformations in the pipeline are not propagated to the
             final estimator.
 
+        Returns
+        -------
+        y_pred : ndarray
+            Result of calling `predict` on the final estimator.
+
         Raises
         ------
         AssertionError
             If the final estimator does not implement `predict`.
             In this case this function should not be available.
 
-        Returns
-        -------
-        y_pred : ndarray
-            Result of calling `predict` on the final estimator.
         """
         if _routing_enabled():
             routed_params = process_routing(self, "predict", **params)
         else:
-            routed_params = process_routing(self, "predict", **{})
+            routed_params = process_routing(self, "predict")
 
         iter_input = self._transform(X, routed_params)
 
@@ -675,7 +697,8 @@ class Pipeline(_Pipeline):
                 iter_input = self._final_estimator.predict(iter_input, **params)
         else:
             raise AssertionError(
-                "Final estimator does not implement predict, hence this function should not be available."
+                "Final estimator does not implement predict, hence this function "
+                "should not be available.",
             )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)
@@ -684,8 +707,9 @@ class Pipeline(_Pipeline):
     @available_if(_final_estimator_has("fit_predict"))
     @_fit_context(
         # estimators in Pipeline.steps are not validated yet
-        prefer_skip_nested_validation=False
+        prefer_skip_nested_validation=False,
     )
+    @override
     def fit_predict(self, X: Any, y: Any = None, **params: Any) -> Any:
         """Transform the data, and apply `fit_predict` with the final estimator.
 
@@ -709,16 +733,17 @@ class Pipeline(_Pipeline):
             each parameter name is prefixed such that parameter ``p`` for step
             ``s`` has key ``s__p``.
 
+        Returns
+        -------
+        y_pred : ndarray
+            Result of calling `fit_predict` on the final estimator.
+
         Raises
         ------
         AssertionError
             If the final estimator does not implement `fit_predict`.
             In this case this function should not be available.
 
-        Returns
-        -------
-        y_pred : ndarray
-            Result of calling `fit_predict` on the final estimator.
         """
         routed_params = self._check_method_params(method="fit_predict", props=params)
         iter_input, iter_label = self._fit(X, y, routed_params)
@@ -733,18 +758,21 @@ class Pipeline(_Pipeline):
                 y_pred = []
             elif hasattr(self._final_estimator, "fit_predict"):
                 y_pred = self._final_estimator.fit_predict(
-                    iter_input, iter_label, **params_last_step.get("fit_predict", {})
+                    iter_input,
+                    iter_label,
+                    **params_last_step.get("fit_predict", {}),
                 )
             else:
                 raise AssertionError(
                     "Final estimator does not implement fit_predict, "
-                    "hence this function should not be available."
+                    "hence this function should not be available.",
                 )
             for _, post_element in self._post_processing_steps():
                 y_pred = post_element.fit_transform(y_pred, iter_label)
         return y_pred
 
     @available_if(_final_estimator_has("predict_proba"))
+    @override
     def predict_proba(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `predict_proba` with the final estimator.
 
@@ -766,16 +794,17 @@ class Pipeline(_Pipeline):
             transformations in the pipeline are not propagated to the
             final estimator.
 
+        Returns
+        -------
+        y_pred : ndarray
+            Result of calling `predict_proba` on the final estimator.
+
         Raises
         ------
         AssertionError
             If the final estimator does not implement `predict_proba`.
             In this case this function should not be available.
 
-        Returns
-        -------
-        y_pred : ndarray
-            Result of calling `predict_proba` on the final estimator.
         """
         routed_params = process_routing(self, "predict_proba", **params)
         iter_input = self._transform(X, routed_params)
@@ -797,12 +826,13 @@ class Pipeline(_Pipeline):
         else:
             raise AssertionError(
                 "Final estimator does not implement predict_proba, "
-                "hence this function should not be available."
+                "hence this function should not be available.",
             )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)
         return iter_input
 
+    @override
     def _can_transform(self) -> bool:
         """Check if the final estimator can transform or is passthrough.
 
@@ -810,12 +840,15 @@ class Pipeline(_Pipeline):
         -------
         bool
             True if the final estimator can transform or is passthrough.
+
         """
         return self._final_estimator == "passthrough" or hasattr(
-            self._final_estimator, "transform"
+            self._final_estimator,
+            "transform",
         )
 
     @available_if(_can_transform)
+    @override
     def transform(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `transform` with the final estimator.
 
@@ -835,16 +868,16 @@ class Pipeline(_Pipeline):
         **params : Any
             Parameters to the ``transform`` method of each estimator.
 
+        Returns
+        -------
+        Xt : ndarray of shape (n_samples, n_transformed_features)
+            Transformed data.
+
         Raises
         ------
         AssertionError
             If the final estimator does not implement `transform` or
             `fit_transform` or is passthrough.
-
-        Returns
-        -------
-        Xt : ndarray of shape (n_samples, n_transformed_features)
-            Transformed data.
 
         """
         routed_params = process_routing(self, "transform", **params)
@@ -860,18 +893,20 @@ class Pipeline(_Pipeline):
                 break
             if hasattr(transform, "transform"):
                 iter_input = transform.transform(
-                    iter_input, **routed_params[name].transform
+                    iter_input,
+                    **routed_params[name].transform,
                 )
             else:
                 raise AssertionError(
                     "Non transformer ocurred in transformation step."
-                    "This should have been caught in the validation step."
+                    "This should have been caught in the validation step.",
                 )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input, **params)
         return iter_input
 
     @available_if(_can_decision_function)
+    @override
     def decision_function(self, X: Any, **params: Any) -> Any:
         """Transform the data, and apply `decision_function` with the final estimator.
 
@@ -883,20 +918,21 @@ class Pipeline(_Pipeline):
         **params : Any
             Parameters to the ``decision_function`` method of the final estimator.
 
+        Returns
+        -------
+        Any
+            Result of calling `decision_function` on the final estimator.
+
         Raises
         ------
         AssertionError
             If the final estimator does not implement `decision_function`.
 
-        Returns
-        -------
-        Any
-            Result of calling `decision_function` on the final estimator.
         """
         if _routing_enabled():
             routed_params = process_routing(self, "decision_function", **params)
         else:
-            routed_params = process_routing(self, "decision_function", **{})
+            routed_params = process_routing(self, "decision_function")
 
         iter_input = self._transform(X, routed_params)
         if self._final_estimator == "passthrough":
@@ -906,16 +942,18 @@ class Pipeline(_Pipeline):
         elif hasattr(self._final_estimator, "decision_function"):
             if _routing_enabled():
                 iter_input = self._final_estimator.decision_function(
-                    iter_input, **routed_params[self._final_estimator].predict
+                    iter_input,
+                    **routed_params[self._final_estimator].predict,
                 )
             else:
                 iter_input = self._final_estimator.decision_function(
-                    iter_input, **params
+                    iter_input,
+                    **params,
                 )
         else:
             raise AssertionError(
                 "Final estimator does not implement `decision_function`, "
-                "hence this function should not be available."
+                "hence this function should not be available.",
             )
         for _, post_element in self._post_processing_steps():
             iter_input = post_element.transform(iter_input)
@@ -948,15 +986,16 @@ class Pipeline(_Pipeline):
     def __sklearn_tags__(self) -> Tags:
         """Return the sklearn tags.
 
+        Returns
+        -------
+        Tags
+            The sklearn tags.
+
         Notes
         -----
         This method is copied from the original sklearn implementation.
         Changes are marked with a comment.
 
-        Returns
-        -------
-        Tags
-            The sklearn tags.
         """
         tags = super().__sklearn_tags__()
 
@@ -966,7 +1005,7 @@ class Pipeline(_Pipeline):
         try:
             if self.steps[0][1] is not None and self.steps[0][1] != "passthrough":
                 tags.input_tags.pairwise = get_tags(
-                    self.steps[0][1]
+                    self.steps[0][1],
                 ).input_tags.pairwise
             # WARNING: the sparse tag can be incorrect.
             # Some Pipelines accepting sparse data are wrongly tagged sparse=False.
@@ -983,7 +1022,8 @@ class Pipeline(_Pipeline):
             pass
 
         try:
-            # Only the _final_estimator is changed from the original implementation is changed in the following 2 lines
+            # Only the _final_estimator is changed from the original implementation is
+            # changed in the following 2 lines
             if (
                 self._final_estimator is not None
                 and self._final_estimator != "passthrough"
@@ -1007,16 +1047,17 @@ class Pipeline(_Pipeline):
         Please check :ref:`User Guide <metadata_routing>` on how the routing
         mechanism works.
 
-        Notes
-        -----
-        This method is copied from the original sklearn implementation.
-        Changes are marked with a comment.
-
         Returns
         -------
         MetadataRouter
             A :class:`~sklearn.utils.metadata_routing.MetadataRouter` encapsulating
             routing information.
+
+        Notes
+        -----
+        This method is copied from the original sklearn implementation.
+        Changes are marked with a comment.
+
         """
         router = MetadataRouter(owner=self.__class__.__name__)
 
@@ -1054,7 +1095,8 @@ class Pipeline(_Pipeline):
 
             router.add(method_mapping=method_mapping, **{name: trans})
 
-        # Only the _non_post_processing_steps is changed from the original implementation is changed in the following line
+        # Only the _non_post_processing_steps is changed from the original
+        # implementation is changed in the following line
         final_name, final_est = self._non_post_processing_steps()[-1]
         if final_est is None or final_est == "passthrough":
             return router
@@ -1065,7 +1107,8 @@ class Pipeline(_Pipeline):
             method_mapping.add(caller="fit_transform", callee="fit_transform")
         else:
             method_mapping.add(caller="fit", callee="fit").add(
-                caller="fit", callee="transform"
+                caller="fit",
+                callee="transform",
             )
         (
             method_mapping.add(caller="fit", callee="fit")

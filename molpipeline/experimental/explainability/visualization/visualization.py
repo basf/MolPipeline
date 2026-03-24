@@ -1,11 +1,10 @@
 """Visualization functions for the explainability module.
 
-Much of the visualization code in this file originates from projects of Christian W. Feldmann:
+Much of the visualization code in this file originates from projects of Christian W.
+Feldmann:
     https://github.com/c-feldmann/rdkit_heatmaps
     https://github.com/c-feldmann/compchemkit
 """
-
-from __future__ import annotations
 
 from collections.abc import Sequence
 
@@ -63,13 +62,14 @@ def _make_grid_from_mol(
     -------
     ValueGrid
         ValueGrid object.
+
     """
     xl: list[float]
     yl: list[float]
     xl, yl = [list(lim) for lim in get_mol_lims(mol)]  # Limit of molecule
 
-    # Extent of the canvas is approximated by size of molecule scaled by ratio of canvas height and width.
-    # Would be nice if this was directly accessible...
+    # Extent of the canvas is approximated by size of molecule scaled by ratio of canvas
+    # height and width.  Would be nice if this was directly accessible...
     mol_height = yl[1] - yl[0]
     mol_width = xl[1] - xl[0]
 
@@ -88,8 +88,7 @@ def _make_grid_from_mol(
 
     xl = list(pad(xl, padding[0]))  # Increasing size of x-axis
     yl = list(pad(yl, padding[1]))  # Increasing size of y-axis
-    v_map = ValueGrid(xl, yl, grid_resolution[0], grid_resolution[1])
-    return v_map
+    return ValueGrid(xl, yl, grid_resolution[0], grid_resolution[1])
 
 
 def _add_gaussians_for_atoms(
@@ -118,6 +117,7 @@ def _add_gaussians_for_atoms(
     -------
     ValueGrid
         ValueGrid object with added functions.
+
     """
     for i in range(mol.GetNumAtoms()):
         if atom_weights[i] == 0:
@@ -164,6 +164,7 @@ def _add_gaussians_for_bonds(
     -------
     ValueGrid
         ValueGrid object with added functions.
+
     """
     # Adding Gauss-functions centered at bonds (position between the two bonded-atoms)
     for i, bond in enumerate(mol.GetBonds()):
@@ -200,10 +201,12 @@ def make_sum_of_gaussians_grid(
 ) -> ValueGrid:
     """Map weights of atoms and bonds to the drawing of a RDKit molecular depiction.
 
-    For each atom and bond of depicted molecule a Gauss-function, centered at the respective object, is created and
-    scaled by the corresponding weight. Gauss-functions of atoms are circular, while Gauss-functions of bonds can be
-    distorted along the bond axis. The value of each pixel is determined as the sum of all function-values at the pixel
-    position. Subsequently, the values are mapped to a color and drawn onto the canvas.
+    For each atom and bond of depicted molecule a Gauss-function, centered at the
+    respective object, is created and scaled by the corresponding weight.
+    Gauss-functions of atoms are circular, while Gauss-functions of bonds can be
+    distorted along the bond axis. The value of each pixel is determined as the sum of
+    all function-values at the pixel position. Subsequently, the values are mapped to a
+    color and drawn onto the canvas.
 
     Inspired from https://github.com/c-feldmann/rdkit_heatmaps/blob/master/rdkit_heatmaps/molmapping.py
 
@@ -226,16 +229,16 @@ def make_sum_of_gaussians_grid(
     bond_length: float
         Value for the length of displayed bond weights (along the bond-axis).
 
+    Returns
+    -------
+    ValueGrid
+        ValueGrid object with added functions.
+
     Raises
     ------
     ValueError
         If the length of `atom_weights` or `bond_weights` does not match the number of
         atoms or bonds in the molecule.
-
-    Returns
-    -------
-    ValueGrid
-        ValueGrid object with added functions.
 
     """
     # assign default values and convert to numpy array
@@ -262,10 +265,19 @@ def make_sum_of_gaussians_grid(
     # setup grid and add functions for atoms and bonds
     value_grid = _make_grid_from_mol(mol, grid_resolution, padding)
     value_grid = _add_gaussians_for_atoms(
-        mol, conf, value_grid, atom_weights, atom_width
+        mol,
+        conf,
+        value_grid,
+        atom_weights,
+        atom_width,
     )
     value_grid = _add_gaussians_for_bonds(
-        mol, conf, value_grid, bond_weights, bond_width, bond_length
+        mol,
+        conf,
+        value_grid,
+        bond_weights,
+        bond_width,
+        bond_length,
     )
 
     # evaluate all functions at pixel positions to obtain pixel values
@@ -282,8 +294,8 @@ def _add_shap_present_absent_features_text(
 ) -> None:
     """Add text to the figure to display the SHAP prediction composition.
 
-    The added text includes the prediction value, the expected value, the sum of the SHAP values for present features,
-    and the sum of the SHAP values for absent features.
+    The added text includes the predicted value, the expected value, the sum of the SHAP
+    values for present features, and the sum of the SHAP values for absent features.
 
     Parameters
     ----------
@@ -409,9 +421,15 @@ def _structure_heatmap(
     height: int = 600,
     color_limits: tuple[float, float] | None = None,
 ) -> tuple[
-    rdMolDraw2D.MolDraw2DCairo, ValueGrid, ColorGrid, colors.Normalize, Colormap
+    rdMolDraw2D.MolDraw2DCairo,
+    ValueGrid,
+    ColorGrid,
+    colors.Normalize,
+    Colormap,
 ]:
-    """Create a heatmap of the molecular structure, highlighting atoms with weighted Gaussian's.
+    """Create a heatmap of the molecular structure.
+
+     Atoms are highlighted with weighted Gaussians.
 
     Parameters
     ----------
@@ -433,6 +451,7 @@ def _structure_heatmap(
     rdMolDraw2D.MolDraw2DCairo, ValueGrid, ColorGrid, colors.Normalize, Colormap
         The configured drawer, the value grid, the color grid, the normalizer, and the
         color map.
+
     """
     drawer = Draw.MolDraw2DCairo(width, height)
     # Coloring atoms of element 0 to 100 black
@@ -506,13 +525,18 @@ def structure_heatmap(
     -------
     Image
         The image as PNG.
+
     """
     drawer, *_ = _structure_heatmap(
-        mol, atom_weights, color, width, height, color_limits
+        mol,
+        atom_weights,
+        color,
+        width,
+        height,
+        color_limits,
     )
     figure_bytes = drawer.GetDrawingText()
-    image = to_png(figure_bytes)
-    return image
+    return to_png(figure_bytes)
 
 
 def structure_heatmap_shap(  # pylint: disable=too-many-locals
@@ -543,6 +567,11 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     color_limits: tuple[float, float] | None
         The color limits.
 
+    Returns
+    -------
+    Image
+        The image as PNG.
+
     Raises
     ------
     ValueError
@@ -562,11 +591,6 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     ValueError
         If the feature weights have an unsupported shape.
 
-    Returns
-    -------
-    Image
-        The image as PNG.
-
     """
     if explanation.feature_weights is None:
         raise ValueError("Explanation does not contain feature weights.")
@@ -583,7 +607,7 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
 
     if explanation.prediction.ndim > 2:
         raise ValueError(
-            "Unsupported shape for prediction. Maximum 2 dimension is supported."
+            "Unsupported shape for prediction. Maximum 2 dimension is supported.",
         )
 
     if explanation.feature_weights.ndim == 1:
@@ -595,7 +619,8 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
 
     # calculate the sum of the SHAP values for present and absent features
     sum_present_shap, sum_absent_shap = calc_present_and_absent_shap_contributions(
-        explanation.feature_vector, feature_weights
+        explanation.feature_vector,
+        feature_weights,
     )
 
     with plt.ioff():
@@ -628,7 +653,10 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
         fig.colorbar(im, ax=ax, orientation="vertical", fraction=0.015, pad=0.0)
 
         _add_shap_present_absent_features_text(
-            fig, explanation, sum_present_shap, sum_absent_shap
+            fig,
+            explanation,
+            sum_present_shap,
+            sum_absent_shap,
         )
 
         image = plt_to_pil(fig)

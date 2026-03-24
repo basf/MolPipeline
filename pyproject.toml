@@ -88,36 +88,16 @@ select =  [
     "W",     # pycodestyle - warnings
 ]
 ignore = [
-    "ANN001",  # Missing type annotation for function argument `X`  # TO REMOVE
-    "ANN201",  # Missing return type annotation for public function  # TO REMOVE
-    "ANN202",  # Missing return type annotation for private function  # TO REMOVE
-    "ANN204",  #  Missing return type annotation for special method  # TO REMOVE
     "ANN401",  #  Allow  typing.Any
-    "ARG002", #  Unused argument  # TO REMOVE
-    "B008",   #  Do not perform function call `StandardScaler` in argument defaults  # TO REMOVE
-    "B024",   #  `xxx` is an abstract base class, but it has no abstract methods or properties  # TO REMOVE
-    "B027",   #  `xxx` is an empty method in an abstract base class, but has no abstract decorator  # TO REMOVE
-    "COM812", # Trailing comma missing # TO REMOVE
-    "DOC202", # Docstring should not have a returns section because the function doesn't return anything  # TO REMOVE
-    "D203", # 1 blank line required before class docstring  # TO REMOVE
+    "D203", # incorrect-blank-line-before-class
     "D213", # blank-line-before-class-docstring
-    "D413", # missing-blank-line-after-last-section # TO REMOVE
-    "D418", # Function decorated with `@overload` shouldn't contain a docstring"  # TO REMOVE
-    "E501", # line-too-long # TO REMOVE
     "ERA001",  # Found commented-out code  # TO REMOVE
-    "FA102",  # Missing `from __future__ import annotations`  # TO REMOVE
     "FURB113", # Use `xxx.extend(...)` instead of repeatedly calling `xxx.append()  # TO REMOVE
-    "FURB177", #  Prefer `Path.cwd()` over `Path().resolve()  # TO REMOVE
-    "N803",  #  Argument name should be lowercase  # TO REMOVE
-    "N806",  #  Variable in function should be lowercase  # TO REMOVE
     "N813",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
     "PGH003",  # Blanket type ignore for types
-    "PGH004",  # Use specific rule codes when using `noqa`  # TO REMOVE
     "PERF203",  # `try`-`except` within a loop incurs performance overhead  # TO REMOVE
     "PERF401", # Use a list comprehension to create a transformed list  # TO REMOVE
-    "PIE804",  # Unnecessary `dict` kwargs  # TO REMOVE
     "PLC1901", # `rest == ""` can be simplified to `not rest` as an empty string is falsey  # TO REMOVE
-    "PLR0911", # Too many return statements (8 > 6)  # TO REMOVE
     "PLR0912", # Too many branches (19 > 12)  # TO REMOVE
     "PLR0913", # too-many-arguments
     "PLR0914", # too-many-locals    # TO REMOVE
@@ -129,28 +109,17 @@ ignore = [
     "PLW3201", #  Dunder method `xxxx` has no special meaning  # TO REMOVE
     "PTH123",  # `open()` should be replaced by `Path.open()`  # TO REMOVE
     "PTH201",  # Do not pass the current directory explicitly to `Path`  # TO REMOVE
-    "PYI018",  # Private TypeVar `_T` is never used  # TO REMOVE
     "PYI056",  # Calling `.append()` on `__all__` may not be supported by all type checkers # TO REMOVE
-    "RET504",  # Unnecessary assignment  # TO REMOVE
     "RUF005",  # Consider iterable unpacking instead of concatenation  # TO REMOVE
     "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`  # TO REMOVE
-    "RUF100", #  Unused noqa  # TO REMOVE
+    "RUF067",  # `__init__` module should only contain docstrings and re-exports
+    "RUF100",  #  Unused noqa  # TO REMOVE
     "S101",   # Use of `assert` detected  # TO REMOVE
     "S311",  #  suspicious-non-cryptographic-random-usage
-    "SIM102",  # Use a single `if` statement instead of nested `if` statements # TO REMOVE
-    "SIM103",  # Return the condition directly  # TO REMOVE
-    "SIM105",  #  Use `contextlib.suppress(RuntimeError)` instead of `try`-`except`-`pass`  # TO REMOVE
-    "SIM110",  # Use return any() instead of `for` loop  # TO REMOVE
-    "SIM114",  # Combine `if` branches  # TO REMOVE
-    "SIM117",  # Use a single `with` statement with multiple contexts instead of nested `with` statements  # TO REMOVE
-    "SIM401",  # Use `xxx` instead of an `if` block  # TO REMOVE
-    "SLF001",  # Private member accessed  # TO REMOVE
-    "TC001",   # Move application import  `xxx` into a type-checking block  # TO REMOVE
-    "TC002",   # Move third-party import `xxx` into a type-checking block  # TO REMOVE
-    "TC003",   # Move standard library import `xxx` into a type-checking block  # TO REMOVE
 ]
  [tool.ruff.lint.per-file-ignores]
  "*.ipynb" = [
+     "E501",
      "PLE1142",
      "F704",
      "T201"
@@ -159,7 +128,8 @@ ignore = [
      "S101",
      "S404",
      "S603",
-     "S607"
+     "S607",
+     "SLF001",  # Private member accessed
  ]
 
 [tool.ruff.lint.pylint]
@@ -205,7 +175,7 @@ dev = [
     "bandit>=1.8.3",
     "black[jupyter]>=25.1.0",
     "coverage>=7.8.0",
-    "docsig>=0.69.3",
+    "docsig>=0.79.0",
     "flake8>=7.2.0",
     "interrogate>=1.7.0",
     "isort>=6.0.1",

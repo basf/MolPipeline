@@ -111,7 +111,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     @override
     def fit(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
+        X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
         *,
         sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,
@@ -187,16 +187,16 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         deep : bool, optional (default=False)
             Whether to get the parameters of the model.
 
+        Returns
+        -------
+        dict[str, Any]
+            The parameters of the model.
+
         Notes
         -----
         The parameters of the trainer and the model checkpoint are added irrespective
         of the `deep` parameter. This is done due to their incompatibility with the
         `get_params` and `set_params` methods.
-
-        Returns
-        -------
-        dict[str, Any]
-            The parameters of the model.
 
         """
         params = super().get_params(deep)

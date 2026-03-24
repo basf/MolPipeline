@@ -1,7 +1,5 @@
 """Module for checking values."""
 
-from __future__ import annotations
-
 from typing import Any
 
 __all__ = ["get_length", "is_empty"]
@@ -19,10 +17,9 @@ def is_empty(value: Any) -> bool:
     -------
     bool
         True if value is empty, False otherwise.
+
     """
-    if get_length(value) == 0:
-        return True
-    return False
+    return get_length(value) == 0
 
 
 def get_length(values: Any) -> int:
@@ -33,15 +30,16 @@ def get_length(values: Any) -> int:
     values: Any
         Values to be checked.
 
+    Returns
+    -------
+    int
+        Length of the values.
+
     Raises
     ------
     TypeError
         If values does not have a shape or len attribute.
 
-    Returns
-    -------
-    int
-        Length of the values.
     """
     if hasattr(values, "shape"):
         return values.shape[0]

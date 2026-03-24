@@ -1,13 +1,12 @@
 """Connected component clustering estimator."""
 
-from __future__ import annotations
-
 from numbers import Real
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import Any, ClassVar, Self
 
 import numpy as np
 import numpy.typing as npt
 from scipy import sparse
+from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # noqa: PLC2701
 from sklearn.utils._param_validation import Interval  # noqa: PLC2701
 from sklearn.utils.validation import validate_data
@@ -17,9 +16,6 @@ from molpipeline.estimators.algorithm.connected_component_clustering import (
     connected_components_iterative_algorithm,
 )
 from molpipeline.kernel.tanimoto_functions import tanimoto_similarity_sparse
-
-if TYPE_CHECKING:
-    from scipy.sparse import csr_matrix
 
 
 class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
@@ -50,7 +46,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
         self.n_clusters_: int | None = None
         self.labels_: npt.NDArray[np.int32] | None = None
 
-    # pylint: disable=C0103,W0613
+    # pylint: disable=W0613
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
@@ -75,7 +71,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
         features = validate_data(self, X=X, ensure_min_samples=2, accept_sparse=True)
         return self._fit(features)
 
-    # pylint: disable=C0103,W0613
+    # pylint: disable=W0613
     def _fit(self, X: npt.NDArray[np.int_] | csr_matrix) -> Self:  # noqa: N803
         """Fit connected component clustering estimator.
 
@@ -123,7 +119,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
 
     def fit_predict(
         self,
-        X: npt.NDArray[np.int_] | csr_matrix,  # pylint: disable=C0103  # noqa: N803
+        X: npt.NDArray[np.int_] | csr_matrix,  # noqa: N803
         y: npt.NDArray[np.int_] | None = None,
         **kwargs: Any,
     ) -> npt.NDArray[np.int32]:

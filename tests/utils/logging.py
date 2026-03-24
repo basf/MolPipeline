@@ -1,17 +1,21 @@
 """Test utils for logging."""
 
-from __future__ import annotations
+from __future__ import annotations  # Required for loguru type hints
 
-from collections.abc import Generator
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 import loguru
 from loguru import logger
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
 
 @contextmanager
 def capture_logs(
-    level: str = "INFO", log_format: str = "{level}:{name}:{message}"
+    level: str = "INFO",
+    log_format: str = "{level}:{name}:{message}",
 ) -> Generator[list[loguru.Message], None, None]:
     """Capture loguru-based logs.
 

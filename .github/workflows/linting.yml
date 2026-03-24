@@ -21,7 +21,7 @@ jobs:
         uv pip install torch --index-url https://download.pytorch.org/whl/cpu
     - name: Analysing the code with pylint
       run: |
-        uv run pylint  -d C0301,R0913,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
+        uv run pylint -d C0103,C0301,R0913,W0212,W0613,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
   mypy:
     runs-on: ubuntu-latest
     steps:
@@ -37,20 +37,6 @@ jobs:
     - name: Analysing the code with mypy
       run: |
         uv run mypy --ignore-missing-imports --disallow-any-generics --disallow-untyped-defs --no-implicit-optional --disallow-incomplete-defs .
-  pydocstyle:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.13"
-    - name: Install dependencies
-      run: |
-        python -m pip install pydocstyle
-    - name: Analysing the code with pydocstyle
-      run: |
-        pydocstyle .
 
   docsig:
     runs-on: ubuntu-latest
@@ -152,7 +138,6 @@ jobs:
     needs:
         - pylint
         - mypy
-        - pydocstyle
         - docsig
         - flake8
         - interrogate
@@ -202,10 +187,9 @@ jobs:
       - name: Run unit-tests for chemprop
         run: |
           # Run only the chemprop test suite.
-          uv run coverage run --source=molpipeline,tests -m unittest discover test_extras/test_chemprop
-          uv run coverage run --source=molpipeline,tests -m -a unittest discover test_extras/test_file_loading
+          uv run coverage run --source=molpipeline,test_extras -m unittest discover test_extras
           # Create a coverage report. Fail if the coverage is below 85%. Include only chemprop files in the report.
-          uv run coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*","*file_loading*"
+          uv run coverage report --fail-under=85 --include="*chemprop*","*/*chemprop*/*","*file_loading*","test_extras/**"
 
   test_notebooks:
     needs:
@@ -220,4 +204,4 @@ jobs:
           uv sync --all-extras
       - name: Run unit-tests for notebooks
         run: |
-          uv run python test_extras/test_notebooks/test_notebooks.py --continue-on-failure
+          uv run -m unittest test_notebooks/test_notebooks.py

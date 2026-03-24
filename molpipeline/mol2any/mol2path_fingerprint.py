@@ -1,7 +1,5 @@
 """Implementations for the RDKit Path Fingerprint."""
 
-from __future__ import annotations  # for all the python 3.8 users out there.
-
 import copy
 from typing import Any, Self
 
@@ -80,14 +78,14 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
         uuid: str | None, optional
             UUID of the PipelineElement.
 
-        References
-        ----------
-        [1] https://www.rdkit.org/docs/source/rdkit.Chem.rdFingerprintGenerator.html#rdkit.Chem.rdFingerprintGenerator.GetRDKitFPGenerator
-
         Raises
         ------
         ValueError
             If the number of bits is not a positive integer.
+
+        References
+        ----------
+        [1] https://www.rdkit.org/docs/source/rdkit.Chem.rdFingerprintGenerator.html#rdkit.Chem.rdFingerprintGenerator.GetRDKitFPGenerator
 
         """
         # pylint: disable=R0801

@@ -29,7 +29,7 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
         name: str = "MolToMACCSFP",
         n_jobs: int = 1,
         uuid: str | None = None,
-    ):
+    ) -> None:
         """Initialize MolToMACCSFP.
 
         Parameters
@@ -68,15 +68,15 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
         value : RDKitMol
             RDKit molecule.
 
-        Raises
-        ------
-        ValueError
-            If the variable `return_as` is not one of the allowed values.
-
         Returns
         -------
         dict[int, int] | npt.NDArray[np.int_] | ExplicitBitVect
             MACCS key fingerprint.
+
+        Raises
+        ------
+        ValueError
+            If the variable `return_as` is not one of the allowed values.
 
         """
         fingerprint = MACCSkeys.GenMACCSKeys(value)  # type: ignore[attr-defined]

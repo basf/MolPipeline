@@ -41,7 +41,7 @@ def get_morgan_physchem_rf_pipeline(n_jobs: int = 1) -> Pipeline:
 
     """
     error_filter = ErrorFilter(filter_everything=True)
-    pipeline = Pipeline(
+    return Pipeline(
         [
             ("smi2mol", SmilesToMol()),
             (
@@ -50,7 +50,7 @@ def get_morgan_physchem_rf_pipeline(n_jobs: int = 1) -> Pipeline:
                     [
                         ("morgan", MolToMorganFP(n_bits=2048)),
                         ("physchem", MolToRDKitPhysChem()),
-                    ]
+                    ],
                 ),
             ),
             ("error_filter", error_filter),
@@ -58,13 +58,12 @@ def get_morgan_physchem_rf_pipeline(n_jobs: int = 1) -> Pipeline:
             (
                 "filter_reinserter",
                 PostPredictionWrapper(
-                    FilterReinserter.from_error_filter(error_filter, None)
+                    FilterReinserter.from_error_filter(error_filter, None),
                 ),
             ),
         ],
         n_jobs=n_jobs,
     )
-    return pipeline
 
 
 def get_standardization_pipeline(n_jobs: int = 1) -> Pipeline:
@@ -84,7 +83,7 @@ def get_standardization_pipeline(n_jobs: int = 1) -> Pipeline:
     """
     error_filter = ErrorFilter(filter_everything=True)
     # Set up pipeline
-    standardization_pipeline = Pipeline(
+    return Pipeline(
         [
             ("smi2mol", SmilesToMol()),
             ("metal_disconnector", MetalDisconnector()),
@@ -103,4 +102,3 @@ def get_standardization_pipeline(n_jobs: int = 1) -> Pipeline:
         ],
         n_jobs=n_jobs,
     )
-    return standardization_pipeline

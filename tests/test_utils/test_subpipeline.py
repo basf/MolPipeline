@@ -23,7 +23,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                 ("smi2mol", SmilesToMol()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                 ("model", RandomForestClassifier()),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         self.assertIs(extractor.get_molecule_reader_element(), pipeline.steps[0][1])
@@ -36,7 +36,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                 ("smi2mol2", SmilesToMol()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                 ("model", RandomForestClassifier()),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         self.assertIs(extractor.get_molecule_reader_element(), pipeline.steps[2][1])
@@ -49,7 +49,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                 ("smi2mol", SmilesToMol()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                 ("model", RandomForestClassifier()),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         self.assertIs(extractor.get_featurization_element(), pipeline.steps[1][1])
@@ -57,7 +57,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         # test with PostPredictionWrapper
         error_filter = ErrorFilter()
         error_reinserter = PostPredictionWrapper(
-            FilterReinserter.from_error_filter(error_filter, None)
+            FilterReinserter.from_error_filter(error_filter, None),
         )
         pipeline = Pipeline(
             [
@@ -69,7 +69,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                     "error_reinserter",
                     error_reinserter,
                 ),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         self.assertIs(extractor.get_featurization_element(), pipeline.steps[2][1])
@@ -82,7 +82,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                 ("smi2mol", SmilesToMol()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                 ("model", RandomForestClassifier()),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         self.assertIs(extractor.get_model_element(), pipeline.steps[2][1])
@@ -90,7 +90,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         # test with PostPredictionWrapper
         error_filter = ErrorFilter()
         error_reinserter = PostPredictionWrapper(
-            FilterReinserter.from_error_filter(error_filter, None)
+            FilterReinserter.from_error_filter(error_filter, None),
         )
         pipeline = Pipeline(
             [
@@ -102,20 +102,20 @@ class TestSubpipelineExtractor(unittest.TestCase):
                     "error_reinserter",
                     error_reinserter,
                 ),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         self.assertIs(extractor.get_model_element(), pipeline.steps[3][1])
 
     def test_get_molecule_reader_subpipeline(self) -> None:
-        """Test extracting subpipeline up to the molecule reader element from pipelines."""
+        """Test extracting subpipeline up to the molecule reader element."""
         # test basic example
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                 ("model", RandomForestClassifier()),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_molecule_reader_subpipeline()
@@ -131,7 +131,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                 ("smi2mol2", SmilesToMol()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                 ("model", RandomForestClassifier()),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_molecule_reader_subpipeline()
@@ -141,14 +141,14 @@ class TestSubpipelineExtractor(unittest.TestCase):
             self.assertIs(subpipe_step, pipeline.steps[i])
 
     def test_get_featurization_subpipeline(self) -> None:
-        """Test extracting subpipeline up to the featurization element from pipelines."""
+        """Test extracting subpipeline up to the featurization element."""
         # test basic example
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                 ("model", RandomForestClassifier()),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_featurization_subpipeline()
@@ -160,7 +160,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         # test with PostPredictionWrapper
         error_filter = ErrorFilter()
         error_reinserter = PostPredictionWrapper(
-            FilterReinserter.from_error_filter(error_filter, None)
+            FilterReinserter.from_error_filter(error_filter, None),
         )
         pipeline = Pipeline(
             [
@@ -172,7 +172,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                     "error_reinserter",
                     error_reinserter,
                 ),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_featurization_subpipeline()
@@ -189,7 +189,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                 ("smi2mol", SmilesToMol()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                 ("model", RandomForestClassifier()),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_model_subpipeline()
@@ -201,7 +201,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         # test with PostPredictionWrapper
         error_filter = ErrorFilter()
         error_reinserter = PostPredictionWrapper(
-            FilterReinserter.from_error_filter(error_filter, None)
+            FilterReinserter.from_error_filter(error_filter, None),
         )
         pipeline = Pipeline(
             [
@@ -213,7 +213,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                     "error_reinserter",
                     error_reinserter,
                 ),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         subpipeline = extractor.get_model_subpipeline()
@@ -223,14 +223,14 @@ class TestSubpipelineExtractor(unittest.TestCase):
             self.assertIs(subpipe_step, pipeline.steps[i])
 
     def test_get_subpipeline(self) -> None:
-        """Test extracting subpipeline as a certain interval from the original pipeline."""
+        """Test extracting subpipeline as a certain interval."""
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
                 ("salt_remover", SaltRemover()),
                 ("morgan", MolToMorganFP(radius=1, n_bits=64)),
                 ("model", RandomForestClassifier()),
-            ]
+            ],
         )
         extractor = SubpipelineExtractor(pipeline)
         reader_element = extractor.get_molecule_reader_element("smi2mol")
@@ -242,7 +242,8 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
         # test smi2mol to morgan
         subpipeline_reader_feature = extractor.get_subpipeline(
-            reader_element, feature_element
+            reader_element,
+            feature_element,
         )
         self.assertIsInstance(subpipeline_reader_feature, Pipeline)
         self.assertEqual(len(subpipeline_reader_feature.steps), 3)  # type: ignore[union-attr]
@@ -252,7 +253,8 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
         # test smi2mol to model
         subpipeline_reader_model = extractor.get_subpipeline(
-            reader_element, model_element
+            reader_element,
+            model_element,
         )
         self.assertIsInstance(subpipeline_reader_model, Pipeline)
         self.assertEqual(len(subpipeline_reader_model.steps), 4)  # type: ignore[union-attr]
@@ -263,7 +265,8 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
         # test morgan to model
         subpipeline_feature_model = extractor.get_subpipeline(
-            feature_element, model_element
+            feature_element,
+            model_element,
         )
         self.assertIsInstance(subpipeline_feature_model, Pipeline)
         self.assertEqual(len(subpipeline_feature_model.steps), 2)  # type: ignore[union-attr]
@@ -272,7 +275,8 @@ class TestSubpipelineExtractor(unittest.TestCase):
 
         # test morgan to morgan
         subpipeline_feature_feature = extractor.get_subpipeline(
-            feature_element, feature_element
+            feature_element,
+            feature_element,
         )
         self.assertIsInstance(subpipeline_feature_feature, Pipeline)
         self.assertEqual(len(subpipeline_feature_feature.steps), 1)  # type: ignore[union-attr]
@@ -309,7 +313,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
         for test_fill_value in test_fill_values:
             error_filter = ErrorFilter()
             error_reinserter = PostPredictionWrapper(
-                FilterReinserter.from_error_filter(error_filter, test_fill_value)
+                FilterReinserter.from_error_filter(error_filter, test_fill_value),
             )
             pipeline = Pipeline(
                 [
@@ -321,7 +325,7 @@ class TestSubpipelineExtractor(unittest.TestCase):
                         "error_reinserter",
                         error_reinserter,
                     ),
-                ]
+                ],
             )
             extractor = SubpipelineExtractor(pipeline)
             fill_values = extractor.get_all_filter_reinserter_fill_values()
