@@ -305,6 +305,11 @@ class SmilesFilter(_BasePatternsFilter):
 class ComplexFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on multiple filter elements.
 
+    Attributes
+    ----------
+    pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
+        pairs of unique names and MolToMol elements to use as filters.
+
     Notes
     -----
     There are four possible scenarios:
@@ -312,11 +317,6 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         - mode= "any" & keep_matches= False: Must not match any filter element.
         - mode= "all" & keep_matches= True: Needs to match all filter elements.
         - mode= "all" & keep_matches= False: Must not match all filter elements.
-
-    Attributes
-    ----------
-    pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
-        pairs of unique names and MolToMol elements to use as filters.
 
 
     """
@@ -478,6 +478,12 @@ class ComplexFilter(_BaseKeepMatchesFilter):
 class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on RDKit descriptors.
 
+    Attributes
+    ----------
+    filter_elements: dict[str, FloatCountRange]
+        Dictionary of RDKit descriptors to filter by.
+        The value must be a tuple of minimum and maximum. If None, no limit is set.
+
     Notes
     -----
     There are four possible scenarios:
@@ -485,12 +491,6 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         - mode= "any" & keep_matches= False: Must not match any filter element.
         - mode= "all" & keep_matches= True: Needs to match all filter elements.
         - mode= "all" & keep_matches= False: Must not match all filter elements.
-
-    Attributes
-    ----------
-    filter_elements: dict[str, FloatCountRange]
-        Dictionary of RDKit descriptors to filter by.
-        The value must be a tuple of minimum and maximum. If None, no limit is set.
 
     """
 

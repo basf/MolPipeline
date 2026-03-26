@@ -24,14 +24,6 @@ from molpipeline.estimators.chemprop.lightning_wrapper import get_params_trainer
 class ABCChemprop(BaseEstimator, abc.ABC):
     """Wrap Chemprop in a sklearn compatible Estimator.
 
-    Notes
-    -----
-    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor,
-    this class provides the common functionality for both classes.
-    Although this class does not implement abstract methods, it is marked as abstract
-    to prevent instantiation.
-    (without predict or transform methods this class is useless.)
-
     Attributes
     ----------
     model : MPNN
@@ -48,6 +40,14 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     model_ckpoint_params : dict[str, Any]
         The parameters of the model checkpoint callback. This is used as the callback
         is not compatible with the `get_params` method.
+
+    Notes
+    -----
+    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor,
+    this class provides the common functionality for both classes.
+    Although this class does not implement abstract methods, it is marked as abstract
+    to prevent instantiation.
+    (without predict or transform methods this class is useless.)
 
     """
 
