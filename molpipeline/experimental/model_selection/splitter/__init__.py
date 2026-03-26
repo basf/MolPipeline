@@ -14,7 +14,7 @@ from molpipeline.experimental.model_selection.splitter.group_shuffle_splitter im
     SplitModeOption,
 )
 from molpipeline.experimental.model_selection.splitter.stratified_regression import (
-    create_continuous_stratified_folds,
+    PercentileStratifiedKFold,
 )
 from molpipeline.experimental.model_selection.splitter.time_threshold_splitter import (
     TimeThresholdSplitter,
@@ -25,7 +25,7 @@ __all__ = [
     "DataRepetitionSplit",
     "GroupAdditionSplit",
     "GroupShuffleSplit",
+    "PercentileStratifiedKFold",
     "SplitModeOption",
     "TimeThresholdSplitter",
-    "create_continuous_stratified_folds",
 ]
