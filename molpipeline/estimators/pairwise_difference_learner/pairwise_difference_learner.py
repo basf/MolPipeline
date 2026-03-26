@@ -14,6 +14,8 @@ from molpipeline.utils.molpipeline_types import AnyPredictor
 
 ModelVar = TypeVar("ModelVar", bound=AnyPredictor | BaseEstimator)
 
+_N_PROBA_CLASSES = 2
+
 
 def dual_vector_combinations(
     vector_1: npt.ArrayLike,
@@ -28,7 +30,7 @@ def dual_vector_combinations(
         Vector to form combinations of.
     vector_2 : npt.ArrayLike
         Vector to form combinations of.
-    mode : Literal["combine", "diff", "combine_and_diff"] = "combine
+    mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
         Mode of combination. Options are:
         - "combine": concatenate the two vectors (default)
         - "diff": calculate the difference between the two vectors
@@ -36,8 +38,13 @@ def dual_vector_combinations(
 
     Returns
     -------
-    dual_vector : npt.NDArray[Any]
+    npt.NDArray[Any]
         Combined vector of the two input vectors.
+
+    Raises
+    ------
+    ValueError
+        If mode is not one of 'combine', 'diff', 'combine_and_diff'.
 
     """
     if mode == "combine":
@@ -68,11 +75,21 @@ def single_vector_combinations(
     ----------
     vector : npt.ArrayLike
         Vector to form combinations of.
-    mode : Literal["combine", "diff", "combine_and_diff"] = "combine
+    mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
         Mode of combination. Options are:
         - "combine": concatenate the two vectors (default)
         - "diff": calculate the difference between the two vectors
         - "combine_and_diff": concatenate the two vectors and their difference
+
+    Returns
+    -------
+    npt.NDArray[Any]
+        Combined vector of all pairwise row combinations.
+
+    Raises
+    ------
+    ValueError
+        If mode is not one of 'combine', 'diff', 'combine_and_diff'.
 
     """
     if mode == "combine":
@@ -96,12 +113,40 @@ class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
         self,
         estimator: ModelVar,
         mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
-    ):
+    ) -> None:
+        """Initialize the pairwise difference learner.
+
+        Parameters
+        ----------
+        estimator : ModelVar
+            The underlying estimator used for pairwise difference learning.
+        mode : Literal["combine", "diff", "combine_and_diff"]
+            Mode of pairwise feature combination.
+
+        """
         self.estimator = estimator
         self.mode = mode
 
-    def fit(self, X, y):
-        """Fit the model to the data."""
+    def fit(
+        self,
+        X: npt.ArrayLike,  # noqa: N803
+        y: npt.ArrayLike,
+    ) -> "PairwiseDifferenceLearner[ModelVar]":
+        """Fit the model to the data.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Feature matrix of shape (n_samples, n_features).
+        y : npt.ArrayLike
+            Target values of shape (n_samples,).
+
+        Returns
+        -------
+        PairwiseDifferenceLearner
+            Fitted estimator.
+
+        """
         self.fit_x = X
         self.fit_y = y
         x_combined = single_vector_combinations(X, mode=self.mode)
@@ -111,34 +156,69 @@ class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
         return self
 
     @abc.abstractmethod
-    def predict(self, X):
-        pass
+    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:  # noqa: N803
+        """Predict target values for the samples in X.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Feature matrix of shape (n_samples, n_features).
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Predicted target values of shape (n_samples,).
+
+        """
 
 
 class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[ModelVar]):
     """Pairwise difference regressor."""
 
-    def predict(self, X, return_std=False):
-        """Predict the target values for the given input."""
+    def predict(
+        self,
+        X: npt.ArrayLike,  # noqa: N803
+        return_std: bool = False,
+    ) -> npt.NDArray[Any] | tuple[npt.NDArray[Any], npt.NDArray[Any]]:
+        """Predict the target values for the given input.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Feature matrix of shape (n_samples, n_features).
+        return_std : bool
+            If True, also return the standard deviation of predictions.
+
+        Returns
+        -------
+        npt.NDArray[Any] | tuple[npt.NDArray[Any], npt.NDArray[Any]]
+            Predicted mean values, and optionally their standard deviations.
+
+        """
         mean_preds = []
         std_preds = []
         for x_ in X:
-            x_combined = dual_vector_combinations(x_, self.fit_x, mode=self.mode)
+            x_combined = dual_vector_combinations(
+                x_.reshape(1, -1),
+                self.fit_x,
+                mode=self.mode,
+            )
             y_diff_pred = self.estimator.predict(x_combined)
             y_pred = self.fit_y + y_diff_pred
             mean_preds.append(np.mean(y_pred))
             std_preds.append(np.std(y_pred))
 
-        mean_preds = np.array(mean_preds)
-        std_preds = np.array(std_preds)
+        mean_preds_arr = np.array(mean_preds)
+        std_preds_arr = np.array(std_preds)
 
         if return_std:
-            return mean_preds, std_preds
-        return mean_preds
+            return mean_preds_arr, std_preds_arr
+        return mean_preds_arr
 
 
 class PairwiseDifferenceClassifier(
-    ClassifierMixin, PairwiseDifferenceLearner[ModelVar],
+    ClassifierMixin,
+    PairwiseDifferenceLearner[ModelVar],
 ):
     """Pairwise difference classifier.
 
@@ -157,14 +237,27 @@ class PairwiseDifferenceClassifier(
         self,
         estimator: ModelVar,
         mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
-    ):
+    ) -> None:
+        """Initialize the pairwise difference classifier.
 
+        Parameters
+        ----------
+        estimator : ModelVar
+            The underlying estimator used for pairwise difference learning.
+        mode : Literal["combine", "diff", "combine_and_diff"]
+            Mode of pairwise feature combination.
+
+        """
         self.ohe = OneHotEncoder(handle_unknown="ignore")
         self.estimators_ = []
 
         super().__init__(estimator=estimator, mode=mode)
 
-    def fit(self, X: npt.ArrayLike, y: npt.ArrayLike) -> "PairwiseDifferenceClassifier":
+    def fit(
+        self,
+        X: npt.ArrayLike,  # noqa: N803
+        y: npt.ArrayLike,
+    ) -> "PairwiseDifferenceClassifier":
         """Fit the classifier to the data.
 
         Parameters
@@ -176,20 +269,22 @@ class PairwiseDifferenceClassifier(
 
         Returns
         -------
-        self
+        PairwiseDifferenceClassifier
+            Fitted estimator.
 
         """
-        X = np.asarray(X)
+        x_mat = np.asarray(X)
         y = np.asarray(y)
         self.classes_ = unique_labels(y)
-        self.fit_x = X
+        self.fit_x = x_mat
 
-        self.fit_y = self.ohe.fit_transform(y.reshape(-1, 1))
+        fit_y = self.ohe.fit_transform(y.reshape(-1, 1))
+        self.fit_y = fit_y.toarray() if hasattr(fit_y, "toarray") else np.asarray(fit_y)
 
         # Abs to only check if class differ or are identical
         y_combined = np.abs(single_vector_combinations(self.fit_y, mode="diff"))
 
-        x_combined = single_vector_combinations(X, mode=self.mode)
+        x_combined = single_vector_combinations(x_mat, mode=self.mode)
         # No model for cls 0, as it will be the class not predicted by the other models.
         for i in range(1, y_combined.shape[1]):
             target_i = y_combined[:, i]
@@ -199,8 +294,11 @@ class PairwiseDifferenceClassifier(
 
         return self
 
-    def predict_proba(self, X: npt.ArrayLike) -> npt.NDArray[np.float64]:
-        """Predict class labels for the samples in X.
+    def predict_proba(
+        self,
+        X: npt.ArrayLike,  # noqa: N803
+    ) -> npt.NDArray[np.float64]:
+        """Predict class probabilities for the samples in X.
 
         For each test sample, pairwise comparisons against all training samples
         are made. The predicted sign indicates whether the test sample's label
@@ -214,26 +312,37 @@ class PairwiseDifferenceClassifier(
 
         Returns
         -------
-        y_pred : npt.NDArray[Any]
-            Predicted class labels of shape (n_samples,).
+        npt.NDArray[np.float64]
+            Predicted class probabilities of shape (n_samples, n_classes).
+
+        Raises
+        ------
+        AssertionError
+            If the underlying estimator does not predict binary probabilities or
+            if an invalid probability distribution is detected.
 
         """
-        X = np.asarray(X)
+        x_mat = np.asarray(X)
         predictions = []
-        for x_ in X:
-            x_ = dual_vector_combinations(x_, self.fit_x, mode=self.mode)
+        for x_ in x_mat:
+            x_ = dual_vector_combinations(x_.reshape(1, -1), self.fit_x, mode=self.mode)
             proba_list = []
             for i, estimator in enumerate(self.estimators_, 1):
                 if hasattr(estimator, "predict_proba"):
                     proba_diff = estimator.predict_proba(x_)
-                    if not proba_diff.shape[1] == 2:
+                    if not proba_diff.shape[1] == _N_PROBA_CLASSES:
                         raise AssertionError(
                             f"Expected binary classification for pairwise difference "
                             f"model, but got {proba_diff.shape[1]} classes in "
                             f"predict_proba output.",
                         )
-                    # If ref has class (1) use proba for class, else 1-proba (0 col)
-                    proba_class = np.mean(proba_diff[self.fit_y[i]])
+                    # For each training sample j:
+                    # - if j is class i: prob(test=i) = prob(same)  = proba_diff[j, 0]
+                    # - if j is not i:   prob(test=i) = prob(diff)  = proba_diff[j, 1]
+                    fit_y_col = self.fit_y[:, i]
+                    proba_class = np.mean(
+                        np.where(fit_y_col == 1, proba_diff[:, 0], proba_diff[:, 1]),
+                    )
                 else:  # If no predict_proba available, estimate proba via avg.
                     # Delta is binary: Has same class or not
                     y_delta_pred = estimator.predict(x_)
@@ -249,8 +358,20 @@ class PairwiseDifferenceClassifier(
             predictions.append(proba_list)
         return np.array(predictions, dtype=np.float64)
 
-    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:
-        """Predict class labels for the samples in X."""
+    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:  # noqa: N803
+        """Predict class labels for the samples in X.
+
+        Parameters
+        ----------
+        X : npt.ArrayLike
+            Feature matrix of shape (n_samples, n_features).
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Predicted class labels of shape (n_samples,).
+
+        """
         proba = self.predict_proba(X)
         class_indices = np.argmax(proba, axis=1)
         return self.ohe.categories_[0][class_indices]
