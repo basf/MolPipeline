@@ -1,12 +1,15 @@
 """Contains functions for loading and saving objects to/from json files."""
 
 import importlib
+import inspect
 import types
 import typing
 import warnings
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar, overload
 
+import joblib
 import numpy as np
+from loguru import logger
 
 from molpipeline.pipeline import Pipeline
 
@@ -335,11 +338,18 @@ def recursive_to_json(obj: Any) -> Any:
                 return obj_dict
         # If the object is not a sklearn model, a warning is raised
         # as it might not be possible to recreate the object.
-        warnings.warn(
-            f"{type(obj)} has no get_params method. "
-            f"No parameters for initialization are retained.",
-            stacklevel=2,
-        )
+        init_params = get_init_params(obj, validation="return_none")
+        if init_params is not None:
+            for key, value in init_params.items():
+                object_dict[key] = recursive_to_json(value)
+        else:
+            # If the object is not a sklearn model, a warning is raised
+            # as it might not be possible to recreate the object.
+            warnings.warn(
+                f"{type(obj)} has no get_params method. "
+                f"No parameters for initialization are retained.",
+                stacklevel=2,
+            )
 
     return object_dict
 
@@ -422,3 +432,103 @@ def recursive_from_json(obj: Any) -> Any:
         return iterable_type(iter_list)
 
     raise TypeError(f"Unexpected Type: {type(obj)}")
+
+
+@overload
+def get_init_params(
+    obj: Any,
+    validation: Literal["return_none"],
+) -> dict[str, Any] | None: ...
+
+
+@overload
+def get_init_params(
+    obj: Any,
+    validation: Literal["raise", "warn", "skip"] = "raise",
+) -> dict[str, Any]: ...
+
+
+@overload
+def get_init_params(
+    obj: Any,
+    validation: Literal["raise", "warn", "skip", "return_none"],
+) -> dict[str, Any] | None: ...
+
+
+def get_init_params(
+    obj: Any,
+    validation: Literal["raise", "warn", "skip", "return_none"] = "raise",
+) -> dict[str, Any] | None:
+    """Get the parameters for initialization of an object.
+
+    Parameters
+    ----------
+    obj : Any
+        The object to get the parameters for.
+    validation : Literal["raise", "warn", "skip", "return_none"], default="raise"
+        The validation strategy applied when required parameters are missing from the
+        object's state or when a reconstructed object does not hash-equal the original.
+        ``"raise"`` raises an error when the validation failed. See Raises section.
+        ``"warn"`` warns when the validation failed.
+        ``"skip"`` bypasses the reconstruction check entirely and returns whatever
+        parameters could be extracted.
+        ``"return_none"`` returns ``None`` when the validation failed, instead of
+        raising an error.
+
+    Returns
+    -------
+    dict[str, Any] | None
+        The extracted initialization parameters, or ``None`` when ``validation`` is
+        ``"return_none"`` and required parameters are missing from the object's state
+        or the hash-equality reconstruction check fails.
+
+    Raises
+    ------
+    ValueError
+        If ``validation="raise"`` and required parameters are missing from the object's
+        state, or the object reconstructed from those parameters does not hash-equal the
+        original.
+
+    Notes
+    -----
+    The reconstruction check compares ``joblib.hash(obj)`` with
+    ``joblib.hash(reconstructed_obj)``.
+
+    """
+    init_params = dict(inspect.signature(obj.__init__).parameters)
+    init_params = {k: v for k, v in init_params.items() if k != "self"}
+    allowed_params = init_params.keys()
+    required_params = [
+        key for key, param in init_params.items() if param.default is param.empty
+    ]
+    if hasattr(obj, "get_params"):
+        obj_params = obj.get_params(deep=False)
+    else:
+        state_dict = obj.__getstate__() or {}
+        obj_params = {k: v for k, v in state_dict.items() if k in allowed_params}
+
+    if validation == "skip":
+        return obj_params
+
+    missing_params = set(required_params) - set(obj_params.keys())
+    if missing_params:
+        msg = f"Missing required parameters: {missing_params}"
+        if validation == "raise":
+            raise ValueError(msg)
+        if validation == "warn":
+            logger.warning(msg)
+            return obj_params
+        if validation == "return_none":
+            return None
+
+    reconstructed_obj = obj.__class__(**obj_params)
+    if joblib.hash(obj) != joblib.hash(reconstructed_obj):
+        msg = "Reconstruction of the object failed."
+        if validation == "raise":
+            raise ValueError(msg)
+        if validation == "warn":
+            logger.warning(msg)
+        if validation == "return_none":
+            return None
+
+    return obj_params
