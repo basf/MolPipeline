@@ -25,7 +25,15 @@ class TestBin2Mol(unittest.TestCase):
     """Test case for testing conversion of binary string to molecules."""
 
     def test_bin2mol(self) -> None:
-        """Test molecules can be read from binary string."""
+        """Test molecules can be read from binary string.
+
+        Raises
+        ------
+        AssertionError
+            If the molecule could not be transformed from binary string.
+            This should not happen for the test molecules.
+
+        """
         test_mols = [
             MOL_ANTIMONY,
             MOL_BENZENE,
@@ -36,9 +44,13 @@ class TestBin2Mol(unittest.TestCase):
         for mol in test_mols:
             bin2mol = BinaryToMol()
             transformed_mol = bin2mol.pretransform_single(mol.ToBinary())
+            if not isinstance(transformed_mol, Chem.Mol):
+                raise AssertionError(
+                    "Molecule could not be transformed from binary string.",
+                )
             log_block = rdBase.BlockLogs()
             self.assertEqual(
-                Chem.MolToInchi(transformed_mol),
+                Chem.MolToInchi(mol),
                 Chem.MolToInchi(transformed_mol),
             )
             del log_block

@@ -10,15 +10,15 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from sklearn.base import _fit_context, clone
+from sklearn.base import _fit_context, clone  # noqa: PLC2701
 from sklearn.pipeline import Pipeline as _Pipeline
-from sklearn.pipeline import _final_estimator_has, _fit_transform_one
+from sklearn.pipeline import _final_estimator_has, _fit_transform_one  # noqa: PLC2701
 from sklearn.utils import Bunch
-from sklearn.utils._tags import Tags, get_tags
+from sklearn.utils._tags import Tags, get_tags  # noqa: PLC2701
 from sklearn.utils.metadata_routing import (
     MetadataRouter,
     MethodMapping,
-    _routing_enabled,
+    _routing_enabled,  # noqa: PLC2701
     process_routing,
 )
 from sklearn.utils.metaestimators import available_if
@@ -70,7 +70,7 @@ class Pipeline(_Pipeline):
 
         Parameters
         ----------
-        steps: list[tuple[str, Union[AnyTransformer, AnyPredictor, ABCPipelineElement]]]
+        steps: list[tuple[str, AnyTransformer | AnyPredictor | ABCPipelineElement]]
             List of (name, Estimator) tuples.
         memory: str | joblib.Memory | None, optional
             Path to cache transformers.
