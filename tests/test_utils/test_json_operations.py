@@ -195,7 +195,7 @@ class GetInitParamsTest(unittest.TestCase):
         self.assertEqual(init_params, {"optional": 9})
 
     def test_modified_param_obj(self) -> None:
-        """Test that modified parameters are correctly extracted."""
+        """Test that modified parameters raise an error."""
         custom_obj = ModifiedParamObj(required=4, optional=6)
         with self.assertRaisesRegex(ValueError, "Reconstruction of the object failed."):
             get_init_params(custom_obj, validation="raise")

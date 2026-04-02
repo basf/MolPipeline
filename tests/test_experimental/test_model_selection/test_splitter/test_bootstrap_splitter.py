@@ -47,6 +47,7 @@ class TestBootstrapSplit(unittest.TestCase):
 
             # Test set is exactly the complement of sampled train indices.
             expected_test = np.setdiff1d(all_indices, train_indices)
+            self.assertGreater(len(expected_test), 0)  # Test set is non-empty
             self.assertTrue(np.array_equal(test_indices, expected_test))
             # Test that test_indices does not contain repetitions
             self.assertEqual(test_indices.shape[0], np.unique(test_indices).shape[0])

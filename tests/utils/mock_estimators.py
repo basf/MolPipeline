@@ -156,7 +156,14 @@ class MockClassiferWithFloatLabels(MockClassifier):
 
 
 class MockClassifierWithTrueFloatLabels(MockClassifier):
-    """A mock classifier that returns true float class labels instead of integers."""
+    """A mock classifier that returns true float class labels instead of integers.
+
+    True float values denote values which have float type and cannot be transformed to
+    integers, such as 1.1 or 0.5. These values are invalid class labels and can raise an
+    error in a meta-estimator. This mock class can be used to check if such faulty
+    predictions were handled correctly.
+
+    """
 
     @override
     def predict(  # type: ignore
