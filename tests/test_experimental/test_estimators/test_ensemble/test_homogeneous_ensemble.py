@@ -457,7 +457,7 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
         )
         ensemble.fit(features, y)
         inverted_classifier = MockClassifier()
-        inverted_classifier.predict = MagicMock(
+        inverted_classifier.predict = MagicMock(  # type: ignore
             side_effect=lambda x: np.array([i[0] == 0 for i in x], dtype=np.int64),
         )
         ensemble.estimators_[1] = inverted_classifier  # Monkeypatch the second model
