@@ -13,7 +13,15 @@ from molpipeline.utils.molpipeline_types import XType, YType
 
 
 class BootstrapSplit(BaseCrossValidator):  # pylint: disable=abstract-method
-    """Splitter where the training set is a bootstrap sample."""
+    """Splitter where the training set is a bootstrap sample.
+
+    For each split an independent bootstrap sample is created, meaning that a specific
+    number of samples is drawn with replacement from the original data. The test set
+    consists of the data not included in the training set. The parameter `max_samples`
+    controls the maximum number of samples to draw for the training set, where the
+    original size is the default and upper limit.
+
+    """
 
     def __init__(
         self,
@@ -47,6 +55,11 @@ class BootstrapSplit(BaseCrossValidator):  # pylint: disable=abstract-method
                 "If max_samples is a float, it must be in the range (0.0, 1.0].",
             )
         self.max_samples = max_samples
+        if not isinstance(np.random.default_rng(random_state), np.random.Generator):
+            raise ValueError(
+                f"`random_state` must be a valid input for `np.random.default_rng`. "
+                f" Got `random_state={random_state}`.",
+            )
         self.random_state = random_state
 
     @override
