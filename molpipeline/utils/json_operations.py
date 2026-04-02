@@ -461,6 +461,16 @@ def get_init_params(
 ) -> dict[str, Any] | None:
     """Get the parameters for initialization of an object.
 
+    If the object supports `get_params`, those parameters are returned. Otherwise, the
+    parameters are inferred from the object's state: The signature of the
+    `__init__` method is used to determine relevant input variables, which are then
+    extracted from the object's state (via `__getstate__`). As this approach may result
+    in incorrect parameters, a validation step is performed by reconstructing the
+    object from the obtained parameters and comparing the hash of the reconstructed
+    object with the original one. The method offers multiple approaches to handle
+    occurring differences between the original and reconstructed object, which can be
+    specified via the parameter `validation`.
+
     Parameters
     ----------
     obj : Any
