@@ -5,7 +5,11 @@ from molpipeline.estimators.pairwise_difference_learner.pairwise_difference_lear
     PairwiseDifferenceLearner,
     PairwiseDifferenceRegressor,
     dual_vector_combinations,
+    dual_vector_combinations_dense,
+    dual_vector_combinations_sparse,
     single_vector_combinations,
+    single_vector_combinations_dense,
+    single_vector_combinations_sparse,
 )
 
 __all__ = [
@@ -13,5 +17,9 @@ __all__ = [
     "PairwiseDifferenceLearner",
     "PairwiseDifferenceRegressor",
     "dual_vector_combinations",
+    "dual_vector_combinations_dense",
+    "dual_vector_combinations_sparse",
     "single_vector_combinations",
+    "single_vector_combinations_dense",
+    "single_vector_combinations_sparse",
 ]

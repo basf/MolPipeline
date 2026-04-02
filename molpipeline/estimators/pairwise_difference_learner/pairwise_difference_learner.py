@@ -2,58 +2,63 @@
 
 import abc
 from itertools import combinations, product
-from typing import Any, Generic, Literal, TypeVar
+from typing import Any, Generic, Literal, TypeVar, Union
 
 import numpy as np
 import numpy.typing as npt
+from scipy import sparse as sp
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.multiclass import unique_labels
 
 from molpipeline.utils.molpipeline_types import AnyPredictor
 
+# Type alias that covers both dense arrays and scipy sp matrices.
+_MatrixLike = Union[npt.ArrayLike, sp.spmatrix]  # REPLACE ONCE ENSEMBLES ARE MERGED
+
 ModelVar = TypeVar("ModelVar", bound=AnyPredictor | BaseEstimator)
 
 _N_PROBA_CLASSES = 2
 
 
-def dual_vector_combinations(
+def dual_vector_combinations_dense(
     vector_1: npt.ArrayLike,
     vector_2: npt.ArrayLike,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
 ) -> npt.NDArray[Any]:
-    """Combine two vectors and return the dual combined vector.
+    """Combine two dense vectors and return the dual combined vector.
 
     Parameters
     ----------
     vector_1 : npt.ArrayLike
-        Vector to form combinations of.
+        Dense matrix whose rows form the first side of each pair.
     vector_2 : npt.ArrayLike
-        Vector to form combinations of.
+        Dense matrix whose rows form the second side of each pair.
     mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
         Mode of combination. Options are:
-        - "combine": concatenate the two vectors (default)
-        - "diff": calculate the difference between the two vectors
-        - "combine_and_diff": concatenate the two vectors and their difference
+
+        - "combine": concatenate the two row vectors (default)
+        - "diff": calculate the element-wise difference ``a1 - a2``
+        - "combine_and_diff": concatenate the two row vectors and their difference
 
     Returns
     -------
     npt.NDArray[Any]
-        Combined vector of the two input vectors.
+        Combined matrix of shape ``(n1 * n2, ...)``.
 
     Raises
     ------
     ValueError
-        If mode is not one of 'combine', 'diff', 'combine_and_diff'.
+        If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
 
     """
     if mode == "combine":
-        return np.vstack([np.hstack(comb) for comb in product(vector_1, vector_2)])
+        return np.vstack([np.hstack(comb) for comb in product(vector_1, vector_2)])  # type: ignore
     if mode == "diff":
-        return np.vstack([a1 - a2 for a1, a2 in product(vector_1, vector_2)])
+        return np.vstack([a1 - a2 for a1, a2 in product(vector_1, vector_2)])  # type: ignore
     if mode == "combine_and_diff":
         return np.vstack(
-            [np.hstack((a1, a2, a1 - a2)) for a1, a2 in product(vector_1, vector_2)],
+            [np.hstack((a1, a2, a1 - a2)) for a1, a2 in product(vector_1, vector_2)],  # type: ignore
         )
     raise ValueError(
         f"Invalid mode: {mode}. Valid options are 'combine', 'diff', "
@@ -61,25 +66,110 @@ def dual_vector_combinations(
     )
 
 
-def single_vector_combinations(
+def dual_vector_combinations_sparse(
+    vector_1: sp.spmatrix,
+    vector_2: sp.spmatrix,
+    mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
+) -> sp.spmatrix:
+    """Combine two sparse matrices and return the dual combined sparse matrix.
+
+    Parameters
+    ----------
+    vector_1 : spmatrix
+        Sparse matrix whose rows form the first side of each pair.
+    vector_2 : spmatrix
+        Sparse matrix whose rows form the second side of each pair.
+    mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
+        Mode of combination. Options are:
+
+        - "combine": horizontally stack the two row vectors (default)
+        - "diff": calculate the element-wise difference ``a1 - a2``
+        - "combine_and_diff": horizontally stack the row vectors and their difference
+
+    Returns
+    -------
+    sp.spmatrix
+        Combined sparse matrix of shape ``(n1 * n2, ...)``.
+
+    Raises
+    ------
+    ValueError
+        If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
+
+    """
+    if mode == "combine":
+        return sp.vstack([sp.hstack(comb) for comb in product(vector_1, vector_2)])  # type: ignore
+    if mode == "diff":
+        return sp.vstack([a1 - a2 for a1, a2 in product(vector_1, vector_2)])  # type: ignore
+    if mode == "combine_and_diff":
+        return sp.vstack(
+            [sp.hstack((a1, a2, a1 - a2)) for a1, a2 in product(vector_1, vector_2)],  # type: ignore
+        )
+    raise ValueError(
+        f"Invalid mode: {mode}. Valid options are 'combine', 'diff', "
+        f"'combine_and_diff'.",
+    )
+
+
+def dual_vector_combinations(
+    vector_1: _MatrixLike,
+    vector_2: _MatrixLike,
+    mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
+) -> npt.NDArray[Any] | sp.spmatrix:
+    """Combine two vectors (dense or sparse) and return the dual combined vector.
+
+    Dispatches to :func:`dual_vector_combinations_sparse` when either input is a
+    scipy sparse matrix, and to :func:`dual_vector_combinations_dense` otherwise.
+
+    Parameters
+    ----------
+    vector_1 : _MatrixLike
+        Matrix whose rows form the first side of each pair.
+    vector_2 : _MatrixLike
+        Matrix whose rows form the second side of each pair.
+    mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
+        Mode of combination. Options are:
+
+        - "combine": concatenate the two row vectors (default)
+        - "diff": calculate the element-wise difference ``a1 - a2``
+        - "combine_and_diff": concatenate the row vectors and their difference
+
+    Returns
+    -------
+    npt.NDArray[Any] | sp.spmatrix
+        Combined matrix of shape ``(n1 * n2, ...)``.  The return type matches
+        the input type: sparse inputs yield a sparse output, dense inputs a
+        dense NumPy array.
+
+    Raises
+    ------
+    ValueError
+        If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
+
+    """
+    if sp.issparse(vector_1) or sp.issparse(vector_2):
+        return dual_vector_combinations_sparse(vector_1, vector_2, mode=mode)
+    return dual_vector_combinations_dense(vector_1, vector_2, mode=mode)
+
+
+def single_vector_combinations_dense(
     vector: npt.ArrayLike,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
 ) -> npt.NDArray[Any]:
     """Combine all rows of the vector and return the combined vector.
 
-    Using dual_vector_combinations(X, X) does not result in the same result as
-    single_vector_combinations(X) as the former includes combinations of the same row
-    with itself.
+    Using ``dual_vector_combinations(X, X)`` does not produce the same result as
+    ``single_vector_combinations(X)`` because the former includes self-pairs.
 
     Parameters
     ----------
     vector : npt.ArrayLike
-        Vector to form combinations of.
+        Dense matrix whose rows are to be combined pairwise.
     mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
         Mode of combination. Options are:
-        - "combine": concatenate the two vectors (default)
-        - "diff": calculate the difference between the two vectors
-        - "combine_and_diff": concatenate the two vectors and their difference
+        - "combine": concatenate the two row vectors (default)
+        - "diff": calculate the element-wise difference ``a1 - a2``
+        - "combine_and_diff": concatenate the row vectors and their difference
 
     Returns
     -------
@@ -89,7 +179,7 @@ def single_vector_combinations(
     Raises
     ------
     ValueError
-        If mode is not one of 'combine', 'diff', 'combine_and_diff'.
+        If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
 
     """
     if mode == "combine":
@@ -104,6 +194,94 @@ def single_vector_combinations(
         f"Invalid mode: {mode}. Valid options are 'combine', 'diff', "
         f"'combine_and_diff'.",
     )
+
+
+def single_vector_combinations_sparse(
+    vector: sp.spmatrix,
+    mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
+) -> sp.spmatrix:
+    """Combine all unique row pairs of a sparse matrix.
+
+    Using ``dual_vector_combinations(X, X)`` does not produce the same result as
+    ``single_vector_combinations(X)`` because the former includes self-pairs.
+
+    Parameters
+    ----------
+    vector : spmatrix
+        Sparse matrix whose rows are to be combined pairwise.
+    mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
+        Mode of combination. Options are:
+
+        - "combine": horizontally stack the two row vectors (default)
+        - "diff": calculate the element-wise difference ``a1 - a2``
+        - "combine_and_diff": horizontally stack the row vectors and their difference
+
+    Returns
+    -------
+    sp.spmatrix
+        Combined sparse matrix of shape ``(C(n, 2), ...)``.
+
+    Raises
+    ------
+    ValueError
+        If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
+
+    """
+    rows = []
+    for a1, a2 in combinations(vector, r=2):
+        if mode == "combine":
+            rows.append(sp.hstack([a1, a2]))
+        elif mode == "diff":
+            rows.append(a1 - a2)
+        elif mode == "combine_and_diff":
+            rows.append(sp.hstack([a1, a2, a1 - a2]))
+        else:
+            raise ValueError(
+                f"Invalid mode: {mode}. Valid options are 'combine', 'diff', "
+                f"'combine_and_diff'.",
+            )
+    return sp.vstack(rows)
+
+
+def single_vector_combinations(
+    vector: _MatrixLike,
+    mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
+) -> npt.NDArray[Any] | sp.spmatrix:
+    """Combine all unique row pairs of a matrix (dense or sparse).
+
+    Dispatches to :func:`single_vector_combinations_sparse` when the input is a
+    scipy sparse matrix, and to :func:`single_vector_combinations_dense` otherwise.
+
+    Using ``dual_vector_combinations(X, X)`` does not produce the same result as
+    ``single_vector_combinations(X)`` because the former includes self-pairs.
+
+    Parameters
+    ----------
+    vector : _MatrixLike
+        Matrix whose rows are to be combined pairwise.
+    mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
+        Mode of combination. Options are:
+
+        - "combine": concatenate the two row vectors (default)
+        - "diff": calculate the element-wise difference ``a1 - a2``
+        - "combine_and_diff": concatenate the row vectors and their difference
+
+    Returns
+    -------
+    npt.NDArray[Any] | sp.spmatrix
+        Combined matrix of shape ``(C(n, 2), ...)``.  The return type matches
+        the input type: sparse inputs yield a sparse output, dense inputs a
+        dense NumPy array.
+
+    Raises
+    ------
+    ValueError
+        If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
+
+    """
+    if sp.issparse(vector):
+        return single_vector_combinations_sparse(vector, mode=mode)
+    return single_vector_combinations_dense(vector, mode=mode)
 
 
 class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
