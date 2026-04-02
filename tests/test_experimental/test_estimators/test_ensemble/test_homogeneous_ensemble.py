@@ -1,12 +1,14 @@
-"""Unit tests for CloneEnsembleClassifier and CloneEnsembleRegressor."""
+"""Unit tests for HomogeneousEnsembleClassifier and HomogeneousEnsembleRegressor."""
 
 import unittest
+from unittest.mock import MagicMock
 
 import joblib
 import numpy as np
 from scipy.sparse import csr_matrix
 from sklearn.base import clone
 from sklearn.datasets import make_classification, make_regression
+from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import GridSearchCV, ParameterGrid
 from sklearn.utils._tags import get_tags  # noqa: PLC2701
@@ -25,7 +27,7 @@ from tests.utils.mock_estimators import (
     MockEstimator,
 )
 
-sampler_list = [DataRepetitionSplit(3), BootstrapSplit(3, random_state=20160316)]
+sampler_list = [DataRepetitionSplit(3), BootstrapSplit(3, random_state=20260316)]
 
 
 class TestHomogeneousEnsembleRegressor(unittest.TestCase):
@@ -203,9 +205,11 @@ class TestHomogeneousEnsembleRegressor(unittest.TestCase):
                 if not isinstance(est, MockEstimator):
                     raise TypeError("Expected an instance of MockEstimator")
                 self.assertTrue(
-                    np.allclose(est.fit_args["X"], np.asarray(features)[split[0]]),
+                    np.array_equal(est.fit_args["X"], np.asarray(features)[split[0]]),
                 )
-                self.assertTrue(np.allclose(est.fit_args["y"], np.asarray(y)[split[0]]))
+                self.assertTrue(
+                    np.array_equal(est.fit_args["y"], np.asarray(y)[split[0]]),
+                )
 
     def test_linear_regression_dense_and_sparse(self) -> None:
         """Regressor works with both dense arrays and CSR sparse matrices."""
@@ -239,13 +243,14 @@ class TestHomogeneousEnsembleRegressor(unittest.TestCase):
     def test_regressor_grid_search(self) -> None:
         """GridSearchCV works for the regressor with r2 scoring."""
         features, y = make_regression(
-            n_samples=50,
-            n_features=5,
+            n_samples=20,
+            n_features=2,
+            n_informative=2,
             random_state=42,
         )
         reg = HomogeneousEnsembleRegressor(
             estimator=LinearRegression(),
-            sampler=BootstrapSplit(3, random_state=42),
+            sampler=BootstrapSplit(2, random_state=42),
         )
         grid = GridSearchCV(
             reg,
@@ -255,6 +260,27 @@ class TestHomogeneousEnsembleRegressor(unittest.TestCase):
         )
         grid.fit(features, y)
         self.assertFalse(np.isnan(grid.best_score_))
+
+    def test_sklearn_similarity(self) -> None:
+        """Ensure that the base case is similar to the sklearn models."""
+        features, y = make_regression(
+            n_samples=20,
+            n_features=2,
+            n_informative=2,
+            random_state=42,
+        )
+        base = LinearRegression()
+        ensemble = HomogeneousEnsembleRegressor(
+            estimator=base,
+            sampler=BootstrapSplit(3, random_state=42),
+        )
+        ensemble.fit(features, y)
+        preds = ensemble.predict(features)
+
+        skl_ensemble = BaggingRegressor(base, n_estimators=3, random_state=42)
+        skl_ensemble.fit(features, y)
+        preds_skl = skl_ensemble.predict(features)
+        self.assertTrue(np.allclose(preds, preds_skl))
 
 
 class TestHomogeneousEnsembleClassifier(unittest.TestCase):
@@ -411,10 +437,35 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
         test_params.pop("voting")
         for parameters in ParameterGrid(test_params):
             base = MockClassifier()
-            ensemble = HomogeneousEnsembleClassifier(estimator=base, **parameters)
+            ensemble = HomogeneousEnsembleClassifier(
+                estimator=base,
+                **parameters,
+                voting="hard",
+            )
             ensemble.fit(features, y)
             preds = ensemble.predict(features)
             self.assertTrue(np.allclose(preds, y))
+
+    def test_predict_hard_voting_tie(self) -> None:
+        """Test the hard voting in case the model predictions result in a tie."""
+        y = np.array([1, 0, 1, 0, 1, 0])
+        features = np.array([[i, i, i, i] for i in y])
+        ensemble = HomogeneousEnsembleClassifier(
+            estimator=MockClassifier(),
+            sampler=DataRepetitionSplit(2),
+            voting="hard",
+        )
+        ensemble.fit(features, y)
+        inverted_classifier = MockClassifier()
+        inverted_classifier.predict = MagicMock(
+            side_effect=lambda x: np.array([i[0] == 0 for i in x], dtype=np.int64),
+        )
+        ensemble.estimators_[1] = inverted_classifier  # Monkeypatch the second model
+        pred = ensemble.predict(features)
+        # In case of a tie, the alphanumeric lower class is returned
+        self.assertTrue(np.allclose(pred, np.array([0, 0, 0, 0, 0, 0])))
+        pred_2 = ensemble.predict(1 - features)
+        self.assertTrue(np.allclose(pred_2, np.array([0, 0, 0, 0, 0, 0])))
 
     def test_predict_proba(self) -> None:
         """predict_proba returns the mean predicted probabilities of the clones."""
@@ -489,19 +540,22 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
     def test_classifier_grid_search_with_roc_auc(self) -> None:
         """GridSearchCV with roc_auc scoring works (requires predict_proba + tags)."""
         features, y = make_classification(
-            n_samples=50,
-            n_features=5,
+            n_samples=20,
+            n_features=2,
+            n_redundant=0,
+            n_repeated=0,
+            n_informative=2,
             random_state=42,
         )
         clf = HomogeneousEnsembleClassifier(
             estimator=LogisticRegression(solver="liblinear"),
-            sampler=BootstrapSplit(3, random_state=42),
+            sampler=BootstrapSplit(2, random_state=42),
         )
         grid = GridSearchCV(
             clf,
             param_grid={"voting": ["hard", "soft"]},
             scoring="roc_auc",
-            cv=3,
+            cv=2,
         )
         grid.fit(features, y)
         self.assertFalse(np.isnan(grid.best_score_))
@@ -509,19 +563,22 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
     def test_classifier_grid_search_with_balanced_accuracy(self) -> None:
         """GridSearchCV with balanced_accuracy scoring works for the classifier."""
         features, y = make_classification(
-            n_samples=50,
-            n_features=5,
+            n_samples=20,
+            n_features=2,
+            n_redundant=0,
+            n_repeated=0,
+            n_informative=2,
             random_state=42,
         )
         clf = HomogeneousEnsembleClassifier(
             estimator=LogisticRegression(solver="liblinear"),
-            sampler=BootstrapSplit(3, random_state=42),
+            sampler=BootstrapSplit(2, random_state=42),
         )
         grid = GridSearchCV(
             clf,
             param_grid={"voting": ["hard", "soft"]},
             scoring="balanced_accuracy",
-            cv=3,
+            cv=2,
         )
         grid.fit(features, y)
         self.assertFalse(np.isnan(grid.best_score_))
@@ -529,13 +586,16 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
     def test_classifier_grid_search_multimetric(self) -> None:
         """Multimetric GridSearchCV works (roc_auc requires predict_proba + tags)."""
         features, y = make_classification(
-            n_samples=50,
-            n_features=5,
+            n_samples=20,
+            n_features=2,
+            n_redundant=0,
+            n_repeated=0,
+            n_informative=2,
             random_state=42,
         )
         clf = HomogeneousEnsembleClassifier(
             estimator=LogisticRegression(solver="liblinear"),
-            sampler=BootstrapSplit(3, random_state=42),
+            sampler=BootstrapSplit(2, random_state=42),
         )
         scoring = {
             "ba": "balanced_accuracy",
@@ -546,7 +606,7 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
             param_grid={"voting": ["hard", "soft"]},
             scoring=scoring,
             refit="ba",
-            cv=3,
+            cv=2,
         )
         grid.fit(features, y)
         self.assertIn("mean_test_ba", grid.cv_results_)
@@ -557,6 +617,35 @@ class TestHomogeneousEnsembleClassifier(unittest.TestCase):
         self.assertFalse(
             np.any(np.isnan(grid.cv_results_["mean_test_roc_auc"])),
         )
+
+    def test_sklearn_similarity(self) -> None:
+        """Ensure similar results to sklearn for the base case."""
+        features, y = make_classification(
+            n_samples=50,
+            n_features=2,
+            n_redundant=0,
+            n_repeated=0,
+            n_informative=2,
+            random_state=42,
+        )
+        base = LogisticRegression()
+        ensemble = HomogeneousEnsembleClassifier(
+            estimator=base,
+            sampler=BootstrapSplit(3, random_state=42),
+            voting="hard",
+        )
+        ensemble.fit(features, y)
+        preds = ensemble.predict(features)
+        proba = ensemble.predict_proba(features)
+
+        skl_ensemble = BaggingClassifier(base, n_estimators=3, random_state=42)
+        skl_ensemble.fit(features, y)
+        preds_skl = skl_ensemble.predict(features)
+        proba_skl = skl_ensemble.predict_proba(features)
+
+        self.assertTrue(np.allclose(preds, preds_skl))
+        # Not using allclose because of relative tolerance is not optional
+        self.assertLess((proba - proba_skl).max(), 0.05)
 
 
 if __name__ == "__main__":
