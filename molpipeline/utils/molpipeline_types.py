@@ -47,8 +47,8 @@ AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 SparseMatrix = csc_matrix[Any] | coo_matrix[Any] | csr_matrix[Any]
 XType = npt.ArrayLike | npt.NDArray[Any] | spmatrix  # Generic model input features
 YType = npt.ArrayLike | npt.NDArray[Any] | None  # Generic model target values
-# XVar is for the case the input has the same type bis is modified in other ways
-# e.g. row removal or value manipulations. Defines parameter AND return type!
+# XVar indicates that the function accepts multiple types, and returns the same type
+# as the input. e.g. row removal or value manipulations.
 XVar = TypeVar("XVar", bound=npt.ArrayLike | npt.NDArray[Any] | spmatrix)
 # Same as XVar but for target values.
 YVar = TypeVar("YVar", bound=npt.ArrayLike | npt.NDArray[Any] | None)
