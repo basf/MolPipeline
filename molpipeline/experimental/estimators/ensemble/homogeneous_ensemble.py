@@ -7,7 +7,7 @@ from typing import Any, Generic, Literal, Self, TypeVar, overload
 import joblib
 import numpy as np
 import numpy.typing as npt
-from scipy import sparse
+from scipy import sparse, stats
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.metaestimators import available_if
@@ -18,7 +18,6 @@ from molpipeline.experimental.model_selection.splitter.bootstrap_splitter import
 )
 from molpipeline.utils.json_operations import get_init_params
 from molpipeline.utils.molpipeline_types import (
-    AnyNumpyElement,
     AnyPredictor,
     XType,
     YType,
@@ -27,24 +26,6 @@ from molpipeline.utils.molpipeline_types import (
 _T = TypeVar("_T", BaseEstimator, AnyPredictor)
 # Not identical to _T, as a bit more flexible, which is required for inheritance.
 _ModelVar = TypeVar("_ModelVar", bound=BaseEstimator | AnyPredictor)
-
-
-def _most_frequent(a: npt.NDArray[AnyNumpyElement]) -> AnyNumpyElement:
-    """Get the most frequent values in an array.
-
-    Parameters
-    ----------
-    a: npt.NDArray[AnyNumpyElement]
-        The array to get the most frequent values.
-
-    Returns
-    -------
-    AnyNumpyElement
-        The most frequent value.
-
-    """
-    labels, counts = np.unique(a, return_counts=True)
-    return labels[np.argmax(counts)]
 
 
 class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
@@ -503,4 +484,4 @@ class HomogeneousEnsembleClassifier(ClassifierMixin, HomogeneousEnsemble[_ModelV
                 )
             predictions = converted_predictions
 
-        return np.apply_along_axis(_most_frequent, axis=0, arr=predictions)
+        return stats.mode(predictions, axis=0)[0]
