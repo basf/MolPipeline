@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline
 from molpipeline.any2mol import SmilesToMol
@@ -249,7 +248,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         descriptor_names = expected_df.drop(columns=["smiles"]).columns.tolist()
         smi2mol = SmilesToMol()
         property_element = MolToRDKitPhysChem(
-            standardizer=None,
             descriptor_list=descriptor_names,
         )
         pipeline = Pipeline(
@@ -264,36 +262,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
         output = pipeline.fit_transform(smiles)
         self.assertTrue(np.allclose(output, property_vector))  # add assertion here
 
-    def test_descriptor_normalization(self) -> None:
-        """Test if the normalization of RDKitPhysChem Descriptors works as expected."""
-        smi2mol = SmilesToMol()
-        property_element = MolToRDKitPhysChem(standardizer=StandardScaler())
-        pipeline = Pipeline(
-            [
-                ("smi2mol", smi2mol),
-                ("property_element", property_element),
-            ],
-        )
-        # pylint: disable=duplicate-code  # test case molecules are allowed to be duplicated
-        smiles = [
-            "CC",
-            "CCC",
-            "CCCO",
-            "CCNCO",
-            "C(C)CCO",
-            "CCO",
-            "CCCN",
-            "CCCC",
-            "CCOC",
-            "COO",
-        ]
-        output = pipeline.fit_transform(smiles)
-        non_zero_descriptors = output[:, (np.abs(output).sum(axis=0) != 0)]
-        self.assertTrue(
-            np.allclose(non_zero_descriptors.mean(axis=0), 0.0),
-        )  # add assertion here
-        self.assertTrue(np.allclose(non_zero_descriptors.std(axis=0), 1.0))
-
     def test_optional_nan_value_handling(self) -> None:
         """Test the handling of partly failed descriptor calculations."""
         ok_smiles_list = [
@@ -306,7 +274,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
         # test with return_with_errors=False
         property_element = MolToRDKitPhysChem(
-            standardizer=None,
             return_with_errors=False,
         )
 
@@ -316,9 +283,9 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
             fill_value=np.nan,
         )
 
-        # note that we need the error filter and replacer here. Otherwise, the
-        # pipeline would fail on any error irrespective of the return_with_errors
-        # parameter
+        # note that we need the error filter and replacer here.
+        # Otherwise, the pipeline would fail on any error irrespective of the
+        # return_with_errors parameter
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
@@ -341,7 +308,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
 
         # test with return_with_errors=True
         property_element2 = MolToRDKitPhysChem(
-            standardizer=None,
             return_with_errors=True,
         )
 
@@ -386,7 +352,6 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
                 (
                     "property_element",
                     MolToRDKitPhysChem(
-                        standardizer=None,
                         return_with_errors=True,
                         log_exceptions=False,
                     ),
@@ -408,30 +373,8 @@ class TestMol2RDKitPhyschem(unittest.TestCase):
                 ("smi2mol", SmilesToMol()),
                 (
                     "property_element",
-                    MolToRDKitPhysChem(standardizer=None),  # no standardizer
+                    MolToRDKitPhysChem(),
                 ),
-            ],
-        )
-        pipeline.fit_transform(
-            [
-                "C1=NC(N)=[Se]=C1",  # fails PhysChem calculation
-            ],
-        )
-        self.assertIsNotNone(pipeline)  # test for ruff to not have a staticmethod
-
-        # test with a molecule that fails the PhysChem calculation and with standardizer
-        pipeline = Pipeline(
-            [
-                ("smi2mol", SmilesToMol()),
-                (
-                    "property_element",
-                    MolToRDKitPhysChem(
-                        standardizer=StandardScaler(),
-                    ),  # with standardizer
-                ),
-                # error filter is needed here, because the MolToRDKitPhysChem doesn't
-                # check if the input to the standardizer contains InvalidInstances
-                ("error_filter", ErrorFilter(filter_everything=True)),
             ],
         )
         pipeline.fit_transform(

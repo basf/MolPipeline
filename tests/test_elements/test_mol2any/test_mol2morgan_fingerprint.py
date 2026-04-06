@@ -86,7 +86,9 @@ class TestMol2MorganFingerprint(unittest.TestCase):
 
         sparse_output = sparse_pipeline.fit_transform(test_smiles)
         dense_output = dense_pipeline.fit_transform(test_smiles)
-        rdkit_vect_morgan_output = rdkit_vect_pipeline.fit_transform(test_smiles)
+        rdkit_vect_morgan_output = rdkit_vect_pipeline.fit_transform(
+            test_smiles,
+        )
 
         self.assertTrue(np.all(sparse_output.toarray() == dense_output))
 
@@ -158,6 +160,26 @@ class TestMol2MorganFingerprint(unittest.TestCase):
         self.assertEqual(len(feature_names), 1024)
         # feature names should be unique
         self.assertEqual(len(feature_names), len(set(feature_names)))
+
+    def test_bit_mapping(self) -> None:
+        """Test if the mapped bits are identical to the original bits.
+
+        Raises
+        ------
+        AssertionError
+            The SMILES provided by the unit test are invalid.
+
+        """
+        mol_fp = MolToMorganFP(n_bits=1024)
+
+        for smiles in test_smiles:
+            mol = SmilesToMol().transform([smiles])[0]
+            if isinstance(mol, InvalidInstance):
+                raise AssertionError(f"Invalid molecule: {smiles}")
+            fp = mol_fp.transform([mol])
+            explained_bits = mol_fp.bit2atom_mapping(mol)
+            self.assertEqual(fp[0].nonzero()[1].shape[0], len(explained_bits))
+            self.assertEqual(sorted(fp[0].nonzero()[1]), sorted(explained_bits.keys()))
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import numpy as np
 from sklearn import clone
 
 from molpipeline import Pipeline
+from molpipeline.abstract_pipeline_elements.core import InvalidInstance
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.mol2any import Mol2PathFP
 
@@ -60,7 +61,9 @@ class TestMol2PathFingerprint(unittest.TestCase):
 
         sparse_output = sparse_pipeline.fit_transform(test_smiles)
         dense_output = dense_pipeline.fit_transform(test_smiles)
-        rdkit_vect_path_fp_output = rdkit_vect_pipeline.fit_transform(test_smiles)
+        rdkit_vect_path_fp_output = rdkit_vect_pipeline.fit_transform(
+            test_smiles,
+        )
 
         self.assertTrue(np.all(sparse_output.toarray() == dense_output))
 
@@ -115,8 +118,8 @@ class TestMol2PathFingerprint(unittest.TestCase):
         self.assertEqual(mol_fp.get_params()["counted"], True)
         self.assertEqual(mol_fp.get_params()["n_bits"], 1024)
 
-    def test_setter_getter_error_handling(self) -> None:
-        """Test the setters and getters work as expected when errors are encountered."""
+    def test_setter_invalid_input(self) -> None:
+        """Test the setters raise an error for invalid input."""
         mol_fp = Mol2PathFP()
         params: dict[str, Any] = {
             "min_path": 2,
@@ -132,6 +135,26 @@ class TestMol2PathFingerprint(unittest.TestCase):
         self.assertEqual(len(feature_names), 1024)
         # feature names should be unique
         self.assertEqual(len(feature_names), len(set(feature_names)))
+
+    def test_bit_mapping(self) -> None:
+        """Test if the mapped bits are identical to the original bits.
+
+        Raises
+        ------
+        AssertionError
+            The SMILES provided by the unit test are invalid.
+
+        """
+        mol_fp = Mol2PathFP(n_bits=1024)
+
+        for smiles in test_smiles:
+            mol = SmilesToMol().transform([smiles])[0]
+            if isinstance(mol, InvalidInstance):
+                raise AssertionError(f"Invalid molecule: {smiles}")
+            fp = mol_fp.transform([mol])
+            explained_bits = mol_fp.bit2atom_mapping(mol)
+            self.assertEqual(fp[0].nonzero()[1].shape[0], len(explained_bits))
+            self.assertEqual(sorted(fp[0].nonzero()[1]), sorted(explained_bits.keys()))
 
 
 if __name__ == "__main__":

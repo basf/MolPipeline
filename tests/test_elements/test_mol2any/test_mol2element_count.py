@@ -16,7 +16,7 @@ class TestMolToElementCount(unittest.TestCase):
 
     def test_default_construction(self) -> None:
         """Test default construction with all 118 elements."""
-        element_count = MolToElementCount(standardizer=None)
+        element_count = MolToElementCount()
         self.assertEqual(element_count.n_features, 118)
         self.assertEqual(len(element_count.feature_names), 118)
         self.assertEqual(element_count.feature_names[0], "Count_H")
@@ -24,7 +24,7 @@ class TestMolToElementCount(unittest.TestCase):
 
     def test_custom_element_list(self) -> None:
         """Test construction with a custom element list."""
-        element_count = MolToElementCount(element_list=[1, 6, 7, 8], standardizer=None)
+        element_count = MolToElementCount(element_list=[1, 6, 7, 8])
         self.assertEqual(element_count.n_features, 4)
         self.assertEqual(
             element_count.feature_names,
@@ -49,7 +49,7 @@ class TestMolToElementCount(unittest.TestCase):
             If pretransform_single does not return an np.ndarray.
 
         """
-        element_count = MolToElementCount(element_list=[6, 8], standardizer=None)
+        element_count = MolToElementCount(element_list=[6, 8])
         mol = MolFromSmiles("CCO")  # ethanol: 2 C, 1 O
         result = element_count.pretransform_single(mol)
         if not isinstance(result, np.ndarray):
@@ -57,7 +57,7 @@ class TestMolToElementCount(unittest.TestCase):
         self.assertTrue(np.array_equal(result, [2.0, 1.0]))
         self.assertEqual(result.dtype, np.float64)
 
-        element_count = MolToElementCount(element_list=[8], standardizer=None)
+        element_count = MolToElementCount(element_list=[8])
         mol = MolFromSmiles("CCO")  # ethanol: 2 C, 1 O
         result = element_count.pretransform_single(mol)
         if not isinstance(result, np.ndarray):
@@ -72,10 +72,7 @@ class TestMolToElementCount(unittest.TestCase):
                 ("smi2mol", SmilesToMol()),
                 (
                     "element_count",
-                    MolToElementCount(
-                        element_list=[1, 6, 7, 8, 16, 35],
-                        standardizer=None,
-                    ),
+                    MolToElementCount(element_list=[1, 6, 7, 8, 16, 35]),
                 ),
             ],
         )
@@ -104,7 +101,7 @@ class TestMolToElementCount(unittest.TestCase):
             If pretransform_single does not return an np.ndarray.
 
         """
-        element_count = MolToElementCount(element_list=[1, 6], standardizer=None)
+        element_count = MolToElementCount(element_list=[1, 6])
         params = element_count.get_params(deep=True)
         self.assertEqual(params["element_list"], [1, 6])
         # Deep copy: modifying returned params should not affect original
@@ -133,7 +130,7 @@ class TestMolToElementCount(unittest.TestCase):
             If pretransform_single does not return a np.ndarray.
 
         """
-        original = MolToElementCount(element_list=[6, 7, 8], standardizer=None)
+        original = MolToElementCount(element_list=[6, 7, 8])
         counts_original = original.pretransform_single(MolFromSmiles("CCO"))
         if not isinstance(counts_original, np.ndarray):
             raise AssertionError(f"Expected np.ndarray, got {type(counts_original)}")
@@ -147,7 +144,7 @@ class TestMolToElementCount(unittest.TestCase):
 
     def test_element_list_setter(self) -> None:
         """Test that the element_list setter validates and updates feature names."""
-        element_count = MolToElementCount(element_list=[1], standardizer=None)
+        element_count = MolToElementCount(element_list=[1])
         self.assertEqual(element_count.feature_names, ["Count_H"])
         self.assertEqual(element_count.n_features, 1)
         element_count.element_list = [6, 7]
@@ -159,7 +156,7 @@ class TestMolToElementCount(unittest.TestCase):
 
     def test_element_list_getter_returns_copy(self) -> None:
         """Test that the getter returns a copy, not the internal list."""
-        element_count = MolToElementCount(element_list=[1, 6], standardizer=None)
+        element_count = MolToElementCount(element_list=[1, 6])
         returned = element_count.element_list
         returned.append(99)
         self.assertEqual(element_count.element_list, [1, 6])
@@ -174,7 +171,7 @@ class TestMolToElementCount(unittest.TestCase):
             typecheckers.
 
         """
-        original = MolToElementCount(element_list=[6, 7, 8], standardizer=None)
+        original = MolToElementCount(element_list=[6, 7, 8])
         counts_original = original.pretransform_single(MolFromSmiles("CCO"))
         if not isinstance(counts_original, np.ndarray):
             raise AssertionError(f"Expected np.ndarray, got {type(counts_original)}")
@@ -194,13 +191,7 @@ class TestMolToElementCount(unittest.TestCase):
         pipeline = Pipeline(
             [
                 ("smi2mol", SmilesToMol()),
-                (
-                    "element_count",
-                    MolToElementCount(
-                        element_list=[1],
-                        standardizer=None,
-                    ),
-                ),
+                ("element_count", MolToElementCount(element_list=[1])),
             ],
         )
         smiles = ["C", "[H]C(-[H])(-[H])-[H]", "[2H]C(-[2H])(-[2H])-[2H]"]
