@@ -9,7 +9,6 @@ import joblib
 import numpy as np
 import pandas as pd
 import torch
-from default_paths import TEST_DATA_DIR
 from sklearn.base import clone
 from sklearn.calibration import CalibratedClassifierCV
 
@@ -38,6 +37,7 @@ from test_extras.test_chemprop.chemprop_test_utils.default_models import (
 from test_extras.test_chemprop.chemprop_test_utils.randomization import (
     randomize_state_dict_weights,
 )
+from tests import TEST_DATA_DIR
 
 _T = TypeVar("_T")
 
