@@ -48,9 +48,9 @@ class Grid2D:
             If x_lim or y_lim is not of length 2.
 
         """
-        if len(x_lim) != 2:
+        if len(x_lim) != 2:  # noqa: PLR2004
             raise ValueError("x_lim must be of length 2.")
-        if len(y_lim) != 2:
+        if len(y_lim) != 2:  # noqa: PLR2004
             raise ValueError("y_lim must be of length 2.")
 
         self.x_lim = x_lim

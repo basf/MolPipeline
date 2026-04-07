@@ -1,11 +1,15 @@
 """Murcko scaffold clustering estimator."""
 
 from numbers import Integral
-from typing import Any, Literal, Self
+from typing import Any, ClassVar, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
-from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
+from sklearn.base import (
+    BaseEstimator,
+    ClusterMixin,
+    _fit_context,  # noqa: PLC2701
+)
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from sklearn.utils.validation import validate_data
 from typing_extensions import override
@@ -27,7 +31,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     linear_molecules_strategy: Literal["ignore", "own_cluster"]
     labels_: npt.NDArray[np.int32]
     n_clusters_: int
-    _parameter_constraints: dict[str, Any] = {
+    _parameter_constraints: ClassVar[dict[str, Any]] = {
         "n_jobs": [Integral, None],
     }
     use_smiles: bool
@@ -120,8 +124,12 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             )
 
             # Directly add the error filter and replacer to the pipeline
-            pipeline_step_list.append(("no_scaffold_filter", no_scaffold_filter))
-            pipeline_step_list.append(("no_scaffold_replacer", no_scaffold_replacer))
+            pipeline_step_list.extend(
+                [
+                    ("no_scaffold_filter", no_scaffold_filter),
+                    ("no_scaffold_replacer", no_scaffold_replacer),
+                ],
+            )
         else:
             raise ValueError(
                 f"Invalid value for linear_molecules_strategy: "

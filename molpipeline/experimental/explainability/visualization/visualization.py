@@ -605,14 +605,14 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     if explanation.atom_weights is None:
         raise ValueError("Explanation does not contain atom weights.")
 
-    if explanation.prediction.ndim > 2:
+    if explanation.prediction.ndim > 2:  # noqa: PLR2004
         raise ValueError(
             "Unsupported shape for prediction. Maximum 2 dimension is supported.",
         )
 
     if explanation.feature_weights.ndim == 1:
         feature_weights = explanation.feature_weights
-    elif explanation.feature_weights.ndim == 2:
+    elif explanation.feature_weights.ndim == 2:  # noqa: PLR2004
         feature_weights = explanation.feature_weights[:, 1]
     else:
         raise ValueError("Unsupported shape for feature weights.")

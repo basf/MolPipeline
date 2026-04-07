@@ -130,7 +130,7 @@ def color_tuple_to_colormap(
         If the color tuple is not of length 3.
 
     """
-    if len(color_tuple) != 3:
+    if len(color_tuple) != 3:  # noqa: PLR2004
         raise ValueError("Color tuple must have 3 elements")
 
     # Definition of color

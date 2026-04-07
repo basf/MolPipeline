@@ -146,7 +146,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "num_nodes": trainer.num_nodes,
         "precision": trainer.precision,
         "logger": trainer.logger,
-        # "callbacks": trainer.callbacks,  # type: ignore[attr-defined]
+        # "callbacks": trainer.callbacks,  # type: ignore[attr-defined]  # noqa: ERA001
         "fast_dev_run": trainer.fast_dev_run,  # type: ignore[attr-defined]
         "max_epochs": trainer.max_epochs,
         "min_epochs": trainer.min_epochs,
@@ -172,11 +172,11 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "benchmark": torch.backends.cudnn.benchmark,
         "inference_mode": trainer.predict_loop.inference_mode,
         "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # noqa: SLF001,E501
-        # "profiler": trainer.profiler,  # type: ignore[attr-defined]
+        # "profiler": trainer.profiler,  # type: ignore[attr-defined]  # noqa: ERA001
         "detect_anomaly": trainer._detect_anomaly,  # noqa: SLF001
         "barebones": trainer.barebones,
-        # "plugins": trainer.plugins,  # can not be exctracted
-        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related  # noqa: E501
+        # "plugins": trainer.plugins,  # can not be exctracted  # noqa: ERA001
+        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related  # noqa: E501, ERA001
         "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,  # type: ignore[attr-defined]
         "default_root_dir": get_trainer_path(trainer),
     }
