@@ -1,6 +1,7 @@
 """Classes for transforming rdkit molecules to any type of output."""
 
 from rdkit import Chem
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
     MolToStringPipelineElement as _MolToStringPipelineElement,
@@ -10,6 +11,7 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
 class MolToSmiles(_MolToStringPipelineElement):
     """PipelineElement to transform a molecule to a SMILES string."""
 
+    @override
     def pretransform_single(self, value: Chem.Mol) -> str:
         """Transform a molecule to a SMILES string.
 
