@@ -9,7 +9,7 @@ from molpipeline.post_prediction import PostPredictionWrapper
 
 # Keep all properties when pickling. Otherwise, we will lose properties set on RDKitMol
 # when passed to multiprocessing subprocesses.
-SetDefaultPickleProperties(PropertyPickleOptions.AllProps)
+SetDefaultPickleProperties(PropertyPickleOptions.AllProps)  # noqa: RUF067
 
 __all__ = [
     "ErrorFilter",
@@ -19,4 +19,4 @@ __all__ = [
     "__version__",
 ]
 
-__version__ = "0.12.0"
+__version__ = "0.13.0"

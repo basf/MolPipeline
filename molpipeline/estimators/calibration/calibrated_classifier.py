@@ -31,13 +31,13 @@ from sklearn.utils import (
     _safe_indexing,  # noqa: PLC2701
     indexable,
 )
-from sklearn.utils._array_api import (
-    get_namespace_and_device,  # noqa: PLC2701
-    move_to,  # noqa: PLC2701
+from sklearn.utils._array_api import (  # noqa: PLC2701
+    get_namespace_and_device,
+    move_to,
 )
-from sklearn.utils._response import (
-    _get_response_values,  # noqa: PLC2701
-    _process_predict_proba,  # noqa: PLC2701
+from sklearn.utils._response import (  # noqa: PLC2701
+    _get_response_values,
+    _process_predict_proba,
 )
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metadata_routing import (
@@ -94,7 +94,7 @@ def merge_class_and_sample_weights(
 
 def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R0917
     estimator: BaseEstimator,
-    X: npt.ArrayLike,  # noqa: N803  # pylint: disable=C0103
+    X: npt.ArrayLike,  # noqa: N803
     y: npt.ArrayLike,
     train: npt.NDArray[np.int_],
     test: npt.NDArray[np.int_],
@@ -158,8 +158,8 @@ def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R
 
     """
     fit_params_train = _check_method_params(X, params=fit_params, indices=train)
-    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # noqa: N806  # pylint: disable=C0103
-    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # noqa: N806  # pylint: disable=C0103
+    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # noqa: N806
+    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # noqa: N806
 
     estimator.fit(X_train, y_train, **fit_params_train)
 
@@ -439,6 +439,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         n_jobs: int | None = None,
         ensemble: Literal["auto"] | bool = "auto",
         class_weight: dict[Any, float] | Literal["balanced"] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize the CalibratedClassifierCV instance.
 
@@ -469,6 +470,8 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             If a dict, it must be provided in this form: ``{class_label: weight}``.
             Those weights won't be used for the underlying estimator training.
             See :term:`Glossary <class_weight>` for more details.
+        **kwargs : Any
+            Addition parameters set via ``set_params``.
 
         """
         if method == "temperature" and class_weight is not None:
@@ -484,6 +487,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             ensemble=ensemble,
         )
         self.class_weight = class_weight
+        self.set_params(**kwargs)
 
     @override
     @_fit_context(
@@ -492,7 +496,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
     )
     def fit(  # noqa: PLR0912, PLR0914, PLR0915  # pylint: disable=R0912,R0914,R0915
         self,
-        X: npt.ArrayLike,  # pylint: disable=C0103
+        X: npt.ArrayLike,
         y: npt.ArrayLike,
         sample_weight: npt.ArrayLike | None = None,
         **fit_params: Any,

@@ -205,15 +205,15 @@ class ABCPipelineElement(abc.ABC):
         parameters: Any
             Parameters to be set.
 
-        Raises
-        ------
-        ValueError
-            If the parameter is not a valid parameter of the object.
-
         Returns
         -------
         Self
             Self with updated parameters.
+
+        Raises
+        ------
+        ValueError
+            If the parameter is not a valid parameter of the object.
 
         """
         for att_name, att_value in parameters.items():
@@ -268,7 +268,7 @@ class ABCPipelineElement(abc.ABC):
         _ = self.fit_transform(values, labels)
         return self
 
-    def fit_to_result(self, values: Any) -> Self:  # pylint: disable=unused-argument  # noqa: ARG002
+    def fit_to_result(self, values: Any) -> Self:  # noqa: ARG002
         """Fit object to result of transformed values.
 
         Fit object to the result of the transform function. This is useful for

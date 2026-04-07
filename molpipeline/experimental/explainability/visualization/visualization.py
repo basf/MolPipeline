@@ -229,16 +229,16 @@ def make_sum_of_gaussians_grid(
     bond_length: float
         Value for the length of displayed bond weights (along the bond-axis).
 
+    Returns
+    -------
+    ValueGrid
+        ValueGrid object with added functions.
+
     Raises
     ------
     ValueError
         If the length of `atom_weights` or `bond_weights` does not match the number of
         atoms or bonds in the molecule.
-
-    Returns
-    -------
-    ValueGrid
-        ValueGrid object with added functions.
 
     """
     # assign default values and convert to numpy array
@@ -567,6 +567,11 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     color_limits: tuple[float, float] | None
         The color limits.
 
+    Returns
+    -------
+    Image
+        The image as PNG.
+
     Raises
     ------
     ValueError
@@ -585,11 +590,6 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
         If the prediction has more than 2 dimensions.
     ValueError
         If the feature weights have an unsupported shape.
-
-    Returns
-    -------
-    Image
-        The image as PNG.
 
     """
     if explanation.feature_weights is None:
