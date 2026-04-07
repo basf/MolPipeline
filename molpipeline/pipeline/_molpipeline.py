@@ -331,7 +331,7 @@ class _MolPipeline:
                 if isinstance(iter_value, RemovedInstance):
                     return iter_value
                 iter_value = p_element.transform_single(iter_value)
-            except MolSanitizeException as err:
+            except MolSanitizeException as err:  # noqa: PERF203
                 iter_value = InvalidInstance(
                     p_element.uuid,
                     f"RDKit MolSanitizeException: {err.args}",
