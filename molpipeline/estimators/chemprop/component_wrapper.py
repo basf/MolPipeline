@@ -223,9 +223,6 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):
     """Abstract wrapper for the Predictor class."""
 
-    _T_default_criterion: type[ChempropMetric]
-    _T_default_metric: type[ChempropMetric]
-
     def __init__(  # pylint: disable=too-many-positional-arguments  # noqa: PLR0917
         self,
         n_tasks: int = 1,
