@@ -120,7 +120,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
             poolSize=len(X),
             threshold=self.distance_threshold,
             numThreads=1,  # according to rdkit docu this parameter is not used
-            # seed=self.random_state if self.random_state is not None else -1,  # noqa: E501, ERA001
+            # seed=self.random_state if self.random_state is not None else -1,  # noqa: ERA001
         )
 
         # Assign points to clusters based on centroid
