@@ -45,7 +45,7 @@ class ElementFilter(_MolToMolPipelineElement):
     number of atoms of each element.
     """
 
-    DEFAULT_ALLOWED_ELEMENT_NUMBERS: ClassVar[list[str]] = [
+    DEFAULT_ALLOWED_ELEMENT_NUMBERS: ClassVar[list[int]] = [
         1,
         5,
         6,
