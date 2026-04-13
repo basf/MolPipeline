@@ -24,6 +24,7 @@ from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
+from sklearn.ensemble import RandomForestClassifier
 
 
 def get_binary_classification_mpnn() -> MPNN:
@@ -202,6 +203,7 @@ def get_regression_pipeline(n_tasks: int = 1) -> Pipeline:
 
 def get_classification_pipeline(
     chemprop_kwargs: dict[str, Any] | None = None,
+    pipeline_n_jobs: int = 1,
 ) -> Pipeline:
     """Get the Chemprop model pipeline for classification.
 
@@ -210,6 +212,8 @@ def get_classification_pipeline(
     chemprop_kwargs : dict[str, Any] | None, optional
         Additional keyword arguments to pass to the ChempropClassifier during
         initialization.
+    pipeline_n_jobs : int, default 1
+        Number of parallel jobs for the pipeline.
 
     Returns
     -------
@@ -237,6 +241,64 @@ def get_classification_pipeline(
             ("model", chemprop_model),
             ("filter_reinserter", PostPredictionWrapper(filter_reinserter)),
         ],
+        n_jobs=pipeline_n_jobs,
+    )
+
+
+def get_neural_fp_classification_pipeline(
+    neural_fp_kwargs: dict[str, Any] | None = None,
+    rf_kwargs: dict[str, Any] | None = None,
+    pipeline_n_jobs: int = 1,
+) -> Pipeline:
+    """Get a pipeline that combines a Chemprop neural fingerprint with a RandomForest.
+
+    The pipeline uses :class:`ChempropNeuralFP` to compute learned molecular
+    representations, which are then fed into a
+    :class:`~sklearn.ensemble.RandomForestClassifier`.
+
+    Parameters
+    ----------
+    neural_fp_kwargs : dict[str, Any] | None, optional
+        Additional keyword arguments to pass to :class:`ChempropNeuralFP`
+        during initialization (e.g. ``n_jobs``, ``lightning_trainer__accelerator``).
+    rf_kwargs : dict[str, Any] | None, optional
+        Additional keyword arguments to pass to
+        :class:`~sklearn.ensemble.RandomForestClassifier` during initialization
+        (e.g. ``n_jobs``, ``n_estimators``).
+    pipeline_n_jobs : int, default 1
+        Number of parallel jobs for the pipeline.
+
+    Returns
+    -------
+    Pipeline
+        The Neural FP + RandomForest classification pipeline.
+
+    """
+    neural_fp_kwargs = neural_fp_kwargs or {}
+    rf_kwargs = rf_kwargs or {}
+    smiles2mol = SmilesToMol()
+    mol2chemprop = MolToChemprop()
+    error_filter = ErrorFilter(filter_everything=True)
+    filter_reinserter = FilterReinserter.from_error_filter(
+        error_filter,
+        fill_value=np.nan,
+    )
+    neural_fp = ChempropNeuralFP(
+        model=ChempropClassifier().model,
+        lightning_trainer=DEFAULT_TRAINER,
+        **neural_fp_kwargs,
+    )
+    rf = RandomForestClassifier(**rf_kwargs)
+    return Pipeline(
+        steps=[
+            ("smiles2mol", smiles2mol),
+            ("mol2chemprop", mol2chemprop),
+            ("error_filter", error_filter),
+            ("neural_fp", neural_fp),
+            ("rf", rf),
+            ("filter_reinserter", PostPredictionWrapper(filter_reinserter)),
+        ],
+        n_jobs=pipeline_n_jobs,
     )
 
 
