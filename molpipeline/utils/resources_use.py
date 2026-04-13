@@ -1,15 +1,20 @@
 """Change resources of estimators."""
 
+import importlib.util
 from collections.abc import Generator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
 
 from loguru import logger
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.pipeline import Pipeline
 
-from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.utils.molpipeline_types import AnySklearnEstimator
+
+_CHEMPROP_INSTALLED = importlib.util.find_spec("chemprop") is not None
+
+if _CHEMPROP_INSTALLED or TYPE_CHECKING:
+    from molpipeline.estimators.chemprop.abstract import ABCChemprop
 
 
 def iterate_components(
@@ -115,9 +120,11 @@ def model_to_cpu(model: AnySklearnEstimator | None) -> bool:
         True if the model was changed, False otherwise.
 
     """
+    if model is None:
+        return False
     changed = False
     for component, name in iterate_components(model):
-        if isinstance(component, ABCChemprop):
+        if _CHEMPROP_INSTALLED and isinstance(component, ABCChemprop):
             accelerator = component.get_params()["lightning_trainer__accelerator"]
             if accelerator != "cpu":
                 component.set_params(lightning_trainer__accelerator="cpu")
@@ -156,7 +163,11 @@ def set_n_job_estimator(
     for component, name in iterate_components(estimator):
         if hasattr(component, "n_jobs"):
             n_jobs_to_set = n_jobs
-            if isinstance(component, ABCChemprop) and n_jobs_chemprop is not None:
+            if (
+                _CHEMPROP_INSTALLED
+                and isinstance(component, ABCChemprop)
+                and n_jobs_chemprop is not None
+            ):
                 n_jobs_to_set = n_jobs_chemprop
             if component.n_jobs != n_jobs_to_set:
                 logger.info(
