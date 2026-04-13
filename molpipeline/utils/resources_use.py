@@ -17,6 +17,26 @@ if _CHEMPROP_INSTALLED or TYPE_CHECKING:
     from molpipeline.estimators.chemprop.abstract import ABCChemprop
 
 
+def _is_chemprop(component: Any) -> bool:
+    """Check if a component is an ABCChemprop instance.
+
+    Returns ``False`` when chemprop is not installed, avoiding a
+    ``NameError`` on the conditionally-imported ``ABCChemprop`` symbol.
+
+    Parameters
+    ----------
+    component : Any
+        The component to check.
+
+    Returns
+    -------
+    bool
+        ``True`` if *component* is an ``ABCChemprop`` instance.
+
+    """
+    return _CHEMPROP_INSTALLED and isinstance(component, ABCChemprop)  # pylint: disable=possibly-used-before-assignment
+
+
 def iterate_components(
     estimator: Any,
     prefix: str = "",
@@ -124,7 +144,7 @@ def model_to_cpu(model: AnySklearnEstimator | None) -> bool:
         return False
     changed = False
     for component, name in iterate_components(model):
-        if _CHEMPROP_INSTALLED and isinstance(component, ABCChemprop):
+        if _is_chemprop(component):
             accelerator = component.get_params()["lightning_trainer__accelerator"]
             if accelerator != "cpu":
                 component.set_params(lightning_trainer__accelerator="cpu")
@@ -163,11 +183,7 @@ def set_n_job_estimator(
     for component, name in iterate_components(estimator):
         if hasattr(component, "n_jobs"):
             n_jobs_to_set = n_jobs
-            if (
-                _CHEMPROP_INSTALLED
-                and isinstance(component, ABCChemprop)
-                and n_jobs_chemprop is not None
-            ):
+            if _is_chemprop(component) and n_jobs_chemprop is not None:
                 n_jobs_to_set = n_jobs_chemprop
             if component.n_jobs != n_jobs_to_set:
                 logger.info(
