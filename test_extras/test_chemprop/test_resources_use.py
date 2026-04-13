@@ -206,7 +206,7 @@ class TestModelToCPUChemprop(unittest.TestCase):
             with self.subTest(accelerator=accelerator, change_expected=change_expected):
                 if accelerator == "gpu" and not torch.cuda.is_available():
                     continue
-                model = _get_chemprop_pipeline(n_jobs=-1, accelerator=accelerator)
+                model = _get_chemprop_pipeline(n_jobs=-1, accelerator=accelerator)  # type: ignore[arg-type]
                 model_params = model.get_params(deep=True)
                 self.assertEqual(
                     model_params["model__lightning_trainer__accelerator"],
@@ -226,8 +226,9 @@ class TestModelToCPUChemprop(unittest.TestCase):
             with self.subTest(accelerator=accelerator, change_expected=change_expected):
                 if accelerator == "gpu" and not torch.cuda.is_available():
                     continue
-                model = _get_neural_rf_pipeline(n_jobs=-1, accelerator=accelerator)
+                model = _get_neural_rf_pipeline(n_jobs=-1, accelerator=accelerator)  # type: ignore[arg-type]
                 model_params = model.get_params(deep=True)
+
                 self.assertEqual(
                     model_params["neural_fp__lightning_trainer__accelerator"],
                     accelerator,
@@ -247,7 +248,7 @@ class TestModelToCPUChemprop(unittest.TestCase):
                 if accelerator == "gpu" and not torch.cuda.is_available():
                     continue
                 model = CalibratedClassifierCV(
-                    _get_neural_rf_pipeline(n_jobs=-1, accelerator=accelerator),
+                    _get_neural_rf_pipeline(n_jobs=-1, accelerator=accelerator),  # type: ignore[arg-type]
                 )
                 model_params = model.get_params(deep=True)
                 self.assertEqual(

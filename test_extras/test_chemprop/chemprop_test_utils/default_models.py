@@ -4,6 +4,7 @@ from typing import Any
 
 import numpy as np
 from lightning import pytorch as pl
+from sklearn.ensemble import RandomForestClassifier
 
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.error_handling import ErrorFilter, FilterReinserter
@@ -24,7 +25,6 @@ from molpipeline.mol2any import MolToSmiles
 from molpipeline.mol2any.mol2chemprop import MolToChemprop
 from molpipeline.pipeline import Pipeline
 from molpipeline.post_prediction import PostPredictionWrapper
-from sklearn.ensemble import RandomForestClassifier
 
 
 def get_binary_classification_mpnn() -> MPNN:
