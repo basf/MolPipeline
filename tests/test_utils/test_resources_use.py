@@ -3,7 +3,6 @@
 import unittest
 from unittest.mock import MagicMock
 
-import numpy as np
 from sklearn.calibration import (
     CalibratedClassifierCV,
     _CalibratedClassifier,  # noqa: PLC2701
@@ -11,61 +10,15 @@ from sklearn.calibration import (
 from sklearn.ensemble import BaggingClassifier, RandomForestClassifier, VotingClassifier
 from sklearn.tree import DecisionTreeClassifier
 
-from molpipeline import ErrorFilter, FilterReinserter, Pipeline
+from molpipeline import Pipeline
 from molpipeline.any2mol import AutoToMol
-from molpipeline.mol2any import MolToMorganFP
-from molpipeline.post_prediction import PostPredictionWrapper
 from molpipeline.utils.resources_use import (
     iterate_components,
     model_to_cpu,
     set_n_job_estimator,
     set_single_job,
 )
-
-
-def _get_morgan_rf(n_jobs: int = 1) -> Pipeline:
-    """Create a Morgan FP + RandomForest pipeline for testing.
-
-    Parameters
-    ----------
-    n_jobs : int, default 1
-        Number of cores to use.
-
-    Returns
-    -------
-    Pipeline
-        A pipeline based on the Morgan fp and the RF.
-
-    """
-    error_filter = ErrorFilter(filter_everything=True)
-    return Pipeline(
-        steps=[
-            ("smiles_to_mol", AutoToMol()),
-            (
-                "morgan_fp",
-                MolToMorganFP(
-                    radius=3,
-                    counted=True,
-                    n_bits=512,
-                ),
-            ),
-            ("error_filter", error_filter),
-            (
-                "rf",
-                RandomForestClassifier(  # type: ignore[list-item]
-                    n_jobs=n_jobs,
-                    n_estimators=2,
-                ),
-            ),
-            (
-                "error_reinserter",
-                PostPredictionWrapper(
-                    FilterReinserter.from_error_filter(error_filter, np.nan),
-                ),
-            ),
-        ],
-        n_jobs=n_jobs,
-    )
+from tests.utils.default_models import get_morgan_rf_pipeline
 
 
 class TestSetSingleJob(unittest.TestCase):
@@ -81,7 +34,7 @@ class TestSetSingleJob(unittest.TestCase):
         """Test if the Random Forest model is set to single-job mode."""
         for n_jobs, change_expected in [(-1, True), (1, False)]:
             with self.subTest(n_jobs=n_jobs, change_expected=change_expected):
-                model = _get_morgan_rf(n_jobs=n_jobs)
+                model = get_morgan_rf_pipeline(n_jobs=n_jobs)
                 changed = set_single_job(model)
                 self.assertEqual(changed, change_expected)
                 self.assertEqual(model.n_jobs, 1)
@@ -91,7 +44,7 @@ class TestSetSingleJob(unittest.TestCase):
         """Test if the fitted Random Forest model is set to single-job mode."""
         for n_jobs, change_expected in [(-1, True), (1, False)]:
             with self.subTest(n_jobs=n_jobs, change_expected=change_expected):
-                model = _get_morgan_rf(n_jobs=n_jobs)
+                model = get_morgan_rf_pipeline(n_jobs=n_jobs)
                 model.fit(["C", "CC"], [1, 0])
                 changed = set_single_job(model)
                 self.assertEqual(changed, change_expected)
@@ -212,7 +165,7 @@ class TestIterateComponents(unittest.TestCase):
 
     def test_iterate_pipeline(self) -> None:
         """Test iterate_components with a Pipeline."""
-        model = _get_morgan_rf(n_jobs=-1)
+        model = get_morgan_rf_pipeline(n_jobs=-1)
         components = [c for c, _n in iterate_components(model)]
         self.assertEqual(len(components), 7)
         self.assertIn(model, components)

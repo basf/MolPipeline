@@ -9,6 +9,11 @@ from loguru import logger
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.pipeline import Pipeline
 
+try:
+    from typing import TypeIs
+except ImportError:
+    from typing_extensions import TypeIs
+
 from molpipeline.utils.molpipeline_types import AnySklearnEstimator
 
 _CHEMPROP_INSTALLED = importlib.util.find_spec("chemprop") is not None
@@ -17,7 +22,7 @@ if _CHEMPROP_INSTALLED or TYPE_CHECKING:
     from molpipeline.estimators.chemprop.abstract import ABCChemprop
 
 
-def _is_chemprop(component: Any) -> bool:
+def _is_chemprop(component: Any) -> TypeIs[ABCChemprop]:
     """Check if a component is an ABCChemprop instance.
 
     Returns ``False`` when chemprop is not installed, avoiding a
