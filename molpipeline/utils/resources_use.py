@@ -3,16 +3,16 @@
 import importlib.util
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any
-from unittest.mock import MagicMock
-
-from loguru import logger
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.pipeline import Pipeline
 
 try:
     from typing import TypeIs
 except ImportError:
     from typing_extensions import TypeIs
+from unittest.mock import MagicMock
+
+from loguru import logger
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.pipeline import Pipeline
 
 from molpipeline.utils.molpipeline_types import AnySklearnEstimator
 
@@ -22,7 +22,7 @@ if _CHEMPROP_INSTALLED or TYPE_CHECKING:
     from molpipeline.estimators.chemprop.abstract import ABCChemprop
 
 
-def _is_chemprop(component: Any) -> TypeIs[ABCChemprop]:
+def _is_chemprop(component: Any) -> TypeIs[ABCChemprop]:  # pylint: disable=possibly-used-before-assignment
     """Check if a component is an ABCChemprop instance.
 
     Returns ``False`` when chemprop is not installed, avoiding a
