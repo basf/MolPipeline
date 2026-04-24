@@ -9,6 +9,7 @@ from loguru import logger
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.pipeline import Pipeline
 
+from molpipeline.mol2any import MolToConcatenatedVector
 from molpipeline.utils.molpipeline_types import AnySklearnEstimator
 
 _CHEMPROP_INSTALLED = importlib.util.find_spec("chemprop") is not None
@@ -37,7 +38,7 @@ def _is_chemprop(component: Any) -> bool:
     return _CHEMPROP_INSTALLED and isinstance(component, ABCChemprop)  # pylint: disable=possibly-used-before-assignment
 
 
-def iterate_components(
+def iterate_components(  # noqa: PLR0912  # pylint: disable=too-many-branches
     estimator: Any,
     prefix: str = "",
     seen: set[int] | None = None,
@@ -86,20 +87,25 @@ def iterate_components(
     seen.add(estimator_id)
     yield estimator, prefix
 
+    prefix = f"{prefix}__" if prefix else ""
+
     # block that traverses nested estimator objects
     if isinstance(estimator, Pipeline):
         for step in estimator.steps:
-            yield from iterate_components(step[1], f"{prefix}{step[0]}__", seen)
+            yield from iterate_components(step[1], f"{prefix}{step[0]}", seen)
+    if isinstance(estimator, MolToConcatenatedVector):
+        for name, est in estimator.element_list:
+            yield from iterate_components(est, f"{prefix}{name}", seen)
     if hasattr(estimator, "estimator"):  # type: ignore
         # follow nested estimators in wrapping estimators like CalibratedClassifierCV,
         # RandomForestClassifier. `estimator` in sklearn and MolPipeline is usually
         # stored as the original estimator which is cloned for an ensemble.
-        yield from iterate_components(estimator.estimator, f"{prefix}estimator__", seen)  # type: ignore
+        yield from iterate_components(estimator.estimator, f"{prefix}estimator", seen)  # type: ignore
 
     if hasattr(estimator, "estimators") and isinstance(estimator.estimators, list):  # type: ignore
         # VotingClassifier and VotingRegressor do not use estimator, but estimators.
         for name, est in estimator.estimators:  # type: ignore
-            yield from iterate_components(est, f"{prefix}{name}__", seen)
+            yield from iterate_components(est, f"{prefix}{name}", seen)
 
     if hasattr(estimator, "estimators_") and isinstance(estimator.estimators_, list):  # type: ignore
         # follow nested estimators in wrapping estimators like RandomForestClassifier.
@@ -107,7 +113,7 @@ def iterate_components(
         # estimators for an ensemble which are only available after fitting. These are
         # usually used for making predictions.
         for i, est in enumerate(estimator.estimators_):  # type: ignore
-            yield from iterate_components(est, f"{prefix}estimator_{i}__", seen)
+            yield from iterate_components(est, f"{prefix}estimator_{i}", seen)
 
     if isinstance(estimator, CalibratedClassifierCV) and hasattr(
         estimator,
@@ -118,7 +124,7 @@ def iterate_components(
         for i, est in enumerate(estimator.calibrated_classifiers_):
             yield from iterate_components(
                 est,
-                f"{prefix}calibrated_classifiers_{i}__",
+                f"{prefix}calibrated_classifiers_{i}",
                 seen,
             )
 

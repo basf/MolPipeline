@@ -12,6 +12,8 @@ from sklearn.tree import DecisionTreeClassifier
 
 from molpipeline import Pipeline
 from molpipeline.any2mol import AutoToMol
+from molpipeline.mol2any import MolToConcatenatedVector
+from molpipeline.mol2any.mol2morgan_fingerprint import MolToMorganFP
 from molpipeline.utils.resources_use import (
     iterate_components,
     model_to_cpu,
@@ -283,6 +285,23 @@ class TestIterateComponents(unittest.TestCase):
         self.assertIn(inner_pipeline, components)
         self.assertIn(inner_pipeline.named_steps["auto2mol"], components)
         self.assertIn(inner_pipeline.named_steps["dt"], components)
+
+    def test_iterate_mol_to_concatenated_vector(self) -> None:
+        """Test iterate_components recurses into MolToConcatenatedVector."""
+        morgan_fp = MolToMorganFP(n_bits=512)
+        morgan_fp2 = MolToMorganFP(n_bits=1024)
+        concat_vec = MolToConcatenatedVector(
+            [("morgan1", morgan_fp), ("morgan2", morgan_fp2)],
+        )
+
+        components, names = zip(*iterate_components(concat_vec), strict=True)
+        # Should yield: concat_vec itself + morgan_fp + morgan_fp2
+        self.assertEqual(len(components), 3)
+        self.assertIn(concat_vec, components)
+        self.assertIn(morgan_fp, components)
+        self.assertIn(morgan_fp2, components)
+        self.assertIn("morgan1", names)
+        self.assertIn("morgan2", names)
 
 
 if __name__ == "__main__":
