@@ -79,15 +79,15 @@ def get_color_map_from_input(
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None
         The color scheme.
 
-    Raises
-    ------
-    ValueError
-        If the color scheme is not valid.
-
     Returns
     -------
     Colormap
         The colormap.
+
+    Raises
+    ------
+    ValueError
+        If the color scheme is not valid.
 
     """
     # read user definer color scheme as ColorMap
@@ -119,15 +119,15 @@ def color_tuple_to_colormap(
     color_tuple: tuple[RGBAtuple, RGBAtuple, RGBAtuple]
         The color tuple.
 
-    Raises
-    ------
-    ValueError
-        If the color tuple is not of length 3.
-
     Returns
     -------
     Colormap
         The colormap (a matplotlib data structure).
+
+    Raises
+    ------
+    ValueError
+        If the color tuple is not of length 3.
 
     """
     if len(color_tuple) != 3:
@@ -230,15 +230,15 @@ def calc_present_and_absent_shap_contributions(
     feature_weights: npt.NDArray[np.float64]
         The feature weights.
 
-    Raises
-    ------
-    ValueError
-        If the feature vector is not binary.
-
     Returns
     -------
     tuple[float, float]
         The sum of present and absent SHAP values.
+
+    Raises
+    ------
+    ValueError
+        If the feature vector is not binary.
 
     """
     if feature_vector.max() > 1 or feature_vector.min() < 0:

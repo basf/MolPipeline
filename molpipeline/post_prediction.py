@@ -5,6 +5,7 @@ from typing import Any, Self
 
 from numpy import typing as npt
 from sklearn.base import BaseEstimator, TransformerMixin
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import ABCPipelineElement
 from molpipeline.error_handling import FilterReinserter
@@ -19,7 +20,7 @@ class PostPredictionTransformation(BaseEstimator, TransformerMixin, abc.ABC):
     """
 
     @abc.abstractmethod
-    def transform(self, X: Any, **params: Any) -> Any:  # pylint: disable=invalid-name
+    def transform(self, X: Any, **params: Any) -> Any:  # noqa: N803
         """Transform data.
 
         Parameters
@@ -67,7 +68,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
 
     def fit(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],  # noqa: N803
         y: npt.NDArray[Any] | None = None,
         **params: Any,
     ) -> Self:
@@ -94,6 +95,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
             self.wrapped_estimator.fit(X, y, **params)
         return self
 
+    @override
     def transform(
         self,
         X: npt.NDArray[Any],
@@ -108,15 +110,15 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         **params : Any
             Additional parameters for transformation.
 
-        Raises
-        ------
-        AttributeError
-            If the wrapped estimator doesn't have a predict or transform method.
-
         Returns
         -------
         npt.NDArray[Any]
             Transformed data.
+
+        Raises
+        ------
+        AttributeError
+            If the wrapped estimator doesn't have a predict or transform method.
 
         """
         if hasattr(self.wrapped_estimator, "predict"):
@@ -128,6 +130,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
             f"method.",
         )
 
+    @override
     def fit_transform(
         self,
         X: npt.NDArray[Any],
@@ -145,15 +148,15 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         **params: Any
             Additional parameters for fitting.
 
-        Raises
-        ------
-        AttributeError
-            If the wrapped estimator doesn't have a fit_predict or fit_transform method.
-
         Returns
         -------
         npt.NDArray[Any]
             Transformed data.
+
+        Raises
+        ------
+        AttributeError
+            If the wrapped estimator doesn't have a fit_predict or fit_transform method.
 
         """
         if hasattr(self.wrapped_estimator, "fit_predict"):
@@ -169,7 +172,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
 
     def inverse_transform(
         self,
-        X: npt.NDArray[Any],  # pylint: disable=invalid-name
+        X: npt.NDArray[Any],  # noqa: N803
     ) -> npt.NDArray[Any]:
         """Inverse transform data.
 
@@ -178,15 +181,15 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         X: npt.NDArray[Any]
             Input data.
 
-        Raises
-        ------
-        AttributeError
-            If the wrapped estimator does not have an inverse_transform method.
-
         Returns
         -------
         npt.NDArray[Any]
             Inverse transformed data.
+
+        Raises
+        ------
+        AttributeError
+            If the wrapped estimator does not have an inverse_transform method.
 
         """
         if hasattr(self.wrapped_estimator, "inverse_transform"):

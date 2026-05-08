@@ -1,10 +1,10 @@
 """Module for default models used for testing molpipeline functions and classes."""
 
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 
-from molpipeline import Pipeline
-from molpipeline.any2mol import SmilesToMol
-from molpipeline.error_handling import ErrorFilter, FilterReinserter
+from molpipeline import ErrorFilter, FilterReinserter, Pipeline
+from molpipeline.any2mol import AutoToMol, SmilesToMol
 from molpipeline.mol2any import (
     MolToConcatenatedVector,
     MolToMorganFP,
@@ -23,6 +23,51 @@ from molpipeline.mol2mol import (
 )
 from molpipeline.mol2mol.filter import ElementFilter
 from molpipeline.post_prediction import PostPredictionWrapper
+
+
+def get_morgan_rf_pipeline(n_jobs: int = 1) -> Pipeline:
+    """Create a Morgan FP + RandomForest pipeline for testing.
+
+    Parameters
+    ----------
+    n_jobs : int, default 1
+        Number of cores to use.
+
+    Returns
+    -------
+    Pipeline
+        A pipeline based on the Morgan fp and the RF.
+
+    """
+    error_filter = ErrorFilter(filter_everything=True)
+    return Pipeline(
+        steps=[
+            ("smiles_to_mol", AutoToMol()),
+            (
+                "morgan_fp",
+                MolToMorganFP(
+                    radius=3,
+                    counted=True,
+                    n_bits=512,
+                ),
+            ),
+            ("error_filter", error_filter),
+            (
+                "rf",
+                RandomForestClassifier(  # type: ignore[list-item]
+                    n_jobs=n_jobs,
+                    n_estimators=2,
+                ),
+            ),
+            (
+                "error_reinserter",
+                PostPredictionWrapper(
+                    FilterReinserter.from_error_filter(error_filter, np.nan),
+                ),
+            ),
+        ],
+        n_jobs=n_jobs,
+    )
 
 
 def get_morgan_physchem_rf_pipeline(n_jobs: int = 1) -> Pipeline:

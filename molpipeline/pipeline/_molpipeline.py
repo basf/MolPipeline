@@ -243,8 +243,8 @@ class _MolPipeline:
     def fit_transform(  # pylint: disable=unused-argument
         self,
         x_input: Any,
-        y: Any = None,
-        **fit_params: dict[str, Any],
+        y: Any = None,  # noqa: ARG002
+        **fit_params: dict[str, Any],  # noqa: ARG002
     ) -> Any:
         """Fit the MolPipeline according to input and return the transformed molecules.
 
@@ -257,16 +257,16 @@ class _MolPipeline:
         fit_params: Any
             Parameters. Only for SKlearn compatibility.
 
+        Returns
+        -------
+        Any
+            Transformed molecules.
+
         Raises
         ------
         AssertionError
             If a subpipeline requires fitting, which by definition should not be the
             case.
-
-        Returns
-        -------
-        Any
-            Transformed molecules.
 
         """
         iter_input = x_input

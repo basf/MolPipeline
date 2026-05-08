@@ -14,7 +14,6 @@ class TestABCChemprop(unittest.TestCase):
             "callback_modelckpt__monitor": "val_loss",
             "other__param": "value",
         }
-        # pylint: disable=protected-access
         other_params, callback_params = ABCChemprop._filter_params(
             dummy_params,
             "callback_modelckpt",
@@ -29,7 +28,6 @@ class TestABCChemprop(unittest.TestCase):
             "lightning_trainer__max_epochs": 50,
             "other__param": "value",
         }
-        # pylint: disable=protected-access
         other_params, trainer_params = ABCChemprop._filter_params(
             dummy_params,
             "lightning_trainer",

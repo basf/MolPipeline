@@ -21,14 +21,6 @@ from molpipeline.utils.json_operations import recursive_from_json, recursive_to_
 class ABCChemprop(BaseEstimator, abc.ABC):
     """Wrap Chemprop in a sklearn compatible Estimator.
 
-    Notes
-    -----
-    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor,
-    this class provides the common functionality for both classes.
-    Although this class does not implement abstract methods, it is marked as abstract
-    to prevent instantiation.
-    (without predict or transform methods this class is useless.)
-
     Attributes
     ----------
     model : MPNN
@@ -45,6 +37,14 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     model_ckpoint_params : dict[str, Any]
         The parameters of the model checkpoint callback. This is used as the callback
         is not compatible with the `get_params` method.
+
+    Notes
+    -----
+    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor,
+    this class provides the common functionality for both classes.
+    Although this class does not implement abstract methods, it is marked as abstract
+    to prevent instantiation.
+    (without predict or transform methods this class is useless.)
 
     """
 
@@ -138,7 +138,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     @override
     def fit(
         self,
-        X: MoleculeDataset,  # pylint: disable=invalid-name
+        X: MoleculeDataset,
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
         *,
         sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,
@@ -214,16 +214,16 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         deep : bool, optional (default=False)
             Whether to get the parameters of the model.
 
+        Returns
+        -------
+        dict[str, Any]
+            The parameters of the model.
+
         Notes
         -----
         The parameters of the trainer and the model checkpoint are added irrespective
         of the `deep` parameter. This is done due to their incompatibility with the
         `get_params` and `set_params` methods.
-
-        Returns
-        -------
-        dict[str, Any]
-            The parameters of the model.
 
         """
         params = super().get_params(deep)

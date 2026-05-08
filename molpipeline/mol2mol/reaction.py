@@ -141,16 +141,16 @@ class MolToMolReaction(MolToMolPipelineElement):
         value: RDKitMol
             Molecule to apply reaction to.
 
+        Returns
+        -------
+        OptionalMol
+            Product of reaction if possible, else InvalidInstance.
+
         Raises
         ------
         ValueError
             If reaction is resulting in multiple products and handle_multi is set to
             "raise".
-
-        Returns
-        -------
-        OptionalMol
-            Product of reaction if possible, else InvalidInstance.
 
         """
         mol = value  # Only value to keep signature consistent.

@@ -1,12 +1,15 @@
 """Contains functions for loading and saving objects to/from json files."""
 
 import importlib
+import inspect
 import types
 import typing
 import warnings
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar, overload
 
+import joblib
 import numpy as np
+from loguru import logger
 
 from molpipeline.pipeline import Pipeline
 
@@ -224,73 +227,21 @@ _U = typing.TypeVar("_U", str, int, float, bool, None, type)
 
 
 @typing.overload
-def builtin_to_json(obj: _U) -> _U:
-    """Transform a builtin object to an object savable as json file.
-
-    Parameters
-    ----------
-    obj: str | int | float | bool | None
-        Object which would be transformed, but these types are just returned as is.
-
-    Returns
-    -------
-    str | int | float | bool | None | type
-        The same object as the input.
-
-    """
+def builtin_to_json(obj: _U) -> _U: ...
 
 
 @typing.overload
-def builtin_to_json(obj: list[Any]) -> list[Any]:
-    """Transform a builtin object to an object savable as json file.
-
-    Parameters
-    ----------
-    obj: list[Any]
-        List of objects transformed recursively to json compatible objects.
-
-    Returns
-    -------
-    list[Any]
-        List of transformed objects.
-
-    """
+def builtin_to_json(obj: list[Any]) -> list[Any]: ...
 
 
 @typing.overload
-def builtin_to_json(obj: tuple[Any, ...]) -> tuple[Any, ...]:
-    """Transform a builtin object to an object savable as json file.
-
-    Parameters
-    ----------
-    obj: tuple[Any]
-        Tuple of objects transformed recursively to json compatible objects.
-
-    Returns
-    -------
-    tuple[Any]
-        Tuple of transformed objects.
-
-    """
+def builtin_to_json(obj: tuple[Any, ...]) -> tuple[Any, ...]: ...
 
 
 @typing.overload
 def builtin_to_json(
     obj: types.FunctionType | set[Any] | dict[Any, Any],
-) -> dict[str, Any]:
-    """Transform a builtin object to an object savable as json file.
-
-    Parameters
-    ----------
-    obj : types.FunctionType | set[Any] | dict[Any, Any]
-        Object which are encoded as a dictionary in order to be json compatible.
-
-    Returns
-    -------
-    dict[str, Any]
-        A dictionary containing the information to recreate the original object.
-
-    """
+) -> dict[str, Any]: ...
 
 
 def builtin_to_json(obj: Any) -> Any:
@@ -302,15 +253,15 @@ def builtin_to_json(obj: Any) -> Any:
         Object to be transformed.
         Can be a string, int, float, bool, list, tuple, dict, callable or a set.
 
-    Raises
-    ------
-    TypeError
-        If the object is not a string, int, float, bool, list, tuple or dict.
-
     Returns
     -------
     Any
         Json file containing the dictionary.
+
+    Raises
+    ------
+    TypeError
+        If the object is not a string, int, float, bool, list, tuple or dict.
 
     """
     if isinstance(obj, (str, int, float, bool, type)) or obj is None:
@@ -390,11 +341,18 @@ def recursive_to_json(obj: Any) -> Any:
                 return obj_dict
         # If the object is not a sklearn model, a warning is raised
         # as it might not be possible to recreate the object.
-        warnings.warn(
-            f"{type(obj)} has no get_params method. "
-            f"No parameters for initialization are retained.",
-            stacklevel=2,
-        )
+        init_params = get_init_params(obj, validation="return_none")
+        if init_params is not None:
+            for key, value in init_params.items():
+                object_dict[key] = recursive_to_json(value)
+        else:
+            # If the object is not a sklearn model, a warning is raised
+            # as it might not be possible to recreate the object.
+            warnings.warn(
+                f"{type(obj)} has no get_params method. "
+                f"No parameters for initialization are retained.",
+                stacklevel=2,
+            )
 
     return object_dict
 
@@ -454,15 +412,15 @@ def recursive_from_json(obj: Any) -> Any:
     obj : Any
         Object to be transformed
 
-    Raises
-    ------
-    TypeError
-        If the object is not a string, int, float, bool, list, tuple or dict.
-
     Returns
     -------
     Any
         Object specified in the json file.
+
+    Raises
+    ------
+    TypeError
+        If the object is not a string, int, float, bool, list, tuple or dict.
 
     """
     if isinstance(obj, (str, int, float, bool, type)) or obj is None:
@@ -477,3 +435,113 @@ def recursive_from_json(obj: Any) -> Any:
         return iterable_type(iter_list)
 
     raise TypeError(f"Unexpected Type: {type(obj)}")
+
+
+@overload
+def get_init_params(
+    obj: Any,
+    validation: Literal["return_none"],
+) -> dict[str, Any] | None: ...
+
+
+@overload
+def get_init_params(
+    obj: Any,
+    validation: Literal["raise", "warn", "skip"] = "raise",
+) -> dict[str, Any]: ...
+
+
+@overload
+def get_init_params(
+    obj: Any,
+    validation: Literal["raise", "warn", "skip", "return_none"],
+) -> dict[str, Any] | None: ...
+
+
+def get_init_params(
+    obj: Any,
+    validation: Literal["raise", "warn", "skip", "return_none"] = "raise",
+) -> dict[str, Any] | None:
+    """Get the parameters for initialization of an object.
+
+    If the object supports `get_params`, those parameters are returned. Otherwise, the
+    parameters are inferred from the object's state: The signature of the
+    `__init__` method is used to determine relevant input variables, which are then
+    extracted from the object's state (via `__getstate__`). As this approach may result
+    in incorrect parameters, a validation step is performed by reconstructing the
+    object from the obtained parameters and comparing the hash of the reconstructed
+    object with the original one. The method offers multiple approaches to handle
+    occurring differences between the original and reconstructed object, which can be
+    specified via the parameter `validation`.
+
+    Parameters
+    ----------
+    obj : Any
+        The object to get the parameters for.
+    validation : Literal["raise", "warn", "skip", "return_none"], default="raise"
+        The validation strategy applied when required parameters are missing from the
+        object's state or when a reconstructed object does not hash-equal the original.
+        ``"raise"`` raises an error when the validation failed. See Raises section.
+        ``"warn"`` warns when the validation failed.
+        ``"skip"`` bypasses the reconstruction check entirely and returns whatever
+        parameters could be extracted.
+        ``"return_none"`` returns ``None`` when the validation failed, instead of
+        raising an error.
+
+    Returns
+    -------
+    dict[str, Any] | None
+        The extracted initialization parameters, or ``None`` when ``validation`` is
+        ``"return_none"`` and required parameters are missing from the object's state
+        or the hash-equality reconstruction check fails.
+
+    Raises
+    ------
+    ValueError
+        If ``validation="raise"`` and required parameters are missing from the object's
+        state, or the object reconstructed from those parameters does not hash-equal the
+        original.
+
+    Notes
+    -----
+    The reconstruction check compares ``joblib.hash(obj)`` with
+    ``joblib.hash(reconstructed_obj)``.
+
+    """
+    init_params = dict(inspect.signature(obj.__init__).parameters)
+    init_params = {k: v for k, v in init_params.items() if k != "self"}
+    allowed_params = init_params.keys()
+    required_params = [
+        key for key, param in init_params.items() if param.default is param.empty
+    ]
+    if hasattr(obj, "get_params"):
+        obj_params = obj.get_params(deep=False)
+    else:
+        state_dict = obj.__getstate__() or {}
+        obj_params = {k: v for k, v in state_dict.items() if k in allowed_params}
+
+    if validation == "skip":
+        return obj_params
+
+    missing_params = set(required_params) - set(obj_params.keys())
+    if missing_params:
+        msg = f"Missing required parameters: {missing_params}"
+        if validation == "raise":
+            raise ValueError(msg)
+        if validation == "warn":
+            logger.warning(msg)
+            return obj_params
+        if validation == "return_none":
+            return None
+
+    reconstructed_obj = obj.__class__(**obj_params)
+    if joblib.hash(obj) != joblib.hash(reconstructed_obj):
+        msg = "Reconstruction of the object failed."
+        if validation == "raise":
+            raise ValueError(msg)
+        if validation == "warn":
+            logger.warning(msg)
+        if validation == "return_none":
+            return None
+
+    return obj_params

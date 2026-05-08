@@ -309,7 +309,6 @@ class ComplexFilter(_BaseKeepMatchesFilter):
     ----------
     pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
         pairs of unique names and MolToMol elements to use as filters.
-    [...]
 
     Notes
     -----
@@ -318,6 +317,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         - mode= "any" & keep_matches= False: Must not match any filter element.
         - mode= "all" & keep_matches= True: Needs to match all filter elements.
         - mode= "all" & keep_matches= False: Must not match all filter elements.
+
 
     """
 
@@ -483,7 +483,6 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
     filter_elements: dict[str, FloatCountRange]
         Dictionary of RDKit descriptors to filter by.
         The value must be a tuple of minimum and maximum. If None, no limit is set.
-    [...]
 
     Notes
     -----
