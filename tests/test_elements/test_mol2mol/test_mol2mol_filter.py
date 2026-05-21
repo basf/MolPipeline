@@ -79,7 +79,7 @@ class ElementFilterTest(unittest.TestCase):
             ],
         )
 
-        test_params_list_with_results = [
+        test_params_list_with_results: list[dict[str, Any]] = [
             {
                 "params": {},
                 "result": [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_CL_BR],
@@ -169,7 +169,7 @@ class ComplexFilterTest(unittest.TestCase):
         """Test if molecules are filtered correctly by allowed chemical elements."""
         pipeline = ComplexFilterTest._create_pipeline()
 
-        test_params_list_with_results = [
+        test_params_list_with_results: list[dict[str, Any]] = [
             {
                 "params": {},
                 "result": [SMILES_BENZENE, SMILES_CHLOROBENZENE],
@@ -242,7 +242,7 @@ class SmartsSmilesFilterTest(unittest.TestCase):
                 ],
             )
 
-            test_params_list_with_results = [
+            test_params_list_with_results: list[dict[str, Any]] = [
                 {
                     "params": {},
                     "result": [SMILES_BENZENE, SMILES_CHLOROBENZENE, SMILES_CL_BR],
@@ -380,7 +380,7 @@ class RDKitDescriptorsFilterTest(unittest.TestCase):
                 ("ErrorFilter", ErrorFilter()),
             ],
         )
-        test_params_list_with_results = [
+        test_params_list_with_results: list[dict[str, Any]] = [
             {"params": {}, "result": SMILES_LIST},
             {"params": {"DescriptorsFilter__mode": "all"}, "result": [SMILES_CL_BR]},
             {
