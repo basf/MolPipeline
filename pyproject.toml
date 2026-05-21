@@ -91,7 +91,6 @@ ignore = [
     "ANN401",  #  Allow  typing.Any
     "D203", # incorrect-blank-line-before-class
     "D213", # blank-line-before-class-docstring
-    "ERA001",  # Found commented-out code  # TO REMOVE
     "FURB113", # Use `xxx.extend(...)` instead of repeatedly calling `xxx.append()  # TO REMOVE
     "N813",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
     "PGH003",  # Blanket type ignore for types
