@@ -328,7 +328,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertEqual(len(sets), len(y_test))
         self.assertEqual(len(p_values), len(y_test))
 
-    def test_nonconformity_functions(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
+    def test_nonconformity_functions(self) -> None:  # pylint: disable=too-many-locals
         """Test different nonconformity functions in ConformalClassifier."""
         data_splits = self._get_train_calib_test_splits(self.x_clf, self.y_clf)
         x_train, x_calib, x_test, y_train, y_calib, y_test = data_splits
@@ -396,7 +396,7 @@ class TestConformalClassifier(BaseConformalTestData):
         self.assertTrue(np.all(np.isfinite(scores_small)))
         self.assertTrue(np.all(scores_small >= -np.log(1.0)))
 
-    def test_log_nonconformity_class(self) -> None:  # noqa: PLR0914  # pylint: disable=too-many-locals
+    def test_log_nonconformity_class(self) -> None:  # pylint: disable=too-many-locals
         """Test LogNonconformity functor class."""
         x_train, x_calib, x_test, y_train, y_calib, _y_test = (
             self._get_train_calib_test_splits(self.x_clf, self.y_clf)

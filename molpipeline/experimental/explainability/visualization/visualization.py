@@ -248,7 +248,7 @@ def make_sum_of_gaussians_grid(
         atom_weights = np.array(atom_weights)
 
     if bond_weights is None:
-        bond_weights = np.zeros(len(mol.GetBonds()))
+        bond_weights = np.zeros(len(list(mol.GetBonds())))
     elif not isinstance(bond_weights, np.ndarray):
         bond_weights = np.array(bond_weights)
 
@@ -256,7 +256,7 @@ def make_sum_of_gaussians_grid(
     if not len(atom_weights) == mol.GetNumAtoms():
         raise ValueError("len(atom_weights) is not equal to number of atoms in mol")
 
-    if not len(bond_weights) == len(mol.GetBonds()):
+    if not len(bond_weights) == len(list(mol.GetBonds())):
         raise ValueError("len(bond_weights) is not equal to number of bonds in mol")
 
     # extract the 2D conformation of the molecule to be drawn
