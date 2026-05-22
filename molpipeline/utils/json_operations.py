@@ -82,7 +82,14 @@ if importlib.util.find_spec("torch") is not None:
         """
         if obj is torch.Tensor:
             tensor = torch.from_numpy(kwargs["data"])
-            tensor = tensor.to(kwargs["device"])
+            if "device" in kwargs:  # For backwards compatibility
+                tensor = tensor.to(kwargs["device"])
+            else:
+                warnings.deprecated(
+                    "Old molpipeline-json format encountered. Support will be dropped "
+                    "from v0.16.0. Please update this file.",
+                    stacklevel=2,
+                )
             return tensor, True
         return obj, False
 
