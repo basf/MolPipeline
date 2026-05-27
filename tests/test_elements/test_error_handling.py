@@ -260,7 +260,7 @@ class NoneTest(unittest.TestCase):
         class DummyMolSanitizeExc(MolToMolPipelineElement):
             """MolToMolPipelineElement with dummy molsanitize exception."""
 
-            def pretransform_single(  # noqa: PLR6301
+            def pretransform_single(
                 self,
                 value: RDKitMol,
             ) -> OptionalMol:

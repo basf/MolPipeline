@@ -36,9 +36,9 @@ def _within_boundaries(
 
     Parameters
     ----------
-    lower_bound: Optional[float]
+    lower_bound: float | None
         Lower boundary.
-    upper_bound: Optional[float]
+    upper_bound: float | None
         Upper boundary.
     property_value: float
         Property value to check.
@@ -107,11 +107,11 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
             If "any", at least one of the specified patterns must be present in the
             molecule.
             If "all", all of the specified patterns must be present in the molecule.
-        name: Optional[str], optional (default: None)
+        name: str | None, optional
             Name of the pipeline element.
-        n_jobs: int, optional (default: 1)
+        n_jobs: int, default=1
             Number of parallel jobs to use.
-        uuid: str, optional (default: None)
+        uuid: str, optional
             Unique identifier of the pipeline element.
 
         """

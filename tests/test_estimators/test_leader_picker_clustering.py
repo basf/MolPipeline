@@ -96,7 +96,11 @@ class TestLeaderPickerEstimator(unittest.TestCase):
                     ("auto2mol", AutoToMol()),
                     (
                         "morgan2",
-                        MolToMorganFP(return_as="rdkit", n_bits=1024, radius=2),
+                        MolToMorganFP(
+                            return_as="rdkit",
+                            n_bits=1024,
+                            radius=2,
+                        ),
                     ),
                     ("leader_picker", leader_picker),
                 ],

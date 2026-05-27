@@ -1,6 +1,7 @@
 """Implementations for the RDKit Path Fingerprint."""
 
 import copy
+from collections.abc import Mapping, Sequence
 from typing import Any, Self
 
 from rdkit.Chem import rdFingerprintGenerator
@@ -9,6 +10,8 @@ from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
     FPReturnAsOption,
     MolToRDKitGenFPElement,
 )
+from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.utils.substructure_handling import AtomEnvironment
 
 
 class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-attributes
@@ -19,7 +22,7 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
     """
 
     # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
-    def __init__(
+    def __init__(  # noqa: PLR0917
         self,
         min_path: int = 1,
         max_path: int = 7,
@@ -90,6 +93,7 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
         """
         # pylint: disable=R0801
         super().__init__(
+            n_bits=n_bits,
             counted=counted,
             return_as=return_as,
             name=name,
@@ -225,3 +229,35 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
             numBitsPerFeature=self._num_bits_per_feature,
             atomInvariantsGenerator=self._atom_invariants_generator,
         )
+
+    def bit2atom_mapping(
+        self,
+        mol_obj: RDKitMol,
+    ) -> Mapping[int, Sequence[AtomEnvironment]]:
+        """Get central atom and radius of all features in molecule.
+
+        Parameters
+        ----------
+        mol_obj: RDKitMol
+            RDKit molecule object
+
+        Returns
+        -------
+        Mapping[int, list[tuple[int, int]]]
+            Dictionary with bit position as key and list of tuples with atom index and
+            radius as value.
+
+        """
+        fp_generator = self._get_fp_generator()
+        additional_output = rdFingerprintGenerator.AdditionalOutput()
+        additional_output.AllocateBitInfoMap()
+        additional_output.AllocateBitPaths()
+        _ = fp_generator.GetFingerprint(mol_obj, additionalOutput=additional_output)
+        result_dict: dict[int, list[AtomEnvironment]] = {}
+        # Iterating over all present bits and respective matches
+        for bit, matches in additional_output.GetBitPaths().items():
+            result_dict[bit] = []
+            for atom_sequence in matches:
+                env = AtomEnvironment(set(atom_sequence))
+                result_dict[bit].append(env)
+        return result_dict
