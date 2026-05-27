@@ -3,15 +3,15 @@
 from collections.abc import Sequence
 from itertools import compress
 from numbers import Real
-from typing import Any, Self
+from typing import Any, ClassVar, Self
 
 import numpy as np
 import numpy.typing as npt
 from rdkit import DataStructs
 from rdkit.DataStructs import ExplicitBitVect
 from rdkit.SimDivFilters import rdSimDivPickers
-from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
-from sklearn.utils._param_validation import Interval
+from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # noqa: PLC2701
+from sklearn.utils._param_validation import Interval  # noqa: PLC2701
 from typing_extensions import override
 
 
@@ -19,7 +19,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
     """LeaderPicker clustering estimator (a sphere exclusion clustering algorithm)."""
 
     # we use sklearn's input validation to check constraints
-    _parameter_constraints: dict[str, Any] = {
+    _parameter_constraints: ClassVar[dict[str, Any]] = {
         "distance_threshold": [Interval(Real, 0, 1.0, closed="left")],
     }
 

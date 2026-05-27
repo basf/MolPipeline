@@ -1,6 +1,8 @@
 """Initialize module for all tests."""
 
-from pathlib import Path
+from tests.default_paths import TEST_DATA_DIR, TEST_TOP_DIR
 
-TEST_TOP_DIR = Path(__file__).parent
-TEST_DATA_DIR = TEST_TOP_DIR / "test_data"
+__all__ = [
+    "TEST_DATA_DIR",
+    "TEST_TOP_DIR",
+]

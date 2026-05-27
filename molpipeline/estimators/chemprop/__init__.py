@@ -4,7 +4,7 @@ import importlib.util
 
 __all__ = []
 
-if importlib.util.find_spec("chemprop") is not None:
+if importlib.util.find_spec("chemprop") is not None:  # noqa: RUF067
     from molpipeline.estimators.chemprop.models import (
         ChempropClassifier,
         ChempropModel,

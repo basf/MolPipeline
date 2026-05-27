@@ -48,9 +48,9 @@ class Grid2D:
             If x_lim or y_lim is not of length 2.
 
         """
-        if len(x_lim) != 2:
+        if len(x_lim) != 2:  # noqa: PLR2004
             raise ValueError("x_lim must be of length 2.")
-        if len(y_lim) != 2:
+        if len(y_lim) != 2:  # noqa: PLR2004
             raise ValueError("y_lim must be of length 2.")
 
         self.x_lim = x_lim
@@ -183,8 +183,8 @@ class ValueGrid(Grid2D):
         y_res: int
             Resolution (number of cells) along y-axis.
         function_list: list[\
-         Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],\
-         ], optional
+            Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],\
+        ], optional
             List of functions to be evaluated for each cell, by default None.
 
         """

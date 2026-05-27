@@ -31,7 +31,7 @@ __all__ = [
     "MolToSmiles",
 ]
 
-if importlib.util.find_spec("chemprop") is not None:
+if importlib.util.find_spec("chemprop") is not None:  # noqa: RUF067
     from molpipeline.mol2any.mol2chemprop import MolToChemprop
 
     __all__ += ["MolToChemprop"]
