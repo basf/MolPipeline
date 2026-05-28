@@ -164,14 +164,14 @@ class TestDualVectorCombinationsSparse(unittest.TestCase):
         result = dual_vector_combinations_sparse(_V1_SPARSE, _V2_SPARSE, mode="combine")
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (4, 4))
-        self.assertTrue(np.array_equal(result.toarray(), _DUAL_COMBINE_EXPECTED))
+        self.assertTrue(np.array_equal(result.todense(), _DUAL_COMBINE_EXPECTED))
 
     def test_diff_mode(self) -> None:
         """Diff returns a sparse result with correct shape and values matching dense."""
         result = dual_vector_combinations_sparse(_V1_SPARSE, _V2_SPARSE, mode="diff")
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (4, 2))
-        self.assertTrue(np.array_equal(result.toarray(), _DUAL_DIFF_EXPECTED))
+        self.assertTrue(np.array_equal(result.todense(), _DUAL_DIFF_EXPECTED))
 
     def test_combine_and_diff_mode(self) -> None:
         """combine_and_diff returns sparse result with correct shape matching dense."""
@@ -183,7 +183,7 @@ class TestDualVectorCombinationsSparse(unittest.TestCase):
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (4, 6))
         self.assertTrue(
-            np.array_equal(result.toarray(), _DUAL_COMBINE_AND_DIFF_EXPECTED),
+            np.array_equal(result.todense(), _DUAL_COMBINE_AND_DIFF_EXPECTED),
         )
 
     def test_invalid_mode_raises(self) -> None:
@@ -204,7 +204,7 @@ class TestDualVectorCombinationsSparse(unittest.TestCase):
             mode="combine",
         )
         self.assertTrue(
-            np.array_equal(result_default.toarray(), result_explicit.toarray()),
+            np.array_equal(result_default.todense(), result_explicit.todense()),
         )
 
 
@@ -273,7 +273,7 @@ class TestDualVectorCombinations(unittest.TestCase):
     def test_invalid_mode_raises(self) -> None:
         """An unsupported mode string must raise ValueError."""
         with self.assertRaises(ValueError):
-            dual_vector_combinations(_V1, _V2, mode="invalid")  # type: ignore[arg-type]
+            dual_vector_combinations(_V1, _V2, mode="invalid")  # type: ignore
 
     def test_default_mode_is_combine(self) -> None:
         """Calling without explicit mode must behave identically to mode='combine'."""
@@ -343,7 +343,7 @@ class TestSingleVectorCombinationsSparse(unittest.TestCase):
         result = single_vector_combinations_sparse(_V_SPARSE, mode="combine")
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (n * (n - 1) // 2, 4))
-        self.assertTrue(np.array_equal(result.toarray(), _SINGLE_COMBINE_EXPECTED))
+        self.assertTrue(np.array_equal(result.todense(), _SINGLE_COMBINE_EXPECTED))
 
     def test_diff_mode(self) -> None:
         """Test diff returns sparse result with correct shape matching dense."""
@@ -351,7 +351,7 @@ class TestSingleVectorCombinationsSparse(unittest.TestCase):
         result = single_vector_combinations_sparse(_V_SPARSE, mode="diff")
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (n * (n - 1) // 2, 2))
-        self.assertTrue(np.array_equal(result.toarray(), _SINGLE_DIFF_EXPECTED))
+        self.assertTrue(np.array_equal(result.todense(), _SINGLE_DIFF_EXPECTED))
 
     def test_combine_and_diff_mode(self) -> None:
         """combine_and_diff returns sparse result with correct shape matching dense."""
@@ -360,7 +360,7 @@ class TestSingleVectorCombinationsSparse(unittest.TestCase):
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (n * (n - 1) // 2, 6))
         self.assertTrue(
-            np.array_equal(result.toarray(), _SINGLE_COMBINE_AND_DIFF_EXPECTED),
+            np.array_equal(result.todense(), _SINGLE_COMBINE_AND_DIFF_EXPECTED),
         )
 
     def test_no_self_pairs(self) -> None:
@@ -386,7 +386,7 @@ class TestSingleVectorCombinationsSparse(unittest.TestCase):
         result_default = single_vector_combinations_sparse(_V_SPARSE)
         result_explicit = single_vector_combinations_sparse(_V_SPARSE, mode="combine")
         self.assertTrue(
-            np.array_equal(result_default.toarray(), result_explicit.toarray()),
+            np.array_equal(result_default.todense(), result_explicit.todense()),
         )
 
 
@@ -469,7 +469,7 @@ class TestSingleVectorCombinations(unittest.TestCase):
     def test_invalid_mode_raises(self) -> None:
         """An unsupported mode string must raise ValueError."""
         with self.assertRaises(ValueError):
-            single_vector_combinations(_V, mode="invalid")  # type: ignore[arg-type]
+            single_vector_combinations(_V, mode="invalid")  # type: ignore
 
     def test_default_mode_is_combine(self) -> None:
         """Calling without explicit mode must behave identically to mode='combine'."""

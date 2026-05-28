@@ -155,6 +155,29 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
         """
         ...  # pylint: disable=unnecessary-ellipsis
 
+    def predict(
+        self,
+        X: XType,  # noqa: N803
+    ) -> npt.NDArray[Any]:
+        """Predict the input.
+
+        Parameters
+        ----------
+        X: npt.NDArray[Any]
+            Model input.
+        y: npt.NDArray[Any] | None
+            Target values.
+        fit_params: Any
+            Additional parameters for fitting.
+
+        Returns
+        -------
+        npt.NDArray[Any]
+            Predictions.
+
+        """
+        ...  # pylint: disable=unnecessary-ellipsis
+
 
 class AnyTransformer(AnySklearnEstimator, Protocol):
     """Protocol for transformers."""

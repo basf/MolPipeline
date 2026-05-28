@@ -2,7 +2,7 @@
 
 import abc
 from itertools import combinations, product
-from typing import Any, Generic, Literal, TypeVar
+from typing import Any, Generic, Literal, TypeVar, overload, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -13,14 +13,14 @@ from sklearn.utils.multiclass import unique_labels
 
 from molpipeline.utils.molpipeline_types import AnyPredictor, XType
 
-ModelVar = TypeVar("ModelVar", bound=AnyPredictor | BaseEstimator)
+ModelVar = TypeVar("ModelVar", bound=AnyPredictor)
 
 _N_PROBA_CLASSES = 2
 
 
 def dual_vector_combinations_dense(
-    vector_1: npt.ArrayLike,
-    vector_2: npt.ArrayLike,
+    vector_1: npt.ArrayLike | npt.NDArray[Any],
+    vector_2: npt.ArrayLike | npt.NDArray[Any],
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
 ) -> npt.NDArray[Any]:
     """Combine two dense vectors and return the dual combined vector.
@@ -107,6 +107,42 @@ def dual_vector_combinations_sparse(
         f"'combine_and_diff'.",
     )
 
+@overload
+def dual_vector_combinations(
+    vector_1: npt.NDArray[Any] | npt.ArrayLike,
+    vector_2: npt.NDArray[Any] | npt.ArrayLike,
+    mode: Literal["combine", "diff", "combine_and_diff"] = ...,
+) -> npt.NDArray[Any]: ...
+
+
+@overload
+def dual_vector_combinations(
+    vector_1: sp.spmatrix,
+    vector_2: npt.NDArray[Any] | npt.ArrayLike,
+    mode: Literal["combine", "diff", "combine_and_diff"] = ...,
+) -> npt.NDArray[Any]: ...
+
+@overload
+def dual_vector_combinations(
+    vector_1: npt.NDArray[Any] | npt.ArrayLike,
+    vector_2: sp.spmatrix,
+    mode: Literal["combine", "diff", "combine_and_diff"] = ...,
+) -> npt.NDArray[Any]: ...
+
+@overload
+def dual_vector_combinations(
+    vector_1: sp.spmatrix,
+    vector_2: sp.spmatrix,
+    mode: Literal["combine", "diff", "combine_and_diff"] = ...,
+) -> sp.spmatrix: ...
+
+@overload
+def dual_vector_combinations(
+    vector_1: XType,
+    vector_2: XType,
+    mode: Literal["combine", "diff", "combine_and_diff"] = ...,
+) -> npt.NDArray[Any] | sp.spmatrix: ...
+
 
 def dual_vector_combinations(
     vector_1: XType,
@@ -139,9 +175,9 @@ def dual_vector_combinations(
         dense NumPy array.
 
     """
-    if sp.issparse(vector_1) or sp.issparse(vector_2):
+    if isinstance(vector_1, sp.spmatrix) and isinstance(vector_2, sp.spmatrix):
         return dual_vector_combinations_sparse(vector_1, vector_2, mode=mode)
-    return dual_vector_combinations_dense(vector_1, vector_2, mode=mode)
+    return dual_vector_combinations_dense(np.asarray(vector_1), np.asarray(vector_2), mode=mode)
 
 
 def single_vector_combinations_dense(
@@ -174,6 +210,7 @@ def single_vector_combinations_dense(
         If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
 
     """
+    vector = np.asarray(vector)
     if mode == "combine":
         return np.vstack([np.hstack(comb) for comb in combinations(vector, r=2)])
     if mode == "diff":
@@ -220,7 +257,7 @@ def single_vector_combinations_sparse(
 
     """
     rows = []
-    for a1, a2 in combinations(vector, r=2):
+    for a1, a2 in combinations(vector, r=2):  # type: ignore
         if mode == "combine":
             rows.append(sp.hstack([a1, a2]))
         elif mode == "diff":
@@ -234,6 +271,24 @@ def single_vector_combinations_sparse(
             )
     return sp.vstack(rows)
 
+
+@overload
+def single_vector_combinations(
+    vector: npt.ArrayLike | npt.NDArray[Any],
+    mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
+) -> npt.NDArray[Any]: ...
+
+@overload
+def single_vector_combinations(
+    vector: sp.spmatrix,
+    mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
+) -> sp.spmatrix: ...
+
+@overload
+def single_vector_combinations(
+    vector: XType,
+    mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
+) -> npt.NDArray[Any] | sp.spmatrix: ...
 
 def single_vector_combinations(
     vector: XType,
@@ -266,13 +321,17 @@ def single_vector_combinations(
         dense NumPy array.
 
     """
-    if sp.issparse(vector):
+    if isinstance(vector, sp.spmatrix):
         return single_vector_combinations_sparse(vector, mode=mode)
     return single_vector_combinations_dense(vector, mode=mode)
 
 
 class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
     """Base class for pairwise difference learners."""
+
+    mode: Literal["combine", "diff", "combine_and_diff"]
+    fit_x_: XType | None
+    fit_y_: npt.NDArray[Any] | None
 
     def __init__(
         self,
@@ -291,6 +350,8 @@ class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
         """
         self.estimator = estimator
         self.mode = mode
+        self.fit_x_ = None
+        self.fit_y_ = None
 
     def fit(
         self,
@@ -313,7 +374,7 @@ class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
 
         """
         self.fit_x_ = X
-        self.fit_y_ = y
+        self.fit_y_ = np.asarray(y)
         x_combined = single_vector_combinations(X, mode=self.mode)
         y_diff = single_vector_combinations(y, mode="diff")
 
@@ -337,13 +398,41 @@ class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
         """
 
 
-class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[ModelVar]):
+class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[ModelVar]):  # pylint: disable=too-many-ancestors
     """Pairwise difference regressor."""
+
+    @overload
+    def predict(
+        self,
+        X: XType,  # noqa: N803
+        return_std: Literal[False] = False,
+        **params: Any,
+    ) -> npt.NDArray[np.float64]: ...
+
+    @overload
+    def predict(
+        self,
+        X: XType,  # noqa: N803
+        return_std: Literal[True] = ...,
+        **params: Any,
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
+
+    @overload
+    def predict(
+        self,
+        X: XType,  # noqa: N803
+        return_std: bool = False,
+        **params: Any,
+    ) -> (
+        npt.NDArray[np.float64]
+        | tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
+    ): ...
 
     def predict(
         self,
-        X: npt.ArrayLike,  # noqa: N803
+        X: XType,  # noqa: N803
         return_std: bool = False,
+        **params: Any,
     ) -> npt.NDArray[Any] | tuple[npt.NDArray[Any], npt.NDArray[Any]]:
         """Predict the target values for the given input.
 
@@ -359,12 +448,20 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
         npt.NDArray[Any] | tuple[npt.NDArray[Any], npt.NDArray[Any]]
             Predicted mean values, and optionally their standard deviations.
 
+        Raises
+        ------
+        AttributeError
+            If the model is not fitted.
+
         """
         mean_preds = []
         std_preds = []
-        for x_ in X:
+        if self.fit_x_ is None or self.fit_y_ is None:
+            raise AttributeError("Unfitted model! Please call fit() before predict().")
+        for x_ in X:  # type: ignore
+            x_ = x_ if isinstance(x_, sp.spmatrix) else np.asarray(x_).reshape(1, -1)
             x_combined = dual_vector_combinations(
-                x_.reshape(1, -1),
+                x_,
                 self.fit_x_,
                 mode=self.mode,
             )
@@ -381,7 +478,7 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
         return mean_preds_arr
 
 
-class PairwiseDifferenceClassifier(
+class PairwiseDifferenceClassifier(  # pylint: disable=too-many-ancestors
     ClassifierMixin,
     PairwiseDifferenceLearner[ModelVar],
 ):
@@ -396,7 +493,7 @@ class PairwiseDifferenceClassifier(
     ``predict_proba`` for ``predict_proba`` to work on this classifier).
     """
 
-    estimators: list[ModelVar]
+    estimators_: list[ModelVar]
 
     def __init__(
         self,
@@ -415,13 +512,14 @@ class PairwiseDifferenceClassifier(
         """
         self.ohe = OneHotEncoder(handle_unknown="ignore")
         self.estimators_ = []
+        self.classes_: npt.NDArray[Any] | None = None
         super().__init__(estimator=estimator, mode=mode)
 
     def fit(
         self,
         X: npt.ArrayLike,  # noqa: N803
         y: npt.ArrayLike,
-    ) -> "PairwiseDifferenceClassifier":
+    ) -> Self:
         """Fit the classifier to the data.
 
         Parameters
@@ -444,10 +542,7 @@ class PairwiseDifferenceClassifier(
         self.estimators_ = []
 
         fit_y = self.ohe.fit_transform(y.reshape(-1, 1))
-        self.fit_y_ = (
-            fit_y.toarray() if hasattr(fit_y, "toarray") else np.asarray(fit_y)
-        )
-
+        self.fit_y_ = np.asarray(fit_y)
         # Abs to only check if class differ or are identical
         y_combined = np.abs(single_vector_combinations(self.fit_y_, mode="diff"))
 
@@ -490,10 +585,16 @@ class PairwiseDifferenceClassifier(
         ------
         AssertionError
             If the underlying estimator does not predict binary probabilities.
+        AttributeError
+            If the model is not fitted.
 
         """
         x_mat = np.asarray(X)
         predictions = []
+        if self.fit_x_ is None or self.fit_y_ is None:
+            raise AttributeError(
+                "Unfitted model! Please call fit() before predict_proba()."
+            )
         for x_ in x_mat:
             x_ = dual_vector_combinations(
                 x_.reshape(1, -1),
