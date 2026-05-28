@@ -96,19 +96,21 @@ class TestSHAPExplainers(unittest.TestCase):
         self.assertIsInstance(explanation.feature_vector, np.ndarray)
         self.assertEqual(
             (nof_features,),
-            explanation.feature_vector.shape,  # type: ignore[union-attr]
+            explanation.feature_vector.shape,
         )
 
         # feature names should be a list of not empty strings
+        if explanation.feature_names is None:
+            raise ValueError("explanation.feature_names is None")
         self.assertTrue(
             all(
                 isinstance(name, str) and len(name) > 0
-                for name in explanation.feature_names  # type: ignore[union-attr]
+                for name in explanation.feature_names
             ),
         )
         self.assertEqual(
-            len(explanation.feature_names),  # type: ignore
-            explanation.feature_vector.shape[0],  # type: ignore
+            len(explanation.feature_names),
+            explanation.feature_vector.shape[0],
         )
 
         self.assertIsInstance(explanation.molecule, RDKitMol)
@@ -120,13 +122,13 @@ class TestSHAPExplainers(unittest.TestCase):
         self.assertIsInstance(explanation.prediction, np.ndarray)
         self.assertIsInstance(explanation.feature_weights, np.ndarray)
         if is_regressor(estimator):
-            self.assertTrue((1,), explanation.prediction.shape)  # type: ignore[union-attr]
+            self.assertTrue((1,), explanation.prediction.shape)
             self.assertEqual(
                 (nof_features,),
-                explanation.feature_weights.shape,  # type: ignore[union-attr]
+                explanation.feature_weights.shape,
             )
         elif is_classifier(estimator):
-            self.assertTrue((2,), explanation.prediction.shape)  # type: ignore[union-attr]
+            self.assertTrue((2,), explanation.prediction.shape)
             if isinstance(explainer, SHAPTreeExplainer) and isinstance(
                 estimator,
                 GradientBoostingClassifier,
@@ -138,33 +140,33 @@ class TestSHAPExplainers(unittest.TestCase):
                 # see https://github.com/shap/shap/issues/3177
                 self.assertEqual(
                     (nof_features,),
-                    explanation.feature_weights.shape,  # type: ignore[union-attr]
+                    explanation.feature_weights.shape,
                 )
             elif isinstance(estimator, SVC):
                 # SVC seems to be handled differently by SHAP. It returns only a one
                 # dimensional feature array for binary classification.
                 self.assertTrue(
                     (1,),
-                    explanation.prediction.shape,  # type: ignore[union-attr]
+                    explanation.prediction.shape,
                 )
                 self.assertEqual(
                     (nof_features,),
-                    explanation.feature_weights.shape,  # type: ignore[union-attr]
+                    explanation.feature_weights.shape,
                 )
             else:
                 # normal binary classification case
                 self.assertEqual(
                     (nof_features, 2),
-                    explanation.feature_weights.shape,  # type: ignore[union-attr]
+                    explanation.feature_weights.shape,
                 )
         else:
             raise ValueError("Error in unittest. Unsupported estimator.")
 
         if issubclass(type(explainer), AtomExplanationMixin):
-            self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
+            self.assertIsInstance(explanation.atom_weights, np.ndarray)
             self.assertEqual(
-                explanation.atom_weights.shape,  # type: ignore[union-attr]
-                (explanation.molecule.GetNumAtoms(),),  # type: ignore[union-attr]
+                explanation.atom_weights.shape,
+                (explanation.molecule.GetNumAtoms(),),
             )
 
     def test_explanations_fingerprint_pipeline(  # pylint: disable=too-many-locals
@@ -233,10 +235,10 @@ class TestSHAPExplainers(unittest.TestCase):
                     self._test_valid_explanation(
                         explanation,
                         estimator,
-                        mol_reader_subpipeline,  # type: ignore[arg-type]
+                        mol_reader_subpipeline,
                         n_bits,
                         TEST_SMILES[i],
-                        explainer=explainer,  # type: ignore[arg-type]
+                        explainer=explainer,
                     )
 
     # pylint: disable=too-many-locals
@@ -315,7 +317,7 @@ class TestSHAPExplainers(unittest.TestCase):
                         self._test_valid_explanation(
                             explanation,
                             estimator,
-                            mol_reader_subpipeline,  # type: ignore[arg-type]
+                            mol_reader_subpipeline,
                             n_bits,
                             TEST_SMILES_WITH_BAD_SMILES[i],
                             explainer=explainer,
@@ -356,7 +358,7 @@ class TestSHAPExplainers(unittest.TestCase):
                 self._test_valid_explanation(
                     explanation,
                     estimator,
-                    mol_reader_subpipeline,  # type: ignore[arg-type]
+                    mol_reader_subpipeline,
                     pipeline.named_steps["physchem"].n_features,
                     TEST_SMILES[i],
                     explainer=explainer,
@@ -418,7 +420,7 @@ class TestSHAPExplainers(unittest.TestCase):
                 self._test_valid_explanation(
                     explanation,
                     estimator,
-                    mol_reader_subpipeline,  # type: ignore[arg-type]
+                    mol_reader_subpipeline,
                     pipeline.named_steps["features"].n_features,
                     TEST_SMILES[i],
                     explainer=explainer,

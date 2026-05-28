@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from typing import Any, Self
 
 try:
-    from typing import override  # type: ignore[attr-defined]
+    from typing import override
 except ImportError:
     from typing_extensions import override
 

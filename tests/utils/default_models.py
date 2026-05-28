@@ -54,7 +54,7 @@ def get_morgan_rf_pipeline(n_jobs: int = 1) -> Pipeline:
             ("error_filter", error_filter),
             (
                 "rf",
-                RandomForestClassifier(  # type: ignore[list-item]
+                RandomForestClassifier(
                     n_jobs=n_jobs,
                     n_estimators=2,
                 ),

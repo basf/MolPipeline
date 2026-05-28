@@ -64,7 +64,7 @@ def tanimoto_distance_sparse(
         and instances of B (columns/second dim).
 
     """
-    return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
+    return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)
 
 
 def pairwise_tanimoto_similarity(
@@ -177,4 +177,4 @@ def self_tanimoto_distance(
         Square matrix of similarity values between all instances in the matrix.
 
     """
-    return 1 - self_tanimoto_similarity(matrix_a)  # type: ignore
+    return 1 - self_tanimoto_similarity(matrix_a)

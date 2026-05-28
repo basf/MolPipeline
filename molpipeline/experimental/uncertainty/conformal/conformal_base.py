@@ -363,7 +363,7 @@ def create_nonconformity_function(
 
     if isinstance(nonconformity, str):
         if nonconformity in NONCONFORMITY_REGISTRY:
-            return NONCONFORMITY_REGISTRY[nonconformity]()  # type: ignore[abstract]
+            return NONCONFORMITY_REGISTRY[nonconformity]()
         if nonconformity.startswith("custom_"):
             raise ValueError(
                 f"Cannot restore custom function from name: {nonconformity}. "

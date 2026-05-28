@@ -59,7 +59,7 @@ class GPKernelTestMixin(abc.ABC):
     def test_addition_with_rbf(self) -> None:
         """Test addition of TanimotoKernel with RBF kernel."""
         combined_kernel = self.kernel + RBF(length_scale=1.0)
-        self.assertIsInstance(combined_kernel, Sum)  # type: ignore
+        self.assertIsInstance(combined_kernel, Sum)
 
     def build_classification_pipeline(self) -> Pipeline:
         """Build a simple pipeline for testing.
@@ -107,17 +107,17 @@ class GPKernelTestMixin(abc.ABC):
         pipeline.fit(self.smiles_list, self.label)
         predictions = pipeline.predict(self.smiles_list)
         proba = pipeline.predict_proba(self.smiles_list)
-        self.assertEqual(len(predictions), len(self.smiles_list))  # type: ignore
-        self.assertEqual(len(proba), len(self.smiles_list))  # type: ignore
+        self.assertEqual(len(predictions), len(self.smiles_list))
+        self.assertEqual(len(proba), len(self.smiles_list))
 
     def test_regression_pipeline_fit_and_predict(self) -> None:
         """Test fitting the regression pipeline with sample data."""
         pipeline = self.build_regression_pipeline()
         pipeline.fit(self.smiles_list, self.label)
         predictions = pipeline.predict(self.smiles_list)
-        self.assertEqual(len(predictions), len(self.smiles_list))  # type: ignore
+        self.assertEqual(len(predictions), len(self.smiles_list))
         predictions, std = pipeline.predict(self.smiles_list, return_std=True)
-        self.assertEqual(len(std), len(self.smiles_list))  # type: ignore
+        self.assertEqual(len(std), len(self.smiles_list))
 
 
 class TestTanimotoKernel(GPKernelTestMixin, unittest.TestCase):

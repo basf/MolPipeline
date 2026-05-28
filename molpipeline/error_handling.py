@@ -261,9 +261,9 @@ class ErrorFilter(ABCPipelineElement):
             for idx, value in enumerate(values):
                 if idx not in self.error_indices:
                     out_list.append(value)
-            return out_list  # type: ignore  # mypy does not support higher-kinded types
+            return out_list  # mypy does not support higher-kinded types
         if isinstance(values, np.ndarray):
-            return np.delete(values, self.error_indices, axis=0)  # type: ignore
+            return np.delete(values, self.error_indices, axis=0)
         if isinstance(values, pd.Series):
             return values.drop(values.index[self.error_indices])
         raise TypeError(f"Unexpected Type: {type(values)}")
@@ -324,7 +324,7 @@ class ErrorFilter(ABCPipelineElement):
         if self.check_removal(value):
             return RemovedInstance(
                 filter_element_id=self.uuid,
-                message=value.message,  # type: ignore
+                message=value.message,
             )
         return value
 
@@ -557,7 +557,7 @@ class FilterReinserter(Generic[_T]):
         if deep:
             params["error_filter_id"] = str(self.error_filter_id)
             if self.fill_value is not None:
-                params["fill_value"] = type(self.fill_value)(self.fill_value)  # type: ignore
+                params["fill_value"] = type(self.fill_value)(self.fill_value)
             else:
                 params["fill_value"] = None
         else:
@@ -891,7 +891,7 @@ class FilterReinserter(Generic[_T]):
 
         """
         if isinstance(value_container, list):
-            return self._fill_list(value_container)  # type: ignore
+            return self._fill_list(value_container)
         if isinstance(value_container, np.ndarray):
-            return self._fill_numpy_arr(value_container)  # type: ignore
+            return self._fill_numpy_arr(value_container)
         raise TypeError(f"Unexpected Type: {type(value_container)}")

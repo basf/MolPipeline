@@ -96,23 +96,23 @@ def iterate_components(  # noqa: PLR0912  # pylint: disable=too-many-branches
     if isinstance(estimator, MolToConcatenatedVector):
         for name, est in estimator.element_list:
             yield from iterate_components(est, f"{prefix}{name}", seen)
-    if hasattr(estimator, "estimator"):  # type: ignore
+    if hasattr(estimator, "estimator"):
         # follow nested estimators in wrapping estimators like CalibratedClassifierCV,
         # RandomForestClassifier. `estimator` in sklearn and MolPipeline is usually
         # stored as the original estimator which is cloned for an ensemble.
-        yield from iterate_components(estimator.estimator, f"{prefix}estimator", seen)  # type: ignore
+        yield from iterate_components(estimator.estimator, f"{prefix}estimator", seen)
 
-    if hasattr(estimator, "estimators") and isinstance(estimator.estimators, list):  # type: ignore
+    if hasattr(estimator, "estimators") and isinstance(estimator.estimators, list):
         # VotingClassifier and VotingRegressor do not use estimator, but estimators.
-        for name, est in estimator.estimators:  # type: ignore
+        for name, est in estimator.estimators:
             yield from iterate_components(est, f"{prefix}{name}", seen)
 
-    if hasattr(estimator, "estimators_") and isinstance(estimator.estimators_, list):  # type: ignore
+    if hasattr(estimator, "estimators_") and isinstance(estimator.estimators_, list):
         # follow nested estimators in wrapping estimators like RandomForestClassifier.
         # `estimators_` in sklearn and MolPipeline is usually the list of cloned
         # estimators for an ensemble which are only available after fitting. These are
         # usually used for making predictions.
-        for i, est in enumerate(estimator.estimators_):  # type: ignore
+        for i, est in enumerate(estimator.estimators_):
             yield from iterate_components(est, f"{prefix}estimator_{i}", seen)
 
     if isinstance(estimator, CalibratedClassifierCV) and hasattr(

@@ -64,7 +64,7 @@ class DataRepetitionSplit(BaseCrossValidator):  # pylint: disable=abstract-metho
             yield train_indices, test_indices
 
     @override
-    def get_n_splits(  # type: ignore  # pylint: disable=signature-differs
+    def get_n_splits(  # pylint: disable=signature-differs
         self,
         X: npt.ArrayLike,
         y: npt.ArrayLike | None = None,

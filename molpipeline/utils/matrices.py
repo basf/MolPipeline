@@ -60,6 +60,6 @@ def are_equal(matrix_a: sparse.csr_matrix, matrix_b: sparse.csr_matrix) -> bool:
         Whether the matrices are equal or not.
 
     """
-    is_unequal_matrix: sparse.csr_matrix = matrix_a != matrix_b  # type: ignore
+    is_unequal_matrix: sparse.csr_matrix = matrix_a != matrix_b
     number_unequal_elements = int(is_unequal_matrix.nnz)
     return number_unequal_elements == 0

@@ -94,7 +94,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         """
         # copy molecule since ComputeGasteigerCharges modifies the molecule inplace
         value_copy = Chem.Mol(value)
-        Chem.rdPartialCharges.ComputeGasteigerCharges(value_copy)  # type: ignore
+        Chem.rdPartialCharges.ComputeGasteigerCharges(value_copy)
         atoms_contributions = np.array(
             [atom.GetDoubleProp("_GasteigerCharge") for atom in value_copy.GetAtoms()],
         )

@@ -4,10 +4,7 @@ from typing import Any
 
 import scipy
 
-try:
-    from typing import TypeIs  # type: ignore  # Can be removed for python>=3.13
-except ImportError:
-    from typing_extensions import TypeIs
+from typing_extensions import TypeIs
 
 
 def sparse_type_guard(

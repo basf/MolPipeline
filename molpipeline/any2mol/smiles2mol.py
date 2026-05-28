@@ -48,7 +48,7 @@ class SmilesToMol(SimpleStringToMolElement):
         """
         # set up rdkit smiles parser parameters
         parser_params = Chem.SmilesParserParams()
-        parser_params.removeHs = self._remove_hydrogens  # type: ignore[assignment]
+        parser_params.removeHs = self._remove_hydrogens
         return parser_params
 
     def string_to_mol(self, value: str) -> RDKitMol:

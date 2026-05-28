@@ -347,7 +347,7 @@ EndFeature
     def test_from_preconfiguration_unknown_name(self) -> None:
         """Test preconfigured fingerprint with an unknown name."""
         with self.assertRaises(ValueError):
-            MolToPharmacophore2DFP.from_preconfiguration("unknown_fingerprint")  # type: ignore[arg-type]
+            MolToPharmacophore2DFP.from_preconfiguration("unknown_fingerprint")
 
     def test_sklearn_clone(self) -> None:
         """Test sklearn clone functionality."""

@@ -4,11 +4,6 @@ import warnings
 from collections.abc import Sequence
 from typing import Any, Literal, Self
 
-try:
-    from typing import override  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import override
-
 import numpy as np
 import numpy.typing as npt
 from chemprop.data import MoleculeDataset, build_dataloader
@@ -22,6 +17,7 @@ from sklearn.utils._tags import (  # noqa: PLC2701
 )
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metaestimators import available_if
+from typing_extensions import override
 
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.component_wrapper import (
@@ -179,7 +175,7 @@ class ChempropModel(ABCChemprop):
         self.model.eval()
         test_data = build_dataloader(X, num_workers=self.n_jobs, shuffle=False)
         predictions = self.lightning_trainer.predict(self.model, test_data)
-        prediction_array = np.vstack(predictions)  # type: ignore
+        prediction_array = np.vstack(predictions)
         if prediction_array.shape[1] == 1:
             prediction_array = prediction_array.squeeze(axis=1)
         # Check if the predictions have the same length as the input dataset
@@ -287,7 +283,7 @@ class ChempropModel(ABCChemprop):
 
         """
         return ChempropNeuralFP(
-            model=clone(self.model),  # type: ignore
+            model=clone(self.model),
             lightning_trainer=self.lightning_trainer,
             batch_size=self.batch_size,
             n_jobs=self.n_jobs,

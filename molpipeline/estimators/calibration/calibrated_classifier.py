@@ -543,7 +543,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         # Set `classes_` using all `y`
         label_encoder_ = LabelEncoder().fit(y)
         self.classes_ = label_encoder_.classes_  # pylint: disable=W0201
-        if self.method == "temperature" and isinstance(y[0], str):  # type: ignore
+        if self.method == "temperature" and isinstance(y[0], str):
             # for temperature scaling if `y` contains strings then encode it
             # right here to avoid fitting LabelEncoder again within the
             # `_fit_calibrator` function.
@@ -581,7 +581,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         xp, is_array_api, device_ = get_namespace_and_device(X)
         if is_array_api:
-            y, sample_weight = move_to(  # type: ignore  # pylint: disable=W0632
+            y, sample_weight = move_to(  # pylint: disable=W0632
                 y,
                 sample_weight,
                 xp=xp,

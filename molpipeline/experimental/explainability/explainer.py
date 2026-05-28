@@ -5,7 +5,7 @@ from collections.abc import Callable
 from typing import Any
 
 try:
-    from typing import override  # type: ignore[attr-defined]
+    from typing import override
 except ImportError:
     from typing_extensions import override
 
@@ -52,8 +52,8 @@ def _to_dense(
 
     """
     if sparse_type_guard(feature_matrix):
-        return feature_matrix.todense()  # type: ignore # Can be removed for py>=3.13
-    return feature_matrix  # type: ignore # Can be removed for py>=3.13
+        return feature_matrix.todense()  # Can be removed for py>=3.13
+    return feature_matrix  # Can be removed for py>=3.13
 
 
 def _get_prediction_function(
@@ -250,7 +250,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
             raise ValueError("Could not determine the featurization subpipeline.")
 
         # determine type of returned explanation
-        featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
+        featurization_element = self.featurization_subpipeline.steps[-1][1]
         if isinstance(featurization_element, MolToMorganFP):
             self.return_element_type_ = SHAPFeatureAndAtomExplanation
         else:
@@ -311,7 +311,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
             If the featurization element does not have a get_feature_names method.
 
         """
-        featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
+        featurization_element = self.featurization_subpipeline.steps[-1][1]
 
         explanation_results: list[
             SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation
@@ -331,10 +331,10 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
                 prediction = prediction.squeeze()
 
             # get the molecule
-            molecule = self.molecule_reader_subpipeline.transform(input_sample)[0]  # type: ignore[union-attr]
+            molecule = self.molecule_reader_subpipeline.transform(input_sample)[0]
 
             # get feature vectors
-            feature_vector = self.featurization_subpipeline.transform(input_sample)  # type: ignore[union-attr]
+            feature_vector = self.featurization_subpipeline.transform(input_sample)
             feature_vector = _to_dense(feature_vector)
             feature_vector = np.asarray(feature_vector).squeeze()
 
@@ -376,7 +376,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
                         "Featurization element does not have a get_feature_names "
                         "method.",
                     )
-                explanation_data["feature_names"] = featurization_element.feature_names  # type: ignore[union-attr]
+                explanation_data["feature_names"] = featurization_element.feature_names
 
             if issubclass(self.return_element_type_, FeatureExplanationMixin):
                 explanation_data["feature_weights"] = feature_weights

@@ -116,7 +116,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-        self.filter_elements = filter_elements  # type: ignore
+        self.filter_elements = filter_elements
         self.keep_matches = keep_matches
         self.mode = mode
 
@@ -342,7 +342,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
                 "Invalid type for patterns. Must be a list of strings or a dictionary"
                 " with patterns as keys and counts as values.",
             )
-        self.patterns_mol_dict = list(self._filter_elements.keys())  # type: ignore
+        self.patterns_mol_dict = list(self._filter_elements.keys())
 
     @property
     def patterns_mol_dict(self) -> Mapping[str, RDKitMol]:

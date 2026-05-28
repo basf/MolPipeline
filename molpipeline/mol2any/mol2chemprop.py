@@ -138,11 +138,11 @@ class MolToChemprop(MolToAnyPipelineElement):
 
         if deep:
             if hasattr(self.graph_featurizer, "get_params"):
-                graph_featurizer_params = self.graph_featurizer.get_params(deep=deep)  # type: ignore
+                graph_featurizer_params = self.graph_featurizer.get_params(deep=deep)
                 for key, value in graph_featurizer_params.items():
                     params[f"graph_featurizer__{key}"] = value
             if hasattr(self.mol_featurizer, "get_params"):
-                mol_featurizer_params = self.mol_featurizer.get_params(deep=deep)  # type: ignore
+                mol_featurizer_params = self.mol_featurizer.get_params(deep=deep)
                 for key, value in mol_featurizer_params.items():
                     params[f"mol_featurizer__{key}"] = value
         return params
@@ -179,9 +179,9 @@ class MolToChemprop(MolToAnyPipelineElement):
             elif component_name == "mol_featurizer":
                 mol_featurizer_params[param_name] = param_copy.pop(key)
         if hasattr(self.graph_featurizer, "set_params"):
-            self.graph_featurizer.set_params(**graph_featurizer_params)  # type: ignore
+            self.graph_featurizer.set_params(**graph_featurizer_params)
         if hasattr(self.mol_featurizer, "set_params"):
-            self.mol_featurizer.set_params(**mol_featurizer_params)  # type: ignore
+            self.mol_featurizer.set_params(**mol_featurizer_params)
 
         super().set_params(**param_copy)
         return self

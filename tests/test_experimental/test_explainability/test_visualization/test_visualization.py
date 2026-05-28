@@ -157,16 +157,16 @@ class TestExplainabilityVisualization(unittest.TestCase):
         ]:
             for explanation in explanation_list:
                 self.assertTrue(explanation.is_valid())
-                self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
+                self.assertIsInstance(explanation.atom_weights, np.ndarray)
                 mol = explanation.molecule
                 if not isinstance(mol, Chem.Mol):
                     raise ValueError("Expected a Chem.Mol object.")
                 image = structure_heatmap(
                     mol,
-                    explanation.atom_weights,  # type: ignore
+                    explanation.atom_weights,
                     width=8,
                     height=8,
-                )  # type: ignore[union-attr]
+                )
                 self.assertIsNotNone(image)
                 self.assertEqual(image.format, "PNG")
 
@@ -181,12 +181,12 @@ class TestExplainabilityVisualization(unittest.TestCase):
             for explanation in explanation_list:
                 self.assertTrue(explanation.is_valid())
                 self.assertIsInstance(explanation, SHAPFeatureAndAtomExplanation)
-                self.assertIsInstance(explanation.atom_weights, np.ndarray)  # type: ignore[union-attr]
+                self.assertIsInstance(explanation.atom_weights, np.ndarray)
                 image = structure_heatmap_shap(
-                    explanation=explanation,  # type: ignore[arg-type]
+                    explanation=explanation,
                     width=8,
                     height=8,
-                )  # type: ignore[union-attr]
+                )
                 self.assertIsNotNone(image)
                 self.assertEqual(image.format, "PNG")
 
@@ -219,12 +219,12 @@ class TestExplainabilityVisualization(unittest.TestCase):
         self.assertTrue(hasattr(explanations1[0], "atom_weights"))
         self.assertTrue(hasattr(explanations2[0], "atom_weights"))
         self.assertTrue(hasattr(explanations3[0], "atom_weights"))
-        self.assertIsInstance(explanations1[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertIsInstance(explanations2[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertIsInstance(explanations3[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertEqual(len(explanations1[0].atom_weights), 1)  # type: ignore
-        self.assertEqual(len(explanations2[0].atom_weights), 1)  # type: ignore
-        self.assertEqual(len(explanations3[0].atom_weights), 1)  # type: ignore
+        self.assertIsInstance(explanations1[0].atom_weights, np.ndarray)
+        self.assertIsInstance(explanations2[0].atom_weights, np.ndarray)
+        self.assertIsInstance(explanations3[0].atom_weights, np.ndarray)
+        self.assertEqual(len(explanations1[0].atom_weights), 1)
+        self.assertEqual(len(explanations2[0].atom_weights), 1)
+        self.assertEqual(len(explanations3[0].atom_weights), 1)
 
         # test visualization
         all_explanations = explanations1 + explanations2 + explanations3
@@ -235,9 +235,9 @@ class TestExplainabilityVisualization(unittest.TestCase):
                 raise ValueError("Expected a Chem.Mol object.")
             image = structure_heatmap(
                 mol,
-                explanation.atom_weights,  # type: ignore
+                explanation.atom_weights,
                 width=8,
                 height=8,
-            )  # type: ignore[union-attr]
+            )
             self.assertIsNotNone(image)
             self.assertEqual(image.format, "PNG")

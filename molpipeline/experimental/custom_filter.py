@@ -103,6 +103,6 @@ class CustomFilter(_MolToMolPipelineElement):
         """
         parameter_copy = dict(parameters)
         if "func" in parameter_copy:
-            self.func = parameter_copy.pop("func")  # type: ignore
+            self.func = parameter_copy.pop("func")
         super().set_params(**parameter_copy)
         return self

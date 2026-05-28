@@ -106,7 +106,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
             The fitted model.
 
         """
-        model_clone: _T = clone(model)  # type: ignore
+        model_clone: _T = clone(model)
         return model_clone.fit(model_input, y, **kwargs)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
@@ -314,7 +314,7 @@ class HomogeneousEnsembleRegressor(RegressorMixin, HomogeneousEnsemble[_ModelVar
 
         """
         predictions = np.array(
-            [estimator.predict(X, **params) for estimator in self.estimators_],  # type: ignore
+            [estimator.predict(X, **params) for estimator in self.estimators_],
         )
         if return_std:
             return np.mean(predictions, axis=0), np.std(predictions, axis=0)
@@ -443,7 +443,7 @@ class HomogeneousEnsembleClassifier(ClassifierMixin, HomogeneousEnsemble[_ModelV
 
         """
         predictions = np.array(
-            [estimator.predict_proba(X, **params) for estimator in self.estimators_],  # type: ignore
+            [estimator.predict_proba(X, **params) for estimator in self.estimators_],
         )
         return np.mean(predictions, axis=0)
 
@@ -486,7 +486,7 @@ class HomogeneousEnsembleClassifier(ClassifierMixin, HomogeneousEnsemble[_ModelV
                 )
             return np.argmax(self.predict_proba(X, **params), axis=1)
         predictions = np.array(
-            [estimator.predict(X, **params) for estimator in self.estimators_],  # type: ignore
+            [estimator.predict(X, **params) for estimator in self.estimators_],
         )
         if not np.issubdtype(predictions.dtype, np.integer):
             converted_predictions = predictions.astype(int)

@@ -179,7 +179,7 @@ def _add_gaussians_for_bonds(
         bond_center = (a1_coords + a2_coords) / 2
 
         func = GaussFunctor2D(
-            center=bond_center,  # type: ignore
+            center=bond_center,
             std1=bond_width,
             std2=bond_length,
             scale=bond_weights[i],
@@ -457,7 +457,7 @@ def _structure_heatmap(
     # Coloring atoms of element 0 to 100 black
     drawer.drawOptions().updateAtomPalette(dict.fromkeys(range(100), (0, 0, 0, 1)))
     draw_opt = drawer.drawOptions()
-    draw_opt.padding = 0.2  # type: ignore[assignment]
+    draw_opt.padding = 0.2
 
     color_map = get_color_map_from_input(color)
 

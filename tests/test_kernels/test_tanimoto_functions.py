@@ -167,7 +167,7 @@ class TestSelfTanimotoSimilarity(ABCTanimotoTestCase):
     def test_type_error_in_self_similarity(self) -> None:
         """Non-sparse, non-ndarray input should raise TypeError."""
         with self.assertRaises(TypeError):
-            self_tanimoto_similarity([[1, 0], [0, 1]])  # type: ignore[arg-type]
+            self_tanimoto_similarity([[1, 0], [0, 1]])
 
 
 class TestSelfTanimotoDistance(unittest.TestCase):

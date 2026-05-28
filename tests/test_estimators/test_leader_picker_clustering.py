@@ -106,4 +106,4 @@ class TestLeaderPickerEstimator(unittest.TestCase):
 
             self.assertTrue(np.equal(actual_labels, exp_labels).all())
             self.assertIsNotNone(leader_picker.centroids_)
-            self.assertTrue(np.equal(leader_picker.centroids_, exp_centroids).all())  # type: ignore
+            self.assertTrue(np.equal(leader_picker.centroids_, exp_centroids).all())

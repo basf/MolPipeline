@@ -60,7 +60,7 @@ class TestURLFileLoader(unittest.TestCase):
 
     def test_cloning(self) -> None:
         """Test cloning of URLFileLoader."""
-        cloned_loader: URLFileLoader = clone(self.loader)  # type: ignore
+        cloned_loader: URLFileLoader = clone(self.loader)
         self.assertNotEqual(cloned_loader, self.loader)
         self.assertIsInstance(cloned_loader, URLFileLoader)
         self.assertEqual(cloned_loader.url, self.loader.url)

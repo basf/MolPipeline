@@ -303,7 +303,7 @@ class TestChempropRegressor(unittest.TestCase):
             "lightning_trainer__max_epochs": 20,
             "model__message_passing__depth": 5,
         }
-        chemprop_model = ChempropRegressor(**non_default_kwargs)  # type: ignore
+        chemprop_model = ChempropRegressor(**non_default_kwargs)
         current_params = chemprop_model.get_params(deep=True)
         self.assertGreaterEqual(current_params.keys(), non_default_kwargs.keys())
         for param, value in non_default_kwargs.items():

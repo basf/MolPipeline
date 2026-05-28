@@ -391,7 +391,7 @@ class Pipeline(_Pipeline):
                 raise AssertionError("Passthrough should have been filtered out.")
             if hasattr(transform, "transform"):
                 if do_routing:
-                    iter_input = transform.transform(  # type: ignore[call-arg]
+                    iter_input = transform.transform(
                         iter_input,
                         routed_params[name].transform,
                     )

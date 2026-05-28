@@ -67,7 +67,7 @@ class TestSetSingleJob(unittest.TestCase):
                 model = Pipeline(
                     [
                         ("auto2mol", AutoToMol(n_jobs=n_jobs)),
-                        ("rf", RandomForestClassifier(n_estimators=2, n_jobs=n_jobs)),  # type: ignore[list-item]
+                        ("rf", RandomForestClassifier(n_estimators=2, n_jobs=n_jobs)),
                     ],
                     n_jobs=n_jobs,
                 )
@@ -86,8 +86,8 @@ class TestSetSingleJob(unittest.TestCase):
 
         """
         rf = RandomForestClassifier(n_estimators=2, n_jobs=-1)
-        rf.estimator = rf  # type: ignore[attr-defined]  # create circular ref
-        changed = set_n_job_estimator(rf, n_jobs=1, n_jobs_chemprop=None)  # type: ignore[reportArgumentType]
+        rf.estimator = rf  # create circular ref
+        changed = set_n_job_estimator(rf, n_jobs=1, n_jobs_chemprop=None)
         self.assertIs(changed, True)
         self.assertEqual(rf.n_jobs, 1)
 
@@ -99,8 +99,8 @@ class TestSetSingleJob(unittest.TestCase):
 
         """
         rf = RandomForestClassifier(n_estimators=2, n_jobs=-1)
-        rf.estimators_ = [rf]  # type: ignore[assignment]  # circular ref in list
-        changed = set_n_job_estimator(rf, n_jobs=1, n_jobs_chemprop=None)  # type: ignore[reportArgumentType]
+        rf.estimators_ = [rf]  # circular ref in list
+        changed = set_n_job_estimator(rf, n_jobs=1, n_jobs_chemprop=None)
         self.assertIs(changed, True)
         self.assertEqual(rf.n_jobs, 1)
 
@@ -115,8 +115,8 @@ class TestSetSingleJob(unittest.TestCase):
         shared_rf = RandomForestClassifier(n_estimators=2, n_jobs=-1)
         model = Pipeline(
             [
-                ("rf1", shared_rf),  # type: ignore[list-item]
-                ("rf2", shared_rf),  # type: ignore[list-item]  # same object referenced twice
+                ("rf1", shared_rf),
+                ("rf2", shared_rf),  # same object referenced twice
             ],
         )
         changed = set_n_job_estimator(model, n_jobs=1, n_jobs_chemprop=None)
@@ -200,7 +200,7 @@ class TestIterateComponents(unittest.TestCase):
 
     def test_iterate_calibrated_classifier_ensemble(self) -> None:
         """Test iterate_components with a fitted ensemble CalibratedClassifierCV."""
-        model = CalibratedClassifierCV(DecisionTreeClassifier(), cv=2, ensemble=True)  # type: ignore[call-arg]
+        model = CalibratedClassifierCV(DecisionTreeClassifier(), cv=2, ensemble=True)
         model.fit([[1, 2], [3, 4], [5, 6], [7, 8]], [0, 1, 0, 1])
         components = [c for c, _n in iterate_components(model)]
 
@@ -216,7 +216,7 @@ class TestIterateComponents(unittest.TestCase):
 
     def test_iterate_calibrated_classifier_no_ensemble(self) -> None:
         """Test iterate_components with a fitted non-ensemble CalibratedClassifierCV."""
-        model = CalibratedClassifierCV(DecisionTreeClassifier(), cv=2, ensemble=False)  # type: ignore[call-arg]
+        model = CalibratedClassifierCV(DecisionTreeClassifier(), cv=2, ensemble=False)
         model.fit([[1, 2], [3, 4], [5, 6], [7, 8]], [0, 1, 0, 1])
         components = [c for c, _n in iterate_components(model)]
 
@@ -235,7 +235,7 @@ class TestIterateComponents(unittest.TestCase):
     def test_iterate_circular_estimator_attribute(self) -> None:
         """Test that circular references in estimator attribute are handled."""
         bc = BaggingClassifier(n_estimators=2, n_jobs=-1)
-        bc.estimator = bc  # type: ignore[assignment]
+        bc.estimator = bc
 
         components = [c for c, _n in iterate_components(bc)]
         self.assertEqual(len(components), 1)
@@ -273,10 +273,10 @@ class TestIterateComponents(unittest.TestCase):
         inner_pipeline = Pipeline(
             [
                 ("auto2mol", AutoToMol(n_jobs=1)),
-                ("dt", DecisionTreeClassifier()),  # type: ignore[list-item]
+                ("dt", DecisionTreeClassifier()),
             ],
         )
-        outer_pipeline = Pipeline([("inner", inner_pipeline)])  # type: ignore[list-item]
+        outer_pipeline = Pipeline([("inner", inner_pipeline)])
 
         components = [c for c, _n in iterate_components(outer_pipeline)]
 

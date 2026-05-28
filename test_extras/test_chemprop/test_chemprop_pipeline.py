@@ -97,7 +97,7 @@ class TestChempropPipeline(unittest.TestCase):
         for step_name, step in model.steps:
             cloned_step = cloned_model.named_steps[step_name]
             self.assertEqual(step.__class__, cloned_step.__class__)
-            params = step.get_params(deep=True)  # type: ignore
+            params = step.get_params(deep=True)
             cloned_params = cloned_step.get_params(deep=True)
             if isinstance(step, ABCChemprop):
                 compare_params(self, step, cloned_step)

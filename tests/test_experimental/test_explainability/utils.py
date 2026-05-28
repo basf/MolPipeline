@@ -33,7 +33,7 @@ def construct_kernel_shap_kwargs(pipeline: Pipeline, data: list[str]) -> dict[st
         pipeline,
         raise_not_found=True,
     )
-    data_transformed = featurization_subpipeline.transform(data)  # type: ignore[union-attr]
+    data_transformed = featurization_subpipeline.transform(data)
     if sparse_type_guard(data_transformed):
         data_transformed = np.array(data_transformed.todense())
     return {"data": data_transformed}

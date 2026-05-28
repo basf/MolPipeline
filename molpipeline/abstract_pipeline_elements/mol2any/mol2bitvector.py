@@ -147,7 +147,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             )
 
     @overload
-    def assemble_output(  # type: ignore
+    def assemble_output(
         self,
         value_list: Iterable[npt.NDArray[np.int_]],
     ) -> npt.NDArray[np.int_]: ...
@@ -204,13 +204,13 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             # return as list of RDkit's native data structures, depending on the
             # fingerprint method and whether counted=True or not, this can be
             # ExplicitBitVect, IntSparseBitVect or UIntSparseBitVect, etc.
-            return list(value_list)  # type: ignore
+            return list(value_list)
         if self._return_as == "dense":
             # return dense numpy matrix
-            return np.vstack(list(value_list))  # type: ignore
+            return np.vstack(list(value_list))
 
         # convert dict representation to csr_matrix
-        return sparse_from_index_value_dicts(value_list, self._n_bits)  # type: ignore
+        return sparse_from_index_value_dicts(value_list, self._n_bits)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get object parameters relevant for copying the class.

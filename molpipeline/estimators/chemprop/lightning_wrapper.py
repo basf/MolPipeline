@@ -27,7 +27,7 @@ def get_enable_progress_bar(trainer: pl.Trainer) -> bool:
         If the progress bar is enabled in the lightning trainer.
 
     """
-    return any(isinstance(callback, ProgressBar) for callback in trainer.callbacks)  # type: ignore
+    return any(isinstance(callback, ProgressBar) for callback in trainer.callbacks)
 
 
 def get_device(trainer: pl.Trainer) -> str | Accelerator:
@@ -127,12 +127,12 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         The parameters of the lightning trainer.
 
     """
-    if trainer.callbacks and isinstance(trainer.callbacks[-1], Timer):  # type: ignore[attr-defined]
-        max_time = trainer.callbacks[-1].duration  # type: ignore[attr-defined]
+    if trainer.callbacks and isinstance(trainer.callbacks[-1], Timer):
+        max_time = trainer.callbacks[-1].duration
     else:
         max_time = None
 
-    for callback in trainer.callbacks:  # type: ignore[attr-defined]
+    for callback in trainer.callbacks:
         if isinstance(callback, ModelSummary):
             enable_progress_model_summary = True
             break
@@ -146,8 +146,8 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "num_nodes": trainer.num_nodes,
         "precision": trainer.precision,
         "logger": trainer.logger,
-        # "callbacks": trainer.callbacks,  # type: ignore[attr-defined]  # noqa: ERA001
-        "fast_dev_run": trainer.fast_dev_run,  # type: ignore[attr-defined]
+        # "callbacks": trainer.callbacks,  # noqa: ERA001
+        "fast_dev_run": trainer.fast_dev_run,
         "max_epochs": trainer.max_epochs,
         "min_epochs": trainer.min_epochs,
         "max_steps": trainer.max_steps,
@@ -157,11 +157,11 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "limit_val_batches": trainer.limit_val_batches,
         "limit_test_batches": trainer.limit_test_batches,
         "limit_predict_batches": trainer.limit_predict_batches,
-        "overfit_batches": trainer.overfit_batches,  # type: ignore[attr-defined]
+        "overfit_batches": trainer.overfit_batches,
         "val_check_interval": trainer.val_check_interval,
         "check_val_every_n_epoch": trainer.check_val_every_n_epoch,
         "num_sanity_val_steps": trainer.num_sanity_val_steps,
-        "log_every_n_steps": trainer.log_every_n_steps,  # type: ignore[attr-defined]
+        "log_every_n_steps": trainer.log_every_n_steps,
         "enable_checkpointing": bool(trainer.checkpoint_callbacks),
         "enable_progress_bar": get_enable_progress_bar(trainer),
         "enable_model_summary": enable_progress_model_summary,
@@ -172,12 +172,12 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "benchmark": torch.backends.cudnn.benchmark,
         "inference_mode": trainer.predict_loop.inference_mode,
         "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # noqa: SLF001,E501
-        # "profiler": trainer.profiler,  # type: ignore[attr-defined]  # noqa: ERA001
+        # "profiler": trainer.profiler,  # noqa: ERA001
         "detect_anomaly": trainer._detect_anomaly,  # noqa: SLF001
         "barebones": trainer.barebones,
         # "plugins": trainer.plugins,  # can not be exctracted  # noqa: ERA001
         # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related  # noqa: E501, ERA001
-        "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,  # type: ignore[attr-defined]
+        "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,
         "default_root_dir": get_trainer_path(trainer),
     }
 

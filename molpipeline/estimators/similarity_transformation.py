@@ -3,7 +3,7 @@
 from typing import Any, Self
 
 try:
-    from typing import override  # type: ignore
+    from typing import override
 except ImportError:
     from typing_extensions import override
 
@@ -68,7 +68,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         if not isinstance(matrix_b, csr_matrix):
             matrix_b = csr_matrix(matrix_b)
         if self.distance:
-            return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
+            return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)
         return tanimoto_similarity_sparse(matrix_a, matrix_b)
 
     @override

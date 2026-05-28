@@ -79,7 +79,7 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
             If the variable `return_as` is not one of the allowed values.
 
         """
-        fingerprint = MACCSkeys.GenMACCSKeys(value)  # type: ignore[attr-defined]
+        fingerprint = MACCSkeys.GenMACCSKeys(value)
         if self._return_as == "rdkit":
             return fingerprint
         if self._return_as == "dense":

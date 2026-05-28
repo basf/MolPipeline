@@ -143,11 +143,10 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             if use_feature_names_prefix:
                 # use element name as prefix
                 feature_names.extend(
-                    [f"{name}__{feature}" for feature in element.feature_names],  # type: ignore[attr-defined]
+                    [f"{name}__{feature}" for feature in element.feature_names],
                 )
             else:
-                feature_names.extend(element.feature_names)  # type: ignore[attr-defined]
-
+                feature_names.extend(element.feature_names)
         if len(feature_names) != len(set(feature_names)):
             logger.warning(
                 "Feature names in MolToConcatenatedVector are not unique."
@@ -297,7 +296,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             # reset feature names
             self._feature_names = self._create_feature_names(
                 self._element_list,
-                self._use_feature_names_prefix,  # type: ignore[arg-type]
+                self._use_feature_names_prefix,
             )
 
         # set parameters of super

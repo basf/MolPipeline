@@ -187,9 +187,9 @@ class TestSetSingleJobChemprop(unittest.TestCase):
 
                 # test calibrated_classifiers_ attribute (used in pred_proba)
                 self.assertTrue(hasattr(model, "calibrated_classifiers_"))
-                self.assertGreater(len(model.calibrated_classifiers_), 0)  # type: ignore[arg-type]
+                self.assertGreater(len(model.calibrated_classifiers_), 0)
                 for clf in model.calibrated_classifiers_:
-                    pipe = clf.estimator  # type: ignore[union-attr]
+                    pipe = clf.estimator
                     self.assertEqual(pipe.n_jobs, 1)
                     self.assertEqual(pipe.named_steps["neural_fp"].n_jobs, 0)
                     for name, step in pipe.steps:  # iterate the pipeline
@@ -206,7 +206,7 @@ class TestModelToCPUChemprop(unittest.TestCase):
             with self.subTest(accelerator=accelerator, change_expected=change_expected):
                 if accelerator == "gpu" and not torch.cuda.is_available():
                     continue
-                model = _get_chemprop_pipeline(n_jobs=-1, accelerator=accelerator)  # type: ignore[arg-type]
+                model = _get_chemprop_pipeline(n_jobs=-1, accelerator=accelerator)
                 model_params = model.get_params(deep=True)
                 self.assertEqual(
                     model_params["model__lightning_trainer__accelerator"],
@@ -226,7 +226,7 @@ class TestModelToCPUChemprop(unittest.TestCase):
             with self.subTest(accelerator=accelerator, change_expected=change_expected):
                 if accelerator == "gpu" and not torch.cuda.is_available():
                     continue
-                model = _get_neural_rf_pipeline(n_jobs=-1, accelerator=accelerator)  # type: ignore[arg-type]
+                model = _get_neural_rf_pipeline(n_jobs=-1, accelerator=accelerator)
                 model_params = model.get_params(deep=True)
 
                 self.assertEqual(
@@ -248,7 +248,7 @@ class TestModelToCPUChemprop(unittest.TestCase):
                 if accelerator == "gpu" and not torch.cuda.is_available():
                     continue
                 model = CalibratedClassifierCV(
-                    _get_neural_rf_pipeline(n_jobs=-1, accelerator=accelerator),  # type: ignore[arg-type]
+                    _get_neural_rf_pipeline(n_jobs=-1, accelerator=accelerator),
                 )
                 model_params = model.get_params(deep=True)
                 self.assertEqual(

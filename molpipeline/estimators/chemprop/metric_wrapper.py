@@ -30,7 +30,7 @@ class LossFunctionParamMixin:
             The weights for each task.
 
         """
-        super().__init__(task_weights=task_weights)  # type: ignore
+        super().__init__(task_weights=task_weights)
         self._original_task_weights = task_weights
 
     # pylint: disable=unused-argument

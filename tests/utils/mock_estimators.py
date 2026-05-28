@@ -83,7 +83,7 @@ class MockClassifier(MockEstimator):
     """A mock classifier that records fit arguments and returns fixed predictions."""
 
     @override
-    def predict(  # type: ignore
+    def predict(
         self,
         X: npt.ArrayLike,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.int64]:
@@ -135,7 +135,7 @@ class MockClassiferWithFloatLabels(MockClassifier):
     """A mock classifier that returns float class labels instead of integers."""
 
     @override
-    def predict(  # type: ignore
+    def predict(
         self,
         X: npt.ArrayLike,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
@@ -166,7 +166,7 @@ class MockClassifierWithTrueFloatLabels(MockClassifier):
     """
 
     @override
-    def predict(  # type: ignore
+    def predict(
         self,
         X: npt.ArrayLike,  # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:

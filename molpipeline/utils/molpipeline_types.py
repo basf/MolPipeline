@@ -41,7 +41,7 @@ AnyNumpyElement = TypeVar("AnyNumpyElement", bound=np.generic)
 
 _T = TypeVar("_T")
 _NT = TypeVar("_NT", bound=np.generic)
-TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_NT])  # type: ignore
+TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_NT])
 AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 
 SparseMatrix = csc_matrix[Any] | coo_matrix[Any] | csr_matrix[Any]

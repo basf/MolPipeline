@@ -94,7 +94,7 @@ class ElementFilter(_MolToMolPipelineElement):
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-        self.allowed_element_numbers = allowed_element_numbers  # type: ignore
+        self.allowed_element_numbers = allowed_element_numbers
         self.add_hydrogens = add_hydrogens
 
     @property
@@ -411,7 +411,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
             self.pipeline_filter_elements = parameter_copy.pop(
                 "pipeline_filter_elements",
             )
-            self.filter_elements = self.pipeline_filter_elements  # type: ignore
+            self.filter_elements = self.pipeline_filter_elements
         for key in parameters:
             if key.startswith("pipeline_filter_elements__"):
                 value = parameter_copy.pop(key)

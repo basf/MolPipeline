@@ -101,7 +101,7 @@ class BootstrapSplit(BaseCrossValidator):  # pylint: disable=abstract-method
             yield train_indices, test_indices
 
     @override
-    def get_n_splits(  # type: ignore  # pylint: disable=signature-differs
+    def get_n_splits(  # pylint: disable=signature-differs
         self,
         X: XType,
         y: YType = None,

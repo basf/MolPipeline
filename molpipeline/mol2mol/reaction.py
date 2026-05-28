@@ -181,5 +181,5 @@ class MolToMolReaction(MolToMolPipelineElement):
                 self.name,
             )
         product = product_list[0][0]
-        AllChem.SanitizeMol(product)  # type: ignore[attr-defined]
+        AllChem.SanitizeMol(product)
         return product

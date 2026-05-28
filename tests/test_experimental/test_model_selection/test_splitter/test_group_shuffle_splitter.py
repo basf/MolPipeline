@@ -52,14 +52,14 @@ class TestGroupShuffleSplit(unittest.TestCase):
             GroupShuffleSplit(
                 1,
                 test_size=0.3,
-                split_mode="Not a valid option.",  # type: ignore[arg-type]
+                split_mode="Not a valid option.",
                 random_state=0,
             )
 
         # test overwrite split_mode raises
         with self.assertRaises(AssertionError):
             split_generator = GroupShuffleSplit(train_size=0.7, split_mode="samples")
-            split_generator.split_mode = "Not a valid option."  # type: ignore[assignment]
+            split_generator.split_mode = "Not a valid option."
             next(split_generator.split(X=[1, 2, 3], y=[1, 2, 3], groups=[1, 2, 3]))
 
     def test_different_input(self) -> None:
