@@ -182,7 +182,9 @@ def dual_vector_combinations(
     if isinstance(vector_1, sp.spmatrix) and isinstance(vector_2, sp.spmatrix):
         return dual_vector_combinations_sparse(vector_1, vector_2, mode=mode)
     return dual_vector_combinations_dense(
-        np.asarray(vector_1), np.asarray(vector_2), mode=mode,
+        np.asarray(vector_1),
+        np.asarray(vector_2),
+        mode=mode,
     )
 
 
@@ -451,6 +453,8 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
             Feature matrix of shape (n_samples, n_features).
         return_std : bool
             If True, also return the standard deviation of predictions.
+        params : Any
+            Additional parameters to pass to the predict function.
 
         Returns
         -------

@@ -165,10 +165,6 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
         ----------
         X: npt.NDArray[Any]
             Model input.
-        y: npt.NDArray[Any] | None
-            Target values.
-        fit_params: Any
-            Additional parameters for fitting.
 
         Returns
         -------
