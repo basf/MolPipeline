@@ -417,7 +417,6 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
         self,
         X: XType,  # noqa: N803
         return_std: Literal[False] = False,
-        **params: Any,
     ) -> npt.NDArray[np.float64]: ...
 
     @overload
@@ -425,7 +424,6 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
         self,
         X: XType,  # noqa: N803
         return_std: Literal[True] = ...,
-        **params: Any,
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 
     @overload
@@ -433,7 +431,6 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
         self,
         X: XType,  # noqa: N803
         return_std: bool = False,
-        **params: Any,
     ) -> (
         npt.NDArray[np.float64]
         | tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
@@ -443,7 +440,6 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
         self,
         X: XType,  # noqa: N803
         return_std: bool = False,
-        **params: Any,
     ) -> npt.NDArray[Any] | tuple[npt.NDArray[Any], npt.NDArray[Any]]:
         """Predict the target values for the given input.
 
@@ -453,8 +449,6 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
             Feature matrix of shape (n_samples, n_features).
         return_std : bool
             If True, also return the standard deviation of predictions.
-        params : Any
-            Additional parameters to pass to the predict function.
 
         Returns
         -------
