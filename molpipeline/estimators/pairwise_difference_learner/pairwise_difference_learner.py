@@ -2,7 +2,7 @@
 
 import abc
 from itertools import combinations, product
-from typing import Any, Generic, Literal, TypeVar, overload, Self
+from typing import Any, Generic, Literal, Self, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -107,6 +107,7 @@ def dual_vector_combinations_sparse(
         f"'combine_and_diff'.",
     )
 
+
 @overload
 def dual_vector_combinations(
     vector_1: npt.NDArray[Any] | npt.ArrayLike,
@@ -122,12 +123,14 @@ def dual_vector_combinations(
     mode: Literal["combine", "diff", "combine_and_diff"] = ...,
 ) -> npt.NDArray[Any]: ...
 
+
 @overload
 def dual_vector_combinations(
     vector_1: npt.NDArray[Any] | npt.ArrayLike,
     vector_2: sp.spmatrix,
     mode: Literal["combine", "diff", "combine_and_diff"] = ...,
 ) -> npt.NDArray[Any]: ...
+
 
 @overload
 def dual_vector_combinations(
@@ -135,6 +138,7 @@ def dual_vector_combinations(
     vector_2: sp.spmatrix,
     mode: Literal["combine", "diff", "combine_and_diff"] = ...,
 ) -> sp.spmatrix: ...
+
 
 @overload
 def dual_vector_combinations(
@@ -177,7 +181,9 @@ def dual_vector_combinations(
     """
     if isinstance(vector_1, sp.spmatrix) and isinstance(vector_2, sp.spmatrix):
         return dual_vector_combinations_sparse(vector_1, vector_2, mode=mode)
-    return dual_vector_combinations_dense(np.asarray(vector_1), np.asarray(vector_2), mode=mode)
+    return dual_vector_combinations_dense(
+        np.asarray(vector_1), np.asarray(vector_2), mode=mode,
+    )
 
 
 def single_vector_combinations_dense(
@@ -278,17 +284,20 @@ def single_vector_combinations(
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
 ) -> npt.NDArray[Any]: ...
 
+
 @overload
 def single_vector_combinations(
     vector: sp.spmatrix,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
 ) -> sp.spmatrix: ...
 
+
 @overload
 def single_vector_combinations(
     vector: XType,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
 ) -> npt.NDArray[Any] | sp.spmatrix: ...
+
 
 def single_vector_combinations(
     vector: XType,
@@ -593,7 +602,7 @@ class PairwiseDifferenceClassifier(  # pylint: disable=too-many-ancestors
         predictions = []
         if self.fit_x_ is None or self.fit_y_ is None:
             raise AttributeError(
-                "Unfitted model! Please call fit() before predict_proba()."
+                "Unfitted model! Please call fit() before predict_proba().",
             )
         for x_ in x_mat:
             x_ = dual_vector_combinations(
