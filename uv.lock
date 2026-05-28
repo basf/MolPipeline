@@ -2710,6 +2710,11 @@ wheels = [
 ]
 
 [[package]]
+name = "microsoft-python-type-stubs"
+version = "0"
+source = { git = "https://github.com/microsoft/python-type-stubs.git#692c37c3969d22612b295ddf7e7af5907204a386" }
+
+[[package]]
 name = "mistune"
 version = "3.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2755,6 +2760,7 @@ dev = [
     { name = "docsig" },
     { name = "flake8" },
     { name = "interrogate" },
+    { name = "microsoft-python-type-stubs" },
     { name = "mypy" },
     { name = "pandas-stubs" },
     { name = "pre-commit" },
@@ -2807,6 +2813,7 @@ dev = [
     { name = "docsig", specifier = ">=0.79.0" },
     { name = "flake8", specifier = ">=7.2.0" },
     { name = "interrogate", specifier = ">=1.7.0" },
+    { name = "microsoft-python-type-stubs", git = "https://github.com/microsoft/python-type-stubs.git" },
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "pandas-stubs", specifier = ">=2.3.2.250926" },
     { name = "pre-commit", specifier = ">=4.2.0" },

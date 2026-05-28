@@ -149,6 +149,9 @@ exclude = ["tests", "docs"]
 [tool.setuptools.package-data]
 "molpipeline" = ["py.typed"]
 
+[tool.uv.sources]
+microsoft-python-type-stubs = { git = "https://github.com/microsoft/python-type-stubs.git" }
+
 [dependency-groups]
 dev = [
     "bandit>=1.8.3",
@@ -157,6 +160,7 @@ dev = [
     "docsig>=0.79.0",
     "flake8>=7.2.0",
     "interrogate>=1.7.0",
+    "microsoft-python-type-stubs",
     "mypy>=1.15.0",
     "pandas-stubs>=2.3.2.250926",
     "pre-commit>=4.2.0",
