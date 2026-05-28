@@ -2,7 +2,7 @@
 
 import abc
 from itertools import combinations, product
-from typing import Any, Generic, Literal, TypeVar, Union
+from typing import Any, Generic, Literal, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -11,10 +11,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.multiclass import unique_labels
 
-from molpipeline.utils.molpipeline_types import AnyPredictor
-
-# Type alias that covers both dense arrays and scipy sp matrices.
-_MatrixLike = Union[npt.ArrayLike, sp.spmatrix]  # REPLACE ONCE ENSEMBLES ARE MERGED
+from molpipeline.utils.molpipeline_types import AnyPredictor, XType
 
 ModelVar = TypeVar("ModelVar", bound=AnyPredictor | BaseEstimator)
 
@@ -112,8 +109,8 @@ def dual_vector_combinations_sparse(
 
 
 def dual_vector_combinations(
-    vector_1: _MatrixLike,
-    vector_2: _MatrixLike,
+    vector_1: XType,
+    vector_2: XType,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
 ) -> npt.NDArray[Any] | sp.spmatrix:
     """Combine two vectors (dense or sparse) and return the dual combined vector.
@@ -123,9 +120,9 @@ def dual_vector_combinations(
 
     Parameters
     ----------
-    vector_1 : _MatrixLike
+    vector_1 : XType
         Matrix whose rows form the first side of each pair.
-    vector_2 : _MatrixLike
+    vector_2 : XType
         Matrix whose rows form the second side of each pair.
     mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
         Mode of combination. Options are:
@@ -140,11 +137,6 @@ def dual_vector_combinations(
         Combined matrix of shape ``(n1 * n2, ...)``.  The return type matches
         the input type: sparse inputs yield a sparse output, dense inputs a
         dense NumPy array.
-
-    Raises
-    ------
-    ValueError
-        If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
 
     """
     if sp.issparse(vector_1) or sp.issparse(vector_2):
@@ -244,7 +236,7 @@ def single_vector_combinations_sparse(
 
 
 def single_vector_combinations(
-    vector: _MatrixLike,
+    vector: XType,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
 ) -> npt.NDArray[Any] | sp.spmatrix:
     """Combine all unique row pairs of a matrix (dense or sparse).
@@ -257,7 +249,7 @@ def single_vector_combinations(
 
     Parameters
     ----------
-    vector : _MatrixLike
+    vector : XType
         Matrix whose rows are to be combined pairwise.
     mode : Literal["combine", "diff", "combine_and_diff"], default="combine"
         Mode of combination. Options are:
@@ -272,11 +264,6 @@ def single_vector_combinations(
         Combined matrix of shape ``(C(n, 2), ...)``.  The return type matches
         the input type: sparse inputs yield a sparse output, dense inputs a
         dense NumPy array.
-
-    Raises
-    ------
-    ValueError
-        If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
 
     """
     if sp.issparse(vector):
@@ -325,8 +312,8 @@ class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
             Fitted estimator.
 
         """
-        self.fit_x = X
-        self.fit_y = y
+        self.fit_x_ = X
+        self.fit_y_ = y
         x_combined = single_vector_combinations(X, mode=self.mode)
         y_diff = single_vector_combinations(y, mode="diff")
 
@@ -378,11 +365,11 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
         for x_ in X:
             x_combined = dual_vector_combinations(
                 x_.reshape(1, -1),
-                self.fit_x,
+                self.fit_x_,
                 mode=self.mode,
             )
             y_diff_pred = self.estimator.predict(x_combined)
-            y_pred = self.fit_y + y_diff_pred
+            y_pred = self.fit_y_ + y_diff_pred
             mean_preds.append(np.mean(y_pred))
             std_preds.append(np.std(y_pred))
 
@@ -428,7 +415,6 @@ class PairwiseDifferenceClassifier(
         """
         self.ohe = OneHotEncoder(handle_unknown="ignore")
         self.estimators_ = []
-
         super().__init__(estimator=estimator, mode=mode)
 
     def fit(
@@ -454,13 +440,16 @@ class PairwiseDifferenceClassifier(
         x_mat = np.asarray(X)
         y = np.asarray(y)
         self.classes_ = unique_labels(y)
-        self.fit_x = x_mat
+        self.fit_x_ = x_mat
+        self.estimators_ = []
 
         fit_y = self.ohe.fit_transform(y.reshape(-1, 1))
-        self.fit_y = fit_y.toarray() if hasattr(fit_y, "toarray") else np.asarray(fit_y)
+        self.fit_y_ = (
+            fit_y.toarray() if hasattr(fit_y, "toarray") else np.asarray(fit_y)
+        )
 
         # Abs to only check if class differ or are identical
-        y_combined = np.abs(single_vector_combinations(self.fit_y, mode="diff"))
+        y_combined = np.abs(single_vector_combinations(self.fit_y_, mode="diff"))
 
         x_combined = single_vector_combinations(x_mat, mode=self.mode)
         # No model for cls 0, as it will be the class not predicted by the other models.
@@ -483,6 +472,10 @@ class PairwiseDifferenceClassifier(
         is greater (+1) or smaller (-1) than each training sample's label. A
         vote tally over the training labels determines the final prediction.
 
+        The K-1 per-class scores are computed independently; the complement
+        (class 0 score) is clipped to zero when negative, and the full vector
+        is L1-normalised so that all rows sum to 1.
+
         Parameters
         ----------
         X : npt.ArrayLike
@@ -496,14 +489,17 @@ class PairwiseDifferenceClassifier(
         Raises
         ------
         AssertionError
-            If the underlying estimator does not predict binary probabilities or
-            if an invalid probability distribution is detected.
+            If the underlying estimator does not predict binary probabilities.
 
         """
         x_mat = np.asarray(X)
         predictions = []
         for x_ in x_mat:
-            x_ = dual_vector_combinations(x_.reshape(1, -1), self.fit_x, mode=self.mode)
+            x_ = dual_vector_combinations(
+                x_.reshape(1, -1),
+                self.fit_x_,
+                mode=self.mode,
+            )
             proba_list = []
             for i, estimator in enumerate(self.estimators_, 1):
                 if hasattr(estimator, "predict_proba"):
@@ -517,14 +513,14 @@ class PairwiseDifferenceClassifier(
                     # For each training sample j:
                     # - if j is class i: prob(test=i) = prob(same)  = proba_diff[j, 0]
                     # - if j is not i:   prob(test=i) = prob(diff)  = proba_diff[j, 1]
-                    fit_y_col = self.fit_y[:, i]
+                    fit_y_col = self.fit_y_[:, i]
                     proba_class = np.mean(
                         np.where(fit_y_col == 1, proba_diff[:, 0], proba_diff[:, 1]),
                     )
                 else:  # If no predict_proba available, estimate proba via avg.
                     # Delta is binary: Has same class or not
                     y_delta_pred = estimator.predict(x_)
-                    proba_class = np.array(self.fit_y[:, i])  # Copy ref
+                    proba_class = np.array(self.fit_y_[:, i])  # Copy ref
                     # Flip label if delta is predicted: 1 - 1 = 0; 1 - 0 = 1
                     proba_class[y_delta_pred > 0] = 1 - proba_class[y_delta_pred > 0]
                     proba_class = np.mean(proba_class)
