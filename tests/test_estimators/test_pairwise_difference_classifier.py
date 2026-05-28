@@ -9,12 +9,13 @@ import unittest
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
+from sklearn.base import clone
 from sklearn.datasets import (
     make_classification,
     make_multilabel_classification,
     make_regression,
 )
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression, RidgeClassifier
 
 from molpipeline.estimators.pairwise_difference_learner import (
     PairwiseDifferenceClassifier,
@@ -534,6 +535,33 @@ class TestPairwiseDifferenceRegressor(unittest.TestCase):
         model = PairwiseDifferenceRegressor(estimator=LinearRegression())
         self.assertIs(model.fit(self.X, self.y), model)
 
+    def test_numeric_correctness_linear(self) -> None:  # noqa: PLR6301
+        """On a noiseless linear dataset the regressor should recover y closely."""
+        rng = np.random.default_rng(42)
+        x = rng.random((15, 3))
+        y = x @ np.array([1.0, -2.0, 0.5])  # exact linear relationship, no noise
+        model = PairwiseDifferenceRegressor(estimator=LinearRegression())
+        model.fit(x, y)
+        y_pred = model.predict(x)
+        np.testing.assert_allclose(y_pred, y, atol=1e-6)
+
+    def test_fit_twice_same_predictions(self) -> None:
+        """Calling fit twice must produce identical results (no state leakage)."""
+        model = PairwiseDifferenceRegressor(estimator=LinearRegression())
+        model.fit(self.X, self.y)
+        y_pred_first = model.predict(self.X)
+        model.fit(self.X, self.y)
+        y_pred_second = model.predict(self.X)
+        np.testing.assert_array_equal(y_pred_first, y_pred_second)
+
+    def test_clone_and_fit(self) -> None:
+        """clone() followed by fit must work correctly (sklearn compat)."""
+        original = PairwiseDifferenceRegressor(estimator=LinearRegression())
+        cloned = clone(original)
+        cloned.fit(self.X, self.y)
+        y_pred = cloned.predict(self.X)
+        self.assertEqual(y_pred.shape[0], len(self.X))
+
 
 # ===========================================================================
 # PairwiseDifferenceClassifier
@@ -660,3 +688,62 @@ class TestPairwiseDifferenceClassifier(unittest.TestCase):
         y_pred = model.predict(self.X_ml)
         self.assertEqual(len(y_pred), len(self.X_ml))
         self.assertTrue(set(y_pred).issubset(set(y_single)))
+
+    # ------------------------------------------------------------------
+    # Sklearn compatibility
+    # ------------------------------------------------------------------
+
+    def test_fit_twice_same_predictions(self) -> None:
+        """Calling fit twice must produce identical predictions (no state leakage).
+
+        This guards against the estimators_ list growing across repeated fits.
+        """
+        model = PairwiseDifferenceClassifier(estimator=LogisticRegression())
+        model.fit(self.X_bin, self.y_bin)
+        y_pred_first = model.predict(self.X_bin)
+        model.fit(self.X_bin, self.y_bin)
+        y_pred_second = model.predict(self.X_bin)
+        np.testing.assert_array_equal(y_pred_first, y_pred_second)
+
+    def test_clone_and_fit(self) -> None:
+        """clone() followed by fit must work correctly."""
+        original = PairwiseDifferenceClassifier(estimator=LogisticRegression())
+        cloned = clone(original)
+        cloned.fit(self.X_bin, self.y_bin)
+        y_pred = cloned.predict(self.X_bin)
+        self.assertEqual(len(y_pred), len(self.X_bin))
+
+    # ------------------------------------------------------------------
+    # Fallback branch: estimator without predict_proba
+    # ------------------------------------------------------------------
+
+    def test_predict_proba_fallback_no_predict_proba(self) -> None:
+        """Classifier must work when the underlying estimator has no predict_proba.
+
+        Uses RidgeClassifier (no predict_proba) to exercise the fallback branch
+        and confirms that predict_proba rows still sum to 1.
+        """
+        model = PairwiseDifferenceClassifier(estimator=RidgeClassifier())
+        model.fit(self.X_bin, self.y_bin)
+        proba = model.predict_proba(self.X_bin)
+        self.assertEqual(proba.shape, (len(self.X_bin), 2))
+        np.testing.assert_allclose(
+            proba.sum(axis=1),
+            np.ones(len(self.X_bin)),
+            atol=1e-6,
+        )
+
+    def test_predict_proba_normalised_multiclass(self) -> None:
+        """predict_proba rows must always sum to 1, even for multiclass.
+
+        Uses an imbalanced multiclass scenario where the independent per-class
+        scores could sum to more than 1 without normalisation.
+        """
+        model = PairwiseDifferenceClassifier(estimator=LogisticRegression())
+        model.fit(self.X_multi, self.y_multi)
+        proba = model.predict_proba(self.X_multi)
+        np.testing.assert_allclose(
+            proba.sum(axis=1),
+            np.ones(len(self.X_multi)),
+            atol=1e-6,
+        )
