@@ -1,4 +1,8 @@
-"""Tests for pairwise difference learner utility functions."""
+"""Tests for pairwise-difference learner utility functions and estimators.
+
+Covers dense/sparse combination helpers and the sklearn-compatible
+PairwiseDifferenceRegressor and PairwiseDifferenceClassifier estimators.
+"""
 
 import unittest
 
@@ -43,7 +47,7 @@ _V2_SPARSE: sp.csr_matrix = sp.csr_matrix(_V2)
 _V_SPARSE: sp.csr_matrix = sp.csr_matrix(_V)
 
 # ---------------------------------------------------------------------------
-# Expected output constants – dual combinations (Cartesian product V1 x V2)
+# Expected output constants - dual combinations (all row-pairs from V1 x V2)
 # ---------------------------------------------------------------------------
 
 _DUAL_COMBINE_EXPECTED: npt.NDArray[np.int_] = np.array(
@@ -52,7 +56,7 @@ _DUAL_COMBINE_EXPECTED: npt.NDArray[np.int_] = np.array(
         [1, 2, 7, 8],
         [3, 4, 5, 6],
         [3, 4, 7, 8],
-    ]
+    ],
 )
 
 _DUAL_DIFF_EXPECTED: npt.NDArray[np.int_] = np.array(
@@ -61,7 +65,7 @@ _DUAL_DIFF_EXPECTED: npt.NDArray[np.int_] = np.array(
         [1 - 7, 2 - 8],
         [3 - 5, 4 - 6],
         [3 - 7, 4 - 8],
-    ]
+    ],
 )
 
 _DUAL_COMBINE_AND_DIFF_EXPECTED: npt.NDArray[np.int_] = np.array(
@@ -70,11 +74,11 @@ _DUAL_COMBINE_AND_DIFF_EXPECTED: npt.NDArray[np.int_] = np.array(
         [1, 2, 7, 8, 1 - 7, 2 - 8],
         [3, 4, 5, 6, 3 - 5, 4 - 6],
         [3, 4, 7, 8, 3 - 7, 4 - 8],
-    ]
+    ],
 )
 
 # ---------------------------------------------------------------------------
-# Expected output constants – single combinations (unique pairs of V)
+# Expected output constants - single combinations (unique pairs of V)
 # ---------------------------------------------------------------------------
 
 _SINGLE_COMBINE_EXPECTED: npt.NDArray[np.int_] = np.array(
@@ -82,7 +86,7 @@ _SINGLE_COMBINE_EXPECTED: npt.NDArray[np.int_] = np.array(
         [1, 2, 3, 4],
         [1, 2, 5, 6],
         [3, 4, 5, 6],
-    ]
+    ],
 )
 
 _SINGLE_DIFF_EXPECTED: npt.NDArray[np.int_] = np.array(
@@ -90,7 +94,7 @@ _SINGLE_DIFF_EXPECTED: npt.NDArray[np.int_] = np.array(
         [1 - 3, 2 - 4],
         [1 - 5, 2 - 6],
         [3 - 5, 4 - 6],
-    ]
+    ],
 )
 
 _SINGLE_COMBINE_AND_DIFF_EXPECTED: npt.NDArray[np.int_] = np.array(
@@ -98,7 +102,7 @@ _SINGLE_COMBINE_AND_DIFF_EXPECTED: npt.NDArray[np.int_] = np.array(
         [1, 2, 3, 4, 1 - 3, 2 - 4],
         [1, 2, 5, 6, 1 - 5, 2 - 6],
         [3, 4, 5, 6, 3 - 5, 4 - 6],
-    ]
+    ],
 )
 
 
@@ -108,24 +112,24 @@ _SINGLE_COMBINE_AND_DIFF_EXPECTED: npt.NDArray[np.int_] = np.array(
 
 
 class TestDualVectorCombinationsDense(unittest.TestCase):
-    """Tests for dual_vector_combinations_dense."""
+    """Tests for the dense cross-pairing helper dual_vector_combinations_dense."""
 
     def test_combine_mode(self) -> None:
-        """combine: result is ndarray with shape (n1*n2, 2*f) and correct values."""
+        """Test combine returns ndarray with correct shape and values."""
         result = dual_vector_combinations_dense(_V1, _V2, mode="combine")
         self.assertIsInstance(result, np.ndarray)
         self.assertEqual(result.shape, (4, 4))
         self.assertTrue(np.array_equal(result, _DUAL_COMBINE_EXPECTED))
 
     def test_diff_mode(self) -> None:
-        """diff: result is ndarray with shape (n1*n2, f) and correct values."""
+        """Test diff returns ndarray with correct shape and values."""
         result = dual_vector_combinations_dense(_V1, _V2, mode="diff")
         self.assertIsInstance(result, np.ndarray)
         self.assertEqual(result.shape, (4, 2))
         self.assertTrue(np.array_equal(result, _DUAL_DIFF_EXPECTED))
 
     def test_combine_and_diff_mode(self) -> None:
-        """combine_and_diff: result is ndarray with shape (n1*n2, 3*f) and correct values."""
+        """Test combine_and_diff returns ndarray with correct shape and values."""
         result = dual_vector_combinations_dense(_V1, _V2, mode="combine_and_diff")
         self.assertIsInstance(result, np.ndarray)
         self.assertEqual(result.shape, (4, 6))
@@ -142,7 +146,7 @@ class TestDualVectorCombinationsDense(unittest.TestCase):
             np.array_equal(
                 dual_vector_combinations_dense(_V1, _V2),
                 dual_vector_combinations_dense(_V1, _V2, mode="combine"),
-            )
+            ),
         )
 
 
@@ -152,59 +156,66 @@ class TestDualVectorCombinationsDense(unittest.TestCase):
 
 
 class TestDualVectorCombinationsSparse(unittest.TestCase):
-    """Tests for dual_vector_combinations_sparse."""
+    """Tests for the sparse cross-pairing helper dual_vector_combinations_sparse."""
 
     def test_combine_mode(self) -> None:
-        """combine: sparse result with shape (n1*n2, 2*f), values match dense."""
+        """Test combine returns sparse result with correct shape matching dense."""
         result = dual_vector_combinations_sparse(_V1_SPARSE, _V2_SPARSE, mode="combine")
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (4, 4))
         self.assertTrue(np.array_equal(result.toarray(), _DUAL_COMBINE_EXPECTED))
 
     def test_diff_mode(self) -> None:
-        """diff: sparse result with shape (n1*n2, f), values match dense."""
+        """Diff returns a sparse result with correct shape and values matching dense."""
         result = dual_vector_combinations_sparse(_V1_SPARSE, _V2_SPARSE, mode="diff")
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (4, 2))
         self.assertTrue(np.array_equal(result.toarray(), _DUAL_DIFF_EXPECTED))
 
     def test_combine_and_diff_mode(self) -> None:
-        """combine_and_diff: sparse result with shape (n1*n2, 3*f), values match dense."""
+        """combine_and_diff returns sparse result with correct shape matching dense."""
         result = dual_vector_combinations_sparse(
-            _V1_SPARSE, _V2_SPARSE, mode="combine_and_diff"
+            _V1_SPARSE,
+            _V2_SPARSE,
+            mode="combine_and_diff",
         )
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (4, 6))
-        self.assertTrue(np.array_equal(result.toarray(), _DUAL_COMBINE_AND_DIFF_EXPECTED))
+        self.assertTrue(
+            np.array_equal(result.toarray(), _DUAL_COMBINE_AND_DIFF_EXPECTED),
+        )
 
     def test_invalid_mode_raises(self) -> None:
         """An unsupported mode string must raise ValueError."""
         with self.assertRaises(ValueError):
             dual_vector_combinations_sparse(
-                _V1_SPARSE, _V2_SPARSE, mode="invalid"  # type: ignore[arg-type]
+                _V1_SPARSE,
+                _V2_SPARSE,
+                mode="invalid",  # type: ignore[arg-type]
             )
 
     def test_default_mode_is_combine(self) -> None:
         """Calling without explicit mode must behave identically to mode='combine'."""
         result_default = dual_vector_combinations_sparse(_V1_SPARSE, _V2_SPARSE)
         result_explicit = dual_vector_combinations_sparse(
-            _V1_SPARSE, _V2_SPARSE, mode="combine"
+            _V1_SPARSE,
+            _V2_SPARSE,
+            mode="combine",
         )
         self.assertTrue(
-            np.array_equal(result_default.toarray(), result_explicit.toarray())
+            np.array_equal(result_default.toarray(), result_explicit.toarray()),
         )
-
-
-# ===========================================================================
-# Dispatcher: dual_vector_combinations
-# ===========================================================================
 
 
 class TestDualVectorCombinations(unittest.TestCase):
-    """Tests for the type-dispatching dual_vector_combinations."""
+    """Unit tests for the type-dispatching dual_vector_combinations function."""
 
     def test_combine_mode(self) -> None:
-        """Test combine mode for dense and sparse."""
+        """Verify combine mode dispatches correctly for dense and sparse inputs.
+
+        Dense input returns an ndarray; sparse input returns a sparse matrix.
+        Values match the expected output for both backends.
+        """
         dense = dual_vector_combinations(_V1, _V2, mode="combine")
         self.assertIsInstance(dense, np.ndarray)
         self.assertEqual(dense.shape, (4, 4))
@@ -216,7 +227,11 @@ class TestDualVectorCombinations(unittest.TestCase):
         self.assertTrue(np.array_equal(sparse.toarray(), _DUAL_COMBINE_EXPECTED))
 
     def test_diff_mode(self) -> None:
-        """Test diff mode for dense and sparse."""
+        """Verify diff mode dispatches correctly for dense and sparse inputs.
+
+        Dense input returns an ndarray; sparse input returns a sparse matrix.
+        Values match the expected output for both backends.
+        """
         dense = dual_vector_combinations(_V1, _V2, mode="diff")
         self.assertIsInstance(dense, np.ndarray)
         self.assertEqual(dense.shape, (4, 2))
@@ -228,16 +243,26 @@ class TestDualVectorCombinations(unittest.TestCase):
         self.assertTrue(np.array_equal(sparse.toarray(), _DUAL_DIFF_EXPECTED))
 
     def test_combine_and_diff_mode(self) -> None:
-        """Test combine_and_diff mode for dense and sparse."""
+        """Verify that combine_and_diff dispatches to the correct backend.
+
+        Dense input returns an ndarray; sparse input returns a sparse matrix.
+        Values match the expected output for both backends.
+        """
         dense = dual_vector_combinations(_V1, _V2, mode="combine_and_diff")
         self.assertIsInstance(dense, np.ndarray)
         self.assertEqual(dense.shape, (4, 6))
         self.assertTrue(np.array_equal(dense, _DUAL_COMBINE_AND_DIFF_EXPECTED))
 
-        sparse = dual_vector_combinations(_V1_SPARSE, _V2_SPARSE, mode="combine_and_diff")
+        sparse = dual_vector_combinations(
+            _V1_SPARSE,
+            _V2_SPARSE,
+            mode="combine_and_diff",
+        )
         self.assertTrue(sp.issparse(sparse))
         self.assertEqual(sparse.shape, (4, 6))
-        self.assertTrue(np.array_equal(sparse.toarray(), _DUAL_COMBINE_AND_DIFF_EXPECTED))
+        self.assertTrue(
+            np.array_equal(sparse.toarray(), _DUAL_COMBINE_AND_DIFF_EXPECTED),
+        )
 
     def test_mixed_sparse_dispatch_returns_sparse(self) -> None:
         """If either input is sparse, result must be sparse."""
@@ -255,7 +280,7 @@ class TestDualVectorCombinations(unittest.TestCase):
             np.array_equal(
                 dual_vector_combinations(_V1, _V2),
                 dual_vector_combinations(_V1, _V2, mode="combine"),
-            )
+            ),
         )
 
 
@@ -265,25 +290,24 @@ class TestDualVectorCombinations(unittest.TestCase):
 
 
 class TestSingleVectorCombinationsDense(unittest.TestCase):
-    """Tests for single_vector_combinations_dense."""
+    """Unit tests for the dense unique-pairs helper single_vector_combinations_dense."""
 
     def test_combine_mode(self) -> None:
-        """combine: result is ndarray with shape (C(n,2), 2*f) and correct values."""
+        """Test combine returns ndarray with correct shape and values."""
         result = single_vector_combinations_dense(_V, mode="combine")
         self.assertIsInstance(result, np.ndarray)
         self.assertEqual(result.shape, (3, 4))
         self.assertTrue(np.array_equal(result, _SINGLE_COMBINE_EXPECTED))
 
     def test_diff_mode(self) -> None:
-        """diff: result is ndarray with shape (C(n,2), f) and correct values."""
+        """Test diff returns ndarray with correct shape and values."""
         result = single_vector_combinations_dense(_V, mode="diff")
         self.assertIsInstance(result, np.ndarray)
         self.assertEqual(result.shape, (3, 2))
         self.assertTrue(np.array_equal(result, _SINGLE_DIFF_EXPECTED))
 
     def test_combine_and_diff_mode(self) -> None:
-        """combine_and_diff: result is ndarray with shape (C(n,2), 3*f) and correct values."""
-        n = _V.shape[0]
+        """combine_and_diff returns an ndarray with correct shape and values."""
         result = single_vector_combinations_dense(_V, mode="combine_and_diff")
         self.assertIsInstance(result, np.ndarray)
         self.assertEqual(result.shape, (3, 6))
@@ -300,7 +324,7 @@ class TestSingleVectorCombinationsDense(unittest.TestCase):
             np.array_equal(
                 single_vector_combinations_dense(_V),
                 single_vector_combinations_dense(_V, mode="combine"),
-            )
+            ),
         )
 
 
@@ -310,10 +334,10 @@ class TestSingleVectorCombinationsDense(unittest.TestCase):
 
 
 class TestSingleVectorCombinationsSparse(unittest.TestCase):
-    """Tests for single_vector_combinations_sparse."""
+    """Tests for the sparse unique-pairs helper single_vector_combinations_sparse."""
 
     def test_combine_mode(self) -> None:
-        """combine: sparse result with shape (C(n,2), 2*f), values match dense."""
+        """Test combine returns sparse result with correct shape matching dense."""
         n = _V_SPARSE.shape[0]
         result = single_vector_combinations_sparse(_V_SPARSE, mode="combine")
         self.assertTrue(sp.issparse(result))
@@ -321,7 +345,7 @@ class TestSingleVectorCombinationsSparse(unittest.TestCase):
         self.assertTrue(np.array_equal(result.toarray(), _SINGLE_COMBINE_EXPECTED))
 
     def test_diff_mode(self) -> None:
-        """diff: sparse result with shape (C(n,2), f), values match dense."""
+        """Test diff returns sparse result with correct shape matching dense."""
         n = _V_SPARSE.shape[0]
         result = single_vector_combinations_sparse(_V_SPARSE, mode="diff")
         self.assertTrue(sp.issparse(result))
@@ -329,26 +353,31 @@ class TestSingleVectorCombinationsSparse(unittest.TestCase):
         self.assertTrue(np.array_equal(result.toarray(), _SINGLE_DIFF_EXPECTED))
 
     def test_combine_and_diff_mode(self) -> None:
-        """combine_and_diff: sparse result with shape (C(n,2), 3*f), values match dense."""
+        """combine_and_diff returns sparse result with correct shape matching dense."""
         n = _V_SPARSE.shape[0]
         result = single_vector_combinations_sparse(_V_SPARSE, mode="combine_and_diff")
         self.assertTrue(sp.issparse(result))
         self.assertEqual(result.shape, (n * (n - 1) // 2, 6))
         self.assertTrue(
-            np.array_equal(result.toarray(), _SINGLE_COMBINE_AND_DIFF_EXPECTED)
+            np.array_equal(result.toarray(), _SINGLE_COMBINE_AND_DIFF_EXPECTED),
         )
 
     def test_no_self_pairs(self) -> None:
         """Result must contain fewer rows than dual_vector_combinations_sparse(V, V)."""
         single_result = single_vector_combinations_sparse(_V_SPARSE, mode="combine")
-        dual_result = dual_vector_combinations_sparse(_V_SPARSE, _V_SPARSE, mode="combine")
+        dual_result = dual_vector_combinations_sparse(
+            _V_SPARSE,
+            _V_SPARSE,
+            mode="combine",
+        )
         self.assertGreater(dual_result.shape[0], single_result.shape[0])
 
     def test_invalid_mode_raises(self) -> None:
         """An unsupported mode string must raise ValueError."""
         with self.assertRaises(ValueError):
             single_vector_combinations_sparse(
-                _V_SPARSE, mode="invalid"  # type: ignore[arg-type]
+                _V_SPARSE,
+                mode="invalid",  # type: ignore[arg-type]
             )
 
     def test_default_mode_is_combine(self) -> None:
@@ -356,19 +385,19 @@ class TestSingleVectorCombinationsSparse(unittest.TestCase):
         result_default = single_vector_combinations_sparse(_V_SPARSE)
         result_explicit = single_vector_combinations_sparse(_V_SPARSE, mode="combine")
         self.assertTrue(
-            np.array_equal(result_default.toarray(), result_explicit.toarray())
+            np.array_equal(result_default.toarray(), result_explicit.toarray()),
         )
-
-# ===========================================================================
-# Dispatcher: single_vector_combinations
-# ===========================================================================
 
 
 class TestSingleVectorCombinations(unittest.TestCase):
     """Tests for the type-dispatching single_vector_combinations."""
 
     def test_combine_mode(self) -> None:
-        """combine: dense→ndarray, sparse→sparse; shape (C(n,2), 2*f) and correct values."""
+        """Verify combine mode dispatches correctly for dense and sparse inputs.
+
+        Dense input returns an ndarray; sparse input returns a sparse matrix.
+        Values match the expected output for both backends.
+        """
         n = _V.shape[0]
         expected_rows = n * (n - 1) // 2
 
@@ -383,7 +412,11 @@ class TestSingleVectorCombinations(unittest.TestCase):
         self.assertTrue(np.array_equal(sparse.toarray(), _SINGLE_COMBINE_EXPECTED))
 
     def test_diff_mode(self) -> None:
-        """diff: dense→ndarray, sparse→sparse; shape (C(n,2), f) and correct values."""
+        """Verify diff mode dispatches correctly for dense and sparse inputs.
+
+        Dense input returns an ndarray; sparse input returns a sparse matrix.
+        Values match the expected output for both backends.
+        """
         n = _V.shape[0]
         expected_rows = n * (n - 1) // 2
 
@@ -398,7 +431,11 @@ class TestSingleVectorCombinations(unittest.TestCase):
         self.assertTrue(np.array_equal(sparse.toarray(), _SINGLE_DIFF_EXPECTED))
 
     def test_combine_and_diff_mode(self) -> None:
-        """combine_and_diff: dense→ndarray, sparse→sparse; shape (C(n,2), 3*f) and correct values."""
+        """Verify that combine_and_diff dispatches to the correct backend.
+
+        Dense input returns an ndarray; sparse input returns a sparse matrix.
+        Values match the expected output for both backends.
+        """
         n = _V.shape[0]
         expected_rows = n * (n - 1) // 2
 
@@ -411,11 +448,14 @@ class TestSingleVectorCombinations(unittest.TestCase):
         self.assertTrue(sp.issparse(sparse))
         self.assertEqual(sparse.shape, (expected_rows, 6))
         self.assertTrue(
-            np.array_equal(sparse.toarray(), _SINGLE_COMBINE_AND_DIFF_EXPECTED)
+            np.array_equal(sparse.toarray(), _SINGLE_COMBINE_AND_DIFF_EXPECTED),
         )
 
     def test_no_self_pairs(self) -> None:
-        """Result must contain fewer rows than dual_vector_combinations(V, V) for both backends."""
+        """Result must contain fewer rows than dual_vector_combinations(V, V).
+
+        Applies for both backends.
+        """
         self.assertGreater(
             dual_vector_combinations(_V, _V, mode="combine").shape[0],
             single_vector_combinations(_V, mode="combine").shape[0],
@@ -436,7 +476,7 @@ class TestSingleVectorCombinations(unittest.TestCase):
             np.array_equal(
                 single_vector_combinations(_V),
                 single_vector_combinations(_V, mode="combine"),
-            )
+            ),
         )
 
 
@@ -460,7 +500,7 @@ class TestPairwiseDifferenceRegressor(unittest.TestCase):
         )
 
     def test_predict(self) -> None:
-        """predict must return an ndarray of length n_samples."""
+        """Predict must return an ndarray of length n_samples."""
         model = PairwiseDifferenceRegressor(estimator=LinearRegression())
         model.fit(self.X, self.y)
         y_pred = model.predict(self.X)
@@ -468,7 +508,7 @@ class TestPairwiseDifferenceRegressor(unittest.TestCase):
         self.assertEqual(y_pred.shape[0], len(self.X))
 
     def test_predict_return_std(self) -> None:
-        """return_std=True must return (mean, std) arrays of length n_samples, std >= 0."""
+        """return_std=True returns (mean, std) of length n_samples with std >= 0."""
         model = PairwiseDifferenceRegressor(estimator=LinearRegression())
         model.fit(self.X, self.y)
         mean_pred, std_pred = model.predict(self.X, return_std=True)
@@ -481,7 +521,8 @@ class TestPairwiseDifferenceRegressor(unittest.TestCase):
         for mode in ("combine", "diff", "combine_and_diff"):
             with self.subTest(mode=mode):
                 model = PairwiseDifferenceRegressor(
-                    estimator=LinearRegression(), mode=mode
+                    estimator=LinearRegression(),
+                    mode=mode,
                 )
                 model.fit(self.X, self.y)
                 y_pred = model.predict(self.X)
@@ -489,7 +530,7 @@ class TestPairwiseDifferenceRegressor(unittest.TestCase):
                 self.assertEqual(y_pred.shape[0], len(self.X))
 
     def test_fit_returns_self(self) -> None:
-        """fit must return the estimator itself (sklearn convention)."""
+        """Fit must return the estimator itself (sklearn convention)."""
         model = PairwiseDifferenceRegressor(estimator=LinearRegression())
         self.assertIs(model.fit(self.X, self.y), model)
 
@@ -544,7 +585,7 @@ class TestPairwiseDifferenceClassifier(unittest.TestCase):
     # ------------------------------------------------------------------
 
     def test_binary_predict(self) -> None:
-        """predict must return labels of correct length that are a subset of training classes."""
+        """Predicted labels have correct length and are a subset of training classes."""
         model = PairwiseDifferenceClassifier(estimator=LogisticRegression())
         model.fit(self.X_bin, self.y_bin)
         y_pred = model.predict(self.X_bin)
@@ -558,11 +599,13 @@ class TestPairwiseDifferenceClassifier(unittest.TestCase):
         proba = model.predict_proba(self.X_bin)
         self.assertEqual(proba.shape, (len(self.X_bin), 2))
         np.testing.assert_allclose(
-            proba.sum(axis=1), np.ones(len(self.X_bin)), atol=1e-6
+            proba.sum(axis=1),
+            np.ones(len(self.X_bin)),
+            atol=1e-6,
         )
 
     def test_fit_returns_self_binary(self) -> None:
-        """fit must return the estimator itself (sklearn convention)."""
+        """Fit must return the estimator itself (sklearn convention)."""
         model = PairwiseDifferenceClassifier(estimator=LogisticRegression())
         self.assertIs(model.fit(self.X_bin, self.y_bin), model)
 
@@ -571,7 +614,7 @@ class TestPairwiseDifferenceClassifier(unittest.TestCase):
     # ------------------------------------------------------------------
 
     def test_multiclass_predict(self) -> None:
-        """predict must return labels of correct length that are a subset of training classes."""
+        """Predicted labels have correct length and are a subset of training classes."""
         model = PairwiseDifferenceClassifier(estimator=LogisticRegression())
         model.fit(self.X_multi, self.y_multi)
         y_pred = model.predict(self.X_multi)
@@ -585,7 +628,9 @@ class TestPairwiseDifferenceClassifier(unittest.TestCase):
         proba = model.predict_proba(self.X_multi)
         self.assertEqual(proba.shape, (len(self.X_multi), 3))
         np.testing.assert_allclose(
-            proba.sum(axis=1), np.ones(len(self.X_multi)), atol=1e-6
+            proba.sum(axis=1),
+            np.ones(len(self.X_multi)),
+            atol=1e-6,
         )
 
     def test_all_modes_multiclass(self) -> None:
@@ -593,7 +638,8 @@ class TestPairwiseDifferenceClassifier(unittest.TestCase):
         for mode in ("combine", "diff", "combine_and_diff"):
             with self.subTest(mode=mode):
                 model = PairwiseDifferenceClassifier(
-                    estimator=LogisticRegression(), mode=mode
+                    estimator=LogisticRegression(),
+                    mode=mode,
                 )
                 model.fit(self.X_multi, self.y_multi)
                 y_pred = model.predict(self.X_multi)
@@ -604,11 +650,13 @@ class TestPairwiseDifferenceClassifier(unittest.TestCase):
     # ------------------------------------------------------------------
 
     def test_multilabel_first_column_as_target(self) -> None:
-        """Single column of multilabel targets must fit, predict correct length, and stay within training classes."""
+        """Multilabel single-column target.
+
+        Fitted and predicted within training classes.
+        """
         y_single = self.Y_ml[:, 0]
         model = PairwiseDifferenceClassifier(estimator=LogisticRegression())
         model.fit(self.X_ml, y_single)
         y_pred = model.predict(self.X_ml)
         self.assertEqual(len(y_pred), len(self.X_ml))
         self.assertTrue(set(y_pred).issubset(set(y_single)))
-
