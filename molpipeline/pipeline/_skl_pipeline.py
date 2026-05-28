@@ -1021,7 +1021,7 @@ class Pipeline(_Pipeline):
             # tuples and `fit` is not called yet to validate the steps.
             pass
 
-        try:
+        try:  # noqa: PLW0717
             # Only the _final_estimator is changed from the original implementation is
             # changed in the following 2 lines
             if (
@@ -1093,7 +1093,7 @@ class Pipeline(_Pipeline):
                 .add(caller="score", callee="transform")
             )
 
-            router.add(method_mapping=method_mapping, **{name: trans})
+            router.add(method_mapping=method_mapping, **{name: trans})  # type: ignore
 
         # Only the _non_post_processing_steps is changed from the original
         # implementation is changed in the following line

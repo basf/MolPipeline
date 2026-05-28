@@ -91,7 +91,6 @@ ignore = [
     "ANN401",  #  Allow  typing.Any
     "D203", # incorrect-blank-line-before-class
     "D213", # blank-line-before-class-docstring
-    "ERA001",  # Found commented-out code  # TO REMOVE
     "FURB113", # Use `xxx.extend(...)` instead of repeatedly calling `xxx.append()  # TO REMOVE
     "N813",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
     "PGH003",  # Blanket type ignore for types
@@ -141,12 +140,12 @@ reportAssignmentType = "warning"
 reportAttributeAccessIssue = "warning"
 reportArgumentType = "warning"
 reportCallIssue = "warning"
-reportClassNotInstantiated = "reportIndexIssue"
 reportGeneralTypeIssues = "warning"
 reportIncompatibleMethodOverride = "warning"
+reportIncompatibleVariableOverride = "error"
 reportInvalidTypeForm = "warning"
 reportIndexIssue = "warning"
-reportMissingImports = "warning"
+reportMissingImports = "error"
 reportMissingTypeStubs = "warning"
 reportOptionalMemberAccess = "warning"
 reportOptionalSubscript = "warning"
@@ -155,7 +154,7 @@ reportPossiblyUnboundVariable = "warning"
 reportPrivateImportUsage = "warning"
 reportRedeclaration = "warning"
 reportReturnType = "warning"
-reportUnhashable = "warning"
+reportUnhashable = "error"
 venvPath = "."
 venv = ".venv"
 pythonVersion = "3.11"
@@ -174,6 +173,7 @@ exclude = ["tests", "docs"]
 dev = [
     "bandit>=1.8.3",
     "black[jupyter]>=25.1.0",
+    "chemprop>=2.2.3",
     "coverage>=7.8.0",
     "docsig>=0.79.0",
     "flake8>=7.2.0",
