@@ -69,10 +69,10 @@ def dual_vector_combinations_dense(
 
 
 def dual_vector_combinations_sparse(
-    vector_1: sp.spmatrix,
-    vector_2: sp.spmatrix,
+    vector_1: SparseVar,
+    vector_2: SparseVar,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
-) -> sp.spmatrix:
+) -> SparseVar:
     """Combine two sparse matrices and return the dual combined sparse matrix.
 
     Parameters
@@ -90,7 +90,7 @@ def dual_vector_combinations_sparse(
 
     Returns
     -------
-    sp.spmatrix
+    SparseMatrix
         Combined sparse matrix of shape ``(n1 * n2, ...)``.
 
     Raises
@@ -123,7 +123,7 @@ def dual_vector_combinations(
 
 @overload
 def dual_vector_combinations(
-    vector_1: sp.spmatrix,
+    vector_1: SparseMatrix,
     vector_2: npt.NDArray[Any] | npt.ArrayLike,
     mode: Literal["combine", "diff", "combine_and_diff"] = ...,
 ) -> npt.NDArray[Any]: ...
@@ -132,17 +132,17 @@ def dual_vector_combinations(
 @overload
 def dual_vector_combinations(
     vector_1: npt.NDArray[Any] | npt.ArrayLike,
-    vector_2: sp.spmatrix,
+    vector_2: SparseMatrix,
     mode: Literal["combine", "diff", "combine_and_diff"] = ...,
 ) -> npt.NDArray[Any]: ...
 
 
 @overload
 def dual_vector_combinations(
-    vector_1: sp.spmatrix,
-    vector_2: sp.spmatrix,
+    vector_1: SparseVar,
+    vector_2: SparseVar,
     mode: Literal["combine", "diff", "combine_and_diff"] = ...,
-) -> sp.spmatrix: ...
+) -> SparseVar: ...
 
 
 @overload
@@ -150,14 +150,14 @@ def dual_vector_combinations(
     vector_1: XType,
     vector_2: XType,
     mode: Literal["combine", "diff", "combine_and_diff"] = ...,
-) -> npt.NDArray[Any] | sp.spmatrix: ...
+) -> npt.NDArray[Any] | SparseMatrix: ...
 
 
 def dual_vector_combinations(
     vector_1: XType,
     vector_2: XType,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
-) -> npt.NDArray[Any] | sp.spmatrix:
+) -> npt.NDArray[Any] | SparseMatrix:
     """Combine two vectors (dense or sparse) and return the dual combined vector.
 
     Dispatches to :func:`dual_vector_combinations_sparse` when either input is a
@@ -178,19 +178,25 @@ def dual_vector_combinations(
 
     Returns
     -------
-    npt.NDArray[Any] | sp.spmatrix
+    npt.NDArray[Any] | SparseMatrix
         Combined matrix of shape ``(n1 * n2, ...)``.  The return type matches
         the input type: sparse inputs yield a sparse output, dense inputs a
         dense NumPy array.
 
     """
-    if isinstance(vector_1, sp.spmatrix) and isinstance(vector_2, sp.spmatrix):
+    if isinstance(vector_1, SparseMatrix) and isinstance(vector_2, SparseMatrix):
         return dual_vector_combinations_sparse(vector_1, vector_2, mode=mode)
-    return dual_vector_combinations_dense(
-        np.asarray(vector_1),
-        np.asarray(vector_2),
-        mode=mode,
+    vector_1 = (
+        vector_1.toarray()
+        if isinstance(vector_1, SparseMatrix)
+        else np.asarray(vector_1)
     )
+    vector_2 = (
+        vector_2.toarray()
+        if isinstance(vector_2, SparseMatrix)
+        else np.asarray(vector_2)
+    )
+    return dual_vector_combinations_dense(vector_1, vector_2, mode=mode)
 
 
 def single_vector_combinations_dense(
@@ -239,9 +245,9 @@ def single_vector_combinations_dense(
 
 
 def single_vector_combinations_sparse(
-    vector: sp.spmatrix,
+    vector: SparseVar,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
-) -> sp.spmatrix:
+) -> sp.csr_matrix[Any]:
     """Combine all unique row pairs of a sparse matrix.
 
     Using ``dual_vector_combinations(X, X)`` does not produce the same result as
@@ -260,7 +266,7 @@ def single_vector_combinations_sparse(
 
     Returns
     -------
-    sp.spmatrix
+    SparseMatrix
         Combined sparse matrix of shape ``(C(n, 2), ...)``.
 
     Raises
@@ -269,10 +275,13 @@ def single_vector_combinations_sparse(
         If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
 
     """
-    rows = []
-    for a1, a2 in combinations(vector, r=2):  # type: ignore
+    rows: list[SparseVar] = []
+    a1: SparseVar
+    a2: SparseVar
+    for a1, a2 in combinations(vector, r=2):
+        a: SparseVar = sp.hstack([a1, a2])
         if mode == "combine":
-            rows.append(sp.hstack([a1, a2]))
+            rows.append(a)
         elif mode == "diff":
             rows.append(a1 - a2)
         elif mode == "combine_and_diff":
@@ -294,22 +303,22 @@ def single_vector_combinations(
 
 @overload
 def single_vector_combinations(
-    vector: sp.spmatrix,
+    vector: SparseMatrix,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
-) -> sp.spmatrix: ...
+) -> SparseMatrix: ...
 
 
 @overload
 def single_vector_combinations(
     vector: XType,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
-) -> npt.NDArray[Any] | sp.spmatrix: ...
+) -> npt.NDArray[Any] | SparseMatrix: ...
 
 
 def single_vector_combinations(
     vector: XType,
     mode: Literal["combine", "diff", "combine_and_diff"] = "combine",
-) -> npt.NDArray[Any] | sp.spmatrix:
+) -> npt.NDArray[Any] | SparseMatrix:
     """Combine all unique row pairs of a matrix (dense or sparse).
 
     Dispatches to :func:`single_vector_combinations_sparse` when the input is a
@@ -331,13 +340,13 @@ def single_vector_combinations(
 
     Returns
     -------
-    npt.NDArray[Any] | sp.spmatrix
+    npt.NDArray[Any] | SparseMatrix
         Combined matrix of shape ``(C(n, 2), ...)``.  The return type matches
         the input type: sparse inputs yield a sparse output, dense inputs a
         dense NumPy array.
 
     """
-    if isinstance(vector, sp.spmatrix):
+    if isinstance(vector, SparseMatrix):
         return single_vector_combinations_sparse(vector, mode=mode)
     return single_vector_combinations_dense(vector, mode=mode)
 
@@ -471,7 +480,7 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
         if self.fit_x_ is None or self.fit_y_ is None:
             raise AttributeError("Unfitted model! Please call fit() before predict().")
         for x_ in X:  # type: ignore
-            x_ = x_ if isinstance(x_, sp.spmatrix) else np.asarray(x_).reshape(1, -1)
+            x_ = x_ if isinstance(x_, SparseMatrix) else np.asarray(x_).reshape(1, -1)
             x_combined = dual_vector_combinations(
                 x_,
                 self.fit_x_,
@@ -617,12 +626,6 @@ class PairwiseDifferenceClassifier(  # pylint: disable=too-many-ancestors
             for i, estimator in enumerate(self.estimators_, 1):
                 if hasattr(estimator, "predict_proba"):
                     proba_diff = estimator.predict_proba(x_)
-                    if not proba_diff.shape[1] == _N_PROBA_CLASSES:
-                        raise AssertionError(
-                            f"Expected binary classification for pairwise difference "
-                            f"model, but got {proba_diff.shape[1]} classes in "
-                            f"predict_proba output.",
-                        )
                     # For each training sample j:
                     # - if j is class i: prob(test=i) = prob(same)  = proba_diff[j, 0]
                     # - if j is not i:   prob(test=i) = prob(diff)  = proba_diff[j, 1]
