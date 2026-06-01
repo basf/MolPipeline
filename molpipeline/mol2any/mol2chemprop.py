@@ -2,25 +2,30 @@
 
 # pylint: disable=too-many-arguments
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any, Self
+import warnings
+from collections.abc import Iterable
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
-from chemprop.data import MoleculeDatapoint, MoleculeDataset
 
-from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
-from molpipeline.estimators.chemprop.featurizer_wrapper.graph_wrapper import (
-    SimpleMoleculeMolGraphFeaturizer,
-)
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
-
+try:
+    from chemprop.data import MoleculeDatapoint, MoleculeDataset
     from chemprop.featurizers.base import GraphFeaturizer, VectorFeaturizer
 
-    from molpipeline.utils.molpipeline_types import RDKitMol
+    from molpipeline.estimators.chemprop.featurizer_wrapper.graph_wrapper import (
+        SimpleMoleculeMolGraphFeaturizer,
+    )
+except ImportError:
+    warnings.warn(
+        "chemprop not installed. MolToChemprop will not work.",
+        ImportWarning,
+        stacklevel=2,
+    )
+
+
+from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
+from molpipeline.utils.molpipeline_types import RDKitMol
 
 
 class MolToChemprop(MolToAnyPipelineElement):
