@@ -49,10 +49,9 @@ _V_SPARSE: sp.csr_matrix = sp.csr_matrix(_V)
 
 _SPARSE_CLASSES = [
     sp.csr_matrix,
-    sp.coo_matrix,
-    sp.bsr_matrix,
-    sp.coo_matrix,
+    sp.csc_matrix,
     sp.lil_matrix,
+    sp.dok_matrix,
 ]
 
 # ---------------------------------------------------------------------------

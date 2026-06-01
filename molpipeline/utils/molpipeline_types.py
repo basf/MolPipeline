@@ -44,21 +44,12 @@ _NT = TypeVar("_NT", bound=np.generic)
 TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_NT])  # type: ignore
 AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 
-SparseMatrix = (
-    sps.csr_matrix
-    | sps.csc_matrix
-    | sps.coo_matrix
-    | sps.lil_matrix
-    | sps.dok_matrix
-    | sps.bsr_matrix
-)
+SparseMatrix = sps.csr_matrix | sps.csc_matrix | sps.lil_matrix | sps.dok_matrix
 SparseVar = TypeVar(
     "SparseVar",
     bound=(
         sps.csr_matrix[Any]
         | sps.csc_matrix[Any]
-        | sps.coo_matrix[Any]
-        | sps.bsr_matrix[Any]
         | sps.lil_matrix[Any]
         | sps.dok_matrix[Any]
     ),

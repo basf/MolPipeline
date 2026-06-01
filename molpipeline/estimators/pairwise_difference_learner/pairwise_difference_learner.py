@@ -352,6 +352,7 @@ def single_vector_combinations(
     """
     if isinstance(vector, SparseMatrix):
         return single_vector_combinations_sparse(vector, mode=mode)
+    vector = np.asarray(vector)
     return single_vector_combinations_dense(vector, mode=mode)
 
 
@@ -535,7 +536,7 @@ class PairwiseDifferenceClassifier(  # pylint: disable=too-many-ancestors
             Mode of pairwise feature combination.
 
         """
-        self.ohe = OneHotEncoder(handle_unknown="ignore")
+        self.ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
         self.estimators_ = []
         self.classes_: npt.NDArray[Any] | None = None
         super().__init__(estimator=estimator, mode=mode)
@@ -566,8 +567,7 @@ class PairwiseDifferenceClassifier(  # pylint: disable=too-many-ancestors
         self.fit_x_ = x_mat
         self.estimators_ = []
 
-        fit_y = self.ohe.fit_transform(y.reshape(-1, 1))
-        self.fit_y_ = np.asarray(fit_y)
+        self.fit_y_ = self.ohe.fit_transform(y.reshape(-1, 1))
         # Abs to only check if class differ or are identical
         y_combined = np.abs(single_vector_combinations(self.fit_y_, mode="diff"))
 
