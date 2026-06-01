@@ -11,7 +11,12 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.multiclass import unique_labels
 
-from molpipeline.utils.molpipeline_types import AnyPredictor, XType
+from molpipeline.utils.molpipeline_types import (
+    AnyPredictor,
+    SparseMatrix,
+    SparseVar,
+    XType,
+)
 
 ModelVar = TypeVar("ModelVar", bound=AnyPredictor)
 
