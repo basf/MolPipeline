@@ -220,11 +220,8 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
-class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
+class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):
     """Abstract wrapper for the Predictor class."""
-
-    _T_default_criterion: ChempropMetric
-    _T_default_metric: ChempropMetric
 
     def __init__(  # pylint: disable=too-many-positional-arguments  # noqa: PLR0917
         self,
@@ -384,7 +381,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         return self
 
 
-class RegressionFFN(PredictorWrapper, _RegressionFFN):  # type: ignore
+class RegressionFFN(PredictorWrapper, _RegressionFFN):
     """A wrapper for the RegressionFFN class."""
 
     n_targets: int = 1
@@ -392,21 +389,21 @@ class RegressionFFN(PredictorWrapper, _RegressionFFN):  # type: ignore
     _T_default_metric = MSE
 
 
-class MveFFN(PredictorWrapper, _MveFFN):  # type: ignore
+class MveFFN(PredictorWrapper, _MveFFN):
     """A wrapper for the MveFFN class."""
 
     n_targets: int = 2
     _T_default_criterion = MVELoss
 
 
-class EvidentialFFN(PredictorWrapper, _EvidentialFFN):  # type: ignore
+class EvidentialFFN(PredictorWrapper, _EvidentialFFN):
     """A wrapper for the EvidentialFFN class."""
 
     n_targets: int = 4
     _T_default_criterion = EvidentialLoss
 
 
-class BinaryClassificationFFN(PredictorWrapper, _BinaryClassificationFFN):  # type: ignore
+class BinaryClassificationFFN(PredictorWrapper, _BinaryClassificationFFN):
     """A wrapper for the BinaryClassificationFFN class."""
 
     n_targets: int = 1
@@ -414,7 +411,7 @@ class BinaryClassificationFFN(PredictorWrapper, _BinaryClassificationFFN):  # ty
     _T_default_metric = BinaryAUROC
 
 
-class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):  # type: ignore
+class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):
     """A wrapper for the BinaryDirichletFFN class."""
 
     n_targets: int = 2
@@ -422,7 +419,7 @@ class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):  # type: ignore
     _T_default_metric = BinaryAUROC
 
 
-class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN):  # type: ignore
+class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN):
     """A wrapper for the MulticlassClassificationFFN class."""
 
     n_targets: int = 1
@@ -508,7 +505,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         super().__setstate__(state)
 
 
-class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type: ignore
+class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):
     """A wrapper for the MulticlassDirichletFFN class."""
 
     n_targets: int = 1
@@ -516,7 +513,7 @@ class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type
     _T_default_metric = MulticlassMCCMetric
 
 
-class SpectralFFN(PredictorWrapper, _SpectralFFN):  # type: ignore
+class SpectralFFN(PredictorWrapper, _SpectralFFN):
     """A wrapper for the SpectralFFN class."""
 
     n_targets: int = 1

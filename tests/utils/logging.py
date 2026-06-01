@@ -37,5 +37,7 @@ def capture_logs(
     """
     output: list[loguru.Message] = []
     handler_id = logger.add(output.append, level=level, format=log_format)
-    yield output
-    logger.remove(handler_id)
+    try:
+        yield output
+    finally:
+        logger.remove(handler_id)

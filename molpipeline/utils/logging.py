@@ -69,14 +69,16 @@ def print_elapsed_time(
         yield
     else:
         start = timeit.default_timer()
-        yield
-        message_to_print = _message_with_time(
-            source,
-            message,
-            timeit.default_timer() - start,
-        )
+        try:
+            yield
+        finally:
+            message_to_print = _message_with_time(
+                source,
+                message,
+                timeit.default_timer() - start,
+            )
 
-        if use_logger:
-            logger.info(message_to_print)
-        else:
-            print(message_to_print)  # noqa: T201
+            if use_logger:
+                logger.info(message_to_print)
+            else:
+                print(message_to_print)  # noqa: T201
