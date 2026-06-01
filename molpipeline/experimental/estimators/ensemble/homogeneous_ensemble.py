@@ -7,7 +7,7 @@ from typing import Any, Generic, Literal, Self, TypeVar, overload
 import joblib
 import numpy as np
 import numpy.typing as npt
-from scipy import sparse, stats
+from scipy import stats
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.metaestimators import available_if
@@ -22,6 +22,7 @@ from molpipeline.utils.molpipeline_types import (
     XType,
     YType,
 )
+from molpipeline.utils.type_guards import sparse_type_guard
 
 _T = TypeVar("_T", BaseEstimator, AnyPredictor)
 # Not identical to _T, as a bit more flexible, which is required for inheritance.
@@ -225,7 +226,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         sampler = self.sampler
         if isinstance(sampler, int):
             sampler = BootstrapSplit(sampler, random_state=self.random_state)
-        features = X if sparse.issparse(X) else np.asarray(X)
+        features = X if sparse_type_guard(X) else np.asarray(X)
         y_array = np.asarray(y) if y is not None else None
         for train_idx, _ in sampler.split(X, y, groups):
             y_iter = y_array[train_idx] if y_array is not None else None
