@@ -13,7 +13,7 @@ from typing import (
 
 import numpy as np
 import numpy.typing as npt
-from scipy.sparse import coo_matrix, csc_matrix, csr_matrix, spmatrix
+import scipy.sparse as sps
 
 from molpipeline.abstract_pipeline_elements.core import (
     ABCPipelineElement,
@@ -44,12 +44,28 @@ _NT = TypeVar("_NT", bound=np.generic)
 TypeFixedVarSeq = TypeVar("TypeFixedVarSeq", bound=Sequence[_T] | npt.NDArray[_NT])  # type: ignore
 AnyVarSeq = TypeVar("AnyVarSeq", bound=Sequence[Any] | npt.NDArray[Any])
 
-SparseMatrix = csc_matrix[Any] | coo_matrix[Any] | csr_matrix[Any]
-XType = npt.ArrayLike | npt.NDArray[Any] | spmatrix  # Generic model input features
+SparseMatrix = (
+    sps.csr_matrix
+    | sps.csc_matrix
+    | sps.coo_matrix
+    | sps.lil_matrix
+    | sps.dok_matrix
+    | sps.bsr_matrix
+)
+SparseVar = TypeVar(
+    "SparseVar",
+    sps.csr_matrix[Any],
+    sps.csc_matrix[Any],
+    sps.coo_matrix[Any],
+    sps.bsr_matrix[Any],
+    sps.lil_matrix[Any],
+    sps.dok_matrix[Any],
+)
+XType = npt.ArrayLike | npt.NDArray[Any] | SparseMatrix  # Generic model input features
 YType = npt.ArrayLike | npt.NDArray[Any] | None  # Generic model target values
 # XVar indicates that the function accepts multiple types, and returns the same type
 # as the input. e.g. row removal or value manipulations.
-XVar = TypeVar("XVar", bound=npt.ArrayLike | npt.NDArray[Any] | spmatrix)
+XVar = TypeVar("XVar", bound=npt.ArrayLike | npt.NDArray[Any] | SparseMatrix)
 # Same as XVar but for target values.
 YVar = TypeVar("YVar", bound=npt.ArrayLike | npt.NDArray[Any] | None)
 
