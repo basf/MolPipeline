@@ -17,6 +17,7 @@ from molpipeline.utils.molpipeline_types import (
     SparseVar,
     XType,
 )
+from molpipeline.utils.type_guards import sparse_type_guard
 
 ModelVar = TypeVar("ModelVar", bound=AnyPredictor)
 
@@ -184,7 +185,11 @@ def dual_vector_combinations(
         dense NumPy array.
 
     """
-    if isinstance(vector_1, SparseMatrix) and isinstance(vector_2, SparseMatrix):
+    if (
+        sparse_type_guard(vector_1)
+        and sparse_type_guard(vector_2)
+        and type(vector_1) is type(vector_2)
+    ):
         return dual_vector_combinations_sparse(vector_1, vector_2, mode=mode)
     vector_1 = (
         vector_1.toarray()
@@ -275,13 +280,12 @@ def single_vector_combinations_sparse(
         If mode is not one of ``'combine'``, ``'diff'``, ``'combine_and_diff'``.
 
     """
-    rows: list[SparseVar] = []
+    rows = []
     a1: SparseVar
     a2: SparseVar
-    for a1, a2 in combinations(vector, r=2):
-        a: SparseVar = sp.hstack([a1, a2])
+    for a1, a2 in combinations(vector, r=2):  # type: ignore
         if mode == "combine":
-            rows.append(a)
+            rows.append(sp.hstack([a1, a2]))
         elif mode == "diff":
             rows.append(a1 - a2)
         elif mode == "combine_and_diff":
@@ -291,7 +295,7 @@ def single_vector_combinations_sparse(
                 f"Invalid mode: {mode}. Valid options are 'combine', 'diff', "
                 f"'combine_and_diff'.",
             )
-    return sp.vstack(rows)
+    return sp.vstack(rows)  # type: ignore
 
 
 @overload

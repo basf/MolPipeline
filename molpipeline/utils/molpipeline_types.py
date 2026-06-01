@@ -54,12 +54,14 @@ SparseMatrix = (
 )
 SparseVar = TypeVar(
     "SparseVar",
-    sps.csr_matrix[Any],
-    sps.csc_matrix[Any],
-    sps.coo_matrix[Any],
-    sps.bsr_matrix[Any],
-    sps.lil_matrix[Any],
-    sps.dok_matrix[Any],
+    bound=(
+        sps.csr_matrix[Any]
+        | sps.csc_matrix[Any]
+        | sps.coo_matrix[Any]
+        | sps.bsr_matrix[Any]
+        | sps.lil_matrix[Any]
+        | sps.dok_matrix[Any]
+    ),
 )
 XType = npt.ArrayLike | npt.NDArray[Any] | SparseMatrix  # Generic model input features
 YType = npt.ArrayLike | npt.NDArray[Any] | None  # Generic model target values

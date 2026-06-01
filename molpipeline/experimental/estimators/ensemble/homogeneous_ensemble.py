@@ -230,7 +230,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
         y_array = np.asarray(y) if y is not None else None
         for train_idx, _ in sampler.split(X, y, groups):
             y_iter = y_array[train_idx] if y_array is not None else None
-            yield features[train_idx], y_iter
+            yield features[train_idx], y_iter  # type: ignore
 
     @abc.abstractmethod
     def predict(
