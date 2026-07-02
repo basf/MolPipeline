@@ -232,7 +232,12 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         conf = self._validate_confidence_level(confidence)
 
-        return self._crepes_wrapper.predict_set(x, confidence=conf, **kwargs)
+        return self._crepes_wrapper.predict_set(
+            x,
+            confidence=conf,
+            **kwargs,
+            labels=False,
+        )
 
     def predict_p(self, x: npt.NDArray[Any], **kwargs: Any) -> npt.NDArray[Any]:
         """Predict p-values.
