@@ -26,7 +26,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     @property
     def output_type(self) -> str:
-        """Return the output type of the transformer."""
+        """The output type of the transformer."""
         return "float"
 
     def __init__(

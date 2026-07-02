@@ -76,7 +76,7 @@ class ChempropModel(ABCChemprop):
 
     @property
     def classes_(self) -> npt.NDArray[np.int_]:
-        """Return the classes.
+        """The classes.
 
         Raises
         ------
@@ -94,7 +94,7 @@ class ChempropModel(ABCChemprop):
 
     @property
     def _estimator_type(self) -> str:
-        """Return the estimator type."""
+        """The estimator type."""
         if self._is_classifier():
             return "classifier"
         return "regressor"
@@ -544,7 +544,7 @@ class ChempropMulticlassClassifier(ChempropModel):
 
     @property
     def n_classes(self) -> int:
-        """Return the number of classes."""
+        """The number of classes."""
         return self.model.predictor.n_classes
 
     @n_classes.setter

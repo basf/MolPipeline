@@ -295,7 +295,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):
 
     @property
     def input_dim(self) -> int:
-        """Get the dimension of input."""
+        """The dimension of input."""
         return self._input_dim
 
     @input_dim.setter
@@ -312,7 +312,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):
 
     @property
     def n_tasks(self) -> int:
-        """Get the number of tasks."""
+        """The number of tasks."""
         return self._n_tasks
 
     @n_tasks.setter

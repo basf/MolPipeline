@@ -206,7 +206,7 @@ class Pipeline(_Pipeline):
 
     @property
     def _estimator_type(self) -> Any:
-        """Return the estimator type."""
+        """The estimator type."""
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
@@ -224,7 +224,7 @@ class Pipeline(_Pipeline):
         | ABCPipelineElement
         | FilterReinserter[Any]
     ):
-        """Return the lst estimator which is not a PostprocessingTransformer."""
+        """The lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())
         last_element = element_list[-1]
         return last_element[2]
@@ -961,7 +961,7 @@ class Pipeline(_Pipeline):
 
     @property
     def classes_(self) -> list[Any] | npt.NDArray[Any]:
-        """Return the classes of the last element.
+        """The classes of the last element.
 
         PostPredictionTransformation elements are not considered as last element.
 

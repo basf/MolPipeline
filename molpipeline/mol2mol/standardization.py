@@ -369,12 +369,12 @@ class SolventRemover(_MolToMolPipelineElement):
 
     @property
     def solvent_mol_list(self) -> list[RDKitMol]:
-        """Return molecule representation of smiles list."""
+        """Molecule representation of smiles list."""
         return self._solvent_mol_list
 
     @property
     def solvent_smiles_list(self) -> list[str]:
-        """Return the smiles list."""
+        """The smiles list."""
         return self._solvent_smiles_list
 
     @solvent_smiles_list.setter
