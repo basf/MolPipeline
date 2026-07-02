@@ -229,9 +229,8 @@ class Pipeline(_Pipeline):
         last_element = element_list[-1]
         return last_element[2]
 
-    # pylint: disable=too-many-locals,too-many-branches
     @override
-    def _fit(
+    def _fit(    # pylint: disable=too-many-locals,too-many-branches,arguments-differ
         self,
         X: Any,
         y: Any = None,
