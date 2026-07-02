@@ -19,6 +19,7 @@ dependencies = [
     "llvmlite>=0.45.1",
     "loguru>=0.7.3",
     "matplotlib>=3.10.1",
+    "numba>=0.47.0",
     "numpy>=1.26.4",
     "pandas>=2.2.3",
     "rdkit>=2023.9.1",
