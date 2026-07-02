@@ -259,9 +259,6 @@ class TestSHAPExplainers(unittest.TestCase):
     # pylint: disable=too-many-locals
     def test_explanations_pipeline_with_invalid_inputs(self) -> None:
         """Test SHAP's TreeExplainer wrapper with invalid inputs."""
-        # estimators to test
-        estimators = _make_tree_estimators()
-
         # fill values considered invalid predictions
         invalid_fill_values = [None, np.nan, pd.NA]
         # fill values considered valid predictions (although outside the valid range)
@@ -271,7 +268,7 @@ class TestSHAPExplainers(unittest.TestCase):
 
         n_bits = 64
 
-        for estimator in estimators:
+        for estimator in _make_tree_estimators():
             for fill_value in fill_values:
                 # pipeline with ErrorFilter
                 error_filter1 = ErrorFilter()
@@ -335,10 +332,8 @@ class TestSHAPExplainers(unittest.TestCase):
 
     def test_explanations_pipeline_with_physchem(self) -> None:
         """Test SHAP's TreeExplainer wrapper on physchem feature vector."""
-        estimators = _make_tree_estimators()
-
         # test explanations with different estimators
-        for estimator in estimators:
+        for estimator in _make_tree_estimators():
             pipeline = Pipeline(
                 [
                     ("smi2mol", SmilesToMol()),
@@ -376,12 +371,8 @@ class TestSHAPExplainers(unittest.TestCase):
 
     def test_explanations_pipeline_with_concatenated_features(self) -> None:
         """Test SHAP's TreeExplainer wrapper on concatenated feature vector."""
-        estimators = _make_tree_estimators()
-
         n_bits = 64
-
-        # test explanations with different estimators
-        for estimator in estimators:
+        for estimator in _make_tree_estimators():
             pipeline = Pipeline(
                 [
                     ("smi2mol", SmilesToMol()),
