@@ -187,6 +187,7 @@ dev = [
     "pydocstyle>=6.3.0",
     "pylint>=3.3.6",
     "pyright>=1.1.399",
+    "rdkit<2026.3.3",
     "ruff>=0.11.4",
     "scipy-stubs>=1.16.2.0",
     "types-colorama>=0.4.15.20250801",
