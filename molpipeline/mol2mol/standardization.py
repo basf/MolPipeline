@@ -352,7 +352,7 @@ class SolventRemover(_MolToMolPipelineElement):
             - ACETONE	CC(=O)C
             - DMSO	CS(=O)C
             - ETHANOL	CCO
-            - Trimethylamine	CN(C)C  # Not in ChEMBL list
+            - Trimethylamine	CN(C)C  # Not in ChEMBL list.
         name: str, default="SolventRemover"
             Name of the pipeline element.
         n_jobs: int, default=1

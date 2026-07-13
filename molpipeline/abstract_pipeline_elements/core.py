@@ -100,7 +100,7 @@ class ABCPipelineElement(abc.ABC):
         Parameters
         ----------
         name: str | None, optional
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores used for processing.
         uuid: str | None, optional
@@ -362,7 +362,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         Parameters
         ----------
         name: str | None, optional
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores used for processing.
         uuid: str | None, optional

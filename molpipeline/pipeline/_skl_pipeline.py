@@ -349,7 +349,7 @@ class Pipeline(_Pipeline):
     ) -> Any:
         """Transform the data, and skip final estimator.
 
-        Call `transform` of each transformer in the pipeline except the last one,
+        Call `transform` of each transformer in the pipeline except the last one.
 
         Parameters
         ----------
@@ -357,7 +357,7 @@ class Pipeline(_Pipeline):
             Data to predict on. Must fulfill input requirements of first step
             of the pipeline.
         routed_params: Bunch
-            Parameters for each step as returned by process_routing
+            Parameters for each step as returned by process_routing.
 
         Returns
         -------

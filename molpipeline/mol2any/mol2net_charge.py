@@ -44,12 +44,12 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         standardizer: Literal["default"] | AnyTransformer | None, default="default"
             Standardizer to use. If None, no standardization is applied. If "default", a
             StandardScaler is used.
-        name: str, optional
-            Name of the pipeline element, by default "MolToNetCharge"
-        n_jobs: int, optional
-            Number of jobs to run in parallel, by default 1
+        name: str, default="MolToNetCharge"
+            Name of the pipeline element.
+        n_jobs: int, default=1
+            Number of jobs to run in parallel.
         uuid: str, optional
-            UUID of the pipeline element, by default None
+            UUID of the pipeline element.
 
         """
         self._descriptor_list = ["NetCharge"]
@@ -137,7 +137,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         Parameters
         ----------
         deep: bool
-            If true create a deep copy of the parameters
+            If true create a deep copy of the parameters.
 
         Returns
         -------
@@ -158,7 +158,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         Parameters
         ----------
         parameters: Any
-            Parameters to set
+            Parameters to set.
 
         Returns
         -------

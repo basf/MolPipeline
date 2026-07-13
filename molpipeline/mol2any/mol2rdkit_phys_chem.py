@@ -159,7 +159,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         deep: bool
-            If true create a deep copy of the parameters
+            If true create a deep copy of the parameters.
 
         Returns
         -------
@@ -184,12 +184,12 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         parameters: Any
-            Parameters to set
+            Parameters to set.
 
         Returns
         -------
         Self
-            Self
+            The object itself.
 
         """
         parameters_shallow_copy = dict(parameters)

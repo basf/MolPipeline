@@ -454,7 +454,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             - 'sigmoid', which corresponds to Platt's method (i.e. A binary logistic
               regression model)
             - 'isotonic', which is a non-parametric approach
-            - 'temperature', temperature scaling
+            - 'temperature', temperature scaling.
         cv : int, cross-validation generator, or iterable, optional
             Determines the cross-validation splitting strategy.
         n_jobs : int, optional
