@@ -1296,7 +1296,7 @@ wheels = [
 
 [[package]]
 name = "docsig"
-version = "0.90.2"
+version = "0.90.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astroid" },
@@ -1304,9 +1304,9 @@ dependencies = [
     { name = "tomli" },
     { name = "wcmatch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bd/82/886f91d235c2fc8d88c99acc5534dfc3d65fc10bd2ce7737b90ff30b6249/docsig-0.90.2.tar.gz", hash = "sha256:626d781834c49168a5e5cddf5ffdf714c103a1d43c762d6ac1779cba2680a727", size = 45668, upload-time = "2026-07-12T11:17:06.21Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/0b/8b7a35544bf289824793e795b0f603c6cb41b1c6fce421d79d35996a355d/docsig-0.90.3.tar.gz", hash = "sha256:7f42a88d0f36a6bdf2674ef45cd3cc2eb203943d8cefc85cb7604d573b819eef", size = 45810, upload-time = "2026-07-14T12:19:27.187Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/e4/d56d9112ffb8725170b21c1134ae7a8d8312ca1d2c4f650c46463c8daf3f/docsig-0.90.2-py3-none-any.whl", hash = "sha256:a63f6eff322b807d296500a8fe9d73525816156915f8a13d80fd6f686806e4c2", size = 51271, upload-time = "2026-07-12T11:17:07.652Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/e0/b8ad398e22dee2d76d6b3abe8c17821a0ee04b6393ba37daf850494c7631/docsig-0.90.3-py3-none-any.whl", hash = "sha256:7781afc294be3658e637137eb7a565a0375dff9dab8e2560d77b030e6bf8aceb", size = 51431, upload-time = "2026-07-14T12:19:28.507Z" },
 ]
 
 [[package]]
@@ -5940,13 +5940,12 @@ source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.12' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "(python_full_version < '3.12' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version < '3.12' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32')",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
     { name = "numpy", marker = "python_full_version < '3.12'" },
     { name = "nvidia-nccl-cu12", marker = "python_full_version < '3.12' and sys_platform == 'linux'" },
-    { name = "scipy", marker = "python_full_version < '3.12'" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/91/bb/1eb0242409d22db725d7a88088e6cfd6556829fb0736f9ff69aa9f1e9455/xgboost-3.2.0.tar.gz", hash = "sha256:99b0e9a2a64896cdaf509c5e46372d336c692406646d20f2af505003c0c5d70d", size = 1263936, upload-time = "2026-02-10T11:03:05.542Z" }
 wheels = [
@@ -5978,7 +5977,7 @@ resolution-markers = [
 dependencies = [
     { name = "numpy", marker = "python_full_version >= '3.12'" },
     { name = "nvidia-nccl-cu12", marker = "python_full_version >= '3.12' and sys_platform == 'linux'" },
-    { name = "scipy", marker = "python_full_version >= '3.12'" },
+    { name = "scipy", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/fd/41/846d4de2b8fc694073fd3ac5052caf68caa1ea11cb7fa32d7ad9c049b232/xgboost-3.3.0.tar.gz", hash = "sha256:58bcb8a4cace648cdab7b94fa4f16d2c9ff26d90dd4d26907168106fa06d8746", size = 1224702, upload-time = "2026-06-17T21:26:50.846Z" }
 wheels = [
