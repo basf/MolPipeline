@@ -2744,7 +2744,6 @@ source = { editable = "." }
 dependencies = [
     { name = "crepes" },
     { name = "joblib" },
-    { name = "llvmlite" },
     { name = "loguru" },
     { name = "matplotlib" },
     { name = "numba" },
@@ -2814,7 +2813,6 @@ requires-dist = [
     { name = "joblib", specifier = ">=1.3.0" },
     { name = "jupyterlab", marker = "extra == 'notebooks'", specifier = ">=4.4.0" },
     { name = "lightning", marker = "extra == 'chemprop'", specifier = ">=2.5.1" },
-    { name = "llvmlite", specifier = ">=0.45.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "matplotlib", specifier = ">=3.10.1" },
     { name = "numba", specifier = ">=0.47.0" },
