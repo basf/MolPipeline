@@ -15,7 +15,7 @@ from chemprop.data import MoleculeDataset, build_dataloader
 from chemprop.nn.predictors import BinaryClassificationFFNBase
 from lightning import pytorch as pl
 from sklearn.base import clone
-from sklearn.utils._tags import (
+from sklearn.utils._tags import (  # noqa: PLC2701
     ClassifierTags,
     RegressorTags,
     Tags,

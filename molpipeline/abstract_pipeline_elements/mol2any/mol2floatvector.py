@@ -211,8 +211,8 @@ class MolToDescriptorPipelineElement(MolToAnyPipelineElement):
 
         """
         if self._standardizer is not None:
-            standadized_value = self._standardizer.transform(value.reshape(1, -1))
-            return standadized_value.reshape(-1)
+            standardized_value = self._standardizer.transform(value.reshape(1, -1))
+            return standardized_value.reshape(-1)
         return value
 
     @abc.abstractmethod

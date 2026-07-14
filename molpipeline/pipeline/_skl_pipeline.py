@@ -10,15 +10,15 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from sklearn.base import _fit_context, clone
+from sklearn.base import _fit_context, clone  # noqa: PLC2701
 from sklearn.pipeline import Pipeline as _Pipeline
-from sklearn.pipeline import _final_estimator_has, _fit_transform_one
+from sklearn.pipeline import _final_estimator_has, _fit_transform_one  # noqa: PLC2701
 from sklearn.utils import Bunch
-from sklearn.utils._tags import Tags, get_tags
+from sklearn.utils._tags import Tags, get_tags  # noqa: PLC2701
 from sklearn.utils.metadata_routing import (
     MetadataRouter,
     MethodMapping,
-    _routing_enabled,
+    _routing_enabled,  # noqa: PLC2701
     process_routing,
 )
 from sklearn.utils.metaestimators import available_if
@@ -94,12 +94,16 @@ class Pipeline(_Pipeline):
         error_filter_list = [
             n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
         ]
-        for step in self.steps:
-            if isinstance(step[1], PostPredictionWrapper) and isinstance(
-                step[1].wrapped_estimator,
-                FilterReinserter,
-            ):
-                error_replacer_list.append(step[1].wrapped_estimator)
+        error_replacer_list.extend(
+            [
+                step[1].wrapped_estimator
+                for step in self.steps
+                if (
+                    isinstance(step[1], PostPredictionWrapper)
+                    and isinstance(step[1].wrapped_estimator, FilterReinserter)
+                )
+            ],
+        )
         for error_replacer in error_replacer_list:
             error_replacer.select_error_filter(error_filter_list)
 
@@ -230,7 +234,7 @@ class Pipeline(_Pipeline):
         return last_element[2]
 
     @override
-    def _fit(  # pylint: disable=too-many-locals,too-many-branches,arguments-differ
+    def _fit(  # noqa: PLR0912  # pylint: disable=too-many-locals,too-many-branches,arguments-differ
         self,
         X: Any,
         y: Any = None,
@@ -984,7 +988,7 @@ class Pipeline(_Pipeline):
             f"'{type(self).__name__}' object has no attribute 'classes_'",
         )
 
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
         """Return the sklearn tags.
 
         Returns
