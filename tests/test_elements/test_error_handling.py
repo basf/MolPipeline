@@ -269,7 +269,7 @@ class NoneTest(unittest.TestCase):
                 Parameters
                 ----------
                 value: RDKitMol
-                    Molecule
+                    Molecule.
 
                 Returns
                 -------

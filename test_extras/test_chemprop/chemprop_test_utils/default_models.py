@@ -253,8 +253,8 @@ def get_neural_fp_classification_pipeline(
     """Get a pipeline that combines a Chemprop neural fingerprint with a RandomForest.
 
     The pipeline uses :class:`ChempropNeuralFP` to compute learned molecular
-    representations, which are then fed into a
-    :class:`~sklearn.ensemble.RandomForestClassifier`.
+    representations, which are then fed into
+    a :class:`sklearn.ensemble.RandomForestClassifier` during initialization.
 
     Parameters
     ----------
@@ -263,9 +263,9 @@ def get_neural_fp_classification_pipeline(
         during initialization (e.g. ``n_jobs``, ``lightning_trainer__accelerator``).
     rf_kwargs : dict[str, Any] | None, optional
         Additional keyword arguments to pass to
-        :class:`~sklearn.ensemble.RandomForestClassifier` during initialization
+        :class:`sklearn.ensemble.RandomForestClassifier` during initialization
         (e.g. ``n_jobs``, ``n_estimators``).
-    pipeline_n_jobs : int, default 1
+    pipeline_n_jobs : int, default=1
         Number of parallel jobs for the pipeline.
 
     Returns

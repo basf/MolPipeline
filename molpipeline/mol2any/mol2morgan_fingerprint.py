@@ -53,7 +53,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             IntSparseBitVect, UIntSparseBitVect, etc. depending on the fingerprint
             and parameters.
         name: str, default="MolToMorganFP"
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores to use.
         uuid: str | None, optional
@@ -152,7 +152,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         Parameters
         ----------
         mol_obj: RDKitMol
-            RDKit molecule object
+            RDKit molecule object.
 
         Returns
         -------
