@@ -966,7 +966,7 @@ class Pipeline(_Pipeline):
 
         Raises
         ------
-        ValueError
+        AttributeError
             If the last step is passthrough or has no classes_ attribute.
 
         """
@@ -977,10 +977,12 @@ class Pipeline(_Pipeline):
         ]
         last_step = check_last[-1][1]
         if last_step == "passthrough":
-            raise ValueError("Last step is passthrough.")
+            raise AttributeError("Last step is passthrough.")
         if hasattr(last_step, "classes_"):
             return last_step.classes_
-        raise ValueError("Last step has no classes_ attribute.")
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute 'classes_'",
+        )
 
     def __sklearn_tags__(self) -> Tags:
         """Return the sklearn tags.
