@@ -234,7 +234,7 @@ class Pipeline(_Pipeline):
         return last_element[2]
 
     @override
-    def _fit(  # noqa: PLR0912
+    def _fit(  # noqa: PLR0912  # pylint: disable=too-many-locals,too-many-branches,arguments-differ
         self,
         X: Any,
         y: Any = None,
