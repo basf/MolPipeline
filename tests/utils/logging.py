@@ -25,9 +25,9 @@ def capture_logs(
     Parameters
     ----------
     level : str, optional
-        Log level, by default "INFO"
+        Log level, by default "INFO".
     log_format : str, optional
-        Log format, by default "{level}:{name}:{message}"
+        Log format, by default "{level}:{name}:{message}".
 
     Yields
     ------

@@ -87,7 +87,7 @@ def ignored_value_scorer(
 ) -> _BaseScorer:
     """Create a scorer that ignores a given value in the prediction array.
 
-    This is relevant for pipline models which replace errors with a given value.
+    This is relevant for pipeline models which replace errors with a given value.
     The wrapped scorer will ignore that value and return the corresponding score.
 
     Parameters
@@ -96,7 +96,6 @@ def ignored_value_scorer(
         The scorer to wrap.
     ignore_value : Any, optional
         The value to ignore in the prediction array.
-        Default: None
 
     Returns
     -------

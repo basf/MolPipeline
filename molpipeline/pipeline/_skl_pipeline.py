@@ -210,7 +210,7 @@ class Pipeline(_Pipeline):
 
     @property
     def _estimator_type(self) -> Any:
-        """Return the estimator type."""
+        """The estimator type."""
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
@@ -228,12 +228,11 @@ class Pipeline(_Pipeline):
         | ABCPipelineElement
         | FilterReinserter[Any]
     ):
-        """Return the lst estimator which is not a PostprocessingTransformer."""
+        """The lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())
         last_element = element_list[-1]
         return last_element[2]
 
-    # pylint: disable=too-many-locals,too-many-branches
     @override
     def _fit(  # noqa: PLR0912
         self,
@@ -354,7 +353,7 @@ class Pipeline(_Pipeline):
     ) -> Any:
         """Transform the data, and skip final estimator.
 
-        Call `transform` of each transformer in the pipeline except the last one,
+        Call `transform` of each transformer in the pipeline except the last one.
 
         Parameters
         ----------
@@ -362,7 +361,7 @@ class Pipeline(_Pipeline):
             Data to predict on. Must fulfill input requirements of first step
             of the pipeline.
         routed_params: Bunch
-            Parameters for each step as returned by process_routing
+            Parameters for each step as returned by process_routing.
 
         Returns
         -------
@@ -965,13 +964,13 @@ class Pipeline(_Pipeline):
 
     @property
     def classes_(self) -> list[Any] | npt.NDArray[Any]:
-        """Return the classes of the last element.
+        """The classes of the last element.
 
         PostPredictionTransformation elements are not considered as last element.
 
         Raises
         ------
-        ValueError
+        AttributeError
             If the last step is passthrough or has no classes_ attribute.
 
         """
@@ -982,10 +981,12 @@ class Pipeline(_Pipeline):
         ]
         last_step = check_last[-1][1]
         if last_step == "passthrough":
-            raise ValueError("Last step is passthrough.")
+            raise AttributeError("Last step is passthrough.")
         if hasattr(last_step, "classes_"):
             return last_step.classes_
-        raise ValueError("Last step has no classes_ attribute.")
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute 'classes_'",
+        )
 
     def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
         """Return the sklearn tags.

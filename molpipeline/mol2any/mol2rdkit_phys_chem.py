@@ -79,12 +79,12 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     @property
     def n_features(self) -> int:
-        """Return the number of features."""
+        """The number of features."""
         return len(self._descriptor_list)
 
     @property
     def descriptor_list(self) -> list[str]:
-        """Return a copy of the descriptor list. Alias of `feature_names`."""
+        """A copy of the descriptor list. Alias of `feature_names`."""
         return self._descriptor_list[:]
 
     @descriptor_list.setter
@@ -159,7 +159,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         deep: bool
-            If true create a deep copy of the parameters
+            If true create a deep copy of the parameters.
 
         Returns
         -------
@@ -184,12 +184,12 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         Parameters
         ----------
         parameters: Any
-            Parameters to set
+            Parameters to set.
 
         Returns
         -------
         Self
-            Self
+            The object itself.
 
         """
         parameters_shallow_copy = dict(parameters)

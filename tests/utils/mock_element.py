@@ -33,7 +33,7 @@ class MockTransformingPipelineElement(TransformingPipelineElement):
         return_as_numpy_array: bool, default=False
             If True return output as numpy array, otherwise as list.
         name: str, default="dummy"
-            Name of PipelineElement
+            Name of the PipelineElement.
         uuid: str | None, optional
             Unique identifier of PipelineElement.
         n_jobs: int, default=1

@@ -33,7 +33,7 @@ class AutoToMol(AnyToMolPipelineElement):
         Parameters
         ----------
         name: str, default="auto2mol"
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of parallel jobs to use.
         uuid: str | None, optional
@@ -43,7 +43,7 @@ class AutoToMol(AnyToMolPipelineElement):
             - SmilesToMol
             - InchiToMol
             - BinaryToMol
-            - SDFToMol
+            - SDFToMol.
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)

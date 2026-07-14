@@ -44,11 +44,11 @@ class MolToInchiKey(_MolToStringPipelineElement):
         Parameters
         ----------
         name: str, default="MolToInchiKey"
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
-            Number of jobs to use for parallelization
+            Number of jobs to use for parallelization.
         uuid:  str | None, optional
-            UUID of PipelineElement, by default None
+            UUID of PipelineElement.
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)

@@ -148,12 +148,11 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         ----------
         X : npt.NDArray[Any] | sparse.csr_matrix
             The new data to query.
-        return_distance : bool, optional (default = False)
+        return_distance : bool, default=False
             If True, return the distances to the neighbors of each point.
-            Default: False
-        n_neighbors : int, optional (default = None)
-            Number of neighbors to get. If None, the value set at initialization is
-            used.
+        n_neighbors : int, optional
+            Number of neighbors to get.
+            If None, the value set at initialization is used.
 
         Returns
         -------
@@ -201,10 +200,9 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         y : Sequence[Any]
             Target values. Here values are used as returned nearest neighbors.
             Must have the same length as X.
-        return_distance : bool, optional (default = False)
+        return_distance : bool, default=False
             If True, return the distances to the neighbors of each point.
-            Default: False
-        n_neighbors : int, optional (default = None)
+        n_neighbors : int, optional
             Number of neighbors to get. If None, the value set at initialization is
             used.
 

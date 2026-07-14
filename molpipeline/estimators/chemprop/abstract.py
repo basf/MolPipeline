@@ -73,7 +73,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         model : MPNN
             The chemprop model to wrap.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
