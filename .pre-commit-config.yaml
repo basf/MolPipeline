@@ -2,7 +2,7 @@ fail_fast: false
 default_stages: [pre-commit, pre-push]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-case-conflict
       - id: check-merge-conflict
@@ -13,13 +13,13 @@ repos:
         args: [--markdown-linebreak-ext=md]
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v3.29.1
+    rev: v4.16.4
     hooks:
       - id: commitizen
         stages: [commit-msg]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.14
+    rev: v0.15.21
     hooks:
       - id: ruff-format
         types_or: [python, pyi, jupyter]
@@ -40,7 +40,7 @@ repos:
           - json
 
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.408
+    rev: v1.1.411
     hooks:
       - id: pyright
         args: [-p, pyproject.toml]
@@ -51,7 +51,7 @@ repos:
     hooks:
       - id: flake8
         additional_dependencies:
-          - docsig==0.80.1
+          - docsig==0.90.3
         args:
           - --extend-ignore=D203,E203,E501,F401,W5
           - "--sig-check-class-constructor"
