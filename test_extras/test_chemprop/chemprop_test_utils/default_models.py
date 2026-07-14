@@ -262,8 +262,8 @@ def get_neural_fp_classification_pipeline(
         Additional keyword arguments to pass to :class:`ChempropNeuralFP`
         during initialization (e.g. ``n_jobs``, ``lightning_trainer__accelerator``).
     rf_kwargs : dict[str, Any] | None, optional
-        Additional keyword arguments to pass to
-        :class:`sklearn.ensemble.RandomForestClassifier` during initialization
+        Additional keyword arguments to pass
+        to :class:`sklearn.ensemble.RandomForestClassifier` during initialization
         (e.g. ``n_jobs``, ``n_estimators``).
     pipeline_n_jobs : int, default=1
         Number of parallel jobs for the pipeline.

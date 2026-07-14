@@ -24,7 +24,7 @@ dependencies = [
     "rdkit>=2023.9.1",
     "scikit-learn>=1.8.0",
     "scipy>=1.15.2",
-    "shap>=0.47.1",
+    "shap>=0.51.0",
     "typing-extensions>=4.13.1",
 ]
 
@@ -202,4 +202,5 @@ dev = [
     "types-requests>=2.32.4.20250913",
     "types-tabulate>=0.9.0.20241207",
     "types-tqdm>=4.67.0.20250809",
+    "xgboost>=3.2.0",
 ]
