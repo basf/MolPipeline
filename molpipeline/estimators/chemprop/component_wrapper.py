@@ -117,11 +117,11 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         Parameters
         ----------
         d_v : int, default=DEFAULT_ATOM_FDIM
-            The input vertices feature dimension, by default DEFAULT_ATOM_FDIM
+            The input vertices feature dimension, by default DEFAULT_ATOM_FDIM.
         d_e : int, default=DEFAULT_BOND_FDIM
-            The input edges feature dimension, by default DEFAULT_BOND_FDIM
+            The input edges feature dimension, by default DEFAULT_BOND_FDIM.
         d_h : int, default=DEFAULT_HIDDEN_DIM
-            The hidden layer dimension, by default DEFAULT_HIDDEN_DIM
+            The hidden layer dimension, by default DEFAULT_HIDDEN_DIM.
         bias : bool, default=False
             Whether to use bias in the weight matrices.
         depth : int, default=3
@@ -134,7 +134,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
             Whether to use undirected edges.
         d_vd : int or None, optional
             Dimension of additional vertex descriptors that will be concatenated to the
-            hidden features before readout
+            hidden features before readout.
         state_dict_ref : str | Path | dict[str, Any] | None, optional
             Path to a state dict to load the model weights from.
 
@@ -295,7 +295,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):
 
     @property
     def input_dim(self) -> int:
-        """Get the dimension of input."""
+        """The dimension of input."""
         return self._input_dim
 
     @input_dim.setter
@@ -312,7 +312,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):
 
     @property
     def n_tasks(self) -> int:
-        """Get the number of tasks."""
+        """The number of tasks."""
         return self._n_tasks
 
     @n_tasks.setter

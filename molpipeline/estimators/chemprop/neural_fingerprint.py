@@ -26,7 +26,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     @property
     def output_type(self) -> str:
-        """Return the output type of the transformer."""
+        """The output type of the transformer."""
         return "float"
 
     def __init__(
@@ -45,12 +45,12 @@ class ChempropNeuralFP(ABCChemprop):
         model : MPNN
             The chemprop model to wrap.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
-        batch_size : int, optional (default=64)
+            The lightning trainer to use.
+        batch_size : int, default=64
             The batch size to use.
-        n_jobs : int, optional (default=1)
+        n_jobs : int, default=1
             The number of jobs to use.
-        disable_fitting : bool, optional (default=False)
+        disable_fitting : bool, default=False
             Whether to allow fitting or set to fixed encoding.
         **kwargs: Any
             Parameters for components of the model.

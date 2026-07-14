@@ -360,7 +360,7 @@ def decode_dict(obj: dict[str, Any]) -> Any:
     Parameters
     ----------
     obj : dict[str, Any]
-        Dictionary to be transformed
+        Dictionary to be transformed.
 
     Returns
     -------
@@ -407,7 +407,7 @@ def recursive_from_json(obj: Any) -> Any:
     Parameters
     ----------
     obj : Any
-        Object to be transformed
+        Object to be transformed.
 
     Returns
     -------

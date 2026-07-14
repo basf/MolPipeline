@@ -30,13 +30,13 @@ class CustomFilter(_MolToMolPipelineElement):
         Parameters
         ----------
         func : Callable[[RDKitMol], bool]
-            Custom function to filter molecules
+            Custom function to filter molecules.
         name : str, default="CustomFilter"
-            Name of the element, by default "CustomFilter"
+            Name of the element, by default "CustomFilter".
         n_jobs : int, default=1
-            Number of jobs to use, by default 1
+            Number of jobs to use.
         uuid :  str | None, optional
-            UUID of the element, by default None
+            UUID of the element.
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)

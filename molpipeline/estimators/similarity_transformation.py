@@ -84,7 +84,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         X : npt.NDArray[np.float64] | csr_matrix
             Feature matrix to which the similarity matrix is computed.
         y : npt.NDArray[np.float64] | None, optional
-            Labels, by default None and never used
+            Labels, by default None and never used.
 
         Returns
         -------
@@ -136,7 +136,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         X: npt.NDArray[np.float64] | csr_matrix
             Feature matrix to fit the model. Is returned as similarity matrix to itself.
         y: npt.NDArray[np.float64] | None, optional
-            Labels, by default None and never used
+            Labels, by default None and never used.
         **fit_params: Any
             Additional fit parameters. Ignored.
 

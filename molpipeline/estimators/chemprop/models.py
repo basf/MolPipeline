@@ -55,7 +55,7 @@ class ChempropModel(ABCChemprop):
         model : MPNN
             The chemprop model to wrap.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
@@ -76,7 +76,7 @@ class ChempropModel(ABCChemprop):
 
     @property
     def classes_(self) -> npt.NDArray[np.int_]:
-        """Return the classes.
+        """The classes.
 
         Raises
         ------
@@ -94,7 +94,7 @@ class ChempropModel(ABCChemprop):
 
     @property
     def _estimator_type(self) -> str:
-        """Return the estimator type."""
+        """The estimator type."""
         if self._is_classifier():
             return "classifier"
         return "regressor"
@@ -314,9 +314,9 @@ class ChempropClassifier(ChempropModel):
         model : MPNN | None, optional
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         class_weight : Literal["balanced"] | dict[int, float] | None, optional
-            The class weights to use, by default None
+            The class weights to use.
             If "balanced", the class weights will be calculated using the
             sklearn.utils.class_weight.compute_class_weight function.
             If a dict is provided, it should map class labels to weights.
@@ -452,12 +452,12 @@ class ChempropRegressor(ChempropModel):
         model : MPNN | None, optional
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         n_tasks : int
             The number of tasks for the regressor, e.g. number of target variables.
-        batch_size : int, optional (default=64)
+        batch_size : int, default=64
             The batch size to use.
-        n_jobs : int, optional (default=1)
+        n_jobs : int, default=1
             The number of jobs to use.
         kwargs : Any
             Parameters set using `set_params`.
@@ -500,7 +500,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         model : MPNN | None, optional
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
@@ -544,7 +544,7 @@ class ChempropMulticlassClassifier(ChempropModel):
 
     @property
     def n_classes(self) -> int:
-        """Return the number of classes."""
+        """The number of classes."""
         return self.model.predictor.n_classes
 
     @n_classes.setter
@@ -624,7 +624,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         Parameters
         ----------
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
-            Indended classes for the dataset
+            Intended classes for the dataset.
 
         Raises
         ------
