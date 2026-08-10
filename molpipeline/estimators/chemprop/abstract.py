@@ -4,19 +4,16 @@ import abc
 from collections.abc import Sequence
 from typing import Any, Self
 
-try:
-    from typing import override  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import override
-
 import numpy as np
 import numpy.typing as npt
 from chemprop.data import MoleculeDataset, build_dataloader
 from chemprop.models.model import MPNN
 from lightning import pytorch as pl
 from sklearn.base import BaseEstimator
+from typing_extensions import override
 
 from molpipeline.estimators.chemprop.lightning_wrapper import get_params_trainer
+from molpipeline.utils.json_operations import recursive_from_json, recursive_to_json
 
 # pylint: enable=duplicate-code
 
@@ -98,6 +95,36 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.lightning_trainer = lightning_trainer
         self.trainer_params = get_params_trainer(self.lightning_trainer)
         self.set_params(**kwargs)
+
+    def __getstate__(self) -> dict[str, Any]:
+        """Get the state of the model for pickling.
+
+        Returns
+        -------
+        dict[str, Any]
+            The state of the model.
+
+        """
+        state = dict(super().__getstate__())
+        state["model_state_dict"] = recursive_to_json(self.model.state_dict())
+        state["model"] = recursive_to_json(state.pop("model"))
+        state["lightning_trainer"] = get_params_trainer(state.pop("lightning_trainer"))
+        return state
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Set the state of the model for unpickling.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            The state of the model.
+
+        """
+        state["model"] = recursive_from_json(state.pop("model"))
+        state["lightning_trainer"] = pl.Trainer(**state.pop("lightning_trainer"))
+        model_state_dict = recursive_from_json(state.pop("model_state_dict"))
+        super().__setstate__(state)
+        self.model.load_state_dict(model_state_dict)
 
     def _update_trainer(self) -> None:
         """Update the trainer for the model."""

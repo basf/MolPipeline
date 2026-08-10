@@ -40,6 +40,7 @@ class TestJsonOperations(unittest.TestCase):
                     "__init__": False,
                 },
             },
+            "device": "cpu",
         }
         self.assertDictEqual(json_data, expected_json_data)
         deserialized_tensor = recursive_from_json(json_data)
