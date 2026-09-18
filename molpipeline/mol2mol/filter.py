@@ -96,7 +96,7 @@ class ElementFilter(_MolToMolPipelineElement):
 
     @property
     def add_hydrogens(self) -> bool:
-        """Get add_hydrogens."""
+        """Whether to add hydrogens."""
         return self._add_hydrogens
 
     @add_hydrogens.setter
@@ -124,7 +124,7 @@ class ElementFilter(_MolToMolPipelineElement):
 
     @property
     def allowed_element_numbers(self) -> dict[int, IntCountRange]:
-        """Get allowed element numbers as dict."""
+        """Allowed element numbers as dict."""
         return self._allowed_element_numbers
 
     @allowed_element_numbers.setter
@@ -420,7 +420,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
     def filter_elements(
         self,
     ) -> Mapping[str, tuple[int, int | None]]:
-        """Get filter elements."""
+        """Filter elements."""
         return self._filter_elements
 
     @filter_elements.setter
@@ -496,7 +496,7 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
 
     @property
     def filter_elements(self) -> Mapping[str, FloatCountRange]:
-        """Get allowed descriptors as dict."""
+        """Allowed descriptors as dict."""
         return self._filter_elements
 
     @filter_elements.setter

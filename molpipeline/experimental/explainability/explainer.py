@@ -346,7 +346,10 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
                 continue
 
             # compute the shap values for the features
-            feature_weights = self.explainer.shap_values(feature_vector, **kwargs)
+            feature_weights = self.explainer.shap_values(
+                np.atleast_2d(feature_vector),
+                **kwargs,
+            )
             feature_weights = np.asarray(feature_weights).squeeze()
 
             atom_weights = None

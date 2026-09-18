@@ -38,7 +38,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
         distance_threshold : float
             Distance threshold for connected component clustering.
         max_memory_usage : float, optional
-            Maximum memory usage in GB, by default 4.0 GB
+            Maximum memory usage in GB, by default 4.0 GB.
 
         """
         self.distance_threshold: float = distance_threshold

@@ -41,9 +41,8 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         ----------
         estimator : BaseEstimator
             The base classifier to wrap.
-        mondrian : bool, optional
-            Whether to use Mondrian (class-conditional) conformal prediction
-            (default: False).
+        mondrian : bool, default=False
+            Whether to use Mondrian (class-conditional) conformal prediction.
         calibrate_probs : bool, default=False
             Default behavior for probability calibration during `calibrate()`.
             If True, antitonic probability calibration is applied unless
@@ -52,7 +51,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Nonconformity function to use. Can be:
             - String: 'hinge', 'margin' (built-in functions)
             - NonconformityFunctor instance
-            - None: Use crepes default
+            - None: Use crepes default.
         **kwargs : Any
             Additional keyword arguments passed to crepes calibration.
 
@@ -232,7 +231,12 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         conf = self._validate_confidence_level(confidence)
 
-        return self._crepes_wrapper.predict_set(x, confidence=conf, **kwargs)
+        return self._crepes_wrapper.predict_set(
+            x,
+            confidence=conf,
+            **kwargs,
+            labels=False,
+        )
 
     def predict_p(self, x: npt.NDArray[Any], **kwargs: Any) -> npt.NDArray[Any]:
         """Predict p-values.

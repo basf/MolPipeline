@@ -4,6 +4,7 @@ import unittest
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.model_selection import StratifiedKFold
@@ -87,7 +88,10 @@ class JsonConversionTest(unittest.TestCase):
         }
         for dtype_name, dtype in dtype_dict.items():
             with self.subTest(dtype=dtype_name):
-                original_array = np.array([[1, 2], [3, 4]], dtype=dtype)
+                original_array: npt.NDArray[Any] = np.array(
+                    [[1, 2], [3, 4]],
+                    dtype=dtype,
+                )
                 json_data = recursive_to_json(original_array)
                 deserialized_array = recursive_from_json(json_data)
                 self.assertTrue(np.array_equal(original_array, deserialized_array))

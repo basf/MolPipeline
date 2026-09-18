@@ -594,7 +594,7 @@ class FilterReinserter(Generic[_T]):
 
     @property
     def error_filter(self) -> ErrorFilter:
-        """Get the ErrorFilter connected to this FilterReinserter.
+        """The ErrorFilter connected to this FilterReinserter.
 
         Raises
         ------

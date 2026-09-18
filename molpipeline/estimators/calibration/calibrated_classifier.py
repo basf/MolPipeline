@@ -454,7 +454,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             - 'sigmoid', which corresponds to Platt's method (i.e. A binary logistic
               regression model)
             - 'isotonic', which is a non-parametric approach
-            - 'temperature', temperature scaling
+            - 'temperature', temperature scaling.
         cv : int, cross-validation generator, or iterable, optional
             Determines the cross-validation splitting strategy.
         n_jobs : int, optional
@@ -463,8 +463,8 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             The value ``-1`` means using all processors.
         ensemble : Literal["auto"] | bool, default="auto"
             Determines how the calibrator is fitted.
-            The value "auto" will use `False` if the `estimator` is a
-            :class:`~sklearn.frozen.FrozenEstimator`, and `True` otherwise.
+            The value "auto" will use `False` if the `estimator` is
+            a :class:`~sklearn.frozen.FrozenEstimator`, and `True` otherwise.
         class_weight : dict | Literal['balanced'], optional
             Class weights used for the calibration.
             If a dict, it must be provided in this form: ``{class_label: weight}``.

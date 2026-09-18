@@ -14,6 +14,7 @@ from sklearn.ensemble import (
 )
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.svm import SVC, SVR
+from xgboost import XGBClassifier, XGBRegressor
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
@@ -54,6 +55,25 @@ TEST_SMILES_WITH_BAD_SMILES = [
 CONTAINS_OX_BAD_SMILES = [0, 1, 1, 0, 0, 1, 0, 1, 0, 0]
 
 _RANDOM_STATE = 67056
+
+
+def _make_tree_estimators() -> list[BaseEstimator]:
+    """Return a fresh list of tree-based estimators used across the SHAP tests.
+
+    Returns
+    -------
+    list[BaseEstimator]
+        A list of tree-based estimators used in the SHAP tests.
+
+    """
+    return [
+        RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+        RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
+        GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
+        GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
+        XGBClassifier(n_estimators=2, tree_method="hist", random_state=_RANDOM_STATE),
+        XGBRegressor(n_estimators=2, tree_method="hist", random_state=_RANDOM_STATE),
+    ]
 
 
 class TestSHAPExplainers(unittest.TestCase):
@@ -129,13 +149,15 @@ class TestSHAPExplainers(unittest.TestCase):
             self.assertTrue((2,), explanation.prediction.shape)  # type: ignore[union-attr]
             if isinstance(explainer, SHAPTreeExplainer) and isinstance(
                 estimator,
-                GradientBoostingClassifier,
+                (GradientBoostingClassifier, XGBClassifier),
             ):
                 # there is currently a bug in SHAP's TreeExplainer for
                 # GradientBoostingClassifier, returning only one feature weight, which
                 # is also based on log odds.
                 # This check is a workaround until the bug is fixed.
                 # see https://github.com/shap/shap/issues/3177
+                # XGBClassifier's binary classification also returns a single set of
+                # feature weights (log odds).
                 self.assertEqual(
                     (nof_features,),
                     explanation.feature_weights.shape,  # type: ignore[union-attr]
@@ -171,12 +193,7 @@ class TestSHAPExplainers(unittest.TestCase):
         self,
     ) -> None:
         """Test SHAP's TreeExplainer wrapper on pipelines with fingerprints."""
-        tree_estimators = [
-            RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
-            RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
-            GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
-            GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
-        ]
+        tree_estimators = _make_tree_estimators()
         other_estimators = [
             SVC(kernel="rbf", probability=False, random_state=_RANDOM_STATE),
             SVR(kernel="linear"),
@@ -242,14 +259,6 @@ class TestSHAPExplainers(unittest.TestCase):
     # pylint: disable=too-many-locals
     def test_explanations_pipeline_with_invalid_inputs(self) -> None:
         """Test SHAP's TreeExplainer wrapper with invalid inputs."""
-        # estimators to test
-        estimators = [
-            RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
-            RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
-            GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
-            GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
-        ]
-
         # fill values considered invalid predictions
         invalid_fill_values = [None, np.nan, pd.NA]
         # fill values considered valid predictions (although outside the valid range)
@@ -259,7 +268,7 @@ class TestSHAPExplainers(unittest.TestCase):
 
         n_bits = 64
 
-        for estimator in estimators:
+        for estimator in _make_tree_estimators():
             for fill_value in fill_values:
                 # pipeline with ErrorFilter
                 error_filter1 = ErrorFilter()
@@ -323,15 +332,8 @@ class TestSHAPExplainers(unittest.TestCase):
 
     def test_explanations_pipeline_with_physchem(self) -> None:
         """Test SHAP's TreeExplainer wrapper on physchem feature vector."""
-        estimators = [
-            RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
-            RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
-            GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
-            GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
-        ]
-
         # test explanations with different estimators
-        for estimator in estimators:
+        for estimator in _make_tree_estimators():
             pipeline = Pipeline(
                 [
                     ("smi2mol", SmilesToMol()),
@@ -369,17 +371,8 @@ class TestSHAPExplainers(unittest.TestCase):
 
     def test_explanations_pipeline_with_concatenated_features(self) -> None:
         """Test SHAP's TreeExplainer wrapper on concatenated feature vector."""
-        estimators = [
-            RandomForestClassifier(n_estimators=2, random_state=_RANDOM_STATE),
-            RandomForestRegressor(n_estimators=2, random_state=_RANDOM_STATE),
-            GradientBoostingClassifier(n_estimators=2, random_state=_RANDOM_STATE),
-            GradientBoostingRegressor(n_estimators=2, random_state=_RANDOM_STATE),
-        ]
-
         n_bits = 64
-
-        # test explanations with different estimators
-        for estimator in estimators:
+        for estimator in _make_tree_estimators():
             pipeline = Pipeline(
                 [
                     ("smi2mol", SmilesToMol()),

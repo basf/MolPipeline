@@ -100,7 +100,7 @@ class ABCPipelineElement(abc.ABC):
         Parameters
         ----------
         name: str | None, optional
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores used for processing.
         uuid: str | None, optional
@@ -226,7 +226,7 @@ class ABCPipelineElement(abc.ABC):
 
     @property
     def n_jobs(self) -> int:
-        """Get the number of cores."""
+        """The number of cores."""
         return self._n_jobs
 
     @n_jobs.setter
@@ -243,7 +243,7 @@ class ABCPipelineElement(abc.ABC):
 
     @property
     def requires_fitting(self) -> bool:
-        """Return whether the object requires fitting or not."""
+        """Whether the object requires fitting or not."""
         return self._requires_fitting
 
     def fit(self, values: Any, labels: Any = None) -> Self:
@@ -362,7 +362,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         Parameters
         ----------
         name: str | None, optional
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores used for processing.
         uuid: str | None, optional
@@ -374,22 +374,22 @@ class TransformingPipelineElement(ABCPipelineElement):
 
     @property
     def input_type(self) -> str:
-        """Return the input type."""
+        """The input type."""
         return self._input_type
 
     @property
     def is_fitted(self) -> bool:
-        """Return whether the object is fitted or not."""
+        """Whether the object is fitted or not."""
         return self._is_fitted
 
     @property
     def output_type(self) -> str:
-        """Return the output type."""
+        """The output type."""
         return self._output_type
 
     @property
     def parameters(self) -> dict[str, Any]:
-        """Return the parameters of the object."""
+        """The parameters of the object."""
         return self.get_params()
 
     @parameters.setter

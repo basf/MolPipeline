@@ -265,47 +265,47 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
 
     @property
     def min_point_count(self) -> int:
-        """Get minimum point count."""
+        """Minimum point count."""
         return self._min_point_count
 
     @property
     def max_point_count(self) -> int:
-        """Get maximum point count."""
+        """Maximum point count."""
         return self._max_point_count
 
     @property
     def triangular_pruning(self) -> bool:
-        """Get triangular pruning setting."""
+        """Triangular pruning setting."""
         return self._triangular_pruning
 
     @property
     def shortest_paths_only(self) -> bool:
-        """Get shortest paths only setting."""
+        """Shortest paths only setting."""
         return self._shortest_paths_only
 
     @property
     def include_bond_order(self) -> bool:
-        """Get include bond order setting."""
+        """Include bond order setting."""
         return self._include_bond_order
 
     @property
     def skip_feats(self) -> list[str]:
-        """Get list of features to skip."""
+        """List of features to skip."""
         return self._skip_feats[:]
 
     @property
     def feature_definition(self) -> str:
-        """Get feature factory file path."""
+        """Feature factory file path."""
         return self._feature_definition
 
     @property
     def distance_bins(self) -> list[tuple[float, float]]:
-        """Get distance bins."""
+        """Distance bins."""
         return self._distance_bins[:]
 
     @property
     def counted(self) -> bool:
-        """Get counted setting."""
+        """Counted setting."""
         return self._counted
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:

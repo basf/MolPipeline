@@ -56,7 +56,7 @@ class PostPredictionWrapper(PostPredictionTransformation):  # pylint: disable=to
         wrapped_estimator: AnyPredictor | AnyTransformer | FilterReinserter[Any]
             PipelineElement to be wrapped.
         kwargs: Any
-            Parameter of the wrapped_estimator
+            Parameter of the wrapped_estimator.
 
         """
         self.wrapped_estimator = wrapped_estimator

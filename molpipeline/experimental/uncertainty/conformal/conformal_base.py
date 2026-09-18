@@ -502,7 +502,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-in
 
     @property
     def nonconformity(self) -> str | NonconformityFunctor | None:
-        """Get the nonconformity parameter value.
+        """The nonconformity parameter value.
 
         This property is needed for sklearn's get_params/set_params compatibility.
         """
