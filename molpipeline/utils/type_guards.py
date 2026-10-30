@@ -2,17 +2,14 @@
 
 from typing import Any
 
-import scipy
+from typing_extensions import TypeIs
 
-try:
-    from typing import TypeIs  # type: ignore  # Can be removed for python>=3.13
-except ImportError:
-    from typing_extensions import TypeIs
+from molpipeline.utils.molpipeline_types import SparseMatrix
 
 
 def sparse_type_guard(
     matrix: Any,
-) -> TypeIs[scipy.sparse.spmatrix]:
+) -> TypeIs[SparseMatrix]:
     """Type guard to check if a matrix is a scipy sparse matrix.
 
     Parameters
@@ -26,4 +23,4 @@ def sparse_type_guard(
         True if the matrix is a scipy sparse matrix, False otherwise.
 
     """
-    return scipy.sparse.issparse(matrix)
+    return isinstance(matrix, SparseMatrix)

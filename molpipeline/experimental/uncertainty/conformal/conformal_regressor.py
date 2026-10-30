@@ -1,14 +1,13 @@
 """Conformal prediction wrappers for regression using crepes."""
 # pylint: disable=duplicate-code
 
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
 from crepes import WrapRegressor
 from crepes.extras import DifficultyEstimator, MondrianCategorizer
 from sklearn.base import BaseEstimator, RegressorMixin, clone
-from typing_extensions import Self
 
 from molpipeline.experimental.model_selection.splitter import (
     PercentileStratifiedKFold,

@@ -1,13 +1,12 @@
 """Conformal prediction wrappers for classification using crepes."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 import numpy as np
 import numpy.typing as npt
 from crepes import WrapClassifier
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import StratifiedKFold
-from typing_extensions import Self
 
 from molpipeline.experimental.uncertainty.conformal.conformal_base import (
     BaseConformalPredictor,
