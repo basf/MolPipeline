@@ -5,7 +5,7 @@ convenient access at the uncertainty package level.
 """
 
 # pylint: disable=unused-import
-from molpipeline.experimental.uncertainty.conformal.conformal_base import (  # noqa: F401
+from molpipeline.experimental.uncertainty.conformal.conformal_base import (  # ruff: ignore[unused-import]
     HingeNonconformity,
     LogNonconformity,
     MarginNonconformity,
