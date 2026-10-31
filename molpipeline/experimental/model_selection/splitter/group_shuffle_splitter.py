@@ -7,9 +7,14 @@ import numpy as np
 import numpy.typing as npt
 from numpy.random import RandomState  # pylint: disable=no-name-in-module
 from sklearn.model_selection import BaseShuffleSplit
-from sklearn.model_selection._split import _validate_shuffle_split  # ruff: ignore[import-private-name]
+from sklearn.model_selection._split import (
+    _validate_shuffle_split,  # ruff: ignore[import-private-name]
+)
 from sklearn.utils import check_array, shuffle
-from sklearn.utils.validation import _num_samples, check_random_state  # ruff: ignore[import-private-name]
+from sklearn.utils.validation import (  # ruff: ignore[import-private-name]
+    _num_samples,
+    check_random_state,
+)
 from typing_extensions import override
 
 SplitModeOption = Literal["groups", "samples"]

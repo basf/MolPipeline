@@ -7,8 +7,14 @@ import numpy as np
 import numpy.typing as npt
 from scipy import sparse
 from scipy.sparse import csr_matrix
-from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # ruff: ignore[import-private-name]
-from sklearn.utils._param_validation import Interval  # ruff: ignore[import-private-name]
+from sklearn.base import (  # ruff: ignore[import-private-name]
+    BaseEstimator,
+    ClusterMixin,
+    _fit_context,
+)
+from sklearn.utils._param_validation import (
+    Interval,  # ruff: ignore[import-private-name]
+)
 from sklearn.utils.validation import validate_data
 
 from molpipeline.estimators.algorithm.connected_component_clustering import (
