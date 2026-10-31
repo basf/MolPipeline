@@ -146,7 +146,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "num_nodes": trainer.num_nodes,
         "precision": trainer.precision,
         "logger": trainer.logger,
-        # "callbacks": trainer.callbacks,  # type: ignore[attr-defined]  # noqa: ERA001
+        "callbacks": trainer.callbacks,  # type: ignore[attr-defined]
         "fast_dev_run": trainer.fast_dev_run,  # type: ignore[attr-defined]
         "max_epochs": trainer.max_epochs,
         "min_epochs": trainer.min_epochs,
