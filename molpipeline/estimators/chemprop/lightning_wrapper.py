@@ -146,7 +146,7 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "num_nodes": trainer.num_nodes,
         "precision": trainer.precision,
         "logger": trainer.logger,
-        # "callbacks": trainer.callbacks,  # type: ignore[attr-defined]  # noqa: ERA001
+        # "callbacks": trainer.callbacks,  # type: ignore[attr-defined]  # ruff: ignore[commented-out-code]
         "fast_dev_run": trainer.fast_dev_run,  # type: ignore[attr-defined]
         "max_epochs": trainer.max_epochs,
         "min_epochs": trainer.min_epochs,
@@ -171,12 +171,12 @@ def get_params_trainer(trainer: pl.Trainer) -> dict[str, Any]:
         "deterministic": torch.are_deterministic_algorithms_enabled(),
         "benchmark": torch.backends.cudnn.benchmark,
         "inference_mode": trainer.predict_loop.inference_mode,
-        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # noqa: SLF001,E501
-        # "profiler": trainer.profiler,  # type: ignore[attr-defined]  # noqa: ERA001
-        "detect_anomaly": trainer._detect_anomaly,  # noqa: SLF001
+        "use_distributed_sampler": trainer._accelerator_connector.use_distributed_sampler,  # ruff: ignore[private-member-access, line-too-long]
+        # "profiler": trainer.profiler,  # type: ignore[attr-defined]  # ruff: ignore[commented-out-code]
+        "detect_anomaly": trainer._detect_anomaly,  # ruff: ignore[private-member-access]
         "barebones": trainer.barebones,
-        # "plugins": trainer.plugins,  # can not be exctracted  # noqa: ERA001
-        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related  # noqa: E501, ERA001
+        # "plugins": trainer.plugins,  # can not be exctracted  # ruff: ignore[commented-out-code]
+        # "sync_batchnorm": trainer._accelerator_connector.sync_batchnorm,  # plugin related  # ruff: ignore[line-too-long, commented-out-code]
         "reload_dataloaders_every_n_epochs": trainer.reload_dataloaders_every_n_epochs,  # type: ignore[attr-defined]
         "default_root_dir": get_trainer_path(trainer),
     }

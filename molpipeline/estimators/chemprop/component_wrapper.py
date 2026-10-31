@@ -27,7 +27,7 @@ from chemprop.nn.predictors import MulticlassDirichletFFN as _MulticlassDirichle
 from chemprop.nn.predictors import MveFFN as _MveFFN
 from chemprop.nn.predictors import RegressionFFN as _RegressionFFN
 from chemprop.nn.predictors import SpectralFFN as _SpectralFFN
-from chemprop.nn.predictors import _FFNPredictorBase as _Predictor  # noqa: PLC2701
+from chemprop.nn.predictors import _FFNPredictorBase as _Predictor  # ruff: ignore[import-private-name]
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
@@ -223,7 +223,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):
     """Abstract wrapper for the Predictor class."""
 
-    def __init__(  # pylint: disable=too-many-positional-arguments  # noqa: PLR0917
+    def __init__(  # pylint: disable=too-many-positional-arguments  # ruff: ignore[too-many-positional-arguments]
         self,
         n_tasks: int = 1,
         input_dim: int = DEFAULT_HIDDEN_DIM,
@@ -426,7 +426,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
     _T_default_criterion = CrossEntropyLoss
     _T_default_metric = MulticlassMCCMetric
 
-    def __init__(  # pylint: disable=too-many-positional-arguments #noqa: PLR0917
+    def __init__(  # pylint: disable=too-many-positional-arguments # ruff: ignore[too-many-positional-arguments]
         self,
         n_classes: int,
         n_tasks: int = 1,
@@ -617,7 +617,7 @@ class MPNN(_MPNN, BaseEstimator):
 
         if self.metric_list is None:
             self.metrics = nn.ModuleList(
-                [self.predictor._T_default_metric(), self.criterion],  # noqa: SLF001
+                [self.predictor._T_default_metric(), self.criterion],  # ruff: ignore[private-member-access]
             )
         else:
             self.metrics = nn.ModuleList([*list(self.metric_list), self.criterion])

@@ -164,7 +164,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
 
     def fit(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # ruff: ignore[invalid-argument-name],  # pylint: disable=invalid-name
         y: YType = None,
         groups: YType = None,
         **kwargs: Any,
@@ -200,7 +200,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
 
     def _iter_model_inputs(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # ruff: ignore[invalid-argument-name],  # pylint: disable=invalid-name
         y: YType,
         groups: npt.ArrayLike | None = None,
     ) -> Iterator[tuple[XType, YType]]:
@@ -234,7 +234,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
     @abc.abstractmethod
     def predict(
         self,
-        X: XType,  # noqa: N803
+        X: XType,  # ruff: ignore[invalid-argument-name]
         **params: Any,
     ) -> npt.NDArray[Any]:
         """Predict using the ensemble of estimators.
@@ -261,7 +261,7 @@ class HomogeneousEnsembleRegressor(RegressorMixin, HomogeneousEnsemble[_ModelVar
     @overload
     def predict(
         self,
-        X: XType,  # noqa: N803
+        X: XType,  # ruff: ignore[invalid-argument-name]
         return_std: Literal[False] = False,
         **params: Any,
     ) -> npt.NDArray[np.float64]: ...
@@ -269,7 +269,7 @@ class HomogeneousEnsembleRegressor(RegressorMixin, HomogeneousEnsemble[_ModelVar
     @overload
     def predict(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # ruff: ignore[invalid-argument-name],  # pylint: disable=invalid-name
         return_std: Literal[True] = ...,
         **params: Any,
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
@@ -277,7 +277,7 @@ class HomogeneousEnsembleRegressor(RegressorMixin, HomogeneousEnsemble[_ModelVar
     @overload
     def predict(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # ruff: ignore[invalid-argument-name],  # pylint: disable=invalid-name
         return_std: bool = False,
         **params: Any,
     ) -> (
@@ -423,7 +423,7 @@ class HomogeneousEnsembleClassifier(ClassifierMixin, HomogeneousEnsemble[_ModelV
     @available_if(_can_predict_proba)
     def predict_proba(
         self,
-        X: XType,  # noqa: N803,  # pylint: disable=invalid-name
+        X: XType,  # ruff: ignore[invalid-argument-name],  # pylint: disable=invalid-name
         **params: Any,  # pylint: disable=unused-argument
     ) -> npt.NDArray[Any]:
         """Predict class probabilities using the ensemble of estimators.

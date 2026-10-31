@@ -7,9 +7,9 @@ import numpy as np
 import numpy.typing as npt
 from numpy.random import RandomState  # pylint: disable=no-name-in-module
 from sklearn.model_selection import BaseShuffleSplit
-from sklearn.model_selection._split import _validate_shuffle_split  # noqa: PLC2701
+from sklearn.model_selection._split import _validate_shuffle_split  # ruff: ignore[import-private-name]
 from sklearn.utils import check_array, shuffle
-from sklearn.utils.validation import _num_samples, check_random_state  # noqa: PLC2701
+from sklearn.utils.validation import _num_samples, check_random_state  # ruff: ignore[import-private-name]
 from typing_extensions import override
 
 SplitModeOption = Literal["groups", "samples"]
@@ -77,9 +77,9 @@ class GroupShuffleSplit(BaseShuffleSplit):  # pylint: disable=abstract-method
             )
         self.split_mode = split_mode
 
-    def _iter_indices_split_mode_samples(  # noqa: PLR0914
+    def _iter_indices_split_mode_samples(  # ruff: ignore[too-many-locals]
         self,
-        X: Any,  # noqa: N803
+        X: Any,  # ruff: ignore[invalid-argument-name]
         groups: npt.ArrayLike,
     ) -> Generator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None]:
         """Generate indices to split data into training and test sets.

@@ -33,7 +33,7 @@ def assure_range(value: VarNumber | Sequence[VarNumber]) -> tuple[VarNumber, Var
         return value, value
     if isinstance(value, Sequence):
         range_tuple = tuple(value)
-        if len(range_tuple) != 2:  # noqa: PLR2004
+        if len(range_tuple) != 2:  # ruff: ignore[magic-value-comparison]
             raise ValueError(f"Expected a sequence of length 2, got: {range_tuple}")
         return range_tuple
     raise TypeError(f"Got unexpected type: {type(value)}")

@@ -124,7 +124,7 @@ class NonconformityFunctor(ABC):
 class HingeNonconformity(NonconformityFunctor):
     """Hinge loss nonconformity function for classification."""
 
-    def get_name(self) -> str:  # noqa: PLR6301
+    def get_name(self) -> str:  # ruff: ignore[no-self-use]
         """Get function name for parameter serialization.
 
         Returns
@@ -268,7 +268,7 @@ class SVMMarginNonconformity(NonconformityFunctor):
 
     """
 
-    def get_name(self) -> str:  # noqa: PLR6301
+    def get_name(self) -> str:  # ruff: ignore[no-self-use]
         """Get function name for parameter serialization.
 
         Returns

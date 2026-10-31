@@ -268,7 +268,7 @@ class ABCPipelineElement(abc.ABC):
         _ = self.fit_transform(values, labels)
         return self
 
-    def fit_to_result(self, values: Any) -> Self:  # noqa: ARG002
+    def fit_to_result(self, values: Any) -> Self:  # ruff: ignore[unused-method-argument]
         """Fit object to result of transformed values.
 
         Fit object to the result of the transform function. This is useful for catching

@@ -44,8 +44,8 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
-        X: list[ExplicitBitVect],  # noqa: N803
-        y: npt.NDArray[np.float64] | None = None,  # noqa: ARG002
+        X: list[ExplicitBitVect],  # ruff: ignore[invalid-argument-name]
+        y: npt.NDArray[np.float64] | None = None,  # ruff: ignore[unused-method-argument]
     ) -> Self:
         """Fit leader picker clustering estimator.
 
@@ -98,7 +98,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
 
         return np.unique(labels).shape[0], labels
 
-    def _fit(self, X: list[ExplicitBitVect]) -> Self:  # noqa: N803
+    def _fit(self, X: list[ExplicitBitVect]) -> Self:  # ruff: ignore[invalid-argument-name]
         """Fit leader picker clustering estimator.
 
         Parameters
@@ -120,7 +120,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
             poolSize=len(X),
             threshold=self.distance_threshold,
             numThreads=1,  # according to rdkit docu this parameter is not used
-            # seed=self.random_state if self.random_state is not None else -1,  # noqa: ERA001
+            # seed=self.random_state if self.random_state is not None else -1,  # ruff: ignore[commented-out-code]
         )
 
         # Assign points to clusters based on centroid
