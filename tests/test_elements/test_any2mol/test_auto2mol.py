@@ -28,7 +28,7 @@ _sdf_supplier = Chem.SDMolSupplier()
 _sdf_supplier.SetData(SDF_P86_B_400)
 
 # INCHI
-INCHI_P86_LIGAND = "InChI=1S/C16H24I2N2O/c1-3-20(4-2)14-5-7-19(8-6-14)11-12-9-13(17)10-15(18)16(12)21/h9-10,14,21H,3-8,11H2,1-2H3"  # noqa: E501
+INCHI_P86_LIGAND = "InChI=1S/C16H24I2N2O/c1-3-20(4-2)14-5-7-19(8-6-14)11-12-9-13(17)10-15(18)16(12)21/h9-10,14,21H,3-8,11H2,1-2H3"  # ruff: ignore[line-too-long]
 
 
 # RDKit mols

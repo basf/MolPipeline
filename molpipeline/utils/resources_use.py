@@ -38,7 +38,7 @@ def _is_chemprop(component: Any) -> bool:
     return _CHEMPROP_INSTALLED and isinstance(component, ABCChemprop)  # pylint: disable=possibly-used-before-assignment
 
 
-def iterate_components(  # noqa: PLR0912  # pylint: disable=too-many-branches
+def iterate_components(  # ruff: ignore[too-many-branches]  # pylint: disable=too-many-branches
     estimator: Any,
     prefix: str = "",
     seen: set[int] | None = None,

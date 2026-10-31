@@ -13,7 +13,7 @@ import numpy.typing as npt
 from loguru import logger
 from sklearn.base import (
     BaseEstimator,
-    _fit_context,  # noqa: PLC2701
+    _fit_context,  # ruff: ignore[import-private-name]
     clone,
 )
 from sklearn.calibration import (
@@ -21,35 +21,35 @@ from sklearn.calibration import (
 )
 from sklearn.calibration import (
     _CalibratedClassifier,
-    _fit_calibrator,  # noqa: PLC2701
+    _fit_calibrator,  # ruff: ignore[import-private-name]
 )
 from sklearn.frozen import FrozenEstimator
 from sklearn.model_selection import LeaveOneOut, check_cv, cross_val_predict
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import (
     Bunch,
-    _safe_indexing,  # noqa: PLC2701
+    _safe_indexing,  # ruff: ignore[import-private-name]
     indexable,
 )
-from sklearn.utils._array_api import (  # noqa: PLC2701
+from sklearn.utils._array_api import (  # ruff: ignore[import-private-name]
     get_namespace_and_device,
     move_to,
 )
-from sklearn.utils._response import (  # noqa: PLC2701
+from sklearn.utils._response import (  # ruff: ignore[import-private-name]
     _get_response_values,
     _process_predict_proba,
 )
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metadata_routing import (
-    _routing_enabled,  # noqa: PLC2701
+    _routing_enabled,  # ruff: ignore[import-private-name]
     process_routing,
 )
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.parallel import Parallel, delayed
 from sklearn.utils.validation import (
-    _check_method_params,  # noqa: PLC2701
-    _check_response_method,  # noqa: PLC2701
-    _check_sample_weight,  # noqa: PLC2701
+    _check_method_params,  # ruff: ignore[import-private-name]
+    _check_response_method,  # ruff: ignore[import-private-name]
+    _check_sample_weight,  # ruff: ignore[import-private-name]
 )
 from typing_extensions import override
 
@@ -92,9 +92,9 @@ def merge_class_and_sample_weights(
     return class_weights_array * sample_weight
 
 
-def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R0917
+def _fit_classifier_calibrator_pair(  # ruff: ignore[too-many-positional-arguments]  # pylint: disable=R0914,R0917
     estimator: BaseEstimator,
-    X: npt.ArrayLike,  # noqa: N803
+    X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
     y: npt.ArrayLike,
     train: npt.NDArray[np.int_],
     test: npt.NDArray[np.int_],
@@ -158,8 +158,8 @@ def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R
 
     """
     fit_params_train = _check_method_params(X, params=fit_params, indices=train)
-    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # noqa: N806
-    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # noqa: N806
+    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # ruff: ignore[non-lowercase-variable-in-function]
+    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # ruff: ignore[non-lowercase-variable-in-function]
 
     estimator.fit(X_train, y_train, **fit_params_train)
 
@@ -494,7 +494,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         # CalibratedClassifierCV.estimator is not validated yet
         prefer_skip_nested_validation=False,
     )
-    def fit(  # noqa: PLR0912, PLR0914, PLR0915  # pylint: disable=R0912,R0914,R0915
+    def fit(  # ruff: ignore[too-many-branches, too-many-locals, too-many-statements]  # pylint: disable=R0912,R0914,R0915
         self,
         X: npt.ArrayLike,
         y: npt.ArrayLike,
@@ -531,7 +531,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         """
         check_classification_targets(y)
-        X, y = indexable(X, y)  # noqa: N806
+        X, y = indexable(X, y)  # ruff: ignore[non-lowercase-variable-in-function]
         estimator = self._get_estimator()
 
         ensemble = self.ensemble
@@ -648,7 +648,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
                 n_jobs=self.n_jobs,
                 params=routed_params.estimator.fit,
             )
-            if self.classes_.shape[0] == 2:  # noqa: PLR2004
+            if self.classes_.shape[0] == 2:  # ruff: ignore[magic-value-comparison]
                 # Ensure shape (n_samples, 1) in the binary case
                 if method_name == "predict_proba":
                     # Select the probability column of the positive class

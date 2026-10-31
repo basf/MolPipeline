@@ -57,7 +57,7 @@ if importlib.util.find_spec("torch") is not None:
 
     def _tensor_from_json(  # pylint: disable=unused-argument
         obj: type,
-        *args: Any,  # noqa: ARG001
+        *args: Any,  # ruff: ignore[unused-function-argument]
         **kwargs: Any,
     ) -> tuple[Any | type, bool]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
@@ -107,8 +107,8 @@ else:
 
     def _tensor_from_json(  # pylint: disable=unused-argument
         obj: type,
-        *args: Any,  # noqa: ARG001
-        **kwargs: Any,  # noqa: ARG001
+        *args: Any,  # ruff: ignore[unused-function-argument]
+        **kwargs: Any,  # ruff: ignore[unused-function-argument]
     ) -> tuple[Any | type, bool]:
         """Recursively convert a JSON-serializable object to a PyTorch model.
 

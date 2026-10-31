@@ -132,7 +132,7 @@ class ChempropModel(ABCChemprop):
         """
         return self._is_binary_classifier() or self._is_multiclass_classifier()
 
-    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return the sklearn tags.
 
         Returns
@@ -153,7 +153,7 @@ class ChempropModel(ABCChemprop):
 
     def _predict(
         self,
-        X: MoleculeDataset,  # noqa: N803
+        X: MoleculeDataset,  # ruff: ignore[invalid-argument-name]
     ) -> npt.NDArray[np.float64]:
         """Predict the labels.
 
@@ -245,7 +245,7 @@ class ChempropModel(ABCChemprop):
         predictions = self._predict(X)
         if self._is_binary_classifier():
             pred = np.zeros(len(predictions))
-            pred[predictions > 0.5] = 1  # noqa: PLR2004
+            pred[predictions > 0.5] = 1  # ruff: ignore[magic-value-comparison]
             return pred
 
         if self._is_multiclass_classifier():
@@ -665,5 +665,5 @@ class ChempropMulticlassClassifier(ChempropModel):
             self.model.predictor,
             MulticlassClassificationFFN,
         )
-        has_classes = self.n_classes > 2  # noqa: PLR2004
+        has_classes = self.n_classes > 2  # ruff: ignore[magic-value-comparison]
         return has_correct_model and has_classes

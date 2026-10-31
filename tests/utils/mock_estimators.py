@@ -37,7 +37,7 @@ class MockEstimator(BaseEstimator):
 
     def fit(
         self,
-        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name] # pylint: disable=invalid-name
         y: npt.ArrayLike,
     ) -> Self:
         """Fit the model and record the arguments.
@@ -58,9 +58,9 @@ class MockEstimator(BaseEstimator):
         self.fit_args = {"X": X, "y": y}
         return self
 
-    def predict(  # noqa: PLR6301
+    def predict(  # ruff: ignore[no-self-use]
         self,
-        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name] # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Return fixed predictions.
 
@@ -103,9 +103,9 @@ class MockClassifier(MockEstimator):
         feature_arr = np.asarray(X)
         return np.array([x[0] == 1 for x in feature_arr], dtype=np.int64)
 
-    def predict_proba(  # noqa: PLR6301
+    def predict_proba(  # ruff: ignore[no-self-use]
         self,
-        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name] # pylint: disable=invalid-name
     ) -> npt.NDArray[np.float64]:
         """Return fake class probabilities.
 

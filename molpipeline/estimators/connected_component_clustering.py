@@ -7,8 +7,14 @@ import numpy as np
 import numpy.typing as npt
 from scipy import sparse
 from scipy.sparse import csr_matrix
-from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # noqa: PLC2701
-from sklearn.utils._param_validation import Interval  # noqa: PLC2701
+from sklearn.base import (  # ruff: ignore[import-private-name]
+    BaseEstimator,
+    ClusterMixin,
+    _fit_context,
+)
+from sklearn.utils._param_validation import (
+    Interval,  # ruff: ignore[import-private-name]
+)
 from sklearn.utils.validation import validate_data
 
 from molpipeline.estimators.algorithm.connected_component_clustering import (
@@ -50,8 +56,8 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
-        X: npt.NDArray[np.int_] | csr_matrix,  # noqa: N803
-        y: npt.NDArray[np.float64] | None = None,  # noqa: ARG002
+        X: npt.NDArray[np.int_] | csr_matrix,  # ruff: ignore[invalid-argument-name]
+        y: npt.NDArray[np.float64] | None = None,  # ruff: ignore[unused-method-argument]
     ) -> Self:
         """Fit connected component clustering estimator.
 
@@ -72,7 +78,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
         return self._fit(features)
 
     # pylint: disable=W0613
-    def _fit(self, X: npt.NDArray[np.int_] | csr_matrix) -> Self:  # noqa: N803
+    def _fit(self, X: npt.NDArray[np.int_] | csr_matrix) -> Self:  # ruff: ignore[invalid-argument-name]
         """Fit connected component clustering estimator.
 
         Parameters
@@ -119,7 +125,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
 
     def fit_predict(
         self,
-        X: npt.NDArray[np.int_] | csr_matrix,  # noqa: N803
+        X: npt.NDArray[np.int_] | csr_matrix,  # ruff: ignore[invalid-argument-name]
         y: npt.NDArray[np.int_] | None = None,
         **kwargs: Any,
     ) -> npt.NDArray[np.int32]:

@@ -210,7 +210,7 @@ class Pipeline(_Pipeline):
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
-            return self._final_estimator._estimator_type  # noqa: SLF001
+            return self._final_estimator._estimator_type  # ruff: ignore[private-member-access]
         return None
 
     @property
@@ -309,7 +309,7 @@ class Pipeline(_Pipeline):
                 )
 
             # Fit or load from cache the current transformer
-            X, fitted_transformer = fit_transform_one_cached(  # noqa: N806
+            X, fitted_transformer = fit_transform_one_cached(  # ruff: ignore[non-lowercase-variable-in-function]
                 cloned_transformer,
                 X,
                 y,
@@ -344,7 +344,7 @@ class Pipeline(_Pipeline):
 
     def _transform(
         self,
-        X: Any,  # noqa: N803
+        X: Any,  # ruff: ignore[invalid-argument-name]
         routed_params: Bunch,
     ) -> Any:
         """Transform the data, and skip final estimator.
@@ -524,7 +524,7 @@ class Pipeline(_Pipeline):
 
         """
         routed_params = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, routed_params)  # noqa: N806
+        Xt, yt = self._fit(X, y, routed_params)  # ruff: ignore[non-lowercase-variable-in-function]
         with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 if is_empty(Xt):
@@ -1022,7 +1022,7 @@ class Pipeline(_Pipeline):
             # tuples and `fit` is not called yet to validate the steps.
             pass
 
-        try:  # noqa: PLW0717
+        try:  # ruff: ignore[too-many-statements-in-try-clause]
             # Only the _final_estimator is changed from the original implementation is
             # changed in the following 2 lines
             if (

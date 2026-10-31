@@ -185,7 +185,7 @@ class ErrorFilter(ABCPipelineElement):
             return False
         return self.filter_everything or value.element_id in self.element_ids
 
-    def fit(self, values: AnyVarSeq, labels: Any = None) -> Self:  # noqa: ARG002
+    def fit(self, values: AnyVarSeq, labels: Any = None) -> Self:  # ruff: ignore[unused-method-argument]
         """Fit to input values.
 
         Only for compatibility with sklearn Pipelines.
@@ -673,8 +673,8 @@ class FilterReinserter(Generic[_T]):
     def fit(
         self,
         values: TypeFixedVarSeq,
-        labels: Any = None,  # noqa: ARG002
-        **params: Any,  # noqa: ARG002
+        labels: Any = None,  # ruff: ignore[unused-method-argument]
+        **params: Any,  # ruff: ignore[unused-method-argument]
     ) -> Self:
         """Fit to input values.
 
@@ -702,8 +702,8 @@ class FilterReinserter(Generic[_T]):
     def fit_transform(
         self,
         values: TypeFixedVarSeq,
-        labels: Any = None,  # noqa: ARG002
-        **params: Any,  # noqa: ARG002
+        labels: Any = None,  # ruff: ignore[unused-method-argument]
+        **params: Any,  # ruff: ignore[unused-method-argument]
     ) -> TypeFixedVarSeq:
         """Transform values and return a list without the Invalid values.
 
