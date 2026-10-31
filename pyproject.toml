@@ -30,7 +30,7 @@ dependencies = [
 
 [project.optional-dependencies]
 chemprop = [
-    "chemprop>=2.2.0,<2.3.0",
+    "chemprop>=2.2.0,<2.4.0",
     "dvc>=3.64.1",
     "lightning>=2.5.1",
     "requests>=2.32.5",
