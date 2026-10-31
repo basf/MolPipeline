@@ -182,7 +182,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.lightning_trainer.fit(self.model, training_data)
         checkpoint_callbacks = [
             c
-            for c in self.lightning_trainer.callbacks
+            for c in self.lightning_trainer.callbacks  # type: ignore[attr-defined]
             if isinstance(c, ModelCheckpoint)
         ]
         if self.reload_best_checkpoint is True or (
