@@ -131,6 +131,9 @@ ignore = [
      "S607",
      "SLF001",  # Private member accessed
  ]
+"README.md" = [
+    "E501",
+]
 
 [tool.ruff.lint.pylint]
 max-positional-args = 10
