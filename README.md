@@ -84,7 +84,7 @@ pipeline = Pipeline([
       ("element_filter", ElementFilter()),                           # standardization
       ("salt_remover", SaltRemover()),                               # standardization
       ("morgan2_2048", MolToMorganFP(n_bits=2048, radius=2)),        # fingerprints and featurization
-      ("RandomForestRegressor", RandomForestRegressor())             # machine learning model
+      ("RandomForestRegressor", RandomForestRegressor()),            # machine learning model
     ],
     n_jobs=4,
 )
