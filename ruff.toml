@@ -45,26 +45,26 @@ select = [
     "W",     # pycodestyle - warnings
 ]
 ignore = [
-    "ANN401",  #  Allow  typing.Any
-    "ANN204",  #  Missing return type annotation for special method
-    "D203", # 1 blank line required before class docstring
-    "D213", # blank-line-before-class-docstring
-    "PLR0913", # too-many-arguments
-    "PGH003",  # Blanket type ignore for types
-    "PLW2901", # Redefined loop variable
-    "S311",  #  suspicious-non-cryptographic-random-usage
+    "any-type",  #  Allow  typing.Any
+    "missing-return-type-special-method",  #  Missing return type annotation for special method
+    "incorrect-blank-line-before-class", # 1 blank line required before class docstring
+    "multi-line-summary-second-line", # blank-line-before-class-docstring
+    "too-many-arguments", # too-many-arguments
+    "blanket-type-ignore",  # Blanket type ignore for types
+    "redefined-loop-name", # Redefined loop variable
+    "suspicious-non-cryptographic-random-usage",  #  suspicious-non-cryptographic-random-usage
 ]
  pylint = {max-positional-args=10 }
  [lint.per-file-ignores]
  "*.ipynb" = [
-     "PLE1142",
-     "F704",
-     "T201"
+     "await-outside-async",
+     "yield-outside-function",
+     "print"
  ]
  "test_*" = [
-     "S101",
-     "S404",
-     "S603",
-     "S607",
-     "SLF001",
+     "assert",
+     "suspicious-subprocess-import",
+     "subprocess-without-shell-equals-true",
+     "start-process-with-partial-path",
+     "private-member-access",
  ]
