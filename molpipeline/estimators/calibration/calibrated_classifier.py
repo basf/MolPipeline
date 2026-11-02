@@ -89,7 +89,7 @@ def merge_class_and_sample_weights(
     if sample_weight is None:
         return class_weights_array
 
-    return class_weights_array * sample_weight
+    return class_weights_array * np.array(sample_weight)
 
 
 def _fit_classifier_calibrator_pair(  # ruff: ignore[too-many-positional-arguments]  # pylint: disable=R0914,R0917
