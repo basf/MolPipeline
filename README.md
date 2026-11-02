@@ -67,6 +67,7 @@ A nice introduction to the basic usage is in the [01_getting_started_with_molpip
 ### Model building
 
 Create a fingerprint-based prediction model:
+<!-- fmt:off --> <!--- To prevent ruff from breaking the lines in the pipeline setup --->
 ```python
 from molpipeline import Pipeline
 from molpipeline.any2mol import AutoToMol
@@ -95,6 +96,7 @@ pipeline.fit(X=["CCCCCC", "c1ccccc1"], y=[0.2, 0.4])
 pipeline.predict(["CCC"])
 # output: array([0.29])
 ```
+<!-- fmt:on -->
 
 ### Feature calculation
 
