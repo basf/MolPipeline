@@ -57,6 +57,7 @@ ignore = [
  pylint = {max-positional-args=10 }
  [lint.per-file-ignores]
  "*.ipynb" = [
+     "assert",
      "line-too-long",
      "magic-value-comparison",
      "await-outside-async",

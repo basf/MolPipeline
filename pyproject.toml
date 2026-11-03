@@ -119,6 +119,7 @@ ignore = [
 ]
  [tool.ruff.lint.per-file-ignores]
  "*.ipynb" = [
+     "assert",
      "line-too-long",
      "magic-value-comparison",
      "await-outside-async",
