@@ -138,7 +138,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
                 "trainer.",
             )
         best_model_path = best_model_path_list[0]
-        checkpoint = torch.load(best_model_path, map_location="cpu", weights_only=False)
+        checkpoint = torch.load(best_model_path, map_location="cpu", weights_only=False)  # nosec B614
         self.model.load_state_dict(checkpoint["state_dict"])
 
     @override

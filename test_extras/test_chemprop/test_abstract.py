@@ -56,7 +56,7 @@ class TestABCChemprop(unittest.TestCase):
                 X=["CCO", "CCN", "CCC"],
                 y=[0, 1, 0],
             )
-            best_checkpoint = torch.load(
+            best_checkpoint = torch.load(  # nosec B614
                 checkpoint.best_model_path,
                 map_location="cpu",
                 weights_only=False,
