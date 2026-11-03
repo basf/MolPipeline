@@ -177,7 +177,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         else:
             self._output_type = "mixed"
         self._requires_fitting = any(
-            element[1]._requires_fitting  # noqa: SLF001
+            element[1]._requires_fitting  # ruff: ignore[private-member-access]
             for element in element_list
         )
 

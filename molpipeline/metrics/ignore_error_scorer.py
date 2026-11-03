@@ -106,10 +106,10 @@ def ignored_value_scorer(
     if isinstance(scorer, str):
         scorer = metrics.get_scorer(scorer)
 
-    score_func = scorer._score_func  # noqa: SLF001
-    response_method = scorer._response_method  # noqa: SLF001
-    scorer_kwargs = scorer._kwargs  # noqa: SLF001
-    if scorer._sign < 0:  # noqa: SLF001
+    score_func = scorer._score_func  # ruff: ignore[private-member-access]
+    response_method = scorer._response_method  # ruff: ignore[private-member-access]
+    scorer_kwargs = scorer._kwargs  # ruff: ignore[private-member-access]
+    if scorer._sign < 0:  # ruff: ignore[private-member-access]
         scorer_kwargs["greater_is_better"] = False
 
     newscore = _IgnoreValueScoreFunc(score_func, ignore_value)

@@ -122,7 +122,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
 
     def split(
         self,
-        X: npt.ArrayLike,  # noqa: N803
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
         y: npt.ArrayLike | None = None,
         groups: npt.ArrayLike | None = None,
     ) -> Iterator[tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]]:
@@ -164,7 +164,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
 
     def get_n_splits(
         self,
-        X: npt.ArrayLike,  # noqa: N803
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
         y: npt.ArrayLike | None = None,
         groups: npt.ArrayLike | None = None,
     ) -> int:
