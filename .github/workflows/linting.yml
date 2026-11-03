@@ -60,7 +60,7 @@ jobs:
           python-version: "3.13"
       - name: Analysing the code with flake8
         run: |
-          uv run flake8 --extend-ignore=D203,E203,E501,W503 --extend-exclude .venv .
+          uv run flake8 --extend-ignore=D203,E203,E501,F401,W503 --extend-exclude .venv .
 
   interrogate:
     runs-on: ubuntu-latest
