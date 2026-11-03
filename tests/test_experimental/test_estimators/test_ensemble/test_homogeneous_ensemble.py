@@ -11,7 +11,7 @@ from sklearn.datasets import make_classification, make_regression
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import GridSearchCV, ParameterGrid
-from sklearn.utils._tags import get_tags  # noqa: PLC2701
+from sklearn.utils._tags import get_tags  # ruff: ignore[import-private-name]
 
 from molpipeline.experimental.estimators.ensemble.homogeneous_ensemble import (
     HomogeneousEnsembleClassifier,
