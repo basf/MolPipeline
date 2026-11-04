@@ -4,17 +4,13 @@ import abc
 from collections.abc import Sequence
 from typing import Any, Self
 
-try:
-    from typing import override  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import override
-
 import numpy as np
 import numpy.typing as npt
 from chemprop.data import MoleculeDataset, build_dataloader
 from chemprop.models.model import MPNN
 from lightning import pytorch as pl
 from sklearn.base import BaseEstimator
+from typing_extensions import override
 
 from molpipeline.estimators.chemprop.lightning_wrapper import get_params_trainer
 
@@ -37,9 +33,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     trainer_params : dict[str, Any]
         The parameters of the lightning trainer. This is used as the trainer is not
         compatible with the `get_params` method.
-    model_ckpoint_params : dict[str, Any]
-        The parameters of the model checkpoint callback. This is used as the callback
-        is not compatible with the `get_params` method.
 
     Notes
     -----
@@ -56,7 +49,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     n_jobs: int
     lightning_trainer: pl.Trainer
     trainer_params: dict[str, Any]
-    model_ckpoint_params: dict[str, Any]
 
     def __init__(
         self,
@@ -86,7 +78,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.model = model
         self.batch_size = batch_size
         self.n_jobs = n_jobs
-        self.model_ckpoint_params = {}
         if not lightning_trainer:
             lightning_trainer = pl.Trainer(
                 logger=False,
@@ -102,10 +93,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     def _update_trainer(self) -> None:
         """Update the trainer for the model."""
         trainer_params = dict(self.trainer_params)
-        if self.model_ckpoint_params:
-            trainer_params["callbacks"] = [
-                pl.callbacks.ModelCheckpoint(**self.model_ckpoint_params),
-            ]
         self.lightning_trainer = pl.Trainer(**trainer_params)
 
     @override
@@ -172,9 +159,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
 
         """
         params, trainer_params = self._filter_params(params, "lightning_trainer")
-        params, model_ckpoint_params = self._filter_params(params, "callback_modelckpt")
         self.trainer_params.update(trainer_params)
-        self.model_ckpoint_params.update(model_ckpoint_params)
         super().set_params(**params)
         self._update_trainer()
         return self
@@ -206,8 +191,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         # always returned.
         for name, value in self.trainer_params.items():
             params[f"lightning_trainer__{name}"] = value
-        for name, value in self.model_ckpoint_params.items():
-            params[f"callback_modelckpt__{name}"] = value
         # set to none as the trainer is created from the parameters
         # Otherwise, the sklearn clone will fail as the trainer is updated by
         # replacing the object
