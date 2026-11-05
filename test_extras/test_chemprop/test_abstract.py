@@ -70,6 +70,8 @@ class TestABCChemprop(unittest.TestCase):
             callbacks=expected_callbacks,
             accelerator="cpu",
             max_epochs=1,
+            enable_model_summary=False,  # Adds an extra callback
+            enable_progress_bar=False,  # Adds an extra callback
         )
         estimator = ABCChemprop(
             model=get_binary_classification_mpnn(),
