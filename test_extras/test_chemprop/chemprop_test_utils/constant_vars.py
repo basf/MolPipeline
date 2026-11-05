@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 from chemprop.nn import BCELoss
+from lightning.pytorch.callbacks.progress.rich_progress import RichProgressBar
 from torch import Tensor, nn
 
 from molpipeline.estimators.chemprop.component_wrapper import (
@@ -17,6 +18,7 @@ from molpipeline.estimators.chemprop.metric_wrapper import CrossEntropyLoss
 # These are model parameters which are copied by value, but are too complex to check
 # for equality. Thus, for these model parameters, only the type is checked.
 NO_IDENTITY_CHECK = [
+    "lightning_trainer__callbacks",
     "model__agg",
     "model__message_passing",
     "model",
@@ -34,6 +36,7 @@ DEFAULT_BINARY_CLASSIFICATION_PARAMS = {
     "lightning_trainer__enable_model_summary": False,
     "lightning_trainer__max_epochs": 500,
     "lightning_trainer__accelerator": "cpu",
+    "lightning_trainer__callbacks": [RichProgressBar],
     "lightning_trainer__default_root_dir": None,
     "lightning_trainer__limit_predict_batches": 1.0,
     "lightning_trainer__detect_anomaly": False,
@@ -179,6 +182,7 @@ DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS = {
     "lightning_trainer__enable_model_summary": False,
     "lightning_trainer__max_epochs": 500,
     "lightning_trainer__accelerator": "cpu",
+    "lightning_trainer__callbacks": [RichProgressBar],
     "lightning_trainer__default_root_dir": None,
     "lightning_trainer__limit_predict_batches": 1.0,
     "lightning_trainer__detect_anomaly": False,
