@@ -2,13 +2,15 @@
 
 import abc
 from collections.abc import Sequence
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
+import torch
 from chemprop.data import MoleculeDataset, build_dataloader
 from chemprop.models.model import MPNN
 from lightning import pytorch as pl
+from lightning.pytorch.callbacks import ModelCheckpoint
 from sklearn.base import BaseEstimator
 from typing_extensions import override
 
@@ -56,6 +58,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop abstract model.
@@ -70,6 +74,9 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -78,6 +85,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.model = model
         self.batch_size = batch_size
         self.n_jobs = n_jobs
+        self.reload_best_checkpoint = reload_best_checkpoint
         if not lightning_trainer:
             lightning_trainer = pl.Trainer(
                 logger=False,
@@ -94,6 +102,44 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         """Update the trainer for the model."""
         trainer_params = dict(self.trainer_params)
         self.lightning_trainer = pl.Trainer(**trainer_params)
+
+    def _load_best_checkpoint(
+        self,
+        checkpoint_callbacks: Sequence[pl.callbacks.ModelCheckpoint],
+    ) -> None:
+        """Load the best checkpoint for the wrapped model.
+
+        Parameters
+        ----------
+        checkpoint_callbacks : Sequence[pl.callbacks.ModelCheckpoint]
+            Checkpoint callbacks associated with the trainer.
+
+        Raises
+        ------
+        RuntimeError
+            If no checkpoint path is available or was not unambiguously found.
+
+        """
+        if not checkpoint_callbacks:
+            raise RuntimeError(
+                "Best checkpoint was requested, but no checkpoint callback was found.",
+            )
+
+        best_model_path_list = [
+            callback.best_model_path
+            for callback in checkpoint_callbacks
+            if hasattr(callback, "best_model_path") and callback.best_model_path
+        ]
+
+        if len(best_model_path_list) != 1:
+            raise RuntimeError(
+                "Multiple checkpoint callbacks found, but only one is expected. "
+                "Please ensure that only one ModelCheckpoint callback is used in the "
+                "trainer.",
+            )
+        best_model_path = best_model_path_list[0]
+        checkpoint = torch.load(best_model_path, map_location="cpu", weights_only=False)  # nosec B614
+        self.model.load_state_dict(checkpoint["state_dict"])
 
     @override
     def fit(
@@ -134,6 +180,16 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             num_workers=self.n_jobs,
         )
         self.lightning_trainer.fit(self.model, training_data)
+        checkpoint_callbacks = [
+            c
+            for c in self.lightning_trainer.callbacks  # type: ignore[attr-defined]
+            if isinstance(c, ModelCheckpoint)
+        ]
+        if self.reload_best_checkpoint is True or (
+            self.reload_best_checkpoint == "auto" and checkpoint_callbacks
+        ):
+            self._load_best_checkpoint(checkpoint_callbacks)
+
         # The trainer is reinitalized to avoid storing the training data
         self._update_trainer()
         return self

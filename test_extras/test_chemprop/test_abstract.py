@@ -1,13 +1,16 @@
 """Tests for the abstract class ABCChemprop."""
 
+import tempfile
 import unittest
 
+import torch
 from chemprop.data import MoleculeDataset
 from lightning import pytorch as pl
 
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
-from molpipeline.mol2any.mol2chemprop import MolToChemprop
+from molpipeline.estimators.chemprop.models import ChempropClassifier, ChempropRegressor
+from molpipeline.mol2any import MolToChemprop
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_binary_classification_mpnn,
 )
@@ -56,7 +59,6 @@ class TestABCChemprop(unittest.TestCase):
             dummy_params,
             "lightning_trainer",
         )
-        # pylint: enable=protected-access
         self.assertEqual(trainer_params, {"max_epochs": 50})
         self.assertEqual(other_params, {"other__param": "value"})
 
@@ -132,3 +134,37 @@ class TestABCChemprop(unittest.TestCase):
         ):
             self.assertIs(expected_callback, actual_callback)
         self.assertEqual(len(learning_rate_callback.lrs["lr-Adam"]), 5)
+
+    def test_load_best_checkpoint_success(self) -> None:
+        """Loading the best checkpoint restores the saved model state."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            checkpoint = pl.callbacks.ModelCheckpoint(
+                dirpath=str(tmp_dir),
+                save_top_k=1,
+            )
+            trainer = pl.Trainer(
+                max_epochs=10,
+                enable_checkpointing=True,
+                callbacks=[checkpoint],
+                accelerator="cpu",
+            )
+            estimator = ChempropClassifier(
+                lightning_trainer=trainer,
+            )
+            estimator.fit(*self._get_training_data())
+            best_checkpoint = torch.load(  # nosec B614
+                checkpoint.best_model_path,
+                map_location="cpu",
+                weights_only=False,
+            )
+            model_state = estimator.model.state_dict()
+            self.assertEqual(model_state.keys(), best_checkpoint["state_dict"].keys())
+            for key, value in model_state.items():
+                self.assertTrue(torch.equal(value, best_checkpoint["state_dict"][key]))
+
+    def test_load_best_checkpoint_raises_without_callbacks(self) -> None:
+        """No checkpoint callback raises a RuntimeError."""
+        estimator = ChempropRegressor(lightning_trainer__accelerator="cpu")
+
+        with self.assertRaisesRegex(RuntimeError, "no checkpoint callback"):
+            estimator._load_best_checkpoint([])
