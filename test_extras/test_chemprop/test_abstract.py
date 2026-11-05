@@ -62,16 +62,15 @@ class TestABCChemprop(unittest.TestCase):
 
     def test_trainer_callbacks_direct(self) -> None:
         """Test callbacks passed through a Trainer are retained."""
-        expected_callbacks = [
-            pl.callbacks.Callback(),
-            pl.callbacks.lr_monitor.LearningRateMonitor(),
-        ]
+        learning_rate_callback = pl.callbacks.LearningRateMonitor()
+        expected_callbacks = [pl.callbacks.Callback(), learning_rate_callback]
         trainer = pl.Trainer(
             callbacks=expected_callbacks,
             accelerator="cpu",
-            max_epochs=1,
-            enable_model_summary=False,  # Adds an extra callback
-            enable_progress_bar=False,  # Adds an extra callback
+            max_epochs=5,
+            log_every_n_steps=1,
+            enable_model_summary=False,  # Adds an extra callback otherwise
+            enable_progress_bar=False,  # Adds an extra callback otherwise
         )
         estimator = ABCChemprop(
             model=get_binary_classification_mpnn(),
@@ -97,18 +96,20 @@ class TestABCChemprop(unittest.TestCase):
             strict=True,
         ):
             self.assertIs(expected_callback, actual_callback)
+        self.assertEqual(len(learning_rate_callback.lrs["lr-Adam"]), 5)
 
     def test_trainer_callback_indirect(self) -> None:
         """Test callbacks passed as ABCChemprop trainer kwargs are retained."""
-        expected_callbacks = [
-            pl.callbacks.Callback(),
-            pl.callbacks.LearningRateMonitor(),
-        ]
+        learning_rate_callback = pl.callbacks.LearningRateMonitor()
+        expected_callbacks = [pl.callbacks.Callback(), learning_rate_callback]
+
         estimator = ABCChemprop(
             model=get_binary_classification_mpnn(),
             lightning_trainer__callbacks=expected_callbacks,
             lightning_trainer__accelerator="cpu",
-            lightning_trainer__max_epochs=1,
+            lightning_trainer__logger=True,
+            lightning_trainer__log_every_n_steps=1,
+            lightning_trainer__max_epochs=5,
         )
         actual_callbacks = list(estimator.lightning_trainer.callbacks)  # type: ignore[attr-defined]
         self.assertEqual(len(expected_callbacks), len(actual_callbacks))
@@ -130,3 +131,4 @@ class TestABCChemprop(unittest.TestCase):
             strict=True,
         ):
             self.assertIs(expected_callback, actual_callback)
+        self.assertEqual(len(learning_rate_callback.lrs["lr-Adam"]), 5)
