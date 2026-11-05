@@ -7,8 +7,7 @@ import torch
 from chemprop.data import MoleculeDataset
 from lightning import pytorch as pl
 
-from molpipeline import Pipeline
-from molpipeline.any2mol import AutoToMol, SmilesToMol
+from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
 from molpipeline.estimators.chemprop.models import ChempropClassifier, ChempropRegressor
 from molpipeline.mol2any import MolToChemprop
@@ -152,17 +151,7 @@ class TestABCChemprop(unittest.TestCase):
             estimator = ChempropClassifier(
                 lightning_trainer=trainer,
             )
-            pipeline = Pipeline(
-                steps=[
-                    ("auto2mol", AutoToMol()),
-                    ("mol2chemprop", MolToChemprop()),
-                    ("chemprop", estimator),
-                ],
-            )
-            pipeline.fit(
-                X=["CCO", "CCN", "CCC"],
-                y=[0, 1, 0],
-            )
+            estimator.fit(*self._get_training_data())
             best_checkpoint = torch.load(  # nosec B614
                 checkpoint.best_model_path,
                 map_location="cpu",
