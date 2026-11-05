@@ -77,18 +77,26 @@ class TestABCChemprop(unittest.TestCase):
             model=get_binary_classification_mpnn(),
             lightning_trainer=trainer,
         )
-        self.assertListEqual(
+        actual_callbacks = list(estimator.lightning_trainer.callbacks)  # type: ignore[attr-defined]
+        self.assertEqual(len(expected_callbacks), len(actual_callbacks))
+        for expected_callback, actual_callback in zip(
             expected_callbacks,
-            list(estimator.lightning_trainer.callbacks),  # type: ignore[attr-defined]
-        )
+            actual_callbacks,
+            strict=True,
+        ):
+            self.assertIs(expected_callback, actual_callback)
 
         training_data, labels = self._get_training_data()
         estimator.fit(training_data, labels)
 
-        self.assertListEqual(
+        actual_callbacks = list(estimator.lightning_trainer.callbacks)  # type: ignore[attr-defined]
+        self.assertEqual(len(expected_callbacks), len(actual_callbacks))
+        for expected_callback, actual_callback in zip(
             expected_callbacks,
-            list(estimator.lightning_trainer.callbacks),  # type: ignore[attr-defined]
-        )
+            actual_callbacks,
+            strict=True,
+        ):
+            self.assertIs(expected_callback, actual_callback)
 
     def test_trainer_callback_indirect(self) -> None:
         """Test callbacks passed as ABCChemprop trainer kwargs are retained."""
@@ -102,15 +110,23 @@ class TestABCChemprop(unittest.TestCase):
             lightning_trainer__accelerator="cpu",
             lightning_trainer__max_epochs=1,
         )
-        self.assertListEqual(
+        actual_callbacks = list(estimator.lightning_trainer.callbacks)  # type: ignore[attr-defined]
+        self.assertEqual(len(expected_callbacks), len(actual_callbacks))
+        for expected_callback, actual_callback in zip(
             expected_callbacks,
-            list(estimator.lightning_trainer.callbacks),  # type: ignore[attr-defined]
-        )
+            actual_callbacks,
+            strict=True,
+        ):
+            self.assertIs(expected_callback, actual_callback)
 
         training_data, labels = self._get_training_data()
         estimator.fit(training_data, labels)
 
-        self.assertListEqual(
+        actual_callbacks = list(estimator.lightning_trainer.callbacks)  # type: ignore[attr-defined]
+        self.assertEqual(len(expected_callbacks), len(actual_callbacks))
+        for expected_callback, actual_callback in zip(
             expected_callbacks,
-            list(estimator.lightning_trainer.callbacks),  # type: ignore[attr-defined]
-        )
+            actual_callbacks,
+            strict=True,
+        ):
+            self.assertIs(expected_callback, actual_callback)
