@@ -77,7 +77,7 @@ class TestABCChemprop(unittest.TestCase):
         )
         self.assertListEqual(
             expected_callbacks,
-            list(estimator.lightning_trainer.callbacks),
+            list(estimator.lightning_trainer.callbacks),  # type: ignore[attr-defined]
         )
 
         training_data, labels = self._get_training_data()
@@ -85,7 +85,7 @@ class TestABCChemprop(unittest.TestCase):
 
         self.assertListEqual(
             expected_callbacks,
-            list(estimator.lightning_trainer.callbacks),
+            list(estimator.lightning_trainer.callbacks),  # type: ignore[attr-defined]
         )
 
     def test_trainer_callback_indirect(self) -> None:
@@ -102,7 +102,7 @@ class TestABCChemprop(unittest.TestCase):
         )
         self.assertListEqual(
             expected_callbacks,
-            list(estimator.lightning_trainer.callbacks),
+            list(estimator.lightning_trainer.callbacks),  # type: ignore[attr-defined]
         )
 
         training_data, labels = self._get_training_data()
@@ -110,5 +110,5 @@ class TestABCChemprop(unittest.TestCase):
 
         self.assertListEqual(
             expected_callbacks,
-            list(estimator.lightning_trainer.callbacks),
+            list(estimator.lightning_trainer.callbacks),  # type: ignore[attr-defined]
         )
