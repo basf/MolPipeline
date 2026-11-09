@@ -206,7 +206,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         self,
         X: (npt.NDArray[np.str_] | list[str] | list[OptionalMol]),
         y: npt.NDArray[np.float64] | None = None,
-        **params: Any,  # pylint: disable=unused-argument
+        **params: Any,
     ) -> npt.NDArray[np.float64]:
         """Fit and predict Murcko scaffold clustering estimator.
 

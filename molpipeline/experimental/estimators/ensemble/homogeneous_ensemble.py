@@ -424,7 +424,7 @@ class HomogeneousEnsembleClassifier(ClassifierMixin, HomogeneousEnsemble[_ModelV
     def predict_proba(
         self,
         X: XType,  # ruff: ignore[invalid-argument-name],
-        **params: Any,  # pylint: disable=unused-argument
+        **params: Any,
     ) -> npt.NDArray[Any]:
         """Predict class probabilities using the ensemble of estimators.
 

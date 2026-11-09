@@ -240,7 +240,7 @@ class _MolPipeline:
             self.fit_transform(x_input)
         return self
 
-    def fit_transform(  # pylint: disable=unused-argument
+    def fit_transform(
         self,
         x_input: Any,
         y: Any = None,  # ruff: ignore[unused-method-argument]

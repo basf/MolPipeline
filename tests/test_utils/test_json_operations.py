@@ -123,7 +123,7 @@ class ReconstructibleObject:  # pylint: disable=too-few-public-methods
         self.sum = required + optional
 
 
-class MissingRequiredStateParamObj(ReconstructibleObject):  # pylint: disable=too-few-public-methods
+class MissingRequiredStateParamObj(ReconstructibleObject):
     """Class that omits a required init parameter from state."""
 
     def __getstate__(self) -> dict[str, Any]:
