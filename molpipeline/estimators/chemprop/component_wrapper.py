@@ -647,7 +647,6 @@ class MPNN(_MPNN, BaseEstimator):
         return self
 
 
-
 class MeanAggregation(_MeanAggregation, BaseEstimator):  # pylint: disable=too-many-ancestors
     """Aggregate the graph-level representation by averaging node representations."""
 
@@ -661,7 +660,6 @@ class MeanAggregation(_MeanAggregation, BaseEstimator):  # pylint: disable=too-m
 
         """
         super().__init__(dim)
-
 
 
 class SumAggregation(_SumAggregation, BaseEstimator):  # pylint: disable=too-many-ancestors

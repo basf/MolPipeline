@@ -4,9 +4,8 @@ import abc
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, Self, TypeAlias
 
-from typing_extensions import override
-
 import pandas as pd
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,

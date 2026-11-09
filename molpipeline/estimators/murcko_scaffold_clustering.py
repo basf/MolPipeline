@@ -225,4 +225,4 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
 
         """
-        return super().fit_predict(X, y, **params)        # pylint: disable=W0246
+        return super().fit_predict(X, y, **params)  # pylint: disable=W0246
