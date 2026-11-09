@@ -269,7 +269,10 @@ class TestABCChemprop(unittest.TestCase):
             reload_best_checkpoint=True,
         )
 
-        with self.assertRaisesRegex(RuntimeError, "no checkpoint callback"):
+        with self.assertRaisesRegex(
+            RuntimeError,
+            r"Best checkpoint was requested, but no checkpoint callback was found\.",
+        ):
             estimator._restore_best_checkpoint()
 
     def test_load_best_checkpoint_raises_without_saved_checkpoint(self) -> None:
@@ -280,5 +283,9 @@ class TestABCChemprop(unittest.TestCase):
             reload_best_checkpoint=True,
         )
 
-        with self.assertRaisesRegex(RuntimeError, "no checkpoint callback has a"):
+        with self.assertRaisesRegex(
+            RuntimeError,
+            r"Best checkpoint was requested, but no checkpoint callback has a best "
+            r"model path\.",
+        ):
             estimator._restore_best_checkpoint()
