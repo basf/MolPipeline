@@ -121,7 +121,7 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
             )
         return self
 
-    def fit_predict(
+    def fit_predict(  # pylint: disable=useless-parent-delegation
         self,
         X: npt.NDArray[np.int_] | csr_matrix,  # ruff: ignore[invalid-argument-name]
         y: npt.NDArray[np.int_] | None = None,
@@ -144,4 +144,4 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
 
         """
-        return super().fit_predict(X, y, **kwargs)  # pylint: disable=useless-parent-delegation
+        return super().fit_predict(X, y, **kwargs)
