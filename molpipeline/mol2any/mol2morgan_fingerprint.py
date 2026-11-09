@@ -22,7 +22,6 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
     # pylint: disable=R0913
     def __init__(
         self,
-        *,
         radius: int = 2,
         use_features: bool = False,
         n_bits: int = 2048,

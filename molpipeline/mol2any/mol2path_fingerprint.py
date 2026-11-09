@@ -21,7 +21,6 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
     # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
     def __init__(
         self,
-        *,
         min_path: int = 1,
         max_path: int = 7,
         use_hs: bool = True,

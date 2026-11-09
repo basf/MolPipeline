@@ -82,7 +82,6 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
             | Sequence[Any]
             | pd.Series
         ),
-        *,
         keep_matches: bool = True,
         mode: FilterModeType = "any",
         name: str | None = None,

@@ -430,7 +430,6 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
 
     def __init__(
         self,
-        *,
         radius: int = 2,
         use_features: bool = False,
         counted: bool = False,

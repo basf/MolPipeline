@@ -193,7 +193,6 @@ def make_sum_of_gaussians_grid(
     mol: Chem.Mol,
     grid_resolution: Sequence[int],
     padding: Sequence[float],
-    *,
     atom_weights: Sequence[float] | npt.NDArray[np.float64] | None = None,
     bond_weights: Sequence[float] | npt.NDArray[np.float64] | None = None,
     atom_width: float = 0.3,
@@ -417,7 +416,6 @@ def _add_shap_present_absent_features_text(
 def _structure_heatmap(
     mol: RDKitMol,
     atom_weights: npt.NDArray[np.float64],
-    *,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
     height: int = 600,
@@ -499,7 +497,6 @@ def _structure_heatmap(
 def structure_heatmap(
     mol: RDKitMol,
     atom_weights: npt.NDArray[np.float64],
-    *,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
     height: int = 600,

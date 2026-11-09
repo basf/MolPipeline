@@ -39,7 +39,6 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
         return_with_errors: bool = False,
         standardizer: Literal["default"] | AnyTransformer | None = "default",
         log_exceptions: bool = True,
-        *,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
         uuid: str | None = None,

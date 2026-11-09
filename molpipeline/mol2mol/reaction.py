@@ -1,6 +1,5 @@
 """Pipline elements for mol to mol transformations."""
 
-
 import copy
 import warnings
 from typing import Any, Literal, Self
@@ -25,7 +24,6 @@ class MolToMolReaction(MolToMolPipelineElement):
         self,
         reaction: AllChem.ChemicalReaction,
         additive_list: list[RDKitMol],
-        *,
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
         name: str = "MolToMolReaction",
         n_jobs: int = 1,

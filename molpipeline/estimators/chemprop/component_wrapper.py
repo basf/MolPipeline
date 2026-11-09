@@ -103,7 +103,6 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 
     def __init__(  # pylint: disable=too-many-positional-arguments
         self,
-        *,
         d_v: int = DEFAULT_ATOM_FDIM,
         d_e: int = DEFAULT_BOND_FDIM,
         d_h: int = DEFAULT_HIDDEN_DIM,

@@ -328,7 +328,6 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]],
         keep_matches: bool = True,
         mode: FilterModeType = "any",
-        *,
         name: str | None = None,
         n_jobs: int = 1,
         uuid: str | None = None,
