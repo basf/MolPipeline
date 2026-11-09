@@ -462,7 +462,7 @@ def _apply_antitonic_regressors(
 class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-instance-attributes
     """Base class for conformal predictors providing common functionality."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         estimator: BaseEstimator,
         nonconformity: str | NonconformityFunctor | None = None,

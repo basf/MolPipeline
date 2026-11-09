@@ -69,6 +69,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
     @classmethod
     def from_final_threshold(
         cls,
+        *,
         final_threshold: pd.Timestamp | str = "today",
         n_years: int = 5,
         splits_per_year: int = 1,

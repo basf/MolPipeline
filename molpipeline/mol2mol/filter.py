@@ -323,11 +323,12 @@ class ComplexFilter(_BaseKeepMatchesFilter):
 
     _filter_elements: Mapping[str, tuple[int, int | None]]
 
-    def __init__(
+    def __init__(  # ruff: ignore[too-many-arguments]
         self,
         pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]],
         keep_matches: bool = True,
         mode: FilterModeType = "any",
+        *,
         name: str | None = None,
         n_jobs: int = 1,
         uuid: str | None = None,

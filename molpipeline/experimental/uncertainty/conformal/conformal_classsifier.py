@@ -382,7 +382,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
     and aggregates their predictions.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(s
         self,
         estimator: BaseEstimator,
         *,

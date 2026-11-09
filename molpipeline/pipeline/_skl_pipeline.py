@@ -230,7 +230,7 @@ class Pipeline(_Pipeline):
         return last_element[2]
 
     @override
-    def _fit(  # pylint: disable=too-many-locals,too-many-branches,arguments-differ
+    def _fit(  # ruff: ignore[too-many-branches]
         self,
         X: Any,
         y: Any = None,

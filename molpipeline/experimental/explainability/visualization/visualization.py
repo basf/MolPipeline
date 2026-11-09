@@ -135,7 +135,7 @@ def _add_gaussians_for_atoms(
     return v_map
 
 
-def _add_gaussians_for_bonds(
+def _add_gaussians_for_bonds(  # ruff: ignore[too-many-positional-arguments]
     mol: Chem.Mol,
     conf: Chem.Conformer,
     v_map: ValueGrid,
@@ -193,6 +193,7 @@ def make_sum_of_gaussians_grid(
     mol: Chem.Mol,
     grid_resolution: Sequence[int],
     padding: Sequence[float],
+    *,
     atom_weights: Sequence[float] | npt.NDArray[np.float64] | None = None,
     bond_weights: Sequence[float] | npt.NDArray[np.float64] | None = None,
     atom_width: float = 0.3,
@@ -416,6 +417,7 @@ def _add_shap_present_absent_features_text(
 def _structure_heatmap(
     mol: RDKitMol,
     atom_weights: npt.NDArray[np.float64],
+    *,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
     height: int = 600,
@@ -497,6 +499,7 @@ def _structure_heatmap(
 def structure_heatmap(
     mol: RDKitMol,
     atom_weights: npt.NDArray[np.float64],
+    *,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
     height: int = 600,
@@ -530,16 +533,16 @@ def structure_heatmap(
     drawer, *_ = _structure_heatmap(
         mol,
         atom_weights,
-        color,
-        width,
-        height,
-        color_limits,
+        color=color,
+        width=width,
+        height=height,
+        color_limits=color_limits,
     )
     figure_bytes = drawer.GetDrawingText()
     return to_png(figure_bytes)
 
 
-def structure_heatmap_shap(  # pylint: disable=too-many-locals
+def structure_heatmap_shap(
     explanation: SHAPFeatureAndAtomExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,

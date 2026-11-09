@@ -1,6 +1,5 @@
 """Pipline elements for mol to mol transformations."""
 
-# pylint: disable=too-many-arguments
 
 import copy
 import warnings
@@ -26,6 +25,7 @@ class MolToMolReaction(MolToMolPipelineElement):
         self,
         reaction: AllChem.ChemicalReaction,
         additive_list: list[RDKitMol],
+        *,
         handle_multi: Literal["pass", "warn", "raise"] = "warn",
         name: str = "MolToMolReaction",
         n_jobs: int = 1,

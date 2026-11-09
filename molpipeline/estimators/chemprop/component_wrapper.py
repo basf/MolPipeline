@@ -103,6 +103,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 
     def __init__(  # pylint: disable=too-many-positional-arguments
         self,
+        *,
         d_v: int = DEFAULT_ATOM_FDIM,
         d_e: int = DEFAULT_BOND_FDIM,
         d_h: int = DEFAULT_HIDDEN_DIM,
@@ -225,7 +226,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):
     """Abstract wrapper for the Predictor class."""
 
-    def __init__(  # pylint: disable=too-many-positional-arguments  # ruff: ignore[too-many-positional-arguments]
+    def __init__(  # ruff: ignore[too-many-positional-arguments, too-many-arguments]
         self,
         n_tasks: int = 1,
         input_dim: int = DEFAULT_HIDDEN_DIM,
@@ -428,7 +429,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
     _T_default_criterion = CrossEntropyLoss
     _T_default_metric = MulticlassMCCMetric
 
-    def __init__(  # pylint: disable=too-many-positional-arguments # ruff: ignore[too-many-positional-arguments]
+    def __init__(  # ruff: ignore[too-many-arguments,too-many-positional-arguments]
         self,
         n_classes: int,
         n_tasks: int = 1,
@@ -538,6 +539,7 @@ class MPNN(_MPNN, BaseEstimator):
         message_passing: MessagePassing,
         agg: Aggregation,
         predictor: PredictorWrapper,
+        *,
         batch_norm: bool = True,
         metric_list: Iterable[ChempropMetric] | None = None,
         warmup_epochs: int = 2,

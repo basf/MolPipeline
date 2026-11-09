@@ -428,9 +428,9 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
             return "integer"
         return "binary"
 
-    # pylint: disable=R0913
     def __init__(
         self,
+        *,
         radius: int = 2,
         use_features: bool = False,
         counted: bool = False,

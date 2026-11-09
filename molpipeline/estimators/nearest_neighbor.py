@@ -48,6 +48,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
 
     def __init__(
         self,
+        *,
         n_neighbors: int = 5,
         radius: float = 1.0,
         algorithm: Algorithm = "auto",

@@ -238,7 +238,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
     and aggregates their predictions.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         estimator: BaseEstimator,
         *,
@@ -283,7 +283,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self.difficulty_estimator = difficulty_estimator
         self.binning_bins = binning_bins
 
-    def fit(  # pylint: disable=too-many-locals
+    def fit(
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],

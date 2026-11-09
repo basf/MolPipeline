@@ -33,12 +33,13 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     _descriptor_list: list[str]
 
-    def __init__(
+    def __init__(  # ruff: ignore[too-many-arguments]
         self,
         descriptor_list: list[str] | None = None,
         return_with_errors: bool = False,
         standardizer: Literal["default"] | AnyTransformer | None = "default",
         log_exceptions: bool = True,
+        *,
         name: str = "Mol2RDKitPhysChem",
         n_jobs: int = 1,
         uuid: str | None = None,

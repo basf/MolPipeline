@@ -106,7 +106,6 @@ class GroupShuffleSplit(BaseShuffleSplit):  # pylint: disable=abstract-method
             The testing set indices for that split.
 
         """
-        # pylint: disable=too-many-locals
         n_samples = _num_samples(X)
         n_train, n_test = _validate_shuffle_split(
             n_samples,
