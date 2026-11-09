@@ -428,7 +428,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
             return "integer"
         return "binary"
 
-    def __init__(  # ruff: ignore[too-many-positional-arguments]
+    def __init__(
         self,
         radius: int = 2,
         use_features: bool = False,

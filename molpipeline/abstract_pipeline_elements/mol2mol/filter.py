@@ -71,7 +71,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     keep_matches: bool
     mode: FilterModeType
 
-    def __init__(  # ruff: ignore[too-many-positional-arguments]
+    def __init__(
         self,
         filter_elements: (
             Mapping[

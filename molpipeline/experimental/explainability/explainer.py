@@ -155,7 +155,7 @@ def _convert_shap_feature_weights_to_atom_weights(
     if feature_weights.ndim == 1:
         # regression case
         feature_weights_present_bits_only = feature_weights.copy()
-    elif feature_weights.ndim == 2:  # ruff: ignore[magic-value-comparison]
+    elif feature_weights.ndim == 2:
         # binary classification case. Take the weights for the positive class.
         feature_weights_present_bits_only = feature_weights[:, 1].copy()
     else:

@@ -32,7 +32,7 @@ def _message_with_time(source: str, message: str, time: float) -> str:
 
     # adapted from joblib.logger.short_format_time without the Windows -.1s
     # adjustment
-    time_str = f"{time / 60:4.1f}min" if time > 60 else f" {time:5.1f}s"  # ruff: ignore[magic-value-comparison]
+    time_str = f"{time / 60:4.1f}min" if time > 60 else f" {time:5.1f}s"
 
     end_message = f" {message}, total={time_str}"
     dots_len = 70 - len(start_message) - len(end_message)

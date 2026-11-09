@@ -13,7 +13,7 @@ import numpy.typing as npt
 from loguru import logger
 from sklearn.base import (
     BaseEstimator,
-    _fit_context,  # ruff: ignore[import-private-name]
+    _fit_context,
     clone,
 )
 from sklearn.calibration import (
@@ -21,35 +21,35 @@ from sklearn.calibration import (
 )
 from sklearn.calibration import (
     _CalibratedClassifier,
-    _fit_calibrator,  # ruff: ignore[import-private-name]
+    _fit_calibrator,
 )
 from sklearn.frozen import FrozenEstimator
 from sklearn.model_selection import LeaveOneOut, check_cv, cross_val_predict
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import (
     Bunch,
-    _safe_indexing,  # ruff: ignore[import-private-name]
+    _safe_indexing,
     indexable,
 )
-from sklearn.utils._array_api import (  # ruff: ignore[import-private-name]
+from sklearn.utils._array_api import (
     get_namespace_and_device,
     move_to,
 )
-from sklearn.utils._response import (  # ruff: ignore[import-private-name]
+from sklearn.utils._response import (
     _get_response_values,
     _process_predict_proba,
 )
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metadata_routing import (
-    _routing_enabled,  # ruff: ignore[import-private-name]
+    _routing_enabled,
     process_routing,
 )
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.parallel import Parallel, delayed
 from sklearn.utils.validation import (
-    _check_method_params,  # ruff: ignore[import-private-name]
-    _check_response_method,  # ruff: ignore[import-private-name]
-    _check_sample_weight,  # ruff: ignore[import-private-name]
+    _check_method_params,
+    _check_response_method,
+    _check_sample_weight,
 )
 from typing_extensions import override
 
@@ -648,7 +648,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
                 n_jobs=self.n_jobs,
                 params=routed_params.estimator.fit,
             )
-            if self.classes_.shape[0] == 2:  # ruff: ignore[magic-value-comparison]
+            if self.classes_.shape[0] == 2:
                 # Ensure shape (n_samples, 1) in the binary case
                 if method_name == "predict_proba":
                     # Select the probability column of the positive class

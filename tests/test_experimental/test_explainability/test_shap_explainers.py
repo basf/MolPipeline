@@ -79,7 +79,7 @@ def _make_tree_estimators() -> list[BaseEstimator]:
 class TestSHAPExplainers(unittest.TestCase):
     """Test SHAP's Explainer wrappers."""
 
-    def _test_valid_explanation(  # ruff: ignore[too-many-positional-arguments]
+    def _test_valid_explanation(
         self,
         explanation: SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation,
         estimator: BaseEstimator,

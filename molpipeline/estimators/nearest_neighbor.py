@@ -46,7 +46,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
 
     learned_names_: npt.NDArray[Any] | None
 
-    def __init__(  # ruff: ignore[too-many-positional-arguments]
+    def __init__(
         self,
         n_neighbors: int = 5,
         radius: float = 1.0,

@@ -109,7 +109,6 @@ ignore = [
     "collection-literal-concatenation",  # Consider iterable unpacking instead of concatenation  # TO REMOVE
     "mutable-class-default",  # Mutable class attributes should be annotated with `typing.ClassVar`  # TO REMOVE
     "non-empty-init-module",  # `__init__` module should only contain docstrings and re-exports
-    "unused-noqa",  #  Unused noqa  # TO REMOVE
     "assert",   # Use of `assert` detected  # TO REMOVE
     "suspicious-non-cryptographic-random-usage",  #  suspicious-non-cryptographic-random-usage
 ]
@@ -132,7 +131,7 @@ ignore = [
 
 [tool.ruff.lint.pylint]
 max-args = 20
-max-positional-args = 5
+max-positional-args = 10
 
 [tool.pyright]
 reportAbstractUsage = "warning"

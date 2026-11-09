@@ -58,7 +58,7 @@ class MockEstimator(BaseEstimator):
         self.fit_args = {"X": X, "y": y}
         return self
 
-    def predict(  # ruff: ignore[no-self-use]
+    def predict(
         self,
         X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
     ) -> npt.NDArray[np.float64]:
@@ -103,7 +103,7 @@ class MockClassifier(MockEstimator):
         feature_arr = np.asarray(X)
         return np.array([x[0] == 1 for x in feature_arr], dtype=np.int64)
 
-    def predict_proba(  # ruff: ignore[no-self-use]
+    def predict_proba(
         self,
         X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
     ) -> npt.NDArray[np.float64]:
