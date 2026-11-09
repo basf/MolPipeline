@@ -538,11 +538,11 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         if ensemble == "auto":
             ensemble = not isinstance(estimator, FrozenEstimator)
 
-        self.calibrated_classifiers_ = []  # pylint: disable=W0201
+        self.calibrated_classifiers_ = []  # pylint: disable=attribute-defined-outside-init
 
         # Set `classes_` using all `y`
         label_encoder_ = LabelEncoder().fit(y)
-        self.classes_ = label_encoder_.classes_  # pylint: disable=W0201
+        self.classes_ = label_encoder_.classes_  # pylint: disable=attribute-defined-outside-init
         if self.method == "temperature" and isinstance(y[0], str):  # type: ignore
             # for temperature scaling if `y` contains strings then encode it
             # right here to avoid fitting LabelEncoder again within the
@@ -612,7 +612,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         if ensemble:
             parallel = Parallel(n_jobs=self.n_jobs)
-            self.calibrated_classifiers_ = parallel(  # pylint: disable=W0201
+            self.calibrated_classifiers_ = parallel(  # pylint: disable=attribute-defined-outside-init
                 delayed(_fit_classifier_calibrator_pair)(
                     clone(estimator),
                     X,
@@ -685,7 +685,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         first_clf = self.calibrated_classifiers_[0].estimator
         if hasattr(first_clf, "n_features_in_"):
-            self.n_features_in_ = first_clf.n_features_in_  # pylint: disable=W0201
+            self.n_features_in_ = first_clf.n_features_in_  # pylint: disable=attribute-defined-outside-init
         if hasattr(first_clf, "feature_names_in_"):
-            self.feature_names_in_ = first_clf.feature_names_in_  # pylint: disable=W0201
+            self.feature_names_in_ = first_clf.feature_names_in_  # pylint: disable=attribute-defined-outside-init
         return self
