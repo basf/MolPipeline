@@ -164,7 +164,11 @@ class TestABCChemprop(unittest.TestCase):
 
     def test_load_best_checkpoint_raises_without_callbacks(self) -> None:
         """No checkpoint callback raises a RuntimeError."""
-        estimator = ChempropRegressor(lightning_trainer__accelerator="cpu")
+        trainer = pl.Trainer(accelerator="cpu", callbacks=[])
+        estimator = ChempropRegressor(
+            lightning_trainer=trainer,
+            reload_best_checkpoint=True,
+        )
 
         with self.assertRaisesRegex(RuntimeError, "no checkpoint callback"):
-            estimator._load_best_checkpoint([])
+            estimator._restore_best_checkpoint()
