@@ -1,7 +1,5 @@
 """Classes for encoding molecules as phys-chem vector."""
 
-# pylint: disable=too-many-arguments
-
 import copy
 from collections.abc import Callable
 from typing import Any, Literal, Self

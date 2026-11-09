@@ -24,7 +24,7 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
     This class uses composition with crepes to provide full sklearn compatibility.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         estimator: BaseEstimator,
         *,
