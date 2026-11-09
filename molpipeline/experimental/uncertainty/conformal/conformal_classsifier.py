@@ -382,7 +382,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
     and aggregates their predictions.
     """
 
-    def __init__(s
+    def __init__(
         self,
         estimator: BaseEstimator,
         *,
