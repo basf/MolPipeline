@@ -648,7 +648,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
                 n_jobs=self.n_jobs,
                 params=routed_params.estimator.fit,
             )
-            if self.classes_.shape[0] == 2:
+            if self.classes_.shape[0] == 2:  # ruff: ignore[magic-value-comparison]
                 # Ensure shape (n_samples, 1) in the binary case
                 if method_name == "predict_proba":
                     # Select the probability column of the positive class

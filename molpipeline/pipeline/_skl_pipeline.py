@@ -988,7 +988,7 @@ class Pipeline(_Pipeline):
             f"'{type(self).__name__}' object has no attribute 'classes_'",
         )
 
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return the sklearn tags.
 
         Returns
