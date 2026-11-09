@@ -189,7 +189,7 @@ def _add_gaussians_for_bonds(  # ruff: ignore[too-many-positional-arguments]
     return v_map
 
 
-def make_sum_of_gaussians_grid(
+def make_sum_of_gaussians_grid(  # ruff: ignore[too-many-positional-arguments]
     mol: Chem.Mol,
     grid_resolution: Sequence[int],
     padding: Sequence[float],
@@ -413,7 +413,7 @@ def _add_shap_present_absent_features_text(
     )
 
 
-def _structure_heatmap(
+def _structure_heatmap(  # ruff: ignore[too-many-positional-arguments]
     mol: RDKitMol,
     atom_weights: npt.NDArray[np.float64],
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
