@@ -18,7 +18,7 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
 
     """
 
-    def __init__(  # ruff: ignore[too-many-positional-arguments]
+    def __init__(  # ruff: ignore[too-many-arguments,too-many-positional-arguments]
         self,
         min_path: int = 1,
         max_path: int = 7,

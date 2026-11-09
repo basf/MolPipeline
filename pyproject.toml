@@ -130,7 +130,7 @@ ignore = [
  ]
 
 [tool.ruff.lint.pylint]
-max-args = 20
+max-args = 10
 max-positional-args = 10
 
 [tool.pyright]

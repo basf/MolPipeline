@@ -49,7 +49,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
 
     """
 
-    def __init__(
+    def __init__(  # ruff: ignore[too-many-arguments]
         self,
         *,
         feature_definition: str | None = None,

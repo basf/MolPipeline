@@ -92,7 +92,7 @@ def merge_class_and_sample_weights(
     return class_weights_array * np.array(sample_weight)
 
 
-def _fit_classifier_calibrator_pair(  # ruff: ignore[too-many-positional-arguments]
+def _fit_classifier_calibrator_pair(  # ruff: ignore[too-many-arguments,too-many-positional-arguments]
     estimator: BaseEstimator,
     X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
     y: npt.ArrayLike,
