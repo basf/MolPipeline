@@ -108,7 +108,6 @@ ignore = [
     "builtin-open",  # `open()` should be replaced by `Path.open()`  # TO REMOVE
     "path-constructor-current-directory",  # Do not pass the current directory explicitly to `Path`  # TO REMOVE
     "unsupported-method-call-on-all",  # Calling `.append()` on `__all__` may not be supported by all type checkers # TO REMOVE
-    "collection-literal-concatenation",  # Consider iterable unpacking instead of concatenation  # TO REMOVE
     "mutable-class-default",  # Mutable class attributes should be annotated with `typing.ClassVar`  # TO REMOVE
     "non-empty-init-module",  # `__init__` module should only contain docstrings and re-exports
     "unused-noqa",  #  Unused noqa  # TO REMOVE
