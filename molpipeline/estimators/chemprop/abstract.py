@@ -103,23 +103,32 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         trainer_params = dict(self.trainer_params)
         self.lightning_trainer = pl.Trainer(**trainer_params)
 
-    def _load_best_checkpoint(
-        self,
-        checkpoint_callbacks: Sequence[pl.callbacks.ModelCheckpoint],
-    ) -> None:
-        """Load the best checkpoint for the wrapped model.
+    def _restore_best_checkpoint(self) -> None:
+        """Restore the best checkpoint as allowed by `reload_best_checkpoint`.
 
-        Parameters
-        ----------
-        checkpoint_callbacks : Sequence[pl.callbacks.ModelCheckpoint]
-            Checkpoint callbacks associated with the trainer.
+        Reads the callbacks of `self.lightning_trainer`. Whether a checkpoint is loaded
+        is determined by `reload_best_checkpoint`: never if False, and if "auto" only
+        when a ModelCheckpoint callback is present. If True, a missing checkpoint
+        callback is an error. When loading, the state dict of the best checkpoint
+        (`best_model_path` of the single ModelCheckpoint callback) is loaded into
+        `self.model`.
 
         Raises
         ------
         RuntimeError
-            If no checkpoint path is available or was not unambiguously found.
+            If a checkpoint is requested but no checkpoint callback is found, or if
+            exactly one best checkpoint path is not available.
 
         """
+        checkpoint_callbacks = [
+            callback
+            for callback in self.lightning_trainer.callbacks  # type: ignore[attr-defined]
+            if isinstance(callback, ModelCheckpoint)
+        ]
+        if self.reload_best_checkpoint is False or (
+            self.reload_best_checkpoint == "auto" and not checkpoint_callbacks
+        ):
+            return
         if not checkpoint_callbacks:
             raise RuntimeError(
                 "Best checkpoint was requested, but no checkpoint callback was found.",
@@ -180,15 +189,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             num_workers=self.n_jobs,
         )
         self.lightning_trainer.fit(self.model, training_data)
-        checkpoint_callbacks = [
-            c
-            for c in self.lightning_trainer.callbacks  # type: ignore[attr-defined]
-            if isinstance(c, ModelCheckpoint)
-        ]
-        if self.reload_best_checkpoint is True or (
-            self.reload_best_checkpoint == "auto" and checkpoint_callbacks
-        ):
-            self._load_best_checkpoint(checkpoint_callbacks)
+        self._restore_best_checkpoint()
 
         # The trainer is reinitalized to avoid storing the training data
         self._update_trainer()
