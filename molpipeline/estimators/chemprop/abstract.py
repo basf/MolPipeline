@@ -116,8 +116,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         Raises
         ------
         RuntimeError
-            If a checkpoint is requested but no checkpoint callback is found, or if
-            exactly one best checkpoint path is not available.
+            If a checkpoint is requested but no checkpoint callback is found, if no
+            best checkpoint path is available, or if more than one is available.
 
         """
         checkpoint_callbacks = [
@@ -140,11 +140,16 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             if hasattr(callback, "best_model_path") and callback.best_model_path
         ]
 
-        if len(best_model_path_list) != 1:
+        if not best_model_path_list:
             raise RuntimeError(
-                "Multiple checkpoint callbacks found, but only one is expected. "
-                "Please ensure that only one ModelCheckpoint callback is used in the "
-                "trainer.",
+                "Best checkpoint was requested, but no checkpoint callback has a "
+                "best model path. Ensure that a checkpoint was saved during training.",
+            )
+        if len(best_model_path_list) > 1:
+            raise RuntimeError(
+                "Multiple checkpoint callbacks with a best model path found, but "
+                "only one is expected. Please ensure that only one ModelCheckpoint "
+                "callback is used in the trainer.",
             )
         best_model_path = best_model_path_list[0]
         checkpoint = torch.load(best_model_path, map_location="cpu", weights_only=False)  # nosec B614
