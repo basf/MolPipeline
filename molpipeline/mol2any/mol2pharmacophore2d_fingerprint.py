@@ -106,7 +106,7 @@ class MolToPharmacophore2DFP(  # pylint: disable=too-many-instance-attributes
             UUID of the PipelineElement.
 
         """
-        super().__init__(  # pylint: disable=R0801
+        super().__init__(  # pylint: disable=duplicate-code
             return_as=return_as,
             name=name,
             n_jobs=n_jobs,
