@@ -163,7 +163,7 @@ def _fit_classifier_calibrator_pair(  # ruff: ignore[too-many-positional-argumen
 
     estimator.fit(X_train, y_train, **fit_params_train)
 
-    predictions, _ = _get_response_values(  # pylint: disable=W0632
+    predictions, _ = _get_response_values(  # pylint: disable=unbalanced-tuple-unpacking
         estimator,
         X_test,
         response_method=["decision_function", "predict_proba"],
@@ -581,7 +581,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         xp, is_array_api, device_ = get_namespace_and_device(X)
         if is_array_api:
-            y, sample_weight = move_to(  # type: ignore  # pylint: disable=W0632
+            y, sample_weight = move_to(  # type: ignore  # pylint: disable=unbalanced-tuple-unpacking
                 y,
                 sample_weight,
                 xp=xp,
