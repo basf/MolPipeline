@@ -10,9 +10,9 @@ from scipy.sparse import csr_matrix
 from sklearn.base import (
     BaseEstimator,
     ClusterMixin,
-    _fit_context,
+    _fit_context,  # ruff: ignore[import-private-name]
 )
-from sklearn.utils._param_validation import (
+from sklearn.utils._param_validation import (  # ruff: ignore[import-private-name]
     Interval,
 )
 from sklearn.utils.validation import validate_data

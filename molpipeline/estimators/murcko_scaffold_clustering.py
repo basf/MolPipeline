@@ -5,7 +5,7 @@ from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
-from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
+from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # ruff: ignore[import-private-name]
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from sklearn.utils.validation import validate_data
 from typing_extensions import override

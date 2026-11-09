@@ -10,16 +10,16 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from sklearn.base import _fit_context, clone
+from sklearn.base import _fit_context, clone  # ruff: ignore[import-private-name]
 from sklearn.callback import CallbackContext
 from sklearn.pipeline import Pipeline as _Pipeline
-from sklearn.pipeline import _final_estimator_has, _fit_transform_one
+from sklearn.pipeline import _final_estimator_has, _fit_transform_one  # ruff: ignore[import-private-name]
 from sklearn.utils import Bunch
-from sklearn.utils._tags import Tags, get_tags
+from sklearn.utils._tags import Tags, get_tags  # ruff: ignore[import-private-name]
 from sklearn.utils.metadata_routing import (
     MetadataRouter,
     MethodMapping,
-    _routing_enabled,
+    _routing_enabled,  # ruff: ignore[import-private-name]
     process_routing,
 )
 from sklearn.utils.metaestimators import available_if

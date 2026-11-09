@@ -17,8 +17,8 @@ from molpipeline.experimental.uncertainty import (
     CrossConformalClassifier,
     LogNonconformity,
     SVMMarginNonconformity,
-    _apply_antitonic_regressors,
-    _fit_antitonic_regressors,
+    _apply_antitonic_regressors,  # ruff: ignore[import-private-name]
+    _fit_antitonic_regressors,  # ruff: ignore[import-private-name]
     create_nonconformity_function,
 )
 from molpipeline.mol2any import MolToMorganFP

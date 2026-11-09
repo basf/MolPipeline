@@ -7,12 +7,12 @@ import numpy as np
 import numpy.typing as npt
 from numpy.random import RandomState  # pylint: disable=no-name-in-module
 from sklearn.model_selection import BaseShuffleSplit
-from sklearn.model_selection._split import (
+from sklearn.model_selection._split import (  # ruff: ignore[import-private-name]
     _validate_shuffle_split,
 )
 from sklearn.utils import check_array, shuffle
 from sklearn.utils.validation import (
-    _num_samples,
+    _num_samples,  # ruff: ignore[import-private-name]
     check_random_state,
 )
 from typing_extensions import override

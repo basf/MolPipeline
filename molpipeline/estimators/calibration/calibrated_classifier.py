@@ -13,7 +13,7 @@ import numpy.typing as npt
 from loguru import logger
 from sklearn.base import (
     BaseEstimator,
-    _fit_context,
+    _fit_context,  # ruff: ignore[import-private-name]
     clone,
 )
 from sklearn.calibration import (
@@ -21,35 +21,35 @@ from sklearn.calibration import (
 )
 from sklearn.calibration import (
     _CalibratedClassifier,
-    _fit_calibrator,
+    _fit_calibrator,  # ruff: ignore[import-private-name]
 )
 from sklearn.frozen import FrozenEstimator
 from sklearn.model_selection import LeaveOneOut, check_cv, cross_val_predict
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import (
     Bunch,
-    _safe_indexing,
+    _safe_indexing,  # ruff: ignore[import-private-name]
     indexable,
 )
-from sklearn.utils._array_api import (
+from sklearn.utils._array_api import (  # ruff: ignore[import-private-name]
     get_namespace_and_device,
     move_to,
 )
-from sklearn.utils._response import (
+from sklearn.utils._response import (  # ruff: ignore[import-private-name]
     _get_response_values,
     _process_predict_proba,
 )
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metadata_routing import (
-    _routing_enabled,
+    _routing_enabled,  # ruff: ignore[import-private-name]
     process_routing,
 )
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.parallel import Parallel, delayed
 from sklearn.utils.validation import (
-    _check_method_params,
-    _check_response_method,
-    _check_sample_weight,
+    _check_method_params,  # ruff: ignore[import-private-name]
+    _check_response_method,  # ruff: ignore[import-private-name]
+    _check_sample_weight,  # ruff: ignore[import-private-name]
 )
 from typing_extensions import override
 

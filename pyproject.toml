@@ -99,7 +99,6 @@ ignore = [
     "manual-list-comprehension", # Use a list comprehension to create a transformed list  # TO REMOVE
     "compare-to-empty-string", # `rest == ""` can be simplified to `not rest` as an empty string is falsey  # TO REMOVE
     "magic-value-comparison", # Magic value used in comparison  # TO REMOVE
-    "import-private-name", # Private name import  # TO REMOVE
     "no-self-use", #  could be a function, class method, or static method # TO REMOVE
     "redefined-loop-name", # Redefined loop variable
     "bad-dunder-method-name", #  Dunder method `xxxx` has no special meaning  # TO REMOVE
