@@ -20,7 +20,7 @@ class MolToMolReaction(MolToMolPipelineElement):
     handle_multi: Literal["pass", "warn", "raise"]
     _reaction: AllChem.ChemicalReaction
 
-    def __init__(
+    def __init__(  # ruff: ignore[too-many-positional-arguments]
         self,
         reaction: AllChem.ChemicalReaction,
         additive_list: list[RDKitMol],

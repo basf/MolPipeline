@@ -33,7 +33,7 @@ class MolToRDKitPhysChem(MolToDescriptorPipelineElement):
 
     _descriptor_list: list[str]
 
-    def __init__(  # ruff: ignore[too-many-arguments]
+    def __init__(  # ruff: ignore[too-many-positional-arguments]
         self,
         descriptor_list: list[str] | None = None,
         return_with_errors: bool = False,

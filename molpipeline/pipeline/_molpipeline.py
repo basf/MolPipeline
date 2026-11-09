@@ -214,8 +214,8 @@ class _MolPipeline:
     def fit(
         self,
         x_input: Any,
-        y: Any = None,
-        **fit_params: dict[Any, Any],
+        y: Any = None,  # ruff: ignore[unused-method-argument]
+        **fit_params: dict[Any, Any],  # ruff: ignore[unused-method-argument]
     ) -> Self:
         """Fit the MolPipeline according to x_input.
 

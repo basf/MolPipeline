@@ -323,7 +323,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
 
     _filter_elements: Mapping[str, tuple[int, int | None]]
 
-    def __init__(  # ruff: ignore[too-many-arguments]
+    def __init__(  # ruff: ignore[too-many-positional-arguments]
         self,
         pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]],
         keep_matches: bool = True,

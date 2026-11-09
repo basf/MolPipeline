@@ -67,7 +67,7 @@ class TimeThresholdSplitter(GroupAdditionSplit):  # pylint: disable=abstract-met
         self.threshold_list = sorted(threshold_list)
 
     @classmethod
-    def from_final_threshold(
+    def from_final_threshold(  # ruff: ignore[too-many-positional-arguments]
         cls,
         final_threshold: pd.Timestamp | str = "today",
         n_years: int = 5,

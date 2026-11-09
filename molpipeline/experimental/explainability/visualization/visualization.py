@@ -494,7 +494,7 @@ def _structure_heatmap(
     return drawer, value_grid, color_grid, normalizer, color_map
 
 
-def structure_heatmap(
+def structure_heatmap(  # ruff: ignore[too-many-positional-arguments]
     mol: RDKitMol,
     atom_weights: npt.NDArray[np.float64],
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
