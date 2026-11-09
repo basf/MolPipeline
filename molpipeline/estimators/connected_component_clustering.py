@@ -52,7 +52,6 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
         self.n_clusters_: int | None = None
         self.labels_: npt.NDArray[np.int32] | None = None
 
-    # pylint: disable=W0613
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
@@ -77,7 +76,6 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
         features = validate_data(self, X=X, ensure_min_samples=2, accept_sparse=True)
         return self._fit(features)
 
-    # pylint: disable=W0613
     def _fit(self, X: npt.NDArray[np.int_] | csr_matrix) -> Self:  # ruff: ignore[invalid-argument-name]
         """Fit connected component clustering estimator.
 
@@ -146,5 +144,4 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
 
         """
-        # pylint: disable=W0246
-        return super().fit_predict(X, y, **kwargs)
+        return super().fit_predict(X, y, **kwargs)        # pylint: disable=W0246

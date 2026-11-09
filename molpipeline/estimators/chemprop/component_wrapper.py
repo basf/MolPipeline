@@ -101,7 +101,7 @@ WARN_MSG = (
 class BondMessagePassing(_BondMessagePassing, BaseEstimator):
     """A wrapper for the BondMessagePassing class."""
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(
         self,
         d_v: int = DEFAULT_ATOM_FDIM,
         d_e: int = DEFAULT_BOND_FDIM,
@@ -473,7 +473,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
             Path to a state dict to load the model weights from.
 
         """
-        super().__init__(  # pylint: disable=too-many-arguments
+        super().__init__(
             n_tasks,
             input_dim,
             hidden_dim,
@@ -533,7 +533,7 @@ class MPNN(_MPNN, BaseEstimator):
 
     bn: nn.BatchNorm1d | nn.Identity
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(
         self,
         message_passing: MessagePassing,
         agg: Aggregation,
@@ -647,8 +647,8 @@ class MPNN(_MPNN, BaseEstimator):
         return self
 
 
-# pylint: disable=too-many-ancestors
-class MeanAggregation(_MeanAggregation, BaseEstimator):
+
+class MeanAggregation(_MeanAggregation, BaseEstimator):  # pylint: disable=too-many-ancestors
     """Aggregate the graph-level representation by averaging node representations."""
 
     def __init__(self, dim: int = 0) -> None:
@@ -663,8 +663,8 @@ class MeanAggregation(_MeanAggregation, BaseEstimator):
         super().__init__(dim)
 
 
-# pylint: disable=too-many-ancestors
-class SumAggregation(_SumAggregation, BaseEstimator):
+
+class SumAggregation(_SumAggregation, BaseEstimator):  # pylint: disable=too-many-ancestors
     """Aggregate the graph-level representation by summing the node representations."""
 
     def __init__(self, dim: int = 0) -> None:

@@ -234,8 +234,6 @@ class _MolPipeline:
             Fitted MolPipeline.
 
         """
-        _ = y  # Making pylint happy
-        _ = fit_params  # Making pylint happy
         if self.requires_fitting:
             self.fit_transform(x_input)
         return self
