@@ -144,4 +144,4 @@ class ConnectedComponentClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
 
         """
-        return super().fit_predict(X, y, **kwargs)  # pylint: disable=W0246
+        return super().fit_predict(X, y, **kwargs)  # pylint: disable=useless-parent-delegation
