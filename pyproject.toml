@@ -92,11 +92,9 @@ ignore = [
     "any-type",  #  Allow  typing.Any
     "incorrect-blank-line-before-class", # incorrect-blank-line-before-class
     "multi-line-summary-second-line", # blank-line-before-class-docstring
-    "repeated-append", # Use `xxx.extend(...)` instead of repeatedly calling `xxx.append()  # TO REMOVE
     "camelcase-imported-as-lowercase",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
     "blanket-type-ignore",  # Blanket type ignore for types
     "try-except-in-loop",  # `try`-`except` within a loop incurs performance overhead  # TO REMOVE
-    "manual-list-comprehension", # Use a list comprehension to create a transformed list  # TO REMOVE
     "compare-to-empty-string", # `rest == ""` can be simplified to `not rest` as an empty string is falsey  # TO REMOVE
     "too-many-branches", # Too many branches (19 > 12)  # TO REMOVE
     "too-many-arguments", # too-many-arguments
