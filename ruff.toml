@@ -49,12 +49,11 @@ ignore = [
     "missing-return-type-special-method",  #  Missing return type annotation for special method
     "incorrect-blank-line-before-class", # 1 blank line required before class docstring
     "multi-line-summary-second-line", # blank-line-before-class-docstring
-    "too-many-arguments", # too-many-arguments
     "blanket-type-ignore",  # Blanket type ignore for types
     "redefined-loop-name", # Redefined loop variable
     "suspicious-non-cryptographic-random-usage",  #  suspicious-non-cryptographic-random-usage
 ]
- pylint = {max-positional-args=10 }
+ pylint = {max-positional-args=10, max-args=10}
  [lint.per-file-ignores]
  "*.ipynb" = [
      "assert",
@@ -64,8 +63,9 @@ ignore = [
      "yield-outside-function",
      "print"
  ]
- "test_*" = [
+ "test*" = [
      "assert",
+     "magic-value-comparison",
      "suspicious-subprocess-import",
      "subprocess-without-shell-equals-true",
      "start-process-with-partial-path",
