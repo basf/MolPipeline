@@ -538,7 +538,6 @@ class MPNN(_MPNN, BaseEstimator):
         message_passing: MessagePassing,
         agg: Aggregation,
         predictor: PredictorWrapper,
-        *,
         batch_norm: bool = True,
         metric_list: Iterable[ChempropMetric] | None = None,
         warmup_epochs: int = 2,
