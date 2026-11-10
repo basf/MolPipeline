@@ -26,13 +26,8 @@ class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
     """Callback-specific hooks for the clone-isolation test."""
 
     @abc.abstractmethod
-    def get_callback(self, tmp_dir: str) -> _CallbackVar:
+    def get_callback(self) -> _CallbackVar:
         """Create a fresh callback.
-
-        Parameters
-        ----------
-        tmp_dir : str
-            Temporary directory usable by the callback.
 
         Returns
         -------
@@ -53,15 +48,10 @@ class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
 
         """
 
-    def get_trainer_kwargs(self, tmp_dir: str) -> dict[str, Any]:  # ruff: ignore[unused-method-argument, no-self-use]
+    def get_trainer_kwargs(self) -> dict[str, Any]:  # ruff: ignore[no-self-use]
         """Return trainer kwargs required by the callback.
 
         Subclasses extend the returned dictionary via ``super()``.
-
-        Parameters
-        ----------
-        tmp_dir : str
-            Temporary directory usable by loggers.
 
         Returns
         -------
@@ -148,13 +138,8 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
     """Clone-isolation hooks for LearningRateMonitor."""
 
     @override
-    def get_callback(self, tmp_dir: str) -> pl.callbacks.LearningRateMonitor:
+    def get_callback(self) -> pl.callbacks.LearningRateMonitor:
         """Create a LearningRateMonitor.
-
-        Parameters
-        ----------
-        tmp_dir : str
-            Unused.
 
         Returns
         -------
@@ -177,12 +162,12 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
         return pl.callbacks.LearningRateMonitor
 
     @override
-    def get_trainer_kwargs(self, tmp_dir: str) -> dict[str, Any]:
+    def get_trainer_kwargs(self, *, tmp_dir: str | None = None) -> dict[str, Any]:
         """Return trainer kwargs enabling logging.
 
         Parameters
         ----------
-        tmp_dir : str
+        tmp_dir : str | None, optional
             Directory for the CSV logger.
 
         Returns
@@ -241,12 +226,16 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
 class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
     """Clone-isolation hooks for ModelCheckpoint."""
 
-    def get_callback(self, tmp_dir: str) -> pl.callbacks.ModelCheckpoint:
+    def get_callback(
+        self,
+        *,
+        tmp_dir: str | None = None,
+    ) -> pl.callbacks.ModelCheckpoint:
         """Create a ModelCheckpoint.
 
         Parameters
         ----------
-        tmp_dir : str
+        tmp_dir : str | None, optional
             Directory to store checkpoints in.
 
         Returns
@@ -269,13 +258,8 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
         """
         return pl.callbacks.ModelCheckpoint
 
-    def get_trainer_kwargs(self, tmp_dir: str) -> dict[str, Any]:
+    def get_trainer_kwargs(self) -> dict[str, Any]:
         """Return trainer kwargs enabling checkpointing.
-
-        Parameters
-        ----------
-        tmp_dir : str
-            Unused.
 
         Returns
         -------
@@ -283,7 +267,7 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
             Keyword arguments for ``pl.Trainer``.
 
         """
-        trainer_kwargs = super().get_trainer_kwargs(tmp_dir)
+        trainer_kwargs = super().get_trainer_kwargs()
         trainer_kwargs.update({"logger": False, "enable_checkpointing": True})
         return trainer_kwargs
 
