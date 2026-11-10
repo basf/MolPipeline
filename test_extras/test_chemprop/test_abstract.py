@@ -308,3 +308,13 @@ class TestABCChemprop(unittest.TestCase):
             estimator = ChempropClassifier(lightning_trainer=trainer, n_jobs=0)
             estimator.fit(*self._get_training_data())
             self.assertFalse(checkpoint.best_model_path)
+
+    def test_reload_best_checkpoint_survives_clone(self) -> None:
+        """The reload_best_checkpoint option is exposed as a parameter and cloned."""
+        for estimator in (
+            ChempropClassifier(reload_best_checkpoint=False),
+            ChempropRegressor(reload_best_checkpoint=False),
+        ):
+            with self.subTest(estimator=type(estimator).__name__):
+                self.assertIn("reload_best_checkpoint", estimator.get_params())
+                self.assertIs(clone(estimator).reload_best_checkpoint, False)
