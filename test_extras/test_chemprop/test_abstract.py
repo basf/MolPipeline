@@ -505,7 +505,6 @@ class TestABCChemprop(unittest.TestCase):
                 )
                 self.assertIsNot(original_callback, cloned_callback)
 
-                # Only the original callback accumulated state.
                 callback_test.test_original_callback(self, original_callback)
                 callback_test.test_cloned_callback(self, cloned_callback)
 
