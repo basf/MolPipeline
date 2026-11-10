@@ -53,10 +53,15 @@ class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
 
         """
 
-    def get_trainer_kwargs(self) -> dict[str, Any]:  # ruff: ignore[no-self-use]
+    def get_trainer_kwargs(self, **kwargs: Any) -> dict[str, Any]:  # ruff: ignore[no-self-use,unused-method-argument]
         """Return trainer kwargs required by the callback.
 
         Subclasses extend the returned dictionary via ``super()``.
+
+        Parameters
+        ----------
+        **kwargs : Any
+            Additional keyword arguments for the trainer constructor.
 
         Returns
         -------
