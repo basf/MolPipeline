@@ -518,6 +518,7 @@ class TestABCChemprop(unittest.TestCase):
             accelerator="cpu",
             callbacks=[],
             enable_checkpointing=False,  # Adds a default ModelCheckpoint otherwise
+            max_epochs=2,
         )
         estimator = ChempropRegressor(
             lightning_trainer=trainer,
@@ -528,7 +529,7 @@ class TestABCChemprop(unittest.TestCase):
             RuntimeError,
             r"Best checkpoint was requested, but no checkpoint callback was found\.",
         ):
-            estimator._restore_best_checkpoint()
+            estimator.fit(*self._get_training_data())
 
     def test_load_best_checkpoint_raises_without_saved_checkpoint(self) -> None:
         """A checkpoint callback without a saved checkpoint raises a RuntimeError."""
