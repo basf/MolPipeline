@@ -147,7 +147,7 @@ class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
 class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor]):
     """Clone-isolation hooks for LearningRateMonitor."""
 
-    @staticmethod
+    @override
     def get_callback_type() -> type[pl.callbacks.LearningRateMonitor]:
         """Return the LearningRateMonitor class.
 
@@ -231,7 +231,7 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
 class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
     """Clone-isolation hooks for ModelCheckpoint."""
 
-    @staticmethod
+    @override
     def get_callback_type() -> type[pl.callbacks.ModelCheckpoint]:
         """Return the ModelCheckpoint class.
 
