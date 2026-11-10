@@ -109,15 +109,17 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         Reads the callbacks of `self.lightning_trainer`. Whether a checkpoint is loaded
         is determined by `reload_best_checkpoint`: never if False, and if "auto" only
         when a ModelCheckpoint callback is present. If True, a missing checkpoint
-        callback is an error. When loading, the state dict of the best checkpoint
-        (`best_model_path` of the single ModelCheckpoint callback) is loaded into
-        `self.model`.
+        callback or best checkpoint path is an error. If "auto" and no best checkpoint
+        path is available (e.g. only `save_last` is used), the model is left unchanged.
+        When loading, the state dict of the best checkpoint (`best_model_path` of the
+        single ModelCheckpoint callback) is loaded into `self.model`.
 
         Raises
         ------
         RuntimeError
             If a checkpoint is requested but no checkpoint callback is found, if no
-            best checkpoint path is available, or if more than one is available.
+            best checkpoint path is available (with True), or if more than one is
+            available.
 
         """
         checkpoint_callbacks = [
@@ -141,6 +143,10 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         ]
 
         if not best_model_path_list:
+            if self.reload_best_checkpoint == "auto":
+                # No best checkpoint was saved (e.g. save_top_k=0 with save_last);
+                # keep the trained model as is.
+                return
             raise RuntimeError(
                 "Best checkpoint was requested, but no checkpoint callback has a "
                 "best model path. Ensure that a checkpoint was saved during training.",

@@ -287,3 +287,24 @@ class TestABCChemprop(unittest.TestCase):
             r"model path\.",
         ):
             estimator._restore_best_checkpoint()
+
+    def test_load_best_checkpoint_auto_without_best_path(self) -> None:
+        """Automatic reloading is skipped when only the last checkpoint is saved."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            checkpoint = pl.callbacks.ModelCheckpoint(
+                dirpath=tmp_dir,
+                save_top_k=0,
+                save_last=True,
+            )
+            trainer = pl.Trainer(
+                max_epochs=1,
+                accelerator="cpu",
+                logger=False,
+                enable_checkpointing=True,
+                callbacks=[checkpoint],
+                enable_progress_bar=False,
+                enable_model_summary=False,
+            )
+            estimator = ChempropClassifier(lightning_trainer=trainer, n_jobs=0)
+            estimator.fit(*self._get_training_data())
+            self.assertFalse(checkpoint.best_model_path)
