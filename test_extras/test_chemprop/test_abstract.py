@@ -243,9 +243,7 @@ class TestABCChemprop(unittest.TestCase):
                 callbacks=[checkpoint],
                 accelerator="cpu",
             )
-            estimator = ChempropClassifier(
-                lightning_trainer=trainer,
-            )
+            estimator = ChempropClassifier(lightning_trainer=trainer)
             estimator.fit(*self._get_training_data())
             best_checkpoint = torch.load(  # nosec B614
                 checkpoint.best_model_path,
