@@ -246,16 +246,12 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
     @override
     def get_callback(
         self,
-        *,
-        tmp_dir: str | None = None,
         **kwargs: Any,
     ) -> pl.callbacks.ModelCheckpoint:
         """Create a ModelCheckpoint.
 
         Parameters
         ----------
-        tmp_dir : str | None, optional
-            Directory to store checkpoints in.
         **kwargs : Any
             Additional keyword arguments for the callback constructor.
 
@@ -265,14 +261,16 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
             New callback instance.
 
         """
-        return super().get_callback(dirpath=tmp_dir, save_top_k=1, **kwargs)
+        return super().get_callback(save_top_k=1, **kwargs)
 
     @override
-    def get_trainer_kwargs(self, **kwargs: Any) -> dict[str, Any]:
+    def get_trainer_kwargs(self, *, tmp_dir: str, **kwargs: Any) -> dict[str, Any]:
         """Return trainer kwargs enabling checkpointing.
 
         Parameters
         ----------
+        tmp_dir : str
+            Root directory for saved checkpoints.
         **kwargs : Any
             Additional keyword arguments for the trainer constructor.
 
@@ -283,7 +281,13 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
 
         """
         trainer_kwargs = super().get_trainer_kwargs()
-        trainer_kwargs.update({"logger": False, "enable_checkpointing": True})
+        trainer_kwargs.update(
+            {
+                "logger": False,
+                "enable_checkpointing": True,
+                "default_root_dir": tmp_dir,
+            },
+        )
         return trainer_kwargs
 
     def test_original_callback(  # ruff: ignore[no-self-use]
@@ -291,7 +295,7 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
         test_object: unittest.TestCase,
         orig_callback: pl.callbacks.ModelCheckpoint,
     ) -> None:
-        """Assert a best checkpoint was saved.
+        """Assert that the best checkpoint was saved.
 
         Parameters
         ----------
@@ -460,7 +464,7 @@ class TestABCChemprop(unittest.TestCase):
                 self.subTest(callback=callback_name),
                 tempfile.TemporaryDirectory() as tmp_dir,
             ):
-                original_callback = callback_test.get_callback(tmp_dir=tmp_dir)
+                original_callback = callback_test.get_callback()
                 estimator = ChempropClassifier(
                     lightning_trainer=pl.Trainer(
                         callbacks=[original_callback],
