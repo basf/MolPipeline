@@ -25,7 +25,18 @@ _CallbackVar = TypeVar("_CallbackVar", bound=pl.Callback)
 class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
     """Callback-specific hooks for the clone-isolation test."""
 
+    @staticmethod
     @abc.abstractmethod
+    def get_callback_type() -> type[_CallbackVar]:
+        """Return the callback class created by ``get_callback``.
+
+        Returns
+        -------
+        type[_CallbackVar]
+            Callback class.
+
+        """
+
     def get_callback(self, **kwargs: Any) -> _CallbackVar:
         """Create a fresh callback.
 
@@ -40,18 +51,7 @@ class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
             New callback instance.
 
         """
-
-    @staticmethod
-    @abc.abstractmethod
-    def get_callback_type() -> type[_CallbackVar]:
-        """Return the callback class created by ``get_callback``.
-
-        Returns
-        -------
-        type[_CallbackVar]
-            Callback class.
-
-        """
+        return self.get_callback_type()(**kwargs)
 
     def get_trainer_kwargs(self, **kwargs: Any) -> dict[str, Any]:  # ruff: ignore[no-self-use,unused-method-argument]
         """Return trainer kwargs required by the callback.
@@ -147,23 +147,6 @@ class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
 class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor]):
     """Clone-isolation hooks for LearningRateMonitor."""
 
-    @override
-    def get_callback(self, **kwargs: Any) -> pl.callbacks.LearningRateMonitor:
-        """Create a LearningRateMonitor.
-
-        Parameters
-        ----------
-        **kwargs : Any
-            Additional keyword arguments for the callback constructor.
-
-        Returns
-        -------
-        pl.callbacks.LearningRateMonitor
-            New callback instance.
-
-        """
-        return self.get_callback_type()()
-
     @staticmethod
     def get_callback_type() -> type[pl.callbacks.LearningRateMonitor]:
         """Return the LearningRateMonitor class.
@@ -248,6 +231,18 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
 class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
     """Clone-isolation hooks for ModelCheckpoint."""
 
+    @staticmethod
+    def get_callback_type() -> type[pl.callbacks.ModelCheckpoint]:
+        """Return the ModelCheckpoint class.
+
+        Returns
+        -------
+        type[pl.callbacks.ModelCheckpoint]
+            Callback class.
+
+        """
+        return pl.callbacks.ModelCheckpoint
+
     @override
     def get_callback(
         self,
@@ -270,19 +265,7 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
             New callback instance.
 
         """
-        return self.get_callback_type()(dirpath=tmp_dir, save_top_k=1)
-
-    @staticmethod
-    def get_callback_type() -> type[pl.callbacks.ModelCheckpoint]:
-        """Return the ModelCheckpoint class.
-
-        Returns
-        -------
-        type[pl.callbacks.ModelCheckpoint]
-            Callback class.
-
-        """
-        return pl.callbacks.ModelCheckpoint
+        return super().get_callback(dirpath=tmp_dir, save_top_k=1, **kwargs)
 
     @override
     def get_trainer_kwargs(self, **kwargs: Any) -> dict[str, Any]:
