@@ -120,8 +120,12 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             )
 
             # Directly add the error filter and replacer to the pipeline
-            pipeline_step_list.append(("no_scaffold_filter", no_scaffold_filter))
-            pipeline_step_list.append(("no_scaffold_replacer", no_scaffold_replacer))
+            pipeline_step_list.extend(
+                [
+                    ("no_scaffold_filter", no_scaffold_filter),
+                    ("no_scaffold_replacer", no_scaffold_replacer),
+                ],
+            )
         else:
             raise ValueError(
                 f"Invalid value for linear_molecules_strategy: "
