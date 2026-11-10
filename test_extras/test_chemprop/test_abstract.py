@@ -3,7 +3,7 @@
 import abc
 import tempfile
 import unittest
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, Generic, TypeVar
 
 import torch
 from chemprop.data import MoleculeDataset
@@ -464,7 +464,14 @@ class TestABCChemprop(unittest.TestCase):
         self.assertEqual(len(learning_rate_callback.lrs["lr-Adam"]), 5)
 
     def test_clone_callback_isolation(self) -> None:
-        """Fitting an estimator does not change the callbacks of its clone."""
+        """Fitting an estimator does not change the callbacks of its clone.
+
+        Raises
+        ------
+        AssertionError
+            If the fitted estimator and its clone are not of the same type.
+
+        """
         for callback_name, callback_test in _CALLBACK_TESTS.items():
             with (
                 self.subTest(callback=callback_name),
@@ -478,7 +485,12 @@ class TestABCChemprop(unittest.TestCase):
                     ),
                     n_jobs=0,
                 )
-                cloned_estimator = cast("ChempropClassifier", clone(estimator))
+                cloned_estimator = clone(estimator)
+                if not isinstance(cloned_estimator, ChempropClassifier):
+                    raise AssertionError(
+                        f"Cloned estimator is not a ChempropClassifier: "
+                        f"{type(cloned_estimator)!r}.",
+                    )
 
                 # This should change the original callback's state.
                 estimator.fit(*self._get_training_data())
