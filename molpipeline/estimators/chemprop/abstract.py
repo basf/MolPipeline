@@ -152,7 +152,11 @@ class ABCChemprop(BaseEstimator, abc.ABC):
                 "callback is used in the trainer.",
             )
         best_model_path = best_model_path_list[0]
-        checkpoint = torch.load(best_model_path, map_location="cpu", weights_only=False)  # nosec B614
+        checkpoint = torch.load(  # nosec B614
+            best_model_path,
+            map_location=self.model.device,
+            weights_only=False,
+        )
         self.model.load_state_dict(checkpoint["state_dict"])
 
     @override

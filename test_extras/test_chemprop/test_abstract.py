@@ -249,7 +249,7 @@ class TestABCChemprop(unittest.TestCase):
             estimator.fit(*self._get_training_data())
             best_checkpoint = torch.load(  # nosec B614
                 checkpoint.best_model_path,
-                map_location="cpu",
+                map_location=estimator.model.device,
                 weights_only=False,
             )
             model_state = estimator.model.state_dict()
