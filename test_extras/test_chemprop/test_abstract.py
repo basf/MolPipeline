@@ -76,7 +76,7 @@ class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
             "enable_progress_bar": False,
         }
 
-    def extract_callback_from_list(self, estimator: ABCChemprop) -> _CallbackVar:
+    def extract_callback_from_model(self, estimator: ABCChemprop) -> _CallbackVar:
         """Return the single callback of this test's type from the estimator's trainer.
 
         Parameters
@@ -468,11 +468,11 @@ class TestABCChemprop(unittest.TestCase):
                 estimator.fit(*self._get_training_data())
 
                 # The fitted estimator keeps the original callback object.
-                fitted_callback = callback_test.extract_callback_from_list(estimator)
+                fitted_callback = callback_test.extract_callback_from_model(estimator)
                 self.assertIs(original_callback, fitted_callback)
 
                 # The clone holds a different callback object.
-                cloned_callback = callback_test.extract_callback_from_list(
+                cloned_callback = callback_test.extract_callback_from_model(
                     cloned_estimator,
                 )
                 self.assertIsNot(original_callback, cloned_callback)
