@@ -26,8 +26,13 @@ class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
     """Callback-specific hooks for the clone-isolation test."""
 
     @abc.abstractmethod
-    def get_callback(self) -> _CallbackVar:
+    def get_callback(self, **kwargs: Any) -> _CallbackVar:
         """Create a fresh callback.
+
+        Parameters
+        ----------
+        **kwargs : Any
+            Additional keyword arguments for the callback constructor.
 
         Returns
         -------
@@ -138,8 +143,13 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
     """Clone-isolation hooks for LearningRateMonitor."""
 
     @override
-    def get_callback(self) -> pl.callbacks.LearningRateMonitor:
+    def get_callback(self, **kwargs: Any) -> pl.callbacks.LearningRateMonitor:
         """Create a LearningRateMonitor.
+
+        Parameters
+        ----------
+        **kwargs : Any
+            Additional keyword arguments for the callback constructor.
 
         Returns
         -------
@@ -176,7 +186,7 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
             Keyword arguments for ``pl.Trainer``.
 
         """
-        trainer_kwargs = super().get_trainer_kwargs(tmp_dir)
+        trainer_kwargs = super().get_trainer_kwargs()
         trainer_kwargs.update(
             {
                 "logger": pl.loggers.CSVLogger(tmp_dir),
@@ -226,6 +236,7 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
 class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
     """Clone-isolation hooks for ModelCheckpoint."""
 
+    @override
     def get_callback(
         self,
         *,
@@ -258,8 +269,14 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
         """
         return pl.callbacks.ModelCheckpoint
 
-    def get_trainer_kwargs(self) -> dict[str, Any]:
+    @override
+    def get_trainer_kwargs(self, **kwargs: Any) -> dict[str, Any]:
         """Return trainer kwargs enabling checkpointing.
+
+        Parameters
+        ----------
+        **kwargs : Any
+            Additional keyword arguments for the trainer constructor.
 
         Returns
         -------
@@ -438,11 +455,11 @@ class TestABCChemprop(unittest.TestCase):
                 self.subTest(callback=callback_name),
                 tempfile.TemporaryDirectory() as tmp_dir,
             ):
-                original_callback = callback_test.get_callback(tmp_dir)
+                original_callback = callback_test.get_callback(tmp_dir=tmp_dir)
                 estimator = ChempropClassifier(
                     lightning_trainer=pl.Trainer(
                         callbacks=[original_callback],
-                        **callback_test.get_trainer_kwargs(tmp_dir),
+                        **callback_test.get_trainer_kwargs(tmp_dir=tmp_dir),
                     ),
                     n_jobs=0,
                 )
