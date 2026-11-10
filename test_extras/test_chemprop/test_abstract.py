@@ -1,12 +1,15 @@
 """Tests for the abstract class ABCChemprop."""
 
+import abc
 import tempfile
 import unittest
+from typing import Any, Generic, TypeVar, cast
 
 import torch
 from chemprop.data import MoleculeDataset
 from lightning import pytorch as pl
 from sklearn.base import clone
+from typing_extensions import override
 
 from molpipeline.any2mol import SmilesToMol
 from molpipeline.estimators.chemprop.abstract import ABCChemprop
@@ -15,6 +18,314 @@ from molpipeline.mol2any import MolToChemprop
 from test_extras.test_chemprop.chemprop_test_utils.default_models import (
     get_binary_classification_mpnn,
 )
+
+_CallbackVar = TypeVar("_CallbackVar", bound=pl.Callback)
+
+
+class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
+    """Callback-specific hooks for the clone-isolation test."""
+
+    @abc.abstractmethod
+    def get_callback(self, tmp_dir: str) -> _CallbackVar:
+        """Create a fresh callback.
+
+        Parameters
+        ----------
+        tmp_dir : str
+            Temporary directory usable by the callback.
+
+        Returns
+        -------
+        _CallbackVar
+            New callback instance.
+
+        """
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_callback_type() -> type[_CallbackVar]:
+        """Return the callback class created by ``get_callback``.
+
+        Returns
+        -------
+        type[_CallbackVar]
+            Callback class.
+
+        """
+
+    def get_trainer_kwargs(self, tmp_dir: str) -> dict[str, Any]:  # ruff: ignore[unused-method-argument, no-self-use]
+        """Return trainer kwargs required by the callback.
+
+        Subclasses extend the returned dictionary via ``super()``.
+
+        Parameters
+        ----------
+        tmp_dir : str
+            Temporary directory usable by loggers.
+
+        Returns
+        -------
+        dict[str, Any]
+            Keyword arguments for ``pl.Trainer``.
+
+        """
+        return {
+            "accelerator": "cpu",
+            "max_epochs": 2,
+            "enable_model_summary": False,
+            "enable_progress_bar": False,
+        }
+
+    def extract_callback_from_list(self, estimator: ABCChemprop) -> _CallbackVar:
+        """Return the single callback of this test's type from the estimator's trainer.
+
+        Parameters
+        ----------
+        estimator : ABCChemprop
+            Estimator whose trainer callbacks are searched.
+
+        Returns
+        -------
+        _CallbackVar
+            The only callback of the requested type.
+
+        Raises
+        ------
+        AssertionError
+            If the trainer does not hold exactly one callback of that type.
+
+        """
+        callback_type = self.get_callback_type()
+        matching_callbacks = [
+            callback
+            for callback in estimator.lightning_trainer.callbacks  # type: ignore[attr-defined]
+            if isinstance(callback, callback_type)
+        ]
+        if len(matching_callbacks) != 1:
+            msg = (
+                f"Expected exactly one {callback_type.__name__}, "
+                f"found {len(matching_callbacks)}."
+            )
+            raise AssertionError(msg)
+        return matching_callbacks[0]
+
+    @abc.abstractmethod
+    def test_original_callback(
+        self,
+        test_object: unittest.TestCase,
+        orig_callback: _CallbackVar,
+    ) -> None:
+        """Assert the original callback accumulated state during fitting.
+
+        Parameters
+        ----------
+        test_object : unittest.TestCase
+            Test case used for assertions.
+        orig_callback : _CallbackVar
+            Callback of the fitted estimator.
+
+        """
+
+    @abc.abstractmethod
+    def test_cloned_callback(
+        self,
+        test_object: unittest.TestCase,
+        cloned_callback: _CallbackVar,
+    ) -> None:
+        """Assert the cloned callback is still in its initial state.
+
+        Parameters
+        ----------
+        test_object : unittest.TestCase
+            Test case used for assertions.
+        cloned_callback : _CallbackVar
+            Callback of the unfitted clone.
+
+        """
+
+
+class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor]):
+    """Clone-isolation hooks for LearningRateMonitor."""
+
+    @override
+    def get_callback(self, tmp_dir: str) -> pl.callbacks.LearningRateMonitor:
+        """Create a LearningRateMonitor.
+
+        Parameters
+        ----------
+        tmp_dir : str
+            Unused.
+
+        Returns
+        -------
+        pl.callbacks.LearningRateMonitor
+            New callback instance.
+
+        """
+        return self.get_callback_type()()
+
+    @staticmethod
+    def get_callback_type() -> type[pl.callbacks.LearningRateMonitor]:
+        """Return the LearningRateMonitor class.
+
+        Returns
+        -------
+        type[pl.callbacks.LearningRateMonitor]
+            Callback class.
+
+        """
+        return pl.callbacks.LearningRateMonitor
+
+    @override
+    def get_trainer_kwargs(self, tmp_dir: str) -> dict[str, Any]:
+        """Return trainer kwargs enabling logging.
+
+        Parameters
+        ----------
+        tmp_dir : str
+            Directory for the CSV logger.
+
+        Returns
+        -------
+        dict[str, Any]
+            Keyword arguments for ``pl.Trainer``.
+
+        """
+        trainer_kwargs = super().get_trainer_kwargs(tmp_dir)
+        trainer_kwargs.update(
+            {
+                "logger": pl.loggers.CSVLogger(tmp_dir),
+                "log_every_n_steps": 1,
+                "enable_checkpointing": False,
+            },
+        )
+        return trainer_kwargs
+
+    @override
+    def test_original_callback(
+        self,
+        test_object: unittest.TestCase,
+        orig_callback: pl.callbacks.LearningRateMonitor,
+    ) -> None:
+        """Assert learning rates were logged for every epoch.
+
+        Parameters
+        ----------
+        test_object : unittest.TestCase
+            Test case used for assertions.
+        orig_callback : pl.callbacks.LearningRateMonitor
+            Callback of the fitted estimator.
+
+        """
+        test_object.assertEqual(len(orig_callback.lrs["lr-Adam"]), 2)
+
+    @override
+    def test_cloned_callback(
+        self,
+        test_object: unittest.TestCase,
+        cloned_callback: pl.callbacks.LearningRateMonitor,
+    ) -> None:
+        """Assert no learning rates were logged.
+
+        Parameters
+        ----------
+        test_object : unittest.TestCase
+            Test case used for assertions.
+        cloned_callback : pl.callbacks.LearningRateMonitor
+            Callback of the unfitted clone.
+
+        """
+        test_object.assertFalse(cloned_callback.lrs)
+
+
+class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
+    """Clone-isolation hooks for ModelCheckpoint."""
+
+    def get_callback(self, tmp_dir: str) -> pl.callbacks.ModelCheckpoint:
+        """Create a ModelCheckpoint.
+
+        Parameters
+        ----------
+        tmp_dir : str
+            Directory to store checkpoints in.
+
+        Returns
+        -------
+        pl.callbacks.ModelCheckpoint
+            New callback instance.
+
+        """
+        return self.get_callback_type()(dirpath=tmp_dir, save_top_k=1)
+
+    @staticmethod
+    def get_callback_type() -> type[pl.callbacks.ModelCheckpoint]:
+        """Return the ModelCheckpoint class.
+
+        Returns
+        -------
+        type[pl.callbacks.ModelCheckpoint]
+            Callback class.
+
+        """
+        return pl.callbacks.ModelCheckpoint
+
+    def get_trainer_kwargs(self, tmp_dir: str) -> dict[str, Any]:
+        """Return trainer kwargs enabling checkpointing.
+
+        Parameters
+        ----------
+        tmp_dir : str
+            Unused.
+
+        Returns
+        -------
+        dict[str, Any]
+            Keyword arguments for ``pl.Trainer``.
+
+        """
+        trainer_kwargs = super().get_trainer_kwargs(tmp_dir)
+        trainer_kwargs.update({"logger": False, "enable_checkpointing": True})
+        return trainer_kwargs
+
+    def test_original_callback(  # ruff: ignore[no-self-use]
+        self,
+        test_object: unittest.TestCase,
+        orig_callback: pl.callbacks.ModelCheckpoint,
+    ) -> None:
+        """Assert a best checkpoint was saved.
+
+        Parameters
+        ----------
+        test_object : unittest.TestCase
+            Test case used for assertions.
+        orig_callback : pl.callbacks.ModelCheckpoint
+            Callback of the fitted estimator.
+
+        """
+        test_object.assertTrue(orig_callback.best_model_path)
+
+    def test_cloned_callback(  # ruff: ignore[no-self-use]
+        self,
+        test_object: unittest.TestCase,
+        cloned_callback: pl.callbacks.ModelCheckpoint,
+    ) -> None:
+        """Assert no checkpoint was saved.
+
+        Parameters
+        ----------
+        test_object : unittest.TestCase
+            Test case used for assertions.
+        cloned_callback : pl.callbacks.ModelCheckpoint
+            Callback of the unfitted clone.
+
+        """
+        test_object.assertFalse(cloned_callback.best_model_path)
+
+
+_CALLBACK_TESTS: dict[str, CallbackTestABC[Any]] = {
+    "LearningRateMonitor": LearningRateMonitorTest(),
+    "ModelCheckpoint": ModelCheckpointTest(),
+}
 
 
 class TestABCChemprop(unittest.TestCase):
@@ -136,99 +447,39 @@ class TestABCChemprop(unittest.TestCase):
             self.assertIs(expected_callback, actual_callback)
         self.assertEqual(len(learning_rate_callback.lrs["lr-Adam"]), 5)
 
-    def test_clone_learning_rate_monitor_isolation(self) -> None:
-        """Fitting an estimator does not change its clone's LearningRateMonitor."""
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            original_monitor = pl.callbacks.LearningRateMonitor()
-            estimator = ChempropClassifier(
-                lightning_trainer=pl.Trainer(
-                    callbacks=[original_monitor],
-                    accelerator="cpu",
-                    logger=pl.loggers.CSVLogger(tmp_dir),
-                    max_epochs=2,
-                    log_every_n_steps=1,
-                    enable_checkpointing=False,
-                    enable_model_summary=False,
-                    enable_progress_bar=False,
-                ),
-                n_jobs=0,
-            )
-            cloned_estimator = clone(estimator)
+    def test_clone_callback_isolation(self) -> None:
+        """Fitting an estimator does not change the callbacks of its clone."""
+        for callback_name, callback_test in _CALLBACK_TESTS.items():
+            with (
+                self.subTest(callback=callback_name),
+                tempfile.TemporaryDirectory() as tmp_dir,
+            ):
+                original_callback = callback_test.get_callback(tmp_dir)
+                estimator = ChempropClassifier(
+                    lightning_trainer=pl.Trainer(
+                        callbacks=[original_callback],
+                        **callback_test.get_trainer_kwargs(tmp_dir),
+                    ),
+                    n_jobs=0,
+                )
+                cloned_estimator = cast("ChempropClassifier", clone(estimator))
 
-            # This should change the original LR monitor's state.
-            estimator.fit(*self._get_training_data())
+                # This should change the original callback's state.
+                estimator.fit(*self._get_training_data())
 
-            # Check the original monitor for identity after fitting
-            extracted_monitors = [
-                callback
-                for callback in estimator.lightning_trainer.callbacks  # type: ignore[attr-defined]
-                if isinstance(callback, pl.callbacks.LearningRateMonitor)
-            ]
-            self.assertEqual(len(extracted_monitors), 1)
-            extracted_monitor = extracted_monitors[0]
-            self.assertIs(original_monitor, extracted_monitor)
+                # The fitted estimator keeps the original callback object.
+                fitted_callback = callback_test.extract_callback_from_list(estimator)
+                self.assertIs(original_callback, fitted_callback)
 
-            # Check if the cloned monitor is a different object.
-            cloned_monitors = [
-                callback
-                for callback in cloned_estimator.lightning_trainer.callbacks  # type: ignore[attr-defined]
-                if isinstance(callback, pl.callbacks.LearningRateMonitor)
-            ]
-            self.assertEqual(len(cloned_monitors), 1)
-            cloned_monitor = cloned_monitors[0]
-            self.assertIsNot(original_monitor, cloned_monitor)
+                # The clone holds a different callback object.
+                cloned_callback = callback_test.extract_callback_from_list(
+                    cloned_estimator,
+                )
+                self.assertIsNot(original_callback, cloned_callback)
 
-            # Check if the monitors have different states.
-            self.assertEqual(len(original_monitor.lrs["lr-Adam"]), 2)
-            self.assertFalse(cloned_monitor.lrs)
-
-    def test_clone_model_checkpoint_isolation(self) -> None:
-        """Fitting an estimator does not change its clone's ModelCheckpoint."""
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            original_checkpoint = pl.callbacks.ModelCheckpoint(
-                dirpath=tmp_dir,
-                save_top_k=1,
-            )
-            estimator = ChempropClassifier(
-                lightning_trainer=pl.Trainer(
-                    callbacks=[original_checkpoint],
-                    accelerator="cpu",
-                    logger=False,
-                    max_epochs=2,
-                    enable_checkpointing=True,
-                    enable_model_summary=False,
-                    enable_progress_bar=False,
-                ),
-                n_jobs=0,
-            )
-            cloned_estimator = clone(estimator)
-
-            # This should change the original checkpoint's state.
-            estimator.fit(*self._get_training_data())
-
-            # Check the original checkpoint for identity after fitting
-            extracted_checkpoints = [
-                callback
-                for callback in estimator.lightning_trainer.callbacks  # type: ignore[attr-defined]
-                if isinstance(callback, pl.callbacks.ModelCheckpoint)
-            ]
-            self.assertEqual(len(extracted_checkpoints), 1)
-            extracted_checkpoint = extracted_checkpoints[0]
-            self.assertIs(original_checkpoint, extracted_checkpoint)
-
-            # Check if the cloned checkpoint is a different object.
-            cloned_checkpoints = [
-                callback
-                for callback in cloned_estimator.lightning_trainer.callbacks  # type: ignore[attr-defined]
-                if isinstance(callback, pl.callbacks.ModelCheckpoint)
-            ]
-            self.assertEqual(len(cloned_checkpoints), 1)
-            cloned_checkpoint = cloned_checkpoints[0]
-            self.assertIsNot(original_checkpoint, cloned_checkpoint)
-
-            # Check if the checkpoints have different states.
-            self.assertTrue(original_checkpoint.best_model_path)
-            self.assertFalse(cloned_checkpoint.best_model_path)
+                # Only the original callback accumulated state.
+                callback_test.test_original_callback(self, original_callback)
+                callback_test.test_cloned_callback(self, cloned_callback)
 
     def test_load_best_checkpoint_success(self) -> None:
         """Loading the best checkpoint restores the saved model state."""
