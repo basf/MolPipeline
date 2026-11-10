@@ -177,13 +177,20 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
         return pl.callbacks.LearningRateMonitor
 
     @override
-    def get_trainer_kwargs(self, *, tmp_dir: str | None = None) -> dict[str, Any]:
+    def get_trainer_kwargs(
+        self,
+        *,
+        tmp_dir: str = "logs",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
         """Return trainer kwargs enabling logging.
 
         Parameters
         ----------
         tmp_dir : str | None, optional
             Directory for the CSV logger.
+        **kwargs : Any
+            Additional keyword arguments for the trainer constructor.
 
         Returns
         -------
@@ -191,7 +198,7 @@ class LearningRateMonitorTest(CallbackTestABC[pl.callbacks.LearningRateMonitor])
             Keyword arguments for ``pl.Trainer``.
 
         """
-        trainer_kwargs = super().get_trainer_kwargs()
+        trainer_kwargs = super().get_trainer_kwargs(**kwargs)
         trainer_kwargs.update(
             {
                 "logger": pl.loggers.CSVLogger(tmp_dir),
@@ -246,6 +253,7 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
         self,
         *,
         tmp_dir: str | None = None,
+        **kwargs: Any,
     ) -> pl.callbacks.ModelCheckpoint:
         """Create a ModelCheckpoint.
 
@@ -253,6 +261,8 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
         ----------
         tmp_dir : str | None, optional
             Directory to store checkpoints in.
+        **kwargs : Any
+            Additional keyword arguments for the callback constructor.
 
         Returns
         -------
