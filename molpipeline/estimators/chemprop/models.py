@@ -46,6 +46,8 @@ class ChempropModel(ABCChemprop):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop abstract model.
@@ -60,6 +62,9 @@ class ChempropModel(ABCChemprop):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -70,6 +75,7 @@ class ChempropModel(ABCChemprop):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            reload_best_checkpoint=reload_best_checkpoint,
             **kwargs,
         )
         self._classes_ = None
@@ -305,6 +311,8 @@ class ChempropClassifier(ChempropModel):
         class_weight: Literal["balanced"] | dict[int, float] | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop classifier model.
@@ -326,6 +334,9 @@ class ChempropClassifier(ChempropModel):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -347,6 +358,7 @@ class ChempropClassifier(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            reload_best_checkpoint=reload_best_checkpoint,
             **kwargs,
         )
         if not self._is_binary_classifier():
@@ -443,6 +455,8 @@ class ChempropRegressor(ChempropModel):
         n_tasks: int = 1,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop regressor model.
@@ -459,6 +473,9 @@ class ChempropRegressor(ChempropModel):
             The batch size to use.
         n_jobs : int, default=1
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -475,6 +492,7 @@ class ChempropRegressor(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            reload_best_checkpoint=reload_best_checkpoint,
             **kwargs,
         )
 
@@ -489,6 +507,8 @@ class ChempropMulticlassClassifier(ChempropModel):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop multiclass model.
@@ -505,6 +525,9 @@ class ChempropMulticlassClassifier(ChempropModel):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -538,6 +561,7 @@ class ChempropMulticlassClassifier(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            reload_best_checkpoint=reload_best_checkpoint,
             **kwargs,
         )
         self._is_valid_multiclass_classifier()

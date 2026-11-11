@@ -31,6 +31,7 @@ NO_IDENTITY_CHECK = [
 
 DEFAULT_BINARY_CLASSIFICATION_PARAMS = {
     "batch_size": 64,
+    "reload_best_checkpoint": "auto",
     "lightning_trainer": None,
     "lightning_trainer__enable_checkpointing": False,
     "lightning_trainer__enable_model_summary": False,
@@ -177,6 +178,7 @@ DEFAULT_REGRESSION_PARAMS.update({"n_tasks": 1})
 
 DEFAULT_MULTICLASS_CLASSIFICATION_PARAMS = {
     "batch_size": 64,
+    "reload_best_checkpoint": "auto",
     "lightning_trainer": None,
     "lightning_trainer__enable_checkpointing": False,
     "lightning_trainer__enable_model_summary": False,
