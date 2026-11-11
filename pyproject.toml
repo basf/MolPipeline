@@ -30,7 +30,7 @@ dependencies = [
 
 [project.optional-dependencies]
 chemprop = [
-    "chemprop>=2.2.0,<2.3.0",
+    "chemprop>=2.2.0,<2.4.0",
     "dvc>=3.64.1",
     "lightning>=2.5.1",
     "requests>=2.32.5",
@@ -99,17 +99,19 @@ ignore = [
 ]
  [tool.ruff.lint.per-file-ignores]
  "*.ipynb" = [
-     "E501",
-     "PLE1142",
-     "F704",
-     "T201"
+     "assert",
+     "line-too-long",
+     "magic-value-comparison",
+     "await-outside-async",
+     "yield-outside-function",
+     "print"
  ]
  "test_*" = [
-     "S101",
-     "S404",
-     "S603",
-     "S607",
-     "SLF001",  # Private member accessed
+     "assert",
+     "suspicious-subprocess-import",
+     "subprocess-without-shell-equals-true",
+     "start-process-with-partial-path",
+     "private-member-access",  # Private member accessed
  ]
 
 [tool.ruff.lint.pylint]
@@ -153,7 +155,7 @@ exclude = ["tests", "docs"]
 [dependency-groups]
 dev = [
     "bandit>=1.8.3",
-    "chemprop>=2.2.3",
+    "chemprop>=2.3.1",
     "coverage>=7.8.0",
     "docsig>=0.79.0",
     "flake8>=7.2.0",
@@ -163,7 +165,6 @@ dev = [
     "pre-commit>=4.2.0",
     "pylint>=3.3.6",
     "pyright>=1.1.399",
-    "rdkit<2026.3.3",
     "ruff>=0.11.4",
     "scipy-stubs>=1.16.2.0",
     "types-colorama>=0.4.15.20250801",

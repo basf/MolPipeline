@@ -181,7 +181,7 @@ class ComplexFilterTest(unittest.TestCase):
             {
                 "params": {
                     "MultiElementFilter__mode": "any",
-                    "MultiElementFilter__pipeline_filter_elements__element_filter_1__add_hydrogens": False,  # noqa: E501
+                    "MultiElementFilter__pipeline_filter_elements__element_filter_1__add_hydrogens": False,  # ruff: ignore[line-too-long]
                 },
                 "result": [SMILES_CHLOROBENZENE],
             },

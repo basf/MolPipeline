@@ -32,7 +32,7 @@ def _message_with_time(source: str, message: str, time: float) -> str:
 
     # adapted from joblib.logger.short_format_time without the Windows -.1s
     # adjustment
-    time_str = f"{time / 60:4.1f}min" if time > 60 else f" {time:5.1f}s"  # noqa: PLR2004
+    time_str = f"{time / 60:4.1f}min" if time > 60 else f" {time:5.1f}s"  # ruff: ignore[magic-value-comparison]
 
     end_message = f" {message}, total={time_str}"
     dots_len = 70 - len(start_message) - len(end_message)
@@ -81,4 +81,4 @@ def print_elapsed_time(
             if use_logger:
                 logger.info(message_to_print)
             else:
-                print(message_to_print)  # noqa: T201
+                print(message_to_print)  # ruff: ignore[print]

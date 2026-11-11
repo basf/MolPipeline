@@ -13,13 +13,13 @@ repos:
         args: [--markdown-linebreak-ext=md]
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.16.4
+    rev: v4.19.3
     hooks:
       - id: commitizen
         stages: [commit-msg]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.21
+    rev: v0.17.3
     hooks:
       - id: ruff-format
         types_or: [python, pyi, jupyter]
@@ -40,14 +40,14 @@ repos:
           - json
 
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.411
+    rev: v1.1.414
     hooks:
       - id: pyright
         args: [-p, pyproject.toml]
         verbose: true
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.3.0
+    rev: 7.5.0
     hooks:
       - id: flake8
         additional_dependencies:

@@ -186,7 +186,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         params["filter_elements"] = self.filter_elements
         return params
 
-    def pretransform_single(  # pylint: disable=too-many-return-statements # noqa: PLR0911
+    def pretransform_single(  # pylint: disable=too-many-return-statements # ruff: ignore[too-many-return-statements]
         self,
         value: RDKitMol,
     ) -> OptionalMol:
