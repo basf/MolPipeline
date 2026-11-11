@@ -10,8 +10,8 @@ import numpy.typing as npt
 from rdkit import DataStructs
 from rdkit.DataStructs import ExplicitBitVect
 from rdkit.SimDivFilters import rdSimDivPickers
-from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # noqa: PLC2701
-from sklearn.utils._param_validation import Interval  # noqa: PLC2701
+from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # ruff: ignore[import-private-name]
+from sklearn.utils._param_validation import Interval  # ruff: ignore[import-private-name]
 from typing_extensions import override
 
 

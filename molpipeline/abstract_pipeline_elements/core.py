@@ -131,7 +131,7 @@ class ABCPipelineElement(abc.ABC):
         parm_str = ", ".join(parm_list)
         return f"{self.__class__.__name__}({parm_str})"
 
-    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return Tags for the Element.
 
         Returns
@@ -477,7 +477,7 @@ class TransformingPipelineElement(ABCPipelineElement):
             return pre_value
         return self.finalize_single(pre_value)
 
-    def assemble_output(self, value_list: Iterable[Any]) -> Any:  # noqa: PLR6301
+    def assemble_output(self, value_list: Iterable[Any]) -> Any:  # ruff: ignore[no-self-use]
         """Aggregate rows, which in most cases is just return the list.
 
         Some representations might be better representd as a single object.
@@ -517,7 +517,7 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
 
-    def finalize_single(self, value: Any) -> Any:  # noqa: PLR6301
+    def finalize_single(self, value: Any) -> Any:  # ruff: ignore[no-self-use]
         """Apply parameters learned during fitting to a single instance.
 
         Parameters

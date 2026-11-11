@@ -14,7 +14,7 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
     extra_atom_fdim: InitVar[int]
     extra_bond_fdim: InitVar[int]
 
-    def get_params(  # noqa: PLR6301
+    def get_params(  # ruff: ignore[no-self-use]
         self,
         deep: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> dict[str, InitVar[int]]:

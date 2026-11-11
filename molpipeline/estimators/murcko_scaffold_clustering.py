@@ -8,7 +8,7 @@ import numpy.typing as npt
 from sklearn.base import (
     BaseEstimator,
     ClusterMixin,
-    _fit_context,  # noqa: PLC2701
+    _fit_context,  # ruff: ignore[import-private-name]
 )
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from sklearn.utils.validation import validate_data

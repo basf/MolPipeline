@@ -10,15 +10,15 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from sklearn.base import _fit_context, clone  # noqa: PLC2701
+from sklearn.base import _fit_context, clone  # ruff: ignore[import-private-name]
 from sklearn.pipeline import Pipeline as _Pipeline
-from sklearn.pipeline import _final_estimator_has, _fit_transform_one  # noqa: PLC2701
+from sklearn.pipeline import _final_estimator_has, _fit_transform_one  # ruff: ignore[import-private-name]
 from sklearn.utils import Bunch
-from sklearn.utils._tags import Tags, get_tags  # noqa: PLC2701
+from sklearn.utils._tags import Tags, get_tags  # ruff: ignore[import-private-name]
 from sklearn.utils.metadata_routing import (
     MetadataRouter,
     MethodMapping,
-    _routing_enabled,  # noqa: PLC2701
+    _routing_enabled,  # ruff: ignore[import-private-name]
     process_routing,
 )
 from sklearn.utils.metaestimators import available_if
@@ -230,7 +230,7 @@ class Pipeline(_Pipeline):
         return last_element[2]
 
     @override
-    def _fit(  # noqa: PLR0912  # pylint: disable=too-many-locals,too-many-branches,arguments-differ
+    def _fit(  # ruff: ignore[too-many-branches]  # pylint: disable=too-many-locals,too-many-branches,arguments-differ
         self,
         X: Any,
         y: Any = None,
@@ -984,7 +984,7 @@ class Pipeline(_Pipeline):
             f"'{type(self).__name__}' object has no attribute 'classes_'",
         )
 
-    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return the sklearn tags.
 
         Returns

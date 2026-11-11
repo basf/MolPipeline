@@ -3342,7 +3342,6 @@ dev = [
     { name = "mypy" },
     { name = "pandas-stubs" },
     { name = "pre-commit" },
-    { name = "pydocstyle" },
     { name = "pylint" },
     { name = "pyright" },
     { name = "ruff" },
@@ -3399,7 +3398,6 @@ dev = [
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "pandas-stubs", specifier = ">=2.3.2.250926" },
     { name = "pre-commit", specifier = ">=4.2.0" },
-    { name = "pydocstyle", specifier = ">=6.3.0" },
     { name = "pylint", specifier = ">=3.3.6" },
     { name = "pyright", specifier = ">=1.1.399" },
     { name = "ruff", specifier = ">=0.11.4" },
@@ -5140,18 +5138,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pydocstyle"
-version = "6.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "snowballstemmer" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/5c/d5385ca59fd065e3c6a5fe19f9bc9d5ea7f2509fa8c9c22fb6b2031dd953/pydocstyle-6.3.0.tar.gz", hash = "sha256:7ce43f0c0ac87b07494eb9c0b462c0b73e6ff276807f204d6b53edc72b7e44e1", size = 36796, upload-time = "2023-01-17T20:29:19.838Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/ea/99ddefac41971acad68f14114f38261c1f27dac0b3ec529824ebc739bdaa/pydocstyle-6.3.0-py3-none-any.whl", hash = "sha256:118762d452a49d6b05e194ef344a55822987a462831ade91ec5c06fd2169d019", size = 38038, upload-time = "2023-01-17T20:29:18.094Z" },
-]
-
-[[package]]
 name = "pydot"
 version = "4.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -6335,15 +6321,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1f/ea/49c993d6dfdd7338c9b1000a0f36817ed7ec84577ae2e52f890d1a4ff909/smmap-5.0.3.tar.gz", hash = "sha256:4d9debb8b99007ae47165abc08670bd74cb74b5227dda7f643eccc4e9eb5642c", size = 22506, upload-time = "2026-03-09T03:43:26.1Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/d4/59e74daffcb57a07668852eeeb6035af9f32cbfd7a1d2511f17d2fe6a738/smmap-5.0.3-py3-none-any.whl", hash = "sha256:c106e05d5a61449cf6ba9a1e650227ecfb141590d2a98412103ff35d89fc7b2f", size = 24390, upload-time = "2026-03-09T03:43:24.361Z" },
-]
-
-[[package]]
-name = "snowballstemmer"
-version = "3.1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/43/f8/0a71edf031f03c40db17503cb8ca78a69a171254e568e7db241b0ab57ea1/snowballstemmer-3.1.1.tar.gz", hash = "sha256:e07bbc54a0d798fe6010a12398422e62a8bfbba95c394fd0956ef58cb4d3e260", size = 123314, upload-time = "2026-06-03T00:56:40.194Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4c/07/2ebca9b11fb9be7340a818d8d6f63feaebb146be2c4afbd6061701d6df6e/snowballstemmer-3.1.1-py3-none-any.whl", hash = "sha256:7e207fa178741da09cdee59d3ecec3827ad5f92b1fc5c9ff3755b639f71f5752", size = 104164, upload-time = "2026-06-03T00:56:38.614Z" },
 ]
 
 [[package]]

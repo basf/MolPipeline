@@ -89,13 +89,13 @@ select =  [
     "W",     # pycodestyle - warnings
 ]
 ignore = [
-    "ANN401",  #  Allow  typing.Any
-    "D203", # incorrect-blank-line-before-class
-    "D213", # blank-line-before-class-docstring
-    "PGH003",  # Blanket type ignore for types
-    "PLR0913", # too-many-arguments
-    "PLW2901", # Redefined loop variable
-    "S311",  #  suspicious-non-cryptographic-random-usage
+    "any-type",  #  Allow  typing.Any
+    "incorrect-blank-line-before-class", # incorrect-blank-line-before-class
+    "multi-line-summary-second-line", # blank-line-before-class-docstring
+    "blanket-type-ignore",  # Blanket type ignore for types
+    "too-many-arguments", # too-many-arguments
+    "redefined-loop-name", # Redefined loop variable
+    "suspicious-non-cryptographic-random-usage",  #  suspicious-non-cryptographic-random-usage
 ]
  [tool.ruff.lint.per-file-ignores]
  "*.ipynb" = [
