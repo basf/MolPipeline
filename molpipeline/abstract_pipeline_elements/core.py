@@ -131,7 +131,7 @@ class ABCPipelineElement(abc.ABC):
         parm_str = ", ".join(parm_list)
         return f"{self.__class__.__name__}({parm_str})"
 
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return Tags for the Element.
 
         Returns
@@ -268,7 +268,7 @@ class ABCPipelineElement(abc.ABC):
         _ = self.fit_transform(values, labels)
         return self
 
-    def fit_to_result(self, values: Any) -> Self:  # noqa: ARG002
+    def fit_to_result(self, values: Any) -> Self:  # ruff: ignore[unused-method-argument]
         """Fit object to result of transformed values.
 
         Fit object to the result of the transform function. This is useful for catching

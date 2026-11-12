@@ -16,7 +16,7 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
 
     def get_params(
         self,
-        deep: bool = True,  # noqa: ARG002
+        deep: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> dict[str, InitVar[int]]:
         """Get parameters for the featurizer.
 
@@ -33,7 +33,7 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         """
         return {}
 
-    def set_params(self, **parameters: Any) -> Self:  # noqa: ARG002
+    def set_params(self, **parameters: Any) -> Self:  # ruff: ignore[unused-method-argument]
         """Set the parameters of the featurizer.
 
         Parameters

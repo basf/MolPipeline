@@ -37,7 +37,7 @@ class MockEstimator(BaseEstimator):
 
     def fit(
         self,
-        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
         y: npt.ArrayLike,
     ) -> Self:
         """Fit the model and record the arguments.
@@ -58,9 +58,9 @@ class MockEstimator(BaseEstimator):
         self.fit_args = {"X": X, "y": y}
         return self
 
-    def predict(  # noqa: PLR6301
+    def predict(
         self,
-        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
     ) -> npt.NDArray[np.float64]:
         """Return fixed predictions.
 
@@ -85,7 +85,7 @@ class MockClassifier(MockEstimator):
     @override
     def predict(  # type: ignore
         self,
-        X: npt.ArrayLike,  # pylint: disable=invalid-name
+        X: npt.ArrayLike,
     ) -> npt.NDArray[np.int64]:
         """Predicts whether the first feature is equal to 1 for each sample.
 
@@ -103,9 +103,9 @@ class MockClassifier(MockEstimator):
         feature_arr = np.asarray(X)
         return np.array([x[0] == 1 for x in feature_arr], dtype=np.int64)
 
-    def predict_proba(  # noqa: PLR6301
+    def predict_proba(
         self,
-        X: npt.ArrayLike,  # noqa: N803 # pylint: disable=invalid-name
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
     ) -> npt.NDArray[np.float64]:
         """Return fake class probabilities.
 
@@ -137,7 +137,7 @@ class MockClassiferWithFloatLabels(MockClassifier):
     @override
     def predict(  # type: ignore
         self,
-        X: npt.ArrayLike,  # pylint: disable=invalid-name
+        X: npt.ArrayLike,
     ) -> npt.NDArray[np.float64]:
         """Return fixed class predictions as floats.
 
@@ -168,7 +168,7 @@ class MockClassifierWithTrueFloatLabels(MockClassifier):
     @override
     def predict(  # type: ignore
         self,
-        X: npt.ArrayLike,  # pylint: disable=invalid-name
+        X: npt.ArrayLike,
     ) -> npt.NDArray[np.float64]:
         """Return fixed class predictions plus 0.5 so they are not integers.
 

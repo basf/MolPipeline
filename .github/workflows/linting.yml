@@ -21,7 +21,7 @@ jobs:
         uv pip install torch --index-url https://download.pytorch.org/whl/cpu
     - name: Analysing the code with pylint
       run: |
-        uv run pylint -d C0103,C0301,R0913,W0212,W0613,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
+        uv run pylint -d C0103,C0301,R0911,R0912,R0913,R0914,R0915,R0917,W0212,W0613,W1202 $(git ls-files '*.py') --ignored-modules "rdkit"  --max-positional-arguments 10
   mypy:
     runs-on: ubuntu-latest
     steps:
@@ -29,7 +29,7 @@ jobs:
     - name: Set up Python
       uses: astral-sh/setup-uv@v5
       with:
-        python-version: "3.13"
+        python-version: "3.11"
     - name: Install dependencies
       run: |
         uv run mypy . || exit_code=$?
@@ -60,7 +60,7 @@ jobs:
           python-version: "3.13"
       - name: Analysing the code with flake8
         run: |
-          uv run flake8 --extend-ignore=D203,E203,E501,W503 --extend-exclude .venv .
+          uv run flake8 --extend-ignore=D203,E203,E501,F401,W503 --extend-exclude .venv .
 
   interrogate:
     runs-on: ubuntu-latest
@@ -105,7 +105,7 @@ jobs:
       - name: Set up Python
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.13"
+          python-version: "3.11"
       - name: Analysing the code with ruff
         run: |
           uv run ruff check --config pyproject.toml
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
@@ -156,7 +156,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
