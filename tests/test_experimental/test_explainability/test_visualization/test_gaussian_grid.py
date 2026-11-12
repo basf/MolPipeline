@@ -68,7 +68,7 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
                 padding=[0.4, 0.4],
             )
             self.assertIsNotNone(value_grid)
-            grid_values = value_grid.values  # type: ignore[attr-defined]
+            grid_values = value_grid.values
             self.assertEqual(grid_values.size, 8 * 8)
 
             # test that the range of summed gaussian values is as expected for SHAP

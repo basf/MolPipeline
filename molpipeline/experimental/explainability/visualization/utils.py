@@ -101,7 +101,7 @@ def get_color_map_from_input(
     if isinstance(color, Colormap):
         color_map = color
     elif isinstance(color, tuple):
-        color_map = color_tuple_to_colormap(color)  # type: ignore
+        color_map = color_tuple_to_colormap(color)
     elif isinstance(color, str):
         color_map = get_cmap(color)
     else:

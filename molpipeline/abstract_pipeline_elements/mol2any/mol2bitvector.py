@@ -147,7 +147,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             )
 
     @overload
-    def assemble_output(  # type: ignore
+    def assemble_output(
         self,
         value_list: Iterable[npt.NDArray[np.int_]],
     ) -> npt.NDArray[np.int_]: ...

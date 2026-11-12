@@ -250,7 +250,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
             raise ValueError("Could not determine the featurization subpipeline.")
 
         # determine type of returned explanation
-        featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
+        featurization_element = self.featurization_subpipeline.steps[-1][1]
         if isinstance(featurization_element, MolToMorganFP):
             self.return_element_type_ = SHAPFeatureAndAtomExplanation
         else:

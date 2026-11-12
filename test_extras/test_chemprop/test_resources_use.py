@@ -187,9 +187,9 @@ class TestSetSingleJobChemprop(unittest.TestCase):
 
                 # test calibrated_classifiers_ attribute (used in pred_proba)
                 self.assertTrue(hasattr(model, "calibrated_classifiers_"))
-                self.assertGreater(len(model.calibrated_classifiers_), 0)  # type: ignore[arg-type]
+                self.assertGreater(len(model.calibrated_classifiers_), 0)
                 for clf in model.calibrated_classifiers_:
-                    pipe = clf.estimator  # type: ignore[union-attr]
+                    pipe = clf.estimator
                     self.assertEqual(pipe.n_jobs, 1)
                     self.assertEqual(pipe.named_steps["neural_fp"].n_jobs, 0)
                     for name, step in pipe.steps:  # iterate the pipeline

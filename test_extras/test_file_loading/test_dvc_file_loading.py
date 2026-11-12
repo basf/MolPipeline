@@ -77,7 +77,7 @@ class TestDVCFileLoading(unittest.TestCase):
 
     def test_cloning(self) -> None:
         """Test cloning of the DVC file loader."""
-        cloned_loader: DVCFileLoader = clone(self.dvc_loader)  # type: ignore
+        cloned_loader: DVCFileLoader = clone(self.dvc_loader)
         self.assertNotEqual(cloned_loader, self.dvc_loader)
         self.assertIsInstance(cloned_loader, DVCFileLoader)
         self.assertEqual(cloned_loader.file_path, self.dvc_loader.file_path)

@@ -106,7 +106,7 @@ class HomogeneousEnsemble(abc.ABC, BaseEstimator, Generic[_ModelVar]):
             The fitted model.
 
         """
-        model_clone: _T = clone(model)  # type: ignore
+        model_clone: _T = clone(model)
         return model_clone.fit(model_input, y, **kwargs)
 
     def get_params(self, deep: bool = True) -> dict[str, Any]:
