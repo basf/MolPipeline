@@ -238,7 +238,7 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
         Parameters
         ----------
         mol_obj: RDKitMol
-            RDKit molecule object
+            RDKit molecule object.
 
         Returns
         -------
