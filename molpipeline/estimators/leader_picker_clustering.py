@@ -156,5 +156,4 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
 
         """
-        # pylint: disable=W0246
-        return super().fit_predict(X, y, **kwargs)
+        return super().fit_predict(X, y, **kwargs)  # pylint: disable=useless-parent-delegation

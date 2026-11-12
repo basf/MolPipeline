@@ -530,16 +530,16 @@ def structure_heatmap(
     drawer, *_ = _structure_heatmap(
         mol,
         atom_weights,
-        color,
-        width,
-        height,
-        color_limits,
+        color=color,
+        width=width,
+        height=height,
+        color_limits=color_limits,
     )
     figure_bytes = drawer.GetDrawingText()
     return to_png(figure_bytes)
 
 
-def structure_heatmap_shap(  # pylint: disable=too-many-locals
+def structure_heatmap_shap(
     explanation: SHAPFeatureAndAtomExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,

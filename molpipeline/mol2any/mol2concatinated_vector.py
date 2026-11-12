@@ -24,7 +24,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     _element_list: list[tuple[str, MolToAnyPipelineElement]]
 
-    # pylint: disable=R0913
     def __init__(
         self,
         element_list: list[tuple[str, MolToAnyPipelineElement]],

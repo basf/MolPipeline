@@ -106,15 +106,17 @@ ignore = [
      "yield-outside-function",
      "print"
  ]
- "test_*" = [
+ "test*" = [
      "assert",
+     "magic-value-comparison",
      "suspicious-subprocess-import",
      "subprocess-without-shell-equals-true",
      "start-process-with-partial-path",
-     "private-member-access",  # Private member accessed
+     "private-member-access",
  ]
 
 [tool.ruff.lint.pylint]
+max-args = 10
 max-positional-args = 10
 
 [tool.pyright]

@@ -75,7 +75,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
     def fit(
         self,
         X: npt.NDArray[np.float64] | csr_matrix,
-        y: npt.NDArray[np.float64] | None = None,  # pylint: disable=unused-argument
+        y: npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model.
 

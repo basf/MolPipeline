@@ -92,7 +92,7 @@ def merge_class_and_sample_weights(
     return class_weights_array * np.array(sample_weight)
 
 
-def _fit_classifier_calibrator_pair(  # ruff: ignore[too-many-positional-arguments]  # pylint: disable=R0914,R0917
+def _fit_classifier_calibrator_pair(  # ruff: ignore[too-many-arguments,too-many-positional-arguments]
     estimator: BaseEstimator,
     X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
     y: npt.ArrayLike,
@@ -163,7 +163,7 @@ def _fit_classifier_calibrator_pair(  # ruff: ignore[too-many-positional-argumen
 
     estimator.fit(X_train, y_train, **fit_params_train)
 
-    predictions, _ = _get_response_values(  # pylint: disable=W0632
+    predictions, _ = _get_response_values(  # pylint: disable=unbalanced-tuple-unpacking
         estimator,
         X_test,
         response_method=["decision_function", "predict_proba"],
@@ -494,7 +494,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         # CalibratedClassifierCV.estimator is not validated yet
         prefer_skip_nested_validation=False,
     )
-    def fit(  # ruff: ignore[too-many-branches, too-many-locals, too-many-statements]  # pylint: disable=R0912,R0914,R0915
+    def fit(  # ruff: ignore[too-many-branches, too-many-locals, too-many-statements]
         self,
         X: npt.ArrayLike,
         y: npt.ArrayLike,
@@ -538,11 +538,11 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         if ensemble == "auto":
             ensemble = not isinstance(estimator, FrozenEstimator)
 
-        self.calibrated_classifiers_ = []  # pylint: disable=W0201
+        self.calibrated_classifiers_ = []  # pylint: disable=attribute-defined-outside-init
 
         # Set `classes_` using all `y`
         label_encoder_ = LabelEncoder().fit(y)
-        self.classes_ = label_encoder_.classes_  # pylint: disable=W0201
+        self.classes_ = label_encoder_.classes_  # pylint: disable=attribute-defined-outside-init
         if self.method == "temperature" and isinstance(y[0], str):  # type: ignore
             # for temperature scaling if `y` contains strings then encode it
             # right here to avoid fitting LabelEncoder again within the
@@ -581,7 +581,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         xp, is_array_api, device_ = get_namespace_and_device(X)
         if is_array_api:
-            y, sample_weight = move_to(  # type: ignore  # pylint: disable=W0632
+            y, sample_weight = move_to(  # type: ignore  # pylint: disable=unbalanced-tuple-unpacking
                 y,
                 sample_weight,
                 xp=xp,
@@ -612,7 +612,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         if ensemble:
             parallel = Parallel(n_jobs=self.n_jobs)
-            self.calibrated_classifiers_ = parallel(  # pylint: disable=W0201
+            self.calibrated_classifiers_ = parallel(  # pylint: disable=attribute-defined-outside-init
                 delayed(_fit_classifier_calibrator_pair)(
                     clone(estimator),
                     X,
@@ -685,7 +685,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         first_clf = self.calibrated_classifiers_[0].estimator
         if hasattr(first_clf, "n_features_in_"):
-            self.n_features_in_ = first_clf.n_features_in_  # pylint: disable=W0201
+            self.n_features_in_ = first_clf.n_features_in_  # pylint: disable=attribute-defined-outside-init
         if hasattr(first_clf, "feature_names_in_"):
-            self.feature_names_in_ = first_clf.feature_names_in_  # pylint: disable=W0201
+            self.feature_names_in_ = first_clf.feature_names_in_  # pylint: disable=attribute-defined-outside-init
         return self

@@ -428,7 +428,6 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
             return "integer"
         return "binary"
 
-    # pylint: disable=R0913
     def __init__(
         self,
         radius: int = 2,
@@ -469,7 +468,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
             If radius is not a positive integer.
 
         """
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         super().__init__(
             return_as=return_as,
             counted=counted,
