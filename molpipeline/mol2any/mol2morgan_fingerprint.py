@@ -25,7 +25,7 @@ class MolToMorganFP(MolToRDKitGenFPElement):
 
     @property
     def radius(self) -> int:
-        """Get radius of Morgan fingerprint."""
+        """Radius of Morgan fingerprint."""
         return self._radius
 
     @radius.setter
@@ -51,7 +51,7 @@ class MolToMorganFP(MolToRDKitGenFPElement):
 
     @property
     def use_features(self) -> bool:
-        """Get whether to encode atoms by features or not."""
+        """Whether to encode atoms by features or not."""
         return self._use_features
 
     @use_features.setter

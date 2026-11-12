@@ -304,7 +304,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
     @property
     def n_bits(self) -> int:
-        """Get number of bits in (or size of) fingerprint."""
+        """Number of bits in (or size of) fingerprint."""
         return self._n_bits
 
     @n_bits.setter
@@ -330,7 +330,7 @@ class MolToRDKitGenFPElement(MolToFingerprintPipelineElement, abc.ABC):
 
     @property
     def output_type(self) -> str:
-        """Get output type."""
+        """Output type."""
         if self.counted:
             return "integer"
         return "binary"
