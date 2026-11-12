@@ -166,7 +166,7 @@ class AnyPredictor(AnySklearnEstimator, Protocol):
 
     def predict(
         self,
-        X: XType,  # noqa: N803
+        X: XType,  # ruff: ignore[invalid-argument-name]
     ) -> npt.NDArray[Any]:
         """Predict the input.
 

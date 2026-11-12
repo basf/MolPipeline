@@ -385,7 +385,7 @@ class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
 
     def fit(
         self,
-        X: npt.ArrayLike,  # noqa: N803
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
         y: npt.ArrayLike,
     ) -> "PairwiseDifferenceLearner[ModelVar]":
         """Fit the model to the data.
@@ -412,7 +412,7 @@ class PairwiseDifferenceLearner(BaseEstimator, abc.ABC, Generic[ModelVar]):
         return self
 
     @abc.abstractmethod
-    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:  # noqa: N803
+    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:  # ruff: ignore[invalid-argument-name]
         """Predict target values for the samples in X.
 
         Parameters
@@ -434,21 +434,21 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
     @overload
     def predict(
         self,
-        X: XType,  # noqa: N803
+        X: XType,  # ruff: ignore[invalid-argument-name]
         return_std: Literal[False] = False,
     ) -> npt.NDArray[np.float64]: ...
 
     @overload
     def predict(
         self,
-        X: XType,  # noqa: N803
+        X: XType,  # ruff: ignore[invalid-argument-name]
         return_std: Literal[True] = ...,
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 
     @overload
     def predict(
         self,
-        X: XType,  # noqa: N803
+        X: XType,  # ruff: ignore[invalid-argument-name]
         return_std: bool = False,
     ) -> (
         npt.NDArray[np.float64]
@@ -457,7 +457,7 @@ class PairwiseDifferenceRegressor(RegressorMixin, PairwiseDifferenceLearner[Mode
 
     def predict(
         self,
-        X: XType,  # noqa: N803
+        X: XType,  # ruff: ignore[invalid-argument-name]
         return_std: bool = False,
     ) -> npt.NDArray[Any] | tuple[npt.NDArray[Any], npt.NDArray[Any]]:
         """Predict the target values for the given input.
@@ -543,7 +543,7 @@ class PairwiseDifferenceClassifier(  # pylint: disable=too-many-ancestors
 
     def fit(
         self,
-        X: npt.ArrayLike,  # noqa: N803
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
         y: npt.ArrayLike,
     ) -> Self:
         """Fit the classifier to the data.
@@ -583,7 +583,7 @@ class PairwiseDifferenceClassifier(  # pylint: disable=too-many-ancestors
 
     def predict_proba(
         self,
-        X: npt.ArrayLike,  # noqa: N803
+        X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
     ) -> npt.NDArray[np.float64]:
         """Predict class probabilities for the samples in X.
 
@@ -652,7 +652,7 @@ class PairwiseDifferenceClassifier(  # pylint: disable=too-many-ancestors
             predictions.append(proba_list)
         return np.array(predictions, dtype=np.float64)
 
-    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:  # noqa: N803
+    def predict(self, X: npt.ArrayLike) -> npt.NDArray[Any]:  # ruff: ignore[invalid-argument-name]
         """Predict class labels for the samples in X.
 
         Parameters

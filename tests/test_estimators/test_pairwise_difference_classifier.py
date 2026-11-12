@@ -556,7 +556,7 @@ class TestPairwiseDifferenceRegressor(unittest.TestCase):
         model = PairwiseDifferenceRegressor(estimator=LinearRegression())
         self.assertIs(model.fit(self.X, self.y), model)
 
-    def test_numeric_correctness_linear(self) -> None:  # noqa: PLR6301
+    def test_numeric_correctness_linear(self) -> None:  # ruff: ignore[no-self-use]
         """On a noiseless linear dataset the regressor should recover y closely."""
         rng = np.random.default_rng(42)
         x = rng.random((15, 3))

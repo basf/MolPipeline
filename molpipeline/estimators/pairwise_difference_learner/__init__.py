@@ -1,6 +1,6 @@
 """Module for pairwise difference learners."""
 
-from molpipeline.estimators.pairwise_difference_learner.pairwise_difference_learner import (  # noqa: E501
+from molpipeline.estimators.pairwise_difference_learner.pairwise_difference_learner import (  # ruff: ignore[line-too-long]
     PairwiseDifferenceClassifier,
     PairwiseDifferenceLearner,
     PairwiseDifferenceRegressor,
