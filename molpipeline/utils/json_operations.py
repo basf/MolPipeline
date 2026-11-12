@@ -55,7 +55,7 @@ if importlib.util.find_spec("torch") is not None:
         obj_dict["data"] = recursive_to_json(obj.cpu().numpy())
         return obj_dict, True
 
-    def _tensor_from_json(  # pylint: disable=unused-argument
+    def _tensor_from_json(
         obj: type,
         *args: Any,  # ruff: ignore[unused-function-argument]
         **kwargs: Any,
@@ -105,7 +105,7 @@ else:
         """
         return obj, False
 
-    def _tensor_from_json(  # pylint: disable=unused-argument
+    def _tensor_from_json(
         obj: type,
         *args: Any,  # ruff: ignore[unused-function-argument]
         **kwargs: Any,  # ruff: ignore[unused-function-argument]

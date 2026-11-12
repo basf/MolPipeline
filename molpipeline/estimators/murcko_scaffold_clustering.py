@@ -5,7 +5,7 @@ from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
-from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
+from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # ruff: ignore[import-private-name]
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from sklearn.utils.validation import validate_data
 from typing_extensions import override
@@ -210,7 +210,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
         self,
         X: (npt.NDArray[np.str_] | list[str] | list[OptionalMol]),
         y: npt.NDArray[np.float64] | None = None,
-        **params: Any,  # pylint: disable=unused-argument
+        **params: Any,
     ) -> npt.NDArray[np.float64]:
         """Fit and predict Murcko scaffold clustering estimator.
 
@@ -229,5 +229,4 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
 
         """
-        # pylint: disable=W0246
-        return super().fit_predict(X, y, **params)
+        return super().fit_predict(X, y, **params)  # pylint: disable=useless-parent-delegation

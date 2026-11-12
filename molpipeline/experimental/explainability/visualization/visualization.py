@@ -530,16 +530,16 @@ def structure_heatmap(
     drawer, *_ = _structure_heatmap(
         mol,
         atom_weights,
-        color,
-        width,
-        height,
-        color_limits,
+        color=color,
+        width=width,
+        height=height,
+        color_limits=color_limits,
     )
     figure_bytes = drawer.GetDrawingText()
     return to_png(figure_bytes)
 
 
-def structure_heatmap_shap(  # pylint: disable=too-many-locals
+def structure_heatmap_shap(
     explanation: SHAPFeatureAndAtomExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
@@ -605,14 +605,14 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     if explanation.atom_weights is None:
         raise ValueError("Explanation does not contain atom weights.")
 
-    if explanation.prediction.ndim > 2:
+    if explanation.prediction.ndim > 2:  # ruff: ignore[magic-value-comparison]
         raise ValueError(
             "Unsupported shape for prediction. Maximum 2 dimension is supported.",
         )
 
     if explanation.feature_weights.ndim == 1:
         feature_weights = explanation.feature_weights
-    elif explanation.feature_weights.ndim == 2:
+    elif explanation.feature_weights.ndim == 2:  # ruff: ignore[magic-value-comparison]
         feature_weights = explanation.feature_weights[:, 1]
     else:
         raise ValueError("Unsupported shape for feature weights.")

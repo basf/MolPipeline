@@ -10,15 +10,16 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from sklearn.base import _fit_context, clone
+from sklearn.base import _fit_context, clone  # ruff: ignore[import-private-name]
+from sklearn.callback import CallbackContext
 from sklearn.pipeline import Pipeline as _Pipeline
-from sklearn.pipeline import _final_estimator_has, _fit_transform_one
+from sklearn.pipeline import _final_estimator_has, _fit_transform_one  # ruff: ignore[import-private-name]
 from sklearn.utils import Bunch
-from sklearn.utils._tags import Tags, get_tags
+from sklearn.utils._tags import Tags, get_tags  # ruff: ignore[import-private-name]
 from sklearn.utils.metadata_routing import (
     MetadataRouter,
     MethodMapping,
-    _routing_enabled,
+    _routing_enabled,  # ruff: ignore[import-private-name]
     process_routing,
 )
 from sklearn.utils.metaestimators import available_if
@@ -230,12 +231,13 @@ class Pipeline(_Pipeline):
         return last_element[2]
 
     @override
-    def _fit(  # pylint: disable=too-many-locals,too-many-branches,arguments-differ
+    def _fit(  # ruff: ignore[too-many-branches]
         self,
         X: Any,
         y: Any = None,
         routed_params: dict[str, Any] | None = None,
         raw_params: dict[str, Any] | None = None,
+        callback_ctx: CallbackContext | None = None,
     ) -> tuple[Any, Any]:
         """Fit the model by fitting all transformers except the final estimator.
 
@@ -245,7 +247,7 @@ class Pipeline(_Pipeline):
         ----------
         X : Any
             Training data.
-        y : Any, optional (default=None)
+        y : Any, optional
             Training objectives.
         routed_params : dict[str, Any], optional
             Parameters for each step as returned by process_routing.
@@ -254,6 +256,8 @@ class Pipeline(_Pipeline):
             Can be an empty dictionary.
         raw_params : dict[str, Any], optional
             Parameters passed by the user, used when `transform_input`
+        callback_ctx : CallbackContext | None, optional
+            Context of the sklearn callback system, passed down to the steps.
 
         Returns
         -------
@@ -984,7 +988,7 @@ class Pipeline(_Pipeline):
             f"'{type(self).__name__}' object has no attribute 'classes_'",
         )
 
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return the sklearn tags.
 
         Returns

@@ -7,12 +7,12 @@ import numpy as np
 import numpy.typing as npt
 from numpy.random import RandomState  # pylint: disable=no-name-in-module
 from sklearn.model_selection import BaseShuffleSplit
-from sklearn.model_selection._split import (
-    _validate_shuffle_split,  # ruff: ignore[import-private-name]
+from sklearn.model_selection._split import (  # ruff: ignore[import-private-name]
+    _validate_shuffle_split,
 )
 from sklearn.utils import check_array, shuffle
-from sklearn.utils.validation import (  # ruff: ignore[import-private-name]
-    _num_samples,
+from sklearn.utils.validation import (
+    _num_samples,  # ruff: ignore[import-private-name]
     check_random_state,
 )
 from typing_extensions import override
@@ -106,7 +106,6 @@ class GroupShuffleSplit(BaseShuffleSplit):  # pylint: disable=abstract-method
             The testing set indices for that split.
 
         """
-        # pylint: disable=too-many-locals
         n_samples = _num_samples(X)
         n_train, n_test = _validate_shuffle_split(
             n_samples,

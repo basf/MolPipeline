@@ -260,7 +260,7 @@ class NoneTest(unittest.TestCase):
         class DummyMolSanitizeExc(MolToMolPipelineElement):
             """MolToMolPipelineElement with dummy molsanitize exception."""
 
-            def pretransform_single(  # ruff: ignore[no-self-use]
+            def pretransform_single(
                 self,
                 value: RDKitMol,
             ) -> OptionalMol:
@@ -309,7 +309,7 @@ class TestFilterReinserter(unittest.TestCase):
 
     def test_bad_input_data_types(self) -> None:
         """Test bad input data types."""
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=1, n_bits=32, return_as="sparse")
         error_filter = ErrorFilter(filter_everything=True)

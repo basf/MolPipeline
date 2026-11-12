@@ -55,7 +55,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         self._descriptor_list = ["NetCharge"]
         self._feature_names = self._descriptor_list
         self._charge_method = charge_method
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         super().__init__(
             standardizer=standardizer,
             name=name,

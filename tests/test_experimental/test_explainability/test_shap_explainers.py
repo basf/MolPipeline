@@ -189,7 +189,7 @@ class TestSHAPExplainers(unittest.TestCase):
                 (explanation.molecule.GetNumAtoms(),),  # type: ignore[union-attr]
             )
 
-    def test_explanations_fingerprint_pipeline(  # pylint: disable=too-many-locals
+    def test_explanations_fingerprint_pipeline(
         self,
     ) -> None:
         """Test SHAP's TreeExplainer wrapper on pipelines with fingerprints."""
@@ -256,7 +256,6 @@ class TestSHAPExplainers(unittest.TestCase):
                         explainer=explainer,  # type: ignore[arg-type]
                     )
 
-    # pylint: disable=too-many-locals
     def test_explanations_pipeline_with_invalid_inputs(self) -> None:
         """Test SHAP's TreeExplainer wrapper with invalid inputs."""
         # fill values considered invalid predictions

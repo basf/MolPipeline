@@ -669,7 +669,6 @@ class FilterReinserter(Generic[_T]):
                 f"Received: {type(values)}",
             )
 
-    # pylint: disable=unused-argument
     def fit(
         self,
         values: TypeFixedVarSeq,
@@ -698,7 +697,6 @@ class FilterReinserter(Generic[_T]):
         self._validate_input_values(values)
         return self
 
-    # pylint: disable=unused-argument
     def fit_transform(
         self,
         values: TypeFixedVarSeq,
