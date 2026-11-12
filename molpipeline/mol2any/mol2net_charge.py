@@ -41,18 +41,18 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
             Can be "formal_charge" which uses sum of the formal charges assigned to
             each atom. The setting "gasteiger" computes the Gasteiger partial
             charges and returns the rounded sum over the atoms.
-        name: str, optional
-            Name of the pipeline element, by default "MolToNetCharge"
-        n_jobs: int, optional
-            Number of jobs to run in parallel, by default 1
+        name: str, default="MolToNetCharge"
+            Name of the pipeline element.
+        n_jobs: int, default=1
+            Number of jobs to run in parallel.
         uuid: str, optional
-            UUID of the pipeline element, by default None
+            UUID of the pipeline element.
 
         """
         self._descriptor_list = ["NetCharge"]
         self._feature_names = self._descriptor_list
         self._charge_method = charge_method
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         super().__init__(
             name=name,
             n_jobs=n_jobs,
@@ -61,12 +61,12 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
 
     @property
     def n_features(self) -> int:
-        """Return the number of features."""
+        """The number of features."""
         return len(self._descriptor_list)
 
     @property
     def descriptor_list(self) -> list[str]:
-        """Return a copy of the descriptor list. Alias of `feature_names`."""
+        """A copy of the descriptor list. Alias of `feature_names`."""
         return self._descriptor_list[:]
 
     def _get_net_charge_gasteiger(
@@ -133,7 +133,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         Parameters
         ----------
         deep: bool
-            If true create a deep copy of the parameters
+            If true create a deep copy of the parameters.
 
         Returns
         -------
@@ -154,7 +154,7 @@ class MolToNetCharge(MolToDescriptorPipelineElement):
         Parameters
         ----------
         parameters: Any
-            Parameters to set
+            Parameters to set.
 
         Returns
         -------

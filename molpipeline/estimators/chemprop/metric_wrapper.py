@@ -33,8 +33,7 @@ class LossFunctionParamMixin:
         super().__init__(task_weights=task_weights)  # type: ignore
         self._original_task_weights = task_weights
 
-    # pylint: disable=unused-argument
-    def get_params(self: _ChempropMetric, deep: bool = True) -> dict[str, Any]:  # noqa: ARG002
+    def get_params(self: _ChempropMetric, deep: bool = True) -> dict[str, Any]:  # ruff: ignore[unused-method-argument]
         """Get the parameters of the loss function.
 
         Parameters

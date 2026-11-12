@@ -73,7 +73,6 @@ class MolToMorganFP(MolToRDKitGenFPElement):
             raise ValueError(f"Use features has to be a boolean! (Received: {value})")
         self._use_features = value
 
-    # pylint: disable=R0913
     def __init__(
         self,
         radius: int = 2,
@@ -107,7 +106,7 @@ class MolToMorganFP(MolToRDKitGenFPElement):
             IntSparseBitVect, UIntSparseBitVect, etc. depending on the fingerprint
             and parameters.
         name: str, default="MolToMorganFP"
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores to use.
         uuid: str | None, optional
@@ -119,7 +118,7 @@ class MolToMorganFP(MolToRDKitGenFPElement):
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
 
         """
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         super().__init__(
             n_bits=n_bits,
             counted=counted,
@@ -202,14 +201,13 @@ class MolToMorganFP(MolToRDKitGenFPElement):
         Parameters
         ----------
         mol_obj: RDKitMol
-            RDKit molecule object
+            RDKit molecule object.
 
         Returns
         -------
         Mapping[int, list[tuple[int, int]]]
             Dictionary with bit position as key and list of tuples with atom index
-            and
-            radius as value.
+            and radius as value.
 
         """
         fp_generator = self._get_fp_generator()

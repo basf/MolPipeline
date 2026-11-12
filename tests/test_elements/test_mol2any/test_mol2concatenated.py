@@ -154,7 +154,7 @@ class TestConcatenatedFingerprint(unittest.TestCase):
             net_charge_elem[1].n_features + 16 + physchem_elem[1].n_features,
         )
 
-    def test_features_names(self) -> None:  # pylint: disable-msg=too-many-locals
+    def test_features_names(self) -> None:
         """Test getting the names of features in the concatenated vector."""
         physchem_elem = (
             "RDKitPhysChem",

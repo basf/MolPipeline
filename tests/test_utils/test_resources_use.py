@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 from sklearn.calibration import (
     CalibratedClassifierCV,
-    _CalibratedClassifier,  # noqa: PLC2701
+    _CalibratedClassifier,  # ruff: ignore[import-private-name]
 )
 from sklearn.ensemble import BaggingClassifier, RandomForestClassifier, VotingClassifier
 from sklearn.tree import DecisionTreeClassifier

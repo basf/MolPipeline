@@ -1,13 +1,12 @@
 """Conformal prediction wrappers for classification using crepes."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 import numpy as np
 import numpy.typing as npt
 from crepes import WrapClassifier
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
 from sklearn.model_selection import StratifiedKFold
-from typing_extensions import Self
 
 from molpipeline.experimental.uncertainty.conformal.conformal_base import (
     BaseConformalPredictor,
@@ -41,9 +40,8 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
         ----------
         estimator : BaseEstimator
             The base classifier to wrap.
-        mondrian : bool, optional
-            Whether to use Mondrian (class-conditional) conformal prediction
-            (default: False).
+        mondrian : bool, default=False
+            Whether to use Mondrian (class-conditional) conformal prediction.
         calibrate_probs : bool, default=False
             Default behavior for probability calibration during `calibrate()`.
             If True, antitonic probability calibration is applied unless
@@ -52,7 +50,7 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
             Nonconformity function to use. Can be:
             - String: 'hinge', 'margin' (built-in functions)
             - NonconformityFunctor instance
-            - None: Use crepes default
+            - None: Use crepes default.
         **kwargs : Any
             Additional keyword arguments passed to crepes calibration.
 
@@ -232,7 +230,12 @@ class ConformalClassifier(BaseConformalPredictor, ClassifierMixin):
 
         conf = self._validate_confidence_level(confidence)
 
-        return self._crepes_wrapper.predict_set(x, confidence=conf, **kwargs)
+        return self._crepes_wrapper.predict_set(
+            x,
+            confidence=conf,
+            **kwargs,
+            labels=False,
+        )
 
     def predict_p(self, x: npt.NDArray[Any], **kwargs: Any) -> npt.NDArray[Any]:
         """Predict p-values.
@@ -379,7 +382,7 @@ class CrossConformalClassifier(BaseConformalPredictor, ClassifierMixin):
     and aggregates their predictions.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         estimator: BaseEstimator,
         *,

@@ -24,7 +24,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     _element_list: list[tuple[str, MolToAnyPipelineElement]]
 
-    # pylint: disable=R0913
     def __init__(
         self,
         element_list: list[tuple[str, MolToAnyPipelineElement]],
@@ -76,7 +75,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     @property
     def element_list(self) -> list[tuple[str, MolToAnyPipelineElement]]:
-        """Get pipeline elements."""
+        """Pipeline elements."""
         return self._element_list
 
     @property
@@ -103,7 +102,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     @property
     def feature_names(self) -> list[str]:
-        """Return the feature names of concatenated elements."""
+        """The feature names of concatenated elements."""
         return self._feature_names[:]
 
     @staticmethod
@@ -177,7 +176,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         else:
             self._output_type = "mixed"
         self._requires_fitting = any(
-            element[1]._requires_fitting  # noqa: SLF001
+            element[1]._requires_fitting  # ruff: ignore[private-member-access]
             for element in element_list
         )
 

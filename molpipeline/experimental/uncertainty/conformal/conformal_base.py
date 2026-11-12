@@ -124,7 +124,7 @@ class NonconformityFunctor(ABC):
 class HingeNonconformity(NonconformityFunctor):
     """Hinge loss nonconformity function for classification."""
 
-    def get_name(self) -> str:  # noqa: PLR6301
+    def get_name(self) -> str:
         """Get function name for parameter serialization.
 
         Returns
@@ -268,7 +268,7 @@ class SVMMarginNonconformity(NonconformityFunctor):
 
     """
 
-    def get_name(self) -> str:  # noqa: PLR6301
+    def get_name(self) -> str:
         """Get function name for parameter serialization.
 
         Returns
@@ -462,7 +462,7 @@ def _apply_antitonic_regressors(
 class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-instance-attributes
     """Base class for conformal predictors providing common functionality."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         estimator: BaseEstimator,
         nonconformity: str | NonconformityFunctor | None = None,
@@ -502,7 +502,7 @@ class BaseConformalPredictor(BaseEstimator, ABC):  # pylint: disable=too-many-in
 
     @property
     def nonconformity(self) -> str | NonconformityFunctor | None:
-        """Get the nonconformity parameter value.
+        """The nonconformity parameter value.
 
         This property is needed for sklearn's get_params/set_params compatibility.
         """

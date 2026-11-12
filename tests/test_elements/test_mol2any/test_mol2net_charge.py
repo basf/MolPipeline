@@ -16,7 +16,7 @@ DF_TEST_DATA = pd.DataFrame(
             "c1cc(c(nc1)Cl)C(=O)Nc2c(c3c(s2)CCCCC3)C(=O)N",
             "Cc1ccc(cc1)S(=O)(=O)Nc2c(c3c(s2)C[C@@H](CC3)C)C(=O)N",
             "c1cc(oc1)CN=C2C=C(C(=CC2=C(O)[O-])S(=O)(=O)[NH-])Cl",
-            "C[C@@H]1[C@@H](OP2(O1)(O[C@H]([C@H](O2)C)C)C[NH+]3CCCCC3)C",  # this one fails gasteiger charge computation  # noqa: E501
+            "C[C@@H]1[C@@H](OP2(O1)(O[C@H]([C@H](O2)C)C)C[NH+]3CCCCC3)C",  # this one fails gasteiger charge computation  # ruff: ignore[line-too-long]
         ],
         "expected_net_charges_formal_charge": [2, 0, 0, -2, 1],
         "expected_net_charges_gasteiger": [2, -1, -1, -2, np.nan],

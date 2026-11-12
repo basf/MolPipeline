@@ -1,14 +1,13 @@
 """Conformal prediction wrappers for regression using crepes."""
 # pylint: disable=duplicate-code
 
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
 from crepes import WrapRegressor
 from crepes.extras import DifficultyEstimator, MondrianCategorizer
 from sklearn.base import BaseEstimator, RegressorMixin, clone
-from typing_extensions import Self
 
 from molpipeline.experimental.model_selection.splitter import (
     PercentileStratifiedKFold,
@@ -25,7 +24,7 @@ class ConformalRegressor(BaseConformalPredictor, RegressorMixin):
     This class uses composition with crepes to provide full sklearn compatibility.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         estimator: BaseEstimator,
         *,
@@ -239,7 +238,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
     and aggregates their predictions.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         estimator: BaseEstimator,
         *,
@@ -284,7 +283,7 @@ class CrossConformalRegressor(BaseConformalPredictor, RegressorMixin):
         self.difficulty_estimator = difficulty_estimator
         self.binning_bins = binning_bins
 
-    def fit(  # pylint: disable=too-many-locals
+    def fit(
         self,
         x: npt.NDArray[Any],
         y: npt.NDArray[Any],

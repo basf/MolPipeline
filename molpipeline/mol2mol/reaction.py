@@ -1,7 +1,5 @@
 """Pipline elements for mol to mol transformations."""
 
-# pylint: disable=too-many-arguments
-
 import copy
 import warnings
 from typing import Any, Literal, Self
@@ -111,7 +109,7 @@ class MolToMolReaction(MolToMolPipelineElement):
 
     @property
     def reaction(self) -> AllChem.ChemicalReaction:
-        """Get the reaction which is applied to the input molecule."""
+        """The reaction which is applied to the input molecule."""
         return self._reaction
 
     @reaction.setter

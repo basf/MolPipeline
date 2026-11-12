@@ -21,8 +21,7 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
 
     """
 
-    # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
-    def __init__(  # noqa: PLR0917
+    def __init__(  # ruff: ignore[too-many-arguments,too-many-positional-arguments]
         self,
         min_path: int = 1,
         max_path: int = 7,
@@ -75,7 +74,7 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
             IntSparseBitVect, UIntSparseBitVect, etc. depending on the fingerprint
             and parameters.
         name: str, default="MolToMorganFP"
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores to use.
         uuid: str | None, optional
@@ -91,7 +90,7 @@ class Mol2PathFP(MolToRDKitGenFPElement):  # pylint: disable=too-many-instance-a
         [1] https://www.rdkit.org/docs/source/rdkit.Chem.rdFingerprintGenerator.html#rdkit.Chem.rdFingerprintGenerator.GetRDKitFPGenerator
 
         """
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         super().__init__(
             n_bits=n_bits,
             counted=counted,

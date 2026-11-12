@@ -26,7 +26,7 @@ SEED = 42
 TOLERANCE = 0.1
 
 
-def make_specific_classification(  # pylint: disable=too-many-locals
+def make_specific_classification(
     n_positive: int,
     n_negative: int,
     selectivity: float,

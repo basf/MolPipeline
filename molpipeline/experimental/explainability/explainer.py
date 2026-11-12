@@ -157,7 +157,7 @@ def _convert_shap_feature_weights_to_atom_weights(
     if feature_weights.ndim == 1:
         # regression case
         feature_weights_present_bits_only = feature_weights.copy()
-    elif feature_weights.ndim == 2:  # noqa: PLR2004
+    elif feature_weights.ndim == 2:  # ruff: ignore[magic-value-comparison]
         # binary classification case. Take the weights for the positive class.
         feature_weights_present_bits_only = feature_weights[:, 1].copy()
     else:
@@ -184,7 +184,7 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
     @abc.abstractmethod
     def explain(
         self,
-        X: Any,  # noqa: N803
+        X: Any,  # ruff: ignore[invalid-argument-name]
         **kwargs: Any,
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
@@ -352,7 +352,10 @@ class SHAPExplainerAdapter(  # pylint: disable=too-few-public-methods
                 continue
 
             # compute the shap values for the features
-            feature_weights = self.explainer.shap_values(feature_vector, **kwargs)
+            feature_weights = self.explainer.shap_values(
+                np.atleast_2d(feature_vector),
+                **kwargs,
+            )
             feature_weights = np.asarray(feature_weights).squeeze()
 
             atom_weights = None

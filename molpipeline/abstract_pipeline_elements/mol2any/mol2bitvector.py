@@ -124,12 +124,12 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     @property
     def n_bits(self) -> int:
-        """Get number of bits in (or size of) fingerprint."""
+        """Number of bits in (or size of) fingerprint."""
         return self._n_bits
 
     @property
     def feature_names(self) -> list[str]:
-        """Get feature names."""
+        """Feature names."""
         return self._feature_names[:]
 
     @staticmethod

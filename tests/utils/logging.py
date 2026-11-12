@@ -25,9 +25,9 @@ def capture_logs(
     Parameters
     ----------
     level : str, optional
-        Log level, by default "INFO"
+        Log level, by default "INFO".
     log_format : str, optional
-        Log format, by default "{level}:{name}:{message}"
+        Log format, by default "{level}:{name}:{message}".
 
     Yields
     ------
@@ -37,5 +37,7 @@ def capture_logs(
     """
     output: list[loguru.Message] = []
     handler_id = logger.add(output.append, level=level, format=log_format)
-    yield output
-    logger.remove(handler_id)
+    try:
+        yield output
+    finally:
+        logger.remove(handler_id)

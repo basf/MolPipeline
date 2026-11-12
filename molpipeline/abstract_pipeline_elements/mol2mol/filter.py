@@ -5,6 +5,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Literal, Self, TypeAlias
 
 import pandas as pd
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -125,7 +126,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     def filter_elements(
         self,
     ) -> Mapping[Any, FloatCountRange]:
-        """Get filter elements as dict."""
+        """Filter elements as dict."""
 
     @filter_elements.setter
     @abc.abstractmethod
@@ -186,7 +187,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         params["filter_elements"] = self.filter_elements
         return params
 
-    def pretransform_single(  # pylint: disable=too-many-return-statements # noqa: PLR0911
+    @override
+    def pretransform_single(  # ruff: ignore[too-many-return-statements]
         self,
         value: RDKitMol,
     ) -> OptionalMol:
@@ -310,7 +312,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
 
     @property
     def filter_elements(self) -> Mapping[str, FloatCountRange]:
-        """Get allowed filter elements (patterns) as dict."""
+        """Allowed filter elements (patterns) as dict."""
         return self._filter_elements
 
     @filter_elements.setter
@@ -346,7 +348,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
 
     @property
     def patterns_mol_dict(self) -> Mapping[str, RDKitMol]:
-        """Get patterns as dict with RDKitMol objects."""
+        """Patterns as dict with RDKitMol objects."""
         return self._patterns_mol_dict
 
     @patterns_mol_dict.setter

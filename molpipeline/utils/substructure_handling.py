@@ -8,8 +8,7 @@ from typing import Self
 from rdkit import Chem
 
 
-# pylint: disable=R0903
-class AtomEnvironment:
+class AtomEnvironment:  # pylint: disable=R0903
     """A Class to store environment-information for fingerprint features."""
 
     def __init__(self, environment_atoms: set[int]) -> None:
@@ -24,8 +23,7 @@ class AtomEnvironment:
         self.environment_atoms = environment_atoms  # set of all atoms within radius
 
 
-# pylint: disable=R0903
-class CircularAtomEnvironment(AtomEnvironment):
+class CircularAtomEnvironment(AtomEnvironment):  # pylint: disable=R0903
     """A Class to store environment-information for morgan-fingerprint features."""
 
     def __init__(

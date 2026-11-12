@@ -19,7 +19,7 @@ def sparse_from_index_value_dicts(
     row_index_lists: Iterable[dict[int, int]]
         Iterable of dicts of which each holds column positions and values.
     n_columns: int
-        Total number of columns
+        Total number of columns.
 
     Returns
     -------
