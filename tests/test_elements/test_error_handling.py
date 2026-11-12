@@ -7,6 +7,7 @@ import numpy as np
 from rdkit import Chem, RDLogger
 from rdkit.Chem.rdchem import MolSanitizeException
 from sklearn.base import clone
+from typing_extensions import override
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
@@ -260,6 +261,7 @@ class NoneTest(unittest.TestCase):
         class DummyMolSanitizeExc(MolToMolPipelineElement):
             """MolToMolPipelineElement with dummy molsanitize exception."""
 
+            @override
             def pretransform_single(
                 self,
                 value: RDKitMol,
