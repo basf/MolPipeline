@@ -19,7 +19,6 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
 
     """
 
-    # pylint: disable=R0913
     def __init__(
         self,
         radius: int = 2,
@@ -70,7 +69,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
 
         """
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         super().__init__(
             radius=radius,
             use_features=use_features,

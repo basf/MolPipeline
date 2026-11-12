@@ -10,8 +10,8 @@ import numpy.typing as npt
 from rdkit import DataStructs
 from rdkit.DataStructs import ExplicitBitVect
 from rdkit.SimDivFilters import rdSimDivPickers
-from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
-from sklearn.utils._param_validation import Interval
+from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # ruff: ignore[import-private-name]
+from sklearn.utils._param_validation import Interval  # ruff: ignore[import-private-name]
 from typing_extensions import override
 
 
@@ -156,5 +156,4 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
 
         """
-        # pylint: disable=W0246
-        return super().fit_predict(X, y, **kwargs)
+        return super().fit_predict(X, y, **kwargs)  # pylint: disable=useless-parent-delegation

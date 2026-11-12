@@ -131,7 +131,7 @@ class ABCPipelineElement(abc.ABC):
         parm_str = ", ".join(parm_list)
         return f"{self.__class__.__name__}({parm_str})"
 
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return Tags for the Element.
 
         Returns

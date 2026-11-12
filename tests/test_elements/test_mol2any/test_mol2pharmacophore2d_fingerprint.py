@@ -329,7 +329,7 @@ EndFeature
         self.assertTrue(fp_element.triangular_pruning)
         self.assertEqual(
             fp_element.distance_bins,
-            [  # pylint: disable=R0801
+            [  # pylint: disable=duplicate-code
                 (2, 3),
                 (3, 4),
                 (4, 5),

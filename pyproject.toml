@@ -93,25 +93,14 @@ ignore = [
     "any-type",  #  Allow  typing.Any
     "incorrect-blank-line-before-class", # incorrect-blank-line-before-class
     "multi-line-summary-second-line", # blank-line-before-class-docstring
-    "camelcase-imported-as-lowercase",  #  Camelcase `rdFingerprintGenerator` imported as lowercase `rdkit_fp`  # TO REMOVE
     "blanket-type-ignore",  # Blanket type ignore for types
     "try-except-in-loop",  # `try`-`except` within a loop incurs performance overhead  # TO REMOVE
     "compare-to-empty-string", # `rest == ""` can be simplified to `not rest` as an empty string is falsey  # TO REMOVE
-    "too-many-branches", # Too many branches (19 > 12)  # TO REMOVE
-    "too-many-arguments", # too-many-arguments
-    "too-many-locals", # too-many-locals    # TO REMOVE
-    "magic-value-comparison", # Magic value used in comparison  # TO REMOVE
-    "import-private-name", # Private name import  # TO REMOVE
-    "too-many-positional-arguments", # too-many-positional-arguments   # TO REMOVE
     "no-self-use", #  could be a function, class method, or static method # TO REMOVE
     "redefined-loop-name", # Redefined loop variable
-    "bad-dunder-method-name", #  Dunder method `xxxx` has no special meaning  # TO REMOVE
-    "builtin-open",  # `open()` should be replaced by `Path.open()`  # TO REMOVE
-    "path-constructor-current-directory",  # Do not pass the current directory explicitly to `Path`  # TO REMOVE
     "unsupported-method-call-on-all",  # Calling `.append()` on `__all__` may not be supported by all type checkers # TO REMOVE
     "mutable-class-default",  # Mutable class attributes should be annotated with `typing.ClassVar`  # TO REMOVE
     "non-empty-init-module",  # `__init__` module should only contain docstrings and re-exports
-    "unused-noqa",  #  Unused noqa  # TO REMOVE
     "assert",   # Use of `assert` detected  # TO REMOVE
     "suspicious-non-cryptographic-random-usage",  #  suspicious-non-cryptographic-random-usage
 ]
@@ -124,15 +113,17 @@ ignore = [
      "yield-outside-function",
      "print"
  ]
- "test_*" = [
+ "test*" = [
      "assert",
+     "magic-value-comparison",
      "suspicious-subprocess-import",
      "subprocess-without-shell-equals-true",
      "start-process-with-partial-path",
-     "private-member-access",  # Private member accessed
+     "private-member-access",
  ]
 
 [tool.ruff.lint.pylint]
+max-args = 10
 max-positional-args = 10
 
 [tool.pyright]

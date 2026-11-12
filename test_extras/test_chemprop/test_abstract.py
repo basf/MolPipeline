@@ -53,7 +53,7 @@ class CallbackTestABC(abc.ABC, Generic[_CallbackVar]):
         """
         return self.get_callback_type()(**kwargs)
 
-    def get_trainer_kwargs(self, **kwargs: Any) -> dict[str, Any]:  # ruff: ignore[no-self-use,unused-method-argument]
+    def get_trainer_kwargs(self, **kwargs: Any) -> dict[str, Any]:  # ruff: ignore[unused-method-argument]
         """Return trainer kwargs required by the callback.
 
         Subclasses extend the returned dictionary via ``super()``.
@@ -295,7 +295,8 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
         )
         return trainer_kwargs
 
-    def test_original_callback(  # ruff: ignore[no-self-use]
+    @override
+    def test_original_callback(
         self,
         test_object: unittest.TestCase,
         orig_callback: pl.callbacks.ModelCheckpoint,
@@ -312,7 +313,8 @@ class ModelCheckpointTest(CallbackTestABC[pl.callbacks.ModelCheckpoint]):
         """
         test_object.assertTrue(orig_callback.best_model_path)
 
-    def test_cloned_callback(  # ruff: ignore[no-self-use]
+    @override
+    def test_cloned_callback(
         self,
         test_object: unittest.TestCase,
         cloned_callback: pl.callbacks.ModelCheckpoint,
