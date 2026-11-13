@@ -22,7 +22,7 @@ class TestCustomFilter(unittest.TestCase):
     def test_transform(self) -> None:
         """Test the custom filter."""
         mol_list = AutoToMol().transform(self.smiles_list)
-        res_filter = CustomFilter(lambda x: x.GetNumAtoms() == 2).transform(mol_list)  # ruff: ignore[magic-value-comparison]
+        res_filter = CustomFilter(lambda x: x.GetNumAtoms() == 2).transform(mol_list)
         res_bool = MolToBool().transform(res_filter)
         self.assertEqual(res_bool, [True, False, False, True])
 
@@ -31,7 +31,7 @@ class TestCustomFilter(unittest.TestCase):
         pipeline = Pipeline(
             [
                 ("auto_to_mol", AutoToMol()),
-                ("custom_filter", CustomFilter(lambda x: x.GetNumAtoms() == 2)),  # ruff: ignore[magic-value-comparison]
+                ("custom_filter", CustomFilter(lambda x: x.GetNumAtoms() == 2)),
                 ("mol_to_bool", MolToBool()),
             ],
         )

@@ -627,7 +627,7 @@ class InorganicsFilter(_MolToMolPipelineElement):
             Molecule if it contains carbon, else InvalidInstance.
 
         """
-        if not any(atom.GetAtomicNum() == CARBON_ATOM_NUM for atom in value.GetAtoms()):  # ruff: ignore[magic-value-comparison]
+        if not any(atom.GetAtomicNum() == CARBON_ATOM_NUM for atom in value.GetAtoms()):
             return InvalidInstance(
                 self.uuid,
                 "Molecule contains no organic atoms.",
