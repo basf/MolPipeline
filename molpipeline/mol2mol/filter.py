@@ -2,7 +2,7 @@
 
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from typing import Any, Self
+from typing import Any, ClassVar, Self
 
 from loguru import logger
 from rdkit import Chem
@@ -34,6 +34,8 @@ from molpipeline.utils.molpipeline_types import (
 )
 from molpipeline.utils.value_conversions import assure_range
 
+CARBON_ATOM_NUM = 6
+
 
 class ElementFilter(_MolToMolPipelineElement):
     """Filter to remove molecules containing chemical elements other than specified.
@@ -43,7 +45,7 @@ class ElementFilter(_MolToMolPipelineElement):
     number of atoms of each element.
     """
 
-    DEFAULT_ALLOWED_ELEMENT_NUMBERS = [
+    DEFAULT_ALLOWED_ELEMENT_NUMBERS: ClassVar[list[int]] = [
         1,
         5,
         6,
@@ -363,6 +365,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
             uuid=uuid,
         )
 
+    @override
     def get_params(self, deep: bool = True) -> dict[str, Any]:
         """Get parameters of ComplexFilter.
 
@@ -551,6 +554,7 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
 class MixtureFilter(_MolToMolPipelineElement):
     """MolToMol which removes molecules composed of multiple fragments."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Invalidate molecule containing multiple fragments.
 
@@ -579,6 +583,7 @@ class MixtureFilter(_MolToMolPipelineElement):
 class EmptyMoleculeFilter(_MolToMolPipelineElement):
     """EmptyMoleculeFilter which removes empty molecules."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Invalidate empty molecule.
 
@@ -601,9 +606,11 @@ class EmptyMoleculeFilter(_MolToMolPipelineElement):
 class InorganicsFilter(_MolToMolPipelineElement):
     """Filters Molecules which do not contain any organic (i.e. Carbon) atoms."""
 
-    CARBON_INORGANICS = ["O=C=O", "[C-]#[O+]"]  # CO2 and CO are not organic
-    CARBON_INORGANICS_MAX_ATOMS = 3
+    # CO2 and CO are not organic
+    CARBON_INORGANICS: ClassVar[list[str]] = ["O=C=O", "[C-]#[O+]"]
+    CARBON_INORGANICS_MAX_ATOMS: ClassVar[int] = 3
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Invalidate molecules not containing a carbon atom.
 
@@ -618,7 +625,7 @@ class InorganicsFilter(_MolToMolPipelineElement):
             Molecule if it contains carbon, else InvalidInstance.
 
         """
-        if not any(atom.GetAtomicNum() == 6 for atom in value.GetAtoms()):  # ruff: ignore[magic-value-comparison]
+        if not any(atom.GetAtomicNum() == CARBON_ATOM_NUM for atom in value.GetAtoms()):
             return InvalidInstance(
                 self.uuid,
                 "Molecule contains no organic atoms.",

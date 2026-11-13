@@ -1,7 +1,7 @@
 """Murcko scaffold clustering estimator."""
 
 from numbers import Integral
-from typing import Any, Literal, Self
+from typing import Any, ClassVar, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -27,7 +27,7 @@ class MurckoScaffoldClustering(ClusterMixin, BaseEstimator):
     linear_molecules_strategy: Literal["ignore", "own_cluster"]
     labels_: npt.NDArray[np.int32]
     n_clusters_: int
-    _parameter_constraints: dict[str, Any] = {
+    _parameter_constraints: ClassVar[dict[str, Any]] = {
         "n_jobs": [Integral, None],
     }
     use_smiles: bool

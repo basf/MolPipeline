@@ -66,13 +66,6 @@ class SimpleStringToMolElement(StringToMolPipelineElement, abc.ABC):
             Rdkit molecule if valid string representation, else None.
 
         """
-        if value is None:
-            return InvalidInstance(
-                self.uuid,
-                f"Invalid representation: {value}",
-                self.name,
-            )
-
         if not isinstance(value, str):
             return InvalidInstance(
                 self.uuid,

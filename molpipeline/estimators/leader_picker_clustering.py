@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from itertools import compress
 from numbers import Real
-from typing import Any, Self
+from typing import Any, ClassVar, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -19,7 +19,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
     """LeaderPicker clustering estimator (a sphere exclusion clustering algorithm)."""
 
     # we use sklearn's input validation to check constraints
-    _parameter_constraints: dict[str, Any] = {
+    _parameter_constraints: ClassVar[dict[str, Any]] = {
         "distance_threshold": [Interval(Real, 0, 1.0, closed="left")],
     }
 

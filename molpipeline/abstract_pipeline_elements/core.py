@@ -271,8 +271,8 @@ class ABCPipelineElement(abc.ABC):
     def fit_to_result(self, values: Any) -> Self:  # ruff: ignore[unused-method-argument]
         """Fit object to result of transformed values.
 
-        Fit object to the result of the transform function. This is useful for catching
-        invalid or removed molecules.
+        Fit object to the result of the transform function. This is useful for
+        catching invalid or removed molecules.
 
         Parameters
         ----------
@@ -553,7 +553,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         )
 
     def finalize_list(self, value_list: Iterable[Any]) -> list[Any]:
-        """Transform list of values according to parameters learned during fitting.
+        """Transform list of values according to learned parameters.
 
         Parameters
         ----------
@@ -625,7 +625,8 @@ class MolToMolPipelineElement(TransformingPipelineElement, abc.ABC):
         Returns
         -------
         OptionalMol
-            Transformed molecule if transformation was successful, else InvalidInstance.
+            Transformed molecule.
+            InvalidInstance if the transformation was not successful.
 
         """
         try:

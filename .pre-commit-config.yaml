@@ -19,13 +19,13 @@ repos:
         stages: [commit-msg]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.3
+    rev: v0.17.4
     hooks:
       - id: ruff-format
         types_or: [python, pyi, jupyter]
       - id: ruff-check
         types_or: [python, pyi, jupyter]
-        args: [ --fix, --exit-non-zero-on-fix, --config, ruff.toml]
+        args: [ --fix, --exit-non-zero-on-fix]
 
 
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -51,7 +51,7 @@ repos:
     hooks:
       - id: flake8
         additional_dependencies:
-          - docsig==0.80.1
+          - docsig==0.90.3
         args:
           - --extend-ignore=D203,E203,E501,F401,W5
           - "--sig-check-class-constructor"
