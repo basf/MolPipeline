@@ -32,10 +32,7 @@ def _make_physchem_morgan_feature_pipeline_elements() -> list[AnyStep]:
                 [
                     (
                         "RDKitPhysChem",
-                        MolToRDKitPhysChem(
-                            # we avoid standardization at this point
-                            standardizer=None,
-                        ),
+                        MolToRDKitPhysChem(),
                     ),
                     (
                         "MorganFP",

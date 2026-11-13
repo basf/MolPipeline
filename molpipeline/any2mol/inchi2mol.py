@@ -6,14 +6,14 @@ from typing_extensions import override
 from molpipeline.abstract_pipeline_elements.any2mol.string2mol import (
     SimpleStringToMolElement,
 )
-from molpipeline.utils.molpipeline_types import RDKitMol
+from molpipeline.abstract_pipeline_elements.core import RDKitMol
 
 
 class InchiToMol(SimpleStringToMolElement):
     """Transforms Inchi to RDKit Mol objects."""
 
     @override
-    def string_to_mol(self, value: str) -> RDKitMol:
+    def string_to_mol(self, value: str) -> RDKitMol | None:
         """Transform Inchi string to molecule.
 
         Parameters
@@ -23,8 +23,8 @@ class InchiToMol(SimpleStringToMolElement):
 
         Returns
         -------
-        RDKitMol
-            Rdkit molecule if valid Inchi, else None.
+        RDKitMol | None
+            Rdkit molecule if valid Inchi, else InvalidInstance.
 
         """
         return Chem.MolFromInchi(value)

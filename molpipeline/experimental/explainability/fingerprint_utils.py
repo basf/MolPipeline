@@ -7,7 +7,9 @@ import numpy as np
 import numpy.typing as npt
 
 from molpipeline.abstract_pipeline_elements.core import RDKitMol
-from molpipeline.mol2any import MolToMorganFP
+from molpipeline.abstract_pipeline_elements.mol2any.mol2bitvector import (
+    MolToRDKitGenFPElement,
+)
 from molpipeline.utils.substructure_handling import AtomEnvironment
 
 
@@ -56,7 +58,7 @@ def assign_prediction_importance(
 
 def fingerprint_shap_to_atomweights(
     mol: RDKitMol,
-    fingerprint_element: MolToMorganFP,
+    fingerprint_element: MolToRDKitGenFPElement,
     shap_mat: npt.NDArray[np.float64],
 ) -> list[float]:
     """Convert SHAP values to atom weights.
@@ -68,7 +70,7 @@ def fingerprint_shap_to_atomweights(
     ----------
     mol : RDKitMol
         The molecule.
-    fingerprint_element : MolToMorganFP
+    fingerprint_element : MolToRDKitGenFPElement
         The fingerprint element.
     shap_mat : npt.NDArray[np.float64]
         The SHAP values.
