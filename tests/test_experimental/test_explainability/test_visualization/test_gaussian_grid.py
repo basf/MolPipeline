@@ -16,7 +16,7 @@ from molpipeline.experimental.explainability import (
 from molpipeline.experimental.explainability.visualization.visualization import (
     make_sum_of_gaussians_grid,
 )
-from tests.test_experimental.test_explainability.test_visualization.test_visualization import (  # noqa: E501
+from tests.test_experimental.test_explainability.test_visualization.test_visualization import (  # ruff: ignore[line-too-long]
     _get_test_morgan_rf_pipeline,
 )
 
@@ -68,7 +68,7 @@ class TestSumOfGaussiansGrid(unittest.TestCase):
                 padding=[0.4, 0.4],
             )
             self.assertIsNotNone(value_grid)
-            grid_values = value_grid.values  # type: ignore[attr-defined]
+            grid_values = value_grid.values
             self.assertEqual(grid_values.size, 8 * 8)
 
             # test that the range of summed gaussian values is as expected for SHAP

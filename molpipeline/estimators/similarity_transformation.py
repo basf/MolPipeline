@@ -68,14 +68,14 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         if not isinstance(matrix_b, csr_matrix):
             matrix_b = csr_matrix(matrix_b)
         if self.distance:
-            return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
+            return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)
         return tanimoto_similarity_sparse(matrix_a, matrix_b)
 
     @override
     def fit(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
-        y: npt.NDArray[np.float64] | None = None,  # pylint: disable=unused-argument
+        X: npt.NDArray[np.float64] | csr_matrix,
+        y: npt.NDArray[np.float64] | None = None,
     ) -> Self:
         """Fit the model.
 
@@ -84,7 +84,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         X : npt.NDArray[np.float64] | csr_matrix
             Feature matrix to which the similarity matrix is computed.
         y : npt.NDArray[np.float64] | None, optional
-            Labels, by default None and never used
+            Labels, by default None and never used.
 
         Returns
         -------
@@ -98,7 +98,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
     @override
     def transform(
         self,
-        X: npt.NDArray[np.float64] | csr_matrix,  # pylint: disable=invalid-name
+        X: npt.NDArray[np.float64] | csr_matrix,
     ) -> npt.NDArray[np.float64]:
         """Transform the data.
 
@@ -107,15 +107,15 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         X : npt.NDArray[np.float64] | csr_matrix
             Feature matrix to which the similarity matrix is computed.
 
-        Raises
-        ------
-        ValueError
-            If the transformer has not been fitted yet.
-
         Returns
         -------
         npt.NDArray[np.float64]
             Similarity matrix of X to the training matrix.
+
+        Raises
+        ------
+        ValueError
+            If the transformer has not been fitted yet.
 
         """
         if self.training_matrix is None:
@@ -136,7 +136,7 @@ class TanimotoToTraining(BaseEstimator, TransformerMixin):
         X: npt.NDArray[np.float64] | csr_matrix
             Feature matrix to fit the model. Is returned as similarity matrix to itself.
         y: npt.NDArray[np.float64] | None, optional
-            Labels, by default None and never used
+            Labels, by default None and never used.
         **fit_params: Any
             Additional fit parameters. Ignored.
 

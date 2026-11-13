@@ -16,6 +16,11 @@ def assure_range(value: VarNumber | Sequence[VarNumber]) -> tuple[VarNumber, Var
     value: VarNumber | Sequence[VarNumber]
         Count value. Can be a single int | float or a Sequence of two values.
 
+    Returns
+    -------
+    IntCountRange
+        Tuple of count values.
+
     Raises
     ------
     ValueError
@@ -23,17 +28,12 @@ def assure_range(value: VarNumber | Sequence[VarNumber]) -> tuple[VarNumber, Var
     TypeError
         If the count is not an int or a sequence.
 
-    Returns
-    -------
-    IntCountRange
-        Tuple of count values.
-
     """
     if isinstance(value, (float, int)):
         return value, value
     if isinstance(value, Sequence):
         range_tuple = tuple(value)
-        if len(range_tuple) != 2:  # noqa: PLR2004
+        if len(range_tuple) != 2:  # ruff: ignore[magic-value-comparison]
             raise ValueError(f"Expected a sequence of length 2, got: {range_tuple}")
         return range_tuple
     raise TypeError(f"Got unexpected type: {type(value)}")

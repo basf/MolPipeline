@@ -212,8 +212,8 @@ class _MolPipeline:
     def fit(
         self,
         x_input: Any,
-        y: Any = None,
-        **fit_params: dict[Any, Any],
+        y: Any = None,  # ruff: ignore[unused-method-argument]
+        **fit_params: dict[Any, Any],  # ruff: ignore[unused-method-argument]
     ) -> Self:
         """Fit the MolPipeline according to x_input.
 
@@ -232,13 +232,11 @@ class _MolPipeline:
             Fitted MolPipeline.
 
         """
-        _ = y  # Making pylint happy
-        _ = fit_params  # Making pylint happy
         if self.requires_fitting:
             self.fit_transform(x_input)
         return self
 
-    def fit_transform(  # pylint: disable=unused-argument
+    def fit_transform(
         self,
         x_input: Any,
         y: Any = None,  # ruff: ignore[unused-method-argument]

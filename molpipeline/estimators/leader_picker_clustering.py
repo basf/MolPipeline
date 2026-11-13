@@ -10,8 +10,9 @@ import numpy.typing as npt
 from rdkit import DataStructs
 from rdkit.DataStructs import ExplicitBitVect
 from rdkit.SimDivFilters import rdSimDivPickers
-from sklearn.base import BaseEstimator, ClusterMixin, _fit_context
-from sklearn.utils._param_validation import Interval
+from sklearn.base import BaseEstimator, ClusterMixin, _fit_context  # ruff: ignore[import-private-name]
+from sklearn.utils._param_validation import Interval  # ruff: ignore[import-private-name]
+from typing_extensions import override
 
 
 class LeaderPickerClustering(ClusterMixin, BaseEstimator):
@@ -40,12 +41,11 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         # centroid indices
         self.centroids_: npt.NDArray[np.int32] | None = None
 
-    # pylint: disable=C0103,W0613
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self,
-        X: list[ExplicitBitVect],
-        y: npt.NDArray[np.float64] | None = None,
+        X: list[ExplicitBitVect],  # ruff: ignore[invalid-argument-name]
+        y: npt.NDArray[np.float64] | None = None,  # ruff: ignore[unused-method-argument]
     ) -> Self:
         """Fit leader picker clustering estimator.
 
@@ -98,8 +98,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
 
         return np.unique(labels).shape[0], labels
 
-    # pylint: disable=C0103,W0613
-    def _fit(self, X: list[ExplicitBitVect]) -> Self:
+    def _fit(self, X: list[ExplicitBitVect]) -> Self:  # ruff: ignore[invalid-argument-name]
         """Fit leader picker clustering estimator.
 
         Parameters
@@ -121,7 +120,7 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
             poolSize=len(X),
             threshold=self.distance_threshold,
             numThreads=1,  # according to rdkit docu this parameter is not used
-            # seed=self.random_state if self.random_state is not None else -1,
+            # seed=self.random_state if self.random_state is not None else -1,  # ruff: ignore[commented-out-code]
         )
 
         # Assign points to clusters based on centroid
@@ -133,9 +132,10 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
         self.centroids_ = np.array(picks)
         return self
 
+    @override
     def fit_predict(
         self,
-        X: list[ExplicitBitVect],  # pylint: disable=C0103
+        X: list[ExplicitBitVect],
         y: npt.NDArray[np.float64] | None = None,
         **kwargs: Any,
     ) -> npt.NDArray[np.int32]:
@@ -156,5 +156,4 @@ class LeaderPickerClustering(ClusterMixin, BaseEstimator):
             Cluster labels.
 
         """
-        # pylint: disable=W0246
-        return super().fit_predict(X, y, **kwargs)
+        return super().fit_predict(X, y, **kwargs)  # pylint: disable=useless-parent-delegation

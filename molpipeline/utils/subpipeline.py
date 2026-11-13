@@ -375,6 +375,11 @@ class SubpipelineExtractor:
         second_offset : int
             The offset to apply to the second element.
 
+        Returns
+        -------
+        Pipeline | None
+            The extracted subpipeline or None if the elements were not found.
+
         Raises
         ------
         ValueError
@@ -383,11 +388,6 @@ class SubpipelineExtractor:
             If the second element is not found in the pipeline.
         ValueError
             If the second element is before the first element.
-
-        Returns
-        -------
-        Pipeline | None
-            The extracted subpipeline or None if the elements were not found.
 
         """
         first_element_index = self._get_index_of_element_by_id(first_element)
@@ -443,16 +443,16 @@ def get_featurization_subpipeline(
     raise_not_found : bool
         If True, raise a ValueError if the model was not found.
 
-    Raises
-    ------
-    ValueError
-        If the model was not found and raise_not_found is True.
-
     Returns
     -------
     Pipeline | None
         The extracted featurization subpipeline.
         None if the featurization element was not found.
+
+    Raises
+    ------
+    ValueError
+        If the model was not found and raise_not_found is True.
 
     """
     pipeline_extractor = SubpipelineExtractor(pipeline)
@@ -475,15 +475,15 @@ def get_model_from_pipeline(
     raise_not_found : bool
         If True, raise a ValueError if the model was not found.
 
-    Raises
-    ------
-    ValueError
-        If the model was not found and raise_not_found is True.
-
     Returns
     -------
     BaseEstimator | None
         The extracted model or None if the model was not found.
+
+    Raises
+    ------
+    ValueError
+        If the model was not found and raise_not_found is True.
 
     """
     pipeline_extractor = SubpipelineExtractor(pipeline)

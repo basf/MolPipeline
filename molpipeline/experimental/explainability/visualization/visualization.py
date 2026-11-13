@@ -179,7 +179,7 @@ def _add_gaussians_for_bonds(
         bond_center = (a1_coords + a2_coords) / 2
 
         func = GaussFunctor2D(
-            center=bond_center,  # type: ignore
+            center=bond_center,
             std1=bond_width,
             std2=bond_length,
             scale=bond_weights[i],
@@ -229,16 +229,16 @@ def make_sum_of_gaussians_grid(
     bond_length: float
         Value for the length of displayed bond weights (along the bond-axis).
 
+    Returns
+    -------
+    ValueGrid
+        ValueGrid object with added functions.
+
     Raises
     ------
     ValueError
         If the length of `atom_weights` or `bond_weights` does not match the number of
         atoms or bonds in the molecule.
-
-    Returns
-    -------
-    ValueGrid
-        ValueGrid object with added functions.
 
     """
     # assign default values and convert to numpy array
@@ -248,7 +248,7 @@ def make_sum_of_gaussians_grid(
         atom_weights = np.array(atom_weights)
 
     if bond_weights is None:
-        bond_weights = np.zeros(len(mol.GetBonds()))
+        bond_weights = np.zeros(mol.GetNumBonds())
     elif not isinstance(bond_weights, np.ndarray):
         bond_weights = np.array(bond_weights)
 
@@ -256,7 +256,7 @@ def make_sum_of_gaussians_grid(
     if not len(atom_weights) == mol.GetNumAtoms():
         raise ValueError("len(atom_weights) is not equal to number of atoms in mol")
 
-    if not len(bond_weights) == len(mol.GetBonds()):
+    if not len(bond_weights) == mol.GetNumBonds():
         raise ValueError("len(bond_weights) is not equal to number of bonds in mol")
 
     # extract the 2D conformation of the molecule to be drawn
@@ -530,16 +530,16 @@ def structure_heatmap(
     drawer, *_ = _structure_heatmap(
         mol,
         atom_weights,
-        color,
-        width,
-        height,
-        color_limits,
+        color=color,
+        width=width,
+        height=height,
+        color_limits=color_limits,
     )
     figure_bytes = drawer.GetDrawingText()
     return to_png(figure_bytes)
 
 
-def structure_heatmap_shap(  # pylint: disable=too-many-locals
+def structure_heatmap_shap(
     explanation: SHAPFeatureAndAtomExplanation,
     color: str | Colormap | tuple[RGBAtuple, RGBAtuple, RGBAtuple] | None = None,
     width: int = 600,
@@ -567,6 +567,11 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     color_limits: tuple[float, float] | None
         The color limits.
 
+    Returns
+    -------
+    Image
+        The image as PNG.
+
     Raises
     ------
     ValueError
@@ -586,11 +591,6 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     ValueError
         If the feature weights have an unsupported shape.
 
-    Returns
-    -------
-    Image
-        The image as PNG.
-
     """
     if explanation.feature_weights is None:
         raise ValueError("Explanation does not contain feature weights.")
@@ -605,14 +605,14 @@ def structure_heatmap_shap(  # pylint: disable=too-many-locals
     if explanation.atom_weights is None:
         raise ValueError("Explanation does not contain atom weights.")
 
-    if explanation.prediction.ndim > 2:
+    if explanation.prediction.ndim > 2:  # ruff: ignore[magic-value-comparison]
         raise ValueError(
             "Unsupported shape for prediction. Maximum 2 dimension is supported.",
         )
 
     if explanation.feature_weights.ndim == 1:
         feature_weights = explanation.feature_weights
-    elif explanation.feature_weights.ndim == 2:
+    elif explanation.feature_weights.ndim == 2:  # ruff: ignore[magic-value-comparison]
         feature_weights = explanation.feature_weights[:, 1]
     else:
         raise ValueError("Unsupported shape for feature weights.")

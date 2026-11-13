@@ -1,7 +1,5 @@
 """Pipline elements for mol to mol transformations."""
 
-# pylint: disable=too-many-arguments
-
 import copy
 import warnings
 from typing import Any, Literal, Self
@@ -111,7 +109,7 @@ class MolToMolReaction(MolToMolPipelineElement):
 
     @property
     def reaction(self) -> AllChem.ChemicalReaction:
-        """Get the reaction which is applied to the input molecule."""
+        """The reaction which is applied to the input molecule."""
         return self._reaction
 
     @reaction.setter
@@ -141,16 +139,16 @@ class MolToMolReaction(MolToMolPipelineElement):
         value: RDKitMol
             Molecule to apply reaction to.
 
+        Returns
+        -------
+        OptionalMol
+            Product of reaction if possible, else InvalidInstance.
+
         Raises
         ------
         ValueError
             If reaction is resulting in multiple products and handle_multi is set to
             "raise".
-
-        Returns
-        -------
-        OptionalMol
-            Product of reaction if possible, else InvalidInstance.
 
         """
         mol = value  # Only value to keep signature consistent.

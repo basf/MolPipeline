@@ -27,7 +27,9 @@ from chemprop.nn.predictors import MulticlassDirichletFFN as _MulticlassDirichle
 from chemprop.nn.predictors import MveFFN as _MveFFN
 from chemprop.nn.predictors import RegressionFFN as _RegressionFFN
 from chemprop.nn.predictors import SpectralFFN as _SpectralFFN
-from chemprop.nn.predictors import _FFNPredictorBase as _Predictor  # noqa: PLC2701
+from chemprop.nn.predictors import (
+    _FFNPredictorBase as _Predictor,  # ruff: ignore[import-private-name]
+)
 from chemprop.nn.transforms import UnscaleTransform
 from chemprop.nn.utils import Activation, get_activation_function
 from sklearn.base import BaseEstimator
@@ -99,7 +101,7 @@ WARN_MSG = (
 class BondMessagePassing(_BondMessagePassing, BaseEstimator):
     """A wrapper for the BondMessagePassing class."""
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(
         self,
         d_v: int = DEFAULT_ATOM_FDIM,
         d_e: int = DEFAULT_BOND_FDIM,
@@ -117,11 +119,11 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
         Parameters
         ----------
         d_v : int, default=DEFAULT_ATOM_FDIM
-            The input vertices feature dimension, by default DEFAULT_ATOM_FDIM
+            The input vertices feature dimension, by default DEFAULT_ATOM_FDIM.
         d_e : int, default=DEFAULT_BOND_FDIM
-            The input edges feature dimension, by default DEFAULT_BOND_FDIM
+            The input edges feature dimension, by default DEFAULT_BOND_FDIM.
         d_h : int, default=DEFAULT_HIDDEN_DIM
-            The hidden layer dimension, by default DEFAULT_HIDDEN_DIM
+            The hidden layer dimension, by default DEFAULT_HIDDEN_DIM.
         bias : bool, default=False
             Whether to use bias in the weight matrices.
         depth : int, default=3
@@ -134,7 +136,7 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
             Whether to use undirected edges.
         d_vd : int or None, optional
             Dimension of additional vertex descriptors that will be concatenated to the
-            hidden features before readout
+            hidden features before readout.
         state_dict_ref : str | Path | dict[str, Any] | None, optional
             Path to a state dict to load the model weights from.
 
@@ -220,13 +222,10 @@ class BondMessagePassing(_BondMessagePassing, BaseEstimator):
 
 
 # pylint: disable=too-many-ancestors, too-many-instance-attributes
-class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
+class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):
     """Abstract wrapper for the Predictor class."""
 
-    _T_default_criterion: ChempropMetric
-    _T_default_metric: ChempropMetric
-
-    def __init__(  # pylint: disable=too-many-positional-arguments  # noqa: PLR0917
+    def __init__(  # ruff: ignore[too-many-arguments,too-many-positional-arguments]
         self,
         n_tasks: int = 1,
         input_dim: int = DEFAULT_HIDDEN_DIM,
@@ -298,7 +297,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
 
     @property
     def input_dim(self) -> int:
-        """Get the dimension of input."""
+        """The dimension of input."""
         return self._input_dim
 
     @input_dim.setter
@@ -315,7 +314,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
 
     @property
     def n_tasks(self) -> int:
-        """Get the number of tasks."""
+        """The number of tasks."""
         return self._n_tasks
 
     @n_tasks.setter
@@ -384,7 +383,7 @@ class PredictorWrapper(_Predictor, BaseEstimator, abc.ABC):  # type: ignore
         return self
 
 
-class RegressionFFN(PredictorWrapper, _RegressionFFN):  # type: ignore
+class RegressionFFN(PredictorWrapper, _RegressionFFN):
     """A wrapper for the RegressionFFN class."""
 
     n_targets: int = 1
@@ -392,21 +391,21 @@ class RegressionFFN(PredictorWrapper, _RegressionFFN):  # type: ignore
     _T_default_metric = MSE
 
 
-class MveFFN(PredictorWrapper, _MveFFN):  # type: ignore
+class MveFFN(PredictorWrapper, _MveFFN):
     """A wrapper for the MveFFN class."""
 
     n_targets: int = 2
     _T_default_criterion = MVELoss
 
 
-class EvidentialFFN(PredictorWrapper, _EvidentialFFN):  # type: ignore
+class EvidentialFFN(PredictorWrapper, _EvidentialFFN):
     """A wrapper for the EvidentialFFN class."""
 
     n_targets: int = 4
     _T_default_criterion = EvidentialLoss
 
 
-class BinaryClassificationFFN(PredictorWrapper, _BinaryClassificationFFN):  # type: ignore
+class BinaryClassificationFFN(PredictorWrapper, _BinaryClassificationFFN):
     """A wrapper for the BinaryClassificationFFN class."""
 
     n_targets: int = 1
@@ -414,7 +413,7 @@ class BinaryClassificationFFN(PredictorWrapper, _BinaryClassificationFFN):  # ty
     _T_default_metric = BinaryAUROC
 
 
-class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):  # type: ignore
+class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):
     """A wrapper for the BinaryDirichletFFN class."""
 
     n_targets: int = 2
@@ -422,14 +421,14 @@ class BinaryDirichletFFN(PredictorWrapper, _BinaryDirichletFFN):  # type: ignore
     _T_default_metric = BinaryAUROC
 
 
-class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN):  # type: ignore
+class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN):
     """A wrapper for the MulticlassClassificationFFN class."""
 
     n_targets: int = 1
     _T_default_criterion = CrossEntropyLoss
     _T_default_metric = MulticlassMCCMetric
 
-    def __init__(  # pylint: disable=too-many-positional-arguments #noqa: PLR0917
+    def __init__(  # ruff: ignore[too-many-arguments,too-many-positional-arguments]
         self,
         n_classes: int,
         n_tasks: int = 1,
@@ -474,7 +473,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
             Path to a state dict to load the model weights from.
 
         """
-        super().__init__(  # pylint: disable=too-many-arguments
+        super().__init__(
             n_tasks,
             input_dim,
             hidden_dim,
@@ -508,7 +507,7 @@ class MulticlassClassificationFFN(PredictorWrapper, _MulticlassClassificationFFN
         super().__setstate__(state)
 
 
-class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type: ignore
+class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):
     """A wrapper for the MulticlassDirichletFFN class."""
 
     n_targets: int = 1
@@ -516,7 +515,7 @@ class MulticlassDirichletFFN(PredictorWrapper, _MulticlassDirichletFFN):  # type
     _T_default_metric = MulticlassMCCMetric
 
 
-class SpectralFFN(PredictorWrapper, _SpectralFFN):  # type: ignore
+class SpectralFFN(PredictorWrapper, _SpectralFFN):
     """A wrapper for the SpectralFFN class."""
 
     n_targets: int = 1
@@ -534,7 +533,7 @@ class MPNN(_MPNN, BaseEstimator):
 
     bn: nn.BatchNorm1d | nn.Identity
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(
         self,
         message_passing: MessagePassing,
         agg: Aggregation,
@@ -619,9 +618,8 @@ class MPNN(_MPNN, BaseEstimator):
             self.bn = nn.Identity()
 
         if self.metric_list is None:
-            # pylint: disable=protected-access
             self.metrics = nn.ModuleList(
-                [self.predictor._T_default_metric(), self.criterion],  # noqa: SLF001
+                [self.predictor._T_default_metric(), self.criterion],  # ruff: ignore[private-member-access]
             )
         else:
             self.metrics = nn.ModuleList([*list(self.metric_list), self.criterion])
@@ -648,8 +646,7 @@ class MPNN(_MPNN, BaseEstimator):
         return self
 
 
-# pylint: disable=too-many-ancestors
-class MeanAggregation(_MeanAggregation, BaseEstimator):
+class MeanAggregation(_MeanAggregation, BaseEstimator):  # pylint: disable=too-many-ancestors
     """Aggregate the graph-level representation by averaging node representations."""
 
     def __init__(self, dim: int = 0) -> None:
@@ -664,8 +661,7 @@ class MeanAggregation(_MeanAggregation, BaseEstimator):
         super().__init__(dim)
 
 
-# pylint: disable=too-many-ancestors
-class SumAggregation(_SumAggregation, BaseEstimator):
+class SumAggregation(_SumAggregation, BaseEstimator):  # pylint: disable=too-many-ancestors
     """Aggregate the graph-level representation by summing the node representations."""
 
     def __init__(self, dim: int = 0) -> None:

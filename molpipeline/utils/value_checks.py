@@ -30,15 +30,15 @@ def get_length(values: Any) -> int:
     values: Any
         Values to be checked.
 
-    Raises
-    ------
-    TypeError
-        If values does not have a shape or len attribute.
-
     Returns
     -------
     int
         Length of the values.
+
+    Raises
+    ------
+    TypeError
+        If values does not have a shape or len attribute.
 
     """
     if hasattr(values, "shape"):

@@ -38,15 +38,15 @@ def _get_test_morgan_rf_pipeline(task: str = "classification") -> Pipeline:
     task : str, optional (default="classification")
         Task of the pipeline. Either "classification" or "regression".
 
-    Raises
-    ------
-    ValueError
-        If the task is not "classification" or "regression".
-
     Returns
     -------
     Pipeline
         Pipeline with Morgan fingerprints and a random forest classifier.
+
+    Raises
+    ------
+    ValueError
+        If the task is not "classification" or "regression".
 
     """
     if task == "classification":
@@ -166,7 +166,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
                     explanation.atom_weights,  # type: ignore
                     width=8,
                     height=8,
-                )  # type: ignore[union-attr]
+                )
                 self.assertIsNotNone(image)
                 self.assertEqual(image.format, "PNG")
 
@@ -186,7 +186,7 @@ class TestExplainabilityVisualization(unittest.TestCase):
                     explanation=explanation,  # type: ignore[arg-type]
                     width=8,
                     height=8,
-                )  # type: ignore[union-attr]
+                )
                 self.assertIsNotNone(image)
                 self.assertEqual(image.format, "PNG")
 
@@ -219,12 +219,12 @@ class TestExplainabilityVisualization(unittest.TestCase):
         self.assertTrue(hasattr(explanations1[0], "atom_weights"))
         self.assertTrue(hasattr(explanations2[0], "atom_weights"))
         self.assertTrue(hasattr(explanations3[0], "atom_weights"))
-        self.assertIsInstance(explanations1[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertIsInstance(explanations2[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertIsInstance(explanations3[0].atom_weights, np.ndarray)  # type: ignore[union-attr]
-        self.assertEqual(len(explanations1[0].atom_weights), 1)  # type: ignore
-        self.assertEqual(len(explanations2[0].atom_weights), 1)  # type: ignore
-        self.assertEqual(len(explanations3[0].atom_weights), 1)  # type: ignore
+        self.assertIsInstance(explanations1[0].atom_weights, np.ndarray)
+        self.assertIsInstance(explanations2[0].atom_weights, np.ndarray)
+        self.assertIsInstance(explanations3[0].atom_weights, np.ndarray)
+        self.assertEqual(len(explanations1[0].atom_weights), 1)
+        self.assertEqual(len(explanations2[0].atom_weights), 1)
+        self.assertEqual(len(explanations3[0].atom_weights), 1)
 
         # test visualization
         all_explanations = explanations1 + explanations2 + explanations3
@@ -233,11 +233,6 @@ class TestExplainabilityVisualization(unittest.TestCase):
             mol = explanation.molecule
             if not isinstance(mol, Chem.Mol):
                 raise ValueError("Expected a Chem.Mol object.")
-            image = structure_heatmap(
-                mol,
-                explanation.atom_weights,  # type: ignore
-                width=8,
-                height=8,
-            )  # type: ignore[union-attr]
+            image = structure_heatmap(mol, explanation.atom_weights, width=8, height=8)
             self.assertIsNotNone(image)
             self.assertEqual(image.format, "PNG")

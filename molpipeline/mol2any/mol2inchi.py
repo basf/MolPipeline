@@ -1,6 +1,7 @@
 """Classes for transforming rdkit molecules to inchi."""
 
 from rdkit import Chem
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.mol2any.mol2string import (
     MolToStringPipelineElement as _MolToStringPipelineElement,
@@ -11,6 +12,7 @@ from molpipeline.utils.molpipeline_types import RDKitMol
 class MolToInchi(_MolToStringPipelineElement):
     """PipelineElement to transform a molecule to an INCHI string."""
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> str:
         """Transform a molecule to a INCHI-key string.
 
@@ -42,15 +44,16 @@ class MolToInchiKey(_MolToStringPipelineElement):
         Parameters
         ----------
         name: str, default="MolToInchiKey"
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
-            Number of jobs to use for parallelization
+            Number of jobs to use for parallelization.
         uuid:  str | None, optional
-            UUID of PipelineElement, by default None
+            UUID of PipelineElement.
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> str:
         """Transform a molecule to an INCHI-key string.
 

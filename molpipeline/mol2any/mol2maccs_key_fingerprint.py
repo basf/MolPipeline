@@ -49,7 +49,7 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
             UUID of the PipelineElement.
 
         """
-        super().__init__(  # pylint: disable=R0801
+        super().__init__(  # pylint: disable=duplicate-code
             return_as=return_as,
             name=name,
             n_jobs=n_jobs,
@@ -68,15 +68,15 @@ class MolToMACCSFP(MolToFingerprintPipelineElement):
         value : RDKitMol
             RDKit molecule.
 
-        Raises
-        ------
-        ValueError
-            If the variable `return_as` is not one of the allowed values.
-
         Returns
         -------
         dict[int, int] | npt.NDArray[np.int_] | ExplicitBitVect
             MACCS key fingerprint.
+
+        Raises
+        ------
+        ValueError
+            If the variable `return_as` is not one of the allowed values.
 
         """
         fingerprint = MACCSkeys.GenMACCSKeys(value)  # type: ignore[attr-defined]

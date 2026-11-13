@@ -13,7 +13,7 @@ import numpy.typing as npt
 from loguru import logger
 from sklearn.base import (
     BaseEstimator,
-    _fit_context,  # noqa: PLC2701
+    _fit_context,  # ruff: ignore[import-private-name]
     clone,
 )
 from sklearn.calibration import (
@@ -21,35 +21,35 @@ from sklearn.calibration import (
 )
 from sklearn.calibration import (
     _CalibratedClassifier,
-    _fit_calibrator,  # noqa: PLC2701
+    _fit_calibrator,  # ruff: ignore[import-private-name]
 )
 from sklearn.frozen import FrozenEstimator
 from sklearn.model_selection import LeaveOneOut, check_cv, cross_val_predict
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import (
     Bunch,
-    _safe_indexing,  # noqa: PLC2701
+    _safe_indexing,  # ruff: ignore[import-private-name]
     indexable,
 )
-from sklearn.utils._array_api import (
-    get_namespace_and_device,  # noqa: PLC2701
-    move_to,  # noqa: PLC2701
+from sklearn.utils._array_api import (  # ruff: ignore[import-private-name]
+    get_namespace_and_device,
+    move_to,
 )
-from sklearn.utils._response import (
-    _get_response_values,  # noqa: PLC2701
-    _process_predict_proba,  # noqa: PLC2701
+from sklearn.utils._response import (  # ruff: ignore[import-private-name]
+    _get_response_values,
+    _process_predict_proba,
 )
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.metadata_routing import (
-    _routing_enabled,  # noqa: PLC2701
+    _routing_enabled,  # ruff: ignore[import-private-name]
     process_routing,
 )
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.parallel import Parallel, delayed
 from sklearn.utils.validation import (
-    _check_method_params,  # noqa: PLC2701
-    _check_response_method,  # noqa: PLC2701
-    _check_sample_weight,  # noqa: PLC2701
+    _check_method_params,  # ruff: ignore[import-private-name]
+    _check_response_method,  # ruff: ignore[import-private-name]
+    _check_sample_weight,  # ruff: ignore[import-private-name]
 )
 from typing_extensions import override
 
@@ -89,12 +89,12 @@ def merge_class_and_sample_weights(
     if sample_weight is None:
         return class_weights_array
 
-    return class_weights_array * sample_weight
+    return class_weights_array * np.array(sample_weight)
 
 
-def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R0917
+def _fit_classifier_calibrator_pair(  # ruff: ignore[too-many-arguments,too-many-positional-arguments]
     estimator: BaseEstimator,
-    X: npt.ArrayLike,  # noqa: N803  # pylint: disable=C0103
+    X: npt.ArrayLike,  # ruff: ignore[invalid-argument-name]
     y: npt.ArrayLike,
     train: npt.NDArray[np.int_],
     test: npt.NDArray[np.int_],
@@ -158,12 +158,12 @@ def _fit_classifier_calibrator_pair(  # noqa: PLR0917  # pylint: disable=R0914,R
 
     """
     fit_params_train = _check_method_params(X, params=fit_params, indices=train)
-    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # noqa: N806  # pylint: disable=C0103
-    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # noqa: N806  # pylint: disable=C0103
+    X_train, y_train = _safe_indexing(X, train), _safe_indexing(y, train)  # ruff: ignore[non-lowercase-variable-in-function]
+    X_test, y_test = _safe_indexing(X, test), _safe_indexing(y, test)  # ruff: ignore[non-lowercase-variable-in-function]
 
     estimator.fit(X_train, y_train, **fit_params_train)
 
-    predictions, _ = _get_response_values(  # pylint: disable=W0632
+    predictions, _ = _get_response_values(  # pylint: disable=unbalanced-tuple-unpacking
         estimator,
         X_test,
         response_method=["decision_function", "predict_proba"],
@@ -439,6 +439,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
         n_jobs: int | None = None,
         ensemble: Literal["auto"] | bool = "auto",
         class_weight: dict[Any, float] | Literal["balanced"] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize the CalibratedClassifierCV instance.
 
@@ -453,7 +454,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             - 'sigmoid', which corresponds to Platt's method (i.e. A binary logistic
               regression model)
             - 'isotonic', which is a non-parametric approach
-            - 'temperature', temperature scaling
+            - 'temperature', temperature scaling.
         cv : int, cross-validation generator, or iterable, optional
             Determines the cross-validation splitting strategy.
         n_jobs : int, optional
@@ -462,13 +463,15 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             The value ``-1`` means using all processors.
         ensemble : Literal["auto"] | bool, default="auto"
             Determines how the calibrator is fitted.
-            The value "auto" will use `False` if the `estimator` is a
-            :class:`~sklearn.frozen.FrozenEstimator`, and `True` otherwise.
+            The value "auto" will use `False` if the `estimator` is
+            a :class:`~sklearn.frozen.FrozenEstimator`, and `True` otherwise.
         class_weight : dict | Literal['balanced'], optional
             Class weights used for the calibration.
             If a dict, it must be provided in this form: ``{class_label: weight}``.
             Those weights won't be used for the underlying estimator training.
             See :term:`Glossary <class_weight>` for more details.
+        **kwargs : Any
+            Addition parameters set via ``set_params``.
 
         """
         if method == "temperature" and class_weight is not None:
@@ -484,15 +487,16 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
             ensemble=ensemble,
         )
         self.class_weight = class_weight
+        self.set_params(**kwargs)
 
     @override
     @_fit_context(
         # CalibratedClassifierCV.estimator is not validated yet
         prefer_skip_nested_validation=False,
     )
-    def fit(  # noqa: PLR0912, PLR0914, PLR0915  # pylint: disable=R0912,R0914,R0915
+    def fit(  # ruff: ignore[too-many-branches, too-many-locals, too-many-statements]
         self,
-        X: npt.ArrayLike,  # pylint: disable=C0103
+        X: npt.ArrayLike,
         y: npt.ArrayLike,
         sample_weight: npt.ArrayLike | None = None,
         **fit_params: Any,
@@ -527,18 +531,18 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         """
         check_classification_targets(y)
-        X, y = indexable(X, y)  # noqa: N806
+        X, y = indexable(X, y)  # ruff: ignore[non-lowercase-variable-in-function]
         estimator = self._get_estimator()
 
         ensemble = self.ensemble
         if ensemble == "auto":
             ensemble = not isinstance(estimator, FrozenEstimator)
 
-        self.calibrated_classifiers_ = []  # pylint: disable=W0201
+        self.calibrated_classifiers_ = []  # pylint: disable=attribute-defined-outside-init
 
         # Set `classes_` using all `y`
         label_encoder_ = LabelEncoder().fit(y)
-        self.classes_ = label_encoder_.classes_  # pylint: disable=W0201
+        self.classes_ = label_encoder_.classes_  # pylint: disable=attribute-defined-outside-init
         if self.method == "temperature" and isinstance(y[0], str):  # type: ignore
             # for temperature scaling if `y` contains strings then encode it
             # right here to avoid fitting LabelEncoder again within the
@@ -577,7 +581,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         xp, is_array_api, device_ = get_namespace_and_device(X)
         if is_array_api:
-            y, sample_weight = move_to(  # type: ignore  # pylint: disable=W0632
+            y, sample_weight = move_to(  # pylint: disable=unbalanced-tuple-unpacking
                 y,
                 sample_weight,
                 xp=xp,
@@ -608,7 +612,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         if ensemble:
             parallel = Parallel(n_jobs=self.n_jobs)
-            self.calibrated_classifiers_ = parallel(  # pylint: disable=W0201
+            self.calibrated_classifiers_ = parallel(  # pylint: disable=attribute-defined-outside-init
                 delayed(_fit_classifier_calibrator_pair)(
                     clone(estimator),
                     X,
@@ -644,7 +648,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
                 n_jobs=self.n_jobs,
                 params=routed_params.estimator.fit,
             )
-            if self.classes_.shape[0] == 2:  # noqa: PLR2004
+            if self.classes_.shape[0] == 2:  # ruff: ignore[magic-value-comparison]
                 # Ensure shape (n_samples, 1) in the binary case
                 if method_name == "predict_proba":
                     # Select the probability column of the positive class
@@ -681,7 +685,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         first_clf = self.calibrated_classifiers_[0].estimator
         if hasattr(first_clf, "n_features_in_"):
-            self.n_features_in_ = first_clf.n_features_in_  # pylint: disable=W0201
+            self.n_features_in_ = first_clf.n_features_in_  # pylint: disable=attribute-defined-outside-init
         if hasattr(first_clf, "feature_names_in_"):
-            self.feature_names_in_ = first_clf.feature_names_in_  # pylint: disable=W0201
+            self.feature_names_in_ = first_clf.feature_names_in_  # pylint: disable=attribute-defined-outside-init
         return self

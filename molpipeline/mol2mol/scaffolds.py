@@ -4,6 +4,7 @@ from typing import Any, Self
 
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold as RDKIT_MurckoScaffold
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import (
     MolToMolPipelineElement as _MolToMolPipelineElement,
@@ -17,6 +18,7 @@ class MurckoScaffold(_MolToMolPipelineElement):
     The Murcko-scaffold is composed of all rings and the linker atoms between them.
     """
 
+    @override
     def pretransform_single(self, value: RDKitMol) -> OptionalMol:
         """Extract Murco-scaffold of molecule.
 
@@ -138,16 +140,15 @@ class MakeScaffoldGeneric(_MolToMolPipelineElement):
         parameters: dict[str, Any]
             Parameters to set.
 
+        Returns
+        -------
+        Self
+            Pipeline element with set parameters.
 
         Raises
         ------
         ValueError
             If parameters are not valid.
-
-        Returns
-        -------
-        Self
-            Pipeline element with set parameters.
 
         """
         param_copy = parameters.copy()

@@ -104,10 +104,8 @@ class TestChempropModel(unittest.TestCase):
     def test_classifier_methods(self) -> None:
         """Test the classifier methods."""
         chemprop_model = get_chemprop_model_binary_classification_mpnn()
-        # pylint: disable=protected-access
-        self.assertTrue(chemprop_model._is_binary_classifier())  # noqa: SLF001
-        self.assertFalse(chemprop_model._is_multiclass_classifier())  # noqa: SLF001
-        # pylint: enable=protected-access
+        self.assertTrue(chemprop_model._is_binary_classifier())
+        self.assertFalse(chemprop_model._is_multiclass_classifier())
         self.assertTrue(hasattr(chemprop_model, "predict_proba"))
 
     def test_neural_fp(self) -> None:

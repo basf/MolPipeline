@@ -14,9 +14,9 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
     extra_atom_fdim: InitVar[int]
     extra_bond_fdim: InitVar[int]
 
-    def get_params(
+    def get_params(  # ruff: ignore[no-self-use]
         self,
-        deep: bool = True,  # pylint: disable=unused-argument
+        deep: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> dict[str, InitVar[int]]:
         """Get parameters for the featurizer.
 
@@ -33,7 +33,7 @@ class SimpleMoleculeMolGraphFeaturizer(_SimpleMoleculeMolGraphFeaturizer):
         """
         return {}
 
-    def set_params(self, **parameters: Any) -> Self:  # pylint: disable=unused-argument
+    def set_params(self, **parameters: Any) -> Self:  # ruff: ignore[unused-method-argument]
         """Set the parameters of the featurizer.
 
         Parameters

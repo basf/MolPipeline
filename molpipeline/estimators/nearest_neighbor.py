@@ -100,8 +100,8 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
     # pylint: disable=arguments-differ, signature-differs
     def fit(
         self,
-        X: (npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any]),  # pylint: disable=invalid-name # noqa: N803
-        y: Sequence[Any],  # pylint: disable=invalid-name
+        X: (npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any]),  # ruff: ignore[invalid-argument-name]
+        y: Sequence[Any],
     ) -> Self:
         """Fit the model using X as training data.
 
@@ -136,10 +136,9 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         super().fit(X)
         return self
 
-    # pylint: disable=invalid-name
     def predict(
         self,
-        X: npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any],  # noqa: N803
+        X: npt.NDArray[Any] | sparse.csr_matrix | Sequence[Any],  # ruff: ignore[invalid-argument-name]
         return_distance: bool = False,
         n_neighbors: int | None = None,
     ) -> npt.NDArray[Any]:
@@ -149,23 +148,22 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         ----------
         X : npt.NDArray[Any] | sparse.csr_matrix
             The new data to query.
-        return_distance : bool, optional (default = False)
+        return_distance : bool, default=False
             If True, return the distances to the neighbors of each point.
-            Default: False
-        n_neighbors : int, optional (default = None)
-            Number of neighbors to get. If None, the value set at initialization is
-            used.
-
-        Raises
-        ------
-        ValueError
-            If the model has not been fitted yet.
+        n_neighbors : int, optional
+            Number of neighbors to get.
+            If None, the value set at initialization is used.
 
         Returns
         -------
         tuple[npt.NDArray[Any], npt.NDArray[np.float64]] | npt.NDArray[Any]
             The indices of the nearest points in the population matrix and the distances
             to the points.
+
+        Raises
+        ------
+        ValueError
+            If the model has not been fitted yet.
 
         """
         if self.learned_names_ is None:
@@ -188,7 +186,7 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
 
     def fit_predict(
         self,
-        X: (npt.NDArray[Any] | sparse.csr_matrix),  # pylint: disable=invalid-name # noqa: N803
+        X: (npt.NDArray[Any] | sparse.csr_matrix),  # ruff: ignore[invalid-argument-name]
         y: Sequence[Any],
         return_distance: bool = False,
         n_neighbors: int | None = None,
@@ -202,10 +200,9 @@ class NamedNearestNeighbors(NearestNeighbors):  # pylint: disable=too-many-ances
         y : Sequence[Any]
             Target values. Here values are used as returned nearest neighbors.
             Must have the same length as X.
-        return_distance : bool, optional (default = False)
+        return_distance : bool, default=False
             If True, return the distances to the neighbors of each point.
-            Default: False
-        n_neighbors : int, optional (default = None)
+        n_neighbors : int, optional
             Number of neighbors to get. If None, the value set at initialization is
             used.
 
@@ -264,8 +261,8 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
 
     def fit(
         self,
-        X: sparse.csr_matrix,  # pylint: disable=invalid-name # noqa: N803
-        y: Sequence[Any] | None = None,  # pylint: disable=invalid-name
+        X: sparse.csr_matrix,  # ruff: ignore[invalid-argument-name]
+        y: Sequence[Any] | None = None,
     ) -> Self:
         """Fit the estimator using X as target fingerprint data set.
 
@@ -350,17 +347,17 @@ class TanimotoKNN(BaseEstimator):  # pylint: disable=too-few-public-methods
         similarity_matrix: npt.NDArray[np.float64]
             Similarity matrix of Tanimoto scores between query and target fingerprints.
 
-        Raises
-        ------
-        AssertionError
-            If the number of neighbors k has not been set. This should happen in the
-            fit function.
-
         Returns
         -------
         tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]
             Indices of the query's k-nearest neighbors in the target fingerprints and
             the corresponding similarities.
+
+        Raises
+        ------
+        AssertionError
+            If the number of neighbors k has not been set. This should happen in the
+            fit function.
 
         """
         # Get the indices of the k-nearest neighbors.

@@ -5,17 +5,22 @@ from typing import Any, Literal, get_args
 
 import numpy as np
 import numpy.typing as npt
-import pandas as pd
 from numpy.random import RandomState  # pylint: disable=no-name-in-module
-from sklearn.model_selection import BaseShuffleSplit, StratifiedKFold
-from sklearn.model_selection._split import _validate_shuffle_split
+from sklearn.model_selection import BaseShuffleSplit
+from sklearn.model_selection._split import (  # ruff: ignore[import-private-name]
+    _validate_shuffle_split,
+)
 from sklearn.utils import check_array, shuffle
-from sklearn.utils.validation import _num_samples, check_random_state
+from sklearn.utils.validation import (
+    _num_samples,  # ruff: ignore[import-private-name]
+    check_random_state,
+)
+from typing_extensions import override
 
 SplitModeOption = Literal["groups", "samples"]
 
 
-class GroupShuffleSplit(BaseShuffleSplit):
+class GroupShuffleSplit(BaseShuffleSplit):  # pylint: disable=abstract-method
     """Creates a shuffle split while considering groups.
 
     This is a modified version of sklearn's GroupShuffleSplit which can control with
@@ -77,9 +82,9 @@ class GroupShuffleSplit(BaseShuffleSplit):
             )
         self.split_mode = split_mode
 
-    def _iter_indices_split_mode_samples(
+    def _iter_indices_split_mode_samples(  # ruff: ignore[too-many-locals]
         self,
-        X: Any,  # pylint: disable=invalid-name
+        X: Any,  # ruff: ignore[invalid-argument-name]
         groups: npt.ArrayLike,
     ) -> Generator[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None]:
         """Generate indices to split data into training and test sets.
@@ -101,7 +106,6 @@ class GroupShuffleSplit(BaseShuffleSplit):
             The testing set indices for that split.
 
         """
-        # pylint: disable=too-many-locals
         n_samples = _num_samples(X)
         n_train, n_test = _validate_shuffle_split(
             n_samples,
@@ -176,6 +180,7 @@ class GroupShuffleSplit(BaseShuffleSplit):
 
             yield train, test
 
+    @override
     def _iter_indices(
         self,
         X: Any,
@@ -235,60 +240,3 @@ class GroupShuffleSplit(BaseShuffleSplit):
 
         else:
             raise AssertionError("Unknown parameter for 'split_mode'.")
-
-
-def create_continuous_stratified_folds(
-    y: npt.NDArray[Any],
-    n_splits: int,
-    n_groups: int = 10,
-    random_state: int | None = None,
-) -> list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]:
-    """Create stratified folds for continuous targets using quantile-based binning.
-
-    This method creates stratified cross-validation folds for regression by:
-    1. Binning continuous targets into quantile-based groups
-    2. Using stratified sampling to ensure balanced target distribution
-    3. Returning train/validation index pairs
-
-    Parameters
-    ----------
-    y : npt.NDArray[Any]
-        Continuous target values to stratify.
-    n_splits : int
-        Number of cross-validation folds.
-    n_groups : int, optional
-        Number of quantile groups to create for stratification (default: 10).
-    random_state : int | None, optional
-        Random state for reproducibility.
-
-    Returns
-    -------
-    list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]
-        List of (train_indices, validation_indices) tuples for each fold.
-
-    """
-    rng = check_random_state(random_state)
-
-    n_effective_groups = min(n_groups, len(np.unique(y)))
-    rng_noise = np.random.default_rng(random_state)
-    y_mod = np.asarray(y) + rng_noise.random(len(y)) * 1e-9
-    # Use pandas qcut for quantile binning
-    y_binned = pd.qcut(y_mod, n_effective_groups, labels=False, duplicates="drop")
-
-    splitter = StratifiedKFold(
-        n_splits=n_splits,
-        shuffle=True,
-        random_state=rng,
-    )
-
-    fold_assignments = np.zeros(len(y), dtype=int)
-    for fold_idx, (_, val_indices) in enumerate(splitter.split(y, y_binned)):
-        fold_assignments[val_indices] = fold_idx
-
-    cv_splits = []
-    for fold_idx in range(n_splits):
-        val_indices = np.where(fold_assignments == fold_idx)[0]
-        train_indices = np.where(fold_assignments != fold_idx)[0]
-        cv_splits.append((train_indices, val_indices))
-
-    return cv_splits

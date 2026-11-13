@@ -64,7 +64,7 @@ def tanimoto_distance_sparse(
         and instances of B (columns/second dim).
 
     """
-    return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)  # type: ignore
+    return 1 - tanimoto_similarity_sparse(matrix_a, matrix_b)
 
 
 def pairwise_tanimoto_similarity(
@@ -141,15 +141,15 @@ def self_tanimoto_similarity(
     matrix_a : Union[sparse.csr_matrix, npt.NDArray[np.int_]]
         Feature matrix.
 
-    Raises
-    ------
-    TypeError
-        If the matrix is not a sparse matrix or a numpy array.
-
     Returns
     -------
     npt.NDArray[np.float64]
         Square matrix of similarity values between all instances in the matrix.
+
+    Raises
+    ------
+    TypeError
+        If the matrix is not a sparse matrix or a numpy array.
 
     """
     if isinstance(matrix_a, np.ndarray):
@@ -177,4 +177,4 @@ def self_tanimoto_distance(
         Square matrix of similarity values between all instances in the matrix.
 
     """
-    return 1 - self_tanimoto_similarity(matrix_a)  # type: ignore
+    return 1 - self_tanimoto_similarity(matrix_a)

@@ -69,15 +69,15 @@ def _get_prediction_function(
     pipeline : Pipeline
         The pipeline containing the model.
 
-    Raises
-    ------
-    ValueError
-        If no prediction function could be found.
-
     Returns
     -------
     Any
         The prediction function.
+
+    Raises
+    ------
+    ValueError
+        If no prediction function could be found.
 
     """
     if hasattr(pipeline, "predict_proba"):
@@ -135,17 +135,17 @@ def _convert_shap_feature_weights_to_atom_weights(
     feature_vector : npt.NDArray[np.float64]
         The feature vector.
 
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        The atom weights.
+
     Raises
     ------
     ValueError
         If the molecule is None.
     ValueError
         If the feature weights have an unsupported number of dimensions.
-
-    Returns
-    -------
-    npt.NDArray[np.float64]
-        The atom weights.
 
     """
     if isinstance(molecule, InvalidInstance):
@@ -155,7 +155,7 @@ def _convert_shap_feature_weights_to_atom_weights(
     if feature_weights.ndim == 1:
         # regression case
         feature_weights_present_bits_only = feature_weights.copy()
-    elif feature_weights.ndim == 2:  # noqa: PLR2004
+    elif feature_weights.ndim == 2:  # ruff: ignore[magic-value-comparison]
         # binary classification case. Take the weights for the positive class.
         feature_weights_present_bits_only = feature_weights[:, 1].copy()
     else:
@@ -182,7 +182,7 @@ class AbstractSHAPExplainer(abc.ABC):  # pylint: disable=too-few-public-methods
     @abc.abstractmethod
     def explain(
         self,
-        X: Any,  # pylint: disable=invalid-name  # noqa: N803
+        X: Any,  # ruff: ignore[invalid-argument-name]
         **kwargs: Any,
     ) -> list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]:
         """Explain the predictions for the input data.
@@ -250,7 +250,7 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
             raise ValueError("Could not determine the featurization subpipeline.")
 
         # determine type of returned explanation
-        featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
+        featurization_element = self.featurization_subpipeline.steps[-1][1]
         if isinstance(featurization_element, MolToMorganFP):
             self.return_element_type_ = SHAPFeatureAndAtomExplanation
         else:
@@ -300,15 +300,15 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
         kwargs : Any
             Additional keyword arguments for SHAP's TreeExplainer.shap_values.
 
-        Raises
-        ------
-        ValueError
-            If the featurization element does not have a get_feature_names method.
-
         Returns
         -------
         list[SHAPFeatureExplanation | SHAPFeatureAndAtomExplanation]
             List of explanations corresponding to the input data.
+
+        Raises
+        ------
+        ValueError
+            If the featurization element does not have a get_feature_names method.
 
         """
         featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
@@ -346,7 +346,10 @@ class SHAPExplainerAdapter(AbstractSHAPExplainer, abc.ABC):  # pylint: disable=t
                 continue
 
             # compute the shap values for the features
-            feature_weights = self.explainer.shap_values(feature_vector, **kwargs)
+            feature_weights = self.explainer.shap_values(
+                np.atleast_2d(feature_vector),
+                **kwargs,
+            )
             feature_weights = np.asarray(feature_weights).squeeze()
 
             atom_weights = None
