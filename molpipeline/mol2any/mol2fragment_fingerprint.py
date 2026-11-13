@@ -59,12 +59,12 @@ class MolToFragmentFP(MolToFingerprintPipelineElement):
 
     @property
     def n_bits(self) -> int:
-        """Return the number of bits in the fingerprint."""
+        """The number of bits in the fingerprint."""
         return self._n_bits
 
     @property
     def substructure_list(self) -> list[str]:
-        """Get the list of SMARTS substructures."""
+        """The list of SMARTS substructures."""
         return self._substructure_list
 
     @substructure_list.setter
