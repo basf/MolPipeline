@@ -117,12 +117,12 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
 
     @property
     def n_bits(self) -> int:
-        """Get number of bits in (or size of) fingerprint."""
+        """Number of bits in (or size of) fingerprint."""
         return self._n_bits
 
     @property
     def feature_names(self) -> list[str]:
-        """Get feature names."""
+        """Feature names."""
         return self._feature_names[:]
 
     @staticmethod
@@ -147,7 +147,7 @@ class MolToFingerprintPipelineElement(MolToAnyPipelineElement, abc.ABC):
             )
 
     @overload
-    def assemble_output(  # type: ignore
+    def assemble_output(
         self,
         value_list: Iterable[npt.NDArray[np.int_]],
     ) -> npt.NDArray[np.int_]: ...
@@ -423,12 +423,11 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
 
     @property
     def output_type(self) -> str:
-        """Get output type."""
+        """Output type."""
         if self.counted:
             return "integer"
         return "binary"
 
-    # pylint: disable=R0913
     def __init__(
         self,
         radius: int = 2,
@@ -446,7 +445,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         radius: int, default=2
             Radius of fingerprint.
         use_features: bool, default=False
-            Whether to represent atoms by element or category (donor, acceptor, etc.)
+            Whether to represent atoms by element or category (donor, acceptor, etc.).
         counted: bool, default=False
             Whether to count the bits or not.
         return_as: FPReturnAsOption, default="sparse"
@@ -469,7 +468,7 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
             If radius is not a positive integer.
 
         """
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         super().__init__(
             return_as=return_as,
             counted=counted,
@@ -540,12 +539,12 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
 
     @property
     def radius(self) -> int:
-        """Get radius of Morgan fingerprint."""
+        """Radius of the Morgan fingerprint."""
         return self._radius
 
     @property
     def use_features(self) -> bool:
-        """Get whether to encode atoms by features or not."""
+        """Whether to encode atoms by features or not."""
         return self._use_features
 
     @abc.abstractmethod
@@ -586,9 +585,9 @@ class ABCMorganFingerprintPipelineElement(MolToRDKitGenFPElement, abc.ABC):
         bit2atom_dict = self._explain_rdmol(mol_obj)
         result_dict: dict[int, list[CircularAtomEnvironment]] = {}
         # Iterating over all present bits and respective matches
-        for bit, matches in bit2atom_dict.items():  # type: int, list[tuple[int, int]]
+        for bit, matches in bit2atom_dict.items():
             result_dict[bit] = []
-            for central_atom, radius in matches:  # type: int, int
+            for central_atom, radius in matches:
                 env = CircularAtomEnvironment.from_mol(mol_obj, central_atom, radius)
                 result_dict[bit].append(env)
         # Transforming default dict to dict

@@ -1,13 +1,12 @@
 """Stratified K-Fold splitter for regression tasks."""
 
 from collections.abc import Iterator
-from typing import Any
 
 import numpy as np
 import pandas as pd
 from numpy import typing as npt
 from sklearn.model_selection import StratifiedKFold
-from typing_extensions import deprecated, override
+from typing_extensions import override
 
 
 class PercentileStratifiedKFold(StratifiedKFold):  # pylint: disable=abstract-method
@@ -91,46 +90,3 @@ class PercentileStratifiedKFold(StratifiedKFold):  # pylint: disable=abstract-me
             ) from e
 
         yield from super().split(X, y_binned)
-
-
-@deprecated(
-    "Use the StratifiedRegressionKFold class directly instead of this helper function.",
-)
-def create_continuous_stratified_folds(
-    y: npt.NDArray[Any],
-    n_splits: int,
-    n_groups: int = 10,
-    random_state: int | None = None,
-) -> list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]:
-    """Create stratified folds for continuous targets using percentile-based binning.
-
-    This method creates stratified cross-validation folds for regression by:
-    1. Binning continuous targets into percentile-based groups
-    2. Using stratified sampling to ensure balanced target distribution
-    3. Returning train/validation index pairs
-
-    Parameters
-    ----------
-    y : npt.NDArray[Any]
-        Continuous target values to stratify.
-    n_splits : int
-        Number of cross-validation folds.
-    n_groups : int, optional
-        Number of percentile groups to create for stratification (default: 10).
-    random_state : int | None, optional
-        Random state for reproducibility.
-
-    Returns
-    -------
-    list[tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]]]
-        List of (train_indices, validation_indices) tuples for each fold.
-
-    """
-    splitter = PercentileStratifiedKFold(
-        n_splits=n_splits,
-        n_groups=n_groups,
-        shuffle=True,
-        random_state=random_state,
-    )
-
-    return list(splitter.split(X=np.zeros(len(y)), y=y))

@@ -67,6 +67,7 @@ A nice introduction to the basic usage is in the [01_getting_started_with_molpip
 ### Model building
 
 Create a fingerprint-based prediction model:
+<!-- fmt:off --> <!--- To prevent ruff from breaking the lines in the pipeline setup --->
 ```python
 from molpipeline import Pipeline
 from molpipeline.any2mol import AutoToMol
@@ -84,9 +85,10 @@ pipeline = Pipeline([
       ("element_filter", ElementFilter()),                           # standardization
       ("salt_remover", SaltRemover()),                               # standardization
       ("morgan2_2048", MolToMorganFP(n_bits=2048, radius=2)),        # fingerprints and featurization
-      ("RandomForestRegressor", RandomForestRegressor())             # machine learning model
+      ("RandomForestRegressor", RandomForestRegressor()),            # machine learning model
     ],
-    n_jobs=4)
+    n_jobs=4,
+)
 
 # fit the pipeline
 pipeline.fit(X=["CCCCCC", "c1ccccc1"], y=[0.2, 0.4])
@@ -94,6 +96,7 @@ pipeline.fit(X=["CCCCCC", "c1ccccc1"], y=[0.2, 0.4])
 pipeline.predict(["CCC"])
 # output: array([0.29])
 ```
+<!-- fmt:on -->
 
 ### Feature calculation
 
@@ -181,12 +184,14 @@ from sklearn.ensemble import RandomForestRegressor
 X = ["CCCCCC", "c1ccccc1"]
 y = [0.2, 0.4]
 
-pipeline = Pipeline([
-    ("auto2mol", AutoToMol()),
-    ("morgan2_2048", MolToMorganFP(n_bits=2048, radius=2)),
-    ("RandomForest", RandomForestRegressor())
-],
-    n_jobs=4)
+pipeline = Pipeline(
+    [
+        ("auto2mol", AutoToMol()),
+        ("morgan2_2048", MolToMorganFP(n_bits=2048, radius=2)),
+        ("RandomForest", RandomForestRegressor()),
+    ],
+    n_jobs=4,
+)
 pipeline.fit(X, y)
 
 # explain the model
@@ -196,7 +201,6 @@ explanations = explainer.explain(X)
 # visualize the explanation
 image = structure_heatmap_shap(explanation=explanations[0])
 image.save("explanation.png")
-
 ```
 Note that the explainability module is fully-functional but in the 'experimental' directory because we might make changes to the API.
 
@@ -239,7 +243,6 @@ y = [0.2, 0.1, 0.4]
 rf_baseline.fit(X, y)
 preds = rf_baseline.predict(X)
 # output: array([0.2468    nan 0.3428])
-
 ```
 
 The Random Forest baseline models differ to the model with scikit-learn defaults and binary fingerprints in the following ways:

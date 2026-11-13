@@ -174,7 +174,7 @@ class TestResolveSpecialTimeStrings(unittest.TestCase):
             "2024-01-01 00:00:00": pd.Timestamp("2024-01-01 00:00:00"),
         }
         for input_str, expected in test_cases.items():
-            resolved = resolve_named_time_stamps(input_str)  # type: ignore
+            resolved = resolve_named_time_stamps(input_str)
             with self.subTest(input_str):
                 if input_str == "today":
                     # Allow for a small time difference due to execution time

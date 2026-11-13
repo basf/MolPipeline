@@ -101,7 +101,7 @@ def get_color_map_from_input(
     if isinstance(color, Colormap):
         color_map = color
     elif isinstance(color, tuple):
-        color_map = color_tuple_to_colormap(color)  # type: ignore
+        color_map = color_tuple_to_colormap(color)
     elif isinstance(color, str):
         color_map = get_cmap(color)
     else:
@@ -130,7 +130,7 @@ def color_tuple_to_colormap(
         If the color tuple is not of length 3.
 
     """
-    if len(color_tuple) != 3:
+    if len(color_tuple) != 3:  # ruff: ignore[magic-value-comparison]
         raise ValueError("Color tuple must have 3 elements")
 
     # Definition of color

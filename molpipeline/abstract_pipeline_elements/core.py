@@ -100,7 +100,7 @@ class ABCPipelineElement(abc.ABC):
         Parameters
         ----------
         name: str | None, optional
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores used for processing.
         uuid: str | None, optional
@@ -131,7 +131,7 @@ class ABCPipelineElement(abc.ABC):
         parm_str = ", ".join(parm_list)
         return f"{self.__class__.__name__}({parm_str})"
 
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return Tags for the Element.
 
         Returns
@@ -226,7 +226,7 @@ class ABCPipelineElement(abc.ABC):
 
     @property
     def n_jobs(self) -> int:
-        """Get the number of cores."""
+        """The number of cores."""
         return self._n_jobs
 
     @n_jobs.setter
@@ -243,7 +243,7 @@ class ABCPipelineElement(abc.ABC):
 
     @property
     def requires_fitting(self) -> bool:
-        """Return whether the object requires fitting or not."""
+        """Whether the object requires fitting or not."""
         return self._requires_fitting
 
     def fit(self, values: Any, labels: Any = None) -> Self:
@@ -268,7 +268,7 @@ class ABCPipelineElement(abc.ABC):
         _ = self.fit_transform(values, labels)
         return self
 
-    def fit_to_result(self, values: Any) -> Self:  # noqa: ARG002
+    def fit_to_result(self, values: Any) -> Self:  # ruff: ignore[unused-method-argument]
         """Fit object to result of transformed values.
 
         Fit object to the result of the transform function. This is useful for catching
@@ -362,7 +362,7 @@ class TransformingPipelineElement(ABCPipelineElement):
         Parameters
         ----------
         name: str | None, optional
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores used for processing.
         uuid: str | None, optional
@@ -374,22 +374,22 @@ class TransformingPipelineElement(ABCPipelineElement):
 
     @property
     def input_type(self) -> str:
-        """Return the input type."""
+        """The input type."""
         return self._input_type
 
     @property
     def is_fitted(self) -> bool:
-        """Return whether the object is fitted or not."""
+        """Whether the object is fitted or not."""
         return self._is_fitted
 
     @property
     def output_type(self) -> str:
-        """Return the output type."""
+        """The output type."""
         return self._output_type
 
     @property
     def parameters(self) -> dict[str, Any]:
-        """Return the parameters of the object."""
+        """The parameters of the object."""
         return self.get_params()
 
     @parameters.setter
@@ -477,7 +477,7 @@ class TransformingPipelineElement(ABCPipelineElement):
             return pre_value
         return self.finalize_single(pre_value)
 
-    def assemble_output(self, value_list: Iterable[Any]) -> Any:
+    def assemble_output(self, value_list: Iterable[Any]) -> Any:  # ruff: ignore[no-self-use]
         """Aggregate rows, which in most cases is just return the list.
 
         Some representations might be better representd as a single object.
@@ -517,7 +517,7 @@ class TransformingPipelineElement(ABCPipelineElement):
 
         """
 
-    def finalize_single(self, value: Any) -> Any:
+    def finalize_single(self, value: Any) -> Any:  # ruff: ignore[no-self-use]
         """Apply parameters learned during fitting to a single instance.
 
         Parameters

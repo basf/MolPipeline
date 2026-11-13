@@ -23,7 +23,7 @@ class TanimotoKernel(StationaryKernelMixin, Kernel):
         """Initialize the Tanimoto kernel."""
 
     @override
-    def __call__(  # type: ignore
+    def __call__(
         self,
         X: npt.NDArray[np.int_],
         Y: npt.NDArray[np.int_] | None = None,
@@ -53,7 +53,7 @@ class TanimotoKernel(StationaryKernelMixin, Kernel):
 
         """
         if Y is None:
-            Y = X  # noqa: N806
+            Y = X  # ruff: ignore[non-lowercase-variable-in-function]
         sim = tanimoto_similarity_sparse(X, Y)
         if not eval_gradient:
             return sim
@@ -156,7 +156,7 @@ class ExponentialTanimotoKernel(StationaryKernelMixin, Kernel):
 
         """
         if Y is None:
-            Y = X  # noqa: N806
+            Y = X  # ruff: ignore[non-lowercase-variable-in-function]
         tanimoto = tanimoto_similarity_sparse(X, Y)
         sim = np.power(tanimoto, self.exponent)
         if not eval_gradient:

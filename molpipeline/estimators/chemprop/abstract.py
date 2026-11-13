@@ -2,19 +2,17 @@
 
 import abc
 from collections.abc import Sequence
-from typing import Any, Self
-
-try:
-    from typing import override  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import override
+from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
+import torch
 from chemprop.data import MoleculeDataset, build_dataloader
 from chemprop.models.model import MPNN
 from lightning import pytorch as pl
+from lightning.pytorch.callbacks import ModelCheckpoint
 from sklearn.base import BaseEstimator
+from typing_extensions import override
 
 from molpipeline.estimators.chemprop.lightning_wrapper import get_params_trainer
 
@@ -23,14 +21,6 @@ from molpipeline.estimators.chemprop.lightning_wrapper import get_params_trainer
 
 class ABCChemprop(BaseEstimator, abc.ABC):
     """Wrap Chemprop in a sklearn compatible Estimator.
-
-    Notes
-    -----
-    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor,
-    this class provides the common functionality for both classes.
-    Although this class does not implement abstract methods, it is marked as abstract
-    to prevent instantiation.
-    (without predict or transform methods this class is useless.)
 
     Attributes
     ----------
@@ -45,9 +35,14 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     trainer_params : dict[str, Any]
         The parameters of the lightning trainer. This is used as the trainer is not
         compatible with the `get_params` method.
-    model_ckpoint_params : dict[str, Any]
-        The parameters of the model checkpoint callback. This is used as the callback
-        is not compatible with the `get_params` method.
+
+    Notes
+    -----
+    As the ChempropNeuralFP is a transformer and the ChempropModel is a predictor,
+    this class provides the common functionality for both classes.
+    Although this class does not implement abstract methods, it is marked as abstract
+    to prevent instantiation.
+    (without predict or transform methods this class is useless.)
 
     """
 
@@ -56,7 +51,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     n_jobs: int
     lightning_trainer: pl.Trainer
     trainer_params: dict[str, Any]
-    model_ckpoint_params: dict[str, Any]
 
     def __init__(
         self,
@@ -64,6 +58,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop abstract model.
@@ -73,11 +69,14 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         model : MPNN
             The chemprop model to wrap.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -86,7 +85,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         self.model = model
         self.batch_size = batch_size
         self.n_jobs = n_jobs
-        self.model_ckpoint_params = {}
+        self.reload_best_checkpoint = reload_best_checkpoint
         if not lightning_trainer:
             lightning_trainer = pl.Trainer(
                 logger=False,
@@ -102,11 +101,72 @@ class ABCChemprop(BaseEstimator, abc.ABC):
     def _update_trainer(self) -> None:
         """Update the trainer for the model."""
         trainer_params = dict(self.trainer_params)
-        if self.model_ckpoint_params:
-            trainer_params["callbacks"] = [
-                pl.callbacks.ModelCheckpoint(**self.model_ckpoint_params),
-            ]
         self.lightning_trainer = pl.Trainer(**trainer_params)
+
+    def _restore_best_checkpoint(self) -> None:
+        """Restore the best checkpoint as allowed by `reload_best_checkpoint`.
+
+        Reads the callbacks of `self.lightning_trainer`. Whether a checkpoint is loaded
+        is determined by `reload_best_checkpoint`: never if False, and if "auto" only
+        when a ModelCheckpoint callback is present. If True, missing the checkpoint
+        callback or the best checkpoint path raises an error. If "auto" and no best
+        checkpoint path is available (e.g. only `save_last` is used), the model is left
+        unchanged. When loading, the state dict of the best checkpoint
+        (`best_model_path` of the single ModelCheckpoint callback) is loaded into
+        `self.model`.
+
+        Raises
+        ------
+        RuntimeError
+            If a checkpoint is requested but no checkpoint callback is found.
+        RuntimeError
+            If no best checkpoint path is available (with True).
+        RuntimeError
+            If more than one checkpoint is available.
+
+        """
+        checkpoint_callbacks = [
+            callback
+            for callback in self.lightning_trainer.callbacks  # type: ignore[attr-defined]
+            if isinstance(callback, ModelCheckpoint)
+        ]
+        if self.reload_best_checkpoint is False or (
+            self.reload_best_checkpoint == "auto" and not checkpoint_callbacks
+        ):
+            return
+        if not checkpoint_callbacks:
+            raise RuntimeError(
+                "Best checkpoint was requested, but no checkpoint callback was found.",
+            )
+
+        best_model_path_list = [
+            callback.best_model_path
+            for callback in checkpoint_callbacks
+            if hasattr(callback, "best_model_path") and callback.best_model_path
+        ]
+
+        if not best_model_path_list:
+            if self.reload_best_checkpoint == "auto":
+                # No best checkpoint was saved (e.g. save_top_k=0 with save_last);
+                # keep the trained model as is.
+                return
+            raise RuntimeError(
+                "Best checkpoint was requested, but no checkpoint callback has a "
+                "best model path. Ensure that a checkpoint was saved during training.",
+            )
+        if len(best_model_path_list) > 1:
+            raise RuntimeError(
+                "Multiple checkpoint callbacks with a best model path found, but "
+                "only one is expected. Please ensure that only one ModelCheckpoint "
+                "callback is used in the trainer.",
+            )
+        best_model_path = best_model_path_list[0]
+        checkpoint = torch.load(  # nosec B614
+            best_model_path,
+            map_location=self.model.device,
+            weights_only=False,
+        )
+        self.model.load_state_dict(checkpoint["state_dict"])
 
     @override
     def fit(
@@ -147,6 +207,8 @@ class ABCChemprop(BaseEstimator, abc.ABC):
             num_workers=self.n_jobs,
         )
         self.lightning_trainer.fit(self.model, training_data)
+        self._restore_best_checkpoint()
+
         # The trainer is reinitalized to avoid storing the training data
         self._update_trainer()
         return self
@@ -172,9 +234,7 @@ class ABCChemprop(BaseEstimator, abc.ABC):
 
         """
         params, trainer_params = self._filter_params(params, "lightning_trainer")
-        params, model_ckpoint_params = self._filter_params(params, "callback_modelckpt")
         self.trainer_params.update(trainer_params)
-        self.model_ckpoint_params.update(model_ckpoint_params)
         super().set_params(**params)
         self._update_trainer()
         return self
@@ -206,8 +266,6 @@ class ABCChemprop(BaseEstimator, abc.ABC):
         # always returned.
         for name, value in self.trainer_params.items():
             params[f"lightning_trainer__{name}"] = value
-        for name, value in self.model_ckpoint_params.items():
-            params[f"callback_modelckpt__{name}"] = value
         # set to none as the trainer is created from the parameters
         # Otherwise, the sklearn clone will fail as the trainer is updated by
         # replacing the object

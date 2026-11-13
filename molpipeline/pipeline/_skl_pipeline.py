@@ -10,15 +10,16 @@ import joblib
 import numpy as np
 import numpy.typing as npt
 from loguru import logger
-from sklearn.base import _fit_context, clone
+from sklearn.base import _fit_context, clone  # ruff: ignore[import-private-name]
+from sklearn.callback import CallbackContext
 from sklearn.pipeline import Pipeline as _Pipeline
-from sklearn.pipeline import _final_estimator_has, _fit_transform_one
+from sklearn.pipeline import _final_estimator_has, _fit_transform_one  # ruff: ignore[import-private-name]
 from sklearn.utils import Bunch
-from sklearn.utils._tags import Tags, get_tags
+from sklearn.utils._tags import Tags, get_tags  # ruff: ignore[import-private-name]
 from sklearn.utils.metadata_routing import (
     MetadataRouter,
     MethodMapping,
-    _routing_enabled,
+    _routing_enabled,  # ruff: ignore[import-private-name]
     process_routing,
 )
 from sklearn.utils.metaestimators import available_if
@@ -94,12 +95,12 @@ class Pipeline(_Pipeline):
         error_filter_list = [
             n_filter for _, n_filter in self.steps if isinstance(n_filter, ErrorFilter)
         ]
-        for step in self.steps:
-            if isinstance(step[1], PostPredictionWrapper) and isinstance(
-                step[1].wrapped_estimator,
-                FilterReinserter,
-            ):
-                error_replacer_list.append(step[1].wrapped_estimator)
+        error_replacer_list.extend(
+            step[1].wrapped_estimator
+            for step in self.steps
+            if isinstance(step[1], PostPredictionWrapper)
+            and isinstance(step[1].wrapped_estimator, FilterReinserter)
+        )
         for error_replacer in error_replacer_list:
             error_replacer.select_error_filter(error_filter_list)
 
@@ -206,11 +207,11 @@ class Pipeline(_Pipeline):
 
     @property
     def _estimator_type(self) -> Any:
-        """Return the estimator type."""
+        """The estimator type."""
         if self._final_estimator is None or self._final_estimator == "passthrough":
             return None
         if hasattr(self._final_estimator, "_estimator_type"):
-            return self._final_estimator._estimator_type  # noqa: SLF001
+            return self._final_estimator._estimator_type  # ruff: ignore[private-member-access]
         return None
 
     @property
@@ -224,19 +225,19 @@ class Pipeline(_Pipeline):
         | ABCPipelineElement
         | FilterReinserter[Any]
     ):
-        """Return the lst estimator which is not a PostprocessingTransformer."""
+        """The lst estimator which is not a PostprocessingTransformer."""
         element_list = list(self._agg_non_postpred_steps())
         last_element = element_list[-1]
         return last_element[2]
 
-    # pylint: disable=too-many-locals,too-many-branches
     @override
-    def _fit(
+    def _fit(  # ruff: ignore[too-many-branches]
         self,
         X: Any,
         y: Any = None,
         routed_params: dict[str, Any] | None = None,
         raw_params: dict[str, Any] | None = None,
+        callback_ctx: CallbackContext | None = None,
     ) -> tuple[Any, Any]:
         """Fit the model by fitting all transformers except the final estimator.
 
@@ -246,7 +247,7 @@ class Pipeline(_Pipeline):
         ----------
         X : Any
             Training data.
-        y : Any, optional (default=None)
+        y : Any, optional
             Training objectives.
         routed_params : dict[str, Any], optional
             Parameters for each step as returned by process_routing.
@@ -255,6 +256,8 @@ class Pipeline(_Pipeline):
             Can be an empty dictionary.
         raw_params : dict[str, Any], optional
             Parameters passed by the user, used when `transform_input`
+        callback_ctx : CallbackContext | None, optional
+            Context of the sklearn callback system, passed down to the steps.
 
         Returns
         -------
@@ -310,7 +313,7 @@ class Pipeline(_Pipeline):
                 )
 
             # Fit or load from cache the current transformer
-            X, fitted_transformer = fit_transform_one_cached(  # noqa: N806
+            X, fitted_transformer = fit_transform_one_cached(  # ruff: ignore[non-lowercase-variable-in-function]
                 cloned_transformer,
                 X,
                 y,
@@ -345,12 +348,12 @@ class Pipeline(_Pipeline):
 
     def _transform(
         self,
-        X: Any,  # noqa: N803
+        X: Any,  # ruff: ignore[invalid-argument-name]
         routed_params: Bunch,
     ) -> Any:
         """Transform the data, and skip final estimator.
 
-        Call `transform` of each transformer in the pipeline except the last one,
+        Call `transform` of each transformer in the pipeline except the last one.
 
         Parameters
         ----------
@@ -358,7 +361,7 @@ class Pipeline(_Pipeline):
             Data to predict on. Must fulfill input requirements of first step
             of the pipeline.
         routed_params: Bunch
-            Parameters for each step as returned by process_routing
+            Parameters for each step as returned by process_routing.
 
         Returns
         -------
@@ -525,7 +528,7 @@ class Pipeline(_Pipeline):
 
         """
         routed_params = self._check_method_params(method="fit", props=fit_params)
-        Xt, yt = self._fit(X, y, routed_params)  # noqa: N806
+        Xt, yt = self._fit(X, y, routed_params)  # ruff: ignore[non-lowercase-variable-in-function]
         with print_elapsed_time("Pipeline", self._log_message(len(self.steps) - 1)):
             if self._final_estimator != "passthrough":
                 if is_empty(Xt):
@@ -961,13 +964,13 @@ class Pipeline(_Pipeline):
 
     @property
     def classes_(self) -> list[Any] | npt.NDArray[Any]:
-        """Return the classes of the last element.
+        """The classes of the last element.
 
         PostPredictionTransformation elements are not considered as last element.
 
         Raises
         ------
-        ValueError
+        AttributeError
             If the last step is passthrough or has no classes_ attribute.
 
         """
@@ -978,12 +981,14 @@ class Pipeline(_Pipeline):
         ]
         last_step = check_last[-1][1]
         if last_step == "passthrough":
-            raise ValueError("Last step is passthrough.")
+            raise AttributeError("Last step is passthrough.")
         if hasattr(last_step, "classes_"):
             return last_step.classes_
-        raise ValueError("Last step has no classes_ attribute.")
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute 'classes_'",
+        )
 
-    def __sklearn_tags__(self) -> Tags:
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return the sklearn tags.
 
         Returns
@@ -1021,7 +1026,7 @@ class Pipeline(_Pipeline):
             # tuples and `fit` is not called yet to validate the steps.
             pass
 
-        try:
+        try:  # ruff: ignore[too-many-statements-in-try-clause]
             # Only the _final_estimator is changed from the original implementation is
             # changed in the following 2 lines
             if (
@@ -1093,7 +1098,7 @@ class Pipeline(_Pipeline):
                 .add(caller="score", callee="transform")
             )
 
-            router.add(method_mapping=method_mapping, **{name: trans})
+            router.add(method_mapping=method_mapping, **{name: trans})  # type: ignore
 
         # Only the _non_post_processing_steps is changed from the original
         # implementation is changed in the following line

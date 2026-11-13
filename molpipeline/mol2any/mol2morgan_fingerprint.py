@@ -19,7 +19,6 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
 
     """
 
-    # pylint: disable=R0913
     def __init__(
         self,
         radius: int = 2,
@@ -53,7 +52,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             IntSparseBitVect, UIntSparseBitVect, etc. depending on the fingerprint
             and parameters.
         name: str, default="MolToMorganFP"
-            Name of PipelineElement
+            Name of PipelineElement.
         n_jobs: int, default=1
             Number of cores to use.
         uuid: str | None, optional
@@ -70,7 +69,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
             [2] https://rdkit.org/docs/GettingStartedInPython.html#feature-definitions-used-in-the-morgan-fingerprints
 
         """
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         super().__init__(
             radius=radius,
             use_features=use_features,
@@ -152,7 +151,7 @@ class MolToMorganFP(ABCMorganFingerprintPipelineElement):
         Parameters
         ----------
         mol_obj: RDKitMol
-            RDKit molecule object
+            RDKit molecule object.
 
         Returns
         -------

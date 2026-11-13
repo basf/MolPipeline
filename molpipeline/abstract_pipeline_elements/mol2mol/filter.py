@@ -5,6 +5,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Literal, Self, TypeAlias
 
 import pandas as pd
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -125,7 +126,7 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
     def filter_elements(
         self,
     ) -> Mapping[Any, FloatCountRange]:
-        """Get filter elements as dict."""
+        """Filter elements as dict."""
 
     @filter_elements.setter
     @abc.abstractmethod
@@ -186,7 +187,8 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
         params["filter_elements"] = self.filter_elements
         return params
 
-    def pretransform_single(  # pylint: disable=too-many-return-statements # noqa: PLR0911
+    @override
+    def pretransform_single(  # ruff: ignore[too-many-return-statements]
         self,
         value: RDKitMol,
     ) -> OptionalMol:
@@ -289,6 +291,13 @@ class BaseKeepMatchesFilter(MolToMolPipelineElement, abc.ABC):
 class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     """Filter to keep or remove molecules based on patterns.
 
+    Attributes
+    ----------
+    filter_elements: Union[Sequence[str], Mapping[str, IntOrIntCountRange]]
+        List of patterns to allow in molecules.
+        Alternatively, a dictionary can be passed with patterns as keys
+        and an int for exact count or a tuple of minimum and maximum.
+
     Notes
     -----
     There are four possible scenarios:
@@ -297,20 +306,13 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
     - mode = "all" & keep_matches = True: Needs to match all filter elements.
     - mode = "all" & keep_matches = False: Must not match all filter elements.
 
-    Attributes
-    ----------
-    filter_elements: Union[Sequence[str], Mapping[str, IntOrIntCountRange]]
-        List of patterns to allow in molecules.
-        Alternatively, a dictionary can be passed with patterns as keys
-        and an int for exact count or a tuple of minimum and maximum.
-
     """
 
     _filter_elements: Mapping[str, FloatCountRange]
 
     @property
     def filter_elements(self) -> Mapping[str, FloatCountRange]:
-        """Get allowed filter elements (patterns) as dict."""
+        """Allowed filter elements (patterns) as dict."""
         return self._filter_elements
 
     @filter_elements.setter
@@ -342,11 +344,11 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
                 "Invalid type for patterns. Must be a list of strings or a dictionary"
                 " with patterns as keys and counts as values.",
             )
-        self.patterns_mol_dict = list(self._filter_elements.keys())  # type: ignore
+        self.patterns_mol_dict = list(self._filter_elements.keys())
 
     @property
     def patterns_mol_dict(self) -> Mapping[str, RDKitMol]:
-        """Get patterns as dict with RDKitMol objects."""
+        """Patterns as dict with RDKitMol objects."""
         return self._patterns_mol_dict
 
     @patterns_mol_dict.setter

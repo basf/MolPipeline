@@ -7,6 +7,7 @@ from typing import Any, Self
 from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Descriptors
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -91,12 +92,12 @@ class ElementFilter(_MolToMolPipelineElement):
 
         """
         super().__init__(name=name, n_jobs=n_jobs, uuid=uuid)
-        self.allowed_element_numbers = allowed_element_numbers  # type: ignore
+        self.allowed_element_numbers = allowed_element_numbers
         self.add_hydrogens = add_hydrogens
 
     @property
     def add_hydrogens(self) -> bool:
-        """Get add_hydrogens."""
+        """Whether to add hydrogens."""
         return self._add_hydrogens
 
     @add_hydrogens.setter
@@ -124,7 +125,7 @@ class ElementFilter(_MolToMolPipelineElement):
 
     @property
     def allowed_element_numbers(self) -> dict[int, IntCountRange]:
-        """Get allowed element numbers as dict."""
+        """Allowed element numbers as dict."""
         return self._allowed_element_numbers
 
     @allowed_element_numbers.setter
@@ -250,6 +251,7 @@ class SmartsFilter(_BasePatternsFilter):
 
     """
 
+    @override
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
         """Convert SMARTS pattern to RDKit molecule.
 
@@ -285,6 +287,7 @@ class SmilesFilter(_BasePatternsFilter):
 
     """
 
+    @override
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
         """Convert SMILES pattern to RDKit molecule.
 
@@ -305,6 +308,11 @@ class SmilesFilter(_BasePatternsFilter):
 class ComplexFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on multiple filter elements.
 
+    Attributes
+    ----------
+    pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
+        pairs of unique names and MolToMol elements to use as filters.
+
     Notes
     -----
     There are four possible scenarios:
@@ -312,11 +320,6 @@ class ComplexFilter(_BaseKeepMatchesFilter):
         - mode= "any" & keep_matches= False: Must not match any filter element.
         - mode= "all" & keep_matches= True: Needs to match all filter elements.
         - mode= "all" & keep_matches= False: Must not match all filter elements.
-
-    Attributes
-    ----------
-    pipeline_filter_elements: Sequence[tuple[str, _MolToMolPipelineElement]]
-        pairs of unique names and MolToMol elements to use as filters.
 
 
     """
@@ -405,7 +408,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
             self.pipeline_filter_elements = parameter_copy.pop(
                 "pipeline_filter_elements",
             )
-            self.filter_elements = self.pipeline_filter_elements  # type: ignore
+            self.filter_elements = self.pipeline_filter_elements
         for key in parameters:
             if key.startswith("pipeline_filter_elements__"):
                 value = parameter_copy.pop(key)
@@ -420,7 +423,7 @@ class ComplexFilter(_BaseKeepMatchesFilter):
     def filter_elements(
         self,
     ) -> Mapping[str, tuple[int, int | None]]:
-        """Get filter elements."""
+        """Filter elements."""
         return self._filter_elements
 
     @filter_elements.setter
@@ -478,6 +481,12 @@ class ComplexFilter(_BaseKeepMatchesFilter):
 class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
     """Filter to keep or remove molecules based on RDKit descriptors.
 
+    Attributes
+    ----------
+    filter_elements: dict[str, FloatCountRange]
+        Dictionary of RDKit descriptors to filter by.
+        The value must be a tuple of minimum and maximum. If None, no limit is set.
+
     Notes
     -----
     There are four possible scenarios:
@@ -486,17 +495,11 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
         - mode= "all" & keep_matches= True: Needs to match all filter elements.
         - mode= "all" & keep_matches= False: Must not match all filter elements.
 
-    Attributes
-    ----------
-    filter_elements: dict[str, FloatCountRange]
-        Dictionary of RDKit descriptors to filter by.
-        The value must be a tuple of minimum and maximum. If None, no limit is set.
-
     """
 
     @property
     def filter_elements(self) -> Mapping[str, FloatCountRange]:
-        """Get allowed descriptors as dict."""
+        """Allowed descriptors as dict."""
         return self._filter_elements
 
     @filter_elements.setter
@@ -521,6 +524,7 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
             )
         self._filter_elements = descriptors
 
+    @override
     def _calculate_single_element_value(
         self,
         filter_element: Any,
@@ -614,7 +618,7 @@ class InorganicsFilter(_MolToMolPipelineElement):
             Molecule if it contains carbon, else InvalidInstance.
 
         """
-        if not any(atom.GetAtomicNum() == 6 for atom in value.GetAtoms()):
+        if not any(atom.GetAtomicNum() == 6 for atom in value.GetAtoms()):  # ruff: ignore[magic-value-comparison]
             return InvalidInstance(
                 self.uuid,
                 "Molecule contains no organic atoms.",

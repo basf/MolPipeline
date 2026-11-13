@@ -15,7 +15,7 @@ from chemprop.data import MoleculeDataset, build_dataloader
 from chemprop.nn.predictors import BinaryClassificationFFNBase
 from lightning import pytorch as pl
 from sklearn.base import clone
-from sklearn.utils._tags import (
+from sklearn.utils._tags import (  # ruff: ignore[import-private-name]
     ClassifierTags,
     RegressorTags,
     Tags,
@@ -46,6 +46,8 @@ class ChempropModel(ABCChemprop):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop abstract model.
@@ -55,11 +57,14 @@ class ChempropModel(ABCChemprop):
         model : MPNN
             The chemprop model to wrap.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -70,13 +75,14 @@ class ChempropModel(ABCChemprop):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            reload_best_checkpoint=reload_best_checkpoint,
             **kwargs,
         )
         self._classes_ = None
 
     @property
     def classes_(self) -> npt.NDArray[np.int_]:
-        """Return the classes.
+        """The classes.
 
         Raises
         ------
@@ -94,7 +100,7 @@ class ChempropModel(ABCChemprop):
 
     @property
     def _estimator_type(self) -> str:
-        """Return the estimator type."""
+        """The estimator type."""
         if self._is_classifier():
             return "classifier"
         return "regressor"
@@ -132,7 +138,7 @@ class ChempropModel(ABCChemprop):
         """
         return self._is_binary_classifier() or self._is_multiclass_classifier()
 
-    def __sklearn_tags__(self) -> Tags:  # noqa: PLW3201
+    def __sklearn_tags__(self) -> Tags:  # ruff: ignore[bad-dunder-method-name]
         """Return the sklearn tags.
 
         Returns
@@ -153,7 +159,7 @@ class ChempropModel(ABCChemprop):
 
     def _predict(
         self,
-        X: MoleculeDataset,  # noqa: N803
+        X: MoleculeDataset,  # ruff: ignore[invalid-argument-name]
     ) -> npt.NDArray[np.float64]:
         """Predict the labels.
 
@@ -245,7 +251,7 @@ class ChempropModel(ABCChemprop):
         predictions = self._predict(X)
         if self._is_binary_classifier():
             pred = np.zeros(len(predictions))
-            pred[predictions > 0.5] = 1  # noqa: PLR2004
+            pred[predictions > 0.5] = 1  # ruff: ignore[magic-value-comparison]
             return pred
 
         if self._is_multiclass_classifier():
@@ -287,7 +293,7 @@ class ChempropModel(ABCChemprop):
 
         """
         return ChempropNeuralFP(
-            model=clone(self.model),  # type: ignore
+            model=clone(self.model),
             lightning_trainer=self.lightning_trainer,
             batch_size=self.batch_size,
             n_jobs=self.n_jobs,
@@ -305,6 +311,8 @@ class ChempropClassifier(ChempropModel):
         class_weight: Literal["balanced"] | dict[int, float] | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop classifier model.
@@ -314,9 +322,9 @@ class ChempropClassifier(ChempropModel):
         model : MPNN | None, optional
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         class_weight : Literal["balanced"] | dict[int, float] | None, optional
-            The class weights to use, by default None
+            The class weights to use.
             If "balanced", the class weights will be calculated using the
             sklearn.utils.class_weight.compute_class_weight function.
             If a dict is provided, it should map class labels to weights.
@@ -326,6 +334,9 @@ class ChempropClassifier(ChempropModel):
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -347,6 +358,7 @@ class ChempropClassifier(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            reload_best_checkpoint=reload_best_checkpoint,
             **kwargs,
         )
         if not self._is_binary_classifier():
@@ -443,6 +455,8 @@ class ChempropRegressor(ChempropModel):
         n_tasks: int = 1,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop regressor model.
@@ -452,13 +466,16 @@ class ChempropRegressor(ChempropModel):
         model : MPNN | None, optional
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         n_tasks : int
             The number of tasks for the regressor, e.g. number of target variables.
-        batch_size : int, optional (default=64)
+        batch_size : int, default=64
             The batch size to use.
-        n_jobs : int, optional (default=1)
+        n_jobs : int, default=1
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -475,6 +492,7 @@ class ChempropRegressor(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            reload_best_checkpoint=reload_best_checkpoint,
             **kwargs,
         )
 
@@ -489,6 +507,8 @@ class ChempropMulticlassClassifier(ChempropModel):
         lightning_trainer: pl.Trainer | None = None,
         batch_size: int = 64,
         n_jobs: int = 1,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop multiclass model.
@@ -500,11 +520,14 @@ class ChempropMulticlassClassifier(ChempropModel):
         model : MPNN | None, optional
             The chemprop model to wrap. If None, a default model will be used.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
+            The lightning trainer to use.
         batch_size : int, optional (default=64)
             The batch size to use.
         n_jobs : int, optional (default=1)
             The number of jobs to use.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         kwargs : Any
             Parameters set using `set_params`.
             Can be used to modify components of the model.
@@ -538,13 +561,14 @@ class ChempropMulticlassClassifier(ChempropModel):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            reload_best_checkpoint=reload_best_checkpoint,
             **kwargs,
         )
         self._is_valid_multiclass_classifier()
 
     @property
     def n_classes(self) -> int:
-        """Return the number of classes."""
+        """The number of classes."""
         return self.model.predictor.n_classes
 
     @n_classes.setter
@@ -624,7 +648,7 @@ class ChempropMulticlassClassifier(ChempropModel):
         Parameters
         ----------
         y : Sequence[int | float] | npt.NDArray[np.int_ | np.float64]
-            Indended classes for the dataset
+            Intended classes for the dataset.
 
         Raises
         ------
@@ -665,5 +689,5 @@ class ChempropMulticlassClassifier(ChempropModel):
             self.model.predictor,
             MulticlassClassificationFFN,
         )
-        has_classes = self.n_classes > 2  # noqa: PLR2004
+        has_classes = self.n_classes > 2  # ruff: ignore[magic-value-comparison]
         return has_correct_model and has_classes

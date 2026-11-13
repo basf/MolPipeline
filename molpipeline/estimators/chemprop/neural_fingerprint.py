@@ -1,7 +1,7 @@
 """Wrap Chemprop in a transformer returning the neural fingerprint as a numpy array."""
 
 from collections.abc import Sequence
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -26,7 +26,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     @property
     def output_type(self) -> str:
-        """Return the output type of the transformer."""
+        """The output type of the transformer."""
         return "float"
 
     def __init__(
@@ -36,6 +36,8 @@ class ChempropNeuralFP(ABCChemprop):
         batch_size: int = 64,
         n_jobs: int = 1,
         disable_fitting: bool = False,
+        *,
+        reload_best_checkpoint: bool | Literal["auto"] = "auto",
         **kwargs: Any,
     ) -> None:
         """Initialize the chemprop neural fingerprint model.
@@ -45,13 +47,16 @@ class ChempropNeuralFP(ABCChemprop):
         model : MPNN
             The chemprop model to wrap.
         lightning_trainer : pl.Trainer, optional
-            The lightning trainer to use, by default None
-        batch_size : int, optional (default=64)
+            The lightning trainer to use.
+        batch_size : int, default=64
             The batch size to use.
-        n_jobs : int, optional (default=1)
+        n_jobs : int, default=1
             The number of jobs to use.
-        disable_fitting : bool, optional (default=False)
+        disable_fitting : bool, default=False
             Whether to allow fitting or set to fixed encoding.
+        reload_best_checkpoint : bool | Literal["auto"], optional (default="auto")
+            Whether to reload the best checkpoint after training.
+            If "auto", the best checkpoint is reloaded if a checkpoint callback is used.
         **kwargs: Any
             Parameters for components of the model.
 
@@ -63,6 +68,7 @@ class ChempropNeuralFP(ABCChemprop):
             lightning_trainer=lightning_trainer,
             batch_size=batch_size,
             n_jobs=n_jobs,
+            reload_best_checkpoint=reload_best_checkpoint,
             **kwargs,
         )
 
@@ -97,7 +103,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     def transform(
         self,
-        X: MoleculeDataset,  # noqa: N803
+        X: MoleculeDataset,  # ruff: ignore[invalid-argument-name]
     ) -> npt.NDArray[np.float64]:
         """Transform the input.
 
@@ -118,7 +124,7 @@ class ChempropNeuralFP(ABCChemprop):
 
     def fit_transform(
         self,
-        X: MoleculeDataset,  # noqa: N803
+        X: MoleculeDataset,  # ruff: ignore[invalid-argument-name]
         y: Sequence[int | float] | npt.NDArray[np.int_ | np.float64],
         *,
         sample_weight: Sequence[float] | npt.NDArray[np.float64] | None = None,

@@ -7,6 +7,7 @@ import numpy as np
 from rdkit import Chem, RDLogger
 from rdkit.Chem.rdchem import MolSanitizeException
 from sklearn.base import clone
+from typing_extensions import override
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
 from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
@@ -260,7 +261,8 @@ class NoneTest(unittest.TestCase):
         class DummyMolSanitizeExc(MolToMolPipelineElement):
             """MolToMolPipelineElement with dummy molsanitize exception."""
 
-            def pretransform_single(  # noqa: PLR6301
+            @override
+            def pretransform_single(
                 self,
                 value: RDKitMol,
             ) -> OptionalMol:
@@ -269,7 +271,7 @@ class NoneTest(unittest.TestCase):
                 Parameters
                 ----------
                 value: RDKitMol
-                    Molecule
+                    Molecule.
 
                 Returns
                 -------
@@ -309,7 +311,7 @@ class TestFilterReinserter(unittest.TestCase):
 
     def test_bad_input_data_types(self) -> None:
         """Test bad input data types."""
-        # pylint: disable=R0801
+        # pylint: disable=duplicate-code
         smi2mol = SmilesToMol()
         mol2morgan = MolToMorganFP(radius=1, n_bits=32, return_as="sparse")
         error_filter = ErrorFilter(filter_everything=True)

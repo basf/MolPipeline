@@ -60,7 +60,7 @@ class MolToElementCount(MolToDescriptorPipelineElement):
 
     @property
     def element_list(self) -> list[int]:
-        """Get the element list."""
+        """The element list."""
         return self._element_list[:]
 
     @element_list.setter
@@ -96,7 +96,7 @@ class MolToElementCount(MolToDescriptorPipelineElement):
 
     @property
     def n_features(self) -> int:
-        """Return the number of features."""
+        """The number of features."""
         return len(self._element_list)
 
     def pretransform_single(

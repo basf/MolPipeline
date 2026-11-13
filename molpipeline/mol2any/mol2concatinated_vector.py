@@ -24,7 +24,6 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     _element_list: list[tuple[str, MolToAnyPipelineElement]]
 
-    # pylint: disable=R0913
     def __init__(
         self,
         element_list: list[tuple[str, MolToAnyPipelineElement]],
@@ -76,7 +75,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     @property
     def element_list(self) -> list[tuple[str, MolToAnyPipelineElement]]:
-        """Get pipeline elements."""
+        """Pipeline elements."""
         return self._element_list
 
     @property
@@ -103,7 +102,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
 
     @property
     def feature_names(self) -> list[str]:
-        """Return the feature names of concatenated elements."""
+        """The feature names of concatenated elements."""
         return self._feature_names[:]
 
     @staticmethod
@@ -143,10 +142,10 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             if use_feature_names_prefix:
                 # use element name as prefix
                 feature_names.extend(
-                    [f"{name}__{feature}" for feature in element.feature_names],  # type: ignore[attr-defined]
+                    [f"{name}__{feature}" for feature in element.feature_names],
                 )
             else:
-                feature_names.extend(element.feature_names)  # type: ignore[attr-defined]
+                feature_names.extend(element.feature_names)
 
         if len(feature_names) != len(set(feature_names)):
             logger.warning(
@@ -177,7 +176,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
         else:
             self._output_type = "mixed"
         self._requires_fitting = any(
-            element[1]._requires_fitting  # noqa: SLF001
+            element[1]._requires_fitting  # ruff: ignore[private-member-access]
             for element in element_list
         )
 
@@ -297,7 +296,7 @@ class MolToConcatenatedVector(MolToAnyPipelineElement):
             # reset feature names
             self._feature_names = self._create_feature_names(
                 self._element_list,
-                self._use_feature_names_prefix,  # type: ignore[arg-type]
+                self._use_feature_names_prefix,
             )
 
         # set parameters of super
