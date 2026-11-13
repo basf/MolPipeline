@@ -13,6 +13,7 @@ authors = [
 ]
 description = "Integration of rdkit functionality into sklearn pipelines."
 readme = "README.md"
+requires-python = ">=3.11"
 dependencies = [
     "crepes>=0.8.0",
     "joblib>=1.3.0",
@@ -93,7 +94,6 @@ ignore = [
     "incorrect-blank-line-before-class", # incorrect-blank-line-before-class
     "multi-line-summary-second-line", # blank-line-before-class-docstring
     "blanket-type-ignore",  # Blanket type ignore for types
-    "too-many-arguments", # too-many-arguments
     "redefined-loop-name", # Redefined loop variable
     "suspicious-non-cryptographic-random-usage",  #  suspicious-non-cryptographic-random-usage
 ]
@@ -149,7 +149,7 @@ version = {attr = "molpipeline.__version__"}
 
 
 [tool.setuptools.packages.find]
-exclude = ["tests", "docs"]
+include = ["molpipeline", "molpipeline.*"]
 
 [tool.setuptools.package-data]
 "molpipeline" = ["py.typed"]

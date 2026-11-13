@@ -3,6 +3,7 @@
 import contextlib
 
 from rdkit import Chem
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import (
     AnyToMolPipelineElement,
@@ -14,6 +15,7 @@ from molpipeline.utils.molpipeline_types import OptionalMol
 class BinaryToMol(AnyToMolPipelineElement):
     """Transforms binary string representation to RDKit Mol objects."""
 
+    @override
     def pretransform_single(self, value: str) -> OptionalMol:
         """Transform binary string to molecule.
 
