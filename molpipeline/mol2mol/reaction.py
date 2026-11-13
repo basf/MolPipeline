@@ -5,6 +5,7 @@ import warnings
 from typing import Any, Literal, Self
 
 from rdkit.Chem import AllChem
+from rdkit.Chem.rdchem import MolSanitizeException
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -179,5 +180,12 @@ class MolToMolReaction(MolToMolPipelineElement):
                 self.name,
             )
         product = product_list[0][0]
-        AllChem.SanitizeMol(product)  # type: ignore[attr-defined]
+        try:
+            AllChem.SanitizeMol(product)  # type: ignore[attr-defined]
+        except MolSanitizeException as error:
+            return InvalidInstance(
+                self.uuid,
+                f"Reaction product could not be sanitized: {error}",
+                self.name,
+            )
         return product

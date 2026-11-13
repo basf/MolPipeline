@@ -5,16 +5,14 @@ from typing import Any
 
 import numpy as np
 from rdkit import Chem, RDLogger
+from rdkit.Chem import AllChem
 from rdkit.Chem.rdchem import MolSanitizeException
 from sklearn.base import clone
-from typing_extensions import override
 
 from molpipeline import ErrorFilter, FilterReinserter, Pipeline, PostPredictionWrapper
-from molpipeline.abstract_pipeline_elements.core import MolToMolPipelineElement
 from molpipeline.any2mol import SmilesToMol
-from molpipeline.any2mol.auto2mol import AutoToMol
 from molpipeline.mol2any import MolToMorganFP, MolToRDKitPhysChem, MolToSmiles
-from molpipeline.utils.molpipeline_types import OptionalMol, RDKitMol
+from molpipeline.mol2mol import MolToMolReaction
 from tests.utils.mock_element import MockTransformingPipelineElement
 
 rdlog = RDLogger.logger()
@@ -257,41 +255,10 @@ class NoneTest(unittest.TestCase):
 
     def test_molsanitize_error(self) -> None:
         """Test if MolSanitizeException is caught and catched by ErrorFilter."""
-
-        class DummyMolSanitizeExc(MolToMolPipelineElement):
-            """MolToMolPipelineElement with dummy molsanitize exception."""
-
-            @override
-            def pretransform_single(
-                self,
-                value: RDKitMol,
-            ) -> OptionalMol:
-                """Raise MolSanitizeException if value is c1ccccc1.
-
-                Parameters
-                ----------
-                value: RDKitMol
-                    Molecule.
-
-                Returns
-                -------
-                OptionalMol
-                    Molecule.
-
-                Raises
-                ------
-                MolSanitizeException
-                    Dummy exception used for testing.
-
-                """
-                if Chem.MolToSmiles(value) == "c1ccccc1":
-                    raise MolSanitizeException("This is a dummy exception.")
-                return value
-
+        # Ensure the neutral 4-valent nitrogen really raises a sanitize error.
         pipeline = Pipeline(
             [
-                ("autotosmiles", AutoToMol()),
-                ("atomneutralizer", DummyMolSanitizeExc()),
+                ("smilestomol", SmilesToMol()),
                 ("moltosmiles", MolToSmiles()),
                 ("errorfilter", error_filter := ErrorFilter()),
                 (
@@ -302,8 +269,35 @@ class NoneTest(unittest.TestCase):
             n_jobs=-1,
         )
 
-        result = pipeline.transform(["c1ccccc1", "CCCCCCC", "c1cc"])
+        result = pipeline.transform(["C[N](C)(C)C", "CCCCCCC", "c1cc"])
         self.assertEqual(result, [None, "CCCCCCC", None])
+
+    def test_molsanitize_error_reaction(self) -> None:
+        """Test that sanitize errors of reaction products are caught by ErrorFilter."""
+        # Methylating a quaternary/hypervalent nitrogen yields an invalid valence.
+        methylation = AllChem.ReactionFromSmarts("[N:1]>>[N:1]C")
+        product_list = methylation.RunReactants(
+            [Chem.MolFromSmiles("C[N+](C)(C)C")],
+        )
+        with self.assertRaises(MolSanitizeException):
+            Chem.SanitizeMol(product_list[0][0])
+
+        pipeline = Pipeline(
+            [
+                ("smilestomol", SmilesToMol()),
+                ("reaction", MolToMolReaction(methylation, [], handle_multi="pass")),
+                ("moltosmiles", MolToSmiles()),
+                ("errorfilter", error_filter := ErrorFilter()),
+                (
+                    "filterreinserter",
+                    FilterReinserter.from_error_filter(error_filter, None),
+                ),
+            ],
+            n_jobs=1,
+        )
+
+        result = pipeline.transform(["CNC", "C[N+](C)(C)C", "CCO"])
+        self.assertEqual(result, ["CN(C)C", None, None])
 
 
 class TestFilterReinserter(unittest.TestCase):
