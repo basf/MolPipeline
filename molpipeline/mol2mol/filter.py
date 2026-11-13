@@ -606,10 +606,8 @@ class EmptyMoleculeFilter(_MolToMolPipelineElement):
 class InorganicsFilter(_MolToMolPipelineElement):
     """Filters Molecules which do not contain any organic (i.e. Carbon) atoms."""
 
-    CARBON_INORGANICS: ClassVar[list[str]] = [
-        "O=C=O",
-        "[C-]#[O+]",
-    ]  # CO2 and CO are not organic
+    # CO2 and CO are not organic
+    CARBON_INORGANICS: ClassVar[list[str]] = ["O=C=O", "[C-]#[O+]"]
     CARBON_INORGANICS_MAX_ATOMS: ClassVar[int] = 3
 
     @override

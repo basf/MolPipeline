@@ -54,7 +54,7 @@ OptionalMol = RDKitMol | InvalidInstance
 
 
 class RemovedInstance:  # pylint: disable=too-few-public-methods
-    """Returned by an ErrorFilter if an Invalid instance was removed."""
+    """Object which is returned by a ErrorFilter if an Invalid instance was removed."""
 
     def __init__(self, filter_element_id: str, message: str | None = None) -> None:
         """Initialize RemovedInstance.
