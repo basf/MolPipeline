@@ -7,6 +7,7 @@ from typing import Any, Self
 from loguru import logger
 from rdkit import Chem
 from rdkit.Chem import Descriptors
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
@@ -250,6 +251,7 @@ class SmartsFilter(_BasePatternsFilter):
 
     """
 
+    @override
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
         """Convert SMARTS pattern to RDKit molecule.
 
@@ -285,6 +287,7 @@ class SmilesFilter(_BasePatternsFilter):
 
     """
 
+    @override
     def _pattern_to_mol(self, pattern: str) -> RDKitMol:
         """Convert SMILES pattern to RDKit molecule.
 
@@ -521,6 +524,7 @@ class RDKitDescriptorsFilter(_BaseKeepMatchesFilter):
             )
         self._filter_elements = descriptors
 
+    @override
     def _calculate_single_element_value(
         self,
         filter_element: Any,
