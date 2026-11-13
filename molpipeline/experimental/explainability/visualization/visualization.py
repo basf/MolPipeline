@@ -179,7 +179,7 @@ def _add_gaussians_for_bonds(
         bond_center = (a1_coords + a2_coords) / 2
 
         func = GaussFunctor2D(
-            center=bond_center,  # type: ignore
+            center=bond_center,
             std1=bond_width,
             std2=bond_length,
             scale=bond_weights[i],

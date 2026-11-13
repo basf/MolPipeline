@@ -293,7 +293,7 @@ class ChempropModel(ABCChemprop):
 
         """
         return ChempropNeuralFP(
-            model=clone(self.model),  # type: ignore
+            model=clone(self.model),
             lightning_trainer=self.lightning_trainer,
             batch_size=self.batch_size,
             n_jobs=self.n_jobs,
