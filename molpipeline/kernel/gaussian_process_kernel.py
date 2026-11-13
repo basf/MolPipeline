@@ -23,7 +23,7 @@ class TanimotoKernel(StationaryKernelMixin, Kernel):
         """Initialize the Tanimoto kernel."""
 
     @override
-    def __call__(  # type: ignore
+    def __call__(
         self,
         X: npt.NDArray[np.int_],
         Y: npt.NDArray[np.int_] | None = None,
