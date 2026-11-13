@@ -1,6 +1,7 @@
 """Converter element for molecules to binary string representation."""
 
 from rdkit import Chem
+from typing_extensions import override
 
 from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 
@@ -8,6 +9,7 @@ from molpipeline.abstract_pipeline_elements.core import MolToAnyPipelineElement
 class MolToBinary(MolToAnyPipelineElement):
     """PipelineElement to transform a molecule to a binary."""
 
+    @override
     def pretransform_single(self, value: Chem.Mol) -> str:
         """Transform a molecule to a binary string.
 

@@ -263,7 +263,7 @@ class ErrorFilter(ABCPipelineElement):
                     out_list.append(value)
             return out_list  # type: ignore  # mypy does not support higher-kinded types
         if isinstance(values, np.ndarray):
-            return np.delete(values, self.error_indices, axis=0)  # type: ignore
+            return np.delete(values, self.error_indices, axis=0)
         if isinstance(values, pd.Series):
             return values.drop(values.index[self.error_indices])
         raise TypeError(f"Unexpected Type: {type(values)}")
@@ -322,10 +322,7 @@ class ErrorFilter(ABCPipelineElement):
 
         """
         if self.check_removal(value):
-            return RemovedInstance(
-                filter_element_id=self.uuid,
-                message=value.message,  # type: ignore
-            )
+            return RemovedInstance(filter_element_id=self.uuid, message=value.message)
         return value
 
 

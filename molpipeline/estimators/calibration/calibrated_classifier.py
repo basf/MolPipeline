@@ -581,7 +581,7 @@ class CalibratedClassifierCV(SklearnCalibratedClassifierCV):
 
         xp, is_array_api, device_ = get_namespace_and_device(X)
         if is_array_api:
-            y, sample_weight = move_to(  # type: ignore  # pylint: disable=unbalanced-tuple-unpacking
+            y, sample_weight = move_to(  # pylint: disable=unbalanced-tuple-unpacking
                 y,
                 sample_weight,
                 xp=xp,

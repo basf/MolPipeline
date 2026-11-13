@@ -255,7 +255,7 @@ class SHAPExplainerAdapter(  # pylint: disable=too-few-public-methods
             raise ValueError("Could not determine the featurization subpipeline.")
 
         # determine type of returned explanation
-        featurization_element = self.featurization_subpipeline.steps[-1][1]  # type: ignore[union-attr]
+        featurization_element = self.featurization_subpipeline.steps[-1][1]
         if isinstance(featurization_element, MolToRDKitGenFPElement):
             self.return_element_type_ = SHAPFeatureAndAtomExplanation
         else:

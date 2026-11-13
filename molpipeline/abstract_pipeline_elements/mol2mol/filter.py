@@ -344,7 +344,7 @@ class BasePatternsFilter(BaseKeepMatchesFilter, abc.ABC):
                 "Invalid type for patterns. Must be a list of strings or a dictionary"
                 " with patterns as keys and counts as values.",
             )
-        self.patterns_mol_dict = list(self._filter_elements.keys())  # type: ignore
+        self.patterns_mol_dict = list(self._filter_elements.keys())
 
     @property
     def patterns_mol_dict(self) -> Mapping[str, RDKitMol]:

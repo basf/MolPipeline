@@ -43,22 +43,9 @@ def get_morgan_rf_pipeline(n_jobs: int = 1) -> Pipeline:
     return Pipeline(
         steps=[
             ("smiles_to_mol", AutoToMol()),
-            (
-                "morgan_fp",
-                MolToMorganFP(
-                    radius=3,
-                    counted=True,
-                    n_bits=512,
-                ),
-            ),
+            ("morgan_fp", MolToMorganFP(radius=3, counted=True, n_bits=512)),
             ("error_filter", error_filter),
-            (
-                "rf",
-                RandomForestClassifier(  # type: ignore[list-item]
-                    n_jobs=n_jobs,
-                    n_estimators=2,
-                ),
-            ),
+            ("rf", RandomForestClassifier(n_jobs=n_jobs, n_estimators=2)),
             (
                 "error_reinserter",
                 PostPredictionWrapper(

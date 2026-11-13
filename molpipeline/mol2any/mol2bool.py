@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from typing_extensions import override
+
 from molpipeline.abstract_pipeline_elements.core import (
     InvalidInstance,
     MolToAnyPipelineElement,
@@ -14,6 +16,7 @@ class MolToBool(MolToAnyPipelineElement):
     Valid molecules are passed as True, InvalidInstances are passed as False.
     """
 
+    @override
     def pretransform_single(self, value: Any) -> bool:
         """Transform a value to a bool representation.
 
@@ -30,6 +33,7 @@ class MolToBool(MolToAnyPipelineElement):
         """
         return not isinstance(value, InvalidInstance)
 
+    @override
     def transform_single(self, value: Any) -> Any:
         """Transform a single molecule to a bool representation.
 
