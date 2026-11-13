@@ -96,7 +96,6 @@ ignore = [
     "blanket-type-ignore",  # Blanket type ignore for types
     "try-except-in-loop",  # `try`-`except` within a loop incurs performance overhead  # TO REMOVE
     "compare-to-empty-string", # `rest == ""` can be simplified to `not rest` as an empty string is falsey  # TO REMOVE
-    "no-self-use", #  could be a function, class method, or static method # TO REMOVE
     "redefined-loop-name", # Redefined loop variable
     "unsupported-method-call-on-all",  # Calling `.append()` on `__all__` may not be supported by all type checkers # TO REMOVE
     "mutable-class-default",  # Mutable class attributes should be annotated with `typing.ClassVar`  # TO REMOVE

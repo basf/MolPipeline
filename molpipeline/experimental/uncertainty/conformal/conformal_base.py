@@ -124,6 +124,7 @@ class NonconformityFunctor(ABC):
 class HingeNonconformity(NonconformityFunctor):
     """Hinge loss nonconformity function for classification."""
 
+    @override
     def get_name(self) -> str:
         """Get function name for parameter serialization.
 
@@ -268,6 +269,7 @@ class SVMMarginNonconformity(NonconformityFunctor):
 
     """
 
+    @override
     def get_name(self) -> str:
         """Get function name for parameter serialization.
 
